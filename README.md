@@ -55,14 +55,14 @@ Dhanam Ledger is a monorepo powering a **personal + business budgeting** app and
 
 ```mermaid
 flowchart LR
-  A[Web (Next.js)] -->|REST+JWT| B[NestJS API]
-  M[Mobile (RN/Expo)] -->|REST+JWT| B
-  B -->|SQL| D[(Postgres)]
-  B -->|Cache & Queues| R[(Redis)]
-  B <-->|Link| C[Belvo & Plaid]
-  B <-->|API| X[Bitso & Exchanges]
-  B <-->|ESG| E[Dhanam ESG]
-  C <--> W[Provider Webhooks]
+  A["Web (Next.js)"] -->|"REST + JWT"| B["API (NestJS)"]
+  M["Mobile (React Native)"] -->|"REST + JWT"| B
+  B -->|"SQL"| D[(Postgres)]
+  B -->|"Cache/Queues"| R[(Redis)]
+  B <-->|"Link"| C["Belvo and Plaid"]
+  B <-->|"API"| X["Bitso and Exchanges"]
+  B <-->|"ESG"| E["Dhanam ESG"]
+  C <--> W["Provider Webhooks"]
   W --> B
 ```
 
