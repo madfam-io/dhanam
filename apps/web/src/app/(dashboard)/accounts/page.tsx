@@ -34,7 +34,7 @@ import { accountsApi } from '@/lib/api/accounts';
 import { Account, AccountType, Currency, Provider } from '@dhanam/shared';
 import { formatCurrency } from '@/lib/utils';
 import { toast } from 'sonner';
-import { BelvoConnect } from '@/components/providers/belvo-connect';
+import { BelvoConnect } from '@/components/providers/belvo-connect';\nimport { PlaidConnect } from '@/components/providers/plaid-connect';\nimport { BitsoConnect } from '@/components/providers/bitso-connect';
 
 const accountTypeIcons: Record<AccountType, React.ElementType> = {
   checking: Building2,
@@ -59,6 +59,7 @@ export default function AccountsPage() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
   const [isBelvoOpen, setIsBelvoOpen] = useState(false);
+  const [isPlaidOpen, setIsPlaidOpen] = useState(false);\n  const [isBitsoOpen, setIsBitsoOpen] = useState(false);
 
   const { data: accounts, isLoading } = useQuery({
     queryKey: ['accounts', currentSpace?.id],
@@ -114,10 +115,10 @@ export default function AccountsPage() {
         setIsBelvoOpen(true);
         break;
       case 'plaid':
-        toast.error('Plaid integration coming soon');
+        setIsPlaidOpen(true);
         break;
       case 'bitso':
-        toast.error('Bitso integration coming soon');
+        setIsBitsoOpen(true);
         break;
     }
   };
@@ -350,6 +351,24 @@ export default function AccountsPage() {
       <BelvoConnect
         open={isBelvoOpen}
         onOpenChange={setIsBelvoOpen}
+        spaceId={currentSpace.id}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ['accounts', currentSpace.id] });
+        }}
+      />
+
+      <PlaidConnect
+        open={isPlaidOpen}
+        onOpenChange={setIsPlaidOpen}
+        spaceId={currentSpace.id}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ['accounts', currentSpace.id] });
+        }}
+      />
+
+      <BitsoConnect
+        open={isBitsoOpen}
+        onOpenChange={setIsBitsoOpen}
         spaceId={currentSpace.id}
         onSuccess={() => {
           queryClient.invalidateQueries({ queryKey: ['accounts', currentSpace.id] });
