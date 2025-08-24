@@ -11,13 +11,12 @@ import {
   ItemPublicTokenExchangeRequest,
   LinkTokenCreateRequest,
   AccountsGetRequest,
-  TransactionsGetRequest,
   TransactionsSyncRequest,
-  WebhookVerificationKeyGetRequest,
+  DepositoryAccountSubtype,
+  CreditAccountSubtype,
 } from 'plaid';
 import { CreatePlaidLinkDto, PlaidWebhookDto } from './dto';
-import { Account, Transaction } from '@dhanam/shared';
-import { Prisma } from '@prisma/client';
+import { Prisma, Account, Currency, AccountType } from '@prisma/client';
 import * as crypto from 'crypto';
 
 @Injectable()
@@ -76,10 +75,10 @@ export class PlaidService {
         webhook: this.configService.get('PLAID_WEBHOOK_URL'),
         account_filters: {
           depository: {
-            account_subtypes: ['checking', 'savings'],
+            account_subtypes: [DepositoryAccountSubtype.Checking, DepositoryAccountSubtype.Savings],
           },
           credit: {
-            account_subtypes: ['credit_card'],
+            account_subtypes: [CreditAccountSubtype.CreditCard],
           },
         },
       };
@@ -116,12 +115,12 @@ export class PlaidService {
       const { access_token, item_id } = exchangeResponse.data;
 
       // Store encrypted access token
-      const encryptedToken = await this.cryptoService.encrypt(access_token);
+      const encryptedToken = this.cryptoService.encrypt(access_token);
       await this.prisma.providerConnection.create({
         data: {
           provider: 'plaid',
           providerUserId: item_id,
-          encryptedToken,
+          encryptedToken: JSON.stringify(encryptedToken),
           metadata: {
             publicToken: dto.publicToken,
             itemId: item_id,
@@ -168,19 +167,25 @@ export class PlaidService {
         name: plaidAccount.name,
         type: this.mapAccountType(plaidAccount.type),
         subtype: plaidAccount.subtype || plaidAccount.type,
-        currency: plaidAccount.balances.iso_currency_code || 'USD',
+        currency: this.mapCurrency(plaidAccount.balances.iso_currency_code || 'USD'),
         balance: plaidAccount.balances.current || 0,
         lastSyncedAt: new Date(),
         metadata: {
           mask: plaidAccount.mask,
           officialName: plaidAccount.official_name,
           itemId,
-          balances: plaidAccount.balances,
+          balances: {
+            available: plaidAccount.balances.available,
+            current: plaidAccount.balances.current,
+            limit: plaidAccount.balances.limit,
+            iso_currency_code: plaidAccount.balances.iso_currency_code,
+            unofficial_currency_code: plaidAccount.balances.unofficial_currency_code,
+          },
         } as Prisma.JsonObject,
       };
 
       const account = await this.prisma.account.create({ data: accountData });
-      accounts.push(account as Account);
+      accounts.push(account);
     }
 
     return accounts;
@@ -235,7 +240,7 @@ export class PlaidService {
     }
   }
 
-  private async createTransactionFromPlaid(plaidTransaction: any, itemId: string) {
+  private async createTransactionFromPlaid(plaidTransaction: any, _itemId: string) {
     try {
       // Find the account
       const account = await this.prisma.account.findFirst({
@@ -256,6 +261,7 @@ export class PlaidService {
           accountId: account.id,
           providerTransactionId: plaidTransaction.transaction_id,
           amount: -plaidTransaction.amount, // Plaid uses positive for outflows
+          currency: account.currency as Currency,
           date: new Date(plaidTransaction.date),
           description: plaidTransaction.name,
           merchant: plaidTransaction.merchant_name,
@@ -270,7 +276,7 @@ export class PlaidService {
         },
       });
     } catch (error) {
-      if (error.code === 'P2002') {
+      if ((error as any).code === 'P2002') {
         // Transaction already exists, skip
         return;
       }
@@ -278,7 +284,7 @@ export class PlaidService {
     }
   }
 
-  private async updateTransactionFromPlaid(plaidTransaction: any, itemId: string) {
+  private async updateTransactionFromPlaid(plaidTransaction: any, _itemId: string) {
     try {
       await this.prisma.transaction.updateMany({
         where: {
@@ -304,7 +310,7 @@ export class PlaidService {
     }
   }
 
-  private async removeTransaction(transactionId: string, itemId: string) {
+  private async removeTransaction(transactionId: string, _itemId: string) {
     try {
       await this.prisma.transaction.deleteMany({
         where: {
@@ -362,7 +368,7 @@ export class PlaidService {
       return;
     }
 
-    const accessToken = await this.cryptoService.decrypt(connection.encryptedToken);
+    const accessToken = this.cryptoService.decrypt(JSON.parse(connection.encryptedToken));
 
     switch (webhook_code) {
       case 'SYNC_UPDATES_AVAILABLE':
@@ -423,7 +429,7 @@ export class PlaidService {
     );
   }
 
-  private mapAccountType(plaidType: string): 'checking' | 'savings' | 'credit' | 'investment' | 'other' {
+  private mapAccountType(plaidType: string): AccountType {
     switch (plaidType.toLowerCase()) {
       case 'depository':
         return 'checking'; // Default for depository
@@ -433,6 +439,21 @@ export class PlaidService {
         return 'investment';
       default:
         return 'other';
+    }
+  }
+
+  private mapCurrency(currency: string): Currency {
+    const upperCurrency = currency?.toUpperCase();
+    switch (upperCurrency) {
+      case 'MXN':
+        return Currency.MXN;
+      case 'USD':
+        return Currency.USD;
+      case 'EUR':
+        return Currency.EUR;
+      default:
+        // Default to USD for US-focused Plaid
+        return Currency.USD;
     }
   }
 }

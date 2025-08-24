@@ -13,7 +13,13 @@ import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { CategoriesService } from './categories.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CreateCategoryDto, UpdateCategoryDto } from './dto';
-import { Request } from 'express';
+
+interface AuthenticatedRequest {
+  user: {
+    id: string;
+    email: string;
+  };
+}
 
 @ApiTags('categories')
 @Controller('spaces/:spaceId/categories')
@@ -24,8 +30,8 @@ export class CategoriesController {
 
   @Get()
   @ApiOperation({ summary: 'Get all categories in a space' })
-  findAll(@Param('spaceId') spaceId: string, @Req() req: Request) {
-    return this.categoriesService.findAll(spaceId, req.user.id);
+  findAll(@Param('spaceId') spaceId: string, @Req() req: AuthenticatedRequest) {
+    return this.categoriesService.findAll(spaceId, req.user!.id);
   }
 
   @Get('budget/:budgetId')
@@ -33,9 +39,9 @@ export class CategoriesController {
   findByBudget(
     @Param('spaceId') spaceId: string,
     @Param('budgetId') budgetId: string,
-    @Req() req: Request,
+    @Req() req: AuthenticatedRequest,
   ) {
-    return this.categoriesService.findByBudget(spaceId, req.user.id, budgetId);
+    return this.categoriesService.findByBudget(spaceId, req.user!.id, budgetId);
   }
 
   @Get(':id')
@@ -43,9 +49,9 @@ export class CategoriesController {
   findOne(
     @Param('spaceId') spaceId: string,
     @Param('id') id: string,
-    @Req() req: Request,
+    @Req() req: AuthenticatedRequest,
   ) {
-    return this.categoriesService.findOne(spaceId, req.user.id, id);
+    return this.categoriesService.findOne(spaceId, req.user!.id, id);
   }
 
   @Get(':id/spending')
@@ -53,9 +59,9 @@ export class CategoriesController {
   getCategorySpending(
     @Param('spaceId') spaceId: string,
     @Param('id') id: string,
-    @Req() req: Request,
+    @Req() req: AuthenticatedRequest,
   ) {
-    return this.categoriesService.getCategorySpending(spaceId, req.user.id, id);
+    return this.categoriesService.getCategorySpending(spaceId, req.user!.id, id);
   }
 
   @Post()
@@ -63,9 +69,9 @@ export class CategoriesController {
   create(
     @Param('spaceId') spaceId: string,
     @Body() createCategoryDto: CreateCategoryDto,
-    @Req() req: Request,
+    @Req() req: AuthenticatedRequest,
   ) {
-    return this.categoriesService.create(spaceId, req.user.id, createCategoryDto);
+    return this.categoriesService.create(spaceId, req.user!.id, createCategoryDto);
   }
 
   @Patch(':id')
@@ -74,11 +80,11 @@ export class CategoriesController {
     @Param('spaceId') spaceId: string,
     @Param('id') id: string,
     @Body() updateCategoryDto: UpdateCategoryDto,
-    @Req() req: Request,
+    @Req() req: AuthenticatedRequest,
   ) {
     return this.categoriesService.update(
       spaceId,
-      req.user.id,
+      req.user!.id,
       id,
       updateCategoryDto,
     );
@@ -89,8 +95,8 @@ export class CategoriesController {
   remove(
     @Param('spaceId') spaceId: string,
     @Param('id') id: string,
-    @Req() req: Request,
+    @Req() req: AuthenticatedRequest,
   ) {
-    return this.categoriesService.remove(spaceId, req.user.id, id);
+    return this.categoriesService.remove(spaceId, req.user!.id, id);
   }
 }

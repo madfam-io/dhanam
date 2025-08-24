@@ -16,7 +16,7 @@ export class CryptoService {
   private readonly algorithm = 'aes-256-gcm';
   private readonly encryptionKey: Buffer;
 
-  constructor(private configService: ConfigService) {
+  constructor(private readonly configService: ConfigService) {
     const key = this.configService.get<string>('encryption.key');
     if (!key || key.length !== 32) {
       throw new Error('Encryption key must be 32 characters');
@@ -62,7 +62,7 @@ export class CryptoService {
       Buffer.from(data.iv, 'base64')
     );
     
-    decipher.setAuthTag(Buffer.from(data.tag, 'base64'));
+    (decipher as any).setAuthTag(Buffer.from(data.tag, 'base64'));
     
     let plaintext = decipher.update(data.ciphertext, 'base64', 'utf8');
     plaintext += decipher.final('utf8');
@@ -80,7 +80,7 @@ export class CryptoService {
     const randomBytes = crypto.randomBytes(length);
     
     for (let i = 0; i < length; i++) {
-      code += digits[randomBytes[i] % 10];
+      code += digits[randomBytes[i]! % 10];
     }
     
     return code;

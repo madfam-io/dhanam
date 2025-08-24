@@ -1,8 +1,7 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { PrismaService } from '../../core/prisma/prisma.service';
 import { SpacesService } from '../spaces/spaces.service';
-import { Budget, Prisma } from '@prisma/client';
-import { CreateBudgetDto, UpdateBudgetDto } from './dto';
+import { CreateBudgetDto, UpdateBudgetDto, BudgetResponseDto, BudgetSummaryDto, CategorySummaryDto } from './dto';
 
 @Injectable()
 export class BudgetsService {
@@ -11,10 +10,10 @@ export class BudgetsService {
     private spacesService: SpacesService,
   ) {}
 
-  async findAll(spaceId: string, userId: string): Promise<Budget[]> {
+  async findAll(spaceId: string, userId: string): Promise<BudgetResponseDto[]> {
     await this.spacesService.verifyUserAccess(userId, spaceId, 'viewer');
 
-    return this.prisma.budget.findMany({
+    const budgets = await this.prisma.budget.findMany({
       where: { spaceId },
       include: {
         categories: {
@@ -27,13 +26,15 @@ export class BudgetsService {
       },
       orderBy: { createdAt: 'desc' },
     });
+
+    return budgets.map(budget => this.transformBudgetToDto(budget));
   }
 
   async findOne(
     spaceId: string,
     userId: string,
     budgetId: string,
-  ): Promise<Budget> {
+  ): Promise<BudgetResponseDto> {
     await this.spacesService.verifyUserAccess(userId, spaceId, 'viewer');
 
     const budget = await this.prisma.budget.findFirst({
@@ -56,14 +57,14 @@ export class BudgetsService {
       throw new NotFoundException('Budget not found');
     }
 
-    return budget;
+    return this.transformBudgetToDto(budget);
   }
 
   async create(
     spaceId: string,
     userId: string,
     dto: CreateBudgetDto,
-  ): Promise<Budget> {
+  ): Promise<BudgetResponseDto> {
     await this.spacesService.verifyUserAccess(userId, spaceId, 'member');
 
     // Check for overlapping budgets
@@ -107,11 +108,17 @@ export class BudgetsService {
         endDate,
       },
       include: {
-        categories: true,
+        categories: {
+          include: {
+            _count: {
+              select: { transactions: true },
+            },
+          },
+        },
       },
     });
 
-    return budget;
+    return this.transformBudgetToDto(budget);
   }
 
   async update(
@@ -119,21 +126,30 @@ export class BudgetsService {
     userId: string,
     budgetId: string,
     dto: UpdateBudgetDto,
-  ): Promise<Budget> {
+  ): Promise<BudgetResponseDto> {
     await this.spacesService.verifyUserAccess(userId, spaceId, 'member');
 
-    const existing = await this.findOne(spaceId, userId, budgetId);
+    const existing = await this.prisma.budget.findFirst({
+      where: {
+        id: budgetId,
+        spaceId,
+      },
+    });
+
+    if (!existing) {
+      throw new NotFoundException('Budget not found');
+    }
 
     // If updating dates or period, check for overlaps
     if (dto.startDate || dto.endDate || dto.period) {
       const startDate = dto.startDate || existing.startDate;
       const endDate = dto.endDate || existing.endDate;
-      const period = dto.period || existing.period;
+      const period = dto.period || existing.period as any;
 
       const overlapping = await this.prisma.budget.findFirst({
         where: {
           spaceId,
-          period,
+          period: period as any,
           id: { not: budgetId },
           OR: [
             {
@@ -144,8 +160,8 @@ export class BudgetsService {
             },
             {
               AND: [
-                { startDate: { lte: endDate } },
-                { endDate: { gte: endDate } },
+                { startDate: { lte: endDate || undefined } },
+                { endDate: { gte: endDate || undefined } },
               ],
             },
           ],
@@ -176,7 +192,7 @@ export class BudgetsService {
       },
     });
 
-    return budget;
+    return this.transformBudgetToDto(budget);
   }
 
   async remove(
@@ -186,7 +202,16 @@ export class BudgetsService {
   ): Promise<void> {
     await this.spacesService.verifyUserAccess(userId, spaceId, 'admin');
 
-    await this.findOne(spaceId, userId, budgetId);
+    const budget = await this.prisma.budget.findFirst({
+      where: {
+        id: budgetId,
+        spaceId,
+      },
+    });
+
+    if (!budget) {
+      throw new NotFoundException('Budget not found');
+    }
 
     // Categories will be cascade deleted
     await this.prisma.budget.delete({
@@ -198,10 +223,28 @@ export class BudgetsService {
     spaceId: string,
     userId: string,
     budgetId: string,
-  ): Promise<any> {
+  ): Promise<BudgetSummaryDto> {
     await this.spacesService.verifyUserAccess(userId, spaceId, 'viewer');
 
-    const budget = await this.findOne(spaceId, userId, budgetId);
+    const budget = await this.prisma.budget.findFirst({
+      where: {
+        id: budgetId,
+        spaceId,
+      },
+      include: {
+        categories: {
+          include: {
+            _count: {
+              select: { transactions: true },
+            },
+          },
+        },
+      },
+    });
+
+    if (!budget) {
+      throw new NotFoundException('Budget not found');
+    }
 
     // Get all transactions for this budget period
     const transactions = await this.prisma.transaction.findMany({
@@ -209,7 +252,7 @@ export class BudgetsService {
         account: { spaceId },
         date: {
           gte: budget.startDate,
-          lte: budget.endDate,
+          lte: budget.endDate || undefined,
         },
         categoryId: {
           in: budget.categories.map((c) => c.id),
@@ -221,19 +264,29 @@ export class BudgetsService {
     });
 
     // Calculate totals by category
-    const categoryTotals = budget.categories.map((category) => {
+    const categoryTotals: CategorySummaryDto[] = budget.categories.map((category) => {
       const categoryTransactions = transactions.filter(
         (t) => t.categoryId === category.id,
       );
       const spent = categoryTransactions.reduce(
-        (sum, t) => sum + Math.abs(t.amount),
+        (sum, t) => sum + Math.abs(t.amount.toNumber()),
         0,
       );
-      const remaining = category.budgetedAmount - spent;
-      const percentUsed = (spent / category.budgetedAmount) * 100;
+      const budgetedAmount = category.budgetedAmount.toNumber();
+      const remaining = budgetedAmount - spent;
+      const percentUsed = budgetedAmount > 0 ? (spent / budgetedAmount) * 100 : 0;
 
       return {
-        ...category,
+        id: category.id,
+        budgetId: category.budgetId,
+        name: category.name,
+        budgetedAmount,
+        icon: category.icon,
+        color: category.color,
+        description: category.description,
+        createdAt: category.createdAt.toISOString(),
+        updatedAt: category.updatedAt.toISOString(),
+        _count: category._count,
         spent,
         remaining,
         percentUsed,
@@ -242,15 +295,22 @@ export class BudgetsService {
     });
 
     const totalBudgeted = budget.categories.reduce(
-      (sum, c) => sum + c.budgetedAmount,
+      (sum, c) => sum + c.budgetedAmount.toNumber(),
       0,
     );
     const totalSpent = categoryTotals.reduce((sum, c) => sum + c.spent, 0);
     const totalRemaining = totalBudgeted - totalSpent;
-    const totalPercentUsed = (totalSpent / totalBudgeted) * 100;
+    const totalPercentUsed = totalBudgeted > 0 ? (totalSpent / totalBudgeted) * 100 : 0;
 
     return {
-      ...budget,
+      id: budget.id,
+      spaceId: budget.spaceId,
+      name: budget.name,
+      period: budget.period,
+      startDate: budget.startDate.toISOString(),
+      endDate: budget.endDate?.toISOString() || null,
+      createdAt: budget.createdAt.toISOString(),
+      updatedAt: budget.updatedAt.toISOString(),
       categories: categoryTotals,
       summary: {
         totalBudgeted,
@@ -282,5 +342,30 @@ export class BudgetsService {
     }
     date.setDate(date.getDate() - 1); // End date is inclusive
     return date;
+  }
+
+  private transformBudgetToDto(budget: any): BudgetResponseDto {
+    return {
+      id: budget.id,
+      spaceId: budget.spaceId,
+      name: budget.name,
+      period: budget.period,
+      startDate: budget.startDate.toISOString(),
+      endDate: budget.endDate?.toISOString() || null,
+      createdAt: budget.createdAt.toISOString(),
+      updatedAt: budget.updatedAt.toISOString(),
+      categories: budget.categories?.map((category: any) => ({
+        id: category.id,
+        budgetId: category.budgetId,
+        name: category.name,
+        budgetedAmount: category.budgetedAmount.toNumber(),
+        icon: category.icon,
+        color: category.color,
+        description: category.description,
+        createdAt: category.createdAt.toISOString(),
+        updatedAt: category.updatedAt.toISOString(),
+        _count: category._count,
+      })) || [],
+    };
   }
 }

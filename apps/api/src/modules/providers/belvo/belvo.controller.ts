@@ -34,7 +34,7 @@ export class BelvoController {
     @Body() dto: CreateBelvoLinkDto,
     @Req() req: Request,
   ) {
-    return this.belvoService.createLink(spaceId, req.user.id, dto);
+    return this.belvoService.createLink(spaceId, req.user!.id, dto);
   }
 
   @Post('spaces/:spaceId/sync/:linkId')
@@ -46,8 +46,8 @@ export class BelvoController {
     @Param('linkId') linkId: string,
     @Req() req: Request,
   ) {
-    const accounts = await this.belvoService.syncAccounts(spaceId, req.user.id, linkId);
-    const transactions = await this.belvoService.syncTransactions(spaceId, req.user.id, linkId);
+    const accounts = await this.belvoService.syncAccounts(spaceId, req.user!.id, linkId);
+    const transactions = await this.belvoService.syncTransactions(spaceId, req.user!.id, linkId);
     
     return {
       accounts: accounts.length,
@@ -64,7 +64,7 @@ export class BelvoController {
     @Param('linkId') linkId: string,
     @Req() req: Request,
   ) {
-    await this.belvoService.deleteLink(req.user.id, linkId);
+    await this.belvoService.deleteLink(req.user!.id, linkId);
     return { success: true };
   }
 

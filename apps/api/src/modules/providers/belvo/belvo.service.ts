@@ -2,11 +2,9 @@ import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '@core/prisma/prisma.service';
 import { CryptoService } from '@core/crypto/crypto.service';
-import { AccountsService } from '@modules/accounts/accounts.service';
-import { TransactionsService } from '@modules/transactions/transactions.service';
 import { CreateBelvoLinkDto, BelvoWebhookDto, BelvoWebhookEvent } from './dto';
-import { Account, Transaction, Prisma } from '@prisma/client';
-import * as Belvo from 'belvo';
+import { Account, Transaction, Prisma, Currency, AccountType } from '@prisma/client';
+const { default: Belvo } = require('belvo');
 
 @Injectable()
 export class BelvoService {
@@ -17,8 +15,6 @@ export class BelvoService {
     private configService: ConfigService,
     private prisma: PrismaService,
     private cryptoService: CryptoService,
-    private accountsService: AccountsService,
-    private transactionsService: TransactionsService,
   ) {
     const secretKeyId = this.configService.get<string>('BELVO_SECRET_KEY_ID');
     const secretKeyPassword = this.configService.get<string>('BELVO_SECRET_KEY_PASSWORD');
@@ -57,12 +53,12 @@ export class BelvoService {
       );
 
       // Store encrypted link
-      const encryptedLinkId = await this.cryptoService.encrypt(link.id);
+      const encryptedLinkId = this.cryptoService.encrypt(link.id);
       await this.prisma.providerConnection.create({
         data: {
           provider: 'belvo',
           providerUserId: link.id,
-          encryptedToken: encryptedLinkId,
+          encryptedToken: JSON.stringify(encryptedLinkId),
           metadata: {
             institution: dto.institution,
             createdAt: new Date().toISOString(),
@@ -89,7 +85,7 @@ export class BelvoService {
 
   async syncAccounts(
     spaceId: string,
-    userId: string,
+    _userId: string,
     linkId: string,
     belvoAccounts?: any[],
   ): Promise<Account[]> {
@@ -105,7 +101,7 @@ export class BelvoService {
 
       const accounts: Account[] = [];
 
-      for (const belvoAccount of belvoAccounts) {
+      for (const belvoAccount of belvoAccounts!) {
         const accountType = this.mapBelvoAccountType(belvoAccount.category);
         
         // Check if account already exists
@@ -124,7 +120,7 @@ export class BelvoService {
             data: {
               name: belvoAccount.name,
               balance: belvoAccount.balance.current,
-              currency: belvoAccount.currency,
+              currency: this.mapCurrency(belvoAccount.currency),
               lastSyncedAt: new Date(),
               metadata: {
                 ...existingAccount.metadata as object,
@@ -144,7 +140,7 @@ export class BelvoService {
               name: belvoAccount.name,
               type: accountType,
               subtype: belvoAccount.type,
-              currency: belvoAccount.currency,
+              currency: this.mapCurrency(belvoAccount.currency),
               balance: belvoAccount.balance.current,
               lastSyncedAt: new Date(),
               metadata: {
@@ -167,7 +163,7 @@ export class BelvoService {
 
   async syncTransactions(
     spaceId: string,
-    userId: string,
+    _userId: string,
     linkId: string,
     dateFrom?: string,
     dateTo?: string,
@@ -222,6 +218,7 @@ export class BelvoService {
             data: {
               accountId: account.id,
               amount: belvoTx.type === 'INFLOW' ? belvoTx.amount : -belvoTx.amount,
+              currency: account.currency as Currency,
               date: new Date(belvoTx.value_date),
               description: belvoTx.description,
               merchant: belvoTx.merchant?.name || null,
@@ -320,8 +317,8 @@ export class BelvoService {
     }
   }
 
-  private mapBelvoAccountType(category: string): string {
-    const mapping: Record<string, string> = {
+  private mapBelvoAccountType(category: string): AccountType {
+    const mapping: Record<string, AccountType> = {
       'CHECKING_ACCOUNT': 'checking',
       'CREDIT_CARD': 'credit',
       'LOAN_ACCOUNT': 'other',
@@ -329,5 +326,20 @@ export class BelvoService {
       'INVESTMENT_ACCOUNT': 'investment',
     };
     return mapping[category] || 'other';
+  }
+
+  private mapCurrency(currency: string): Currency {
+    const upperCurrency = currency?.toUpperCase();
+    switch (upperCurrency) {
+      case 'MXN':
+        return Currency.MXN;
+      case 'USD':
+        return Currency.USD;
+      case 'EUR':
+        return Currency.EUR;
+      default:
+        // Default to MXN for Mexico-focused Belvo
+        return Currency.MXN;
+    }
   }
 }

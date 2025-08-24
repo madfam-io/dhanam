@@ -1,7 +1,6 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { PrismaService } from '../../core/prisma/prisma.service';
 import { SpacesService } from '../spaces/spaces.service';
-import { Category, Prisma } from '@prisma/client';
 import { CreateCategoryDto, UpdateCategoryDto } from './dto';
 
 @Injectable()
@@ -11,10 +10,10 @@ export class CategoriesService {
     private spacesService: SpacesService,
   ) {}
 
-  async findAll(spaceId: string, userId: string): Promise<Category[]> {
+  async findAll(spaceId: string, userId: string): Promise<any[]> {
     await this.spacesService.verifyUserAccess(userId, spaceId, 'viewer');
 
-    return this.prisma.category.findMany({
+    const categories = await this.prisma.category.findMany({
       where: {
         budget: { spaceId },
       },
@@ -26,13 +25,27 @@ export class CategoriesService {
       },
       orderBy: { name: 'asc' },
     });
+
+    return categories.map(category => ({
+      ...category,
+      budgetedAmount: category.budgetedAmount.toNumber(),
+      createdAt: category.createdAt.toISOString(),
+      updatedAt: category.updatedAt.toISOString(),
+      budget: {
+        ...category.budget,
+        createdAt: category.budget.createdAt.toISOString(),
+        updatedAt: category.budget.updatedAt.toISOString(),
+        startDate: category.budget.startDate.toISOString(),
+        endDate: category.budget.endDate ? category.budget.endDate.toISOString() : null,
+      },
+    }));
   }
 
   async findByBudget(
     spaceId: string,
     userId: string,
     budgetId: string,
-  ): Promise<Category[]> {
+  ): Promise<any[]> {
     await this.spacesService.verifyUserAccess(userId, spaceId, 'viewer');
 
     // Verify budget belongs to space
@@ -47,7 +60,7 @@ export class CategoriesService {
       throw new ForbiddenException('Budget not found or does not belong to this space');
     }
 
-    return this.prisma.category.findMany({
+    const categories = await this.prisma.category.findMany({
       where: { budgetId },
       include: {
         _count: {
@@ -56,13 +69,20 @@ export class CategoriesService {
       },
       orderBy: { name: 'asc' },
     });
+
+    return categories.map(category => ({
+      ...category,
+      budgetedAmount: category.budgetedAmount.toNumber(),
+      createdAt: category.createdAt.toISOString(),
+      updatedAt: category.updatedAt.toISOString(),
+    }));
   }
 
   async findOne(
     spaceId: string,
     userId: string,
     categoryId: string,
-  ): Promise<Category> {
+  ): Promise<any> {
     await this.spacesService.verifyUserAccess(userId, spaceId, 'viewer');
 
     const category = await this.prisma.category.findFirst({
@@ -82,14 +102,26 @@ export class CategoriesService {
       throw new NotFoundException('Category not found');
     }
 
-    return category;
+    return {
+      ...category,
+      budgetedAmount: category.budgetedAmount.toNumber(),
+      createdAt: category.createdAt.toISOString(),
+      updatedAt: category.updatedAt.toISOString(),
+      budget: {
+        ...category.budget,
+        createdAt: category.budget.createdAt.toISOString(),
+        updatedAt: category.budget.updatedAt.toISOString(),
+        startDate: category.budget.startDate.toISOString(),
+        endDate: category.budget.endDate ? category.budget.endDate.toISOString() : null,
+      },
+    };
   }
 
   async create(
     spaceId: string,
     userId: string,
     dto: CreateCategoryDto,
-  ): Promise<Category> {
+  ): Promise<any> {
     await this.spacesService.verifyUserAccess(userId, spaceId, 'member');
 
     // Verify budget belongs to space
@@ -121,7 +153,19 @@ export class CategoriesService {
       },
     });
 
-    return category;
+    return {
+      ...category,
+      budgetedAmount: category.budgetedAmount.toNumber(),
+      createdAt: category.createdAt.toISOString(),
+      updatedAt: category.updatedAt.toISOString(),
+      budget: {
+        ...category.budget,
+        createdAt: category.budget.createdAt.toISOString(),
+        updatedAt: category.budget.updatedAt.toISOString(),
+        startDate: category.budget.startDate.toISOString(),
+        endDate: category.budget.endDate ? category.budget.endDate.toISOString() : null,
+      },
+    };
   }
 
   async update(
@@ -129,7 +173,7 @@ export class CategoriesService {
     userId: string,
     categoryId: string,
     dto: UpdateCategoryDto,
-  ): Promise<Category> {
+  ): Promise<any> {
     await this.spacesService.verifyUserAccess(userId, spaceId, 'member');
 
     await this.findOne(spaceId, userId, categoryId);
@@ -151,7 +195,19 @@ export class CategoriesService {
       },
     });
 
-    return category;
+    return {
+      ...category,
+      budgetedAmount: category.budgetedAmount.toNumber(),
+      createdAt: category.createdAt.toISOString(),
+      updatedAt: category.updatedAt.toISOString(),
+      budget: {
+        ...category.budget,
+        createdAt: category.budget.createdAt.toISOString(),
+        updatedAt: category.budget.updatedAt.toISOString(),
+        startDate: category.budget.startDate.toISOString(),
+        endDate: category.budget.endDate ? category.budget.endDate.toISOString() : null,
+      },
+    };
   }
 
   async remove(
@@ -198,7 +254,7 @@ export class CategoriesService {
         categoryId,
         date: {
           gte: budget.startDate,
-          lte: budget.endDate,
+          ...(budget.endDate && { lte: budget.endDate }),
         },
       },
       include: {
@@ -208,39 +264,58 @@ export class CategoriesService {
     });
 
     const totalSpent = transactions.reduce(
-      (sum, t) => sum + Math.abs(t.amount),
+      (sum, t) => sum + Math.abs(t.amount.toNumber()),
       0,
     );
-    const remaining = category.budgetedAmount - totalSpent;
-    const percentUsed = (totalSpent / category.budgetedAmount) * 100;
+    const budgetedAmount = category.budgetedAmount.toNumber();
+    const remaining = budgetedAmount - totalSpent;
+    const percentUsed = (totalSpent / budgetedAmount) * 100;
 
     // Group transactions by day for spending trend
     const dailySpending = transactions.reduce((acc, transaction) => {
-      const date = transaction.date.toISOString().split('T')[0];
-      if (!acc[date]) {
-        acc[date] = 0;
+      if (!transaction.date) return acc;
+      const dateKey = transaction.date.toISOString().split('T')[0];
+      if (!dateKey) return acc;
+      if (!acc[dateKey]) {
+        acc[dateKey] = 0;
       }
-      acc[date] += Math.abs(transaction.amount);
+      acc[dateKey] += Math.abs(transaction.amount.toNumber());
       return acc;
     }, {} as Record<string, number>);
 
     return {
       ...category,
+      budgetedAmount: budgetedAmount,
+      createdAt: category.createdAt.toISOString(),
+      updatedAt: category.updatedAt.toISOString(),
+      budget: {
+        ...category.budget,
+        createdAt: category.budget.createdAt.toISOString(),
+        updatedAt: category.budget.updatedAt.toISOString(),
+        startDate: category.budget.startDate.toISOString(),
+        endDate: category.budget.endDate ? category.budget.endDate.toISOString() : null,
+      },
       spending: {
-        totalBudgeted: category.budgetedAmount,
+        totalBudgeted: budgetedAmount,
         totalSpent,
         remaining,
         percentUsed,
         transactionCount: transactions.length,
         averageTransaction: transactions.length > 0 ? totalSpent / transactions.length : 0,
       },
-      transactions: transactions.slice(0, 10), // Return last 10 transactions
+      transactions: transactions.slice(0, 10).map(t => ({
+        ...t,
+        amount: t.amount.toNumber(),
+        date: t.date ? t.date.toISOString() : null,
+        createdAt: t.createdAt.toISOString(),
+        updatedAt: t.updatedAt.toISOString(),
+      })), // Return last 10 transactions
       dailySpending,
     };
   }
 
   private generateRandomColor(): string {
-    const colors = [
+    const colors: string[] = [
       '#ef4444', // red
       '#f97316', // orange
       '#f59e0b', // amber
@@ -259,6 +334,6 @@ export class CategoriesService {
       '#ec4899', // pink
       '#f43f5e', // rose
     ];
-    return colors[Math.floor(Math.random() * colors.length)];
+    return colors[Math.floor(Math.random() * colors.length)] || '#3b82f6';
   }
 }

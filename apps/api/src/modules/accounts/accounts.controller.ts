@@ -63,7 +63,7 @@ export class AccountsController {
     @Body() dto: ConnectAccountDto,
     @Req() req: any,
   ): Promise<Account[]> {
-    const userId = req.user.id;
+    const userId = req.user!.id;
     return this.accountsService.connectAccount(spaceId, userId, dto);
   }
 

@@ -38,12 +38,12 @@ export class TwoFactorService {
     hmac.update(buffer);
     const hash = hmac.digest();
     
-    const offset = hash[hash.length - 1] & 0xf;
+    const offset = hash[hash.length - 1]! & 0xf;
     const binary = 
-      ((hash[offset] & 0x7f) << 24) |
-      ((hash[offset + 1] & 0xff) << 16) |
-      ((hash[offset + 2] & 0xff) << 8) |
-      (hash[offset + 3] & 0xff);
+      ((hash[offset]! & 0x7f) << 24) |
+      ((hash[offset + 1]! & 0xff) << 16) |
+      ((hash[offset + 2]! & 0xff) << 8) |
+      (hash[offset + 3]! & 0xff);
     
     const otp = binary % 1000000;
     return otp.toString().padStart(6, '0');
@@ -55,7 +55,7 @@ export class TwoFactorService {
     let secret = '';
     
     for (let i = 0; i < buffer.length; i++) {
-      secret += base32[buffer[i] % 32];
+      secret += base32[buffer[i]! % 32];
     }
     
     return secret;

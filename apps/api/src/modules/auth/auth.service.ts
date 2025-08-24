@@ -4,7 +4,6 @@ import {
   ConflictException,
   BadRequestException,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { Prisma } from '@prisma/client';
 
 import { PrismaService } from '@core/prisma/prisma.service';
@@ -31,7 +30,6 @@ export class AuthService {
     private twoFactorService: TwoFactorService,
     private redis: RedisService,
     private logger: LoggerService,
-    private configService: ConfigService,
   ) {}
 
   async register(dto: RegisterDto, context: AuthContext): Promise<AuthResponse> {
@@ -179,7 +177,7 @@ export class AuthService {
       
       this.logger.log(`User logged out: ${userId}`, 'AuthService');
     } catch (error) {
-      this.logger.warn(`Logout failed for user ${userId}: ${error.message}`, 'AuthService');
+      this.logger.warn(`Logout failed for user ${userId}: ${error instanceof Error ? error.message : 'Unknown error'}`, 'AuthService');
     }
   }
 

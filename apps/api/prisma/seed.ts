@@ -170,6 +170,7 @@ async function main() {
       {
         accountId: checkingAccount.id,
         amount: -1250,
+        currency: 'MXN',
         date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
         description: 'Walmart groceries',
         merchant: 'Walmart',
@@ -178,6 +179,7 @@ async function main() {
       {
         accountId: checkingAccount.id,
         amount: -850,
+        currency: 'MXN',
         date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
         description: 'Soriana weekly shopping',
         merchant: 'Soriana',
@@ -186,6 +188,7 @@ async function main() {
       {
         accountId: creditCard.id,
         amount: -450,
+        currency: 'MXN',
         date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
         description: 'OXXO snacks',
         merchant: 'OXXO',
@@ -200,6 +203,7 @@ async function main() {
       {
         accountId: checkingAccount.id,
         amount: -500,
+        currency: 'MXN',
         date: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000),
         description: 'Uber rides',
         merchant: 'Uber',
@@ -208,6 +212,7 @@ async function main() {
       {
         accountId: checkingAccount.id,
         amount: -1200,
+        currency: 'MXN',
         date: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000),
         description: 'Gasoline',
         merchant: 'Pemex',
@@ -222,6 +227,7 @@ async function main() {
       {
         accountId: creditCard.id,
         amount: -650,
+        currency: 'MXN',
         date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
         description: 'Dinner at restaurant',
         merchant: 'La Casa de Toño',
@@ -230,6 +236,7 @@ async function main() {
       {
         accountId: creditCard.id,
         amount: -250,
+        currency: 'MXN',
         date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
         description: 'Coffee',
         merchant: 'Starbucks',
@@ -243,6 +250,7 @@ async function main() {
     data: {
       accountId: checkingAccount.id,
       amount: 35000,
+      currency: 'MXN',
       date: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000),
       description: 'Salary deposit',
       merchant: 'Employer Inc',

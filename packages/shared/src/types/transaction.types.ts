@@ -1,4 +1,4 @@
-import { UUID, Currency, Money, DateRange } from './common.types';
+import { UUID, Currency, DateRange } from './common.types';
 
 export interface Transaction {
   id: UUID;

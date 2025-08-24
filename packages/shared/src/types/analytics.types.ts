@@ -108,6 +108,54 @@ export type InsightType =
   | 'category_anomaly'
   | 'cash_flow_warning';
 
+// Additional types for API compatibility
+export interface NetWorthResponse {
+  totalAssets: number;
+  totalLiabilities: number;
+  netWorth: number;
+  currency: Currency;
+  lastUpdated: string;
+  trend: Array<{
+    date: string;
+    value: number;
+  }>;
+  changePercent: number;
+  changeAmount: number;
+}
+
+export interface SpendingByCategory {
+  categoryId: UUID;
+  categoryName: string;
+  amount: number;
+  percentage: number;
+  transactionCount: number;
+  icon?: string;
+  color?: string;
+}
+
+export interface IncomeVsExpenses {
+  month: string;
+  income: number;
+  expenses: number;
+  net: number;
+}
+
+export interface AccountBalanceAnalytics {
+  accountId: UUID;
+  accountName: string;
+  accountType: string;
+  balance: number;
+  currency: Currency;
+  lastSynced?: string;
+}
+
+export interface PortfolioAllocation {
+  assetType: string;
+  value: number;
+  percentage: number;
+  accountCount: number;
+}
+
 export interface ExportRequest {
   format: 'csv' | 'xlsx' | 'pdf';
   type: 'transactions' | 'budget' | 'networth' | 'full';

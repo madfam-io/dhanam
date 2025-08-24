@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { PrismaService } from '../../core/prisma/prisma.service';
 import { SpacesService } from '../spaces/spaces.service';
 import { Transaction, Prisma } from '@prisma/client';
 import {
@@ -32,18 +32,20 @@ export class TransactionsService {
       ...(filter.maxAmount && { amount: { lte: filter.maxAmount } }),
     };
 
-    const orderBy: Prisma.TransactionOrderByWithRelationInput = {
-      [filter.sortBy]: filter.sortOrder,
-    };
+    const orderBy: Prisma.TransactionOrderByWithRelationInput = filter.sortBy
+      ? { [filter.sortBy]: filter.sortOrder || 'desc' }
+      : { date: 'desc' };
 
-    const skip = (filter.page - 1) * filter.limit;
+    const page = filter.page || 1;
+    const limit = filter.limit || 20;
+    const skip = (page - 1) * limit;
 
     const [data, total] = await Promise.all([
       this.prisma.transaction.findMany({
         where,
         orderBy,
         skip,
-        take: filter.limit,
+        take: limit,
         include: {
           account: true,
           category: true,
@@ -55,8 +57,8 @@ export class TransactionsService {
     return {
       data,
       total,
-      page: filter.page,
-      limit: filter.limit,
+      page,
+      limit,
     };
   }
 
@@ -122,6 +124,7 @@ export class TransactionsService {
       data: {
         accountId: dto.accountId,
         amount: dto.amount,
+        currency: account.currency,
         date: dto.date,
         description: dto.description,
         merchant: dto.merchant,
@@ -172,8 +175,8 @@ export class TransactionsService {
     }
 
     // Update account balance if amount changed
-    if (dto.amount !== undefined && dto.amount !== existingTransaction.amount) {
-      const difference = dto.amount - existingTransaction.amount;
+    if (dto.amount !== undefined && dto.amount !== existingTransaction.amount.toNumber()) {
+      const difference = dto.amount - existingTransaction.amount.toNumber();
       await this.prisma.account.update({
         where: { id: existingTransaction.accountId },
         data: {

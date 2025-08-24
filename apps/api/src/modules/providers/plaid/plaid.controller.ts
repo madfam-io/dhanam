@@ -4,7 +4,6 @@ import {
   Body,
   Headers,
   UseGuards,
-  Request,
   Get,
   Param,
   BadRequestException,

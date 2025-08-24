@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
-interface IntegrationStatus {
+export interface IntegrationStatus {
   name: string;
   enabled: boolean;
   configured: boolean;
@@ -70,13 +70,13 @@ export class IntegrationsService {
       const names = ['Belvo', 'Plaid', 'Bitso'];
       if (result.status === 'fulfilled') {
         return {
-          name: names[index],
+          name: names[index]!,
           status: 'healthy' as const,
           latency: result.value.latency,
         };
       } else {
         return {
-          name: names[index],
+          name: names[index]!,
           status: 'unhealthy' as const,
           error: result.reason?.message || 'Unknown error',
         };

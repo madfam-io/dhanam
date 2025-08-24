@@ -2,10 +2,8 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
-  ConflictException,
 } from '@nestjs/common';
 import { PrismaService } from '@core/prisma/prisma.service';
-import { CryptoService } from '@core/crypto/crypto.service';
 import { LoggerService } from '@core/logger/logger.service';
 import { CreateAccountDto } from './dto/create-account.dto';
 import { UpdateAccountDto } from './dto/update-account.dto';
@@ -17,7 +15,6 @@ import { v4 as uuidv4 } from 'uuid';
 export class AccountsService {
   constructor(
     private prisma: PrismaService,
-    private crypto: CryptoService,
     private logger: LoggerService,
   ) {}
 
@@ -57,8 +54,8 @@ export class AccountsService {
   }
 
   async connectAccount(
-    spaceId: string,
-    userId: string,
+    _spaceId: string,
+    _userId: string,
     dto: ConnectAccountDto,
   ): Promise<Account[]> {
     // This is a placeholder for provider integration

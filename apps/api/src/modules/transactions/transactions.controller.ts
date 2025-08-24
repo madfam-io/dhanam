@@ -34,7 +34,7 @@ export class TransactionsController {
     @Query() filter: TransactionsFilterDto,
     @Req() req: Request,
   ) {
-    return this.transactionsService.findAll(spaceId, req.user.id, filter);
+    return this.transactionsService.findAll(spaceId, req.user!.id, filter);
   }
 
   @Get(':id')
@@ -44,7 +44,7 @@ export class TransactionsController {
     @Param('id') id: string,
     @Req() req: Request,
   ) {
-    return this.transactionsService.findOne(spaceId, req.user.id, id);
+    return this.transactionsService.findOne(spaceId, req.user!.id, id);
   }
 
   @Post()
@@ -54,7 +54,7 @@ export class TransactionsController {
     @Body() createTransactionDto: CreateTransactionDto,
     @Req() req: Request,
   ) {
-    return this.transactionsService.create(spaceId, req.user.id, createTransactionDto);
+    return this.transactionsService.create(spaceId, req.user!.id, createTransactionDto);
   }
 
   @Patch(':id')
@@ -67,7 +67,7 @@ export class TransactionsController {
   ) {
     return this.transactionsService.update(
       spaceId,
-      req.user.id,
+      req.user!.id,
       id,
       updateTransactionDto,
     );
@@ -80,7 +80,7 @@ export class TransactionsController {
     @Param('id') id: string,
     @Req() req: Request,
   ) {
-    return this.transactionsService.remove(spaceId, req.user.id, id);
+    return this.transactionsService.remove(spaceId, req.user!.id, id);
   }
 
   @Post('bulk-categorize')
@@ -92,7 +92,7 @@ export class TransactionsController {
   ) {
     return this.transactionsService.bulkCategorize(
       spaceId,
-      req.user.id,
+      req.user!.id,
       body.transactionIds,
       body.categoryId,
     );

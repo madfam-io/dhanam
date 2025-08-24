@@ -5,8 +5,8 @@ import { ConfigService } from '@nestjs/config';
 export class LoggerService implements NestLoggerService {
   private readonly isDevelopment: boolean;
 
-  constructor(private configService: ConfigService) {
-    this.isDevelopment = configService.get('NODE_ENV') === 'development';
+  constructor(private readonly _configService: ConfigService) {
+    this.isDevelopment = this._configService.get('NODE_ENV') === 'development';
   }
 
   log(message: any, context?: string) {

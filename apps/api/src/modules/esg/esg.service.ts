@@ -1,5 +1,6 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../core/prisma/prisma.service';
+import { Decimal } from '@prisma/client/runtime/library';
 
 // Dhanam ESG data (based on the Dhanam package)
 const DHANAM_ESG_DATA = {
@@ -134,7 +135,7 @@ const DHANAM_ESG_DATA = {
   },
 };
 
-interface EsgScore {
+export interface EsgScore {
   symbol: string;
   assetType: 'crypto' | 'equity' | 'etf';
   environmentalScore: number;
@@ -151,15 +152,13 @@ interface EsgScore {
 
 @Injectable()
 export class EsgService {
-  private readonly logger = new Logger(EsgService.name);
-
   constructor(private readonly prisma: PrismaService) {}
 
   async getEsgScore(symbol: string, assetType = 'crypto'): Promise<EsgScore> {
     const normalizedSymbol = symbol.toUpperCase();
     
     // Check if we have data for this asset
-    const esgData = DHANAM_ESG_DATA.crypto[normalizedSymbol];
+    const esgData = DHANAM_ESG_DATA.crypto[normalizedSymbol as keyof typeof DHANAM_ESG_DATA.crypto];
     
     if (!esgData) {
       // Return default ESG score for unknown assets
@@ -245,7 +244,9 @@ export class EsgService {
     }
 
     // Calculate total portfolio value
-    const totalValue = cryptoAccounts.reduce((sum, account) => sum + account.balance, 0);
+    const totalValue = cryptoAccounts.reduce((sum, account) => {
+      return sum + (account.balance instanceof Decimal ? account.balance.toNumber() : Number(account.balance));
+    }, 0);
 
     // Get ESG scores for each holding
     const holdings = await Promise.all(
@@ -253,7 +254,8 @@ export class EsgService {
         const metadata = account.metadata as any;
         const symbol = metadata?.cryptoCurrency || 'UNKNOWN';
         const esgScore = await this.getEsgScore(symbol);
-        const weight = account.balance / totalValue;
+        const balance = account.balance instanceof Decimal ? account.balance.toNumber() : Number(account.balance);
+        const weight = balance / totalValue;
         
         return {
           symbol,

@@ -3,8 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../../core/prisma/prisma.service';
 import { CryptoService } from '../../../core/crypto/crypto.service';
 import { ConnectBitsoDto, BitsoWebhookDto } from './dto';
-import { Account } from '@dhanam/shared';
-import { Prisma } from '@prisma/client';
+import { Prisma, Account, Currency } from '@prisma/client';
 import * as crypto from 'crypto';
 import axios, { AxiosInstance } from 'axios';
 
@@ -81,11 +80,8 @@ export class BitsoService {
         .update(message)
         .digest('hex');
 
-      config.headers = {
-        ...config.headers,
-        'Authorization': `Bitso ${apiKey}:${timestamp}:${signature}`,
-        'Content-Type': 'application/json',
-      };
+      config.headers['Authorization'] = `Bitso ${apiKey}:${timestamp}:${signature}`;
+      config.headers['Content-Type'] = 'application/json';
 
       return config;
     });
@@ -111,16 +107,16 @@ export class BitsoService {
       }
 
       // Store encrypted credentials
-      const encryptedApiKey = await this.cryptoService.encrypt(dto.apiKey);
-      const encryptedApiSecret = await this.cryptoService.encrypt(dto.apiSecret);
+      const encryptedApiKey = this.cryptoService.encrypt(dto.apiKey);
+      const encryptedApiSecret = this.cryptoService.encrypt(dto.apiSecret);
       
       await this.prisma.providerConnection.create({
         data: {
           provider: 'bitso',
           providerUserId: accountInfo.client_id || crypto.randomUUID(),
-          encryptedToken: encryptedApiKey,
+          encryptedToken: JSON.stringify(encryptedApiKey),
           metadata: {
-            encryptedApiSecret,
+            encryptedApiSecret: JSON.stringify(encryptedApiSecret),
             externalId: dto.externalId,
             autoSync: dto.autoSync ?? true,
             connectedAt: new Date().toISOString(),
@@ -145,7 +141,7 @@ export class BitsoService {
       };
     } catch (error) {
       this.logger.error('Failed to connect Bitso account:', error);
-      if (error.response?.status === 401) {
+      if ((error as any).response?.status === 401) {
         throw new BadRequestException('Invalid Bitso API credentials');
       }
       throw new BadRequestException('Failed to connect Bitso account');
@@ -170,11 +166,8 @@ export class BitsoService {
         .update(message)
         .digest('hex');
 
-      config.headers = {
-        ...config.headers,
-        'Authorization': `Bitso ${apiKey}:${timestamp}:${signature}`,
-        'Content-Type': 'application/json',
-      };
+      config.headers['Authorization'] = `Bitso ${apiKey}:${timestamp}:${signature}`;
+      config.headers['Content-Type'] = 'application/json';
 
       return config;
     });
@@ -216,7 +209,7 @@ export class BitsoService {
           name: `${balance.currency.toUpperCase()} Wallet`,
           type: 'crypto' as const,
           subtype: 'crypto',
-          currency: 'USD', // Normalize to USD for portfolio tracking
+          currency: Currency.USD, // Normalize to USD for portfolio tracking
           balance: Math.round(usdValue * 100) / 100, // Round to 2 decimals
           lastSyncedAt: new Date(),
           metadata: {
@@ -231,7 +224,7 @@ export class BitsoService {
         };
 
         const account = await this.prisma.account.create({ data: accountData });
-        accounts.push(account as Account);
+        accounts.push(account);
       }
 
       return accounts;
@@ -271,7 +264,7 @@ export class BitsoService {
   private async createTransactionFromTrade(trade: BitsoTrade, clientId: string) {
     try {
       // Find the crypto account
-      const [baseCurrency] = trade.symbol.split('_');
+      const [baseCurrency = 'btc'] = trade.symbol.split('_');
       const account = await this.prisma.account.findFirst({
         where: {
           provider: 'bitso',
@@ -295,6 +288,7 @@ export class BitsoService {
           accountId: account.id,
           providerTransactionId: `bitso_trade_${trade.tid}`,
           amount: amount,
+          currency: account.currency as Currency,
           date: new Date(trade.created_at),
           description: `${trade.side.toUpperCase()} ${trade.symbol.toUpperCase()}`,
           merchant: 'Bitso Exchange',
@@ -313,7 +307,7 @@ export class BitsoService {
         },
       });
     } catch (error) {
-      if (error.code === 'P2002') {
+      if ((error as any).code === 'P2002') {
         // Transaction already exists, skip
         return;
       }
@@ -331,9 +325,9 @@ export class BitsoService {
       });
 
       for (const connection of connections) {
-        const apiKey = await this.cryptoService.decrypt(connection.encryptedToken);
-        const apiSecret = await this.cryptoService.decrypt(
-          (connection.metadata as any).encryptedApiSecret
+        const apiKey = this.cryptoService.decrypt(JSON.parse(connection.encryptedToken));
+        const apiSecret = this.cryptoService.decrypt(
+          JSON.parse((connection.metadata as any).encryptedApiSecret)
         );
         
         const client = this.createTempClient(apiKey, apiSecret);
@@ -364,7 +358,7 @@ export class BitsoService {
       throw new BadRequestException('Invalid webhook signature');
     }
 
-    const { type, tid, user, status } = webhookData;
+    const { type, tid } = webhookData;
 
     this.logger.log(`Received Bitso webhook: ${type} for transaction ${tid}`);
 
@@ -454,15 +448,15 @@ export class BitsoService {
       },
     });
 
-    const totalValue = accounts.reduce((sum, account) => sum + account.balance, 0);
+    const totalValue = accounts.reduce((sum, account) => sum + Number(account.balance), 0);
     
     const holdings = accounts.map((account) => {
       const metadata = account.metadata as any;
       return {
         currency: metadata.cryptoCurrency,
         amount: metadata.cryptoAmount,
-        value: account.balance,
-        percentage: totalValue > 0 ? (account.balance / totalValue) * 100 : 0,
+        value: Number(account.balance),
+        percentage: totalValue > 0 ? (Number(account.balance) / totalValue) * 100 : 0,
       };
     });
 

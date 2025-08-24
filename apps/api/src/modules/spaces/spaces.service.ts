@@ -28,6 +28,8 @@ export class SpacesService {
     return userSpaces.map((us) => ({
       ...us.space,
       role: us.role,
+      createdAt: us.space.createdAt.toISOString(),
+      updatedAt: us.space.updatedAt.toISOString(),
     }));
   }
 
@@ -50,6 +52,8 @@ export class SpacesService {
 
     return {
       ...space,
+      createdAt: space.createdAt.toISOString(),
+      updatedAt: space.updatedAt.toISOString(),
       role: 'owner' as SpaceRole,
     };
   }
@@ -63,7 +67,11 @@ export class SpacesService {
       throw new NotFoundException('Space not found');
     }
 
-    return space;
+    return {
+      ...space,
+      createdAt: space.createdAt.toISOString(),
+      updatedAt: space.updatedAt.toISOString(),
+    };
   }
 
   async updateSpace(spaceId: string, dto: UpdateSpaceDto): Promise<Space> {
@@ -77,7 +85,11 @@ export class SpacesService {
 
     this.logger.log(`Space updated: ${spaceId}`, 'SpacesService');
 
-    return space;
+    return {
+      ...space,
+      createdAt: space.createdAt.toISOString(),
+      updatedAt: space.updatedAt.toISOString(),
+    };
   }
 
   async deleteSpace(spaceId: string): Promise<void> {
@@ -241,5 +253,37 @@ export class SpacesService {
     });
 
     return userSpace?.role || null;
+  }
+
+  async verifyUserAccess(
+    userId: string,
+    spaceId: string,
+    requiredRole: SpaceRole,
+  ): Promise<void> {
+    const userSpace = await this.prisma.userSpace.findUnique({
+      where: {
+        userId_spaceId: { userId, spaceId },
+      },
+    });
+
+    if (!userSpace) {
+      throw new NotFoundException('Space not found or access denied');
+    }
+
+    const roleHierarchy: Record<SpaceRole, number> = {
+      owner: 4,
+      admin: 3,
+      member: 2,
+      viewer: 1,
+    };
+
+    const userRoleLevel = roleHierarchy[userSpace.role];
+    const requiredRoleLevel = roleHierarchy[requiredRole];
+
+    if (userRoleLevel < requiredRoleLevel) {
+      throw new ForbiddenException(
+        `Access denied. Required role: ${requiredRole}, user role: ${userSpace.role}`,
+      );
+    }
   }
 }
