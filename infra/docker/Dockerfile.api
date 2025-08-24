@@ -1,0 +1,50 @@
+# Build stage
+FROM node:20-alpine AS builder
+
+# Install pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+WORKDIR /app
+
+# Copy workspace config files
+COPY package.json pnpm-workspace.yaml turbo.json ./
+COPY packages/config/package.json ./packages/config/
+COPY packages/shared/package.json ./packages/shared/
+COPY apps/api/package.json ./apps/api/
+
+# Install dependencies
+RUN pnpm install --frozen-lockfile
+
+# Copy source code
+COPY packages ./packages
+COPY apps/api ./apps/api
+
+# Build packages and API
+RUN pnpm turbo build --filter=@dhanam/api...
+
+# Prune dev dependencies
+RUN pnpm prune --prod
+
+# Production stage
+FROM node:20-alpine AS runner
+
+RUN apk add --no-cache dumb-init
+
+WORKDIR /app
+
+# Copy built application
+COPY --from=builder /app/apps/api/dist ./dist
+COPY --from=builder /app/apps/api/package.json ./
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/apps/api/node_modules ./node_modules
+
+# Create non-root user
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nestjs -u 1001
+
+USER nestjs
+
+EXPOSE 4000
+
+ENTRYPOINT ["dumb-init", "--"]
+CMD ["node", "dist/main.js"]

@@ -1,0 +1,339 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enums
+enum SpaceType {
+  personal
+  business
+}
+
+enum SpaceRole {
+  owner
+  admin
+  member
+  viewer
+}
+
+enum AccountType {
+  checking
+  savings
+  credit
+  investment
+  crypto
+  other
+}
+
+enum Provider {
+  belvo
+  plaid
+  bitso
+  manual
+}
+
+enum ConnectionStatus {
+  active
+  error
+  syncing
+  disconnected
+}
+
+enum BudgetPeriod {
+  monthly
+  quarterly
+  yearly
+}
+
+enum Currency {
+  MXN
+  USD
+  EUR
+}
+
+// Models
+model User {
+  id               String        @id @default(uuid())
+  email            String        @unique
+  passwordHash     String        @map("password_hash")
+  name             String
+  locale           String        @default("es")
+  timezone         String        @default("America/Mexico_City")
+  totpSecret       String?       @map("totp_secret")
+  totpEnabled      Boolean       @default(false) @map("totp_enabled")
+  emailVerified    Boolean       @default(false) @map("email_verified")
+  createdAt        DateTime      @default(now()) @map("created_at")
+  updatedAt        DateTime      @updatedAt @map("updated_at")
+
+  // Relations
+  userSpaces       UserSpace[]
+  sessions         Session[]
+  auditLogs        AuditLog[]
+
+  @@map("users")
+}
+
+model Session {
+  id               String        @id @default(uuid())
+  userId           String        @map("user_id")
+  tokenFamily      String        @unique @map("token_family")
+  refreshTokenHash String        @map("refresh_token_hash")
+  expiresAt        DateTime      @map("expires_at")
+  createdAt        DateTime      @default(now()) @map("created_at")
+  updatedAt        DateTime      @updatedAt @map("updated_at")
+
+  // Relations
+  user             User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([tokenFamily])
+  @@map("sessions")
+}
+
+model Space {
+  id               String        @id @default(uuid())
+  name             String
+  type             SpaceType
+  currency         Currency      @default(MXN)
+  createdAt        DateTime      @default(now()) @map("created_at")
+  updatedAt        DateTime      @updatedAt @map("updated_at")
+
+  // Relations
+  userSpaces       UserSpace[]
+  accounts         Account[]
+  categories       Category[]
+  budgets          Budget[]
+  transactionRules TransactionRule[]
+
+  @@map("spaces")
+}
+
+model UserSpace {
+  userId           String        @map("user_id")
+  spaceId          String        @map("space_id")
+  role             SpaceRole
+  createdAt        DateTime      @default(now()) @map("created_at")
+
+  // Relations
+  user             User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  space            Space         @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+
+  @@id([userId, spaceId])
+  @@map("user_spaces")
+}
+
+model Account {
+  id                    String            @id @default(uuid())
+  spaceId               String            @map("space_id")
+  provider              Provider
+  providerAccountId     String?           @map("provider_account_id")
+  name                  String
+  type                  AccountType
+  subtype               String?
+  currency              Currency
+  balance               Decimal           @default(0) @db.Decimal(19, 4)
+  encryptedCredentials  Json?             @map("encrypted_credentials")
+  lastSyncedAt          DateTime?         @map("last_synced_at")
+  createdAt             DateTime          @default(now()) @map("created_at")
+  updatedAt             DateTime          @updatedAt @map("updated_at")
+
+  // Relations
+  space                 Space             @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  transactions          Transaction[]
+  assetValuations       AssetValuation[]
+  esgScores             ESGScore[]
+  connection            Connection?
+
+  @@unique([spaceId, provider, providerAccountId])
+  @@index([spaceId])
+  @@map("accounts")
+}
+
+model Connection {
+  id               String            @id @default(uuid())
+  accountId        String            @unique @map("account_id")
+  status           ConnectionStatus
+  error            String?
+  metadata         Json?
+  createdAt        DateTime          @default(now()) @map("created_at")
+  updatedAt        DateTime          @updatedAt @map("updated_at")
+
+  // Relations
+  account          Account           @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@map("connections")
+}
+
+model Transaction {
+  id                    String        @id @default(uuid())
+  accountId             String        @map("account_id")
+  providerTransactionId String?       @map("provider_transaction_id")
+  amount                Decimal       @db.Decimal(19, 4)
+  currency              Currency
+  description           String
+  categoryId            String?       @map("category_id")
+  date                  DateTime      @db.Date
+  pending               Boolean       @default(false)
+  metadata              Json?
+  createdAt             DateTime      @default(now()) @map("created_at")
+  updatedAt             DateTime      @updatedAt @map("updated_at")
+
+  // Relations
+  account               Account       @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  category              Category?     @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  @@unique([accountId, providerTransactionId])
+  @@index([accountId, date(sort: Desc)])
+  @@index([categoryId])
+  @@map("transactions")
+}
+
+model Category {
+  id               String        @id @default(uuid())
+  spaceId          String        @map("space_id")
+  name             String
+  icon             String?
+  color            String?
+  parentId         String?       @map("parent_id")
+  createdAt        DateTime      @default(now()) @map("created_at")
+  updatedAt        DateTime      @updatedAt @map("updated_at")
+
+  // Relations
+  space            Space         @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  parent           Category?     @relation("CategoryParent", fields: [parentId], references: [id], onDelete: Cascade)
+  children         Category[]    @relation("CategoryParent")
+  transactions     Transaction[]
+  budgetCategories BudgetCategory[]
+  transactionRules TransactionRule[]
+
+  @@unique([spaceId, name])
+  @@index([spaceId])
+  @@map("categories")
+}
+
+model TransactionRule {
+  id               String        @id @default(uuid())
+  spaceId          String        @map("space_id")
+  name             String
+  conditions       Json
+  categoryId       String        @map("category_id")
+  priority         Int           @default(0)
+  enabled          Boolean       @default(true)
+  createdAt        DateTime      @default(now()) @map("created_at")
+  updatedAt        DateTime      @updatedAt @map("updated_at")
+
+  // Relations
+  space            Space         @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  category         Category      @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@index([spaceId, enabled])
+  @@map("transaction_rules")
+}
+
+model Budget {
+  id               String            @id @default(uuid())
+  spaceId          String            @map("space_id")
+  name             String
+  period           BudgetPeriod
+  startDate        DateTime          @map("start_date") @db.Date
+  endDate          DateTime?         @map("end_date") @db.Date
+  createdAt        DateTime          @default(now()) @map("created_at")
+  updatedAt        DateTime          @updatedAt @map("updated_at")
+
+  // Relations
+  space            Space             @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  categories       BudgetCategory[]
+
+  @@index([spaceId])
+  @@map("budgets")
+}
+
+model BudgetCategory {
+  budgetId         String        @map("budget_id")
+  categoryId       String        @map("category_id")
+  amount           Decimal       @db.Decimal(19, 4)
+  alertThreshold   Decimal       @default(80.00) @map("alert_threshold") @db.Decimal(5, 2)
+
+  // Relations
+  budget           Budget        @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+  category         Category      @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([budgetId, categoryId])
+  @@map("budget_categories")
+}
+
+model AssetValuation {
+  id               String        @id @default(uuid())
+  accountId        String        @map("account_id")
+  date             DateTime      @db.Date
+  value            Decimal       @db.Decimal(19, 4)
+  currency         Currency
+  createdAt        DateTime      @default(now()) @map("created_at")
+
+  // Relations
+  account          Account       @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@unique([accountId, date])
+  @@index([accountId, date(sort: Desc)])
+  @@map("asset_valuations")
+}
+
+model ESGScore {
+  id                  String        @id @default(uuid())
+  accountId           String        @map("account_id")
+  assetSymbol         String        @map("asset_symbol")
+  environmentalScore  Decimal?      @map("environmental_score") @db.Decimal(5, 2)
+  socialScore         Decimal?      @map("social_score") @db.Decimal(5, 2)
+  governanceScore     Decimal?      @map("governance_score") @db.Decimal(5, 2)
+  compositeScore      Decimal?      @map("composite_score") @db.Decimal(5, 2)
+  calculatedAt        DateTime      @map("calculated_at")
+  metadata            Json?
+  createdAt           DateTime      @default(now()) @map("created_at")
+
+  // Relations
+  account             Account       @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId, calculatedAt(sort: Desc)])
+  @@map("esg_scores")
+}
+
+model AuditLog {
+  id               String        @id @default(uuid())
+  userId           String?       @map("user_id")
+  action           String
+  resourceType     String        @map("resource_type")
+  resourceId       String?       @map("resource_id")
+  changes          Json?
+  ipAddress        String?       @map("ip_address")
+  userAgent        String?       @map("user_agent")
+  createdAt        DateTime      @default(now()) @map("created_at")
+
+  // Relations
+  user             User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId, action, createdAt(sort: Desc)])
+  @@index([resourceType, resourceId])
+  @@map("audit_logs")
+}
+
+model WebhookEvent {
+  id               String        @id @default(uuid())
+  provider         Provider
+  eventType        String        @map("event_type")
+  payload          Json
+  signature        String
+  processed        Boolean       @default(false)
+  error            String?
+  createdAt        DateTime      @default(now()) @map("created_at")
+  processedAt      DateTime?     @map("processed_at")
+
+  @@index([provider, processed, createdAt])
+  @@map("webhook_events")
+}

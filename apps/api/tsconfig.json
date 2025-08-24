@@ -1,0 +1,15 @@
+{
+  "extends": "@dhanam/config/typescript/nestjs.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "outDir": "./dist",
+    "paths": {
+      "~/*": ["./src/*"],
+      "@modules/*": ["./src/modules/*"],
+      "@core/*": ["./src/core/*"],
+      "@shared/*": ["./src/shared/*"]
+    }
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "test", "**/*spec.ts"]
+}

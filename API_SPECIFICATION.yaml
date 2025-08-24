@@ -1,0 +1,1197 @@
+openapi: 3.0.0
+info:
+  title: Dhanam Ledger API
+  version: 1.0.0
+  description: Comprehensive financial management API for personal and business budgeting
+  contact:
+    name: Dhanam Support
+    email: support@dhanam.app
+  license:
+    name: MIT
+
+servers:
+  - url: https://api.dhanam.app/v1
+    description: Production server
+  - url: https://staging-api.dhanam.app/v1
+    description: Staging server
+  - url: http://localhost:4000/v1
+    description: Local development
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Authentication
+    description: User authentication and session management
+  - name: Users
+    description: User profile management
+  - name: Spaces
+    description: Multi-tenant space management
+  - name: Accounts
+    description: Financial account management
+  - name: Transactions
+    description: Transaction operations
+  - name: Categories
+    description: Category and rule management
+  - name: Budgets
+    description: Budget management
+  - name: Analytics
+    description: Financial analytics and reporting
+  - name: Integrations
+    description: External provider integrations
+
+paths:
+  # Authentication
+  /auth/register:
+    post:
+      tags: [Authentication]
+      summary: Register new user
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password, name]
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  minLength: 8
+                name:
+                  type: string
+                locale:
+                  type: string
+                  enum: [en, es]
+                  default: es
+                timezone:
+                  type: string
+                  default: America/Mexico_City
+      responses:
+        201:
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        409:
+          $ref: '#/components/responses/Conflict'
+
+  /auth/login:
+    post:
+      tags: [Authentication]
+      summary: Login user
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                totpCode:
+                  type: string
+                  description: Required if 2FA is enabled
+      responses:
+        200:
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/refresh:
+    post:
+      tags: [Authentication]
+      summary: Refresh access token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refreshToken]
+              properties:
+                refreshToken:
+                  type: string
+      responses:
+        200:
+          description: Token refreshed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/2fa/setup:
+    post:
+      tags: [Authentication]
+      summary: Setup 2FA
+      responses:
+        200:
+          description: 2FA setup initiated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  secret:
+                    type: string
+                  qrCode:
+                    type: string
+                    description: Base64 encoded QR code image
+
+  # User Management
+  /users/me:
+    get:
+      tags: [Users]
+      summary: Get current user profile
+      responses:
+        200:
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+    patch:
+      tags: [Users]
+      summary: Update user profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                locale:
+                  type: string
+                timezone:
+                  type: string
+      responses:
+        200:
+          description: Profile updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+  # Spaces
+  /spaces:
+    get:
+      tags: [Spaces]
+      summary: List user spaces
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        200:
+          description: List of spaces
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedSpaces'
+
+    post:
+      tags: [Spaces]
+      summary: Create new space
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, type]
+              properties:
+                name:
+                  type: string
+                type:
+                  type: string
+                  enum: [personal, business]
+                currency:
+                  type: string
+                  enum: [MXN, USD, EUR]
+                  default: MXN
+      responses:
+        201:
+          description: Space created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Space'
+
+  /spaces/{spaceId}:
+    get:
+      tags: [Spaces]
+      summary: Get space details
+      parameters:
+        - $ref: '#/components/parameters/SpaceIdParam'
+      responses:
+        200:
+          description: Space details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Space'
+        404:
+          $ref: '#/components/responses/NotFound'
+
+  # Accounts
+  /spaces/{spaceId}/accounts:
+    get:
+      tags: [Accounts]
+      summary: List accounts in space
+      parameters:
+        - $ref: '#/components/parameters/SpaceIdParam'
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [checking, savings, credit, investment, crypto]
+      responses:
+        200:
+          description: List of accounts
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Account'
+
+    post:
+      tags: [Accounts]
+      summary: Add manual account
+      parameters:
+        - $ref: '#/components/parameters/SpaceIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, type, currency, balance]
+              properties:
+                name:
+                  type: string
+                type:
+                  type: string
+                  enum: [checking, savings, credit, investment, crypto, other]
+                subtype:
+                  type: string
+                currency:
+                  type: string
+                balance:
+                  type: number
+      responses:
+        201:
+          description: Account created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+
+  /spaces/{spaceId}/accounts/{accountId}/sync:
+    post:
+      tags: [Accounts]
+      summary: Sync account data
+      parameters:
+        - $ref: '#/components/parameters/SpaceIdParam'
+        - $ref: '#/components/parameters/AccountIdParam'
+      responses:
+        200:
+          description: Sync initiated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  jobId:
+                    type: string
+                  status:
+                    type: string
+                    enum: [pending, processing, completed, failed]
+
+  # Transactions
+  /spaces/{spaceId}/transactions:
+    get:
+      tags: [Transactions]
+      summary: List transactions
+      parameters:
+        - $ref: '#/components/parameters/SpaceIdParam'
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - name: accountId
+          in: query
+          schema:
+            type: string
+        - name: categoryId
+          in: query
+          schema:
+            type: string
+        - name: startDate
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        200:
+          description: List of transactions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedTransactions'
+
+    post:
+      tags: [Transactions]
+      summary: Create manual transaction
+      parameters:
+        - $ref: '#/components/parameters/SpaceIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, amount, date, description]
+              properties:
+                accountId:
+                  type: string
+                amount:
+                  type: number
+                currency:
+                  type: string
+                description:
+                  type: string
+                categoryId:
+                  type: string
+                date:
+                  type: string
+                  format: date
+                pending:
+                  type: boolean
+                  default: false
+      responses:
+        201:
+          description: Transaction created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+
+  /spaces/{spaceId}/transactions/bulk:
+    post:
+      tags: [Transactions]
+      summary: Bulk transaction operations
+      parameters:
+        - $ref: '#/components/parameters/SpaceIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [operation, transactionIds]
+              properties:
+                operation:
+                  type: string
+                  enum: [categorize, delete]
+                transactionIds:
+                  type: array
+                  items:
+                    type: string
+                categoryId:
+                  type: string
+                  description: Required for categorize operation
+      responses:
+        200:
+          description: Bulk operation completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  affected:
+                    type: integer
+                  results:
+                    type: array
+                    items:
+                      type: object
+
+  # Categories
+  /spaces/{spaceId}/categories:
+    get:
+      tags: [Categories]
+      summary: List categories
+      parameters:
+        - $ref: '#/components/parameters/SpaceIdParam'
+      responses:
+        200:
+          description: List of categories
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Category'
+
+    post:
+      tags: [Categories]
+      summary: Create category
+      parameters:
+        - $ref: '#/components/parameters/SpaceIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                icon:
+                  type: string
+                color:
+                  type: string
+                  pattern: '^#[0-9A-Fa-f]{6}$'
+                parentId:
+                  type: string
+      responses:
+        201:
+          description: Category created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+
+  # Transaction Rules
+  /spaces/{spaceId}/rules:
+    get:
+      tags: [Categories]
+      summary: List transaction rules
+      parameters:
+        - $ref: '#/components/parameters/SpaceIdParam'
+      responses:
+        200:
+          description: List of rules
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TransactionRule'
+
+    post:
+      tags: [Categories]
+      summary: Create transaction rule
+      parameters:
+        - $ref: '#/components/parameters/SpaceIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, conditions, categoryId]
+              properties:
+                name:
+                  type: string
+                conditions:
+                  type: object
+                  properties:
+                    description:
+                      type: object
+                      properties:
+                        contains:
+                          type: string
+                        regex:
+                          type: string
+                    amount:
+                      type: object
+                      properties:
+                        min:
+                          type: number
+                        max:
+                          type: number
+                    merchant:
+                      type: string
+                categoryId:
+                  type: string
+                priority:
+                  type: integer
+                  minimum: 0
+                  default: 0
+                enabled:
+                  type: boolean
+                  default: true
+      responses:
+        201:
+          description: Rule created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionRule'
+
+  # Budgets
+  /spaces/{spaceId}/budgets:
+    get:
+      tags: [Budgets]
+      summary: List budgets
+      parameters:
+        - $ref: '#/components/parameters/SpaceIdParam'
+        - name: active
+          in: query
+          schema:
+            type: boolean
+      responses:
+        200:
+          description: List of budgets
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Budget'
+
+    post:
+      tags: [Budgets]
+      summary: Create budget
+      parameters:
+        - $ref: '#/components/parameters/SpaceIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, period, startDate, categories]
+              properties:
+                name:
+                  type: string
+                period:
+                  type: string
+                  enum: [monthly, quarterly, yearly]
+                startDate:
+                  type: string
+                  format: date
+                endDate:
+                  type: string
+                  format: date
+                categories:
+                  type: array
+                  items:
+                    type: object
+                    required: [categoryId, amount]
+                    properties:
+                      categoryId:
+                        type: string
+                      amount:
+                        type: number
+                        minimum: 0
+                      alertThreshold:
+                        type: number
+                        minimum: 0
+                        maximum: 100
+                        default: 80
+      responses:
+        201:
+          description: Budget created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Budget'
+
+  # Analytics
+  /spaces/{spaceId}/analytics/cashflow:
+    get:
+      tags: [Analytics]
+      summary: Get cashflow forecast
+      parameters:
+        - $ref: '#/components/parameters/SpaceIdParam'
+        - name: days
+          in: query
+          schema:
+            type: integer
+            minimum: 7
+            maximum: 90
+            default: 60
+      responses:
+        200:
+          description: Cashflow forecast
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  forecast:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        date:
+                          type: string
+                          format: date
+                        income:
+                          type: number
+                        expenses:
+                          type: number
+                        balance:
+                          type: number
+                  summary:
+                    type: object
+                    properties:
+                      currentBalance:
+                        type: number
+                      projectedBalance:
+                        type: number
+                      totalIncome:
+                        type: number
+                      totalExpenses:
+                        type: number
+
+  /spaces/{spaceId}/analytics/networth:
+    get:
+      tags: [Analytics]
+      summary: Get net worth history
+      parameters:
+        - $ref: '#/components/parameters/SpaceIdParam'
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [1M, 3M, 6M, 1Y, ALL]
+            default: 1Y
+      responses:
+        200:
+          description: Net worth history
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  history:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        date:
+                          type: string
+                          format: date
+                        assets:
+                          type: number
+                        liabilities:
+                          type: number
+                        netWorth:
+                          type: number
+                  current:
+                    type: object
+                    properties:
+                      assets:
+                        type: number
+                      liabilities:
+                        type: number
+                      netWorth:
+                        type: number
+                      change:
+                        type: object
+                        properties:
+                          amount:
+                            type: number
+                          percentage:
+                            type: number
+
+  /spaces/{spaceId}/analytics/esg:
+    get:
+      tags: [Analytics]
+      summary: Get ESG scores for crypto assets
+      parameters:
+        - $ref: '#/components/parameters/SpaceIdParam'
+      responses:
+        200:
+          description: ESG scores
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  portfolioScore:
+                    type: object
+                    properties:
+                      environmental:
+                        type: number
+                        minimum: 0
+                        maximum: 100
+                      social:
+                        type: number
+                        minimum: 0
+                        maximum: 100
+                      governance:
+                        type: number
+                        minimum: 0
+                        maximum: 100
+                      composite:
+                        type: number
+                        minimum: 0
+                        maximum: 100
+                  assets:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        symbol:
+                          type: string
+                        name:
+                          type: string
+                        value:
+                          type: number
+                        weight:
+                          type: number
+                        scores:
+                          type: object
+                          properties:
+                            environmental:
+                              type: number
+                            social:
+                              type: number
+                            governance:
+                              type: number
+                            composite:
+                              type: number
+
+  # Provider Integrations
+  /integrations/belvo/connect:
+    post:
+      tags: [Integrations]
+      summary: Connect Belvo account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [spaceId, linkToken]
+              properties:
+                spaceId:
+                  type: string
+                linkToken:
+                  type: string
+                  description: Token from Belvo Link flow
+      responses:
+        201:
+          description: Connection established
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  connectionId:
+                    type: string
+                  accounts:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Account'
+
+  /integrations/webhook/{provider}:
+    post:
+      tags: [Integrations]
+      summary: Provider webhook endpoint
+      security: []
+      parameters:
+        - name: provider
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [belvo, plaid, bitso]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        200:
+          description: Webhook processed
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    SpaceIdParam:
+      name: spaceId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    AccountIdParam:
+      name: accountId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    PageParam:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+
+    LimitParam:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        locale:
+          type: string
+        timezone:
+          type: string
+        totpEnabled:
+          type: boolean
+        emailVerified:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    Space:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        type:
+          type: string
+          enum: [personal, business]
+        currency:
+          type: string
+        role:
+          type: string
+          enum: [owner, admin, member, viewer]
+        createdAt:
+          type: string
+          format: date-time
+
+    Account:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        spaceId:
+          type: string
+          format: uuid
+        provider:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+        subtype:
+          type: string
+        currency:
+          type: string
+        balance:
+          type: number
+        lastSyncedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+
+    Transaction:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        accountId:
+          type: string
+          format: uuid
+        amount:
+          type: number
+        currency:
+          type: string
+        description:
+          type: string
+        category:
+          $ref: '#/components/schemas/Category'
+        date:
+          type: string
+          format: date
+        pending:
+          type: boolean
+        metadata:
+          type: object
+        createdAt:
+          type: string
+          format: date-time
+
+    Category:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        icon:
+          type: string
+        color:
+          type: string
+        parentId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+
+    TransactionRule:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        conditions:
+          type: object
+        categoryId:
+          type: string
+          format: uuid
+        priority:
+          type: integer
+        enabled:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    Budget:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        period:
+          type: string
+          enum: [monthly, quarterly, yearly]
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        categories:
+          type: array
+          items:
+            type: object
+            properties:
+              category:
+                $ref: '#/components/schemas/Category'
+              budgeted:
+                type: number
+              spent:
+                type: number
+              remaining:
+                type: number
+              percentUsed:
+                type: number
+              alertThreshold:
+                type: number
+        totalBudgeted:
+          type: number
+        totalSpent:
+          type: number
+        totalRemaining:
+          type: number
+        createdAt:
+          type: string
+          format: date-time
+
+    AuthResponse:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        tokens:
+          type: object
+          properties:
+            accessToken:
+              type: string
+            refreshToken:
+              type: string
+            expiresIn:
+              type: integer
+
+    PaginatedSpaces:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Space'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    PaginatedTransactions:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Transaction'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+        limit:
+          type: integer
+        total:
+          type: integer
+        pages:
+          type: integer
+        hasNext:
+          type: boolean
+        hasPrev:
+          type: boolean
+
+    ApiError:
+      type: object
+      properties:
+        success:
+          type: boolean
+          default: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: array
+              items:
+                type: object
+        meta:
+          type: object
+          properties:
+            timestamp:
+              type: string
+              format: date-time
+            requestId:
+              type: string
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+
+    Conflict:
+      description: Resource conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'

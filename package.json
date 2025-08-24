@@ -1,0 +1,32 @@
+{
+  "name": "dhanam",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Comprehensive budget and wealth tracking for LATAM",
+  "author": "Dhanam Team",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "packageManager": "pnpm@8.6.7",
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "test": "turbo test",
+    "lint": "turbo lint",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "clean": "turbo clean && rm -rf node_modules",
+    "db:generate": "turbo db:generate",
+    "db:push": "turbo db:push",
+    "db:seed": "turbo db:seed",
+    "dev:infra": "docker compose -f infra/docker/docker-compose.yml up -d",
+    "dev:infra:down": "docker compose -f infra/docker/docker-compose.yml down"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "prettier": "^3.2.0",
+    "turbo": "^2.0.0",
+    "typescript": "^5.3.0"
+  }
+}

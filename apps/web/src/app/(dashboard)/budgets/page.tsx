@@ -1,0 +1,376 @@
+'use client';
+
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@dhanam/ui/card';
+import { Button } from '@dhanam/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@dhanam/ui/dialog';
+import { Badge } from '@dhanam/ui/badge';
+import { Input } from '@dhanam/ui/input';
+import { Label } from '@dhanam/ui/label';
+import { Progress } from '@dhanam/ui/progress';
+import { Plus, MoreVertical, Loader2, PiggyBank, TrendingUp, AlertCircle } from 'lucide-react';
+import { useSpaceStore } from '@/stores/space';
+import { budgetsApi } from '@/lib/api/budgets';
+import { categoriesApi } from '@/lib/api/categories';
+import { Budget, Category, BudgetPeriod } from '@dhanam/shared';
+import { formatCurrency, formatDate } from '@/lib/utils';
+import { toast } from 'sonner';
+
+export default function BudgetsPage() {
+  const { currentSpace } = useSpaceStore();
+  const queryClient = useQueryClient();
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [selectedBudget, setSelectedBudget] = useState<Budget | null>(null);
+  const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
+
+  const { data: budgets, isLoading } = useQuery({
+    queryKey: ['budgets', currentSpace?.id],
+    queryFn: () => budgetsApi.getBudgets(currentSpace!.id),
+    enabled: !!currentSpace,
+  });
+
+  const { data: budgetSummary } = useQuery({
+    queryKey: ['budget-summary', currentSpace?.id, selectedBudget?.id],
+    queryFn: () => budgetsApi.getBudgetSummary(currentSpace!.id, selectedBudget!.id),
+    enabled: !!currentSpace && !!selectedBudget,
+  });
+
+  const createBudgetMutation = useMutation({
+    mutationFn: (data: Parameters<typeof budgetsApi.createBudget>[1]) =>
+      budgetsApi.createBudget(currentSpace!.id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['budgets', currentSpace?.id] });
+      setIsCreateOpen(false);
+      toast.success('Budget created successfully');
+    },
+    onError: () => {
+      toast.error('Failed to create budget');
+    },
+  });
+
+  const createCategoryMutation = useMutation({
+    mutationFn: (data: Parameters<typeof categoriesApi.createCategory>[1]) =>
+      categoriesApi.createCategory(currentSpace!.id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['budgets', currentSpace?.id] });
+      queryClient.invalidateQueries({ queryKey: ['budget-summary', currentSpace?.id, selectedBudget?.id] });
+      setIsAddCategoryOpen(false);
+      toast.success('Category added successfully');
+    },
+    onError: () => {
+      toast.error('Failed to add category');
+    },
+  });
+
+  const deleteBudgetMutation = useMutation({
+    mutationFn: (budgetId: string) =>
+      budgetsApi.deleteBudget(currentSpace!.id, budgetId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['budgets', currentSpace?.id] });
+      toast.success('Budget deleted successfully');
+    },
+    onError: () => {
+      toast.error('Failed to delete budget');
+    },
+  });
+
+  const handleCreateSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    createBudgetMutation.mutate({
+      name: formData.get('name') as string,
+      period: formData.get('period') as BudgetPeriod,
+      startDate: new Date(formData.get('startDate') as string),
+    });
+  };
+
+  const handleAddCategorySubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    createCategoryMutation.mutate({
+      budgetId: selectedBudget!.id,
+      name: formData.get('name') as string,
+      budgetedAmount: parseFloat(formData.get('budgetedAmount') as string),
+    });
+  };
+
+  if (!currentSpace) {
+    return null;
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Budgets</h1>
+          <p className="text-muted-foreground">
+            Create and manage your budgets to track spending
+          </p>
+        </div>
+        <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              Create Budget
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <form onSubmit={handleCreateSubmit}>
+              <DialogHeader>
+                <DialogTitle>Create Budget</DialogTitle>
+                <DialogDescription>
+                  Set up a new budget to track your spending
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="name">Budget Name</Label>
+                  <Input
+                    id="name"
+                    name="name"
+                    placeholder="e.g., Monthly Budget"
+                    required
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="period">Period</Label>
+                  <select
+                    id="period"
+                    name="period"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    required
+                  >
+                    <option value="monthly">Monthly</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="quarterly">Quarterly</option>
+                    <option value="yearly">Yearly</option>
+                  </select>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="startDate">Start Date</Label>
+                  <Input
+                    id="startDate"
+                    name="startDate"
+                    type="date"
+                    defaultValue={new Date().toISOString().split('T')[0]}
+                    required
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button type="submit" disabled={createBudgetMutation.isPending}>
+                  {createBudgetMutation.isPending && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  Create Budget
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      {isLoading ? (
+        <div className="flex items-center justify-center py-8">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      ) : budgets?.length === 0 ? (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-8">
+            <PiggyBank className="h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="font-semibold text-lg mb-2">No budgets yet</h3>
+            <p className="text-muted-foreground text-center mb-4">
+              Create your first budget to start tracking expenses
+            </p>
+            <Button onClick={() => setIsCreateOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Create Your First Budget
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {budgets?.map((budget) => (
+            <Card key={budget.id} className="cursor-pointer hover:shadow-lg transition-shadow"
+              onClick={() => setSelectedBudget(budget)}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  {budget.name}
+                </CardTitle>
+                <Badge variant="secondary">{budget.period}</Badge>
+              </CardHeader>
+              <CardContent>
+                <div className="text-xs text-muted-foreground mb-4">
+                  {formatDate(budget.startDate)} - {formatDate(budget.endDate)}
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>Categories</span>
+                    <span className="font-medium">{budget.categories?.length || 0}</span>
+                  </div>
+                  {budget.categories && budget.categories.length > 0 && (
+                    <div className="text-xs text-muted-foreground">
+                      Total Budget: {formatCurrency(
+                        budget.categories.reduce((sum, cat) => sum + cat.budgetedAmount, 0),
+                        currentSpace.currency
+                      )}
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      <Dialog open={!!selectedBudget} onOpenChange={(open) => !open && setSelectedBudget(null)}>
+        <DialogContent className="max-w-2xl">
+          {selectedBudget && budgetSummary && (
+            <>
+              <DialogHeader>
+                <DialogTitle>{selectedBudget.name}</DialogTitle>
+                <DialogDescription>
+                  {formatDate(selectedBudget.startDate)} - {formatDate(selectedBudget.endDate)}
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="grid grid-cols-4 gap-4">
+                  <Card>
+                    <CardContent className="pt-4">
+                      <div className="text-2xl font-bold">
+                        {formatCurrency(budgetSummary.summary.totalBudgeted, currentSpace.currency)}
+                      </div>
+                      <p className="text-xs text-muted-foreground">Total Budget</p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="pt-4">
+                      <div className="text-2xl font-bold">
+                        {formatCurrency(budgetSummary.summary.totalSpent, currentSpace.currency)}
+                      </div>
+                      <p className="text-xs text-muted-foreground">Spent</p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="pt-4">
+                      <div className="text-2xl font-bold">
+                        {formatCurrency(budgetSummary.summary.totalRemaining, currentSpace.currency)}
+                      </div>
+                      <p className="text-xs text-muted-foreground">Remaining</p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="pt-4">
+                      <div className="text-2xl font-bold">
+                        {budgetSummary.summary.totalPercentUsed.toFixed(0)}%
+                      </div>
+                      <p className="text-xs text-muted-foreground">Used</p>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <h4 className="font-medium">Categories</h4>
+                    <Button
+                      size="sm"
+                      onClick={() => setIsAddCategoryOpen(true)}
+                    >
+                      <Plus className="mr-2 h-4 w-4" />
+                      Add Category
+                    </Button>
+                  </div>
+                  {budgetSummary.categories.map((category: any) => (
+                    <Card key={category.id}>
+                      <CardContent className="pt-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <div
+                              className="w-3 h-3 rounded-full"
+                              style={{ backgroundColor: category.color }}
+                            />
+                            <span className="font-medium">{category.name}</span>
+                          </div>
+                          <Badge variant={category.percentUsed > 90 ? 'destructive' : 'secondary'}>
+                            {category.percentUsed.toFixed(0)}% used
+                          </Badge>
+                        </div>
+                        <Progress value={category.percentUsed} className="mb-2" />
+                        <div className="flex justify-between text-sm text-muted-foreground">
+                          <span>
+                            {formatCurrency(category.spent, currentSpace.currency)} spent
+                          </span>
+                          <span>
+                            {formatCurrency(category.remaining, currentSpace.currency)} remaining
+                          </span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isAddCategoryOpen} onOpenChange={setIsAddCategoryOpen}>
+        <DialogContent>
+          <form onSubmit={handleAddCategorySubmit}>
+            <DialogHeader>
+              <DialogTitle>Add Category</DialogTitle>
+              <DialogDescription>
+                Create a new spending category for this budget
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="category-name">Category Name</Label>
+                <Input
+                  id="category-name"
+                  name="name"
+                  placeholder="e.g., Groceries"
+                  required
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="budgetedAmount">Budget Amount</Label>
+                <Input
+                  id="budgetedAmount"
+                  name="budgetedAmount"
+                  type="number"
+                  step="0.01"
+                  placeholder="0.00"
+                  required
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="submit" disabled={createCategoryMutation.isPending}>
+                {createCategoryMutation.isPending && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                Add Category
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
