@@ -24,6 +24,7 @@ import {
   Building2,
   Loader2
 } from 'lucide-react';
+import { SyncStatus } from '@/components/sync/sync-status';
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -400,6 +401,9 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Sync Status */}
+      <SyncStatus spaceId={currentSpace.id} />
     </div>
   );
 }

@@ -51,4 +51,10 @@ export const budgetsApi = {
   deleteBudget: async (spaceId: string, budgetId: string): Promise<void> => {
     await apiClient.delete(`/spaces/${spaceId}/budgets/${budgetId}`);
   },
+
+  getBudgetAnalytics: async (spaceId: string, budgetId: string): Promise<any> => {
+    return apiClient.get<any>(
+      `/spaces/${spaceId}/budgets/${budgetId}/analytics`,
+    );
+  },
 };

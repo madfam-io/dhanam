@@ -22,13 +22,15 @@ import { Badge } from '@dhanam/ui';
 import { Input } from '@dhanam/ui';
 import { Label } from '@dhanam/ui';
 import { Progress } from '@dhanam/ui';
-import { Plus, Loader2, PiggyBank } from 'lucide-react';
+import { Plus, Loader2, PiggyBank, Settings } from 'lucide-react';
 import { useSpaceStore } from '@/stores/space';
 import { budgetsApi } from '@/lib/api/budgets';
 import { categoriesApi } from '@/lib/api/categories';
 import { Budget, BudgetPeriod } from '@dhanam/shared';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { toast } from 'sonner';
+import { RuleManager } from '@/components/budgets/rule-manager';
+import { BudgetAnalytics } from '@/components/budgets/budget-analytics';
 
 export default function BudgetsPage() {
   const { currentSpace } = useSpaceStore();
@@ -36,6 +38,7 @@ export default function BudgetsPage() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [selectedBudget, setSelectedBudget] = useState<Budget | null>(null);
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
+  const [isRuleManagerOpen, setIsRuleManagerOpen] = useState(false);
 
   const { data: budgets, isLoading } = useQuery({
     queryKey: ['budgets', currentSpace?.id],
@@ -110,14 +113,19 @@ export default function BudgetsPage() {
             Create and manage your budgets to track spending
           </p>
         </div>
-        <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Create Budget
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
+        <div className="flex gap-2">
+          <Button onClick={() => setIsRuleManagerOpen(true)} variant="outline">
+            <Settings className="mr-2 h-4 w-4" />
+            Manage Rules
+          </Button>
+          <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                Create Budget
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
             <form onSubmit={handleCreateSubmit}>
               <DialogHeader>
                 <DialogTitle>Create Budget</DialogTitle>
@@ -169,8 +177,9 @@ export default function BudgetsPage() {
                 </Button>
               </DialogFooter>
             </form>
-          </DialogContent>
-        </Dialog>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {isLoading ? (
@@ -227,7 +236,7 @@ export default function BudgetsPage() {
       )}
 
       <Dialog open={!!selectedBudget} onOpenChange={(open) => !open && setSelectedBudget(null)}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
           {selectedBudget && budgetSummary && (
             <>
               <DialogHeader>
@@ -236,7 +245,7 @@ export default function BudgetsPage() {
                   {formatDate(selectedBudget.startDate)} - {selectedBudget.endDate ? formatDate(selectedBudget.endDate) : 'Ongoing'}
                 </DialogDescription>
               </DialogHeader>
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <div className="grid grid-cols-4 gap-4">
                   <Card>
                     <CardContent className="pt-4">
@@ -271,6 +280,12 @@ export default function BudgetsPage() {
                     </CardContent>
                   </Card>
                 </div>
+
+                <BudgetAnalytics 
+                  spaceId={currentSpace.id}
+                  budgetId={selectedBudget.id}
+                  currency={currentSpace.currency}
+                />
 
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
@@ -359,6 +374,12 @@ export default function BudgetsPage() {
           </form>
         </DialogContent>
       </Dialog>
+
+      <RuleManager
+        open={isRuleManagerOpen}
+        onOpenChange={setIsRuleManagerOpen}
+        spaceId={currentSpace.id}
+      />
     </div>
   );
 }
