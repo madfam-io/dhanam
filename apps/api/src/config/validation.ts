@@ -15,14 +15,15 @@ export const validationSchema = Joi.object({
   
   ENCRYPTION_KEY: Joi.string().required().length(32),
   
-  BELVO_SECRET_ID: Joi.string().when('NODE_ENV', {
+  BELVO_SECRET_KEY_ID: Joi.string().when('NODE_ENV', {
     is: 'production',
     then: Joi.required(),
   }),
-  BELVO_SECRET_PASSWORD: Joi.string().when('NODE_ENV', {
+  BELVO_SECRET_KEY_PASSWORD: Joi.string().when('NODE_ENV', {
     is: 'production',
     then: Joi.required(),
   }),
+  BELVO_ENV: Joi.string().valid('sandbox', 'development', 'production').default('sandbox'),
   BELVO_WEBHOOK_SECRET: Joi.string().when('NODE_ENV', {
     is: 'production',
     then: Joi.required(),

@@ -34,6 +34,7 @@ import { accountsApi } from '@/lib/api/accounts';
 import { Account, AccountType, Currency, Provider } from '@dhanam/shared';
 import { formatCurrency } from '@/lib/utils';
 import { toast } from 'sonner';
+import { BelvoConnect } from '@/components/providers/belvo-connect';
 
 const accountTypeIcons: Record<AccountType, React.ElementType> = {
   checking: Building2,
@@ -57,6 +58,7 @@ export default function AccountsPage() {
   const [isConnectOpen, setIsConnectOpen] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
+  const [isBelvoOpen, setIsBelvoOpen] = useState(false);
 
   const { data: accounts, isLoading } = useQuery({
     queryKey: ['accounts', currentSpace?.id],
@@ -104,7 +106,20 @@ export default function AccountsPage() {
 
   const handleConnect = (provider: Exclude<Provider, 'manual'>) => {
     setSelectedProvider(provider);
-    connectMutation.mutate(provider);
+    setIsConnectOpen(false);
+    
+    // Route to appropriate provider component
+    switch (provider) {
+      case 'belvo':
+        setIsBelvoOpen(true);
+        break;
+      case 'plaid':
+        toast.error('Plaid integration coming soon');
+        break;
+      case 'bitso':
+        toast.error('Bitso integration coming soon');
+        break;
+    }
   };
 
   const handleCreateSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -331,6 +346,15 @@ export default function AccountsPage() {
           </form>
         </DialogContent>
       </Dialog>
+
+      <BelvoConnect
+        open={isBelvoOpen}
+        onOpenChange={setIsBelvoOpen}
+        spaceId={currentSpace.id}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ['accounts', currentSpace.id] });
+        }}
+      />
     </div>
   );
 }

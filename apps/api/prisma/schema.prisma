@@ -76,6 +76,7 @@ model User {
   userSpaces       UserSpace[]
   sessions         Session[]
   auditLogs        AuditLog[]
+  providerConnections ProviderConnection[]
 
   @@map("users")
 }
@@ -97,18 +98,36 @@ model Session {
   @@map("sessions")
 }
 
+model ProviderConnection {
+  id                String        @id @default(uuid())
+  userId            String        @map("user_id")
+  provider          Provider
+  providerUserId    String        @map("provider_user_id")
+  encryptedToken    String        @map("encrypted_token")
+  metadata          Json?
+  createdAt         DateTime      @default(now()) @map("created_at")
+  updatedAt         DateTime      @updatedAt @map("updated_at")
+
+  // Relations
+  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, provider, providerUserId])
+  @@index([userId])
+  @@map("provider_connections")
+}
+
 model Space {
   id               String        @id @default(uuid())
   name             String
   type             SpaceType
   currency         Currency      @default(MXN)
+  timezone         String        @default("America/Mexico_City")
   createdAt        DateTime      @default(now()) @map("created_at")
   updatedAt        DateTime      @updatedAt @map("updated_at")
 
   // Relations
   userSpaces       UserSpace[]
   accounts         Account[]
-  categories       Category[]
   budgets          Budget[]
   transactionRules TransactionRule[]
 
@@ -140,6 +159,7 @@ model Account {
   currency              Currency
   balance               Decimal           @default(0) @db.Decimal(19, 4)
   encryptedCredentials  Json?             @map("encrypted_credentials")
+  metadata              Json?
   lastSyncedAt          DateTime?         @map("last_synced_at")
   createdAt             DateTime          @default(now()) @map("created_at")
   updatedAt             DateTime          @updatedAt @map("updated_at")
@@ -178,6 +198,7 @@ model Transaction {
   amount                Decimal       @db.Decimal(19, 4)
   currency              Currency
   description           String
+  merchant              String?
   categoryId            String?       @map("category_id")
   date                  DateTime      @db.Date
   pending               Boolean       @default(false)
@@ -197,24 +218,21 @@ model Transaction {
 
 model Category {
   id               String        @id @default(uuid())
-  spaceId          String        @map("space_id")
+  budgetId         String        @map("budget_id")
   name             String
+  budgetedAmount   Decimal       @map("budgeted_amount") @db.Decimal(19, 4)
   icon             String?
   color            String?
-  parentId         String?       @map("parent_id")
+  description      String?
   createdAt        DateTime      @default(now()) @map("created_at")
   updatedAt        DateTime      @updatedAt @map("updated_at")
 
   // Relations
-  space            Space         @relation(fields: [spaceId], references: [id], onDelete: Cascade)
-  parent           Category?     @relation("CategoryParent", fields: [parentId], references: [id], onDelete: Cascade)
-  children         Category[]    @relation("CategoryParent")
+  budget           Budget        @relation(fields: [budgetId], references: [id], onDelete: Cascade)
   transactions     Transaction[]
-  budgetCategories BudgetCategory[]
-  transactionRules TransactionRule[]
 
-  @@unique([spaceId, name])
-  @@index([spaceId])
+  @@unique([budgetId, name])
+  @@index([budgetId])
   @@map("categories")
 }
 
@@ -231,7 +249,6 @@ model TransactionRule {
 
   // Relations
   space            Space         @relation(fields: [spaceId], references: [id], onDelete: Cascade)
-  category         Category      @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 
   @@index([spaceId, enabled])
   @@map("transaction_rules")
@@ -249,24 +266,10 @@ model Budget {
 
   // Relations
   space            Space             @relation(fields: [spaceId], references: [id], onDelete: Cascade)
-  categories       BudgetCategory[]
+  categories       Category[]
 
   @@index([spaceId])
   @@map("budgets")
-}
-
-model BudgetCategory {
-  budgetId         String        @map("budget_id")
-  categoryId       String        @map("category_id")
-  amount           Decimal       @db.Decimal(19, 4)
-  alertThreshold   Decimal       @default(80.00) @map("alert_threshold") @db.Decimal(5, 2)
-
-  // Relations
-  budget           Budget        @relation(fields: [budgetId], references: [id], onDelete: Cascade)
-  category         Category      @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-
-  @@id([budgetId, categoryId])
-  @@map("budget_categories")
 }
 
 model AssetValuation {

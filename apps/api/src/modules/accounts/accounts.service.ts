@@ -68,26 +68,22 @@ export class AccountsService {
       throw new BadRequestException('Invalid provider');
     }
 
-    // For now, create a mock connected account
-    const mockAccount = await this.prisma.account.create({
-      data: {
-        spaceId,
-        provider: dto.provider,
-        providerAccountId: `mock_${uuidv4()}`,
-        name: `${dto.provider} Account`,
-        type: 'checking',
-        currency: dto.provider === 'belvo' ? 'MXN' : 'USD',
-        balance: 0,
-        encryptedCredentials: {},
-      },
-    });
-
-    this.logger.log(
-      `Account connected via ${dto.provider}: ${mockAccount.id}`,
-      'AccountsService'
-    );
-
-    return [this.sanitizeAccount(mockAccount)];
+    // Route to appropriate provider
+    switch (dto.provider) {
+      case 'belvo':
+        // For Belvo, we'll need to handle this through the Belvo module
+        throw new BadRequestException(
+          'Belvo connections should be initiated through /providers/belvo/link endpoint',
+        );
+      case 'plaid':
+        // TODO: Implement Plaid integration
+        throw new BadRequestException('Plaid integration not yet implemented');
+      case 'bitso':
+        // TODO: Implement Bitso integration  
+        throw new BadRequestException('Bitso integration not yet implemented');
+      default:
+        throw new BadRequestException(`Unknown provider: ${dto.provider}`);
+    }
   }
 
   async getAccount(spaceId: string, accountId: string): Promise<Account> {
