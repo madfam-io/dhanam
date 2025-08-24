@@ -1,0 +1,97 @@
+# Copy this file to terraform.tfvars and fill in your values
+
+# Basic Configuration
+project_name = "dhanam"
+environment  = "prod"
+aws_region   = "us-east-1"
+
+# Networking
+vpc_cidr           = "10.0.0.0/16"
+availability_zones = 2
+enable_nat_gateway = true
+single_nat_gateway = false  # Set to true for dev/staging to save costs
+
+# ECS Configuration
+api_cpu           = 512
+api_memory        = 1024
+api_desired_count = 2
+api_min_count     = 2
+api_max_count     = 10
+
+web_cpu           = 256
+web_memory        = 512
+web_desired_count = 2
+
+# Database Configuration
+db_instance_class          = "db.t3.small"
+db_allocated_storage       = 20
+db_max_allocated_storage   = 100
+db_deletion_protection     = true
+db_backup_retention_period = 30
+db_multi_az                = true
+
+# Redis Configuration
+redis_node_type                = "cache.t3.micro"
+redis_num_cache_nodes          = 1
+redis_snapshot_retention_limit = 7
+
+# Security
+allowed_ips     = ["0.0.0.0/0"]  # Restrict this in production
+certificate_arn = ""  # Add your ACM certificate ARN for HTTPS
+
+# Monitoring
+enable_monitoring  = true
+log_retention_days = 30
+
+# Secrets (use strong, unique values)
+db_password    = "CHANGE_ME_STRONG_PASSWORD_32_CHARS"
+jwt_secret     = "CHANGE_ME_STRONG_SECRET_64_CHARS_MINIMUM_FOR_JWT"
+encryption_key = "CHANGE_ME_EXACTLY_33_CHARACTERS!"  # Must be exactly 33 characters
+
+# Application Environment Variables
+api_environment_variables = {
+  # Provider Credentials
+  BELVO_SECRET_KEY_ID       = "your_belvo_id"
+  BELVO_SECRET_KEY_PASSWORD = "your_belvo_password"
+  BELVO_ENV                 = "production"
+  
+  PLAID_CLIENT_ID = "your_plaid_client_id"
+  PLAID_SECRET    = "your_plaid_secret"
+  PLAID_ENV       = "production"
+  
+  BITSO_API_KEY    = "your_bitso_api_key"
+  BITSO_API_SECRET = "your_bitso_api_secret"
+  
+  # Email Configuration
+  EMAIL_FROM          = "noreply@dhanam.io"
+  SMTP_HOST           = "email-smtp.us-east-1.amazonaws.com"
+  SMTP_PORT           = "587"
+  SMTP_USER           = "your_ses_smtp_user"
+  SMTP_PASSWORD       = "your_ses_smtp_password"
+  
+  # Application Settings
+  CORS_ORIGINS           = "https://app.dhanam.io,https://www.dhanam.io"
+  SESSION_SECRET         = "CHANGE_ME_ANOTHER_STRONG_SECRET"
+  TOTP_ISSUER            = "Dhanam"
+  BANXICO_API_TOKEN      = "your_banxico_api_token"
+  POSTHOG_API_KEY        = "your_posthog_api_key"
+  ALERT_EMAIL_ADDRESSES  = "alerts@yourcompany.com,ops@yourcompany.com"
+  
+  # Feature Flags
+  ENABLE_WEBHOOKS        = "true"
+  ENABLE_2FA_ENFORCEMENT = "false"
+  ENABLE_DEMO_MODE       = "false"
+}
+
+web_environment_variables = {
+  NEXT_PUBLIC_POSTHOG_KEY  = "your_posthog_key"
+  NEXT_PUBLIC_POSTHOG_HOST = "https://app.posthog.com"
+  NEXT_PUBLIC_APP_URL      = "https://app.dhanam.io"
+  NEXT_PUBLIC_ENVIRONMENT  = "production"
+}
+
+# Auto Scaling
+scale_up_cooldown   = 60
+scale_down_cooldown = 300
+cpu_threshold_high  = 70
+cpu_threshold_low   = 20

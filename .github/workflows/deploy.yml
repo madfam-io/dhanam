@@ -1,0 +1,154 @@
+name: Deploy to AWS
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'prod'
+        type: choice
+        options:
+          - prod
+          - staging
+
+env:
+  AWS_REGION: us-east-1
+  
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+      
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+      
+      - name: Setup pnpm cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+      
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      
+      - name: Run linter
+        run: pnpm lint
+      
+      - name: Run tests
+        run: pnpm test
+        env:
+          CI: true
+
+  build-and-deploy:
+    name: Build and Deploy
+    runs-on: ubuntu-latest
+    needs: test
+    environment: ${{ github.event.inputs.environment || 'prod' }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+      
+      - name: Get Terraform outputs
+        id: terraform
+        working-directory: infra/terraform
+        run: |
+          echo "api_repository=$(terraform output -raw ecr_api_repository_url)" >> $GITHUB_OUTPUT
+          echo "web_repository=$(terraform output -raw ecr_web_repository_url)" >> $GITHUB_OUTPUT
+          echo "cluster_name=$(terraform output -raw ecs_cluster_name)" >> $GITHUB_OUTPUT
+      
+      - name: Build and push API image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t ${{ steps.terraform.outputs.api_repository }}:$IMAGE_TAG -t ${{ steps.terraform.outputs.api_repository }}:latest apps/api
+          docker push ${{ steps.terraform.outputs.api_repository }}:$IMAGE_TAG
+          docker push ${{ steps.terraform.outputs.api_repository }}:latest
+      
+      - name: Build and push Web image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t ${{ steps.terraform.outputs.web_repository }}:$IMAGE_TAG -t ${{ steps.terraform.outputs.web_repository }}:latest apps/web
+          docker push ${{ steps.terraform.outputs.web_repository }}:$IMAGE_TAG
+          docker push ${{ steps.terraform.outputs.web_repository }}:latest
+      
+      - name: Update ECS services
+        run: |
+          aws ecs update-service \
+            --cluster ${{ steps.terraform.outputs.cluster_name }} \
+            --service dhanam-${{ github.event.inputs.environment || 'prod' }}-api \
+            --force-new-deployment
+          
+          aws ecs update-service \
+            --cluster ${{ steps.terraform.outputs.cluster_name }} \
+            --service dhanam-${{ github.event.inputs.environment || 'prod' }}-web \
+            --force-new-deployment
+      
+      - name: Wait for services to stabilize
+        run: |
+          aws ecs wait services-stable \
+            --cluster ${{ steps.terraform.outputs.cluster_name }} \
+            --services dhanam-${{ github.event.inputs.environment || 'prod' }}-api dhanam-${{ github.event.inputs.environment || 'prod' }}-web
+
+  post-deployment:
+    name: Post Deployment
+    runs-on: ubuntu-latest
+    needs: build-and-deploy
+    if: success()
+    
+    steps:
+      - name: Notify success
+        uses: 8398a7/action-slack@v3
+        if: ${{ secrets.SLACK_WEBHOOK_URL }}
+        with:
+          status: success
+          text: |
+            ✅ Deployment successful!
+            Environment: ${{ github.event.inputs.environment || 'prod' }}
+            Commit: ${{ github.sha }}
+            Author: ${{ github.actor }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      
+      - name: Create deployment record
+        uses: chrnorm/deployment-action@v2
+        with:
+          token: ${{ github.token }}
+          environment: ${{ github.event.inputs.environment || 'prod' }}
+          target-url: https://app.dhanam.io
+          initial-status: success
