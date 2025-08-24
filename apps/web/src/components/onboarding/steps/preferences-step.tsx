@@ -5,12 +5,12 @@ import { useForm } from 'react-hook-form';
 import { useAuth } from '@/lib/hooks/use-auth';
 import { useOnboarding } from '../onboarding-provider';
 import { onboardingApi } from '@/lib/api/onboarding';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@dhanam/ui';
+import { Card, CardContent, CardHeader, CardTitle } from '@dhanam/ui';
+import { Label } from '@dhanam/ui';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@dhanam/ui';
+import { Switch } from '@dhanam/ui';
+import { Alert, AlertDescription } from '@dhanam/ui';
 import { SettingsIcon, GlobeIcon, DollarSignIcon, BellIcon } from 'lucide-react';
 
 interface PreferencesFormData {
@@ -48,7 +48,7 @@ export function PreferencesStep() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const { handleSubmit, watch, setValue, formState } = useForm<PreferencesFormData>({
+  const { handleSubmit, watch, setValue } = useForm<PreferencesFormData>({
     defaultValues: {
       locale: user?.locale || 'es',
       timezone: user?.timezone || 'America/Mexico_City',
@@ -70,7 +70,7 @@ export function PreferencesStep() {
     try {
       // Update preferences
       await onboardingApi.updatePreferences(data);
-      
+
       // Move to next step
       await updateStep('space_setup', { preferences: data });
     } catch (err: any) {
@@ -86,9 +86,7 @@ export function PreferencesStep() {
         <div className="w-20 h-20 bg-indigo-100 rounded-full mx-auto mb-6 flex items-center justify-center">
           <SettingsIcon className="w-10 h-10 text-indigo-600" />
         </div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">
-          Configura tus preferencias
-        </h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-4">Configura tus preferencias</h1>
         <p className="text-lg text-gray-600">
           Personaliza tu experiencia en Dhanam según tus necesidades
         </p>
@@ -271,12 +269,7 @@ export function PreferencesStep() {
         )}
 
         <div className="flex justify-center pt-4">
-          <Button
-            type="submit"
-            size="lg"
-            disabled={isLoading}
-            className="px-8"
-          >
+          <Button type="submit" size="lg" disabled={isLoading} className="px-8">
             {isLoading ? 'Guardando...' : 'Guardar y continuar'}
           </Button>
         </div>

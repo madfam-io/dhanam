@@ -1,6 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Job } from 'bullmq';
+
 import { RulesService } from '@modules/categories/rules.service';
+
 import { CategorizeTransactionsJobData } from '../queue.service';
 
 @Injectable()
@@ -11,7 +13,7 @@ export class CategorizeTransactionsProcessor {
 
   async process(job: Job<CategorizeTransactionsJobData['payload']>): Promise<any> {
     const { spaceId, transactionIds } = job.data;
-    
+
     this.logger.log(`Processing categorization job for space ${spaceId}`);
 
     try {

@@ -43,56 +43,39 @@ export interface TransactionsResponse {
 export const transactionsApi = {
   getTransactions: async (
     spaceId: string,
-    filter: TransactionsFilterDto,
+    filter: TransactionsFilterDto
   ): Promise<TransactionsResponse> => {
     return apiClient.get<TransactionsResponse>(`/spaces/${spaceId}/transactions`, filter);
   },
 
-  getTransaction: async (
-    spaceId: string,
-    transactionId: string,
-  ): Promise<Transaction> => {
-    return apiClient.get<Transaction>(
-      `/spaces/${spaceId}/transactions/${transactionId}`,
-    );
+  getTransaction: async (spaceId: string, transactionId: string): Promise<Transaction> => {
+    return apiClient.get<Transaction>(`/spaces/${spaceId}/transactions/${transactionId}`);
   },
 
-  createTransaction: async (
-    spaceId: string,
-    dto: CreateTransactionDto,
-  ): Promise<Transaction> => {
+  createTransaction: async (spaceId: string, dto: CreateTransactionDto): Promise<Transaction> => {
     return apiClient.post<Transaction>(`/spaces/${spaceId}/transactions`, dto);
   },
 
   updateTransaction: async (
     spaceId: string,
     transactionId: string,
-    dto: UpdateTransactionDto,
+    dto: UpdateTransactionDto
   ): Promise<Transaction> => {
-    return apiClient.patch<Transaction>(
-      `/spaces/${spaceId}/transactions/${transactionId}`,
-      dto,
-    );
+    return apiClient.patch<Transaction>(`/spaces/${spaceId}/transactions/${transactionId}`, dto);
   },
 
-  deleteTransaction: async (
-    spaceId: string,
-    transactionId: string,
-  ): Promise<void> => {
+  deleteTransaction: async (spaceId: string, transactionId: string): Promise<void> => {
     await apiClient.delete(`/spaces/${spaceId}/transactions/${transactionId}`);
   },
 
   bulkCategorize: async (
     spaceId: string,
     transactionIds: string[],
-    categoryId: string,
+    categoryId: string
   ): Promise<Transaction[]> => {
-    return apiClient.post<Transaction[]>(
-      `/spaces/${spaceId}/transactions/bulk-categorize`,
-      {
-        transactionIds,
-        categoryId,
-      },
-    );
+    return apiClient.post<Transaction[]>(`/spaces/${spaceId}/transactions/bulk-categorize`, {
+      transactionIds,
+      categoryId,
+    });
   },
 };

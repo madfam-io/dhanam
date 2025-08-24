@@ -1,13 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { Card } from '@dhanam/ui/components/card';
-import { Button } from '@dhanam/ui/components/button';
-import { Switch } from '@dhanam/ui/components/switch';
-import { Badge } from '@dhanam/ui/components/badge';
-import { Input } from '@dhanam/ui/components/input';
-import { Label } from '@dhanam/ui/components/label';
-import { Skeleton } from '@dhanam/ui/components/skeleton';
+import { Card } from '@dhanam/ui';
+import { Button } from '@dhanam/ui';
+import { Switch } from '@dhanam/ui';
+import { Badge } from '@dhanam/ui';
+import { Input } from '@dhanam/ui';
+import { Label } from '@dhanam/ui';
+import { Skeleton } from '@dhanam/ui';
 import { useAdmin } from '~/contexts/AdminContext';
 import { Flag, Users, Percent, Edit2, Save, X } from 'lucide-react';
 import type { FeatureFlag } from '~/lib/api/admin';
@@ -65,7 +65,7 @@ export default function FeatureFlagsPage() {
       <div className="grid gap-4">
         {featureFlags.map((flag) => {
           const isEditing = editingFlag === flag.key;
-          
+
           return (
             <Card key={flag.key} className="p-6">
               <div className="space-y-4">
@@ -80,7 +80,7 @@ export default function FeatureFlagsPage() {
                         {flag.description}
                       </p>
                       <div className="flex items-center space-x-2 mt-2">
-                        <Badge variant={flag.enabled ? 'success' : 'secondary'}>
+                        <Badge variant={flag.enabled ? 'default' : 'secondary'}>
                           {flag.enabled ? 'Enabled' : 'Disabled'}
                         </Badge>
                         {flag.rolloutPercentage !== undefined && flag.rolloutPercentage < 100 && (
@@ -98,13 +98,10 @@ export default function FeatureFlagsPage() {
                       </div>
                     </div>
                   </div>
-                  
+
                   {!isEditing && (
                     <div className="flex items-center space-x-2">
-                      <Switch
-                        checked={flag.enabled}
-                        onCheckedChange={() => handleToggle(flag)}
-                      />
+                      <Switch checked={flag.enabled} onCheckedChange={() => handleToggle(flag)} />
                       <Button
                         variant="outline"
                         size="sm"
@@ -127,7 +124,7 @@ export default function FeatureFlagsPage() {
                           <Switch
                             id={`${flag.key}-enabled`}
                             checked={editValues.enabled}
-                            onCheckedChange={(checked) => 
+                            onCheckedChange={(checked) =>
                               setEditValues({ ...editValues, enabled: checked })
                             }
                           />
@@ -136,7 +133,7 @@ export default function FeatureFlagsPage() {
                           </span>
                         </div>
                       </div>
-                      
+
                       <div>
                         <Label htmlFor={`${flag.key}-rollout`}>Rollout Percentage</Label>
                         <Input
@@ -145,10 +142,10 @@ export default function FeatureFlagsPage() {
                           min="0"
                           max="100"
                           value={editValues.rolloutPercentage || 100}
-                          onChange={(e) => 
-                            setEditValues({ 
-                              ...editValues, 
-                              rolloutPercentage: parseInt(e.target.value) 
+                          onChange={(e) =>
+                            setEditValues({
+                              ...editValues,
+                              rolloutPercentage: parseInt(e.target.value),
                             })
                           }
                           className="mt-2"
@@ -157,18 +154,20 @@ export default function FeatureFlagsPage() {
                     </div>
 
                     <div>
-                      <Label htmlFor={`${flag.key}-users`}>Targeted Users (comma-separated IDs)</Label>
+                      <Label htmlFor={`${flag.key}-users`}>
+                        Targeted Users (comma-separated IDs)
+                      </Label>
                       <Input
                         id={`${flag.key}-users`}
                         type="text"
                         value={editValues.targetedUsers?.join(', ') || ''}
-                        onChange={(e) => 
-                          setEditValues({ 
-                            ...editValues, 
+                        onChange={(e) =>
+                          setEditValues({
+                            ...editValues,
                             targetedUsers: e.target.value
                               .split(',')
-                              .map(id => id.trim())
-                              .filter(Boolean)
+                              .map((id) => id.trim())
+                              .filter(Boolean),
                           })
                         }
                         placeholder="user-id-1, user-id-2"
@@ -199,7 +198,8 @@ export default function FeatureFlagsPage() {
                 )}
 
                 <div className="text-xs text-gray-500 dark:text-gray-400">
-                  Key: <code className="bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded">
+                  Key:{' '}
+                  <code className="bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded">
                     {flag.key}
                   </code>
                   {' • '}

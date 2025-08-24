@@ -1,13 +1,15 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+
 import { PrismaService } from '../../core/prisma/prisma.service';
 import { SpacesService } from '../spaces/spaces.service';
+
 import { CreateCategoryDto, UpdateCategoryDto } from './dto';
 
 @Injectable()
 export class CategoriesService {
   constructor(
     private prisma: PrismaService,
-    private spacesService: SpacesService,
+    private spacesService: SpacesService
   ) {}
 
   async findAll(spaceId: string, userId: string): Promise<any[]> {
@@ -26,7 +28,7 @@ export class CategoriesService {
       orderBy: { name: 'asc' },
     });
 
-    return categories.map(category => ({
+    return categories.map((category) => ({
       ...category,
       budgetedAmount: category.budgetedAmount.toNumber(),
       createdAt: category.createdAt.toISOString(),
@@ -41,11 +43,7 @@ export class CategoriesService {
     }));
   }
 
-  async findByBudget(
-    spaceId: string,
-    userId: string,
-    budgetId: string,
-  ): Promise<any[]> {
+  async findByBudget(spaceId: string, userId: string, budgetId: string): Promise<any[]> {
     await this.spacesService.verifyUserAccess(userId, spaceId, 'viewer');
 
     // Verify budget belongs to space
@@ -70,7 +68,7 @@ export class CategoriesService {
       orderBy: { name: 'asc' },
     });
 
-    return categories.map(category => ({
+    return categories.map((category) => ({
       ...category,
       budgetedAmount: category.budgetedAmount.toNumber(),
       createdAt: category.createdAt.toISOString(),
@@ -78,11 +76,7 @@ export class CategoriesService {
     }));
   }
 
-  async findOne(
-    spaceId: string,
-    userId: string,
-    categoryId: string,
-  ): Promise<any> {
+  async findOne(spaceId: string, userId: string, categoryId: string): Promise<any> {
     await this.spacesService.verifyUserAccess(userId, spaceId, 'viewer');
 
     const category = await this.prisma.category.findFirst({
@@ -117,11 +111,7 @@ export class CategoriesService {
     };
   }
 
-  async create(
-    spaceId: string,
-    userId: string,
-    dto: CreateCategoryDto,
-  ): Promise<any> {
+  async create(spaceId: string, userId: string, dto: CreateCategoryDto): Promise<any> {
     await this.spacesService.verifyUserAccess(userId, spaceId, 'member');
 
     // Verify budget belongs to space
@@ -172,7 +162,7 @@ export class CategoriesService {
     spaceId: string,
     userId: string,
     categoryId: string,
-    dto: UpdateCategoryDto,
+    dto: UpdateCategoryDto
   ): Promise<any> {
     await this.spacesService.verifyUserAccess(userId, spaceId, 'member');
 
@@ -210,11 +200,7 @@ export class CategoriesService {
     };
   }
 
-  async remove(
-    spaceId: string,
-    userId: string,
-    categoryId: string,
-  ): Promise<void> {
+  async remove(spaceId: string, userId: string, categoryId: string): Promise<void> {
     await this.spacesService.verifyUserAccess(userId, spaceId, 'admin');
 
     await this.findOne(spaceId, userId, categoryId);
@@ -230,11 +216,7 @@ export class CategoriesService {
     });
   }
 
-  async getCategorySpending(
-    spaceId: string,
-    userId: string,
-    categoryId: string,
-  ): Promise<any> {
+  async getCategorySpending(spaceId: string, userId: string, categoryId: string): Promise<any> {
     await this.spacesService.verifyUserAccess(userId, spaceId, 'viewer');
 
     const category = await this.findOne(spaceId, userId, categoryId);
@@ -263,25 +245,25 @@ export class CategoriesService {
       orderBy: { date: 'desc' },
     });
 
-    const totalSpent = transactions.reduce(
-      (sum, t) => sum + Math.abs(t.amount.toNumber()),
-      0,
-    );
+    const totalSpent = transactions.reduce((sum, t) => sum + Math.abs(t.amount.toNumber()), 0);
     const budgetedAmount = category.budgetedAmount.toNumber();
     const remaining = budgetedAmount - totalSpent;
     const percentUsed = (totalSpent / budgetedAmount) * 100;
 
     // Group transactions by day for spending trend
-    const dailySpending = transactions.reduce((acc, transaction) => {
-      if (!transaction.date) return acc;
-      const dateKey = transaction.date.toISOString().split('T')[0];
-      if (!dateKey) return acc;
-      if (!acc[dateKey]) {
-        acc[dateKey] = 0;
-      }
-      acc[dateKey] += Math.abs(transaction.amount.toNumber());
-      return acc;
-    }, {} as Record<string, number>);
+    const dailySpending = transactions.reduce(
+      (acc, transaction) => {
+        if (!transaction.date) return acc;
+        const dateKey = transaction.date.toISOString().split('T')[0];
+        if (!dateKey) return acc;
+        if (!acc[dateKey]) {
+          acc[dateKey] = 0;
+        }
+        acc[dateKey] += Math.abs(transaction.amount.toNumber());
+        return acc;
+      },
+      {} as Record<string, number>
+    );
 
     return {
       ...category,
@@ -303,7 +285,7 @@ export class CategoriesService {
         transactionCount: transactions.length,
         averageTransaction: transactions.length > 0 ? totalSpent / transactions.length : 0,
       },
-      transactions: transactions.slice(0, 10).map(t => ({
+      transactions: transactions.slice(0, 10).map((t) => ({
         ...t,
         amount: t.amount.toNumber(),
         date: t.date ? t.date.toISOString() : null,

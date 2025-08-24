@@ -1,8 +1,10 @@
 import { Module } from '@nestjs/common';
-import { PreferencesService } from './preferences.service';
-import { PreferencesController } from './preferences.controller';
-import { CoreModule } from '@core/core.module';
+
 import { AuditModule } from '@core/audit/audit.module';
+import { CoreModule } from '@core/core.module';
+
+import { PreferencesController } from './preferences.controller';
+import { PreferencesService } from './preferences.service';
 
 @Module({
   imports: [CoreModule, AuditModule],

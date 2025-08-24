@@ -2,12 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@dhanam/ui';
+import { Card, CardContent, CardHeader, CardTitle } from '@dhanam/ui';
 import { Button } from '@dhanam/ui';
 import {
   Dialog,
@@ -27,7 +22,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@dhanam/ui';
-import { Plus, MoreVertical, Loader2, Building2, CreditCard, TrendingUp, Coins } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@dhanam/ui';
+import {
+  Plus,
+  MoreVertical,
+  Loader2,
+  Building2,
+  CreditCard,
+  TrendingUp,
+  Coins,
+} from 'lucide-react';
 import { useSpaceStore } from '@/stores/space';
 import { accountsApi } from '@/lib/api/accounts';
 import { AccountType, Currency, Provider } from '@dhanam/shared';
@@ -96,8 +100,7 @@ export default function AccountsPage() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (accountId: string) =>
-      accountsApi.deleteAccount(currentSpace!.id, accountId),
+    mutationFn: (accountId: string) => accountsApi.deleteAccount(currentSpace!.id, accountId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['accounts', currentSpace?.id] });
       toast.success('Account deleted successfully');
@@ -110,7 +113,7 @@ export default function AccountsPage() {
   const handleConnect = (provider: Exclude<Provider, 'manual'>) => {
     setSelectedProvider(provider);
     setIsConnectOpen(false);
-    
+
     // Route to appropriate provider component
     switch (provider) {
       case 'belvo':
@@ -159,9 +162,7 @@ export default function AccountsPage() {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Add Account</DialogTitle>
-              <DialogDescription>
-                Connect your bank account or add one manually
-              </DialogDescription>
+              <DialogDescription>Connect your bank account or add one manually</DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
@@ -190,9 +191,7 @@ export default function AccountsPage() {
                   <span className="w-full border-t" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-2 text-muted-foreground">
-                    Or
-                  </span>
+                  <span className="bg-background px-2 text-muted-foreground">Or</span>
                 </div>
               </div>
               <Button
@@ -234,9 +233,7 @@ export default function AccountsPage() {
             return (
               <Card key={account.id}>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    {account.name}
-                  </CardTitle>
+                  <CardTitle className="text-sm font-medium">{account.name}</CardTitle>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" className="h-8 w-8 p-0">
@@ -268,7 +265,8 @@ export default function AccountsPage() {
                       {formatCurrency(account.balance, account.currency)}
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      Last updated: {new Date(account.lastSyncedAt || account.updatedAt).toLocaleDateString()}
+                      Last updated:{' '}
+                      {new Date(account.lastSyncedAt || account.updatedAt).toLocaleDateString()}
                     </p>
                   </div>
                 </CardContent>
@@ -283,48 +281,41 @@ export default function AccountsPage() {
           <form onSubmit={handleCreateSubmit}>
             <DialogHeader>
               <DialogTitle>Create Manual Account</DialogTitle>
-              <DialogDescription>
-                Add an account that you'll update manually
-              </DialogDescription>
+              <DialogDescription>Add an account that you&apos;ll update manually</DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
                 <Label htmlFor="name">Account Name</Label>
-                <Input
-                  id="name"
-                  name="name"
-                  placeholder="e.g., Chase Checking"
-                  required
-                />
+                <Input id="name" name="name" placeholder="e.g., Chase Checking" required />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="type">Account Type</Label>
-                <select
-                  id="type"
-                  name="type"
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  required
-                >
-                  <option value="checking">Checking</option>
-                  <option value="savings">Savings</option>
-                  <option value="credit">Credit Card</option>
-                  <option value="investment">Investment</option>
-                  <option value="crypto">Crypto</option>
-                  <option value="other">Other</option>
-                </select>
+                <Select name="type" required>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select account type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="checking">Checking</SelectItem>
+                    <SelectItem value="savings">Savings</SelectItem>
+                    <SelectItem value="credit">Credit Card</SelectItem>
+                    <SelectItem value="investment">Investment</SelectItem>
+                    <SelectItem value="crypto">Crypto</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="currency">Currency</Label>
-                <select
-                  id="currency"
-                  name="currency"
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  required
-                >
-                  <option value="MXN">MXN</option>
-                  <option value="USD">USD</option>
-                  <option value="EUR">EUR</option>
-                </select>
+                <Select name="currency" required>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select currency" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="MXN">MXN</SelectItem>
+                    <SelectItem value="USD">USD</SelectItem>
+                    <SelectItem value="EUR">EUR</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="balance">Current Balance</Label>
@@ -340,9 +331,7 @@ export default function AccountsPage() {
             </div>
             <DialogFooter>
               <Button type="submit" disabled={createMutation.isPending}>
-                {createMutation.isPending && (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                )}
+                {createMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Create Account
               </Button>
             </DialogFooter>

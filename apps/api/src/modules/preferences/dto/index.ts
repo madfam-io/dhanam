@@ -129,7 +129,7 @@ export class UpdatePreferencesDto {
 export class PreferencesResponseDto {
   id: string;
   userId: string;
-  
+
   // Notification preferences
   emailNotifications: boolean;
   transactionAlerts: boolean;

@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@core/prisma/prisma.service';
+
 import { LoggerService } from '@core/logger/logger.service';
+import { PrismaService } from '@core/prisma/prisma.service';
 
 export interface AuditEventData {
   action: string;
@@ -17,7 +18,7 @@ export interface AuditEventData {
 export class AuditService {
   constructor(
     private prisma: PrismaService,
-    private logger: LoggerService,
+    private logger: LoggerService
   ) {}
 
   async logEvent(data: AuditEventData): Promise<void> {
@@ -41,7 +42,7 @@ export class AuditService {
       if (data.severity === 'critical' || data.severity === 'high') {
         this.logger.warn(
           `Security event: ${data.action} - ${data.resource || 'unknown'} by ${data.userId || 'anonymous'}`,
-          'AuditService',
+          'AuditService'
         );
       }
     } catch (error) {
@@ -112,7 +113,7 @@ export class AuditService {
     action: string,
     userId?: string,
     ipAddress?: string,
-    metadata?: Record<string, any>,
+    metadata?: Record<string, any>
   ): Promise<void> {
     await this.logEvent({
       action,
@@ -128,7 +129,7 @@ export class AuditService {
     resource: string,
     resourceId: string,
     userId: string,
-    action: 'READ' | 'WRITE' | 'DELETE',
+    action: 'READ' | 'WRITE' | 'DELETE'
   ): Promise<void> {
     await this.logEvent({
       action: `DATA_${action}`,
@@ -144,7 +145,7 @@ export class AuditService {
     userId: string,
     spaceId: string,
     success: boolean,
-    ipAddress?: string,
+    ipAddress?: string
   ): Promise<void> {
     await this.logEvent({
       action: success ? 'PROVIDER_CONNECTED' : 'PROVIDER_CONNECTION_FAILED',

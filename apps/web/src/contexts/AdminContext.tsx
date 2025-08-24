@@ -41,9 +41,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   const updateFeatureFlag = async (key: string, updates: Partial<FeatureFlag>) => {
     try {
       const updated = await adminApi.updateFeatureFlag(key, updates);
-      setFeatureFlags(prev => 
-        prev.map(flag => flag.key === key ? updated : flag)
-      );
+      setFeatureFlags((prev) => prev.map((flag) => (flag.key === key ? updated : flag)));
     } catch (error) {
       console.error('Failed to update feature flag:', error);
       throw error;

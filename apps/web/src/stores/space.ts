@@ -19,13 +19,10 @@ export const useSpaceStore = create<SpaceStore>()(
       spaces: [],
       setCurrentSpace: (space) => set({ currentSpace: space }),
       setSpaces: (spaces) => set({ spaces }),
-      addSpace: (space) =>
-        set((state) => ({ spaces: [...state.spaces, space] })),
+      addSpace: (space) => set((state) => ({ spaces: [...state.spaces, space] })),
       updateSpace: (spaceId, updates) =>
         set((state) => ({
-          spaces: state.spaces.map((s) =>
-            s.id === spaceId ? { ...s, ...updates } : s
-          ),
+          spaces: state.spaces.map((s) => (s.id === spaceId ? { ...s, ...updates } : s)),
           currentSpace:
             state.currentSpace?.id === spaceId
               ? { ...state.currentSpace, ...updates }
@@ -34,8 +31,7 @@ export const useSpaceStore = create<SpaceStore>()(
       removeSpace: (spaceId) =>
         set((state) => ({
           spaces: state.spaces.filter((s) => s.id !== spaceId),
-          currentSpace:
-            state.currentSpace?.id === spaceId ? null : state.currentSpace,
+          currentSpace: state.currentSpace?.id === spaceId ? null : state.currentSpace,
         })),
     }),
     {

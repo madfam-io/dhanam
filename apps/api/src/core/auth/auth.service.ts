@@ -1,4 +1,12 @@
 import {
+  LoginDto,
+  RegisterDto,
+  AuthTokens,
+  RefreshTokenDto,
+  ResetPasswordDto,
+  ForgotPasswordDto,
+} from '@dhanam/shared';
+import {
   Injectable,
   UnauthorizedException,
   BadRequestException,
@@ -8,19 +16,13 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
-import { PrismaService } from '@core/prisma/prisma.service';
+
 import { LoggerService } from '@core/logger/logger.service';
+import { PrismaService } from '@core/prisma/prisma.service';
+import { EmailService } from '@modules/email/email.service';
+
 import { SessionService } from './session.service';
 import { TotpService } from './totp.service';
-import { EmailService } from '@modules/email/email.service';
-import {
-  LoginDto,
-  RegisterDto,
-  AuthTokens,
-  RefreshTokenDto,
-  ResetPasswordDto,
-  ForgotPasswordDto,
-} from '@dhanam/shared';
 
 export interface JwtPayload {
   sub: string;
@@ -38,7 +40,7 @@ export class AuthService {
     private sessionService: SessionService,
     private totpService: TotpService,
     @Inject(forwardRef(() => EmailService))
-    private emailService: EmailService,
+    private emailService: EmailService
   ) {}
 
   async register(dto: RegisterDto): Promise<AuthTokens> {
@@ -86,7 +88,7 @@ export class AuthService {
     });
 
     this.logger.log(`User registered: ${user.email}`, 'AuthService');
-    
+
     // Send welcome email
     await this.emailService.sendWelcomeEmail(user.email, user.name);
 
@@ -95,7 +97,7 @@ export class AuthService {
 
   async login(dto: LoginDto): Promise<AuthTokens> {
     const user = await this.validateUser(dto.email, dto.password);
-    
+
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
@@ -106,10 +108,7 @@ export class AuthService {
         throw new UnauthorizedException('TOTP code required');
       }
 
-      const isValidTotp = this.totpService.verifyToken(
-        user.totpSecret,
-        dto.totpCode,
-      );
+      const isValidTotp = this.totpService.verifyToken(user.totpSecret, dto.totpCode);
 
       if (!isValidTotp) {
         throw new UnauthorizedException('Invalid TOTP code');
@@ -128,9 +127,7 @@ export class AuthService {
   }
 
   async refreshTokens(dto: RefreshTokenDto): Promise<AuthTokens> {
-    const sessionData = await this.sessionService.validateRefreshToken(
-      dto.refreshToken,
-    );
+    const sessionData = await this.sessionService.validateRefreshToken(dto.refreshToken);
 
     if (!sessionData) {
       throw new UnauthorizedException('Invalid refresh token');
@@ -158,22 +155,15 @@ export class AuthService {
       return;
     }
 
-    const resetToken = await this.sessionService.createPasswordResetToken(
-      user.id,
-    );
+    const resetToken = await this.sessionService.createPasswordResetToken(user.id);
 
     // TODO: Send email with reset link
     // For now, log the token (remove in production)
-    this.logger.log(
-      `Password reset token for ${user.email}: ${resetToken}`,
-      'AuthService',
-    );
+    this.logger.log(`Password reset token for ${user.email}: ${resetToken}`, 'AuthService');
   }
 
   async resetPassword(dto: ResetPasswordDto): Promise<void> {
-    const userId = await this.sessionService.validatePasswordResetToken(
-      dto.token,
-    );
+    const userId = await this.sessionService.validatePasswordResetToken(dto.token);
 
     if (!userId) {
       throw new BadRequestException('Invalid or expired reset token');
@@ -214,12 +204,12 @@ export class AuthService {
     }
 
     const isValidPassword = await argon2.verify(user.passwordHash, password);
-    
+
     if (!isValidPassword) {
       return null;
     }
 
-    const { passwordHash, ...result } = user;
+    const { passwordHash: _passwordHash, ...result } = user;
     return result;
   }
 
@@ -232,10 +222,7 @@ export class AuthService {
     };
 
     const accessToken = this.jwtService.sign(payload);
-    const refreshToken = await this.sessionService.createRefreshToken(
-      userId,
-      email,
-    );
+    const refreshToken = await this.sessionService.createRefreshToken(userId, email);
 
     return {
       accessToken,

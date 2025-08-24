@@ -1,9 +1,9 @@
+import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import React from 'react';
-import { View, ScrollView, Image } from 'react-native';
+import { View, ScrollView } from 'react-native';
 import { Text, Button, Card } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
 
 import { styles } from '@/styles/auth';
 
@@ -21,7 +21,8 @@ const features = [
   {
     icon: 'shield-checkmark-outline',
     title: 'Bank-Level Security',
-    description: 'Your data is protected with enterprise-grade encryption and biometric authentication',
+    description:
+      'Your data is protected with enterprise-grade encryption and biometric authentication',
   },
   {
     icon: 'globe-outline',
@@ -33,23 +34,19 @@ const features = [
 export default function WelcomeScreen() {
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView 
+      <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
         {/* Hero Section */}
         <View style={styles.hero}>
-          <Image
-            source={require('@/assets/logo.png')}
-            style={styles.logo}
-            resizeMode="contain"
-          />
           <Text variant="displaySmall" style={styles.title}>
-            Welcome to{"\n"}Dhanam Ledger
+            Welcome to{'\n'}Dhanam Ledger
           </Text>
           <Text variant="bodyLarge" style={styles.subtitle}>
-            Your comprehensive financial companion for budgeting, wealth tracking, and sustainable investing
+            Your comprehensive financial companion for budgeting, wealth tracking, and sustainable
+            investing
           </Text>
         </View>
 
@@ -58,10 +55,10 @@ export default function WelcomeScreen() {
           {features.map((feature, index) => (
             <Card key={index} style={styles.featureCard}>
               <Card.Content style={styles.featureContent}>
-                <Ionicons 
-                  name={feature.icon as any} 
-                  size={32} 
-                  color="#4CAF50" 
+                <Ionicons
+                  name={feature.icon as any}
+                  size={32}
+                  color="#4CAF50"
                   style={styles.featureIcon}
                 />
                 <View style={styles.featureText}>
@@ -87,7 +84,7 @@ export default function WelcomeScreen() {
           >
             Get Started
           </Button>
-          
+
           <Button
             mode="outlined"
             onPress={() => router.push('/(auth)/login')}

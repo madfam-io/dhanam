@@ -1,11 +1,14 @@
+import * as crypto from 'crypto';
+
 import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { PrismaService } from '../../../core/prisma/prisma.service';
-import { CryptoService } from '../../../core/crypto/crypto.service';
-import { ConnectBitsoDto, BitsoWebhookDto } from './dto';
 import { Prisma, Account, Currency } from '@prisma/client';
-import * as crypto from 'crypto';
 import axios, { AxiosInstance } from 'axios';
+
+import { CryptoService } from '../../../core/crypto/crypto.service';
+import { PrismaService } from '../../../core/prisma/prisma.service';
+
+import { ConnectBitsoDto, BitsoWebhookDto } from './dto';
 
 interface BitsoBalance {
   currency: string;
@@ -47,7 +50,7 @@ export class BitsoService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
-    private readonly cryptoService: CryptoService,
+    private readonly cryptoService: CryptoService
   ) {
     this.initializeBitsoClient();
     this.webhookSecret = this.configService.get('BITSO_WEBHOOK_SECRET', '');
@@ -73,12 +76,9 @@ export class BitsoService {
       const method = config.method?.toUpperCase() || 'GET';
       const requestPath = config.url || '';
       const body = config.data ? JSON.stringify(config.data) : '';
-      
+
       const message = timestamp + method + '/v3' + requestPath + body;
-      const signature = crypto
-        .createHmac('sha256', apiSecret)
-        .update(message)
-        .digest('hex');
+      const signature = crypto.createHmac('sha256', apiSecret).update(message).digest('hex');
 
       config.headers['Authorization'] = `Bitso ${apiKey}:${timestamp}:${signature}`;
       config.headers['Content-Type'] = 'application/json';
@@ -92,16 +92,16 @@ export class BitsoService {
   async connectAccount(
     spaceId: string,
     userId: string,
-    dto: ConnectBitsoDto,
+    dto: ConnectBitsoDto
   ): Promise<{ accounts: Account[]; message: string }> {
     try {
       // Create temporary client with provided credentials
       const tempClient = this.createTempClient(dto.apiKey, dto.apiSecret);
-      
+
       // Verify credentials by fetching account info
       const accountInfoResponse = await tempClient.get('/account_status');
       const accountInfo = accountInfoResponse.data.payload;
-      
+
       if (!accountInfo) {
         throw new BadRequestException('Invalid Bitso API credentials');
       }
@@ -109,7 +109,7 @@ export class BitsoService {
       // Store encrypted credentials
       const encryptedApiKey = this.cryptoService.encrypt(dto.apiKey);
       const encryptedApiSecret = this.cryptoService.encrypt(dto.apiSecret);
-      
+
       await this.prisma.providerConnection.create({
         data: {
           provider: 'bitso',
@@ -159,12 +159,9 @@ export class BitsoService {
       const method = config.method?.toUpperCase() || 'GET';
       const requestPath = config.url || '';
       const body = config.data ? JSON.stringify(config.data) : '';
-      
+
       const message = timestamp + method + '/v3' + requestPath + body;
-      const signature = crypto
-        .createHmac('sha256', apiSecret)
-        .update(message)
-        .digest('hex');
+      const signature = crypto.createHmac('sha256', apiSecret).update(message).digest('hex');
 
       config.headers['Authorization'] = `Bitso ${apiKey}:${timestamp}:${signature}`;
       config.headers['Content-Type'] = 'application/json';
@@ -178,14 +175,14 @@ export class BitsoService {
   private async syncBalances(
     spaceId: string,
     client: AxiosInstance,
-    clientId: string,
+    clientId: string
   ): Promise<Account[]> {
     try {
       const balancesResponse = await client.get('/balance');
       const balances: BitsoBalance[] = balancesResponse.data.payload.balances;
-      
+
       const accounts: Account[] = [];
-      
+
       // Get current crypto prices for valuation
       const tickerResponse = await axios.get('https://api.bitso.com/v3/ticker');
       const tickers: BitsoTicker[] = tickerResponse.data.payload;
@@ -193,7 +190,7 @@ export class BitsoService {
 
       for (const balance of balances) {
         const totalAmount = parseFloat(balance.total);
-        
+
         // Skip zero balances
         if (totalAmount <= 0) continue;
 
@@ -236,18 +233,18 @@ export class BitsoService {
 
   private createPriceMap(tickers: BitsoTicker[]): Record<string, number> {
     const priceMap: Record<string, number> = {};
-    
+
     for (const ticker of tickers) {
       priceMap[ticker.book] = parseFloat(ticker.last);
     }
-    
+
     return priceMap;
   }
 
   private async syncTrades(client: AxiosInstance, clientId: string) {
     try {
       const tradesResponse = await client.get('/user_trades', {
-        params: { limit: 100 } // Get last 100 trades
+        params: { limit: 100 }, // Get last 100 trades
       });
       const trades: BitsoTrade[] = tradesResponse.data.payload;
 
@@ -278,9 +275,7 @@ export class BitsoService {
       }
 
       // Calculate transaction amount (positive for buy, negative for sell)
-      const amount = trade.side === 'buy' 
-        ? parseFloat(trade.amount) 
-        : -parseFloat(trade.amount);
+      const amount = trade.side === 'buy' ? parseFloat(trade.amount) : -parseFloat(trade.amount);
 
       // Create transaction
       await this.prisma.transaction.create({
@@ -329,9 +324,9 @@ export class BitsoService {
         const apiSecret = this.cryptoService.decrypt(
           JSON.parse((connection.metadata as any).encryptedApiSecret)
         );
-        
+
         const client = this.createTempClient(apiKey, apiSecret);
-        
+
         // Get user's spaces to update accounts
         const userSpaces = await this.prisma.userSpace.findMany({
           where: { userId },
@@ -341,7 +336,7 @@ export class BitsoService {
         for (const userSpace of userSpaces) {
           await this.syncBalances(userSpace.spaceId, client, connection.providerUserId);
         }
-        
+
         // Sync recent trades
         await this.syncTrades(client, connection.providerUserId);
       }
@@ -424,7 +419,7 @@ export class BitsoService {
 
     return crypto.timingSafeEqual(
       Buffer.from(signature, 'hex'),
-      Buffer.from(expectedSignature, 'hex'),
+      Buffer.from(expectedSignature, 'hex')
     );
   }
 
@@ -442,14 +437,14 @@ export class BitsoService {
         provider: 'bitso',
         space: {
           userSpaces: {
-            some: { userId }
-          }
-        }
+            some: { userId },
+          },
+        },
       },
     });
 
     const totalValue = accounts.reduce((sum, account) => sum + Number(account.balance), 0);
-    
+
     const holdings = accounts.map((account) => {
       const metadata = account.metadata as any;
       return {

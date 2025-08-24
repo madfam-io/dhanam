@@ -1,19 +1,15 @@
-import {
-  Injectable,
-  CanActivate,
-  ExecutionContext,
-  ForbiddenException,
-} from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
-import { SpacesService } from '../spaces.service';
-import { ROLES_KEY } from '../decorators/require-role.decorator';
 import { SpaceRole } from '@dhanam/shared';
+import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
+
+import { ROLES_KEY } from '../decorators/require-role.decorator';
+import { SpacesService } from '../spaces.service';
 
 @Injectable()
 export class SpaceGuard implements CanActivate {
   constructor(
     private reflector: Reflector,
-    private spacesService: SpacesService,
+    private spacesService: SpacesService
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {

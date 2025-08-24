@@ -3,14 +3,14 @@
 import { useState } from 'react';
 import { useAuth } from '@/lib/hooks/use-auth';
 import { useOnboarding } from '../onboarding-provider';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { 
-  TrendingUpIcon, 
-  ShieldIcon, 
-  PieChartIcon, 
+import { Button } from '@dhanam/ui';
+import { Card, CardContent } from '@dhanam/ui';
+import {
+  TrendingUpIcon,
+  ShieldIcon,
+  PieChartIcon,
   SmartphoneIcon,
-  ArrowRightIcon 
+  ArrowRightIcon,
 } from 'lucide-react';
 
 const features = [
@@ -70,7 +70,10 @@ export function WelcomeStep() {
       {/* Feature grid */}
       <div className="grid md:grid-cols-2 gap-6 mb-12">
         {features.map((feature, index) => (
-          <Card key={index} className="border-2 border-gray-100 hover:border-indigo-200 transition-colors">
+          <Card
+            key={index}
+            className="border-2 border-gray-100 hover:border-indigo-200 transition-colors"
+          >
             <CardContent className="p-6">
               <div className="flex items-start space-x-4">
                 <div className="p-2 bg-indigo-100 rounded-lg">
@@ -89,9 +92,7 @@ export function WelcomeStep() {
       {/* What to expect */}
       <Card className="bg-gradient-to-r from-indigo-50 to-purple-50 border-indigo-200 mb-8">
         <CardContent className="p-8">
-          <h2 className="text-2xl font-semibold text-gray-900 mb-4">
-            ¿Qué sigue?
-          </h2>
+          <h2 className="text-2xl font-semibold text-gray-900 mb-4">¿Qué sigue?</h2>
           <div className="grid md:grid-cols-3 gap-6 text-left">
             <div>
               <div className="text-2xl mb-2">📧</div>
@@ -114,8 +115,8 @@ export function WelcomeStep() {
 
       {/* CTA */}
       <div className="text-center">
-        <Button 
-          size="lg" 
+        <Button
+          size="lg"
           onClick={handleContinue}
           disabled={isLoading}
           className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 px-8"
@@ -123,9 +124,7 @@ export function WelcomeStep() {
           {isLoading ? 'Cargando...' : 'Comenzar configuración'}
           <ArrowRightIcon className="w-5 h-5 ml-2" />
         </Button>
-        <p className="text-sm text-gray-500 mt-3">
-          Solo tomará unos minutos configurar tu cuenta
-        </p>
+        <p className="text-sm text-gray-500 mt-3">Solo tomará unos minutos configurar tu cuenta</p>
       </div>
     </div>
   );

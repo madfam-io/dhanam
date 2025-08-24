@@ -6,8 +6,8 @@ import {
   HttpStatus,
   Logger,
 } from '@nestjs/common';
-import { FastifyReply, FastifyRequest } from 'fastify';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
+import { FastifyReply, FastifyRequest } from 'fastify';
 
 export interface ErrorResponse {
   success: false;
@@ -34,14 +34,19 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     const request = ctx.getRequest<FastifyRequest>();
 
     const errorResponse = this.createErrorResponse(exception, request);
-    
+
     // Log error with context
     this.logError(exception, request, errorResponse);
 
     response.status(errorResponse.meta.status || 500).send(errorResponse);
   }
 
-  private createErrorResponse(exception: unknown, request: FastifyRequest): ErrorResponse & { meta: { status: number; timestamp: string; path: string; method: string; requestId?: string } } {
+  private createErrorResponse(
+    exception: unknown,
+    request: FastifyRequest
+  ): ErrorResponse & {
+    meta: { status: number; timestamp: string; path: string; method: string; requestId?: string };
+  } {
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
     let code = 'INTERNAL_SERVER_ERROR';
     let message = 'An unexpected error occurred';
@@ -50,7 +55,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     if (exception instanceof HttpException) {
       status = exception.getStatus();
       const response = exception.getResponse();
-      
+
       if (typeof response === 'string') {
         message = response;
         code = this.getCodeFromStatus(status);
@@ -90,7 +95,11 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     };
   }
 
-  private logError(exception: unknown, request: FastifyRequest, errorResponse: ErrorResponse & { meta: { status: number } }) {
+  private logError(
+    exception: unknown,
+    request: FastifyRequest,
+    errorResponse: ErrorResponse & { meta: { status: number } }
+  ) {
     const { status } = errorResponse.meta;
     const logData = {
       url: request.url,

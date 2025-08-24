@@ -1,6 +1,6 @@
-import { IsString, IsIn, IsOptional } from 'class-validator';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { SpaceType, Currency } from '@dhanam/shared';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsString, IsIn, IsOptional } from 'class-validator';
 
 export class CreateSpaceDto {
   @ApiProperty()

@@ -1,14 +1,16 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '@core/prisma/prisma.service';
-import { LoggerService } from '@core/logger/logger.service';
-import { UpdateUserDto } from './dto/update-user.dto';
 import { User, UserProfile } from '@dhanam/shared';
+import { Injectable, NotFoundException } from '@nestjs/common';
+
+import { LoggerService } from '@core/logger/logger.service';
+import { PrismaService } from '@core/prisma/prisma.service';
+
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UsersService {
   constructor(
     private prisma: PrismaService,
-    private logger: LoggerService,
+    private logger: LoggerService
   ) {}
 
   async getProfile(userId: string): Promise<UserProfile> {

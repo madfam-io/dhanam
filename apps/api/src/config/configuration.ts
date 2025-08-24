@@ -1,25 +1,25 @@
 export const configuration = () => ({
   node_env: process.env.NODE_ENV || 'development',
   port: parseInt(process.env.PORT || '4000', 10),
-  
+
   database: {
     url: process.env.DATABASE_URL,
   },
-  
+
   redis: {
     url: process.env.REDIS_URL,
   },
-  
+
   jwt: {
     secret: process.env.JWT_SECRET,
     accessExpiry: process.env.JWT_ACCESS_EXPIRY || '15m',
     refreshExpiry: process.env.JWT_REFRESH_EXPIRY || '30d',
   },
-  
+
   encryption: {
     key: process.env.ENCRYPTION_KEY,
   },
-  
+
   providers: {
     belvo: {
       secretId: process.env.BELVO_SECRET_ID,
@@ -37,13 +37,13 @@ export const configuration = () => ({
       apiSecret: process.env.BITSO_API_SECRET,
     },
   },
-  
+
   external: {
     banxico: {
       apiToken: process.env.BANXICO_API_TOKEN,
     },
   },
-  
+
   email: {
     host: process.env.SMTP_HOST,
     port: parseInt(process.env.SMTP_PORT || '587', 10),
@@ -51,14 +51,14 @@ export const configuration = () => ({
     pass: process.env.SMTP_PASS,
     from: process.env.EMAIL_FROM || 'noreply@dhanam.app',
   },
-  
+
   monitoring: {
     posthog: {
       apiKey: process.env.POSTHOG_API_KEY,
       host: process.env.POSTHOG_HOST || 'https://app.posthog.com',
     },
   },
-  
+
   cors: {
     origins: process.env.CORS_ORIGINS || 'http://localhost:3000',
   },

@@ -52,16 +52,12 @@ export const rulesApi = {
   updateRule: async (
     spaceId: string,
     ruleId: string,
-    dto: Partial<CreateRuleDto>,
+    dto: Partial<CreateRuleDto>
   ): Promise<Rule> => {
     return apiClient.patch<Rule>(`/spaces/${spaceId}/transaction-rules/${ruleId}`, dto);
   },
 
-  toggleRule: async (
-    spaceId: string,
-    ruleId: string,
-    isActive: boolean,
-  ): Promise<Rule> => {
+  toggleRule: async (spaceId: string, ruleId: string, isActive: boolean): Promise<Rule> => {
     return apiClient.patch<Rule>(`/spaces/${spaceId}/transaction-rules/${ruleId}`, {
       isActive,
     });

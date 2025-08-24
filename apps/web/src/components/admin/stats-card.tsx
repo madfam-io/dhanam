@@ -1,4 +1,4 @@
-import { Card } from '@dhanam/ui/components/card';
+import { Card } from '@dhanam/ui';
 import { LucideIcon } from 'lucide-react';
 
 interface StatsCardProps {
@@ -27,11 +27,7 @@ export function StatsCard({ title, value, subtitle, icon: Icon, color = 'blue' }
           <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
             {typeof value === 'number' ? value.toLocaleString() : value}
           </p>
-          {subtitle && (
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-              {subtitle}
-            </p>
-          )}
+          {subtitle && <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{subtitle}</p>}
         </div>
         <div className={`p-3 rounded-lg ${colorClasses[color]}`}>
           <Icon className="h-6 w-6" />

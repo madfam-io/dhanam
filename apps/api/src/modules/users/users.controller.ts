@@ -1,3 +1,4 @@
+import { User, UserProfile } from '@dhanam/shared';
 import {
   Controller,
   Get,
@@ -10,11 +11,11 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 
-import { UsersService } from './users.service';
-import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
 import { CurrentUser } from '@core/auth/decorators/current-user.decorator';
+import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
+
 import { UpdateUserDto } from './dto/update-user.dto';
-import { User, UserProfile } from '@dhanam/shared';
+import { UsersService } from './users.service';
 
 @ApiTags('Users')
 @ApiBearerAuth()
@@ -35,7 +36,7 @@ export class UsersController {
   @ApiResponse({ status: 200, description: 'Profile updated' })
   async updateProfile(
     @CurrentUser('id') userId: string,
-    @Body() dto: UpdateUserDto,
+    @Body() dto: UpdateUserDto
   ): Promise<User> {
     return this.usersService.updateProfile(userId, dto);
   }

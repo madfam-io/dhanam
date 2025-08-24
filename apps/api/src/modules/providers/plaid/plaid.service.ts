@@ -1,8 +1,8 @@
+import * as crypto from 'crypto';
+
 import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { PrismaService } from '../../../core/prisma/prisma.service';
-import { CryptoService } from '../../../core/crypto/crypto.service';
-import { MonitorPerformance } from '@core/decorators/monitor-performance.decorator';
+import { Prisma, Account, Currency, AccountType } from '@prisma/client';
 import {
   PlaidApi,
   Configuration,
@@ -16,9 +16,13 @@ import {
   DepositoryAccountSubtype,
   CreditAccountSubtype,
 } from 'plaid';
+
+import { MonitorPerformance } from '@core/decorators/monitor-performance.decorator';
+
+import { CryptoService } from '../../../core/crypto/crypto.service';
+import { PrismaService } from '../../../core/prisma/prisma.service';
+
 import { CreatePlaidLinkDto, PlaidWebhookDto } from './dto';
-import { Prisma, Account, Currency, AccountType } from '@prisma/client';
-import * as crypto from 'crypto';
 
 @Injectable()
 export class PlaidService {
@@ -29,7 +33,7 @@ export class PlaidService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
-    private readonly cryptoService: CryptoService,
+    private readonly cryptoService: CryptoService
   ) {
     this.initializePlaidClient();
     this.webhookSecret = this.configService.get('PLAID_WEBHOOK_SECRET', '');
@@ -100,7 +104,7 @@ export class PlaidService {
   async createLink(
     spaceId: string,
     userId: string,
-    dto: CreatePlaidLinkDto,
+    dto: CreatePlaidLinkDto
   ): Promise<{ accounts: Account[] }> {
     if (!this.plaidClient) {
       throw new BadRequestException('Plaid integration not configured');
@@ -149,7 +153,7 @@ export class PlaidService {
   private async syncAccounts(
     spaceId: string,
     accessToken: string,
-    itemId: string,
+    itemId: string
   ): Promise<Account[]> {
     const request: AccountsGetRequest = {
       access_token: accessToken,
@@ -193,7 +197,10 @@ export class PlaidService {
   }
 
   @MonitorPerformance(2000) // 2 second threshold for transaction sync
-  async syncTransactions(accessToken: string, itemId: string): Promise<{ transactionCount: number; accountCount: number; nextCursor?: string }> {
+  async syncTransactions(
+    accessToken: string,
+    itemId: string
+  ): Promise<{ transactionCount: number; accountCount: number; nextCursor?: string }> {
     try {
       // Use transactions sync for better performance
       const request: TransactionsSyncRequest = {
@@ -235,7 +242,7 @@ export class PlaidService {
       }
 
       this.logger.log(
-        `Synced transactions for item ${itemId}: ${added.length} added, ${modified.length} modified, ${removed.length} removed`,
+        `Synced transactions for item ${itemId}: ${added.length} added, ${modified.length} modified, ${removed.length} removed`
       );
 
       return {
@@ -434,7 +441,7 @@ export class PlaidService {
 
     return crypto.timingSafeEqual(
       Buffer.from(signature, 'hex'),
-      Buffer.from(expectedSignature, 'hex'),
+      Buffer.from(expectedSignature, 'hex')
     );
   }
 

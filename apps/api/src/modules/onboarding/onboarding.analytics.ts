@@ -15,7 +15,7 @@ export class OnboardingAnalytics {
 
   constructor(private readonly configService: ConfigService) {
     this.analyticsEnabled = this.configService.get('POSTHOG_API_KEY') !== undefined;
-    
+
     if (!this.analyticsEnabled) {
       this.logger.warn('PostHog API key not configured, analytics disabled');
     }
@@ -34,8 +34,8 @@ export class OnboardingAnalytics {
   }
 
   async trackStepCompleted(
-    userId: string, 
-    step: string, 
+    userId: string,
+    step: string,
     timeSpent?: number,
     metadata?: Record<string, any>
   ) {
@@ -64,7 +64,7 @@ export class OnboardingAnalytics {
   }
 
   async trackOnboardingCompleted(
-    userId: string, 
+    userId: string,
     totalTimeSpent?: number,
     stepsCompleted?: string[],
     stepsSkipped?: string[]
@@ -82,11 +82,7 @@ export class OnboardingAnalytics {
     });
   }
 
-  async trackOnboardingAbandoned(
-    userId: string, 
-    lastStep: string,
-    timeSpent?: number
-  ) {
+  async trackOnboardingAbandoned(userId: string, lastStep: string, timeSpent?: number) {
     await this.track({
       userId,
       event: 'onboarding_abandoned',
@@ -123,10 +119,7 @@ export class OnboardingAnalytics {
     });
   }
 
-  async trackPreferencesUpdated(
-    userId: string, 
-    preferences: Record<string, any>
-  ) {
+  async trackPreferencesUpdated(userId: string, preferences: Record<string, any>) {
     await this.track({
       userId,
       event: 'onboarding_preferences_set',
@@ -138,7 +131,7 @@ export class OnboardingAnalytics {
   }
 
   async trackProviderConnectionAttempt(
-    userId: string, 
+    userId: string,
     provider: string,
     success: boolean,
     error?: string
@@ -223,14 +216,13 @@ export class OnboardingAnalytics {
 
       // Example PostHog integration:
       // await this.posthog.capture(event.userId, event.event, event.properties);
-
     } catch (error) {
       this.logger.error('Failed to track analytics event:', error);
     }
   }
 
   // Funnel analysis helper methods
-  async getOnboardingFunnelData(dateRange: { start: Date; end: Date }) {
+  async getOnboardingFunnelData(_dateRange: { start: Date; end: Date }) {
     // This would query your analytics database/service
     // For now, return mock data structure
     return {

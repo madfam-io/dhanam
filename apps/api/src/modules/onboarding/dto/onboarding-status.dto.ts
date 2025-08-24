@@ -1,34 +1,44 @@
 import { ApiProperty } from '@nestjs/swagger';
+
 import { OnboardingStep } from './update-onboarding-step.dto';
 
 export class OnboardingStatusDto {
-  @ApiProperty({ 
+  @ApiProperty({
     description: 'Whether onboarding is completed',
-    example: false
+    example: false,
   })
   completed: boolean;
 
-  @ApiProperty({ 
+  @ApiProperty({
     description: 'Current onboarding step',
-    enum: ['welcome', 'email_verification', 'preferences', 'space_setup', 'connect_accounts', 'first_budget', 'feature_tour', 'completed'],
-    example: 'preferences'
+    enum: [
+      'welcome',
+      'email_verification',
+      'preferences',
+      'space_setup',
+      'connect_accounts',
+      'first_budget',
+      'feature_tour',
+      'completed',
+    ],
+    example: 'preferences',
   })
   currentStep: OnboardingStep | null;
 
-  @ApiProperty({ 
+  @ApiProperty({
     description: 'Completion timestamp',
     example: '2024-01-15T10:30:00Z',
-    nullable: true
+    nullable: true,
   })
   completedAt: string | null;
 
-  @ApiProperty({ 
+  @ApiProperty({
     description: 'Overall onboarding progress percentage',
-    example: 42.5
+    example: 42.5,
   })
   progress: number;
 
-  @ApiProperty({ 
+  @ApiProperty({
     description: 'Step completion status',
     example: {
       welcome: true,
@@ -37,20 +47,20 @@ export class OnboardingStatusDto {
       space_setup: false,
       connect_accounts: false,
       first_budget: false,
-      feature_tour: false
-    }
+      feature_tour: false,
+    },
   })
   stepStatus: Record<string, boolean>;
 
-  @ApiProperty({ 
+  @ApiProperty({
     description: 'Required steps remaining',
-    example: ['preferences', 'space_setup']
+    example: ['preferences', 'space_setup'],
   })
   remainingSteps: string[];
 
-  @ApiProperty({ 
+  @ApiProperty({
     description: 'Optional steps that can be skipped',
-    example: ['connect_accounts', 'feature_tour']
+    example: ['connect_accounts', 'feature_tour'],
   })
   optionalSteps: string[];
 }

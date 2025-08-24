@@ -1,22 +1,24 @@
+import { Space, SpaceMember, SpaceRole } from '@dhanam/shared';
 import {
   Injectable,
   NotFoundException,
   BadRequestException,
   ForbiddenException,
 } from '@nestjs/common';
-import { PrismaService } from '@core/prisma/prisma.service';
+
 import { LoggerService } from '@core/logger/logger.service';
+import { PrismaService } from '@core/prisma/prisma.service';
+
 import { CreateSpaceDto } from './dto/create-space.dto';
-import { UpdateSpaceDto } from './dto/update-space.dto';
 import { InviteMemberDto } from './dto/invite-member.dto';
 import { UpdateMemberRoleDto } from './dto/update-member-role.dto';
-import { Space, SpaceMember, SpaceRole } from '@dhanam/shared';
+import { UpdateSpaceDto } from './dto/update-space.dto';
 
 @Injectable()
 export class SpacesService {
   constructor(
     private prisma: PrismaService,
-    private logger: LoggerService,
+    private logger: LoggerService
   ) {}
 
   async listUserSpaces(userId: string): Promise<Space[]> {
@@ -163,7 +165,7 @@ export class SpacesService {
   async updateMemberRole(
     spaceId: string,
     userId: string,
-    dto: UpdateMemberRoleDto,
+    dto: UpdateMemberRoleDto
   ): Promise<SpaceMember> {
     const member = await this.prisma.userSpace.findUnique({
       where: {
@@ -207,11 +209,7 @@ export class SpacesService {
     };
   }
 
-  async removeMember(
-    spaceId: string,
-    userId: string,
-    currentUserId: string,
-  ): Promise<void> {
+  async removeMember(spaceId: string, userId: string, currentUserId: string): Promise<void> {
     if (userId === currentUserId) {
       throw new BadRequestException('Cannot remove yourself');
     }
@@ -255,11 +253,7 @@ export class SpacesService {
     return userSpace?.role || null;
   }
 
-  async verifyUserAccess(
-    userId: string,
-    spaceId: string,
-    requiredRole: SpaceRole,
-  ): Promise<void> {
+  async verifyUserAccess(userId: string, spaceId: string, requiredRole: SpaceRole): Promise<void> {
     const userSpace = await this.prisma.userSpace.findUnique({
       where: {
         userId_spaceId: { userId, spaceId },
@@ -282,7 +276,7 @@ export class SpacesService {
 
     if (userRoleLevel < requiredRoleLevel) {
       throw new ForbiddenException(
-        `Access denied. Required role: ${requiredRole}, user role: ${userSpace.role}`,
+        `Access denied. Required role: ${requiredRole}, user role: ${userSpace.role}`
       );
     }
   }

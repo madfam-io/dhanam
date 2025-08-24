@@ -1,3 +1,4 @@
+import { Space, SpaceMember } from '@dhanam/shared';
 import {
   Controller,
   Get,
@@ -12,16 +13,16 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 
-import { SpacesService } from './spaces.service';
-import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
 import { CurrentUser } from '@core/auth/decorators/current-user.decorator';
-import { SpaceGuard } from './guards/space.guard';
+import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
+
 import { RequireRole } from './decorators/require-role.decorator';
 import { CreateSpaceDto } from './dto/create-space.dto';
-import { UpdateSpaceDto } from './dto/update-space.dto';
 import { InviteMemberDto } from './dto/invite-member.dto';
 import { UpdateMemberRoleDto } from './dto/update-member-role.dto';
-import { Space, SpaceMember } from '@dhanam/shared';
+import { UpdateSpaceDto } from './dto/update-space.dto';
+import { SpaceGuard } from './guards/space.guard';
+import { SpacesService } from './spaces.service';
 
 @ApiTags('Spaces')
 @ApiBearerAuth()
@@ -42,7 +43,7 @@ export class SpacesController {
   @ApiResponse({ status: 201, description: 'Space created' })
   async createSpace(
     @CurrentUser('id') userId: string,
-    @Body() dto: CreateSpaceDto,
+    @Body() dto: CreateSpaceDto
   ): Promise<Space> {
     return this.spacesService.createSpace(userId, dto);
   }
@@ -62,7 +63,7 @@ export class SpacesController {
   @ApiResponse({ status: 200, description: 'Space updated' })
   async updateSpace(
     @Param('spaceId') spaceId: string,
-    @Body() dto: UpdateSpaceDto,
+    @Body() dto: UpdateSpaceDto
   ): Promise<Space> {
     return this.spacesService.updateSpace(spaceId, dto);
   }
@@ -92,7 +93,7 @@ export class SpacesController {
   @ApiResponse({ status: 201, description: 'Member invited' })
   async inviteMember(
     @Param('spaceId') spaceId: string,
-    @Body() dto: InviteMemberDto,
+    @Body() dto: InviteMemberDto
   ): Promise<SpaceMember> {
     return this.spacesService.inviteMember(spaceId, dto);
   }
@@ -105,7 +106,7 @@ export class SpacesController {
   async updateMemberRole(
     @Param('spaceId') spaceId: string,
     @Param('userId') userId: string,
-    @Body() dto: UpdateMemberRoleDto,
+    @Body() dto: UpdateMemberRoleDto
   ): Promise<SpaceMember> {
     return this.spacesService.updateMemberRole(spaceId, userId, dto);
   }
@@ -119,7 +120,7 @@ export class SpacesController {
   async removeMember(
     @Param('spaceId') spaceId: string,
     @Param('userId') userId: string,
-    @CurrentUser('id') currentUserId: string,
+    @CurrentUser('id') currentUserId: string
   ): Promise<void> {
     await this.spacesService.removeMember(spaceId, userId, currentUserId);
   }

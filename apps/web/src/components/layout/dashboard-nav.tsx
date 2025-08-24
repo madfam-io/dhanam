@@ -63,9 +63,9 @@ export function DashboardNav() {
   return (
     <nav className="w-64 border-r bg-background">
       <div className="flex h-full flex-col gap-y-5 overflow-y-auto px-6 pb-4">
-        <ul role="list" className="flex flex-1 flex-col gap-y-7 pt-6">
+        <ul className="flex flex-1 flex-col gap-y-7 pt-6">
           <li>
-            <ul role="list" className="-mx-2 space-y-1">
+            <ul className="-mx-2 space-y-1">
               {navigation.map((item) => {
                 const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
                 return (
@@ -81,7 +81,9 @@ export function DashboardNav() {
                     >
                       <item.icon
                         className={cn(
-                          isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground',
+                          isActive
+                            ? 'text-primary'
+                            : 'text-muted-foreground group-hover:text-foreground',
                           'h-5 w-5 shrink-0'
                         )}
                         aria-hidden="true"

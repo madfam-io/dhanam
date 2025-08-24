@@ -2,30 +2,14 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import {
-  Card,
-  CardContent,
-} from '@dhanam/ui';
+import { Card, CardContent } from '@dhanam/ui';
 import { Button } from '@dhanam/ui';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@dhanam/ui';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@dhanam/ui';
 import { Input } from '@dhanam/ui';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@dhanam/ui';
 import { Badge } from '@dhanam/ui';
 import { Alert, AlertDescription } from '@dhanam/ui';
-import { 
-  Plus, 
-  Loader2, 
-  Settings, 
-  TestTube, 
-  CheckCircle,
-  XCircle,
-  ArrowUpDown
-} from 'lucide-react';
+import { Plus, Loader2, Settings, TestTube, CheckCircle, XCircle, ArrowUpDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { rulesApi, CreateRuleDto, TestRuleDto } from '@/lib/api/rules';
 import { categoriesApi } from '@/lib/api/categories';
@@ -66,7 +50,7 @@ export function RuleManager({ open, onOpenChange, spaceId }: RuleManagerProps) {
   });
 
   const toggleRuleMutation = useMutation({
-    mutationFn: (params: { ruleId: string; isActive: boolean }) => 
+    mutationFn: (params: { ruleId: string; isActive: boolean }) =>
       rulesApi.toggleRule(spaceId, params.ruleId, params.isActive),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transaction-rules', spaceId] });
@@ -171,16 +155,13 @@ export function RuleManager({ open, onOpenChange, spaceId }: RuleManagerProps) {
                         <div>
                           <p className="font-medium">{rule.name}</p>
                           <p className="text-sm text-muted-foreground">
-                            {rule.field} {rule.operator} "{rule.value}"
+                            {rule.field} {rule.operator} &quot;{rule.value}&quot;
                           </p>
                         </div>
                         {rule.category && (
-                          <Badge 
-                            variant="outline" 
-                            className="flex items-center gap-1"
-                          >
-                            <div 
-                              className="w-2 h-2 rounded-full" 
+                          <Badge variant="outline" className="flex items-center gap-1">
+                            <div
+                              className="w-2 h-2 rounded-full"
                               style={{ backgroundColor: rule.category.color }}
                             />
                             {rule.category.name}
@@ -191,10 +172,12 @@ export function RuleManager({ open, onOpenChange, spaceId }: RuleManagerProps) {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => toggleRuleMutation.mutate({ 
-                            ruleId: rule.id, 
-                            isActive: !rule.isActive 
-                          })}
+                          onClick={() =>
+                            toggleRuleMutation.mutate({
+                              ruleId: rule.id,
+                              isActive: !rule.isActive,
+                            })
+                          }
                         >
                           {rule.isActive ? (
                             <CheckCircle className="h-4 w-4 text-green-600" />
@@ -225,12 +208,7 @@ export function RuleManager({ open, onOpenChange, spaceId }: RuleManagerProps) {
                 <label htmlFor="rule-name" className="text-sm font-medium">
                   Rule Name
                 </label>
-                <Input
-                  id="rule-name"
-                  name="name"
-                  placeholder="e.g., Grocery Stores"
-                  required
-                />
+                <Input id="rule-name" name="name" placeholder="e.g., Grocery Stores" required />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -238,36 +216,36 @@ export function RuleManager({ open, onOpenChange, spaceId }: RuleManagerProps) {
                   <label htmlFor="field" className="text-sm font-medium">
                     Field
                   </label>
-                  <select
-                    id="field"
-                    name="field"
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    required
-                  >
-                    <option value="description">Description</option>
-                    <option value="merchant">Merchant</option>
-                    <option value="amount">Amount</option>
-                  </select>
+                  <Select name="field" required>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select field" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="description">Description</SelectItem>
+                      <SelectItem value="merchant">Merchant</SelectItem>
+                      <SelectItem value="amount">Amount</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="space-y-2">
                   <label htmlFor="operator" className="text-sm font-medium">
                     Operator
                   </label>
-                  <select
-                    id="operator"
-                    name="operator"
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    required
-                  >
-                    <option value="contains">Contains</option>
-                    <option value="equals">Equals</option>
-                    <option value="startsWith">Starts with</option>
-                    <option value="endsWith">Ends with</option>
-                    <option value="regex">Regex</option>
-                    <option value="gte">Greater than</option>
-                    <option value="lte">Less than</option>
-                  </select>
+                  <Select name="operator" required>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select operator" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="contains">Contains</SelectItem>
+                      <SelectItem value="equals">Equals</SelectItem>
+                      <SelectItem value="startsWith">Starts with</SelectItem>
+                      <SelectItem value="endsWith">Ends with</SelectItem>
+                      <SelectItem value="regex">Regex</SelectItem>
+                      <SelectItem value="gte">Greater than</SelectItem>
+                      <SelectItem value="lte">Less than</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
@@ -301,19 +279,18 @@ export function RuleManager({ open, onOpenChange, spaceId }: RuleManagerProps) {
                 <label htmlFor="categoryId" className="text-sm font-medium">
                   Category
                 </label>
-                <select
-                  id="categoryId"
-                  name="categoryId"
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                  required
-                >
-                  <option value="">Select category</option>
-                  {categories?.map((category) => (
-                    <option key={category.id} value={category.id}>
-                      {category.name}
-                    </option>
-                  ))}
-                </select>
+                <Select name="categoryId" required>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories?.map((category) => (
+                      <SelectItem key={category.id} value={category.id}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="flex gap-2">
@@ -336,12 +313,8 @@ export function RuleManager({ open, onOpenChange, spaceId }: RuleManagerProps) {
                     </>
                   )}
                 </Button>
-                
-                <Button
-                  type="submit"
-                  disabled={createRuleMutation.isPending}
-                  className="flex-1"
-                >
+
+                <Button type="submit" disabled={createRuleMutation.isPending} className="flex-1">
                   {createRuleMutation.isPending ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -363,7 +336,8 @@ export function RuleManager({ open, onOpenChange, spaceId }: RuleManagerProps) {
                         <p className="text-xs font-medium">Sample matches:</p>
                         {testResult.sampleMatches.slice(0, 3).map((match: any) => (
                           <p key={match.id} className="text-xs text-muted-foreground">
-                            • {match.description} ({match.amount < 0 ? '-' : ''}${Math.abs(match.amount)})
+                            • {match.description} ({match.amount < 0 ? '-' : ''}$
+                            {Math.abs(match.amount)})
                           </p>
                         ))}
                       </div>

@@ -1,19 +1,19 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card } from '@dhanam/ui/components/card';
-import { Progress } from '@dhanam/ui/components/progress';
-import { Skeleton } from '@dhanam/ui/components/skeleton';
+import { Card } from '@dhanam/ui';
+import { Progress } from '@dhanam/ui';
+import { Skeleton } from '@dhanam/ui';
 import { adminApi, type OnboardingFunnel } from '~/lib/api/admin';
-import { 
-  Users, 
-  UserCheck, 
-  Mail, 
-  Link, 
+import {
+  Users,
+  UserCheck,
+  Mail,
+  Link,
   Target,
   CheckCircle,
   TrendingDown,
-  Clock
+  Clock,
 } from 'lucide-react';
 
 export default function AnalyticsPage() {
@@ -60,9 +60,10 @@ export default function AnalyticsPage() {
   };
 
   const getStepName = (step: string) => {
-    return step.split('_').map(word => 
-      word.charAt(0).toUpperCase() + word.slice(1)
-    ).join(' ');
+    return step
+      .split('_')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
   };
 
   return (
@@ -122,7 +123,7 @@ export default function AnalyticsPage() {
           {funnel.steps.map((step, index) => {
             const Icon = getStepIcon(step.step);
             const isLastStep = index === funnel.steps.length - 1;
-            
+
             return (
               <div key={step.step}>
                 <div className="flex items-center justify-between mb-2">
@@ -142,11 +143,12 @@ export default function AnalyticsPage() {
                   </div>
                 </div>
                 <Progress value={step.percentage} className="h-2" />
-                
-                {!isLastStep && index < funnel.dropoff.length && (
+
+                {!isLastStep && index < funnel.dropoff.length && funnel.dropoff[index] && (
                   <div className="mt-2 mb-4 pl-8 text-sm text-red-600 dark:text-red-400 flex items-center">
                     <TrendingDown className="h-4 w-4 mr-1" />
-                    {funnel.dropoff[index].count} dropped off ({funnel.dropoff[index].percentage.toFixed(1)}%)
+                    {funnel.dropoff[index].count} dropped off (
+                    {funnel.dropoff[index].percentage.toFixed(1)}%)
                   </div>
                 )}
               </div>
@@ -162,7 +164,10 @@ export default function AnalyticsPage() {
         </h2>
         <div className="space-y-3">
           {funnel.dropoff.map((drop) => (
-            <div key={`${drop.fromStep}-${drop.toStep}`} className="flex items-center justify-between">
+            <div
+              key={`${drop.fromStep}-${drop.toStep}`}
+              className="flex items-center justify-between"
+            >
               <div className="flex items-center space-x-2">
                 <span className="text-sm text-gray-600 dark:text-gray-300">
                   {getStepName(drop.fromStep)}

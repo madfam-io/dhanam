@@ -21,16 +21,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider
-        attribute="class"
-        defaultTheme="system"
-        enableSystem
-        disableTransitionOnChange
-      >
+      <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
         <AuthProvider>
-          <PreferencesProvider>
-            {children}
-          </PreferencesProvider>
+          <PreferencesProvider>{children}</PreferencesProvider>
         </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>

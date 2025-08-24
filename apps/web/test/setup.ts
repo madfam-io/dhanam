@@ -39,7 +39,7 @@ global.testUtils = {
     locale: 'en',
     timezone: 'UTC',
   }),
-  
+
   createMockSpace: () => ({
     id: 'test-space',
     name: 'Test Space',
@@ -47,7 +47,7 @@ global.testUtils = {
     currency: 'USD',
     timezone: 'UTC',
   }),
-  
+
   createMockAccount: () => ({
     id: 'test-account',
     name: 'Test Account',
@@ -57,7 +57,7 @@ global.testUtils = {
     balance: 1000,
     lastSyncedAt: new Date().toISOString(),
   }),
-  
+
   createMockTransaction: () => ({
     id: 'test-transaction',
     accountId: 'test-account',

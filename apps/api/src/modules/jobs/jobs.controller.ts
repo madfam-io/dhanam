@@ -1,14 +1,11 @@
-import {
-  Controller,
-  Post,
-  UseGuards,
-  Param,
-} from '@nestjs/common';
+import { Controller, Post, UseGuards, Param } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import { JobsService } from './jobs.service';
+
+import { CurrentUser, AuthenticatedUser } from '@core/auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
 import { SpaceGuard } from '@modules/spaces/guards/space.guard';
-import { CurrentUser, AuthenticatedUser } from '@core/auth/decorators/current-user.decorator';
+
+import { JobsService } from './jobs.service';
 
 @ApiTags('jobs')
 @Controller('jobs')

@@ -6,11 +6,7 @@ import { DashboardNav } from '~/components/layout/dashboard-nav';
 import { DashboardHeader } from '~/components/layout/dashboard-header';
 import { useAuth } from '~/lib/hooks/use-auth';
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth();
   const router = useRouter();
 
@@ -30,9 +26,7 @@ export default function DashboardLayout({
       <div className="flex">
         <DashboardNav />
         <main className="flex-1 p-6">
-          <div className="mx-auto max-w-7xl">
-            {children}
-          </div>
+          <div className="mx-auto max-w-7xl">{children}</div>
         </main>
       </div>
     </div>

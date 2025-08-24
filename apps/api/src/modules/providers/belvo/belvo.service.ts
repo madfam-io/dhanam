@@ -1,12 +1,16 @@
+import * as crypto from 'crypto';
+
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { PrismaService } from '@core/prisma/prisma.service';
-import { CryptoService } from '@core/crypto/crypto.service';
-import { AuditService } from '@core/audit/audit.service';
-import { MonitorPerformance } from '@core/decorators/monitor-performance.decorator';
-import { CreateBelvoLinkDto, BelvoWebhookDto, BelvoWebhookEvent } from './dto';
 import { Account, Transaction, Prisma, Currency, AccountType } from '@prisma/client';
-import * as crypto from 'crypto';
+
+import { AuditService } from '@core/audit/audit.service';
+import { CryptoService } from '@core/crypto/crypto.service';
+import { MonitorPerformance } from '@core/decorators/monitor-performance.decorator';
+import { PrismaService } from '@core/prisma/prisma.service';
+
+import { CreateBelvoLinkDto, BelvoWebhookDto, BelvoWebhookEvent } from './dto';
+
 const { default: Belvo } = require('belvo');
 
 @Injectable()
@@ -19,7 +23,7 @@ export class BelvoService {
     private configService: ConfigService,
     private prisma: PrismaService,
     private cryptoService: CryptoService,
-    private auditService: AuditService,
+    private auditService: AuditService
   ) {
     const secretKeyId = this.configService.get<string>('BELVO_SECRET_KEY_ID');
     const secretKeyPassword = this.configService.get<string>('BELVO_SECRET_KEY_PASSWORD');
@@ -28,11 +32,7 @@ export class BelvoService {
     this.webhookSecret = this.configService.get('BELVO_WEBHOOK_SECRET', '');
 
     if (secretKeyId && secretKeyPassword) {
-      this.belvoClient = new Belvo(
-        secretKeyId,
-        secretKeyPassword,
-        environment,
-      );
+      this.belvoClient = new Belvo(secretKeyId, secretKeyPassword, environment);
     } else {
       this.logger.warn('Belvo credentials not configured');
     }
@@ -41,7 +41,7 @@ export class BelvoService {
   async createLink(
     spaceId: string,
     userId: string,
-    dto: CreateBelvoLinkDto,
+    dto: CreateBelvoLinkDto
   ): Promise<{ linkId: string; accounts: Account[] }> {
     if (!this.belvoClient) {
       throw new BadRequestException('Belvo integration not configured');
@@ -56,7 +56,7 @@ export class BelvoService {
         {
           external_id: dto.externalId,
           access_mode: 'recurrent',
-        },
+        }
       );
 
       // Store encrypted link
@@ -76,7 +76,7 @@ export class BelvoService {
 
       // Fetch accounts immediately
       const belvoAccounts = await this.belvoClient.accounts.retrieve(link.id);
-      
+
       // Convert and store accounts
       const accounts = await this.syncAccounts(spaceId, userId, link.id, belvoAccounts);
 
@@ -84,23 +84,13 @@ export class BelvoService {
       await this.syncTransactions(spaceId, userId, link.id);
 
       // Log successful connection
-      await this.auditService.logProviderConnection(
-        'belvo',
-        userId,
-        spaceId,
-        true,
-      );
+      await this.auditService.logProviderConnection('belvo', userId, spaceId, true);
 
       return { linkId: link.id, accounts };
     } catch (error) {
       // Log failed connection
-      await this.auditService.logProviderConnection(
-        'belvo',
-        userId,
-        spaceId,
-        false,
-      );
-      
+      await this.auditService.logProviderConnection('belvo', userId, spaceId, false);
+
       this.logger.error('Failed to create Belvo link', error);
       throw new BadRequestException('Failed to connect to financial institution');
     }
@@ -110,7 +100,7 @@ export class BelvoService {
     spaceId: string,
     _userId: string,
     linkId: string,
-    belvoAccounts?: any[],
+    belvoAccounts?: any[]
   ): Promise<Account[]> {
     if (!this.belvoClient) {
       throw new BadRequestException('Belvo integration not configured');
@@ -126,7 +116,7 @@ export class BelvoService {
 
       for (const belvoAccount of belvoAccounts!) {
         const accountType = this.mapBelvoAccountType(belvoAccount.category);
-        
+
         // Check if account already exists
         const existingAccount = await this.prisma.account.findFirst({
           where: {
@@ -146,7 +136,7 @@ export class BelvoService {
               currency: this.mapCurrency(belvoAccount.currency),
               lastSyncedAt: new Date(),
               metadata: {
-                ...existingAccount.metadata as object,
+                ...(existingAccount.metadata as object),
                 institution: belvoAccount.institution.name,
                 number: belvoAccount.number,
               } as Prisma.JsonObject,
@@ -189,12 +179,12 @@ export class BelvoService {
     _userId: string,
     linkId: string,
     dateFrom?: string,
-    dateTo?: string,
+    dateTo?: string
   ): Promise<Transaction[]>;
   async syncTransactions(
     accessToken: string,
     linkId: string,
-    cursor?: string,
+    cursor?: string
   ): Promise<{ transactionCount: number; accountCount: number; nextCursor?: string }>;
   @MonitorPerformance(2000) // 2 second threshold for transaction sync
   async syncTransactions(
@@ -202,8 +192,10 @@ export class BelvoService {
     userIdOrLinkId: string,
     linkIdOrCursor?: string,
     dateFrom?: string,
-    dateTo?: string,
-  ): Promise<Transaction[] | { transactionCount: number; accountCount: number; nextCursor?: string }> {
+    dateTo?: string
+  ): Promise<
+    Transaction[] | { transactionCount: number; accountCount: number; nextCursor?: string }
+  > {
     if (!this.belvoClient) {
       throw new BadRequestException('Belvo integration not configured');
     }
@@ -244,13 +236,14 @@ export class BelvoService {
 
         // Default to last 90 days if no cursor
         const endDate = new Date().toISOString().split('T')[0];
-        const startDate = cursor || new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+        const startDate =
+          cursor || new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
         // Fetch transactions from Belvo
         const belvoTransactions = await this.belvoClient.transactions.retrieve(
           linkId,
           startDate,
-          endDate,
+          endDate
         );
 
         let transactionCount = 0;
@@ -323,13 +316,14 @@ export class BelvoService {
     try {
       // Default to last 90 days if not specified
       const endDate = dateTo || new Date().toISOString().split('T')[0];
-      const startDate = dateFrom || new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      const startDate =
+        dateFrom || new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
       // Fetch transactions from Belvo
       const belvoTransactions = await this.belvoClient.transactions.retrieve(
         linkId,
         startDate,
-        endDate,
+        endDate
       );
 
       const transactions: Transaction[] = [];
@@ -472,11 +466,11 @@ export class BelvoService {
 
   private mapBelvoAccountType(category: string): AccountType {
     const mapping: Record<string, AccountType> = {
-      'CHECKING_ACCOUNT': 'checking',
-      'CREDIT_CARD': 'credit',
-      'LOAN_ACCOUNT': 'other',
-      'SAVINGS_ACCOUNT': 'savings',
-      'INVESTMENT_ACCOUNT': 'investment',
+      CHECKING_ACCOUNT: 'checking',
+      CREDIT_CARD: 'credit',
+      LOAN_ACCOUNT: 'other',
+      SAVINGS_ACCOUNT: 'savings',
+      INVESTMENT_ACCOUNT: 'investment',
     };
     return mapping[category] || 'other';
   }
@@ -508,7 +502,7 @@ export class BelvoService {
 
     return crypto.timingSafeEqual(
       Buffer.from(signature, 'hex'),
-      Buffer.from(expectedSignature, 'hex'),
+      Buffer.from(expectedSignature, 'hex')
     );
   }
 }

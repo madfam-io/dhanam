@@ -1,3 +1,4 @@
+import { User } from '@dhanam/shared';
 import {
   Controller,
   Post,
@@ -9,12 +10,14 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+
+import { CurrentUser } from '@core/auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
+
 import { SpaceGuard } from '../../spaces/guards/space.guard';
+
 import { BitsoService } from './bitso.service';
 import { ConnectBitsoDto, BitsoWebhookDto } from './dto';
-import { CurrentUser } from '@core/auth/decorators/current-user.decorator';
-import { User } from '@dhanam/shared';
 
 @ApiTags('Bitso Provider')
 @Controller('providers/bitso')
@@ -29,7 +32,7 @@ export class BitsoController {
   async connectAccount(
     @Param('spaceId') spaceId: string,
     @CurrentUser() user: User,
-    @Body() connectDto: ConnectBitsoDto,
+    @Body() connectDto: ConnectBitsoDto
   ) {
     const result = await this.bitsoService.connectAccount(spaceId, user.id, connectDto);
     return {
@@ -70,14 +73,14 @@ export class BitsoController {
   @ApiResponse({ status: 200, description: 'Webhook processed successfully' })
   async handleWebhook(
     @Body() webhookData: BitsoWebhookDto,
-    @Headers('bitso-signature') signature: string,
+    @Headers('bitso-signature') signature: string
   ) {
     if (!signature) {
       throw new BadRequestException('Missing webhook signature');
     }
 
     await this.bitsoService.handleWebhook(webhookData, signature);
-    
+
     return {
       message: 'Webhook processed successfully',
     };

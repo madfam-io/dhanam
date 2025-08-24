@@ -1,5 +1,5 @@
 import { UUID } from './common.types';
-import { User, UserProfile } from './user.types';
+import { UserProfile } from './user.types';
 
 export interface LoginDto {
   email: string;

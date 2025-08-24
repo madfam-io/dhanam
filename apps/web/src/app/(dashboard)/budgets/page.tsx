@@ -2,12 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@dhanam/ui';
+import { Card, CardContent, CardHeader, CardTitle } from '@dhanam/ui';
 import { Button } from '@dhanam/ui';
 import {
   Dialog,
@@ -22,6 +17,7 @@ import { Badge } from '@dhanam/ui';
 import { Input } from '@dhanam/ui';
 import { Label } from '@dhanam/ui';
 import { Progress } from '@dhanam/ui';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@dhanam/ui';
 import { Plus, Loader2, PiggyBank, Settings } from 'lucide-react';
 import { useSpaceStore } from '@/stores/space';
 import { budgetsApi } from '@/lib/api/budgets';
@@ -70,7 +66,9 @@ export default function BudgetsPage() {
       categoriesApi.createCategory(currentSpace!.id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['budgets', currentSpace?.id] });
-      queryClient.invalidateQueries({ queryKey: ['budget-summary', currentSpace?.id, selectedBudget?.id] });
+      queryClient.invalidateQueries({
+        queryKey: ['budget-summary', currentSpace?.id, selectedBudget?.id],
+      });
       setIsAddCategoryOpen(false);
       toast.success('Category added successfully');
     },
@@ -78,7 +76,6 @@ export default function BudgetsPage() {
       toast.error('Failed to add category');
     },
   });
-
 
   const handleCreateSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -109,9 +106,7 @@ export default function BudgetsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Budgets</h1>
-          <p className="text-muted-foreground">
-            Create and manage your budgets to track spending
-          </p>
+          <p className="text-muted-foreground">Create and manage your budgets to track spending</p>
         </div>
         <div className="flex gap-2">
           <Button onClick={() => setIsRuleManagerOpen(true)} variant="outline">
@@ -126,57 +121,50 @@ export default function BudgetsPage() {
               </Button>
             </DialogTrigger>
             <DialogContent>
-            <form onSubmit={handleCreateSubmit}>
-              <DialogHeader>
-                <DialogTitle>Create Budget</DialogTitle>
-                <DialogDescription>
-                  Set up a new budget to track your spending
-                </DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="name">Budget Name</Label>
-                  <Input
-                    id="name"
-                    name="name"
-                    placeholder="e.g., Monthly Budget"
-                    required
-                  />
+              <form onSubmit={handleCreateSubmit}>
+                <DialogHeader>
+                  <DialogTitle>Create Budget</DialogTitle>
+                  <DialogDescription>Set up a new budget to track your spending</DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="name">Budget Name</Label>
+                    <Input id="name" name="name" placeholder="e.g., Monthly Budget" required />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="period">Period</Label>
+                    <Select name="period" required>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select period" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="monthly">Monthly</SelectItem>
+                        <SelectItem value="weekly">Weekly</SelectItem>
+                        <SelectItem value="quarterly">Quarterly</SelectItem>
+                        <SelectItem value="yearly">Yearly</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="startDate">Start Date</Label>
+                    <Input
+                      id="startDate"
+                      name="startDate"
+                      type="date"
+                      defaultValue={new Date().toISOString().split('T')[0]}
+                      required
+                    />
+                  </div>
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="period">Period</Label>
-                  <select
-                    id="period"
-                    name="period"
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    required
-                  >
-                    <option value="monthly">Monthly</option>
-                    <option value="weekly">Weekly</option>
-                    <option value="quarterly">Quarterly</option>
-                    <option value="yearly">Yearly</option>
-                  </select>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="startDate">Start Date</Label>
-                  <Input
-                    id="startDate"
-                    name="startDate"
-                    type="date"
-                    defaultValue={new Date().toISOString().split('T')[0]}
-                    required
-                  />
-                </div>
-              </div>
-              <DialogFooter>
-                <Button type="submit" disabled={createBudgetMutation.isPending}>
-                  {createBudgetMutation.isPending && (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  )}
-                  Create Budget
-                </Button>
-              </DialogFooter>
-            </form>
+                <DialogFooter>
+                  <Button type="submit" disabled={createBudgetMutation.isPending}>
+                    {createBudgetMutation.isPending && (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    )}
+                    Create Budget
+                  </Button>
+                </DialogFooter>
+              </form>
             </DialogContent>
           </Dialog>
         </div>
@@ -203,17 +191,19 @@ export default function BudgetsPage() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {budgets?.map((budget) => (
-            <Card key={budget.id} className="cursor-pointer hover:shadow-lg transition-shadow"
-              onClick={() => setSelectedBudget(budget)}>
+            <Card
+              key={budget.id}
+              className="cursor-pointer hover:shadow-lg transition-shadow"
+              onClick={() => setSelectedBudget(budget)}
+            >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  {budget.name}
-                </CardTitle>
+                <CardTitle className="text-sm font-medium">{budget.name}</CardTitle>
                 <Badge variant="secondary">{budget.period}</Badge>
               </CardHeader>
               <CardContent>
                 <div className="text-xs text-muted-foreground mb-4">
-                  {formatDate(budget.startDate)} - {budget.endDate ? formatDate(budget.endDate) : 'Ongoing'}
+                  {formatDate(budget.startDate)} -{' '}
+                  {budget.endDate ? formatDate(budget.endDate) : 'Ongoing'}
                 </div>
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
@@ -222,7 +212,8 @@ export default function BudgetsPage() {
                   </div>
                   {budget.categories && budget.categories.length > 0 && (
                     <div className="text-xs text-muted-foreground">
-                      Total Budget: {formatCurrency(
+                      Total Budget:{' '}
+                      {formatCurrency(
                         budget.categories.reduce((sum, cat) => sum + cat.budgeted, 0),
                         currentSpace.currency
                       )}
@@ -242,7 +233,8 @@ export default function BudgetsPage() {
               <DialogHeader>
                 <DialogTitle>{selectedBudget.name}</DialogTitle>
                 <DialogDescription>
-                  {formatDate(selectedBudget.startDate)} - {selectedBudget.endDate ? formatDate(selectedBudget.endDate) : 'Ongoing'}
+                  {formatDate(selectedBudget.startDate)} -{' '}
+                  {selectedBudget.endDate ? formatDate(selectedBudget.endDate) : 'Ongoing'}
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-6">
@@ -266,7 +258,10 @@ export default function BudgetsPage() {
                   <Card>
                     <CardContent className="pt-4">
                       <div className="text-2xl font-bold">
-                        {formatCurrency(budgetSummary.summary.totalRemaining, currentSpace.currency)}
+                        {formatCurrency(
+                          budgetSummary.summary.totalRemaining,
+                          currentSpace.currency
+                        )}
                       </div>
                       <p className="text-xs text-muted-foreground">Remaining</p>
                     </CardContent>
@@ -281,7 +276,7 @@ export default function BudgetsPage() {
                   </Card>
                 </div>
 
-                <BudgetAnalytics 
+                <BudgetAnalytics
                   spaceId={currentSpace.id}
                   budgetId={selectedBudget.id}
                   currency={currentSpace.currency}
@@ -290,10 +285,7 @@ export default function BudgetsPage() {
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
                     <h4 className="font-medium">Categories</h4>
-                    <Button
-                      size="sm"
-                      onClick={() => setIsAddCategoryOpen(true)}
-                    >
+                    <Button size="sm" onClick={() => setIsAddCategoryOpen(true)}>
                       <Plus className="mr-2 h-4 w-4" />
                       Add Category
                     </Button>
@@ -315,9 +307,7 @@ export default function BudgetsPage() {
                         </div>
                         <Progress value={category.percentUsed} className="mb-2" />
                         <div className="flex justify-between text-sm text-muted-foreground">
-                          <span>
-                            {formatCurrency(category.spent, currentSpace.currency)} spent
-                          </span>
+                          <span>{formatCurrency(category.spent, currentSpace.currency)} spent</span>
                           <span>
                             {formatCurrency(category.remaining, currentSpace.currency)} remaining
                           </span>
@@ -337,19 +327,12 @@ export default function BudgetsPage() {
           <form onSubmit={handleAddCategorySubmit}>
             <DialogHeader>
               <DialogTitle>Add Category</DialogTitle>
-              <DialogDescription>
-                Create a new spending category for this budget
-              </DialogDescription>
+              <DialogDescription>Create a new spending category for this budget</DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
                 <Label htmlFor="category-name">Category Name</Label>
-                <Input
-                  id="category-name"
-                  name="name"
-                  placeholder="e.g., Groceries"
-                  required
-                />
+                <Input id="category-name" name="name" placeholder="e.g., Groceries" required />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="budgetedAmount">Budget Amount</Label>

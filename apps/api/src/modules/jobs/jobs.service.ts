@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
+
 import { PrismaService } from '@core/prisma/prisma.service';
 import { RulesService } from '@modules/categories/rules.service';
 import { BitsoService } from '@modules/providers/bitso/bitso.service';
@@ -11,7 +12,7 @@ export class JobsService {
   constructor(
     private prisma: PrismaService,
     private rulesService: RulesService,
-    private bitsoService: BitsoService,
+    private bitsoService: BitsoService
   ) {}
 
   // Run every hour - categorize new transactions
@@ -34,7 +35,7 @@ export class JobsService {
       }
 
       this.logger.log(
-        `Auto-categorization complete: ${totalCategorized}/${totalProcessed} transactions categorized across ${spaces.length} spaces`,
+        `Auto-categorization complete: ${totalCategorized}/${totalProcessed} transactions categorized across ${spaces.length} spaces`
       );
     } catch (error) {
       this.logger.error('Failed to auto-categorize transactions:', error);
@@ -87,7 +88,7 @@ export class JobsService {
       });
 
       this.logger.log(
-        `Session cleanup complete. Active connections: ${activeConnections}, Stale connections: ${oldConnections}`,
+        `Session cleanup complete. Active connections: ${activeConnections}, Stale connections: ${oldConnections}`
       );
     } catch (error) {
       this.logger.error('Failed to cleanup sessions:', error);
@@ -109,7 +110,9 @@ export class JobsService {
       for (const space of spaces) {
         // Calculate total assets and liabilities
         const totalAssets = space.accounts
-          .filter((account: any) => ['checking', 'savings', 'investment', 'crypto'].includes(account.type))
+          .filter((account: any) =>
+            ['checking', 'savings', 'investment', 'crypto'].includes(account.type)
+          )
           .reduce((sum: number, account: any) => sum + account.balance.toNumber(), 0);
 
         const totalLiabilities = space.accounts
@@ -130,7 +133,9 @@ export class JobsService {
           });
         }
 
-        this.logger.log(`Created valuation snapshot for space ${space.id}: $${netWorth.toFixed(2)}`);
+        this.logger.log(
+          `Created valuation snapshot for space ${space.id}: $${netWorth.toFixed(2)}`
+        );
       }
 
       this.logger.log(`Daily snapshots created for ${spaces.length} spaces`);
@@ -147,7 +152,7 @@ export class JobsService {
   }> {
     this.logger.log(`Manual categorization triggered for ${spaceId || 'all spaces'}`);
 
-    const spaces = spaceId 
+    const spaces = spaceId
       ? [{ id: spaceId }]
       : await this.prisma.space.findMany({ select: { id: true } });
 

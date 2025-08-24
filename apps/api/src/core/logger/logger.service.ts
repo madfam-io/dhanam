@@ -13,12 +13,14 @@ export class LoggerService implements NestLoggerService {
     if (this.isDevelopment) {
       console.log(`[${context || 'Application'}] ${message}`);
     } else {
-      console.log(JSON.stringify({
-        level: 'info',
-        message,
-        context,
-        timestamp: new Date().toISOString(),
-      }));
+      console.log(
+        JSON.stringify({
+          level: 'info',
+          message,
+          context,
+          timestamp: new Date().toISOString(),
+        })
+      );
     }
   }
 
@@ -26,13 +28,15 @@ export class LoggerService implements NestLoggerService {
     if (this.isDevelopment) {
       console.error(`[${context || 'Application'}] ${message}`, trace);
     } else {
-      console.error(JSON.stringify({
-        level: 'error',
-        message,
-        trace,
-        context,
-        timestamp: new Date().toISOString(),
-      }));
+      console.error(
+        JSON.stringify({
+          level: 'error',
+          message,
+          trace,
+          context,
+          timestamp: new Date().toISOString(),
+        })
+      );
     }
   }
 
@@ -40,12 +44,14 @@ export class LoggerService implements NestLoggerService {
     if (this.isDevelopment) {
       console.warn(`[${context || 'Application'}] ${message}`);
     } else {
-      console.warn(JSON.stringify({
-        level: 'warn',
-        message,
-        context,
-        timestamp: new Date().toISOString(),
-      }));
+      console.warn(
+        JSON.stringify({
+          level: 'warn',
+          message,
+          context,
+          timestamp: new Date().toISOString(),
+        })
+      );
     }
   }
 

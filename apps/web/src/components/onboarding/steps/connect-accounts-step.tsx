@@ -3,15 +3,15 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useOnboarding } from '../onboarding-provider';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { 
-  CreditCardIcon, 
-  WalletIcon, 
+import { Button } from '@dhanam/ui';
+import { Card, CardContent, CardHeader, CardTitle } from '@dhanam/ui';
+import {
+  CreditCardIcon,
+  WalletIcon,
   BuildingIcon,
   PlusIcon,
   ArrowRightIcon,
-  SkipForwardIcon 
+  SkipForwardIcon,
 } from 'lucide-react';
 
 const providers = [
@@ -92,17 +92,19 @@ export function ConnectAccountsStep() {
         <div className="w-20 h-20 bg-indigo-100 rounded-full mx-auto mb-6 flex items-center justify-center">
           <PlusIcon className="w-10 h-10 text-indigo-600" />
         </div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">
-          Conecta tus cuentas
-        </h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-4">Conecta tus cuentas</h1>
         <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          Conecta tus cuentas bancarias y wallets para sincronizar automáticamente tus transacciones y obtener un análisis completo de tus finanzas
+          Conecta tus cuentas bancarias y wallets para sincronizar automáticamente tus transacciones
+          y obtener un análisis completo de tus finanzas
         </p>
       </div>
 
       <div className="grid md:grid-cols-2 gap-6 mb-8">
         {providers.map((provider) => (
-          <Card key={provider.id} className="hover:shadow-lg transition-shadow cursor-pointer group">
+          <Card
+            key={provider.id}
+            className="hover:shadow-lg transition-shadow cursor-pointer group"
+          >
             <CardHeader>
               <CardTitle className="flex items-start justify-between">
                 <div className="flex items-center space-x-3">
@@ -111,17 +113,17 @@ export function ConnectAccountsStep() {
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-900">{provider.name}</h3>
-                    <p className="text-sm text-gray-500">{provider.region} • {provider.type}</p>
+                    <p className="text-sm text-gray-500">
+                      {provider.region} • {provider.type}
+                    </p>
                   </div>
                 </div>
                 <ArrowRightIcon className="w-5 h-5 text-gray-400 group-hover:text-indigo-600 transition-colors" />
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-gray-600 mb-4">
-                {provider.description}
-              </p>
-              <Button 
+              <p className="text-gray-600 mb-4">{provider.description}</p>
+              <Button
                 onClick={() => handleConnectProvider(provider.id)}
                 className="w-full"
                 variant="outline"
@@ -134,9 +136,7 @@ export function ConnectAccountsStep() {
       </div>
 
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
-        <h3 className="font-semibold text-blue-900 mb-2">
-          🔒 Tu seguridad es nuestra prioridad
-        </h3>
+        <h3 className="font-semibold text-blue-900 mb-2">🔒 Tu seguridad es nuestra prioridad</h3>
         <ul className="space-y-1 text-sm text-blue-800">
           <li>• Todas las conexiones usan autenticación OAuth segura</li>
           <li>• Tus credenciales bancarias nunca se almacenan en nuestros servidores</li>
@@ -146,9 +146,7 @@ export function ConnectAccountsStep() {
       </div>
 
       <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-8">
-        <h3 className="font-semibold text-yellow-900 mb-2">
-          💡 ¿Por qué conectar tus cuentas?
-        </h3>
+        <h3 className="font-semibold text-yellow-900 mb-2">💡 ¿Por qué conectar tus cuentas?</h3>
         <div className="grid md:grid-cols-2 gap-4 text-sm text-yellow-800">
           <div>
             <h4 className="font-medium mb-1">Automatización total</h4>
@@ -180,13 +178,8 @@ export function ConnectAccountsStep() {
           <SkipForwardIcon className="w-4 h-4 mr-2" />
           {isSkipping ? 'Saltando...' : 'Saltar por ahora'}
         </Button>
-        
-        <Button
-          size="lg"
-          onClick={handleContinue}
-          disabled={isLoading}
-          className="px-6"
-        >
+
+        <Button size="lg" onClick={handleContinue} disabled={isLoading} className="px-6">
           {isLoading ? 'Cargando...' : 'Ya conecté mis cuentas'}
         </Button>
       </div>

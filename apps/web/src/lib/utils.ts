@@ -1,4 +1,10 @@
 import { Currency } from '@dhanam/shared';
+import { type ClassValue, clsx } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
 
 export function formatCurrency(amount: number, currency: Currency): string {
   const locale = currency === 'MXN' ? 'es-MX' : 'en-US';

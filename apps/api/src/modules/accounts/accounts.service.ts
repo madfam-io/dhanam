@@ -1,21 +1,19 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
-import { PrismaService } from '@core/prisma/prisma.service';
+import { Account, SyncAccountResponse, AccountType } from '@dhanam/shared';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { v4 as uuidv4 } from 'uuid';
+
 import { LoggerService } from '@core/logger/logger.service';
+import { PrismaService } from '@core/prisma/prisma.service';
+
+import { ConnectAccountDto } from './dto/connect-account.dto';
 import { CreateAccountDto } from './dto/create-account.dto';
 import { UpdateAccountDto } from './dto/update-account.dto';
-import { ConnectAccountDto } from './dto/connect-account.dto';
-import { Account, SyncAccountResponse, AccountType } from '@dhanam/shared';
-import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class AccountsService {
   constructor(
     private prisma: PrismaService,
-    private logger: LoggerService,
+    private logger: LoggerService
   ) {}
 
   async listAccounts(spaceId: string, type?: string): Promise<Account[]> {
@@ -56,11 +54,11 @@ export class AccountsService {
   async connectAccount(
     _spaceId: string,
     _userId: string,
-    dto: ConnectAccountDto,
+    dto: ConnectAccountDto
   ): Promise<Account[]> {
     // This is a placeholder for provider integration
     // In production, this would call the appropriate provider service
-    
+
     if (!['belvo', 'plaid', 'bitso'].includes(dto.provider)) {
       throw new BadRequestException('Invalid provider');
     }
@@ -70,13 +68,13 @@ export class AccountsService {
       case 'belvo':
         // For Belvo, we'll need to handle this through the Belvo module
         throw new BadRequestException(
-          'Belvo connections should be initiated through /providers/belvo/link endpoint',
+          'Belvo connections should be initiated through /providers/belvo/link endpoint'
         );
       case 'plaid':
         // TODO: Implement Plaid integration
         throw new BadRequestException('Plaid integration not yet implemented');
       case 'bitso':
-        // TODO: Implement Bitso integration  
+        // TODO: Implement Bitso integration
         throw new BadRequestException('Bitso integration not yet implemented');
       default:
         throw new BadRequestException(`Unknown provider: ${dto.provider}`);
@@ -98,11 +96,7 @@ export class AccountsService {
     return this.sanitizeAccount(account);
   }
 
-  async updateAccount(
-    spaceId: string,
-    accountId: string,
-    dto: UpdateAccountDto,
-  ): Promise<Account> {
+  async updateAccount(spaceId: string, accountId: string, dto: UpdateAccountDto): Promise<Account> {
     const account = await this.prisma.account.findFirst({
       where: {
         id: accountId,

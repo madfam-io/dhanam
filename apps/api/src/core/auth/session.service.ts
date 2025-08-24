@@ -1,6 +1,8 @@
-import { Injectable } from '@nestjs/common';
 import { randomBytes, createHash } from 'crypto';
+
+import { Injectable } from '@nestjs/common';
 import Redis from 'ioredis';
+
 import { LoggerService } from '@core/logger/logger.service';
 
 export interface SessionData {
@@ -41,7 +43,7 @@ export class SessionService {
     await this.redis.setex(
       `refresh_token:${hashedToken}`,
       30 * 24 * 60 * 60, // 30 days in seconds
-      JSON.stringify(sessionData),
+      JSON.stringify(sessionData)
     );
 
     // Track user's active sessions
@@ -63,7 +65,7 @@ export class SessionService {
 
     try {
       const sessionData: SessionData = JSON.parse(sessionDataStr);
-      
+
       // Check if token is expired
       if (Date.now() > sessionData.expiresAt) {
         await this.revokeRefreshToken(token);
@@ -80,7 +82,7 @@ export class SessionService {
 
   async revokeRefreshToken(token: string): Promise<void> {
     const hashedToken = this.hashToken(token);
-    
+
     // Get session data to remove from user's active sessions
     const sessionDataStr = await this.redis.get(`refresh_token:${hashedToken}`);
     if (sessionDataStr) {
@@ -88,7 +90,11 @@ export class SessionService {
         const sessionData: SessionData = JSON.parse(sessionDataStr);
         await this.redis.srem(`user_sessions:${sessionData.userId}`, hashedToken);
       } catch (error) {
-        this.logger.error('Failed to parse session data during revocation', (error as Error).message, 'SessionService');
+        this.logger.error(
+          'Failed to parse session data during revocation',
+          (error as Error).message,
+          'SessionService'
+        );
       }
     }
 
@@ -98,17 +104,17 @@ export class SessionService {
 
   async revokeAllUserSessions(userId: string): Promise<void> {
     const hashedTokens = await this.redis.smembers(`user_sessions:${userId}`);
-    
+
     const pipeline = this.redis.pipeline();
-    
+
     // Remove all refresh tokens
     for (const hashedToken of hashedTokens) {
       pipeline.del(`refresh_token:${hashedToken}`);
     }
-    
+
     // Remove user sessions set
     pipeline.del(`user_sessions:${userId}`);
-    
+
     await pipeline.exec();
 
     this.logger.log(`All sessions revoked for user: ${userId}`, 'SessionService');
@@ -123,7 +129,7 @@ export class SessionService {
     await this.redis.setex(
       `password_reset:${hashedToken}`,
       60 * 60, // 1 hour in seconds
-      JSON.stringify({ userId, expiresAt }),
+      JSON.stringify({ userId, expiresAt })
     );
 
     this.logger.log(`Password reset token created for user: ${userId}`, 'SessionService');
@@ -141,7 +147,7 @@ export class SessionService {
 
     try {
       const resetData = JSON.parse(resetDataStr);
-      
+
       if (Date.now() > resetData.expiresAt) {
         await this.redis.del(`password_reset:${hashedToken}`);
         return null;
@@ -152,7 +158,11 @@ export class SessionService {
 
       return resetData.userId;
     } catch (error) {
-      this.logger.error('Failed to parse reset token data', (error as Error).message, 'SessionService');
+      this.logger.error(
+        'Failed to parse reset token data',
+        (error as Error).message,
+        'SessionService'
+      );
       await this.redis.del(`password_reset:${hashedToken}`);
       return null;
     }

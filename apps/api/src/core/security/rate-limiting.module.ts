@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ThrottlerModule } from '@nestjs/throttler';
+
 import { RedisModule } from '@core/redis/redis.module';
 
 @Module({
@@ -12,7 +13,7 @@ import { RedisModule } from '@core/redis/redis.module';
         limit: 60, // 60 requests per minute
       },
       {
-        name: 'medium', 
+        name: 'medium',
         ttl: 15 * 60 * 1000, // 15 minutes
         limit: 300, // 300 requests per 15 minutes
       },

@@ -1,6 +1,6 @@
-import { IsString, IsNumber, IsDate, IsOptional, IsUUID, IsObject } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
+import { IsString, IsNumber, IsDate, IsOptional, IsUUID, IsObject } from 'class-validator';
 
 export class CreateTransactionDto {
   @ApiProperty()

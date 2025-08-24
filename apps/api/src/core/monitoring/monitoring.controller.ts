@@ -1,15 +1,17 @@
 import { Controller, Get, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+
+import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
+
 import { HealthService } from './health.service';
 import { MetricsService } from './metrics.service';
-import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
 
 @ApiTags('Monitoring')
 @Controller('monitoring')
 export class MonitoringController {
   constructor(
     private readonly healthService: HealthService,
-    private readonly metricsService: MetricsService,
+    private readonly metricsService: MetricsService
   ) {}
 
   @Get('health')

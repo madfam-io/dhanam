@@ -1,19 +1,11 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  UseGuards,
-  Req,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiOkResponse } from '@nestjs/swagger';
-import { BudgetsService } from './budgets.service';
-import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
-import { CreateBudgetDto, UpdateBudgetDto, BudgetResponseDto, BudgetSummaryDto } from './dto';
 import { Request } from 'express';
+
+import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
+
+import { BudgetsService } from './budgets.service';
+import { CreateBudgetDto, UpdateBudgetDto, BudgetResponseDto, BudgetSummaryDto } from './dto';
 
 @ApiTags('budgets')
 @Controller('spaces/:spaceId/budgets')
@@ -32,11 +24,7 @@ export class BudgetsController {
   @Get(':id')
   @ApiOperation({ summary: 'Get a budget by id' })
   @ApiOkResponse({ type: BudgetResponseDto })
-  findOne(
-    @Param('spaceId') spaceId: string,
-    @Param('id') id: string,
-    @Req() req: Request,
-  ) {
+  findOne(@Param('spaceId') spaceId: string, @Param('id') id: string, @Req() req: Request) {
     return this.budgetsService.findOne(spaceId, req.user!.id, id);
   }
 
@@ -46,7 +34,7 @@ export class BudgetsController {
   getBudgetSummary(
     @Param('spaceId') spaceId: string,
     @Param('id') id: string,
-    @Req() req: Request,
+    @Req() req: Request
   ) {
     return this.budgetsService.getBudgetSummary(spaceId, req.user!.id, id);
   }
@@ -57,7 +45,7 @@ export class BudgetsController {
   create(
     @Param('spaceId') spaceId: string,
     @Body() createBudgetDto: CreateBudgetDto,
-    @Req() req: Request,
+    @Req() req: Request
   ) {
     return this.budgetsService.create(spaceId, req.user!.id, createBudgetDto);
   }
@@ -69,18 +57,14 @@ export class BudgetsController {
     @Param('spaceId') spaceId: string,
     @Param('id') id: string,
     @Body() updateBudgetDto: UpdateBudgetDto,
-    @Req() req: Request,
+    @Req() req: Request
   ) {
     return this.budgetsService.update(spaceId, req.user!.id, id, updateBudgetDto);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a budget' })
-  remove(
-    @Param('spaceId') spaceId: string,
-    @Param('id') id: string,
-    @Req() req: Request,
-  ) {
+  remove(@Param('spaceId') spaceId: string, @Param('id') id: string, @Req() req: Request) {
     return this.budgetsService.remove(spaceId, req.user!.id, id);
   }
 }

@@ -22,7 +22,7 @@ interface LoginFormProps {
 
 export function LoginForm({ onSubmit, isLoading, showTotpField }: LoginFormProps) {
   const [showPassword, setShowPassword] = useState(false);
-  
+
   const {
     register,
     handleSubmit,
@@ -42,9 +42,7 @@ export function LoginForm({ onSubmit, isLoading, showTotpField }: LoginFormProps
           {...register('email')}
           disabled={isLoading}
         />
-        {errors.email && (
-          <p className="text-sm text-destructive">{errors.email.message}</p>
-        )}
+        {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
       </div>
 
       <div className="space-y-2">
@@ -65,9 +63,7 @@ export function LoginForm({ onSubmit, isLoading, showTotpField }: LoginFormProps
             {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
           </button>
         </div>
-        {errors.password && (
-          <p className="text-sm text-destructive">{errors.password.message}</p>
-        )}
+        {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
       </div>
 
       {showTotpField && (
@@ -81,9 +77,7 @@ export function LoginForm({ onSubmit, isLoading, showTotpField }: LoginFormProps
             {...register('totpCode')}
             disabled={isLoading}
           />
-          {errors.totpCode && (
-            <p className="text-sm text-destructive">{errors.totpCode.message}</p>
-          )}
+          {errors.totpCode && <p className="text-sm text-destructive">{errors.totpCode.message}</p>}
         </div>
       )}
 

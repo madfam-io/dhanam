@@ -10,7 +10,7 @@ export class ThrottleAuthGuard extends ThrottlerGuard {
   }
 }
 
-@Injectable() 
+@Injectable()
 export class StrictThrottleGuard extends ThrottlerGuard {
   // For sensitive endpoints like password reset, TOTP setup
   protected async getTracker(req: Record<string, any>): Promise<string> {

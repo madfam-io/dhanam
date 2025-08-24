@@ -2,9 +2,9 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsNotEmpty, IsUUID } from 'class-validator';
 
 export class VerifyEmailDto {
-  @ApiProperty({ 
+  @ApiProperty({
     description: 'Email verification token',
-    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
   })
   @IsString()
   @IsNotEmpty()
@@ -12,9 +12,9 @@ export class VerifyEmailDto {
 }
 
 export class ResendVerificationDto {
-  @ApiProperty({ 
+  @ApiProperty({
     description: 'User ID to resend verification for',
-    example: '550e8400-e29b-41d4-a716-446655440000'
+    example: '550e8400-e29b-41d4-a716-446655440000',
   })
   @IsString()
   @IsUUID()

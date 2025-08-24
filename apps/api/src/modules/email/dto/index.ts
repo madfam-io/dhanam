@@ -1,5 +1,6 @@
-import { IsEmail, IsString, IsOptional, IsArray, IsEnum } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsEmail, IsString, IsOptional, IsArray, IsEnum } from 'class-validator';
+
 import { EmailTemplate } from '../types';
 
 export class SendTestEmailDto {
@@ -14,9 +15,9 @@ export class SendTestEmailDto {
 }
 
 export class SendBatchEmailDto {
-  @ApiProperty({ 
+  @ApiProperty({
     example: ['user1@example.com', 'user2@example.com'],
-    description: 'List of recipient email addresses'
+    description: 'List of recipient email addresses',
   })
   @IsArray()
   @IsEmail({}, { each: true })
@@ -26,16 +27,16 @@ export class SendBatchEmailDto {
   @IsString()
   subject: string;
 
-  @ApiProperty({ 
+  @ApiProperty({
     enum: ['welcome', 'weekly-summary', 'monthly-report'],
-    example: 'monthly-report'
+    example: 'monthly-report',
   })
   @IsEnum(['welcome', 'weekly-summary', 'monthly-report'])
   template: EmailTemplate;
 
-  @ApiProperty({ 
+  @ApiProperty({
     example: { month: 'January', year: 2024 },
-    description: 'Template context variables'
+    description: 'Template context variables',
   })
   context: Record<string, any>;
 }

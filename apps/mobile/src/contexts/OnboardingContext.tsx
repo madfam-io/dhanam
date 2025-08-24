@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { useAuth } from './AuthContext';
+
 import { onboardingApi } from '../services/api';
+
+import { useAuth } from './AuthContext';
 
 export interface OnboardingStatus {
   completed: boolean;
@@ -101,11 +103,7 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
     refreshStatus,
   };
 
-  return (
-    <OnboardingContext.Provider value={value}>
-      {children}
-    </OnboardingContext.Provider>
-  );
+  return <OnboardingContext.Provider value={value}>{children}</OnboardingContext.Provider>;
 }
 
 export function useOnboarding() {

@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Card } from '@dhanam/ui/components/card';
-import { Input } from '@dhanam/ui/components/input';
-import { Button } from '@dhanam/ui/components/button';
-import { Badge } from '@dhanam/ui/components/badge';
-import { Skeleton } from '@dhanam/ui/components/skeleton';
+import { useState, useEffect, useCallback } from 'react';
+import { Card } from '@dhanam/ui';
+import { Input } from '@dhanam/ui';
+import { Button } from '@dhanam/ui';
+import { Badge } from '@dhanam/ui';
+import { Skeleton } from '@dhanam/ui';
 import { adminApi, type UserDetails } from '~/lib/api/admin';
 import { Search, ChevronLeft, ChevronRight, User, Shield, Mail } from 'lucide-react';
 import { UserDetailsModal } from '~/components/admin/user-details-modal';
@@ -18,7 +18,7 @@ export default function UsersPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [selectedUser, setSelectedUser] = useState<UserDetails | null>(null);
 
-  const loadUsers = async () => {
+  const loadUsers = useCallback(async () => {
     setLoading(true);
     try {
       const response = await adminApi.searchUsers({
@@ -35,11 +35,11 @@ export default function UsersPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [search, page]);
 
   useEffect(() => {
     loadUsers();
-  }, [page]);
+  }, [page, loadUsers]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,9 +60,7 @@ export default function UsersPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Users</h1>
-        <p className="text-gray-500 dark:text-gray-400 mt-1">
-          Search and manage user accounts
-        </p>
+        <p className="text-gray-500 dark:text-gray-400 mt-1">Search and manage user accounts</p>
       </div>
 
       <Card className="p-6">
@@ -110,7 +108,10 @@ export default function UsersPage() {
                 <UserTableSkeleton />
               ) : users.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                  <td
+                    colSpan={5}
+                    className="px-6 py-12 text-center text-gray-500 dark:text-gray-400"
+                  >
                     No users found
                   </td>
                 </tr>
@@ -135,7 +136,7 @@ export default function UsersPage() {
                     <td className="px-6 py-4">
                       <div className="flex items-center space-x-2">
                         {user.emailVerified && (
-                          <Badge variant="success" className="flex items-center space-x-1">
+                          <Badge variant="default" className="flex items-center space-x-1">
                             <Mail className="h-3 w-3" />
                             <span>Verified</span>
                           </Badge>
@@ -161,7 +162,9 @@ export default function UsersPage() {
                         {user.transactionsCount} transactions
                       </div>
                       <div className="text-sm text-gray-500 dark:text-gray-400">
-                        {user.lastActivity ? new Date(user.lastActivity).toLocaleDateString() : 'Never'}
+                        {user.lastActivity
+                          ? new Date(user.lastActivity).toLocaleDateString()
+                          : 'Never'}
                       </div>
                     </td>
                     <td className="px-6 py-4">
@@ -186,7 +189,7 @@ export default function UsersPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setPage(p => Math.max(1, p - 1))}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
                 className="flex items-center space-x-2"
               >
@@ -199,7 +202,7 @@ export default function UsersPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
                 className="flex items-center space-x-2"
               >
@@ -212,10 +215,7 @@ export default function UsersPage() {
       </Card>
 
       {selectedUser && (
-        <UserDetailsModal
-          user={selectedUser}
-          onClose={() => setSelectedUser(null)}
-        />
+        <UserDetailsModal user={selectedUser} onClose={() => setSelectedUser(null)} />
       )}
     </div>
   );

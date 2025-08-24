@@ -1,15 +1,4 @@
 import {
-  Controller,
-  Get,
-  Query,
-  UseGuards,
-  Request,
-  Param,
-} from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
-import { AnalyticsService } from './analytics.service';
-import { 
   NetWorthResponse,
   CashflowForecast,
   SpendingByCategory,
@@ -17,6 +6,12 @@ import {
   AccountBalanceAnalytics,
   PortfolioAllocation,
 } from '@dhanam/shared';
+import { Controller, Get, Query, UseGuards, Request, Param } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+
+import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
+
+import { AnalyticsService } from './analytics.service';
 
 @ApiTags('analytics')
 @Controller('analytics')
@@ -29,7 +24,7 @@ export class AnalyticsController {
   @ApiOperation({ summary: 'Get net worth for a space' })
   async getNetWorth(
     @Request() req: any,
-    @Param('spaceId') spaceId: string,
+    @Param('spaceId') spaceId: string
   ): Promise<NetWorthResponse> {
     return this.analyticsService.getNetWorth(req.user!.userId, spaceId);
   }
@@ -39,12 +34,12 @@ export class AnalyticsController {
   async getCashflowForecast(
     @Request() req: any,
     @Param('spaceId') spaceId: string,
-    @Query('days') days?: string,
+    @Query('days') days?: string
   ): Promise<CashflowForecast> {
     return this.analyticsService.getCashflowForecast(
       req.user!.userId,
       spaceId,
-      days ? parseInt(days, 10) : 60,
+      days ? parseInt(days, 10) : 60
     );
   }
 
@@ -54,13 +49,13 @@ export class AnalyticsController {
     @Request() req: any,
     @Param('spaceId') spaceId: string,
     @Query('startDate') startDate: string,
-    @Query('endDate') endDate: string,
+    @Query('endDate') endDate: string
   ): Promise<SpendingByCategory[]> {
     return this.analyticsService.getSpendingByCategory(
       req.user!.userId,
       spaceId,
       new Date(startDate),
-      new Date(endDate),
+      new Date(endDate)
     );
   }
 
@@ -69,12 +64,12 @@ export class AnalyticsController {
   async getIncomeVsExpenses(
     @Request() req: any,
     @Param('spaceId') spaceId: string,
-    @Query('months') months?: string,
+    @Query('months') months?: string
   ): Promise<IncomeVsExpenses[]> {
     return this.analyticsService.getIncomeVsExpenses(
       req.user!.userId,
       spaceId,
-      months ? parseInt(months, 10) : 6,
+      months ? parseInt(months, 10) : 6
     );
   }
 
@@ -82,7 +77,7 @@ export class AnalyticsController {
   @ApiOperation({ summary: 'Get all account balances' })
   async getAccountBalances(
     @Request() req: any,
-    @Param('spaceId') spaceId: string,
+    @Param('spaceId') spaceId: string
   ): Promise<AccountBalanceAnalytics[]> {
     return this.analyticsService.getAccountBalances(req.user!.userId, spaceId);
   }
@@ -91,7 +86,7 @@ export class AnalyticsController {
   @ApiOperation({ summary: 'Get portfolio allocation breakdown' })
   async getPortfolioAllocation(
     @Request() req: any,
-    @Param('spaceId') spaceId: string,
+    @Param('spaceId') spaceId: string
   ): Promise<PortfolioAllocation[]> {
     return this.analyticsService.getPortfolioAllocation(req.user!.userId, spaceId);
   }

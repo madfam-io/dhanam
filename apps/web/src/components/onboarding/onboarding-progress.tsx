@@ -11,7 +11,7 @@ interface OnboardingProgressProps {
 const stepLabels = [
   'Bienvenida',
   'Email',
-  'Preferencias', 
+  'Preferencias',
   'Espacio',
   'Cuentas',
   'Presupuesto',
@@ -28,7 +28,7 @@ export function OnboardingProgress({ currentStep, totalSteps, progress }: Onboar
           <span>{Math.round(progress)}% completado</span>
         </div>
         <div className="w-full bg-gray-200 rounded-full h-2">
-          <div 
+          <div
             className="bg-gradient-to-r from-indigo-600 to-purple-600 h-2 rounded-full transition-all duration-300 ease-out"
             style={{ width: `${progress}%` }}
           />
@@ -41,41 +41,44 @@ export function OnboardingProgress({ currentStep, totalSteps, progress }: Onboar
           {stepLabels.map((label, index) => {
             const isCompleted = index < currentStep;
             const isCurrent = index === currentStep;
-            const isUpcoming = index > currentStep;
+            // const _isUpcoming = index > currentStep;
 
             return (
               <div key={label} className="flex flex-col items-center">
                 {/* Step circle */}
-                <div className={`
+                <div
+                  className={`
                   w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all duration-200
-                  ${isCompleted 
-                    ? 'bg-green-500 text-white' 
-                    : isCurrent 
-                      ? 'bg-indigo-600 text-white ring-4 ring-indigo-200' 
-                      : 'bg-gray-200 text-gray-500'
+                  ${
+                    isCompleted
+                      ? 'bg-green-500 text-white'
+                      : isCurrent
+                        ? 'bg-indigo-600 text-white ring-4 ring-indigo-200'
+                        : 'bg-gray-200 text-gray-500'
                   }
-                `}>
-                  {isCompleted ? (
-                    <CheckIcon className="w-4 h-4" />
-                  ) : (
-                    <span>{index + 1}</span>
-                  )}
+                `}
+                >
+                  {isCompleted ? <CheckIcon className="w-4 h-4" /> : <span>{index + 1}</span>}
                 </div>
 
                 {/* Step label */}
-                <span className={`
+                <span
+                  className={`
                   mt-2 text-xs font-medium text-center
                   ${isCurrent ? 'text-indigo-600' : 'text-gray-500'}
-                `}>
+                `}
+                >
                   {label}
                 </span>
 
                 {/* Connector line */}
                 {index < stepLabels.length - 1 && (
-                  <div className={`
+                  <div
+                    className={`
                     absolute top-4 left-1/2 w-full h-0.5 -z-10
                     ${index < currentStep ? 'bg-green-500' : 'bg-gray-200'}
-                  `} />
+                  `}
+                  />
                 )}
               </div>
             );
@@ -89,9 +92,7 @@ export function OnboardingProgress({ currentStep, totalSteps, progress }: Onboar
           <span className="text-sm text-gray-500">
             Paso {currentStep + 1} de {totalSteps}
           </span>
-          <span className="text-sm font-medium text-indigo-600">
-            {stepLabels[currentStep]}
-          </span>
+          <span className="text-sm font-medium text-indigo-600">{stepLabels[currentStep]}</span>
         </div>
       </div>
     </div>

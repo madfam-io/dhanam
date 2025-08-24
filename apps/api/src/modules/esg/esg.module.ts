@@ -1,8 +1,10 @@
 import { Module } from '@nestjs/common';
+
+import { PrismaModule } from '../../core/prisma/prisma.module';
+
+import { EnhancedEsgService } from './enhanced-esg.service';
 import { EsgController } from './esg.controller';
 import { EsgService } from './esg.service';
-import { EnhancedEsgService } from './enhanced-esg.service';
-import { PrismaModule } from '../../core/prisma/prisma.module';
 
 @Module({
   imports: [PrismaModule],

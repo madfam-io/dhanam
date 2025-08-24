@@ -1,6 +1,6 @@
-import { IsOptional, IsUUID, IsDate, IsNumber, IsIn, Min } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type, Transform } from 'class-transformer';
+import { IsOptional, IsUUID, IsDate, IsNumber, IsIn, Min } from 'class-validator';
 
 export class TransactionsFilterDto {
   @ApiPropertyOptional()

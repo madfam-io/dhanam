@@ -1,8 +1,10 @@
-import { Module } from '@nestjs/common';
-import { FxRatesService } from './fx-rates.service';
-import { FxRatesController } from './fx-rates.controller';
-import { CoreModule } from '@core/core.module';
 import { HttpModule } from '@nestjs/axios';
+import { Module } from '@nestjs/common';
+
+import { CoreModule } from '@core/core.module';
+
+import { FxRatesController } from './fx-rates.controller';
+import { FxRatesService } from './fx-rates.service';
 
 @Module({
   imports: [CoreModule, HttpModule],

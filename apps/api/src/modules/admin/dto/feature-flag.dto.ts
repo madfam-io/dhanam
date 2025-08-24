@@ -1,5 +1,5 @@
-import { IsString, IsBoolean, IsOptional, IsObject } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsString, IsBoolean, IsOptional, IsObject } from 'class-validator';
 
 export class FeatureFlagDto {
   @ApiProperty({ description: 'Feature flag key' })

@@ -48,18 +48,24 @@ export function BudgetAnalytics({ spaceId, budgetId, currency }: BudgetAnalytics
 
   const COLORS = ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
 
-  const categorySpendingData: CategoryData[] = analytics.categories.map((cat: any, index: number) => ({
-    name: cat.name,
-    spent: cat.spent,
-    budgeted: cat.budgeted,
-    color: cat.color || COLORS[index % COLORS.length],
-  }));
+  const categorySpendingData: CategoryData[] = analytics.categories.map(
+    (cat: any, index: number) => ({
+      name: cat.name,
+      spent: cat.spent,
+      budgeted: cat.budgeted,
+      color: cat.color || COLORS[index % COLORS.length],
+    })
+  );
 
-  const weeklyTrendData = analytics.weeklyTrend?.map((week: any) => ({
-    week: new Date(week.weekStart).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-    spent: week.spent,
-    budget: week.budgetedForWeek,
-  })) || [];
+  const weeklyTrendData =
+    analytics.weeklyTrend?.map((week: any) => ({
+      week: new Date(week.weekStart).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+      }),
+      spent: week.spent,
+      budget: week.budgetedForWeek,
+    })) || [];
 
   const categoryPieData = categorySpendingData.map((cat) => ({
     name: cat.name,
@@ -68,7 +74,9 @@ export function BudgetAnalytics({ spaceId, budgetId, currency }: BudgetAnalytics
   }));
 
   const overBudgetCategories = categorySpendingData.filter((cat) => cat.spent > cat.budgeted);
-  const underBudgetCategories = categorySpendingData.filter((cat) => cat.spent < cat.budgeted * 0.5);
+  const underBudgetCategories = categorySpendingData.filter(
+    (cat) => cat.spent < cat.budgeted * 0.5
+  );
 
   return (
     <div className="space-y-6">
@@ -89,11 +97,9 @@ export function BudgetAnalytics({ spaceId, budgetId, currency }: BudgetAnalytics
             <div className="text-2xl font-bold">
               {analytics.summary.totalPercentUsed.toFixed(0)}%
             </div>
-            <p className="text-xs text-muted-foreground">
-              of total budget used
-            </p>
+            <p className="text-xs text-muted-foreground">of total budget used</p>
             <div className="mt-2">
-              <Badge 
+              <Badge
                 variant={analytics.summary.totalPercentUsed > 90 ? 'destructive' : 'secondary'}
               >
                 {formatCurrency(analytics.summary.totalRemaining, currency)} remaining
@@ -108,12 +114,8 @@ export function BudgetAnalytics({ spaceId, budgetId, currency }: BudgetAnalytics
             <AlertTriangle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">
-              {overBudgetCategories.length}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              over budget
-            </p>
+            <div className="text-2xl font-bold text-red-600">{overBudgetCategories.length}</div>
+            <p className="text-xs text-muted-foreground">over budget</p>
             {overBudgetCategories.length > 0 && (
               <div className="mt-2 text-xs">
                 {overBudgetCategories.slice(0, 2).map((cat) => (
@@ -132,12 +134,8 @@ export function BudgetAnalytics({ spaceId, budgetId, currency }: BudgetAnalytics
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {analytics.summary.daysRemaining || 0}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              in this period
-            </p>
+            <div className="text-2xl font-bold">{analytics.summary.daysRemaining || 0}</div>
+            <p className="text-xs text-muted-foreground">in this period</p>
           </CardContent>
         </Card>
       </div>
@@ -152,17 +150,14 @@ export function BudgetAnalytics({ spaceId, budgetId, currency }: BudgetAnalytics
           <CardContent>
             <div className="h-80">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={categorySpendingData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                <BarChart
+                  data={categorySpendingData}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                >
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis 
-                    dataKey="name" 
-                    fontSize={12}
-                    angle={-45}
-                    textAnchor="end"
-                    height={80}
-                  />
+                  <XAxis dataKey="name" fontSize={12} angle={-45} textAnchor="end" height={80} />
                   <YAxis fontSize={12} />
-                  <Tooltip 
+                  <Tooltip
                     formatter={(value: number) => [formatCurrency(value, currency), '']}
                     labelStyle={{ color: '#000' }}
                   />
@@ -183,30 +178,19 @@ export function BudgetAnalytics({ spaceId, budgetId, currency }: BudgetAnalytics
             <div className="h-80">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie
-                    data={categoryPieData}
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={100}
-                    dataKey="value"
-                  >
+                  <Pie data={categoryPieData} cx="50%" cy="50%" outerRadius={100} dataKey="value">
                     {categoryPieData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip 
-                    formatter={(value: number) => [formatCurrency(value, currency), '']}
-                  />
+                  <Tooltip formatter={(value: number) => [formatCurrency(value, currency), '']} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
             <div className="grid grid-cols-2 gap-2 mt-4">
               {categoryPieData.slice(0, 6).map((entry) => (
                 <div key={entry.name} className="flex items-center gap-2 text-xs">
-                  <div 
-                    className="w-3 h-3 rounded-full" 
-                    style={{ backgroundColor: entry.color }}
-                  />
+                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: entry.color }} />
                   <span className="truncate">{entry.name}</span>
                 </div>
               ))}
@@ -224,25 +208,28 @@ export function BudgetAnalytics({ spaceId, budgetId, currency }: BudgetAnalytics
           <CardContent>
             <div className="h-80">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={weeklyTrendData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                <LineChart
+                  data={weeklyTrendData}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                >
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="week" fontSize={12} />
                   <YAxis fontSize={12} />
-                  <Tooltip 
+                  <Tooltip
                     formatter={(value: number) => [formatCurrency(value, currency), '']}
                     labelStyle={{ color: '#000' }}
                   />
-                  <Line 
-                    type="monotone" 
-                    dataKey="spent" 
-                    stroke="#3b82f6" 
+                  <Line
+                    type="monotone"
+                    dataKey="spent"
+                    stroke="#3b82f6"
                     strokeWidth={2}
                     name="Spent"
                   />
-                  <Line 
-                    type="monotone" 
-                    dataKey="budget" 
-                    stroke="#e5e7eb" 
+                  <Line
+                    type="monotone"
+                    dataKey="budget"
+                    stroke="#e5e7eb"
                     strokeWidth={2}
                     strokeDasharray="5 5"
                     name="Budget"
@@ -262,9 +249,7 @@ export function BudgetAnalytics({ spaceId, budgetId, currency }: BudgetAnalytics
               <CardTitle className="text-base text-green-600">Opportunities</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground mb-3">
-                Categories with room to grow:
-              </p>
+              <p className="text-sm text-muted-foreground mb-3">Categories with room to grow:</p>
               <div className="space-y-2">
                 {underBudgetCategories.slice(0, 3).map((cat) => (
                   <div key={cat.name} className="flex justify-between text-sm">
@@ -285,9 +270,7 @@ export function BudgetAnalytics({ spaceId, budgetId, currency }: BudgetAnalytics
               <CardTitle className="text-base text-red-600">Attention Needed</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground mb-3">
-                Categories over budget:
-              </p>
+              <p className="text-sm text-muted-foreground mb-3">Categories over budget:</p>
               <div className="space-y-2">
                 {overBudgetCategories.slice(0, 3).map((cat) => (
                   <div key={cat.name} className="flex justify-between text-sm">

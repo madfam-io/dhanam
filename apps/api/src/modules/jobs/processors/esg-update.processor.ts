@@ -1,6 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Job } from 'bullmq';
+
 import { EnhancedEsgService } from '@modules/esg/enhanced-esg.service';
+
 import { ESGUpdateJobData } from '../queue.service';
 
 @Injectable()
@@ -11,7 +13,7 @@ export class ESGUpdateProcessor {
 
   async process(job: Job<ESGUpdateJobData['payload']>): Promise<any> {
     const { symbols, forceRefresh } = job.data;
-    
+
     this.logger.log(`Processing ESG update job for ${symbols.length} symbols`);
 
     try {
@@ -36,7 +38,9 @@ export class ESGUpdateProcessor {
         forceRefresh,
       };
     } catch (error) {
-      this.logger.error(`ESG update failed for symbols ${symbols.join(', ')}: ${(error as Error).message}`);
+      this.logger.error(
+        `ESG update failed for symbols ${symbols.join(', ')}: ${(error as Error).message}`
+      );
       throw error;
     }
   }

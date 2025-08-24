@@ -1,4 +1,4 @@
-export type EmailTemplate = 
+export type EmailTemplate =
   | 'welcome'
   | 'email-verification'
   | 'onboarding-complete'

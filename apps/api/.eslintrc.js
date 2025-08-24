@@ -1,7 +1,8 @@
 module.exports = {
-  extends: ['@dhanam/config/eslint/nestjs.js'],
+  extends: [require.resolve('@dhanam/config/eslint/nestjs')],
   parserOptions: {
     tsconfigRootDir: __dirname,
     project: './tsconfig.json',
   },
+  ignorePatterns: ['test/**/*.ts'],
 };

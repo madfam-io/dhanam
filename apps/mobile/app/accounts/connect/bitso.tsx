@@ -1,14 +1,13 @@
-import React, { useState } from 'react';
-import { View, ScrollView } from 'react-native';
-import { Text, Card, Button, TextInput, HelperText } from 'react-native-paper';
-import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { StyleSheet } from 'react-native';
+import { router } from 'expo-router';
+import React, { useState } from 'react';
+import { View, ScrollView, StyleSheet } from 'react-native';
+import { Text, Card, Button, TextInput, HelperText } from 'react-native-paper';
 
+import { ErrorState } from '@/components/ErrorState';
+import { LoadingScreen } from '@/components/LoadingScreen';
 import { useSpaces } from '@/hooks/useSpaces';
 import { apiClient } from '@/services/api';
-import { LoadingScreen } from '@/components/LoadingScreen';
-import { ErrorState } from '@/components/ErrorState';
 
 export default function BitsoConnectScreen() {
   const { currentSpace } = useSpaces();
@@ -23,19 +22,19 @@ export default function BitsoConnectScreen() {
 
   const validateForm = () => {
     const errors: Record<string, string> = {};
-    
+
     if (!formData.apiKey.trim()) {
       errors.apiKey = 'API Key is required';
     } else if (formData.apiKey.length < 10) {
       errors.apiKey = 'API Key appears to be too short';
     }
-    
+
     if (!formData.apiSecret.trim()) {
       errors.apiSecret = 'API Secret is required';
     } else if (formData.apiSecret.length < 20) {
       errors.apiSecret = 'API Secret appears to be too short';
     }
-    
+
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -67,13 +66,12 @@ export default function BitsoConnectScreen() {
       router.back();
       console.log('Connected Bitso accounts:', accounts);
       console.log('Success message:', message);
-
     } catch (err: any) {
       console.error('Bitso connection error:', err);
       const errorMessage = err.response?.data?.message || 'Failed to connect to Bitso';
-      
+
       if (errorMessage.includes('Invalid API')) {
-        setFieldErrors({ 
+        setFieldErrors({
           apiKey: 'Invalid API credentials',
           apiSecret: 'Invalid API credentials',
         });
@@ -86,10 +84,10 @@ export default function BitsoConnectScreen() {
   };
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
     // Clear field error when user starts typing
     if (fieldErrors[field]) {
-      setFieldErrors(prev => ({ ...prev, [field]: '' }));
+      setFieldErrors((prev) => ({ ...prev, [field]: '' }));
     }
   };
 
@@ -138,7 +136,7 @@ export default function BitsoConnectScreen() {
             <Text variant="bodyMedium" style={styles.formSubtitle}>
               Enter your Bitso API credentials to connect your account
             </Text>
-            
+
             <View style={styles.formFields}>
               <TextInput
                 label="API Key"
@@ -190,29 +188,35 @@ export default function BitsoConnectScreen() {
             <Text variant="titleMedium" style={styles.instructionsTitle}>
               How to Get API Keys
             </Text>
-            
+
             <View style={styles.instructionsList}>
               <View style={styles.instructionItem}>
                 <View style={styles.stepNumber}>
-                  <Text variant="bodySmall" style={styles.stepNumberText}>1</Text>
+                  <Text variant="bodySmall" style={styles.stepNumberText}>
+                    1
+                  </Text>
                 </View>
                 <Text variant="bodyMedium" style={styles.instructionText}>
                   Log in to your Bitso account and go to API Settings
                 </Text>
               </View>
-              
+
               <View style={styles.instructionItem}>
                 <View style={styles.stepNumber}>
-                  <Text variant="bodySmall" style={styles.stepNumberText}>2</Text>
+                  <Text variant="bodySmall" style={styles.stepNumberText}>
+                    2
+                  </Text>
                 </View>
                 <Text variant="bodyMedium" style={styles.instructionText}>
-                  Create a new API key with "Read" permissions only
+                  Create a new API key with &quot;Read&quot; permissions only
                 </Text>
               </View>
-              
+
               <View style={styles.instructionItem}>
                 <View style={styles.stepNumber}>
-                  <Text variant="bodySmall" style={styles.stepNumberText}>3</Text>
+                  <Text variant="bodySmall" style={styles.stepNumberText}>
+                    3
+                  </Text>
                 </View>
                 <Text variant="bodyMedium" style={styles.instructionText}>
                   Copy the API Key and Secret and paste them above
@@ -240,7 +244,7 @@ export default function BitsoConnectScreen() {
                 Your API Keys are Secure
               </Text>
             </View>
-            
+
             <View style={styles.securityFeatures}>
               <View style={styles.securityItem}>
                 <Ionicons name="lock-closed" size={16} color="#4CAF50" />
@@ -292,11 +296,7 @@ export default function BitsoConnectScreen() {
         >
           Connect Bitso Account
         </Button>
-        <Button
-          mode="text"
-          onPress={() => router.back()}
-          disabled={loading}
-        >
+        <Button mode="text" onPress={() => router.back()} disabled={loading}>
           Cancel
         </Button>
       </View>

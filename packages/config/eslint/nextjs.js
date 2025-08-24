@@ -1,13 +1,13 @@
 /** @type {import("eslint").Linter.Config} */
 module.exports = {
   extends: [
-    './base.js',
     'next/core-web-vitals',
-    'plugin:react/recommended',
-    'plugin:react-hooks/recommended',
+    'plugin:@typescript-eslint/recommended',
     'plugin:jsx-a11y/recommended',
+    'prettier',
   ],
-  plugins: ['react', 'react-hooks', 'jsx-a11y'],
+  parser: '@typescript-eslint/parser',
+  plugins: ['@typescript-eslint', 'jsx-a11y', 'prettier'],
   env: {
     browser: true,
     es2022: true,
@@ -17,8 +17,25 @@ module.exports = {
     react: {
       version: 'detect',
     },
+    'import/resolver': {
+      typescript: {
+        alwaysTryTypes: true,
+      },
+    },
   },
   rules: {
+    'no-console': ['warn', { allow: ['warn', 'error'] }],
+    'no-unused-vars': 'off',
+    '@typescript-eslint/no-unused-vars': [
+      'error',
+      {
+        argsIgnorePattern: '^_',
+        varsIgnorePattern: '^_',
+      },
+    ],
+    '@typescript-eslint/no-explicit-any': 'warn',
+    '@typescript-eslint/explicit-module-boundary-types': 'off',
+    '@typescript-eslint/no-non-null-assertion': 'warn',
     'react/react-in-jsx-scope': 'off',
     'react/prop-types': 'off',
     'react/display-name': 'off',
@@ -30,5 +47,16 @@ module.exports = {
         aspects: ['invalidHref', 'preferButton'],
       },
     ],
+    'prettier/prettier': 'error',
   },
+  ignorePatterns: [
+    'node_modules/',
+    'dist/',
+    'build/',
+    '.next/',
+    '.turbo/',
+    'coverage/',
+    '*.config.js',
+    '*.config.ts',
+  ],
 };

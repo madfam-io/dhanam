@@ -1,5 +1,5 @@
-import { IsString, IsObject, IsOptional, IsEnum } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { IsString, IsObject, IsOptional, IsEnum } from 'class-validator';
 
 enum PlaidWebhookType {
   TRANSACTIONS = 'TRANSACTIONS',
@@ -19,10 +19,10 @@ enum PlaidWebhookCode {
   INITIAL_UPDATE = 'INITIAL_UPDATE',
   HISTORICAL_UPDATE = 'HISTORICAL_UPDATE',
   TRANSACTIONS_REMOVED = 'TRANSACTIONS_REMOVED',
-  
+
   // ACCOUNTS
   DEFAULT_UPDATE_ACCOUNTS = 'DEFAULT_UPDATE',
-  
+
   // ITEM
   ERROR = 'ERROR',
   NEW_ACCOUNTS_AVAILABLE = 'NEW_ACCOUNTS_AVAILABLE',

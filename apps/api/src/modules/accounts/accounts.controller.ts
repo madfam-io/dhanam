@@ -1,3 +1,4 @@
+import { Account, SyncAccountResponse } from '@dhanam/shared';
 import {
   Controller,
   Get,
@@ -14,14 +15,15 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 
-import { AccountsService } from './accounts.service';
 import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
-import { SpaceGuard } from '../spaces/guards/space.guard';
+
 import { RequireRole } from '../spaces/decorators/require-role.decorator';
+import { SpaceGuard } from '../spaces/guards/space.guard';
+
+import { AccountsService } from './accounts.service';
+import { ConnectAccountDto } from './dto/connect-account.dto';
 import { CreateAccountDto } from './dto/create-account.dto';
 import { UpdateAccountDto } from './dto/update-account.dto';
-import { ConnectAccountDto } from './dto/connect-account.dto';
-import { Account, SyncAccountResponse } from '@dhanam/shared';
 
 @ApiTags('Accounts')
 @ApiBearerAuth()
@@ -36,7 +38,7 @@ export class AccountsController {
   @ApiResponse({ status: 200, description: 'List of accounts' })
   async listAccounts(
     @Param('spaceId') spaceId: string,
-    @Query('type') type?: string,
+    @Query('type') type?: string
   ): Promise<Account[]> {
     return this.accountsService.listAccounts(spaceId, type);
   }
@@ -48,7 +50,7 @@ export class AccountsController {
   @ApiResponse({ status: 201, description: 'Account created' })
   async createAccount(
     @Param('spaceId') spaceId: string,
-    @Body() dto: CreateAccountDto,
+    @Body() dto: CreateAccountDto
   ): Promise<Account> {
     return this.accountsService.createAccount(spaceId, dto);
   }
@@ -61,7 +63,7 @@ export class AccountsController {
   async connectAccount(
     @Param('spaceId') spaceId: string,
     @Body() dto: ConnectAccountDto,
-    @Req() req: any,
+    @Req() req: any
   ): Promise<Account[]> {
     const userId = req.user!.id;
     return this.accountsService.connectAccount(spaceId, userId, dto);
@@ -73,7 +75,7 @@ export class AccountsController {
   @ApiResponse({ status: 200, description: 'Account details' })
   async getAccount(
     @Param('spaceId') spaceId: string,
-    @Param('accountId') accountId: string,
+    @Param('accountId') accountId: string
   ): Promise<Account> {
     return this.accountsService.getAccount(spaceId, accountId);
   }
@@ -86,7 +88,7 @@ export class AccountsController {
   async updateAccount(
     @Param('spaceId') spaceId: string,
     @Param('accountId') accountId: string,
-    @Body() dto: UpdateAccountDto,
+    @Body() dto: UpdateAccountDto
   ): Promise<Account> {
     return this.accountsService.updateAccount(spaceId, accountId, dto);
   }
@@ -99,7 +101,7 @@ export class AccountsController {
   @ApiResponse({ status: 204, description: 'Account deleted' })
   async deleteAccount(
     @Param('spaceId') spaceId: string,
-    @Param('accountId') accountId: string,
+    @Param('accountId') accountId: string
   ): Promise<void> {
     await this.accountsService.deleteAccount(spaceId, accountId);
   }
@@ -110,7 +112,7 @@ export class AccountsController {
   @ApiResponse({ status: 200, description: 'Sync initiated' })
   async syncAccount(
     @Param('spaceId') spaceId: string,
-    @Param('accountId') accountId: string,
+    @Param('accountId') accountId: string
   ): Promise<SyncAccountResponse> {
     return this.accountsService.syncAccount(spaceId, accountId);
   }

@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import * as speakeasy from 'speakeasy';
 import * as qrcode from 'qrcode';
-import { PrismaService } from '@core/prisma/prisma.service';
+import * as speakeasy from 'speakeasy';
+
 import { LoggerService } from '@core/logger/logger.service';
+import { PrismaService } from '@core/prisma/prisma.service';
 
 export interface TotpSetupResponse {
   qrCodeUrl: string;
@@ -14,7 +15,7 @@ export interface TotpSetupResponse {
 export class TotpService {
   constructor(
     private prisma: PrismaService,
-    private logger: LoggerService,
+    private logger: LoggerService
   ) {}
 
   async setupTotp(userId: string, userEmail: string): Promise<TotpSetupResponse> {
@@ -126,7 +127,7 @@ export class TotpService {
 
   async storeBackupCodes(userId: string, codes: string[]): Promise<void> {
     // Hash backup codes before storing
-    const hashedCodes = codes.map(code => 
+    const hashedCodes = codes.map((code) =>
       require('crypto').createHash('sha256').update(code).digest('hex')
     );
 

@@ -36,12 +36,12 @@ export const onboardingApi = {
 
   // Complete onboarding
   complete: async (skipOptional = false): Promise<OnboardingStatus> => {
-    const response = await apiClient.post('/onboarding/complete', { 
+    const response = await apiClient.post('/onboarding/complete', {
       skipOptional,
       metadata: {
         source: 'web',
         timestamp: new Date().toISOString(),
-      }
+      },
     });
     return response.data;
   },

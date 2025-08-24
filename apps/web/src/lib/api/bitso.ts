@@ -30,13 +30,10 @@ export const bitsoApi = {
    * Connect a Bitso account to a space
    */
   connectAccount: async (
-    spaceId: string, 
+    spaceId: string,
     data: ConnectBitsoRequest
   ): Promise<ConnectBitsoResponse> => {
-    return apiClient.post<ConnectBitsoResponse>(
-      `/providers/bitso/spaces/${spaceId}/connect`,
-      data
-    );
+    return apiClient.post<ConnectBitsoResponse>(`/providers/bitso/spaces/${spaceId}/connect`, data);
   },
 
   /**
@@ -57,6 +54,8 @@ export const bitsoApi = {
    * Get Bitso service health status
    */
   getHealth: async (): Promise<{ service: string; status: string; timestamp: string }> => {
-    return apiClient.get<{ service: string; status: string; timestamp: string }>('/providers/bitso/health');
+    return apiClient.get<{ service: string; status: string; timestamp: string }>(
+      '/providers/bitso/health'
+    );
   },
 };

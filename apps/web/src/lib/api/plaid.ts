@@ -29,16 +29,15 @@ export const plaidApi = {
    * Link a Plaid account to a space
    */
   linkAccount: async (spaceId: string, data: PlaidLinkRequest): Promise<PlaidLinkResponse> => {
-    return apiClient.post<PlaidLinkResponse>(
-      `/providers/plaid/spaces/${spaceId}/link`,
-      data
-    );
+    return apiClient.post<PlaidLinkResponse>(`/providers/plaid/spaces/${spaceId}/link`, data);
   },
 
   /**
    * Get Plaid service health status
    */
   getHealth: async (): Promise<{ service: string; status: string; timestamp: string }> => {
-    return apiClient.get<{ service: string; status: string; timestamp: string }>('/providers/plaid/health');
+    return apiClient.get<{ service: string; status: string; timestamp: string }>(
+      '/providers/plaid/health'
+    );
   },
 };

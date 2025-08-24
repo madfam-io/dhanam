@@ -1,10 +1,10 @@
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import { User } from '@dhanam/shared';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as SecureStore from 'expo-secure-store';
 import { router } from 'expo-router';
+import * as SecureStore from 'expo-secure-store';
+import React, { createContext, useContext, useReducer, useEffect } from 'react';
 
 import { apiClient } from '@/services/api';
-import { User } from '@dhanam/shared';
 
 interface AuthState {
   user: User | null;
@@ -100,14 +100,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const loadStoredAuth = async () => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
-      
+
       const tokenData = await SecureStore.getItemAsync(TOKEN_KEY);
       const userData = await AsyncStorage.getItem(USER_KEY);
-      
+
       if (tokenData && userData) {
         const tokens = JSON.parse(tokenData);
         const user = JSON.parse(userData);
-        
+
         dispatch({
           type: 'SET_AUTH',
           payload: {
@@ -116,7 +116,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             refreshToken: tokens.refreshToken,
           },
         });
-        
+
         // Verify token is still valid
         await verifyToken(tokens.accessToken);
       } else {
@@ -135,17 +135,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         headers: { Authorization: `Bearer ${token}` },
       });
       dispatch({ type: 'SET_USER', payload: response.data });
-    } catch (error) {
+    } catch {
       // Token is invalid, try to refresh
       await refreshAuth();
     }
   };
 
   const storeAuth = async (user: User, accessToken: string, refreshToken: string) => {
-    await SecureStore.setItemAsync(
-      TOKEN_KEY,
-      JSON.stringify({ accessToken, refreshToken })
-    );
+    await SecureStore.setItemAsync(TOKEN_KEY, JSON.stringify({ accessToken, refreshToken }));
     await AsyncStorage.setItem(USER_KEY, JSON.stringify(user));
   };
 
@@ -157,12 +154,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (credentials: LoginCredentials) => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
-      
+
       const response = await apiClient.post('/auth/login', credentials);
       const { user, accessToken, refreshToken } = response.data;
-      
+
       await storeAuth(user, accessToken, refreshToken);
-      
+
       dispatch({
         type: 'SET_AUTH',
         payload: { user, accessToken, refreshToken },
@@ -176,17 +173,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const register = async (data: RegisterData) => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
-      
+
       const response = await apiClient.post('/auth/register', {
         ...data,
         locale: data.locale || 'en',
         timezone: data.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
       });
-      
+
       const { user, accessToken, refreshToken } = response.data;
-      
+
       await storeAuth(user, accessToken, refreshToken);
-      
+
       dispatch({
         type: 'SET_AUTH',
         payload: { user, accessToken, refreshToken },
@@ -218,15 +215,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!state.refreshToken) {
         throw new Error('No refresh token available');
       }
-      
+
       const response = await apiClient.post('/auth/refresh', {
         refreshToken: state.refreshToken,
       });
-      
+
       const { accessToken, refreshToken: newRefreshToken } = response.data;
-      
+
       await storeAuth(state.user!, accessToken, newRefreshToken);
-      
+
       dispatch({
         type: 'SET_AUTH',
         payload: {
@@ -249,11 +246,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     refreshAuth,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth(): AuthContextType {

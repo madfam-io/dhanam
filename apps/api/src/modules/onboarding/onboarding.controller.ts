@@ -1,18 +1,10 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Put,
-  Body,
-  Param,
-  UseGuards,
-  HttpStatus,
-} from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
-import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
-import { CurrentUser } from '@core/auth/decorators/current-user.decorator';
-import { OnboardingService } from './onboarding.service';
 import { User } from '@dhanam/shared';
+import { Controller, Get, Post, Put, Body, Param, UseGuards, HttpStatus } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+
+import { CurrentUser } from '@core/auth/decorators/current-user.decorator';
+import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
+
 import {
   UpdateOnboardingStepDto,
   CompleteOnboardingDto,
@@ -21,6 +13,7 @@ import {
   OnboardingStatusDto,
   OnboardingStep,
 } from './dto';
+import { OnboardingService } from './onboarding.service';
 
 @ApiTags('Onboarding')
 @Controller('onboarding')
@@ -31,10 +24,10 @@ export class OnboardingController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get user onboarding status and progress' })
-  @ApiResponse({ 
-    status: HttpStatus.OK, 
+  @ApiResponse({
+    status: HttpStatus.OK,
     description: 'Onboarding status retrieved successfully',
-    type: OnboardingStatusDto 
+    type: OnboardingStatusDto,
   })
   async getOnboardingStatus(@CurrentUser() user: User): Promise<OnboardingStatusDto> {
     return await this.onboardingService.getOnboardingStatus(user.id);
@@ -44,14 +37,14 @@ export class OnboardingController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update current onboarding step' })
-  @ApiResponse({ 
-    status: HttpStatus.OK, 
+  @ApiResponse({
+    status: HttpStatus.OK,
     description: 'Onboarding step updated successfully',
-    type: OnboardingStatusDto 
+    type: OnboardingStatusDto,
   })
   async updateOnboardingStep(
     @CurrentUser() user: User,
-    @Body() dto: UpdateOnboardingStepDto,
+    @Body() dto: UpdateOnboardingStepDto
   ): Promise<OnboardingStatusDto> {
     return await this.onboardingService.updateOnboardingStep(user.id, dto);
   }
@@ -60,14 +53,14 @@ export class OnboardingController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Mark onboarding as completed' })
-  @ApiResponse({ 
-    status: HttpStatus.OK, 
+  @ApiResponse({
+    status: HttpStatus.OK,
     description: 'Onboarding completed successfully',
-    type: OnboardingStatusDto 
+    type: OnboardingStatusDto,
   })
   async completeOnboarding(
     @CurrentUser() user: User,
-    @Body() dto: CompleteOnboardingDto,
+    @Body() dto: CompleteOnboardingDto
   ): Promise<OnboardingStatusDto> {
     return await this.onboardingService.completeOnboarding(user.id, dto);
   }
@@ -76,22 +69,22 @@ export class OnboardingController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update user preferences during onboarding' })
-  @ApiResponse({ 
-    status: HttpStatus.OK, 
-    description: 'Preferences updated successfully' 
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Preferences updated successfully',
   })
   async updatePreferences(
     @CurrentUser() user: User,
-    @Body() dto: UpdatePreferencesDto,
+    @Body() dto: UpdatePreferencesDto
   ): Promise<{ success: boolean }> {
     return await this.onboardingService.updatePreferences(user.id, dto);
   }
 
   @Post('verify-email')
   @ApiOperation({ summary: 'Verify user email address' })
-  @ApiResponse({ 
-    status: HttpStatus.OK, 
-    description: 'Email verified successfully' 
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Email verified successfully',
   })
   async verifyEmail(@Body() dto: VerifyEmailDto): Promise<{ success: boolean; message: string }> {
     return await this.onboardingService.verifyEmail(dto);
@@ -101,12 +94,12 @@ export class OnboardingController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Resend email verification' })
-  @ApiResponse({ 
-    status: HttpStatus.OK, 
-    description: 'Verification email sent' 
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Verification email sent',
   })
   async resendEmailVerification(
-    @CurrentUser() user: User,
+    @CurrentUser() user: User
   ): Promise<{ success: boolean; message: string }> {
     return await this.onboardingService.sendEmailVerification(user.id);
   }
@@ -115,14 +108,14 @@ export class OnboardingController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Skip an optional onboarding step' })
-  @ApiResponse({ 
-    status: HttpStatus.OK, 
+  @ApiResponse({
+    status: HttpStatus.OK,
     description: 'Step skipped successfully',
-    type: OnboardingStatusDto 
+    type: OnboardingStatusDto,
   })
   async skipOnboardingStep(
     @CurrentUser() user: User,
-    @Param('step') step: OnboardingStep,
+    @Param('step') step: OnboardingStep
   ): Promise<OnboardingStatusDto> {
     return await this.onboardingService.skipOnboardingStep(user.id, step);
   }
@@ -131,10 +124,10 @@ export class OnboardingController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Reset onboarding progress (for testing/support)' })
-  @ApiResponse({ 
-    status: HttpStatus.OK, 
+  @ApiResponse({
+    status: HttpStatus.OK,
     description: 'Onboarding reset successfully',
-    type: OnboardingStatusDto 
+    type: OnboardingStatusDto,
   })
   async resetOnboarding(@CurrentUser() user: User): Promise<OnboardingStatusDto> {
     return await this.onboardingService.resetOnboarding(user.id);

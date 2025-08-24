@@ -1,4 +1,12 @@
 import {
+  LoginDto,
+  RegisterDto,
+  AuthTokens,
+  RefreshTokenDto,
+  ForgotPasswordDto,
+  ResetPasswordDto,
+} from '@dhanam/shared';
+import {
   Controller,
   Post,
   Body,
@@ -11,20 +19,14 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
-import { AuthService } from './auth.service';
-import { TotpService } from './totp.service';
-import { JwtAuthGuard } from './guards/jwt-auth.guard';
-import { ThrottleAuthGuard } from '@core/security/guards/throttle-auth.guard';
-import { CurrentUser, AuthenticatedUser } from './decorators/current-user.decorator';
+
 import { AuditService } from '@core/audit/audit.service';
-import {
-  LoginDto,
-  RegisterDto,
-  AuthTokens,
-  RefreshTokenDto,
-  ForgotPasswordDto,
-  ResetPasswordDto,
-} from '@dhanam/shared';
+import { ThrottleAuthGuard } from '@core/security/guards/throttle-auth.guard';
+
+import { AuthService } from './auth.service';
+import { CurrentUser, AuthenticatedUser } from './decorators/current-user.decorator';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { TotpService } from './totp.service';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -32,7 +34,7 @@ export class AuthController {
   constructor(
     private authService: AuthService,
     private totpService: TotpService,
-    private auditService: AuditService,
+    private auditService: AuditService
   ) {}
 
   @Post('register')
@@ -46,14 +48,14 @@ export class AuthController {
   async register(
     @Body() dto: RegisterDto,
     @Ip() ip: string,
-    @Headers('user-agent') userAgent: string,
+    @Headers('user-agent') userAgent: string
   ): Promise<{ tokens: AuthTokens }> {
     const tokens = await this.authService.register(dto);
-    
+
     // Log successful registration
     await this.auditService.logEvent({
       action: 'USER_REGISTERED',
-      resource: 'user', 
+      resource: 'user',
       ipAddress: ip,
       userAgent,
       metadata: { email: dto.email },
@@ -75,26 +77,22 @@ export class AuthController {
   async login(
     @Body() dto: LoginDto,
     @Ip() ip: string,
-    @Headers('user-agent') userAgent: string,
+    @Headers('user-agent') userAgent: string
   ): Promise<{ tokens: AuthTokens }> {
     try {
       const tokens = await this.authService.login(dto);
-      
+
       // Log successful login (user ID will be retrieved by service)
       await this.auditService.logAuthSuccess(
         'pending', // Will be updated by auth service
         ip,
-        userAgent,
+        userAgent
       );
 
       return { tokens };
     } catch (error) {
       // Log failed login attempt
-      await this.auditService.logAuthFailure(
-        dto.email,
-        ip,
-        userAgent,
-      );
+      await this.auditService.logAuthFailure(dto.email, ip, userAgent);
       throw error;
     }
   }
@@ -159,10 +157,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Enable TOTP 2FA' })
   @ApiResponse({ status: 200, description: 'TOTP enabled successfully' })
-  async enableTotp(
-    @CurrentUser() user: AuthenticatedUser,
-    @Body() body: { token: string },
-  ) {
+  async enableTotp(@CurrentUser() user: AuthenticatedUser, @Body() body: { token: string }) {
     await this.totpService.enableTotp(user.userId, body.token);
     return { message: 'TOTP enabled successfully' };
   }
@@ -171,10 +166,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Disable TOTP 2FA' })
   @ApiResponse({ status: 200, description: 'TOTP disabled successfully' })
-  async disableTotp(
-    @CurrentUser() user: AuthenticatedUser,
-    @Body() body: { token: string },
-  ) {
+  async disableTotp(@CurrentUser() user: AuthenticatedUser, @Body() body: { token: string }) {
     await this.totpService.disableTotp(user.userId, body.token);
     return { message: 'TOTP disabled successfully' };
   }

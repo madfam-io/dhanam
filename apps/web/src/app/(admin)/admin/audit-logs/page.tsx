@@ -1,14 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Card } from '@dhanam/ui/components/card';
-import { Input } from '@dhanam/ui/components/input';
-import { Button } from '@dhanam/ui/components/button';
-import { Select } from '@dhanam/ui/components/select';
-import { Badge } from '@dhanam/ui/components/badge';
-import { Skeleton } from '@dhanam/ui/components/skeleton';
+import { useState, useEffect, useCallback } from 'react';
+import { Card } from '@dhanam/ui';
+import { Input } from '@dhanam/ui';
+import { Button } from '@dhanam/ui';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@dhanam/ui';
+import { Badge } from '@dhanam/ui';
+import { Skeleton } from '@dhanam/ui';
 import { adminApi, type AuditLog } from '~/lib/api/admin';
-import { Search, ChevronLeft, ChevronRight, FileText, User, Calendar } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const actionTypes = [
   { value: '', label: 'All Actions' },
@@ -45,7 +45,7 @@ export default function AuditLogsPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  const loadLogs = async () => {
+  const loadLogs = useCallback(async () => {
     setLoading(true);
     try {
       const response = await adminApi.searchAuditLogs({
@@ -60,11 +60,11 @@ export default function AuditLogsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters, page]);
 
   useEffect(() => {
     loadLogs();
-  }, [page]);
+  }, [page, loadLogs]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,9 +75,9 @@ export default function AuditLogsPage() {
   const getActionColor = (action: string) => {
     switch (action) {
       case 'create':
-        return 'success';
+        return 'secondary';
       case 'update':
-        return 'warning';
+        return 'outline';
       case 'delete':
         return 'destructive';
       case 'login':
@@ -108,23 +108,33 @@ export default function AuditLogsPage() {
             />
             <Select
               value={filters.action}
-              onChange={(e) => setFilters({ ...filters, action: e.target.value })}
+              onValueChange={(value) => setFilters({ ...filters, action: value })}
             >
-              {actionTypes.map((type) => (
-                <option key={type.value} value={type.value}>
-                  {type.label}
-                </option>
-              ))}
+              <SelectTrigger>
+                <SelectValue placeholder="Action" />
+              </SelectTrigger>
+              <SelectContent>
+                {actionTypes.map((type) => (
+                  <SelectItem key={type.value} value={type.value}>
+                    {type.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
             </Select>
             <Select
               value={filters.resource}
-              onChange={(e) => setFilters({ ...filters, resource: e.target.value })}
+              onValueChange={(value) => setFilters({ ...filters, resource: value })}
             >
-              {resourceTypes.map((type) => (
-                <option key={type.value} value={type.value}>
-                  {type.label}
-                </option>
-              ))}
+              <SelectTrigger>
+                <SelectValue placeholder="Resource" />
+              </SelectTrigger>
+              <SelectContent>
+                {resourceTypes.map((type) => (
+                  <SelectItem key={type.value} value={type.value}>
+                    {type.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
             </Select>
             <div className="flex space-x-2">
               <Input
@@ -177,7 +187,10 @@ export default function AuditLogsPage() {
                 <AuditLogSkeleton />
               ) : logs.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                  <td
+                    colSpan={5}
+                    className="px-6 py-12 text-center text-gray-500 dark:text-gray-400"
+                  >
                     No audit logs found
                   </td>
                 </tr>
@@ -192,15 +205,11 @@ export default function AuditLogsPage() {
                     <td className="px-6 py-4">
                       <div className="text-sm">
                         <div className="text-gray-900 dark:text-white">{log.userEmail}</div>
-                        <div className="text-gray-500 dark:text-gray-400 text-xs">
-                          {log.userId}
-                        </div>
+                        <div className="text-gray-500 dark:text-gray-400 text-xs">{log.userId}</div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <Badge variant={getActionColor(log.action)}>
-                        {log.action}
-                      </Badge>
+                      <Badge variant={getActionColor(log.action)}>{log.action}</Badge>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm">
@@ -222,9 +231,7 @@ export default function AuditLogsPage() {
                             </pre>
                           </details>
                         )}
-                        {log.ipAddress && (
-                          <div className="text-xs mt-1">IP: {log.ipAddress}</div>
-                        )}
+                        {log.ipAddress && <div className="text-xs mt-1">IP: {log.ipAddress}</div>}
                       </div>
                     </td>
                   </tr>
@@ -240,7 +247,7 @@ export default function AuditLogsPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setPage(p => Math.max(1, p - 1))}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
                 className="flex items-center space-x-2"
               >
@@ -253,7 +260,7 @@ export default function AuditLogsPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
                 className="flex items-center space-x-2"
               >

@@ -18,7 +18,9 @@ jest.mock('@/lib/api/analytics', () => ({
 
 // Mock Recharts
 jest.mock('recharts', () => ({
-  ResponsiveContainer: ({ children }: any) => <div data-testid="responsive-container">{children}</div>,
+  ResponsiveContainer: ({ children }: any) => (
+    <div data-testid="responsive-container">{children}</div>
+  ),
   LineChart: ({ children }: any) => <div data-testid="line-chart">{children}</div>,
   Line: () => <div data-testid="line" />,
   XAxis: () => <div data-testid="x-axis" />,
@@ -53,7 +55,7 @@ describe('DashboardCards', () => {
   beforeEach(() => {
     const { spacesApi } = require('@/lib/api/spaces');
     const { analyticsApi } = require('@/lib/api/analytics');
-    
+
     spacesApi.getOverview.mockResolvedValue(mockSpaceOverview);
     analyticsApi.getNetWorthTrend.mockResolvedValue(mockNetWorthTrend);
     analyticsApi.getCashFlowForecast.mockResolvedValue(mockCashFlowForecast);

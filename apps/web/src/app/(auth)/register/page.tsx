@@ -35,9 +35,7 @@ export default function RegisterPage() {
     <Card>
       <CardHeader>
         <CardTitle>Create an account</CardTitle>
-        <CardDescription>
-          Start managing your finances with Dhanam
-        </CardDescription>
+        <CardDescription>Start managing your finances with Dhanam</CardDescription>
       </CardHeader>
       <CardContent>
         {error && (
@@ -45,7 +43,7 @@ export default function RegisterPage() {
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
-        <RegisterForm 
+        <RegisterForm
           onSubmit={(data) => {
             setError(null);
             registerMutation.mutate(data);

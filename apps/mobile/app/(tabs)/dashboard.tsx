@@ -1,21 +1,20 @@
-import React, { useMemo } from 'react';
-import { ScrollView, View, RefreshControl } from 'react-native';
-import { Text, Card, FAB, Button } from 'react-native-paper';
 import { useQuery } from '@tanstack/react-query';
-import { LineChart } from 'react-native-chart-kit';
-import { Dimensions } from 'react-native';
 import { router } from 'expo-router';
+import React, { useMemo } from 'react';
+import { ScrollView, View, RefreshControl, Dimensions } from 'react-native';
+import { LineChart } from 'react-native-chart-kit';
+import { Text, Card, FAB, Button } from 'react-native-paper';
 
+import { AccountCard } from '@/components/AccountCard';
+import { ErrorState } from '@/components/ErrorState';
+import { LoadingScreen } from '@/components/LoadingScreen';
+import { TransactionItem } from '@/components/TransactionItem';
 import { useAuth } from '@/hooks/useAuth';
 import { useSpaces } from '@/hooks/useSpaces';
 import { apiClient } from '@/services/api';
-import { AccountCard } from '@/components/AccountCard';
-import { TransactionItem } from '@/components/TransactionItem';
-import { LoadingScreen } from '@/components/LoadingScreen';
-import { ErrorState } from '@/components/ErrorState';
-import { formatCurrency } from '@/utils/currency';
-import { theme } from '@/theme';
 import { styles } from '@/styles/dashboard';
+import { theme } from '@/theme';
+import { formatCurrency } from '@/utils/currency';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -29,7 +28,7 @@ export default function DashboardScreen() {
     refetch: refetchAccounts,
   } = useQuery({
     queryKey: ['accounts', currentSpace?.id],
-    queryFn: () => apiClient.get(`/accounts?spaceId=${currentSpace!.id}`).then(res => res.data),
+    queryFn: () => apiClient.get(`/accounts?spaceId=${currentSpace!.id}`).then((res) => res.data),
     enabled: !!currentSpace,
   });
 
@@ -39,16 +38,15 @@ export default function DashboardScreen() {
     refetch: refetchTransactions,
   } = useQuery({
     queryKey: ['transactions', currentSpace?.id],
-    queryFn: () => apiClient.get(`/transactions?spaceId=${currentSpace!.id}&limit=10`).then(res => res.data),
+    queryFn: () =>
+      apiClient.get(`/transactions?spaceId=${currentSpace!.id}&limit=10`).then((res) => res.data),
     enabled: !!currentSpace,
   });
 
-  const {
-    data: analytics,
-    isLoading: analyticsLoading,
-  } = useQuery({
+  const { data: analytics, isLoading: analyticsLoading } = useQuery({
     queryKey: ['analytics', currentSpace?.id],
-    queryFn: () => apiClient.get(`/analytics/dashboard?spaceId=${currentSpace!.id}`).then(res => res.data),
+    queryFn: () =>
+      apiClient.get(`/analytics/dashboard?spaceId=${currentSpace!.id}`).then((res) => res.data),
     enabled: !!currentSpace,
   });
 
@@ -56,10 +54,7 @@ export default function DashboardScreen() {
   const isRefreshing = false;
 
   const onRefresh = async () => {
-    await Promise.all([
-      refetchAccounts(),
-      refetchTransactions(),
-    ]);
+    await Promise.all([refetchAccounts(), refetchTransactions()]);
   };
 
   const netWorth = useMemo(() => {
@@ -75,13 +70,15 @@ export default function DashboardScreen() {
       };
     }
     return {
-      labels: analytics.balanceHistory.map((item: any) => 
+      labels: analytics.balanceHistory.map((item: any) =>
         new Date(item.date).toLocaleDateString('en', { month: 'short' })
       ),
-      datasets: [{
-        data: analytics.balanceHistory.map((item: any) => item.balance),
-        strokeWidth: 3,
-      }],
+      datasets: [
+        {
+          data: analytics.balanceHistory.map((item: any) => item.balance),
+          strokeWidth: 3,
+        },
+      ],
     };
   }, [analytics]);
 
@@ -91,7 +88,7 @@ export default function DashboardScreen() {
 
   if (!currentSpace) {
     return (
-      <ErrorState 
+      <ErrorState
         title="No Space Selected"
         message="Please select or create a space to continue"
         action={() => router.push('/spaces')}
@@ -104,9 +101,7 @@ export default function DashboardScreen() {
     <View style={styles.container}>
       <ScrollView
         style={styles.scrollView}
-        refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
-        }
+        refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />}
         showsVerticalScrollIndicator={false}
       >
         {/* Header */}
@@ -152,7 +147,7 @@ export default function DashboardScreen() {
                   backgroundGradientTo: theme.light.colors.surface,
                   decimalPlaces: 0,
                   color: (opacity = 1) => `rgba(76, 175, 80, ${opacity})`,
-                  labelColor: (opacity = 1) => theme.light.colors.onSurface,
+                  labelColor: (_opacity = 1) => theme.light.colors.onSurface,
                   style: {
                     borderRadius: 16,
                   },
@@ -215,10 +210,7 @@ export default function DashboardScreen() {
               <Text variant="titleMedium" style={styles.sectionTitle}>
                 Accounts
               </Text>
-              <Button
-                mode="text"
-                onPress={() => router.push('/(tabs)/accounts')}
-              >
+              <Button mode="text" onPress={() => router.push('/(tabs)/accounts')}>
                 View All
               </Button>
             </View>
@@ -235,20 +227,14 @@ export default function DashboardScreen() {
               <Text variant="titleMedium" style={styles.sectionTitle}>
                 Recent Transactions
               </Text>
-              <Button
-                mode="text"
-                onPress={() => router.push('/(tabs)/transactions')}
-              >
+              <Button mode="text" onPress={() => router.push('/(tabs)/transactions')}>
                 View All
               </Button>
             </View>
             <Card style={styles.transactionsCard}>
               <Card.Content>
                 {transactions.data.slice(0, 5).map((transaction: any) => (
-                  <TransactionItem 
-                    key={transaction.id} 
-                    transaction={transaction}
-                  />
+                  <TransactionItem key={transaction.id} transaction={transaction} />
                 ))}
               </Card.Content>
             </Card>
@@ -278,11 +264,7 @@ export default function DashboardScreen() {
       </ScrollView>
 
       {/* Floating Action Button */}
-      <FAB
-        icon="plus"
-        style={styles.fab}
-        onPress={() => router.push('/transactions/add')}
-      />
+      <FAB icon="plus" style={styles.fab} onPress={() => router.push('/transactions/add')} />
     </View>
   );
 }

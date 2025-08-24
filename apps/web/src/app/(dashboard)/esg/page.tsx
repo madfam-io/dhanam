@@ -2,13 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@dhanam/ui';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@dhanam/ui';
 import { Button } from '@dhanam/ui';
 import { Badge } from '@dhanam/ui';
 import { Progress } from '@dhanam/ui';
@@ -43,7 +37,11 @@ function getScoreColor(score: number) {
 export default function EsgPage() {
   const [selectedAssets] = useState<string[]>(['BTC', 'ETH', 'ADA']);
 
-  const { data: portfolioEsg, isLoading: portfolioLoading, refetch: refetchPortfolio } = useQuery({
+  const {
+    data: portfolioEsg,
+    isLoading: portfolioLoading,
+    refetch: refetchPortfolio,
+  } = useQuery({
     queryKey: ['esg', 'portfolio'],
     queryFn: () => esgApi.getPortfolioAnalysis(),
   });
@@ -73,11 +71,7 @@ export default function EsgPage() {
             Environmental, Social, and Governance scoring for your crypto portfolio
           </p>
         </div>
-        <Button
-          onClick={() => refetchPortfolio()}
-          disabled={portfolioLoading}
-          variant="outline"
-        >
+        <Button onClick={() => refetchPortfolio()} disabled={portfolioLoading} variant="outline">
           {portfolioLoading ? (
             <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
           ) : (
@@ -103,12 +97,8 @@ export default function EsgPage() {
             <CardContent className="space-y-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="text-4xl font-bold">
-                    {portfolioEsg.overallScore}
-                  </div>
-                  <Badge
-                    className={`${getGradeColor(portfolioEsg.grade)} text-white`}
-                  >
+                  <div className="text-4xl font-bold">{portfolioEsg.overallScore}</div>
+                  <Badge className={`${getGradeColor(portfolioEsg.grade)} text-white`}>
                     {portfolioEsg.grade}
                   </Badge>
                 </div>
@@ -127,7 +117,9 @@ export default function EsgPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <Progress value={portfolioEsg.breakdown.environmental} className="flex-1" />
-                    <span className={`text-sm font-medium ${getScoreColor(portfolioEsg.breakdown.environmental)}`}>
+                    <span
+                      className={`text-sm font-medium ${getScoreColor(portfolioEsg.breakdown.environmental)}`}
+                    >
                       {portfolioEsg.breakdown.environmental}
                     </span>
                   </div>
@@ -140,7 +132,9 @@ export default function EsgPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <Progress value={portfolioEsg.breakdown.social} className="flex-1" />
-                    <span className={`text-sm font-medium ${getScoreColor(portfolioEsg.breakdown.social)}`}>
+                    <span
+                      className={`text-sm font-medium ${getScoreColor(portfolioEsg.breakdown.social)}`}
+                    >
                       {portfolioEsg.breakdown.social}
                     </span>
                   </div>
@@ -153,7 +147,9 @@ export default function EsgPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <Progress value={portfolioEsg.breakdown.governance} className="flex-1" />
-                    <span className={`text-sm font-medium ${getScoreColor(portfolioEsg.breakdown.governance)}`}>
+                    <span
+                      className={`text-sm font-medium ${getScoreColor(portfolioEsg.breakdown.governance)}`}
+                    >
                       {portfolioEsg.breakdown.governance}
                     </span>
                   </div>
@@ -187,9 +183,7 @@ export default function EsgPage() {
                     </div>
                     <div className="flex items-center gap-4">
                       <div className="text-right">
-                        <p className="font-medium">
-                          Score: {holding.esgScore.overallScore}
-                        </p>
+                        <p className="font-medium">Score: {holding.esgScore.overallScore}</p>
                         <Badge
                           variant="outline"
                           className={`${getGradeColor(holding.esgScore.grade)} text-white border-0`}
@@ -253,14 +247,12 @@ export default function EsgPage() {
               <TrendingUp className="h-5 w-5 text-blue-600" />
               Asset ESG Comparison
             </CardTitle>
-            <CardDescription>
-              Compare ESG scores across different cryptocurrencies
-            </CardDescription>
+            <CardDescription>Compare ESG scores across different cryptocurrencies</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground">{comparison.summary}</p>
-              
+
               <div className="grid gap-4">
                 {comparison.comparison.map((asset) => (
                   <div
@@ -270,17 +262,13 @@ export default function EsgPage() {
                     <div>
                       <p className="font-semibold">{asset.symbol}</p>
                       {asset.consensusMechanism && (
-                        <p className="text-xs text-muted-foreground">
-                          {asset.consensusMechanism}
-                        </p>
+                        <p className="text-xs text-muted-foreground">{asset.consensusMechanism}</p>
                       )}
                       {asset.description && (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {asset.description}
-                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">{asset.description}</p>
                       )}
                     </div>
-                    
+
                     <div className="flex items-center gap-4">
                       <div className="grid grid-cols-3 gap-2 text-xs">
                         <div className="text-center">
@@ -302,7 +290,7 @@ export default function EsgPage() {
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="text-right">
                         <p className="font-bold text-lg">{asset.overallScore}</p>
                         <Badge
@@ -318,7 +306,7 @@ export default function EsgPage() {
               </div>
 
               {/* Energy Impact */}
-              {comparison.comparison.some(asset => asset.energyIntensity) && (
+              {comparison.comparison.some((asset) => asset.energyIntensity) && (
                 <div className="mt-6">
                   <h4 className="font-medium mb-3 flex items-center gap-2">
                     <Zap className="h-4 w-4 text-yellow-600" />
@@ -326,14 +314,12 @@ export default function EsgPage() {
                   </h4>
                   <div className="space-y-2">
                     {comparison.comparison
-                      .filter(asset => asset.energyIntensity)
+                      .filter((asset) => asset.energyIntensity)
                       .sort((a, b) => (a.energyIntensity || 0) - (b.energyIntensity || 0))
                       .map((asset) => (
                         <div key={asset.symbol} className="flex justify-between text-sm">
                           <span>{asset.symbol}</span>
-                          <span>
-                            {asset.energyIntensity?.toLocaleString()} kWh/transaction
-                          </span>
+                          <span>{asset.energyIntensity?.toLocaleString()} kWh/transaction</span>
                         </div>
                       ))}
                   </div>
@@ -357,13 +343,17 @@ export default function EsgPage() {
                 <h4 className="font-medium text-sm mb-2 text-green-600">Improving ESG</h4>
                 <div className="flex flex-wrap gap-2">
                   {trends.trending.improving.map((symbol) => (
-                    <Badge key={symbol} variant="outline" className="border-green-600 text-green-600">
+                    <Badge
+                      key={symbol}
+                      variant="outline"
+                      className="border-green-600 text-green-600"
+                    >
                       {symbol}
                     </Badge>
                   ))}
                 </div>
               </div>
-              
+
               <div>
                 <h4 className="font-medium text-sm mb-2 text-red-600">Under Pressure</h4>
                 <div className="flex flex-wrap gap-2">
@@ -380,7 +370,7 @@ export default function EsgPage() {
           <Card>
             <CardHeader>
               <CardTitle>Recommendations</CardTitle>
-              <CardDescription>Improve your portfolio's ESG score</CardDescription>
+              <CardDescription>Improve your portfolio&apos;s ESG score</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
@@ -400,9 +390,7 @@ export default function EsgPage() {
         <Card>
           <CardHeader>
             <CardTitle>ESG Methodology</CardTitle>
-            <CardDescription>
-              {methodology.description}
-            </CardDescription>
+            <CardDescription>{methodology.description}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -419,7 +407,7 @@ export default function EsgPage() {
                     Weight: {methodology.scoring.environmental.weight}
                   </p>
                 </div>
-                
+
                 <div className="space-y-2">
                   <h4 className="font-medium flex items-center gap-2">
                     <Users className="h-4 w-4 text-blue-600" />
@@ -428,11 +416,9 @@ export default function EsgPage() {
                   <p className="text-sm text-muted-foreground">
                     {methodology.scoring.social.description}
                   </p>
-                  <p className="text-xs font-medium">
-                    Weight: {methodology.scoring.social.weight}
-                  </p>
+                  <p className="text-xs font-medium">Weight: {methodology.scoring.social.weight}</p>
                 </div>
-                
+
                 <div className="space-y-2">
                   <h4 className="font-medium flex items-center gap-2">
                     <Shield className="h-4 w-4 text-purple-600" />

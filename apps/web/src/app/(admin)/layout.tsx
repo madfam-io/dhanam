@@ -7,11 +7,7 @@ import { AdminHeader } from '~/components/admin/admin-header';
 import { useAuth } from '~/lib/hooks/use-auth';
 import { AdminProvider } from '~/contexts/AdminContext';
 
-export default function AdminLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { user, isAuthenticated } = useAuth();
   const router = useRouter();
 
@@ -25,7 +21,7 @@ export default function AdminLayout({
     // For now, we'll check if the user has admin or owner role in any space
     // In production, you might want to have a dedicated admin flag
     const hasAdminAccess = user?.spaces?.some(
-      space => space.role === 'admin' || space.role === 'owner'
+      (space) => space.role === 'admin' || space.role === 'owner'
     );
 
     if (!hasAdminAccess) {
@@ -38,7 +34,7 @@ export default function AdminLayout({
   }
 
   const hasAdminAccess = user.spaces?.some(
-    space => space.role === 'admin' || space.role === 'owner'
+    (space) => space.role === 'admin' || space.role === 'owner'
   );
 
   if (!hasAdminAccess) {
@@ -52,9 +48,7 @@ export default function AdminLayout({
         <div className="flex">
           <AdminNav />
           <main className="flex-1 p-6">
-            <div className="mx-auto max-w-7xl">
-              {children}
-            </div>
+            <div className="mx-auto max-w-7xl">{children}</div>
           </main>
         </div>
       </div>

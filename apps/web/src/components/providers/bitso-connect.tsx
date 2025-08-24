@@ -2,27 +2,21 @@
 
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@dhanam/ui';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@dhanam/ui';
 import { Button } from '@dhanam/ui';
 import { Input } from '@dhanam/ui';
 import { Label } from '@dhanam/ui';
 import { Alert, AlertDescription } from '@dhanam/ui';
 import { Badge } from '@dhanam/ui';
-import { 
-  Loader2, 
-  Shield, 
-  Coins, 
-  Eye, 
-  EyeOff, 
+import {
+  Loader2,
+  Shield,
+  Coins,
+  Eye,
+  EyeOff,
   ExternalLink,
   AlertTriangle,
-  CheckCircle
+  CheckCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { bitsoApi } from '@/lib/api/bitso';
@@ -109,7 +103,8 @@ export function BitsoConnect({ open, onOpenChange, spaceId, onSuccess }: BitsoCo
               <Shield className="h-4 w-4" />
               <AlertDescription>
                 <strong>Your API credentials are encrypted and secure.</strong>
-                <br />We use bank-level encryption and never store your credentials in plain text.
+                <br />
+                We use bank-level encryption and never store your credentials in plain text.
               </AlertDescription>
             </Alert>
 
@@ -118,17 +113,19 @@ export function BitsoConnect({ open, onOpenChange, spaceId, onSuccess }: BitsoCo
               <h4 className="font-medium flex items-center gap-2">
                 🔑 How to get your Bitso API credentials
               </h4>
-              
+
               <div className="space-y-3 text-sm">
                 <div className="flex items-start gap-3 p-3 rounded-lg border">
-                  <Badge variant="outline" className="mt-0.5">1</Badge>
+                  <Badge variant="outline" className="mt-0.5">
+                    1
+                  </Badge>
                   <div>
                     <p className="font-medium">Log in to Bitso</p>
                     <p className="text-muted-foreground">
                       Go to{' '}
-                      <a 
-                        href="https://bitso.com" 
-                        target="_blank" 
+                      <a
+                        href="https://bitso.com"
+                        target="_blank"
                         rel="noopener noreferrer"
                         className="text-blue-600 hover:underline inline-flex items-center gap-1"
                       >
@@ -140,7 +137,9 @@ export function BitsoConnect({ open, onOpenChange, spaceId, onSuccess }: BitsoCo
                 </div>
 
                 <div className="flex items-start gap-3 p-3 rounded-lg border">
-                  <Badge variant="outline" className="mt-0.5">2</Badge>
+                  <Badge variant="outline" className="mt-0.5">
+                    2
+                  </Badge>
                   <div>
                     <p className="font-medium">Navigate to API Settings</p>
                     <p className="text-muted-foreground">
@@ -150,7 +149,9 @@ export function BitsoConnect({ open, onOpenChange, spaceId, onSuccess }: BitsoCo
                 </div>
 
                 <div className="flex items-start gap-3 p-3 rounded-lg border">
-                  <Badge variant="outline" className="mt-0.5">3</Badge>
+                  <Badge variant="outline" className="mt-0.5">
+                    3
+                  </Badge>
                   <div>
                     <p className="font-medium">Set Permissions</p>
                     <p className="text-muted-foreground">
@@ -160,11 +161,13 @@ export function BitsoConnect({ open, onOpenChange, spaceId, onSuccess }: BitsoCo
                 </div>
 
                 <div className="flex items-start gap-3 p-3 rounded-lg border">
-                  <Badge variant="outline" className="mt-0.5">4</Badge>
+                  <Badge variant="outline" className="mt-0.5">
+                    4
+                  </Badge>
                   <div>
                     <p className="font-medium">Copy Your Credentials</p>
                     <p className="text-muted-foreground">
-                      Copy your API Key and Secret (you'll only see the secret once!)
+                      Copy your API Key and Secret (you&apos;ll only see the secret once!)
                     </p>
                   </div>
                 </div>
@@ -173,7 +176,8 @@ export function BitsoConnect({ open, onOpenChange, spaceId, onSuccess }: BitsoCo
               <Alert>
                 <AlertTriangle className="h-4 w-4" />
                 <AlertDescription>
-                  <strong>Important:</strong> Only enable "View" permissions. Never give trading permissions to third-party applications.
+                  <strong>Important:</strong> Only enable &quot;View&quot; permissions. Never give
+                  trading permissions to third-party applications.
                 </AlertDescription>
               </Alert>
             </div>
@@ -228,9 +232,7 @@ export function BitsoConnect({ open, onOpenChange, spaceId, onSuccess }: BitsoCo
                     variant="ghost"
                     size="sm"
                     className="absolute right-0 top-0 h-full px-3"
-                    onClick={() => 
-                      setShowSecrets({ ...showSecrets, apiKey: !showSecrets.apiKey })
-                    }
+                    onClick={() => setShowSecrets({ ...showSecrets, apiKey: !showSecrets.apiKey })}
                   >
                     {showSecrets.apiKey ? (
                       <EyeOff className="h-4 w-4" />
@@ -257,7 +259,7 @@ export function BitsoConnect({ open, onOpenChange, spaceId, onSuccess }: BitsoCo
                     variant="ghost"
                     size="sm"
                     className="absolute right-0 top-0 h-full px-3"
-                    onClick={() => 
+                    onClick={() =>
                       setShowSecrets({ ...showSecrets, apiSecret: !showSecrets.apiSecret })
                     }
                   >
@@ -292,11 +294,7 @@ export function BitsoConnect({ open, onOpenChange, spaceId, onSuccess }: BitsoCo
             </Alert>
 
             <div className="flex gap-3">
-              <Button 
-                type="submit" 
-                disabled={connectMutation.isPending}
-                className="flex-1"
-              >
+              <Button type="submit" disabled={connectMutation.isPending} className="flex-1">
                 {connectMutation.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -306,11 +304,7 @@ export function BitsoConnect({ open, onOpenChange, spaceId, onSuccess }: BitsoCo
                   'Connect Bitso Account'
                 )}
               </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setStep('instructions')}
-              >
+              <Button type="button" variant="outline" onClick={() => setStep('instructions')}>
                 Back
               </Button>
             </div>

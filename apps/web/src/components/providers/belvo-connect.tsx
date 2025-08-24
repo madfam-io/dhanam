@@ -2,13 +2,7 @@
 
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@dhanam/ui';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@dhanam/ui';
 import { Button } from '@dhanam/ui';
 import { Input } from '@dhanam/ui';
 import { Card, CardContent, CardHeader, CardTitle } from '@dhanam/ui';
@@ -27,7 +21,7 @@ const BELVO_INSTITUTIONS = [
   {
     name: 'Banamex',
     code: 'banamex',
-    logo: '🏛️', 
+    logo: '🏛️',
     description: 'Citibanamex - Major Mexican bank',
   },
   {
@@ -72,7 +66,7 @@ export function BelvoConnect({ open, onOpenChange, spaceId, onSuccess }: BelvoCo
     mutationFn: (data: { institution: string; username: string; password: string }) =>
       belvoApi.linkAccount(spaceId, data),
     onSuccess: (data) => {
-      const selectedBank = BELVO_INSTITUTIONS.find(bank => bank.code === institution);
+      const selectedBank = BELVO_INSTITUTIONS.find((bank) => bank.code === institution);
       toast.success(
         `Successfully linked ${data.accountsCount} account${data.accountsCount > 1 ? 's' : ''} from ${selectedBank?.name || institution}`
       );
@@ -83,13 +77,14 @@ export function BelvoConnect({ open, onOpenChange, spaceId, onSuccess }: BelvoCo
       setPassword('');
     },
     onError: (error: any) => {
-      const message = error.code === 'INVALID_CREDENTIALS' 
-        ? 'Invalid username or password'
-        : error.code === 'INSTITUTION_ERROR'
-        ? 'Bank is temporarily unavailable'
-        : error.code === 'MFA_REQUIRED'
-        ? 'Multi-factor authentication required (not yet supported)'
-        : 'Failed to connect bank account';
+      const message =
+        error.code === 'INVALID_CREDENTIALS'
+          ? 'Invalid username or password'
+          : error.code === 'INSTITUTION_ERROR'
+            ? 'Bank is temporarily unavailable'
+            : error.code === 'MFA_REQUIRED'
+              ? 'Multi-factor authentication required (not yet supported)'
+              : 'Failed to connect bank account';
       toast.error(message);
     },
   });
@@ -144,16 +139,20 @@ export function BelvoConnect({ open, onOpenChange, spaceId, onSuccess }: BelvoCo
                 <div
                   key={bank.code}
                   className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
-                    institution === bank.code ? 'bg-primary/10 border-primary' : 'bg-card hover:bg-accent'
+                    institution === bank.code
+                      ? 'bg-primary/10 border-primary'
+                      : 'bg-card hover:bg-accent'
                   }`}
                   onClick={() => setInstitution(bank.code)}
+                  onKeyDown={(e) => e.key === 'Enter' && setInstitution(bank.code)}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Select ${bank.name} bank`}
                 >
                   <span className="text-2xl">{bank.logo}</span>
                   <div className="min-w-0 flex-1">
                     <p className="font-medium text-sm">{bank.name}</p>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {bank.description}
-                    </p>
+                    <p className="text-xs text-muted-foreground truncate">{bank.description}</p>
                   </div>
                 </div>
               ))}
@@ -195,8 +194,8 @@ export function BelvoConnect({ open, onOpenChange, spaceId, onSuccess }: BelvoCo
             <Alert>
               <Globe className="h-4 w-4" />
               <AlertDescription>
-                We'll only access your account balances and transaction history. 
-                No transfers or payments can be made through this connection.
+                We&apos;ll only access your account balances and transaction history. No transfers
+                or payments can be made through this connection.
               </AlertDescription>
             </Alert>
 
@@ -224,16 +223,22 @@ export function BelvoConnect({ open, onOpenChange, spaceId, onSuccess }: BelvoCo
                 </CardHeader>
                 <CardContent className="pt-0">
                   <div className="text-xs text-blue-700 space-y-1">
-                    <p><strong>Institution:</strong> sandbox_mx</p>
-                    <p><strong>Username:</strong> test_user</p>
-                    <p><strong>Password:</strong> test_password</p>
+                    <p>
+                      <strong>Institution:</strong> sandbox_mx
+                    </p>
+                    <p>
+                      <strong>Username:</strong> test_user
+                    </p>
+                    <p>
+                      <strong>Password:</strong> test_password
+                    </p>
                   </div>
                 </CardContent>
               </Card>
             )}
 
             <p className="text-xs text-center text-muted-foreground">
-              By connecting, you agree to Belvo's{' '}
+              By connecting, you agree to Belvo&apos;s{' '}
               <a
                 href="https://belvo.com/privacy/"
                 target="_blank"

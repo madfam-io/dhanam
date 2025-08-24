@@ -1,7 +1,8 @@
-import { Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
-import { PrismaService } from '../../core/prisma/prisma.service';
-import { Decimal } from '@prisma/client/runtime/library';
 import { ESGManager, PortfolioHolding, PortfolioESGAnalysis, AssetESGData } from '@dhanam/esg';
+import { Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
+import { Decimal } from '@prisma/client/runtime/library';
+
+import { PrismaService } from '../../core/prisma/prisma.service';
 
 @Injectable()
 export class EnhancedEsgService implements OnModuleInit {
@@ -56,11 +57,12 @@ export class EnhancedEsgService implements OnModuleInit {
     }
 
     // Convert database accounts to portfolio holdings
-    const holdings: PortfolioHolding[] = cryptoAccounts.map(account => {
+    const holdings: PortfolioHolding[] = cryptoAccounts.map((account) => {
       const metadata = account.metadata as any;
       const symbol = metadata?.cryptoCurrency || metadata?.symbol || 'UNKNOWN';
-      const balance = account.balance instanceof Decimal ? account.balance.toNumber() : Number(account.balance);
-      
+      const balance =
+        account.balance instanceof Decimal ? account.balance.toNumber() : Number(account.balance);
+
       // For crypto, value equals balance (assuming 1:1 for simplicity)
       // In production, you'd multiply by current market price
       const value = balance;
@@ -89,11 +91,12 @@ export class EnhancedEsgService implements OnModuleInit {
       throw new NotFoundException('No crypto holdings found in this space');
     }
 
-    const holdings: PortfolioHolding[] = cryptoAccounts.map(account => {
+    const holdings: PortfolioHolding[] = cryptoAccounts.map((account) => {
       const metadata = account.metadata as any;
       const symbol = metadata?.cryptoCurrency || metadata?.symbol || 'UNKNOWN';
-      const balance = account.balance instanceof Decimal ? account.balance.toNumber() : Number(account.balance);
-      
+      const balance =
+        account.balance instanceof Decimal ? account.balance.toNumber() : Number(account.balance);
+
       return {
         symbol: symbol.toUpperCase(),
         value: balance,
@@ -122,9 +125,9 @@ export class EnhancedEsgService implements OnModuleInit {
 
     // Sort by overall score to identify trends
     const sortedByScore = esgData.sort((a, b) => b.score.overall - a.score.overall);
-    
-    const improving = sortedByScore.slice(0, 4).map(asset => asset.symbol);
-    const declining = sortedByScore.slice(-2).map(asset => asset.symbol);
+
+    const improving = sortedByScore.slice(0, 4).map((asset) => asset.symbol);
+    const declining = sortedByScore.slice(-2).map((asset) => asset.symbol);
 
     return {
       trending: {
@@ -157,22 +160,22 @@ export class EnhancedEsgService implements OnModuleInit {
     summary: string;
   }> {
     const esgData = await this.getMultipleAssetESG(symbols);
-    
+
     if (esgData.length === 0) {
       throw new NotFoundException('No ESG data found for the provided symbols');
     }
 
     const bestPerformer = {
-      overall: esgData.reduce((best, current) => 
+      overall: esgData.reduce((best, current) =>
         current.score.overall > best.score.overall ? current : best
       ).symbol,
-      environmental: esgData.reduce((best, current) => 
+      environmental: esgData.reduce((best, current) =>
         current.score.environmental > best.score.environmental ? current : best
       ).symbol,
-      social: esgData.reduce((best, current) => 
+      social: esgData.reduce((best, current) =>
         current.score.social > best.score.social ? current : best
       ).symbol,
-      governance: esgData.reduce((best, current) => 
+      governance: esgData.reduce((best, current) =>
         current.score.governance > best.score.governance ? current : best
       ).symbol,
     };

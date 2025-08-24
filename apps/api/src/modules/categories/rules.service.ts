@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { PrismaService } from '@core/prisma/prisma.service';
 import { Transaction } from '@prisma/client';
+
+import { PrismaService } from '@core/prisma/prisma.service';
 
 export interface CategoryRule {
   id: string;
@@ -13,7 +14,14 @@ export interface CategoryRule {
 
 export interface RuleCondition {
   field: 'description' | 'merchant' | 'amount' | 'account';
-  operator: 'contains' | 'equals' | 'startsWith' | 'endsWith' | 'greaterThan' | 'lessThan' | 'between';
+  operator:
+    | 'contains'
+    | 'equals'
+    | 'startsWith'
+    | 'endsWith'
+    | 'greaterThan'
+    | 'lessThan'
+    | 'between';
   value: string | number;
   valueEnd?: number; // For 'between' operator
   caseInsensitive?: boolean;
@@ -30,7 +38,7 @@ export class RulesService {
     categoryId: string,
     name: string,
     conditions: RuleCondition[],
-    priority: number = 0,
+    priority: number = 0
   ): Promise<CategoryRule> {
     const rule = await this.prisma.transactionRule.create({
       data: {
@@ -53,7 +61,7 @@ export class RulesService {
       conditions: RuleCondition[];
       priority: number;
       enabled: boolean;
-    }>,
+    }>
   ): Promise<CategoryRule> {
     const rule = await this.prisma.transactionRule.update({
       where: { id: ruleId },
@@ -105,14 +113,14 @@ export class RulesService {
     }
 
     const rules = await this.getRulesForSpace(account.spaceId);
-    
+
     // Apply rules in priority order
     for (const rule of rules) {
       if (!rule.enabled) continue;
 
       if (this.evaluateRule(rule, transaction)) {
         this.logger.log(
-          `Transaction ${transaction.id} matched rule "${rule.name}" for category ${rule.categoryId}`,
+          `Transaction ${transaction.id} matched rule "${rule.name}" for category ${rule.categoryId}`
         );
         return rule.categoryId;
       }
@@ -140,7 +148,7 @@ export class RulesService {
 
     for (const transaction of transactions) {
       const categoryId = await this.categorizeTransaction(transaction);
-      
+
       if (categoryId) {
         await this.prisma.transaction.update({
           where: { id: transaction.id },
@@ -151,7 +159,7 @@ export class RulesService {
     }
 
     this.logger.log(
-      `Batch categorization complete: ${categorizedCount}/${transactions.length} transactions categorized`,
+      `Batch categorization complete: ${categorizedCount}/${transactions.length} transactions categorized`
     );
 
     return {
@@ -161,7 +169,7 @@ export class RulesService {
   }
 
   private evaluateRule(rule: CategoryRule, transaction: Transaction): boolean {
-    return rule.conditions.every(condition => this.evaluateCondition(condition, transaction));
+    return rule.conditions.every((condition) => this.evaluateCondition(condition, transaction));
   }
 
   private evaluateCondition(condition: RuleCondition, transaction: Transaction): boolean {
@@ -184,7 +192,13 @@ export class RulesService {
         return false;
     }
 
-    return this.applyOperator(condition.operator, fieldValue, condition.value, condition.valueEnd, condition.caseInsensitive);
+    return this.applyOperator(
+      condition.operator,
+      fieldValue,
+      condition.value,
+      condition.valueEnd,
+      condition.caseInsensitive
+    );
   }
 
   private applyOperator(
@@ -192,7 +206,7 @@ export class RulesService {
     fieldValue: string | number,
     conditionValue: string | number,
     conditionValueEnd?: number,
-    caseInsensitive = true,
+    caseInsensitive = true
   ): boolean {
     if (typeof fieldValue === 'string' && typeof conditionValue === 'string') {
       const field = caseInsensitive ? fieldValue.toLowerCase() : fieldValue;
@@ -221,7 +235,7 @@ export class RulesService {
         case 'lessThan':
           return fieldValue < conditionValue;
         case 'between':
-          return conditionValueEnd !== undefined 
+          return conditionValueEnd !== undefined
             ? fieldValue >= conditionValue && fieldValue <= conditionValueEnd
             : false;
         default:
@@ -281,10 +295,8 @@ export class RulesService {
     ];
 
     for (const pattern of commonPatterns) {
-      const matchingCategory = categories.find(cat =>
-        pattern.categoryNames.some(name =>
-          cat.name.toLowerCase().includes(name.toLowerCase())
-        )
+      const matchingCategory = categories.find((cat) =>
+        pattern.categoryNames.some((name) => cat.name.toLowerCase().includes(name.toLowerCase()))
       );
 
       if (matchingCategory) {
@@ -301,7 +313,7 @@ export class RulesService {
                 caseInsensitive: true,
               },
             ],
-            100,
+            100
           );
           rules.push(rule);
         } catch (error) {
@@ -338,7 +350,7 @@ export class RulesService {
     }
 
     this.logger.log(
-      `Specific categorization complete: ${categorizedCount}/${transactions.length} transactions categorized`,
+      `Specific categorization complete: ${categorizedCount}/${transactions.length} transactions categorized`
     );
 
     return {

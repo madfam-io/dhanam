@@ -1,10 +1,10 @@
+import { Ionicons } from '@expo/vector-icons';
+import * as LocalAuthentication from 'expo-local-authentication';
+import { router } from 'expo-router';
 import React, { useState } from 'react';
 import { View, ScrollView, Alert } from 'react-native';
 import { Text, TextInput, Button, Checkbox } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import * as LocalAuthentication from 'expo-local-authentication';
 
 import { useAuth } from '@/hooks/useAuth';
 import { styles } from '@/styles/auth';
@@ -88,14 +88,14 @@ export default function LoginScreen() {
         Alert.alert('Success', 'Biometric authentication successful');
         router.replace('/(tabs)/dashboard');
       }
-    } catch (error) {
+    } catch {
       Alert.alert('Authentication Failed', 'Unable to authenticate with biometrics');
     }
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView 
+      <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
@@ -186,11 +186,7 @@ export default function LoginScreen() {
               <Text variant="bodyMedium">Remember me</Text>
             </View>
 
-            <Button
-              mode="text"
-              onPress={() => router.push('/(auth)/forgot-password')}
-              compact
-            >
+            <Button mode="text" onPress={() => router.push('/(auth)/forgot-password')} compact>
               Forgot Password?
             </Button>
           </View>
@@ -220,12 +216,9 @@ export default function LoginScreen() {
 
           <View style={styles.divider}>
             <Text variant="bodyMedium" style={styles.dividerText}>
-              Don't have an account?
+              Don&apos;t have an account?
             </Text>
-            <Button
-              mode="text"
-              onPress={() => router.push('/(auth)/register')}
-            >
+            <Button mode="text" onPress={() => router.push('/(auth)/register')}>
               Sign Up
             </Button>
           </View>

@@ -2,27 +2,28 @@
 
 import { useState } from 'react';
 import { useOnboarding } from '../onboarding-provider';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { 
+import { Button } from '@dhanam/ui';
+import { Card, CardContent } from '@dhanam/ui';
+import {
   PlayCircleIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   CheckCircleIcon,
-  SkipForwardIcon
+  SkipForwardIcon,
 } from 'lucide-react';
 
 const features = [
   {
     id: 'dashboard',
     title: 'Dashboard Principal',
-    description: 'Tu vista central con resumen de cuentas, gastos recientes y tendencias financieras',
+    description:
+      'Tu vista central con resumen de cuentas, gastos recientes y tendencias financieras',
     image: '📊',
     tips: [
       'Ve el balance de todas tus cuentas en tiempo real',
       'Analiza tus gastos por categoría con gráficos interactivos',
-      'Recibe alertas importantes sobre tu situación financiera'
-    ]
+      'Recibe alertas importantes sobre tu situación financiera',
+    ],
   },
   {
     id: 'accounts',
@@ -32,19 +33,20 @@ const features = [
     tips: [
       'Conecta bancos mexicanos, estadounidenses y exchanges crypto',
       'Monitorea wallets Bitcoin y Ethereum sin compartir claves privadas',
-      'Sincronización automática de transacciones y balances'
-    ]
+      'Sincronización automática de transacciones y balances',
+    ],
   },
   {
     id: 'budgets',
     title: 'Presupuestos Inteligentes',
-    description: 'Crea presupuestos por categoría y recibe alertas cuando te acerques a los límites',
+    description:
+      'Crea presupuestos por categoría y recibe alertas cuando te acerques a los límites',
     image: '💰',
     tips: [
       'Configura límites personalizados por categoría',
       'Alertas automáticas al 80% y 100% del presupuesto',
-      'Análisis de variaciones mes a mes'
-    ]
+      'Análisis de variaciones mes a mes',
+    ],
   },
   {
     id: 'transactions',
@@ -54,8 +56,8 @@ const features = [
     tips: [
       'Categorización automática con inteligencia artificial',
       'Búsqueda y filtros avanzados',
-      'Edita categorías y añade notas personales'
-    ]
+      'Edita categorías y añade notas personales',
+    ],
   },
   {
     id: 'esg',
@@ -65,8 +67,8 @@ const features = [
     tips: [
       'Puntuación ESG para cada criptomoneda en tu portafolio',
       'Análisis de huella de carbono de tus inversiones',
-      'Recomendaciones para inversiones más sostenibles'
-    ]
+      'Recomendaciones para inversiones más sostenibles',
+    ],
   },
   {
     id: 'reports',
@@ -76,9 +78,9 @@ const features = [
     tips: [
       'Reportes mensuales detallados por email',
       'Análisis de cashflow con proyecciones',
-      'Exporta datos a CSV para análisis avanzado'
-    ]
-  }
+      'Exporta datos a CSV para análisis avanzado',
+    ],
+  },
 ];
 
 export function FeatureTourStep() {
@@ -121,17 +123,13 @@ export function FeatureTourStep() {
     }
   };
 
-  const feature = features[currentFeature];
-
   return (
     <div className="max-w-4xl mx-auto">
       <div className="text-center mb-8">
         <div className="w-20 h-20 bg-purple-100 rounded-full mx-auto mb-6 flex items-center justify-center">
           <PlayCircleIcon className="w-10 h-10 text-purple-600" />
         </div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">
-          Tour de funciones
-        </h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-4">Tour de funciones</h1>
         <p className="text-lg text-gray-600">
           Descubre todo lo que puedes hacer con Dhanam para maximizar tu gestión financiera
         </p>
@@ -144,8 +142,11 @@ export function FeatureTourStep() {
             <div
               key={index}
               className={`w-2 h-2 rounded-full transition-colors ${
-                index === currentFeature ? 'bg-purple-600' : 
-                index < currentFeature ? 'bg-purple-300' : 'bg-gray-200'
+                index === currentFeature
+                  ? 'bg-purple-600'
+                  : index < currentFeature
+                    ? 'bg-purple-300'
+                    : 'bg-gray-200'
               }`}
             />
           ))}
@@ -158,29 +159,25 @@ export function FeatureTourStep() {
       {/* Feature showcase */}
       <Card className="mb-8">
         <CardContent className="p-8">
-          <div className="text-center mb-6">
-            <div className="text-6xl mb-4">{feature.image}</div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">
-              {feature.title}
-            </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              {feature.description}
-            </p>
+          {features[currentFeature] && (
+            <div className="text-center mb-6">
+              <div className="text-6xl mb-4">{features[currentFeature].image}</div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">{features[currentFeature].title}</h2>
+              <p className="text-gray-600 max-w-2xl mx-auto">{features[currentFeature].description}</p>
           </div>
 
-          <div className="bg-gray-50 rounded-lg p-6">
-            <h3 className="font-semibold text-gray-900 mb-3">
-              ✨ Características principales:
-            </h3>
-            <ul className="space-y-2">
-              {feature.tips.map((tip, index) => (
-                <li key={index} className="flex items-start space-x-2">
-                  <CheckCircleIcon className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
-                  <span className="text-gray-700">{tip}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
+            <div className="bg-gray-50 rounded-lg p-6">
+              <h3 className="font-semibold text-gray-900 mb-3">✨ Características principales:</h3>
+              <ul className="space-y-2">
+                {features[currentFeature].tips.map((tip, index) => (
+                  <li key={index} className="flex items-start space-x-2">
+                    <CheckCircleIcon className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+                    <span className="text-gray-700">{tip}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -210,10 +207,7 @@ export function FeatureTourStep() {
         </div>
 
         {currentFeature < features.length - 1 ? (
-          <Button
-            onClick={handleNext}
-            className="flex items-center space-x-2"
-          >
+          <Button onClick={handleNext} className="flex items-center space-x-2">
             <span>Siguiente</span>
             <ChevronRightIcon className="w-4 h-4" />
           </Button>
@@ -231,12 +225,10 @@ export function FeatureTourStep() {
 
       {/* Quick access */}
       <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-6 text-center">
-        <h3 className="font-semibold text-indigo-900 mb-2">
-          ¿Listo para comenzar?
-        </h3>
+        <h3 className="font-semibold text-indigo-900 mb-2">¿Listo para comenzar?</h3>
         <p className="text-indigo-800 text-sm mb-4">
-          Todas estas funciones estarán disponibles en tu dashboard. 
-          También puedes consultar nuestra documentación en cualquier momento.
+          Todas estas funciones estarán disponibles en tu dashboard. También puedes consultar
+          nuestra documentación en cualquier momento.
         </p>
         <div className="flex justify-center space-x-4 text-sm">
           <span className="text-indigo-600">📚 Centro de ayuda</span>

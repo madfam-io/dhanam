@@ -1,21 +1,19 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@core/prisma/prisma.service';
-import { AnalyticsService } from './analytics.service';
-import * as PDFDocument from 'pdfkit';
 import { format } from 'date-fns';
+import PDFDocument from 'pdfkit';
+
+import { PrismaService } from '@core/prisma/prisma.service';
+
+import { AnalyticsService } from './analytics.service';
 
 @Injectable()
 export class ReportService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly analyticsService: AnalyticsService,
+    private readonly analyticsService: AnalyticsService
   ) {}
 
-  async generatePdfReport(
-    spaceId: string,
-    startDate: Date,
-    endDate: Date,
-  ): Promise<Buffer> {
+  async generatePdfReport(spaceId: string, startDate: Date, endDate: Date): Promise<Buffer> {
     return new Promise(async (resolve, reject) => {
       try {
         const doc = new PDFDocument();
@@ -43,31 +41,79 @@ export class ReportService {
         // Title Page
         doc.fontSize(24).text('Dhanam Financial Report', 50, 50);
         doc.fontSize(18).text(space.name, 50, 90);
-        doc.fontSize(14).text(
-          `${format(startDate, 'MMMM d, yyyy')} - ${format(endDate, 'MMMM d, yyyy')}`,
-          50,
-          120,
-        );
+        doc
+          .fontSize(14)
+          .text(
+            `${format(startDate, 'MMMM d, yyyy')} - ${format(endDate, 'MMMM d, yyyy')}`,
+            50,
+            120
+          );
 
         // Executive Summary
         doc.addPage();
         doc.fontSize(20).text('Executive Summary', 50, 50);
-        
-        const cashflow = await this.analyticsService.getCashFlow(
-          spaceId,
-          startDate,
-          endDate,
-        );
+
+        // Get income and expense data
+        const transactions = await this.prisma.transaction.findMany({
+          where: {
+            account: { spaceId },
+            date: {
+              gte: startDate,
+              lte: endDate,
+            },
+          },
+          include: {
+            category: true,
+          },
+        });
+
+        const incomeTransactions = transactions.filter((t) => t.amount.gt(0));
+        const expenseTransactions = transactions.filter((t) => t.amount.lt(0));
+
+        const cashflow = {
+          income: incomeTransactions.reduce(
+            (acc, t) => {
+              const category = t.category?.name || 'Uncategorized';
+              const existing = acc.find((i) => i.category === category);
+              if (existing) {
+                existing.amount += t.amount.toNumber();
+              } else {
+                acc.push({ category, amount: t.amount.toNumber() });
+              }
+              return acc;
+            },
+            [] as Array<{ category: string; amount: number }>
+          ),
+          expenses: expenseTransactions.reduce(
+            (acc, t) => {
+              const category = t.category?.name || 'Uncategorized';
+              const existing = acc.find((i) => i.category === category);
+              if (existing) {
+                existing.amount += t.amount.toNumber();
+              } else {
+                acc.push({ category, amount: t.amount.toNumber() });
+              }
+              return acc;
+            },
+            [] as Array<{ category: string; amount: number }>
+          ),
+        };
 
         const totalIncome = cashflow.income.reduce((sum, item) => sum + item.amount, 0);
-        const totalExpenses = Math.abs(cashflow.expenses.reduce((sum, item) => sum + item.amount, 0));
+        const totalExpenses = Math.abs(
+          cashflow.expenses.reduce((sum, item) => sum + item.amount, 0)
+        );
         const netSavings = totalIncome - totalExpenses;
 
         doc.fontSize(12);
         doc.text(`Total Income: ${space.currency} ${totalIncome.toFixed(2)}`, 50, 100);
         doc.text(`Total Expenses: ${space.currency} ${totalExpenses.toFixed(2)}`, 50, 120);
         doc.text(`Net Savings: ${space.currency} ${netSavings.toFixed(2)}`, 50, 140);
-        doc.text(`Savings Rate: ${totalIncome > 0 ? ((netSavings / totalIncome) * 100).toFixed(1) : 0}%`, 50, 160);
+        doc.text(
+          `Savings Rate: ${totalIncome > 0 ? ((netSavings / totalIncome) * 100).toFixed(1) : 0}%`,
+          50,
+          160
+        );
 
         // Income Breakdown
         doc.addPage();
@@ -86,17 +132,18 @@ export class ReportService {
         doc.fontSize(12);
 
         const spending = await this.analyticsService.getSpendingByCategory(
+          space.userSpaces[0]?.userId || '',
           spaceId,
           startDate,
-          endDate,
+          endDate
         );
 
         yPos = 100;
-        for (const category of spending.sort((a, b) => b.total - a.total)) {
+        for (const category of spending.sort((a, b) => b.amount - a.amount)) {
           doc.text(
-            `${category.categoryName}: ${space.currency} ${category.total.toFixed(2)} (${category.percentage.toFixed(1)}%)`,
+            `${category.categoryName}: ${space.currency} ${category.amount.toFixed(2)} (${category.percentage.toFixed(1)}%)`,
             50,
-            yPos,
+            yPos
           );
           yPos += 20;
           if (yPos > 700) {
@@ -109,14 +156,9 @@ export class ReportService {
         const budgets = await this.prisma.budget.findMany({
           where: {
             spaceId,
-            isActive: true,
           },
           include: {
-            budgetCategories: {
-              include: {
-                category: true,
-              },
-            },
+            categories: true,
           },
         });
 
@@ -127,24 +169,45 @@ export class ReportService {
 
           yPos = 100;
           for (const budget of budgets) {
-            const spent = await this.analyticsService.getBudgetSpending(
-              budget.id,
-              startDate,
-              endDate,
+            // Calculate budget spending
+            const budgetTransactions = await this.prisma.transaction.findMany({
+              where: {
+                account: { spaceId },
+                date: {
+                  gte: startDate,
+                  lte: endDate,
+                },
+                categoryId: {
+                  in: budget.categories.map((c) => c.id),
+                },
+              },
+            });
+
+            const totalSpent = Math.abs(
+              budgetTransactions
+                .filter((t) => t.amount.lt(0))
+                .reduce((sum, t) => sum + t.amount.toNumber(), 0)
             );
+            const totalBudgetAmount = budget.categories.reduce(
+              (sum, c) => sum + c.budgetedAmount.toNumber(), 
+              0
+            );
+            const percentageUsed = totalBudgetAmount > 0 ? (totalSpent / totalBudgetAmount) * 100 : 0;
+
+            const spent = { totalSpent, percentageUsed };
 
             doc.text(`${budget.name}:`, 50, yPos);
             yPos += 20;
             doc.text(
-              `  Budget: ${space.currency} ${budget.amount.toNumber().toFixed(2)}`,
+              `  Budget: ${space.currency} ${totalBudgetAmount.toFixed(2)}`,
               50,
-              yPos,
+              yPos
             );
             yPos += 20;
             doc.text(
               `  Spent: ${space.currency} ${spent.totalSpent.toFixed(2)} (${spent.percentageUsed.toFixed(1)}%)`,
               50,
-              yPos,
+              yPos
             );
             yPos += 30;
 
@@ -168,11 +231,7 @@ export class ReportService {
         yPos = 100;
         let totalBalance = 0;
         for (const account of accounts) {
-          doc.text(
-            `${account.name}: ${account.currency} ${account.balance.toFixed(2)}`,
-            50,
-            yPos,
-          );
+          doc.text(`${account.name}: ${account.currency} ${account.balance.toFixed(2)}`, 50, yPos);
           totalBalance += account.balance.toNumber();
           yPos += 20;
           if (yPos > 700) {
@@ -184,11 +243,9 @@ export class ReportService {
         doc.text(`Total Balance: ${space.currency} ${totalBalance.toFixed(2)}`, 50, yPos + 20);
 
         // Footer
-        doc.fontSize(10).text(
-          `Generated by Dhanam on ${format(new Date(), 'MMMM d, yyyy')}`,
-          50,
-          750,
-        );
+        doc
+          .fontSize(10)
+          .text(`Generated by Dhanam on ${format(new Date(), 'MMMM d, yyyy')}`, 50, 750);
 
         doc.end();
       } catch (error) {
@@ -197,14 +254,10 @@ export class ReportService {
     });
   }
 
-  async generateCsvExport(
-    spaceId: string,
-    startDate: Date,
-    endDate: Date,
-  ): Promise<string> {
+  async generateCsvExport(spaceId: string, startDate: Date, endDate: Date): Promise<string> {
     const transactions = await this.prisma.transaction.findMany({
       where: {
-        spaceId,
+        account: { spaceId },
         date: {
           gte: startDate,
           lte: endDate,

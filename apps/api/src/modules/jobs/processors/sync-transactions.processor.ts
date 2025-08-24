@@ -1,10 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Job } from 'bullmq';
+
+import { CryptoService } from '@core/crypto/crypto.service';
 import { PrismaService } from '@core/prisma/prisma.service';
 import { BelvoService } from '@modules/providers/belvo/belvo.service';
-import { PlaidService } from '@modules/providers/plaid/plaid.service';
 import { BitsoService } from '@modules/providers/bitso/bitso.service';
-import { CryptoService } from '@core/crypto/crypto.service';
+import { PlaidService } from '@modules/providers/plaid/plaid.service';
+
 import { SyncTransactionsJobData } from '../queue.service';
 
 @Injectable()
@@ -16,12 +18,12 @@ export class SyncTransactionsProcessor {
     private readonly belvoService: BelvoService,
     private readonly plaidService: PlaidService,
     private readonly bitsoService: BitsoService,
-    private readonly cryptoService: CryptoService,
+    private readonly cryptoService: CryptoService
   ) {}
 
   async process(job: Job<SyncTransactionsJobData['payload']>): Promise<any> {
     const { provider, userId, connectionId, fullSync } = job.data;
-    
+
     this.logger.log(
       `Processing sync job for provider ${provider}, user ${userId}, connection ${connectionId}`
     );
@@ -84,11 +86,11 @@ export class SyncTransactionsProcessor {
   private async syncBelvoTransactions(connection: any, fullSync = false) {
     // Decrypt token
     const accessToken = this.cryptoService.decrypt(JSON.parse(connection.encryptedToken));
-    
+
     // Get sync cursor from metadata
     const metadata = connection.metadata as any;
     const cursor = fullSync ? undefined : metadata?.syncCursor;
-    
+
     // Perform sync (this would call actual Belvo service methods)
     const result = await this.belvoService.syncTransactions(
       accessToken,
@@ -107,12 +109,9 @@ export class SyncTransactionsProcessor {
   private async syncPlaidTransactions(connection: any, _fullSync = false) {
     // Decrypt token
     const accessToken = this.cryptoService.decrypt(JSON.parse(connection.encryptedToken));
-    
+
     // Use Plaid transactions sync
-    const result = await this.plaidService.syncTransactions(
-      accessToken,
-      connection.providerUserId
-    );
+    const result = await this.plaidService.syncTransactions(accessToken, connection.providerUserId);
 
     return {
       provider: 'plaid',

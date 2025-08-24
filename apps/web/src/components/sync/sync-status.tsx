@@ -4,15 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@dhanam/ui';
 import { Badge } from '@dhanam/ui';
 import { Button } from '@dhanam/ui';
-import { 
-  RefreshCw, 
-  CheckCircle, 
-  XCircle, 
-  Clock, 
-  Wifi,
-  WifiOff,
-  AlertCircle
-} from 'lucide-react';
+import { RefreshCw, CheckCircle, XCircle, Clock, Wifi, WifiOff, AlertCircle } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 interface SyncStatusProps {
@@ -96,9 +88,17 @@ export function SyncStatus({ spaceId }: SyncStatusProps) {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'connected':
-        return <Badge variant="secondary" className="text-green-700 bg-green-50 border-green-200">Connected</Badge>;
+        return (
+          <Badge variant="secondary" className="text-green-700 bg-green-50 border-green-200">
+            Connected
+          </Badge>
+        );
       case 'syncing':
-        return <Badge variant="secondary" className="text-blue-700 bg-blue-50 border-blue-200">Syncing</Badge>;
+        return (
+          <Badge variant="secondary" className="text-blue-700 bg-blue-50 border-blue-200">
+            Syncing
+          </Badge>
+        );
       case 'error':
       case 'expired':
         return <Badge variant="destructive">Error</Badge>;
@@ -146,7 +146,8 @@ export function SyncStatus({ spaceId }: SyncStatusProps) {
           <div className="flex items-center justify-between">
             <div className="space-y-1">
               <p className="text-sm">
-                Last updated {formatDistanceToNow(new Date(syncStatus.lastSync), { addSuffix: true })}
+                Last updated{' '}
+                {formatDistanceToNow(new Date(syncStatus.lastSync), { addSuffix: true })}
               </p>
               <p className="text-xs text-muted-foreground">
                 Next sync {formatDistanceToNow(new Date(syncStatus.nextSync), { addSuffix: true })}
@@ -168,17 +169,19 @@ export function SyncStatus({ spaceId }: SyncStatusProps) {
         <CardContent>
           <div className="space-y-3">
             {syncStatus.accounts.map((account) => (
-              <div key={account.id} className="flex items-center justify-between p-3 rounded-lg border">
+              <div
+                key={account.id}
+                className="flex items-center justify-between p-3 rounded-lg border"
+              >
                 <div className="flex items-center gap-3">
                   {getStatusIcon(account.status)}
                   <div>
                     <p className="font-medium text-sm">{account.name}</p>
                     <p className="text-xs text-muted-foreground capitalize">
-                      {account.provider} • Last sync {formatDistanceToNow(new Date(account.lastSync), { addSuffix: true })}
+                      {account.provider} • Last sync{' '}
+                      {formatDistanceToNow(new Date(account.lastSync), { addSuffix: true })}
                     </p>
-                    {account.error && (
-                      <p className="text-xs text-red-600 mt-1">{account.error}</p>
-                    )}
+                    {account.error && <p className="text-xs text-red-600 mt-1">{account.error}</p>}
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -203,35 +206,39 @@ export function SyncStatus({ spaceId }: SyncStatusProps) {
               <CheckCircle className="h-4 w-4 text-green-600" />
               <div>
                 <p className="text-2xl font-bold">
-                  {syncStatus.accounts.filter(acc => acc.status === 'connected').length}
+                  {syncStatus.accounts.filter((acc) => acc.status === 'connected').length}
                 </p>
                 <p className="text-xs text-muted-foreground">Connected</p>
               </div>
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="pt-4">
             <div className="flex items-center gap-2">
               <XCircle className="h-4 w-4 text-red-600" />
               <div>
                 <p className="text-2xl font-bold">
-                  {syncStatus.accounts.filter(acc => acc.status === 'error' || acc.status === 'expired').length}
+                  {
+                    syncStatus.accounts.filter(
+                      (acc) => acc.status === 'error' || acc.status === 'expired'
+                    ).length
+                  }
                 </p>
                 <p className="text-xs text-muted-foreground">Need Attention</p>
               </div>
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="pt-4">
             <div className="flex items-center gap-2">
               <RefreshCw className="h-4 w-4 text-blue-600" />
               <div>
                 <p className="text-2xl font-bold">
-                  {syncStatus.accounts.filter(acc => acc.status === 'syncing').length}
+                  {syncStatus.accounts.filter((acc) => acc.status === 'syncing').length}
                 </p>
                 <p className="text-xs text-muted-foreground">Syncing</p>
               </div>

@@ -90,7 +90,7 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const steps = ONBOARDING_STEPS.map(step => ({
+  const steps = ONBOARDING_STEPS.map((step) => ({
     ...step,
     completed: status?.stepStatus[step.id] || false,
   }));
@@ -162,11 +162,7 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
     refreshStatus,
   };
 
-  return (
-    <OnboardingContext.Provider value={value}>
-      {children}
-    </OnboardingContext.Provider>
-  );
+  return <OnboardingContext.Provider value={value}>{children}</OnboardingContext.Provider>;
 }
 
 export function useOnboarding() {

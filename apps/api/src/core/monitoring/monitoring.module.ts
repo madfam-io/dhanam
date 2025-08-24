@@ -1,9 +1,11 @@
 import { Module } from '@nestjs/common';
-import { MonitoringController } from './monitoring.controller';
-import { HealthService } from './health.service';
-import { MetricsService } from './metrics.service';
+
 import { PrismaModule } from '@core/prisma/prisma.module';
 import { JobsModule } from '@modules/jobs/jobs.module';
+
+import { HealthService } from './health.service';
+import { MetricsService } from './metrics.service';
+import { MonitoringController } from './monitoring.controller';
 
 @Module({
   imports: [PrismaModule, JobsModule],

@@ -1,22 +1,20 @@
-import { 
-  Controller, 
-  Get, 
-  Patch, 
+import {
+  Controller,
+  Get,
+  Patch,
   Put,
   Post,
-  Body, 
+  Body,
   UseGuards,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
+
 import { CurrentUser } from '@core/auth/decorators/current-user.decorator';
+import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
+
+import { UpdatePreferencesDto, PreferencesResponseDto, BulkPreferencesUpdateDto } from './dto';
 import { PreferencesService } from './preferences.service';
-import { 
-  UpdatePreferencesDto, 
-  PreferencesResponseDto,
-  BulkPreferencesUpdateDto 
-} from './dto';
 
 @Controller('preferences')
 @UseGuards(JwtAuthGuard)
@@ -24,9 +22,7 @@ export class PreferencesController {
   constructor(private readonly preferencesService: PreferencesService) {}
 
   @Get()
-  async getUserPreferences(
-    @CurrentUser('id') userId: string,
-  ): Promise<PreferencesResponseDto> {
+  async getUserPreferences(@CurrentUser('id') userId: string): Promise<PreferencesResponseDto> {
     return this.preferencesService.getUserPreferences(userId);
   }
 
@@ -39,7 +35,7 @@ export class PreferencesController {
   @HttpCode(HttpStatus.OK)
   async updatePreferences(
     @CurrentUser('id') userId: string,
-    @Body() dto: UpdatePreferencesDto,
+    @Body() dto: UpdatePreferencesDto
   ): Promise<PreferencesResponseDto> {
     return this.preferencesService.updateUserPreferences(userId, dto);
   }
@@ -48,16 +44,14 @@ export class PreferencesController {
   @HttpCode(HttpStatus.OK)
   async bulkUpdatePreferences(
     @CurrentUser('id') userId: string,
-    @Body() dto: BulkPreferencesUpdateDto,
+    @Body() dto: BulkPreferencesUpdateDto
   ): Promise<PreferencesResponseDto> {
     return this.preferencesService.bulkUpdatePreferences(userId, dto);
   }
 
   @Post('reset')
   @HttpCode(HttpStatus.OK)
-  async resetPreferences(
-    @CurrentUser('id') userId: string,
-  ): Promise<PreferencesResponseDto> {
+  async resetPreferences(@CurrentUser('id') userId: string): Promise<PreferencesResponseDto> {
     return this.preferencesService.resetPreferences(userId);
   }
 }

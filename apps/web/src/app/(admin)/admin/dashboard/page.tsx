@@ -1,7 +1,7 @@
 'use client';
 
-import { Card } from '@dhanam/ui/components/card';
-import { Skeleton } from '@dhanam/ui/components/skeleton';
+import { Card } from '@dhanam/ui';
+import { Skeleton } from '@dhanam/ui';
 import { useAdmin } from '~/contexts/AdminContext';
 import { StatsCard } from '~/components/admin/stats-card';
 import { Users, Building2, CreditCard, Receipt, TrendingUp, Shield } from 'lucide-react';
@@ -62,9 +62,7 @@ export default function AdminDashboard() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Admin Dashboard</h1>
-        <p className="text-gray-500 dark:text-gray-400 mt-1">
-          System overview and statistics
-        </p>
+        <p className="text-gray-500 dark:text-gray-400 mt-1">System overview and statistics</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -91,9 +89,7 @@ export default function AdminDashboard() {
                 <span className="text-sm text-gray-600 dark:text-gray-300 capitalize">
                   {provider}
                 </span>
-                <span className="text-sm font-medium text-gray-900 dark:text-white">
-                  {count}
-                </span>
+                <span className="text-sm font-medium text-gray-900 dark:text-white">{count}</span>
               </div>
             ))}
           </div>
@@ -105,17 +101,16 @@ export default function AdminDashboard() {
           </h2>
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600 dark:text-gray-300">
-                Categorization Rate
-              </span>
+              <span className="text-sm text-gray-600 dark:text-gray-300">Categorization Rate</span>
               <span className="text-sm font-medium text-gray-900 dark:text-white">
-                {Math.round((systemStats.transactions.categorized / systemStats.transactions.total) * 100)}%
+                {Math.round(
+                  (systemStats.transactions.categorized / systemStats.transactions.total) * 100
+                )}
+                %
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600 dark:text-gray-300">
-                Avg per Day (30d)
-              </span>
+              <span className="text-sm text-gray-600 dark:text-gray-300">Avg per Day (30d)</span>
               <span className="text-sm font-medium text-gray-900 dark:text-white">
                 {Math.round(systemStats.transactions.last30Days / 30)}
               </span>
@@ -134,7 +129,7 @@ function DashboardSkeleton() {
         <Skeleton className="h-8 w-48" />
         <Skeleton className="h-4 w-64 mt-2" />
       </div>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {[...Array(6)].map((_, i) => (
           <Card key={i} className="p-6">
@@ -149,7 +144,7 @@ function DashboardSkeleton() {
           </Card>
         ))}
       </div>
-      
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {[...Array(2)].map((_, i) => (
           <Card key={i} className="p-6">

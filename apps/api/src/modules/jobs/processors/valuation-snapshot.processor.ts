@@ -1,8 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Job } from 'bullmq';
-import { PrismaService } from '@core/prisma/prisma.service';
-import { ValuationSnapshotJobData } from '../queue.service';
 import { Decimal } from '@prisma/client/runtime/library';
+import { Job } from 'bullmq';
+
+import { PrismaService } from '@core/prisma/prisma.service';
+
+import { ValuationSnapshotJobData } from '../queue.service';
 
 @Injectable()
 export class ValuationSnapshotProcessor {
@@ -13,8 +15,10 @@ export class ValuationSnapshotProcessor {
   async process(job: Job<ValuationSnapshotJobData['payload']>): Promise<any> {
     const { spaceId, date } = job.data;
     const snapshotDate = date ? new Date(date) : new Date();
-    
-    this.logger.log(`Processing valuation snapshot for space ${spaceId} on ${snapshotDate.toISOString()}`);
+
+    this.logger.log(
+      `Processing valuation snapshot for space ${spaceId} on ${snapshotDate.toISOString()}`
+    );
 
     try {
       // Get all accounts for the space
@@ -22,9 +26,9 @@ export class ValuationSnapshotProcessor {
         where: { spaceId },
         include: {
           space: {
-            select: { currency: true }
-          }
-        }
+            select: { currency: true },
+          },
+        },
       });
 
       if (accounts.length === 0) {
@@ -42,8 +46,16 @@ export class ValuationSnapshotProcessor {
             where: {
               accountId: account.id,
               date: {
-                gte: new Date(snapshotDate.getFullYear(), snapshotDate.getMonth(), snapshotDate.getDate()),
-                lt: new Date(snapshotDate.getFullYear(), snapshotDate.getMonth(), snapshotDate.getDate() + 1),
+                gte: new Date(
+                  snapshotDate.getFullYear(),
+                  snapshotDate.getMonth(),
+                  snapshotDate.getDate()
+                ),
+                lt: new Date(
+                  snapshotDate.getFullYear(),
+                  snapshotDate.getMonth(),
+                  snapshotDate.getDate() + 1
+                ),
               },
             },
           });
@@ -70,22 +82,30 @@ export class ValuationSnapshotProcessor {
             snapshotsCreated++;
           }
         } catch (error) {
-          this.logger.error(`Failed to create snapshot for account ${account.id}: ${(error as Error).message}`);
+          this.logger.error(
+            `Failed to create snapshot for account ${account.id}: ${(error as Error).message}`
+          );
         }
       }
 
       // Calculate net worth for the space
       const totalAssets = accounts
-        .filter(account => ['checking', 'savings', 'investment', 'crypto'].includes(account.type))
+        .filter((account) => ['checking', 'savings', 'investment', 'crypto'].includes(account.type))
         .reduce((sum, account) => {
-          const balance = account.balance instanceof Decimal ? account.balance.toNumber() : Number(account.balance);
+          const balance =
+            account.balance instanceof Decimal
+              ? account.balance.toNumber()
+              : Number(account.balance);
           return sum + balance;
         }, 0);
 
       const totalLiabilities = accounts
-        .filter(account => account.type === 'credit')
+        .filter((account) => account.type === 'credit')
         .reduce((sum, account) => {
-          const balance = account.balance instanceof Decimal ? account.balance.toNumber() : Number(account.balance);
+          const balance =
+            account.balance instanceof Decimal
+              ? account.balance.toNumber()
+              : Number(account.balance);
           return sum + Math.abs(balance);
         }, 0);
 
@@ -103,7 +123,9 @@ export class ValuationSnapshotProcessor {
         totalLiabilities,
       };
     } catch (error) {
-      this.logger.error(`Valuation snapshot failed for space ${spaceId}: ${(error as Error).message}`);
+      this.logger.error(
+        `Valuation snapshot failed for space ${spaceId}: ${(error as Error).message}`
+      );
       throw error;
     }
   }

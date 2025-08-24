@@ -1,27 +1,25 @@
-import { NestFactory } from '@nestjs/core';
-import {
-  FastifyAdapter,
-  NestFastifyApplication,
-} from '@nestjs/platform-fastify';
+import fastifyCompress from '@fastify/compress';
+import fastifyCors from '@fastify/cors';
+import fastifyHelmet from '@fastify/helmet';
+import fastifyRateLimit from '@fastify/rate-limit';
 import { ValidationPipe, VersioningType } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { NestFactory } from '@nestjs/core';
+import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import fastifyHelmet from '@fastify/helmet';
-import fastifyCors from '@fastify/cors';
-import fastifyCompress from '@fastify/compress';
-import fastifyRateLimit from '@fastify/rate-limit';
 
-import { AppModule } from './app.module';
 import { GlobalExceptionFilter } from '@core/filters/global-exception.filter';
 import { LoggingInterceptor } from '@core/interceptors/logging.interceptor';
 import { RequestIdMiddleware } from '@core/middleware/request-id.middleware';
+
+import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
     new FastifyAdapter({
       logger: true,
-    }),
+    })
   );
 
   const configService = app.get(ConfigService);
@@ -73,7 +71,7 @@ async function bootstrap() {
       transformOptions: {
         enableImplicitConversion: true,
       },
-    }),
+    })
   );
 
   // Swagger

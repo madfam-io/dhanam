@@ -1,11 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
+import { Currency } from '@prisma/client';
+import { startOfMonth, endOfMonth, subMonths, format } from 'date-fns';
+
 import { PrismaService } from '@core/prisma/prisma.service';
-import { EmailService } from '../email.service';
 import { AnalyticsService } from '@modules/analytics/analytics.service';
 import { ReportService } from '@modules/analytics/report.service';
-import { startOfMonth, endOfMonth, subMonths, format } from 'date-fns';
-import { Currency } from '@prisma/client';
+
+import { EmailService } from '../email.service';
 
 @Injectable()
 export class MonthlyReportTask {
@@ -15,7 +17,7 @@ export class MonthlyReportTask {
     private readonly prisma: PrismaService,
     private readonly emailService: EmailService,
     private readonly analyticsService: AnalyticsService,
-    private readonly reportService: ReportService,
+    private readonly reportService: ReportService
   ) {}
 
   // Run on the 1st of each month at 10 AM
@@ -28,7 +30,9 @@ export class MonthlyReportTask {
       const users = await this.prisma.user.findMany({
         where: {
           isActive: true,
-          monthlyReports: true,
+          preferences: {
+            monthlyReports: true,
+          },
         },
         include: {
           userSpaces: {
@@ -39,6 +43,7 @@ export class MonthlyReportTask {
               space: true,
             },
           },
+          preferences: true,
         },
       });
 
@@ -54,7 +59,7 @@ export class MonthlyReportTask {
               userSpace.userId,
               monthStart,
               monthEnd,
-              userSpace.space.currency,
+              userSpace.space.currency
             );
 
             if (reportData.hasActivity) {
@@ -62,14 +67,14 @@ export class MonthlyReportTask {
               const pdfBuffer = await this.reportService.generatePdfReport(
                 userSpace.space.id,
                 monthStart,
-                monthEnd,
+                monthEnd
               );
 
               await this.emailService.sendMonthlyReportEmail(
                 user.email,
                 user.name,
                 reportData,
-                pdfBuffer,
+                pdfBuffer
               );
 
               this.logger.log(`Sent monthly report to ${user.email}`);
@@ -91,17 +96,15 @@ export class MonthlyReportTask {
     userId: string,
     startDate: Date,
     endDate: Date,
-    currency: Currency,
+    currency: Currency
   ) {
     // Get income and expenses
-    const cashflow = await this.analyticsService.getCashFlow(
-      spaceId,
-      startDate,
-      endDate,
-    );
+    const incomeVsExpenses = await this.analyticsService.getIncomeVsExpenses(userId, spaceId, 1);
 
-    const totalIncome = cashflow.income.reduce((sum, item) => sum + item.amount, 0);
-    const totalExpenses = Math.abs(cashflow.expenses.reduce((sum, item) => sum + item.amount, 0));
+    // Get the latest month data
+    const latestMonth = incomeVsExpenses[0];
+    const totalIncome = latestMonth?.income || 0;
+    const totalExpenses = Math.abs(latestMonth?.expenses || 0);
     const netSavings = totalIncome - totalExpenses;
     const savingsRate = totalIncome > 0 ? (netSavings / totalIncome) * 100 : 0;
 
@@ -109,34 +112,48 @@ export class MonthlyReportTask {
     const budgets = await this.prisma.budget.findMany({
       where: {
         spaceId,
-        isActive: true,
       },
       include: {
-        budgetCategories: {
-          include: {
-            category: true,
-          },
-        },
+        categories: true,
       },
     });
 
     const budgetPerformance = await Promise.all(
       budgets.map(async (budget) => {
-        const spent = await this.analyticsService.getBudgetSpending(
-          budget.id,
-          startDate,
-          endDate,
-        );
+        // Get transactions for this budget's categories
+        const budgetTransactions = await this.prisma.transaction.findMany({
+          where: {
+            categoryId: { in: budget.categories.map((c) => c.id) },
+            date: { gte: startDate, lte: endDate },
+          },
+          include: { category: true },
+        });
 
-        const categories = budget.budgetCategories.map(bc => ({
-          category: bc.category.name,
-          budgeted: bc.amount.toNumber(),
-          actual: spent.byCategory[bc.categoryId] || 0,
-          variance: bc.amount.toNumber() - (spent.byCategory[bc.categoryId] || 0),
-        }));
+        const categories = budget.categories.map((category) => {
+          const categoryTransactions = budgetTransactions.filter((t) => t.categoryId === category.id);
+          const actualSpent = categoryTransactions
+            .filter((t) => t.amount.lt(0))
+            .reduce((sum, t) => sum + Math.abs(t.amount.toNumber()), 0);
 
-        return categories;
-      }),
+          return {
+            category: category.name,
+            budgeted: category.budgetedAmount.toNumber(),
+            actual: actualSpent,
+            variance: category.budgetedAmount.toNumber() - actualSpent,
+          };
+        });
+
+        const totalBudgeted = categories.reduce((sum, c) => sum + c.budgeted, 0);
+        const totalSpent = categories.reduce((sum, c) => sum + c.actual, 0);
+
+        return {
+          budgetName: budget.name,
+          categories,
+          totalBudgeted,
+          totalSpent,
+          totalVariance: totalBudgeted - totalSpent,
+        };
+      })
     );
 
     // Get net worth trend
@@ -148,8 +165,8 @@ export class MonthlyReportTask {
     // Generate recommendations
     const recommendations = this.generateRecommendations(
       savingsRate,
-      budgetPerformance.flat(),
-      netWorthData,
+      budgetPerformance,
+      netWorthData
     );
 
     return {
@@ -236,10 +253,11 @@ export class MonthlyReportTask {
       return null;
     }
 
-    const avgScore = cryptoAccounts.reduce((sum, acc) => {
-      const score = acc.esgScores[0]?.compositeScore || 0;
-      return sum + score;
-    }, 0) / cryptoAccounts.length;
+    const avgScore =
+      cryptoAccounts.reduce((sum, acc) => {
+        const score = acc.esgScores[0]?.compositeScore || 0;
+        return sum + Number(score);
+      }, 0) / cryptoAccounts.length;
 
     let insight = '';
     if (avgScore >= 80) {
@@ -259,7 +277,7 @@ export class MonthlyReportTask {
   private generateRecommendations(
     savingsRate: number,
     budgetPerformance: any[],
-    netWorthData: any,
+    netWorthData: any
   ): string[] {
     const recommendations: string[] = [];
 
@@ -271,10 +289,9 @@ export class MonthlyReportTask {
     }
 
     // Budget performance
-    const overBudgetCategories = budgetPerformance.filter(b => b.variance < 0);
+    const overBudgetCategories = budgetPerformance.filter((b) => b.variance < 0);
     if (overBudgetCategories.length > 0) {
-      const topOverspend = overBudgetCategories
-        .sort((a, b) => a.variance - b.variance)[0];
+      const topOverspend = overBudgetCategories.sort((a, b) => a.variance - b.variance)[0];
       recommendations.push(
         `Review spending in ${topOverspend.category} which exceeded budget by ${Math.abs(topOverspend.variance).toFixed(2)}.`
       );
@@ -282,15 +299,21 @@ export class MonthlyReportTask {
 
     // Net worth trend
     if (netWorthData.changePercent < -5) {
-      recommendations.push('Your net worth declined significantly. Review investment performance and spending habits.');
+      recommendations.push(
+        'Your net worth declined significantly. Review investment performance and spending habits.'
+      );
     } else if (netWorthData.changePercent > 10) {
-      recommendations.push('Strong net worth growth! Ensure proper diversification across asset classes.');
+      recommendations.push(
+        'Strong net worth growth! Ensure proper diversification across asset classes.'
+      );
     }
 
     // General recommendations
-    const underutilizedBudgets = budgetPerformance.filter(b => b.variance > b.budgeted * 0.5);
+    const underutilizedBudgets = budgetPerformance.filter((b) => b.variance > b.budgeted * 0.5);
     if (underutilizedBudgets.length > 0) {
-      recommendations.push('Some budget categories are significantly underutilized. Consider reallocating funds.');
+      recommendations.push(
+        'Some budget categories are significantly underutilized. Consider reallocating funds.'
+      );
     }
 
     return recommendations.slice(0, 5); // Limit to 5 recommendations

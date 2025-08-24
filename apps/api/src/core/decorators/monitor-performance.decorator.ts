@@ -26,28 +26,22 @@ export function MonitorPerformance(threshold = 1000) {
             }
           );
         } else {
-          logger.debug(
-            `${className}.${methodName} completed in ${duration}ms`,
-            {
-              className,
-              methodName,
-              duration,
-            }
-          );
+          logger.debug(`${className}.${methodName} completed in ${duration}ms`, {
+            className,
+            methodName,
+            duration,
+          });
         }
 
         return result;
       } catch (error) {
         const duration = Date.now() - startTime;
-        logger.error(
-          `Method failed: ${className}.${methodName} after ${duration}ms`,
-          {
-            className,
-            methodName,
-            duration,
-            error: error instanceof Error ? error.message : 'Unknown error',
-          }
-        );
+        logger.error(`Method failed: ${className}.${methodName} after ${duration}ms`, {
+          className,
+          methodName,
+          duration,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
         throw error;
       }
     };

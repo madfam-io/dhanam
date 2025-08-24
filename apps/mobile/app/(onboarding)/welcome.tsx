@@ -1,16 +1,17 @@
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { 
-  View, 
-  Text, 
-  ScrollView, 
-  TouchableOpacity, 
-  ActivityIndicator, 
-  Dimensions 
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  ActivityIndicator,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+
 import { useAuth } from '../../src/contexts/AuthContext';
 import { useOnboarding } from '../../src/contexts/OnboardingContext';
 
@@ -63,10 +64,7 @@ export default function WelcomeScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#f8fafc' }}>
-      <ScrollView 
-        contentContainerStyle={{ flexGrow: 1 }}
-        showsVerticalScrollIndicator={false}
-      >
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <LinearGradient
           colors={['#6366f1', '#8b5cf6']}
@@ -76,46 +74,54 @@ export default function WelcomeScreen() {
             alignItems: 'center',
           }}
         >
-          <View style={{
-            width: 80,
-            height: 80,
-            backgroundColor: 'rgba(255,255,255,0.2)',
-            borderRadius: 40,
-            alignItems: 'center',
-            justifyContent: 'center',
-            marginBottom: 20,
-          }}>
+          <View
+            style={{
+              width: 80,
+              height: 80,
+              backgroundColor: 'rgba(255,255,255,0.2)',
+              borderRadius: 40,
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: 20,
+            }}
+          >
             <Text style={{ fontSize: 36 }}>👋</Text>
           </View>
-          <Text style={{
-            fontSize: 28,
-            fontWeight: 'bold',
-            color: 'white',
-            textAlign: 'center',
-            marginBottom: 8,
-          }}>
+          <Text
+            style={{
+              fontSize: 28,
+              fontWeight: 'bold',
+              color: 'white',
+              textAlign: 'center',
+              marginBottom: 8,
+            }}
+          >
             ¡Bienvenido a Dhanam, {user?.name}!
           </Text>
-          <Text style={{
-            fontSize: 16,
-            color: 'rgba(255,255,255,0.9)',
-            textAlign: 'center',
-            lineHeight: 24,
-          }}>
+          <Text
+            style={{
+              fontSize: 16,
+              color: 'rgba(255,255,255,0.9)',
+              textAlign: 'center',
+              lineHeight: 24,
+            }}
+          >
             Tu nueva plataforma de gestión financiera personal y empresarial con análisis ESG
           </Text>
         </LinearGradient>
 
         {/* Features */}
         <View style={{ padding: 20 }}>
-          <View style={{
-            flexDirection: 'row',
-            flexWrap: 'wrap',
-            justifyContent: 'space-between',
-            marginBottom: 30,
-          }}>
+          <View
+            style={{
+              flexDirection: 'row',
+              flexWrap: 'wrap',
+              justifyContent: 'space-between',
+              marginBottom: 30,
+            }}
+          >
             {features.map((feature, index) => (
-              <View 
+              <View
                 key={index}
                 style={{
                   width: (width - 60) / 2,
@@ -130,34 +136,36 @@ export default function WelcomeScreen() {
                   elevation: 3,
                 }}
               >
-                <View style={{
-                  width: 40,
-                  height: 40,
-                  backgroundColor: `${feature.color}20`,
-                  borderRadius: 20,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginBottom: 12,
-                }}>
-                  <Ionicons 
-                    name={feature.icon as any} 
-                    size={20} 
-                    color={feature.color} 
-                  />
+                <View
+                  style={{
+                    width: 40,
+                    height: 40,
+                    backgroundColor: `${feature.color}20`,
+                    borderRadius: 20,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginBottom: 12,
+                  }}
+                >
+                  <Ionicons name={feature.icon as any} size={20} color={feature.color} />
                 </View>
-                <Text style={{
-                  fontSize: 14,
-                  fontWeight: '600',
-                  color: '#1f2937',
-                  marginBottom: 4,
-                }}>
+                <Text
+                  style={{
+                    fontSize: 14,
+                    fontWeight: '600',
+                    color: '#1f2937',
+                    marginBottom: 4,
+                  }}
+                >
                   {feature.title}
                 </Text>
-                <Text style={{
-                  fontSize: 12,
-                  color: '#6b7280',
-                  lineHeight: 16,
-                }}>
+                <Text
+                  style={{
+                    fontSize: 12,
+                    color: '#6b7280',
+                    lineHeight: 16,
+                  }}
+                >
                   {feature.description}
                 </Text>
               </View>
@@ -165,39 +173,49 @@ export default function WelcomeScreen() {
           </View>
 
           {/* What's next */}
-          <View style={{
-            backgroundColor: '#f0f9ff',
-            borderColor: '#0ea5e9',
-            borderWidth: 1,
-            borderRadius: 12,
-            padding: 20,
-            marginBottom: 30,
-          }}>
-            <Text style={{
-              fontSize: 18,
-              fontWeight: '600',
-              color: '#0c4a6e',
-              marginBottom: 16,
-              textAlign: 'center',
-            }}>
+          <View
+            style={{
+              backgroundColor: '#f0f9ff',
+              borderColor: '#0ea5e9',
+              borderWidth: 1,
+              borderRadius: 12,
+              padding: 20,
+              marginBottom: 30,
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 18,
+                fontWeight: '600',
+                color: '#0c4a6e',
+                marginBottom: 16,
+                textAlign: 'center',
+              }}
+            >
               ¿Qué sigue?
             </Text>
             <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
               <View style={{ alignItems: 'center', flex: 1 }}>
                 <Text style={{ fontSize: 24, marginBottom: 8 }}>📧</Text>
-                <Text style={{ fontSize: 12, fontWeight: '500', color: '#0c4a6e', textAlign: 'center' }}>
+                <Text
+                  style={{ fontSize: 12, fontWeight: '500', color: '#0c4a6e', textAlign: 'center' }}
+                >
                   Verifica tu email
                 </Text>
               </View>
               <View style={{ alignItems: 'center', flex: 1 }}>
                 <Text style={{ fontSize: 24, marginBottom: 8 }}>⚙️</Text>
-                <Text style={{ fontSize: 12, fontWeight: '500', color: '#0c4a6e', textAlign: 'center' }}>
+                <Text
+                  style={{ fontSize: 12, fontWeight: '500', color: '#0c4a6e', textAlign: 'center' }}
+                >
                   Configura preferencias
                 </Text>
               </View>
               <View style={{ alignItems: 'center', flex: 1 }}>
                 <Text style={{ fontSize: 24, marginBottom: 8 }}>🏦</Text>
-                <Text style={{ fontSize: 12, fontWeight: '500', color: '#0c4a6e', textAlign: 'center' }}>
+                <Text
+                  style={{ fontSize: 12, fontWeight: '500', color: '#0c4a6e', textAlign: 'center' }}
+                >
                   Conecta cuentas
                 </Text>
               </View>
@@ -220,31 +238,27 @@ export default function WelcomeScreen() {
             flexDirection: 'row',
           }}
         >
-          {isLoading && (
-            <ActivityIndicator 
-              size="small" 
-              color="white" 
-              style={{ marginRight: 8 }} 
-            />
-          )}
-          <Text style={{
-            color: 'white',
-            fontSize: 16,
-            fontWeight: '600',
-            marginRight: isLoading ? 0 : 8,
-          }}>
+          {isLoading && <ActivityIndicator size="small" color="white" style={{ marginRight: 8 }} />}
+          <Text
+            style={{
+              color: 'white',
+              fontSize: 16,
+              fontWeight: '600',
+              marginRight: isLoading ? 0 : 8,
+            }}
+          >
             {isLoading ? 'Cargando...' : 'Comenzar configuración'}
           </Text>
-          {!isLoading && (
-            <Ionicons name="arrow-forward" size={20} color="white" />
-          )}
+          {!isLoading && <Ionicons name="arrow-forward" size={20} color="white" />}
         </TouchableOpacity>
-        <Text style={{
-          textAlign: 'center',
-          fontSize: 14,
-          color: '#6b7280',
-          marginTop: 12,
-        }}>
+        <Text
+          style={{
+            textAlign: 'center',
+            fontSize: 14,
+            color: '#6b7280',
+            marginTop: 12,
+          }}
+        >
           Solo tomará unos minutos configurar tu cuenta
         </Text>
       </View>

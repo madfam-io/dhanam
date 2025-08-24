@@ -1,6 +1,7 @@
 import { Process, Processor } from '@nestjs/bull';
 import { Logger } from '@nestjs/common';
 import { Job } from 'bull';
+
 import { EmailService } from './email.service';
 import { EmailJobData } from './types';
 
@@ -13,7 +14,7 @@ export class EmailProcessor {
   @Process('send-email')
   async handleSendEmail(job: Job<EmailJobData>) {
     this.logger.debug(`Processing email job ${job.id} for ${job.data.to}`);
-    
+
     try {
       await this.emailService.sendEmailDirect(job.data);
       this.logger.log(`Email job ${job.id} completed successfully`);

@@ -13,9 +13,8 @@ import { ConnectAccountsStep } from './steps/connect-accounts-step';
 import { FirstBudgetStep } from './steps/first-budget-step';
 import { FeatureTourStep } from './steps/feature-tour-step';
 import { CompletionStep } from './steps/completion-step';
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@dhanam/ui';
+import { Button } from '@dhanam/ui';
 
 export function OnboardingFlow() {
   const router = useRouter();
@@ -42,7 +41,7 @@ export function OnboardingFlow() {
     if (status?.currentStep) {
       const stepOrder = [
         'welcome',
-        'email_verification', 
+        'email_verification',
         'preferences',
         'space_setup',
         'connect_accounts',
@@ -60,7 +59,7 @@ export function OnboardingFlow() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <LoadingSpinner size="lg" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
       </div>
     );
   }
@@ -114,14 +113,14 @@ export function OnboardingFlow() {
   return (
     <div className="min-h-screen">
       <OnboardingHeader />
-      
+
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <OnboardingProgress 
-          currentStep={currentStepIndex} 
+        <OnboardingProgress
+          currentStep={currentStepIndex}
           totalSteps={7}
           progress={status.progress}
         />
-        
+
         <div className="mt-8">
           <StepComponent />
         </div>

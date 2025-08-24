@@ -1,9 +1,11 @@
 import { Module } from '@nestjs/common';
+
+import { BelvoModule } from '../providers/belvo/belvo.module';
+import { BitsoModule } from '../providers/bitso/bitso.module';
+import { PlaidModule } from '../providers/plaid/plaid.module';
+
 import { IntegrationsController } from './integrations.controller';
 import { IntegrationsService } from './integrations.service';
-import { BelvoModule } from '../providers/belvo/belvo.module';
-import { PlaidModule } from '../providers/plaid/plaid.module';
-import { BitsoModule } from '../providers/bitso/bitso.module';
 
 @Module({
   imports: [BelvoModule, PlaidModule, BitsoModule],

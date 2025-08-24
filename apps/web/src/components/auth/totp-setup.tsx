@@ -2,13 +2,7 @@
 
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@dhanam/ui';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@dhanam/ui';
 import { Button } from '@dhanam/ui';
 import { Input } from '@dhanam/ui';
 import { Card, CardContent, CardHeader, CardTitle } from '@dhanam/ui';
@@ -49,7 +43,7 @@ export function TotpSetup({ open, onOpenChange, onSuccess }: TotpSetupProps) {
     mutationFn: (code: string) => authApi.verifyTwoFactor({ code }),
     onSuccess: () => {
       // Generate mock backup codes for demo
-      const mockBackupCodes = Array.from({ length: 8 }, () => 
+      const mockBackupCodes = Array.from({ length: 8 }, () =>
         Math.random().toString(36).substring(2, 10).toUpperCase()
       );
       setBackupCodes(mockBackupCodes);
@@ -91,11 +85,11 @@ export function TotpSetup({ open, onOpenChange, onSuccess }: TotpSetupProps) {
         setCopiedSecret(true);
         setTimeout(() => setCopiedSecret(false), 2000);
       } else {
-        setCopiedCodes(prev => ({ ...prev, [type]: true }));
-        setTimeout(() => setCopiedCodes(prev => ({ ...prev, [type]: false })), 2000);
+        setCopiedCodes((prev) => ({ ...prev, [type]: true }));
+        setTimeout(() => setCopiedCodes((prev) => ({ ...prev, [type]: false })), 2000);
       }
       toast.success('Copied to clipboard');
-    } catch (err) {
+    } catch {
       toast.error('Failed to copy');
     }
   };
@@ -122,9 +116,7 @@ export function TotpSetup({ open, onOpenChange, onSuccess }: TotpSetupProps) {
             <Shield className="h-5 w-5 text-green-600" />
             Setup Two-Factor Authentication
           </DialogTitle>
-          <DialogDescription>
-            Add an extra layer of security to your account
-          </DialogDescription>
+          <DialogDescription>Add an extra layer of security to your account</DialogDescription>
         </DialogHeader>
 
         {step === 'setup' && (
@@ -132,21 +124,18 @@ export function TotpSetup({ open, onOpenChange, onSuccess }: TotpSetupProps) {
             <Alert>
               <Smartphone className="h-4 w-4" />
               <AlertDescription>
-                You'll need an authenticator app like Google Authenticator, Authy, or 1Password.
+                You&apos;ll need an authenticator app like Google Authenticator, Authy, or
+                1Password.
               </AlertDescription>
             </Alert>
 
             <div className="space-y-3">
               <p className="text-sm text-muted-foreground">
-                Two-factor authentication adds an extra layer of security by requiring
-                a time-based code from your phone in addition to your password.
+                Two-factor authentication adds an extra layer of security by requiring a time-based
+                code from your phone in addition to your password.
               </p>
-              
-              <Button
-                onClick={handleStart}
-                disabled={setupMutation.isPending}
-                className="w-full"
-              >
+
+              <Button onClick={handleStart} disabled={setupMutation.isPending} className="w-full">
                 {setupMutation.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -167,30 +156,20 @@ export function TotpSetup({ open, onOpenChange, onSuccess }: TotpSetupProps) {
                 <CardTitle className="text-sm">Scan QR Code</CardTitle>
               </CardHeader>
               <CardContent className="flex flex-col items-center space-y-3">
-                {qrCodeUrl && (
-                  <QRCodeSVG value={qrCodeUrl} size={200} />
-                )}
-                
+                {qrCodeUrl && <QRCodeSVG value={qrCodeUrl} size={200} />}
+
                 <div className="w-full">
                   <p className="text-xs text-muted-foreground mb-2">
                     Or enter this secret key manually:
                   </p>
                   <div className="flex items-center gap-2">
-                    <Input
-                      value={secret}
-                      readOnly
-                      className="font-mono text-xs"
-                    />
+                    <Input value={secret} readOnly className="font-mono text-xs" />
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => copyToClipboard(secret, 'secret')}
                     >
-                      {copiedSecret ? (
-                        <Check className="h-3 w-3" />
-                      ) : (
-                        <Copy className="h-3 w-3" />
-                      )}
+                      {copiedSecret ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
                     </Button>
                   </div>
                 </div>
@@ -248,11 +227,7 @@ export function TotpSetup({ open, onOpenChange, onSuccess }: TotpSetupProps) {
                 <div className="grid grid-cols-2 gap-2">
                   {backupCodes.map((code) => (
                     <div key={code} className="flex items-center gap-1">
-                      <Input
-                        value={code}
-                        readOnly
-                        className="font-mono text-xs"
-                      />
+                      <Input value={code} readOnly className="font-mono text-xs" />
                       <Button
                         variant="ghost"
                         size="sm"
@@ -288,7 +263,8 @@ export function TotpSetup({ open, onOpenChange, onSuccess }: TotpSetupProps) {
               </Button>
 
               <p className="text-xs text-center text-muted-foreground">
-                Keep these backup codes safe. You'll need them if you lose access to your authenticator app.
+                Keep these backup codes safe. You&apos;ll need them if you lose access to your
+                authenticator app.
               </p>
             </div>
           </div>

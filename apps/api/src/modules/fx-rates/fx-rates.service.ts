@@ -1,12 +1,14 @@
+import { HttpService } from '@nestjs/axios';
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { PrismaService } from '../../core/prisma/prisma.service';
-import { HttpService } from '@nestjs/axios';
-import { RedisService } from '../../core/redis/redis.service';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { MonitorPerformance } from '@core/decorators/monitor-performance.decorator';
 import { Currency } from '@prisma/client';
 import { firstValueFrom } from 'rxjs';
+
+import { MonitorPerformance } from '@core/decorators/monitor-performance.decorator';
+
+import { PrismaService } from '../../core/prisma/prisma.service';
+import { RedisService } from '../../core/redis/redis.service';
 
 interface BanxicoApiResponse {
   bmx: {
@@ -35,7 +37,7 @@ export class FxRatesService {
   private readonly BANXICO_TOKEN: string;
   private readonly CACHE_TTL = 3600; // 1 hour in seconds
   private readonly BANXICO_BASE_URL = 'https://www.banxico.org.mx/SieAPIRest/service/v1/series';
-  
+
   // Banxico series IDs
   private readonly SERIES_IDS = {
     USD_MXN: 'SF43718', // USD to MXN
@@ -46,7 +48,7 @@ export class FxRatesService {
     private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
     private readonly httpService: HttpService,
-    private readonly redisService: RedisService,
+    private readonly redisService: RedisService
   ) {
     this.BANXICO_TOKEN = this.configService.get('BANXICO_API_TOKEN', '');
     if (!this.BANXICO_TOKEN) {
@@ -58,7 +60,7 @@ export class FxRatesService {
   async getExchangeRate(
     fromCurrency: Currency,
     toCurrency: Currency,
-    date?: Date,
+    date?: Date
   ): Promise<number> {
     // Handle same currency
     if (fromCurrency === toCurrency) return 1;
@@ -114,11 +116,11 @@ export class FxRatesService {
       return rate;
     } catch (error) {
       this.logger.error(`Failed to get exchange rate for ${fromCurrency}/${toCurrency}:`, error);
-      
+
       // Try to get from database
       const dbRate = await this.getLatestFromDatabase(fromCurrency, toCurrency);
       if (dbRate) return dbRate;
-      
+
       // Fallback to hardcoded rates
       return this.getFallbackRate(fromCurrency, toCurrency);
     }
@@ -136,9 +138,9 @@ export class FxRatesService {
       const response = await firstValueFrom(
         this.httpService.get<BanxicoApiResponse>(url, {
           headers: {
-            'Accept': 'application/json',
+            Accept: 'application/json',
           },
-        }),
+        })
       );
 
       const series = response.data.bmx.series[0];
@@ -147,7 +149,7 @@ export class FxRatesService {
       }
 
       const latestData = series.datos[series.datos.length - 1];
-      return parseFloat(latestData.dato);
+      return parseFloat(latestData?.dato || '1');
     } catch (error) {
       this.logger.error(`Failed to fetch from Banxico API:`, error);
       throw error;
@@ -157,12 +159,12 @@ export class FxRatesService {
   private async getFallbackRate(fromCurrency: Currency, toCurrency: Currency): Promise<number> {
     // Hardcoded fallback rates (as of typical 2024 values)
     const fallbackRates: Record<string, number> = {
-      'USD_MXN': 17.50,
-      'MXN_USD': 0.057,
-      'EUR_MXN': 19.20,
-      'MXN_EUR': 0.052,
-      'USD_EUR': 0.91,
-      'EUR_USD': 1.10,
+      USD_MXN: 17.5,
+      MXN_USD: 0.057,
+      EUR_MXN: 19.2,
+      MXN_EUR: 0.052,
+      USD_EUR: 0.91,
+      EUR_USD: 1.1,
     };
 
     const key = `${fromCurrency}_${toCurrency}`;
@@ -171,7 +173,7 @@ export class FxRatesService {
 
   private async getLatestFromDatabase(
     fromCurrency: Currency,
-    toCurrency: Currency,
+    toCurrency: Currency
   ): Promise<number | null> {
     const rate = await this.prisma.exchangeRate.findFirst({
       where: {
@@ -233,7 +235,7 @@ export class FxRatesService {
     amount: number,
     fromCurrency: Currency,
     toCurrency: Currency,
-    date?: Date,
+    date?: Date
   ): Promise<number> {
     const rate = await this.getExchangeRate(fromCurrency, toCurrency, date);
     return Math.round(amount * rate * 100) / 100; // Round to 2 decimals
@@ -243,7 +245,7 @@ export class FxRatesService {
     fromCurrency: Currency,
     toCurrency: Currency,
     startDate: Date,
-    endDate: Date,
+    endDate: Date
   ): Promise<ExchangeRate[]> {
     return this.prisma.exchangeRate.findMany({
       where: {

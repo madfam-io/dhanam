@@ -1,17 +1,33 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Switch } from '@/components/ui/switch';
-import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { Badge } from '@/components/ui/badge';
+import { Switch } from '@dhanam/ui';
+import { Button } from '@dhanam/ui';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@dhanam/ui';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@dhanam/ui';
+import { Separator } from '@dhanam/ui';
+import { Badge } from '@dhanam/ui';
 import { usePreferences } from '@/contexts/PreferencesContext';
-import { Bell, Shield, Palette, DollarSign, Leaf, Database, AlertCircle, CheckCircle } from 'lucide-react';
+import {
+  Bell,
+  Shield,
+  Palette,
+  DollarSign,
+  Leaf,
+  Database,
+  AlertCircle,
+  CheckCircle,
+} from 'lucide-react';
 
 export function PreferencesSection() {
-  const { preferences, updatePreferences, bulkUpdatePreferences, resetPreferences, isLoading, error } = usePreferences();
+  const {
+    preferences,
+    updatePreferences,
+    bulkUpdatePreferences,
+    resetPreferences,
+    isLoading: _isLoading,
+    error,
+  } = usePreferences();
   const [isSaving, setIsSaving] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
@@ -40,7 +56,7 @@ export function PreferencesSection() {
     }
   };
 
-  const handleBulkUpdate = async (category: string, updates: any) => {
+  const _handleBulkUpdate = async (category: string, updates: any) => {
     try {
       setIsSaving(true);
       await bulkUpdatePreferences({ [category]: updates });
@@ -54,7 +70,11 @@ export function PreferencesSection() {
   };
 
   const handleReset = async () => {
-    if (confirm('¿Estás seguro que quieres restablecer todas las preferencias a sus valores por defecto?')) {
+    if (
+      confirm(
+        '¿Estás seguro que quieres restablecer todas las preferencias a sus valores por defecto?'
+      )
+    ) {
       try {
         setIsSaving(true);
         await resetPreferences();
@@ -77,7 +97,7 @@ export function PreferencesSection() {
           <span>Error: {error}</span>
         </div>
       )}
-      
+
       {successMessage && (
         <div className="flex items-center gap-2 p-4 text-green-600 bg-green-50 rounded-lg">
           <CheckCircle className="h-5 w-5" />
@@ -92,16 +112,16 @@ export function PreferencesSection() {
             <Bell className="h-5 w-5" />
             <CardTitle>Notificaciones</CardTitle>
           </div>
-          <CardDescription>
-            Configura cómo y cuándo quieres recibir notificaciones
-          </CardDescription>
+          <CardDescription>Configura cómo y cuándo quieres recibir notificaciones</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4">
             <div className="flex items-center justify-between">
               <div className="space-y-1">
                 <h4 className="font-medium">Notificaciones por email</h4>
-                <p className="text-sm text-muted-foreground">Recibir notificaciones generales por correo</p>
+                <p className="text-sm text-muted-foreground">
+                  Recibir notificaciones generales por correo
+                </p>
               </div>
               <Switch
                 checked={preferences.emailNotifications}
@@ -109,13 +129,15 @@ export function PreferencesSection() {
                 disabled={isSaving}
               />
             </div>
-            
+
             <Separator />
-            
+
             <div className="flex items-center justify-between">
               <div className="space-y-1">
                 <h4 className="font-medium">Alertas de transacciones</h4>
-                <p className="text-sm text-muted-foreground">Notificaciones cuando se detectan nuevas transacciones</p>
+                <p className="text-sm text-muted-foreground">
+                  Notificaciones cuando se detectan nuevas transacciones
+                </p>
               </div>
               <Switch
                 checked={preferences.transactionAlerts}
@@ -123,11 +145,13 @@ export function PreferencesSection() {
                 disabled={isSaving}
               />
             </div>
-            
+
             <div className="flex items-center justify-between">
               <div className="space-y-1">
                 <h4 className="font-medium">Alertas de presupuesto</h4>
-                <p className="text-sm text-muted-foreground">Avisos cuando te acerques o superes límites de presupuesto</p>
+                <p className="text-sm text-muted-foreground">
+                  Avisos cuando te acerques o superes límites de presupuesto
+                </p>
               </div>
               <Switch
                 checked={preferences.budgetAlerts}
@@ -135,11 +159,13 @@ export function PreferencesSection() {
                 disabled={isSaving}
               />
             </div>
-            
+
             <div className="flex items-center justify-between">
               <div className="space-y-1">
                 <h4 className="font-medium">Reportes semanales</h4>
-                <p className="text-sm text-muted-foreground">Resumen semanal de tu actividad financiera</p>
+                <p className="text-sm text-muted-foreground">
+                  Resumen semanal de tu actividad financiera
+                </p>
               </div>
               <Switch
                 checked={preferences.weeklyReports}
@@ -147,11 +173,13 @@ export function PreferencesSection() {
                 disabled={isSaving}
               />
             </div>
-            
+
             <div className="flex items-center justify-between">
               <div className="space-y-1">
                 <h4 className="font-medium">Reportes mensuales</h4>
-                <p className="text-sm text-muted-foreground">Análisis mensual detallado de tus finanzas</p>
+                <p className="text-sm text-muted-foreground">
+                  Análisis mensual detallado de tus finanzas
+                </p>
               </div>
               <Switch
                 checked={preferences.monthlyReports}
@@ -170,15 +198,15 @@ export function PreferencesSection() {
             <Shield className="h-5 w-5" />
             <CardTitle>Privacidad</CardTitle>
           </div>
-          <CardDescription>
-            Controla cómo se usan tus datos y tu privacidad
-          </CardDescription>
+          <CardDescription>Controla cómo se usan tus datos y tu privacidad</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="space-y-1">
               <h4 className="font-medium">Compartir datos</h4>
-              <p className="text-sm text-muted-foreground">Permitir compartir datos anónimos para mejorar el producto</p>
+              <p className="text-sm text-muted-foreground">
+                Permitir compartir datos anónimos para mejorar el producto
+              </p>
             </div>
             <Switch
               checked={preferences.dataSharing}
@@ -186,13 +214,15 @@ export function PreferencesSection() {
               disabled={isSaving}
             />
           </div>
-          
+
           <Separator />
-          
+
           <div className="flex items-center justify-between">
             <div className="space-y-1">
               <h4 className="font-medium">Seguimiento de analíticas</h4>
-              <p className="text-sm text-muted-foreground">Permitir recopilar datos de uso para mejorar la experiencia</p>
+              <p className="text-sm text-muted-foreground">
+                Permitir recopilar datos de uso para mejorar la experiencia
+              </p>
             </div>
             <Switch
               checked={preferences.analyticsTracking}
@@ -200,11 +230,13 @@ export function PreferencesSection() {
               disabled={isSaving}
             />
           </div>
-          
+
           <div className="flex items-center justify-between">
             <div className="space-y-1">
               <h4 className="font-medium">Anuncios personalizados</h4>
-              <p className="text-sm text-muted-foreground">Mostrar contenido y ofertas relevantes basadas en tu actividad</p>
+              <p className="text-sm text-muted-foreground">
+                Mostrar contenido y ofertas relevantes basadas en tu actividad
+              </p>
             </div>
             <Switch
               checked={preferences.personalizedAds}
@@ -222,9 +254,7 @@ export function PreferencesSection() {
             <Palette className="h-5 w-5" />
             <CardTitle>Apariencia</CardTitle>
           </div>
-          <CardDescription>
-            Personaliza la apariencia de tu dashboard
-          </CardDescription>
+          <CardDescription>Personaliza la apariencia de tu dashboard</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -245,7 +275,7 @@ export function PreferencesSection() {
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div className="space-y-2">
               <h4 className="font-medium">Layout del dashboard</h4>
               <Select
@@ -264,13 +294,15 @@ export function PreferencesSection() {
               </Select>
             </div>
           </div>
-          
+
           <Separator />
-          
+
           <div className="flex items-center justify-between">
             <div className="space-y-1">
               <h4 className="font-medium">Vista compacta</h4>
-              <p className="text-sm text-muted-foreground">Mostrar más información en menos espacio</p>
+              <p className="text-sm text-muted-foreground">
+                Mostrar más información en menos espacio
+              </p>
             </div>
             <Switch
               checked={preferences.compactView}
@@ -278,11 +310,13 @@ export function PreferencesSection() {
               disabled={isSaving}
             />
           </div>
-          
+
           <div className="flex items-center justify-between">
             <div className="space-y-1">
               <h4 className="font-medium">Mostrar saldos</h4>
-              <p className="text-sm text-muted-foreground">Mostrar saldos de cuentas en las vistas principales</p>
+              <p className="text-sm text-muted-foreground">
+                Mostrar saldos de cuentas en las vistas principales
+              </p>
             </div>
             <Switch
               checked={preferences.showBalances}
@@ -323,7 +357,7 @@ export function PreferencesSection() {
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div className="space-y-2">
               <h4 className="font-medium">Formato de exportación</h4>
               <Select
@@ -343,13 +377,15 @@ export function PreferencesSection() {
               </Select>
             </div>
           </div>
-          
+
           <Separator />
-          
+
           <div className="flex items-center justify-between">
             <div className="space-y-1">
               <h4 className="font-medium">Categorización automática</h4>
-              <p className="text-sm text-muted-foreground">Asignar categorías automáticamente a las transacciones</p>
+              <p className="text-sm text-muted-foreground">
+                Asignar categorías automáticamente a las transacciones
+              </p>
             </div>
             <Switch
               checked={preferences.autoCategorizeTxns}
@@ -357,11 +393,13 @@ export function PreferencesSection() {
               disabled={isSaving}
             />
           </div>
-          
+
           <div className="flex items-center justify-between">
             <div className="space-y-1">
               <h4 className="font-medium">Ocultar datos sensibles</h4>
-              <p className="text-sm text-muted-foreground">Enmascarar saldos y montos por defecto</p>
+              <p className="text-sm text-muted-foreground">
+                Enmascarar saldos y montos por defecto
+              </p>
             </div>
             <Switch
               checked={preferences.hideSensitiveData}
@@ -387,7 +425,9 @@ export function PreferencesSection() {
           <div className="flex items-center justify-between">
             <div className="space-y-1">
               <h4 className="font-medium">Mostrar puntuaciones ESG</h4>
-              <p className="text-sm text-muted-foreground">Mostrar métricas ESG para activos crypto</p>
+              <p className="text-sm text-muted-foreground">
+                Mostrar métricas ESG para activos crypto
+              </p>
             </div>
             <Switch
               checked={preferences.esgScoreVisibility}
@@ -395,13 +435,15 @@ export function PreferencesSection() {
               disabled={isSaving}
             />
           </div>
-          
+
           <Separator />
-          
+
           <div className="flex items-center justify-between">
             <div className="space-y-1">
               <h4 className="font-medium">Alertas de sustentabilidad</h4>
-              <p className="text-sm text-muted-foreground">Recibir notificaciones sobre impacto ambiental</p>
+              <p className="text-sm text-muted-foreground">
+                Recibir notificaciones sobre impacto ambiental
+              </p>
             </div>
             <Switch
               checked={preferences.sustainabilityAlerts}
@@ -409,11 +451,13 @@ export function PreferencesSection() {
               disabled={isSaving}
             />
           </div>
-          
+
           <div className="flex items-center justify-between">
             <div className="space-y-1">
               <h4 className="font-medium">Reportes de impacto</h4>
-              <p className="text-sm text-muted-foreground">Incluir análisis de impacto en reportes mensuales</p>
+              <p className="text-sm text-muted-foreground">
+                Incluir análisis de impacto en reportes mensuales
+              </p>
             </div>
             <Switch
               checked={preferences.impactReporting}
@@ -431,15 +475,15 @@ export function PreferencesSection() {
             <Database className="h-5 w-5" />
             <CardTitle>Respaldo de Datos</CardTitle>
           </div>
-          <CardDescription>
-            Configurar respaldos automáticos de tus datos
-          </CardDescription>
+          <CardDescription>Configurar respaldos automáticos de tus datos</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="space-y-1">
               <h4 className="font-medium">Respaldo automático</h4>
-              <p className="text-sm text-muted-foreground">Crear respaldos periódicos de tus datos</p>
+              <p className="text-sm text-muted-foreground">
+                Crear respaldos periódicos de tus datos
+              </p>
             </div>
             <Switch
               checked={preferences.autoBackup}
@@ -447,7 +491,7 @@ export function PreferencesSection() {
               disabled={isSaving}
             />
           </div>
-          
+
           {preferences.autoBackup && (
             <div className="space-y-2">
               <h4 className="font-medium">Frecuencia de respaldo</h4>
@@ -475,15 +519,12 @@ export function PreferencesSection() {
         <CardHeader>
           <CardTitle className="text-red-600">Restablecer Preferencias</CardTitle>
           <CardDescription>
-            Restablecer todas las preferencias a sus valores por defecto. Esta acción no se puede deshacer.
+            Restablecer todas las preferencias a sus valores por defecto. Esta acción no se puede
+            deshacer.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Button 
-            variant="destructive" 
-            onClick={handleReset}
-            disabled={isSaving}
-          >
+          <Button variant="destructive" onClick={handleReset} disabled={isSaving}>
             {isSaving ? 'Restableciendo...' : 'Restablecer a valores por defecto'}
           </Button>
         </CardContent>
@@ -493,7 +534,9 @@ export function PreferencesSection() {
       <Card>
         <CardContent className="pt-6">
           <div className="flex items-center justify-between text-sm text-muted-foreground">
-            <span>Última actualización: {new Date(preferences.updatedAt).toLocaleDateString()}</span>
+            <span>
+              Última actualización: {new Date(preferences.updatedAt).toLocaleDateString()}
+            </span>
             <Badge variant="secondary">
               {Object.keys(preferences).length - 4} configuraciones disponibles
             </Badge>

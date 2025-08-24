@@ -1,24 +1,22 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Transaction, Prisma } from '@prisma/client';
+
 import { PrismaService } from '../../core/prisma/prisma.service';
 import { SpacesService } from '../spaces/spaces.service';
-import { Transaction, Prisma } from '@prisma/client';
-import {
-  CreateTransactionDto,
-  UpdateTransactionDto,
-  TransactionsFilterDto,
-} from './dto';
+
+import { CreateTransactionDto, UpdateTransactionDto, TransactionsFilterDto } from './dto';
 
 @Injectable()
 export class TransactionsService {
   constructor(
     private prisma: PrismaService,
-    private spacesService: SpacesService,
+    private spacesService: SpacesService
   ) {}
 
   async findAll(
     spaceId: string,
     userId: string,
-    filter: TransactionsFilterDto,
+    filter: TransactionsFilterDto
   ): Promise<{ data: Transaction[]; total: number; page: number; limit: number }> {
     await this.spacesService.verifyUserAccess(userId, spaceId, 'viewer');
 
@@ -62,11 +60,7 @@ export class TransactionsService {
     };
   }
 
-  async findOne(
-    spaceId: string,
-    userId: string,
-    transactionId: string,
-  ): Promise<Transaction> {
+  async findOne(spaceId: string, userId: string, transactionId: string): Promise<Transaction> {
     await this.spacesService.verifyUserAccess(userId, spaceId, 'viewer');
 
     const transaction = await this.prisma.transaction.findFirst({
@@ -87,11 +81,7 @@ export class TransactionsService {
     return transaction;
   }
 
-  async create(
-    spaceId: string,
-    userId: string,
-    dto: CreateTransactionDto,
-  ): Promise<Transaction> {
+  async create(spaceId: string, userId: string, dto: CreateTransactionDto): Promise<Transaction> {
     await this.spacesService.verifyUserAccess(userId, spaceId, 'member');
 
     // Verify account belongs to space
@@ -154,7 +144,7 @@ export class TransactionsService {
     spaceId: string,
     userId: string,
     transactionId: string,
-    dto: UpdateTransactionDto,
+    dto: UpdateTransactionDto
   ): Promise<Transaction> {
     await this.spacesService.verifyUserAccess(userId, spaceId, 'member');
 
@@ -206,11 +196,7 @@ export class TransactionsService {
     return transaction;
   }
 
-  async remove(
-    spaceId: string,
-    userId: string,
-    transactionId: string,
-  ): Promise<void> {
+  async remove(spaceId: string, userId: string, transactionId: string): Promise<void> {
     await this.spacesService.verifyUserAccess(userId, spaceId, 'member');
 
     const transaction = await this.findOne(spaceId, userId, transactionId);
@@ -234,7 +220,7 @@ export class TransactionsService {
     spaceId: string,
     userId: string,
     transactionIds: string[],
-    categoryId: string,
+    categoryId: string
   ): Promise<Transaction[]> {
     await this.spacesService.verifyUserAccess(userId, spaceId, 'member');
 

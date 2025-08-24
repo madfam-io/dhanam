@@ -1,16 +1,15 @@
-import React, { useState } from 'react';
-import { View, ScrollView, RefreshControl } from 'react-native';
-import { Text, Card, ProgressBar, FAB, Button, Chip } from 'react-native-paper';
+import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import React from 'react';
+import { View, ScrollView, RefreshControl, StyleSheet } from 'react-native';
+import { Text, Card, ProgressBar, FAB, Button, Chip } from 'react-native-paper';
 
+import { ErrorState } from '@/components/ErrorState';
+import { LoadingScreen } from '@/components/LoadingScreen';
 import { useSpaces } from '@/hooks/useSpaces';
 import { apiClient } from '@/services/api';
-import { LoadingScreen } from '@/components/LoadingScreen';
-import { ErrorState } from '@/components/ErrorState';
 import { formatCurrency } from '@/utils/currency';
-import { StyleSheet } from 'react-native';
 
 interface Budget {
   id: string;
@@ -36,7 +35,7 @@ export default function BudgetsScreen() {
     error,
   } = useQuery<Budget[]>({
     queryKey: ['budgets', currentSpace?.id],
-    queryFn: () => apiClient.get(`/budgets?spaceId=${currentSpace!.id}`).then(res => res.data),
+    queryFn: () => apiClient.get(`/budgets?spaceId=${currentSpace!.id}`).then((res) => res.data),
     enabled: !!currentSpace,
   });
 
@@ -137,9 +136,7 @@ export default function BudgetsScreen() {
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
-        refreshControl={
-          <RefreshControl refreshing={false} onRefresh={refetch} />
-        }
+        refreshControl={<RefreshControl refreshing={false} onRefresh={refetch} />}
         showsVerticalScrollIndicator={false}
       >
         {/* Header */}
@@ -204,7 +201,7 @@ export default function BudgetsScreen() {
             {budgets.map((budget) => {
               const progressPercentage = Math.min((budget.spent / budget.amount) * 100, 100);
               const daysRemaining = getDaysRemaining(budget.endDate);
-              
+
               return (
                 <Card key={budget.id} style={styles.budgetCard}>
                   <Card.Content>
@@ -216,8 +213,14 @@ export default function BudgetsScreen() {
                         <View style={styles.budgetMeta}>
                           <Chip
                             mode="outlined"
-                            textStyle={[styles.periodChipText, { color: getStatusColor(budget.status) }]}
-                            style={[styles.periodChip, { borderColor: getStatusColor(budget.status) }]}
+                            textStyle={[
+                              styles.periodChipText,
+                              { color: getStatusColor(budget.status) },
+                            ]}
+                            style={[
+                              styles.periodChip,
+                              { borderColor: getStatusColor(budget.status) },
+                            ]}
                           >
                             {formatPeriod(budget.period)}
                           </Chip>
@@ -227,7 +230,10 @@ export default function BudgetsScreen() {
                               size={16}
                               color={getStatusColor(budget.status)}
                             />
-                            <Text variant="bodySmall" style={[styles.statusText, { color: getStatusColor(budget.status) }]}>
+                            <Text
+                              variant="bodySmall"
+                              style={[styles.statusText, { color: getStatusColor(budget.status) }]}
+                            >
                               {budget.status.charAt(0).toUpperCase() + budget.status.slice(1)}
                             </Text>
                           </View>
@@ -318,11 +324,7 @@ export default function BudgetsScreen() {
       </ScrollView>
 
       {/* FAB */}
-      <FAB
-        icon="plus"
-        style={styles.fab}
-        onPress={() => router.push('/budgets/create')}
-      />
+      <FAB icon="plus" style={styles.fab} onPress={() => router.push('/budgets/create')} />
     </View>
   );
 }

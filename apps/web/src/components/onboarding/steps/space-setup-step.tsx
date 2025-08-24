@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import { useOnboarding } from '../onboarding-provider';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@dhanam/ui';
+import { Card, CardContent, CardHeader, CardTitle } from '@dhanam/ui';
 import { BuildingIcon, UserIcon, CheckIcon } from 'lucide-react';
 
 export function SpaceSetupStep() {
@@ -27,9 +27,7 @@ export function SpaceSetupStep() {
         <div className="w-20 h-20 bg-green-100 rounded-full mx-auto mb-6 flex items-center justify-center">
           <CheckIcon className="w-10 h-10 text-green-600" />
         </div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">
-          ¡Tu espacio personal está listo!
-        </h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-4">¡Tu espacio personal está listo!</h1>
         <p className="text-lg text-gray-600">
           Hemos configurado automáticamente tu espacio personal para gestionar tus finanzas
         </p>
@@ -110,12 +108,7 @@ export function SpaceSetupStep() {
       </div>
 
       <div className="text-center">
-        <Button 
-          size="lg" 
-          onClick={handleContinue}
-          disabled={isLoading}
-          className="px-8"
-        >
+        <Button size="lg" onClick={handleContinue} disabled={isLoading} className="px-8">
           {isLoading ? 'Cargando...' : 'Continuar'}
         </Button>
       </div>

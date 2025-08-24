@@ -85,11 +85,7 @@ export class IntegrationsService {
 
     const healthyCount = results.filter((r) => r.status === 'healthy').length;
     const overallStatus =
-      healthyCount === results.length
-        ? 'healthy'
-        : healthyCount > 0
-        ? 'degraded'
-        : 'unhealthy';
+      healthyCount === results.length ? 'healthy' : healthyCount > 0 ? 'degraded' : 'unhealthy';
 
     return {
       status: overallStatus,
@@ -102,9 +98,10 @@ export class IntegrationsService {
   }
 
   private isBelvoConfigured(): boolean {
-    return !!
-      (this.configService.get('BELVO_SECRET_KEY_ID') &&
-       this.configService.get('BELVO_SECRET_KEY_PASSWORD'));
+    return !!(
+      this.configService.get('BELVO_SECRET_KEY_ID') &&
+      this.configService.get('BELVO_SECRET_KEY_PASSWORD')
+    );
   }
 
   private isPlaidEnabled(): boolean {
@@ -112,9 +109,7 @@ export class IntegrationsService {
   }
 
   private isPlaidConfigured(): boolean {
-    return !!
-      (this.configService.get('PLAID_CLIENT_ID') &&
-       this.configService.get('PLAID_SECRET'));
+    return !!(this.configService.get('PLAID_CLIENT_ID') && this.configService.get('PLAID_SECRET'));
   }
 
   private isBitsoEnabled(): boolean {
@@ -122,9 +117,9 @@ export class IntegrationsService {
   }
 
   private isBitsoConfigured(): boolean {
-    return !!
-      (this.configService.get('BITSO_API_KEY') &&
-       this.configService.get('BITSO_API_SECRET'));
+    return !!(
+      this.configService.get('BITSO_API_KEY') && this.configService.get('BITSO_API_SECRET')
+    );
   }
 
   private async checkBelvoHealth(): Promise<{ latency: number }> {
@@ -133,14 +128,14 @@ export class IntegrationsService {
       if (!this.isBelvoConfigured()) {
         throw new Error('Belvo not configured');
       }
-      
+
       const { default: Belvo } = require('belvo');
       const client = new Belvo(
         this.configService.get('BELVO_SECRET_KEY_ID'),
         this.configService.get('BELVO_SECRET_KEY_PASSWORD'),
         this.configService.get('BELVO_ENV', 'sandbox')
       );
-      
+
       // Simple health check - list institutions (lightweight operation)
       await client.institutions.list();
       return { latency: Date.now() - start };
@@ -155,7 +150,7 @@ export class IntegrationsService {
       if (!this.isPlaidConfigured()) {
         throw new Error('Plaid not configured');
       }
-      
+
       const { PlaidApi, Configuration, PlaidEnvironments } = require('plaid');
       const configuration = new Configuration({
         basePath: PlaidEnvironments[this.configService.get('PLAID_ENV', 'sandbox')],
@@ -166,7 +161,7 @@ export class IntegrationsService {
           },
         },
       });
-      
+
       const client = new PlaidApi(configuration);
       await client.categoriesGet({});
       return { latency: Date.now() - start };

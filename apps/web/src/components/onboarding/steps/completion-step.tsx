@@ -3,14 +3,14 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/hooks/use-auth';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { 
-  CheckCircleIcon, 
+import { Button } from '@dhanam/ui';
+import { Card, CardContent } from '@dhanam/ui';
+import {
+  CheckCircleIcon,
   ArrowRightIcon,
   SparklesIcon,
   TrophyIcon,
-  RocketIcon 
+  RocketIcon,
 } from 'lucide-react';
 
 export function CompletionStep() {
@@ -30,18 +30,18 @@ export function CompletionStep() {
     {
       icon: CheckCircleIcon,
       title: 'Configuración completa',
-      description: 'Tu cuenta está lista para usar con todas las preferencias configuradas'
+      description: 'Tu cuenta está lista para usar con todas las preferencias configuradas',
     },
     {
       icon: SparklesIcon,
       title: 'Experiencia personalizada',
-      description: 'Dhanam se adaptará a tus preferencias de idioma, moneda y notificaciones'
+      description: 'Dhanam se adaptará a tus preferencias de idioma, moneda y notificaciones',
     },
     {
       icon: RocketIcon,
       title: 'Todo listo para comenzar',
-      description: 'Accede a todas las funcionalidades desde tu dashboard personalizado'
-    }
+      description: 'Accede a todas las funcionalidades desde tu dashboard personalizado',
+    },
   ];
 
   return (
@@ -54,7 +54,7 @@ export function CompletionStep() {
         <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-2">
           <div className="flex space-x-1">
             {[...Array(3)].map((_, i) => (
-              <SparklesIcon 
+              <SparklesIcon
                 key={i}
                 className="w-6 h-6 text-yellow-400 animate-bounce"
                 style={{ animationDelay: `${i * 0.2}s` }}
@@ -64,12 +64,10 @@ export function CompletionStep() {
         </div>
       </div>
 
-      <h1 className="text-4xl font-bold text-gray-900 mb-4">
-        ¡Felicidades, {user?.name}! 🎉
-      </h1>
+      <h1 className="text-4xl font-bold text-gray-900 mb-4">¡Felicidades, {user?.name}! 🎉</h1>
       <p className="text-xl text-gray-600 mb-8">
-        Has completado exitosamente la configuración de tu cuenta de Dhanam. 
-        Ya tienes acceso a todas las herramientas para gestionar tus finanzas.
+        Has completado exitosamente la configuración de tu cuenta de Dhanam. Ya tienes acceso a
+        todas las herramientas para gestionar tus finanzas.
       </p>
 
       {/* Completion features */}
@@ -90,39 +88,53 @@ export function CompletionStep() {
       {/* What's next */}
       <Card className="bg-gradient-to-r from-indigo-50 to-purple-50 border-2 border-indigo-200 mb-8">
         <CardContent className="p-8">
-          <h2 className="text-2xl font-semibold text-gray-900 mb-6">
-            🚀 ¿Qué puedes hacer ahora?
-          </h2>
+          <h2 className="text-2xl font-semibold text-gray-900 mb-6">🚀 ¿Qué puedes hacer ahora?</h2>
           <div className="grid md:grid-cols-2 gap-6 text-left">
             <div className="space-y-4">
               <div className="flex items-start space-x-3">
-                <div className="w-6 h-6 bg-indigo-600 text-white rounded-full flex items-center justify-center text-sm font-bold">1</div>
+                <div className="w-6 h-6 bg-indigo-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                  1
+                </div>
                 <div>
                   <h3 className="font-medium text-gray-900">Explora tu Dashboard</h3>
-                  <p className="text-sm text-gray-600">Ve un resumen completo de tu situación financiera</p>
+                  <p className="text-sm text-gray-600">
+                    Ve un resumen completo de tu situación financiera
+                  </p>
                 </div>
               </div>
               <div className="flex items-start space-x-3">
-                <div className="w-6 h-6 bg-indigo-600 text-white rounded-full flex items-center justify-center text-sm font-bold">2</div>
+                <div className="w-6 h-6 bg-indigo-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                  2
+                </div>
                 <div>
                   <h3 className="font-medium text-gray-900">Conecta tus cuentas</h3>
-                  <p className="text-sm text-gray-600">Vincula bancos y wallets para sincronización automática</p>
+                  <p className="text-sm text-gray-600">
+                    Vincula bancos y wallets para sincronización automática
+                  </p>
                 </div>
               </div>
             </div>
             <div className="space-y-4">
               <div className="flex items-start space-x-3">
-                <div className="w-6 h-6 bg-indigo-600 text-white rounded-full flex items-center justify-center text-sm font-bold">3</div>
+                <div className="w-6 h-6 bg-indigo-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                  3
+                </div>
                 <div>
                   <h3 className="font-medium text-gray-900">Crea presupuestos</h3>
-                  <p className="text-sm text-gray-600">Establece límites de gasto y recibe alertas automáticas</p>
+                  <p className="text-sm text-gray-600">
+                    Establece límites de gasto y recibe alertas automáticas
+                  </p>
                 </div>
               </div>
               <div className="flex items-start space-x-3">
-                <div className="w-6 h-6 bg-indigo-600 text-white rounded-full flex items-center justify-center text-sm font-bold">4</div>
+                <div className="w-6 h-6 bg-indigo-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                  4
+                </div>
                 <div>
                   <h3 className="font-medium text-gray-900">Analiza ESG</h3>
-                  <p className="text-sm text-gray-600">Revisa el impacto ambiental de tus inversiones crypto</p>
+                  <p className="text-sm text-gray-600">
+                    Revisa el impacto ambiental de tus inversiones crypto
+                  </p>
                 </div>
               </div>
             </div>
@@ -132,9 +144,7 @@ export function CompletionStep() {
 
       {/* Support info */}
       <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-8">
-        <h3 className="font-semibold text-yellow-900 mb-2">
-          💡 ¿Necesitas ayuda?
-        </h3>
+        <h3 className="font-semibold text-yellow-900 mb-2">💡 ¿Necesitas ayuda?</h3>
         <p className="text-yellow-800 text-sm mb-3">
           Nuestro equipo está aquí para ayudarte a sacar el máximo provecho de Dhanam
         </p>
@@ -147,8 +157,8 @@ export function CompletionStep() {
 
       {/* CTA */}
       <div className="text-center">
-        <Button 
-          size="lg" 
+        <Button
+          size="lg"
           onClick={handleGoToDashboard}
           className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 px-8 py-3 text-lg"
         >

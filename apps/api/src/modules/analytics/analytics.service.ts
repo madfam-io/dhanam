@@ -1,20 +1,21 @@
-import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../../core/prisma/prisma.service';
-import { SpacesService } from '../spaces/spaces.service';
-import { 
-  NetWorthResponse, 
-  CashflowForecast, 
+import {
+  NetWorthResponse,
+  CashflowForecast,
   SpendingByCategory,
   IncomeVsExpenses,
   AccountBalanceAnalytics,
-  PortfolioAllocation
+  PortfolioAllocation,
 } from '@dhanam/shared';
+import { Injectable } from '@nestjs/common';
+
+import { PrismaService } from '../../core/prisma/prisma.service';
+import { SpacesService } from '../spaces/spaces.service';
 
 @Injectable()
 export class AnalyticsService {
   constructor(
     private prisma: PrismaService,
-    private spacesService: SpacesService,
+    private spacesService: SpacesService
   ) {}
 
   async getNetWorth(userId: string, spaceId: string): Promise<NetWorthResponse> {
@@ -31,11 +32,11 @@ export class AnalyticsService {
     });
 
     const totalAssets = accounts
-      .filter(a => a.balance.toNumber() > 0)
+      .filter((a) => a.balance.toNumber() > 0)
       .reduce((sum, account) => sum + account.balance.toNumber(), 0);
 
     const totalLiabilities = accounts
-      .filter(a => a.balance.toNumber() < 0)
+      .filter((a) => a.balance.toNumber() < 0)
       .reduce((sum, account) => sum + Math.abs(account.balance.toNumber()), 0);
 
     const netWorth = totalAssets - totalLiabilities;
@@ -46,13 +47,13 @@ export class AnalyticsService {
 
     const historicalValuations = await this.prisma.assetValuation.findMany({
       where: {
-        accountId: { in: accounts.map(a => a.id) },
+        accountId: { in: accounts.map((a) => a.id) },
         date: { gte: thirtyDaysAgo },
       },
       orderBy: { date: 'asc' },
     });
 
-    const trend = historicalValuations.map(v => ({
+    const trend = historicalValuations.map((v) => ({
       date: v.date.toISOString(),
       value: v.value.toNumber(),
     }));
@@ -69,16 +70,12 @@ export class AnalyticsService {
     };
   }
 
-  async getCashflowForecast(
-    userId: string,
-    spaceId: string,
-    days = 60,
-  ): Promise<CashflowForecast> {
+  async getCashflowForecast(userId: string, spaceId: string, days = 60): Promise<CashflowForecast> {
     await this.spacesService.verifyUserAccess(userId, spaceId, 'viewer');
 
     // Get current liquid account balances
     const liquidAccounts = await this.prisma.account.findMany({
-      where: { 
+      where: {
         spaceId,
         type: { in: ['checking', 'savings'] },
       },
@@ -86,27 +83,28 @@ export class AnalyticsService {
 
     const currentBalance = liquidAccounts.reduce(
       (sum, account) => sum + account.balance.toNumber(),
-      0,
+      0
     );
 
     // Analyze historical patterns for forecasting
     const historicalData = await this.getHistoricalCashflowPatterns(spaceId, 90); // Last 90 days
-    
+
     const forecast = [];
     let runningBalance = currentBalance;
     const today = new Date();
-    
-    for (let i = 0; i < days; i += 7) { // Weekly granularity
+
+    for (let i = 0; i < days; i += 7) {
+      // Weekly granularity
       const forecastDate = new Date(today);
       forecastDate.setDate(today.getDate() + i);
-      
+
       // Predict weekly income/expenses based on historical averages
       const weeklyIncome = historicalData.avgWeeklyIncome || 0;
       const weeklyExpenses = historicalData.avgWeeklyExpenses || 0;
       const weeklyNet = weeklyIncome - weeklyExpenses;
-      
+
       runningBalance += weeklyNet;
-      
+
       forecast.push({
         date: forecastDate.toISOString(),
         income: weeklyIncome,
@@ -130,7 +128,10 @@ export class AnalyticsService {
     };
   }
 
-  private async getHistoricalCashflowPatterns(spaceId: string, days: number): Promise<{
+  private async getHistoricalCashflowPatterns(
+    spaceId: string,
+    days: number
+  ): Promise<{
     avgWeeklyIncome: number;
     avgWeeklyExpenses: number;
     incomeVariability: number;
@@ -163,9 +164,9 @@ export class AnalyticsService {
 
     const totalIncome = incomeData._sum.amount?.toNumber() || 0;
     const totalExpenses = Math.abs(expenseData._sum.amount?.toNumber() || 0);
-    
+
     const weeksInPeriod = days / 7;
-    
+
     return {
       avgWeeklyIncome: totalIncome / weeksInPeriod,
       avgWeeklyExpenses: totalExpenses / weeksInPeriod,
@@ -178,7 +179,7 @@ export class AnalyticsService {
     userId: string,
     spaceId: string,
     startDate: Date,
-    endDate: Date,
+    endDate: Date
   ): Promise<SpendingByCategory[]> {
     await this.spacesService.verifyUserAccess(userId, spaceId, 'viewer');
 
@@ -195,15 +196,15 @@ export class AnalyticsService {
 
     const categories = await this.prisma.category.findMany({
       where: {
-        id: { in: transactions.map(t => t.categoryId).filter(Boolean) as string[] },
+        id: { in: transactions.map((t) => t.categoryId).filter(Boolean) as string[] },
       },
     });
 
-    const categoryMap = new Map(categories.map(c => [c.id, c]));
+    const categoryMap = new Map(categories.map((c) => [c.id, c]));
 
     return transactions
-      .filter(t => t.categoryId)
-      .map(t => {
+      .filter((t) => t.categoryId)
+      .map((t) => {
         const category = categoryMap.get(t.categoryId!);
         return {
           categoryId: t.categoryId!,
@@ -221,7 +222,7 @@ export class AnalyticsService {
   async getIncomeVsExpenses(
     userId: string,
     spaceId: string,
-    months = 6,
+    months = 6
   ): Promise<IncomeVsExpenses[]> {
     await this.spacesService.verifyUserAccess(userId, spaceId, 'viewer');
 
@@ -270,7 +271,7 @@ export class AnalyticsService {
       orderBy: { balance: 'desc' },
     });
 
-    return accounts.map(account => ({
+    return accounts.map((account) => ({
       accountId: account.id,
       accountName: account.name,
       accountType: account.type,
@@ -280,10 +281,7 @@ export class AnalyticsService {
     }));
   }
 
-  async getPortfolioAllocation(
-    userId: string,
-    spaceId: string,
-  ): Promise<PortfolioAllocation[]> {
+  async getPortfolioAllocation(userId: string, spaceId: string): Promise<PortfolioAllocation[]> {
     await this.spacesService.verifyUserAccess(userId, spaceId, 'viewer');
 
     const accounts = await this.prisma.account.findMany({
@@ -292,18 +290,21 @@ export class AnalyticsService {
 
     const totalValue = accounts.reduce(
       (sum, account) => sum + Math.abs(account.balance.toNumber()),
-      0,
+      0
     );
 
-    const typeGroups = accounts.reduce((groups, account) => {
-      const type = account.type;
-      if (!groups[type]) {
-        groups[type] = { value: 0, count: 0 };
-      }
-      groups[type]!.value += Math.abs(account.balance.toNumber());
-      groups[type]!.count += 1;
-      return groups;
-    }, {} as Record<string, { value: number; count: number }>);
+    const typeGroups = accounts.reduce(
+      (groups, account) => {
+        const type = account.type;
+        if (!groups[type]) {
+          groups[type] = { value: 0, count: 0 };
+        }
+        groups[type]!.value += Math.abs(account.balance.toNumber());
+        groups[type]!.count += 1;
+        return groups;
+      },
+      {} as Record<string, { value: number; count: number }>
+    );
 
     return Object.entries(typeGroups).map(([type, data]) => ({
       assetType: type,

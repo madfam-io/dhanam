@@ -1,67 +1,52 @@
-import {
-  Controller,
-  Get,
-  Query,
-  UseGuards,
-  BadRequestException,
-} from '@nestjs/common';
+import { Controller, Get, Query, UseGuards, BadRequestException } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
-import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
-import { FxRatesService } from './fx-rates.service';
 import { Currency } from '@prisma/client';
-import { IsEnum, IsOptional, IsDateString, IsNumber, Min } from 'class-validator';
 import { Type } from 'class-transformer';
+import { IsEnum, IsOptional, IsDateString, IsNumber, Min } from 'class-validator';
+
+import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
+
+import { FxRatesService } from './fx-rates.service';
 
 class GetRateDto {
-  @ApiQuery({ enum: Currency, description: 'Source currency' })
   @IsEnum(Currency)
   from: Currency;
 
-  @ApiQuery({ enum: Currency, description: 'Target currency' })
   @IsEnum(Currency)
   to: Currency;
 
-  @ApiQuery({ required: false, description: 'Date for historical rate (ISO 8601)' })
   @IsOptional()
   @IsDateString()
   date?: string;
 }
 
 class ConvertAmountDto {
-  @ApiQuery({ description: 'Amount to convert' })
   @Type(() => Number)
   @IsNumber()
   @Min(0)
   amount: number;
 
-  @ApiQuery({ enum: Currency, description: 'Source currency' })
   @IsEnum(Currency)
   from: Currency;
 
-  @ApiQuery({ enum: Currency, description: 'Target currency' })
   @IsEnum(Currency)
   to: Currency;
 
-  @ApiQuery({ required: false, description: 'Date for historical rate (ISO 8601)' })
   @IsOptional()
   @IsDateString()
   date?: string;
 }
 
 class HistoricalRatesDto {
-  @ApiQuery({ enum: Currency, description: 'Source currency' })
   @IsEnum(Currency)
   from: Currency;
 
-  @ApiQuery({ enum: Currency, description: 'Target currency' })
   @IsEnum(Currency)
   to: Currency;
 
-  @ApiQuery({ description: 'Start date (ISO 8601)' })
   @IsDateString()
   startDate: string;
 
-  @ApiQuery({ description: 'End date (ISO 8601)' })
   @IsDateString()
   endDate: string;
 }
@@ -75,11 +60,14 @@ export class FxRatesController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get exchange rate between two currencies' })
+  @ApiQuery({ name: 'from', enum: Currency, description: 'Source currency' })
+  @ApiQuery({ name: 'to', enum: Currency, description: 'Target currency' })
+  @ApiQuery({ name: 'date', required: false, description: 'Date for historical rate (ISO 8601)' })
   @ApiResponse({ status: 200, description: 'Exchange rate retrieved successfully' })
   async getRate(@Query() query: GetRateDto) {
     const date = query.date ? new Date(query.date) : undefined;
     const rate = await this.fxRatesService.getExchangeRate(query.from, query.to, date);
-    
+
     return {
       from: query.from,
       to: query.to,
@@ -93,6 +81,10 @@ export class FxRatesController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Convert amount between currencies' })
+  @ApiQuery({ name: 'amount', description: 'Amount to convert' })
+  @ApiQuery({ name: 'from', enum: Currency, description: 'Source currency' })
+  @ApiQuery({ name: 'to', enum: Currency, description: 'Target currency' })
+  @ApiQuery({ name: 'date', required: false, description: 'Date for historical rate (ISO 8601)' })
   @ApiResponse({ status: 200, description: 'Amount converted successfully' })
   async convertAmount(@Query() query: ConvertAmountDto) {
     const date = query.date ? new Date(query.date) : undefined;
@@ -100,11 +92,11 @@ export class FxRatesController {
       query.amount,
       query.from,
       query.to,
-      date,
+      date
     );
-    
+
     const rate = await this.fxRatesService.getExchangeRate(query.from, query.to, date);
-    
+
     return {
       originalAmount: query.amount,
       convertedAmount,
@@ -120,28 +112,32 @@ export class FxRatesController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get historical exchange rates' })
+  @ApiQuery({ name: 'from', enum: Currency, description: 'Source currency' })
+  @ApiQuery({ name: 'to', enum: Currency, description: 'Target currency' })
+  @ApiQuery({ name: 'startDate', description: 'Start date (ISO 8601)' })
+  @ApiQuery({ name: 'endDate', description: 'End date (ISO 8601)' })
   @ApiResponse({ status: 200, description: 'Historical rates retrieved successfully' })
   async getHistoricalRates(@Query() query: HistoricalRatesDto) {
     const startDate = new Date(query.startDate);
     const endDate = new Date(query.endDate);
-    
+
     if (startDate > endDate) {
       throw new BadRequestException('Start date must be before end date');
     }
-    
+
     const rates = await this.fxRatesService.getHistoricalRates(
       query.from,
       query.to,
       startDate,
-      endDate,
+      endDate
     );
-    
+
     return {
       from: query.from,
       to: query.to,
       startDate,
       endDate,
-      rates: rates.map(r => ({
+      rates: rates.map((r) => ({
         date: r.date,
         rate: r.rate,
         source: r.source,
@@ -155,7 +151,7 @@ export class FxRatesController {
   @ApiResponse({ status: 200, description: 'Supported currencies retrieved successfully' })
   async getSupportedCurrencies() {
     const currencies = await this.fxRatesService.getSupportedCurrencies();
-    
+
     return {
       currencies,
       count: currencies.length,
@@ -169,7 +165,7 @@ export class FxRatesController {
     // Test by getting current USD/MXN rate
     try {
       const rate = await this.fxRatesService.getExchangeRate(Currency.USD, Currency.MXN);
-      
+
       return {
         service: 'fx-rates',
         status: 'healthy',

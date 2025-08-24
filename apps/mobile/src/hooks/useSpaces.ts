@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from './useAuth';
+
 import { apiClient } from '@/services/api';
+
+import { useAuth } from './useAuth';
 
 export interface Space {
   id: string;
@@ -29,7 +31,7 @@ export function useSpaces() {
       setLoading(true);
       const response = await apiClient.get('/spaces');
       setSpaces(response.data);
-      
+
       // Set first space as current if none selected
       if (response.data.length > 0 && !currentSpace) {
         setCurrentSpace(response.data[0]);
@@ -45,7 +47,7 @@ export function useSpaces() {
     try {
       const response = await apiClient.post('/spaces', data);
       const newSpace = response.data;
-      setSpaces(prev => [...prev, newSpace]);
+      setSpaces((prev) => [...prev, newSpace]);
       return newSpace;
     } catch (error) {
       console.error('Failed to create space:', error);

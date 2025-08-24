@@ -5,15 +5,15 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/hooks/use-auth';
 import { Button } from '@dhanam/ui';
 import Link from 'next/link';
-import { 
-  TrendingUp, 
-  PiggyBank, 
-  Shield, 
-  Globe, 
-  BarChart3, 
+import {
+  TrendingUp,
+  PiggyBank,
+  Shield,
+  Globe,
+  BarChart3,
   Zap,
   ArrowRight,
-  CheckCircle
+  CheckCircle,
 } from 'lucide-react';
 
 export default function HomePage() {
@@ -82,7 +82,7 @@ export default function HomePage() {
           Your Financial Life, Unified
         </h1>
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
-          Track budgets, monitor wealth, and make smarter financial decisions with Dhanam's 
+          Track budgets, monitor wealth, and make smarter financial decisions with Dhanam&apos;s
           comprehensive platform designed for LATAM users.
         </p>
         <div className="flex items-center justify-center gap-4">
@@ -158,9 +158,7 @@ export default function HomePage() {
       {/* Footer */}
       <footer className="container mx-auto px-6 py-8 border-t">
         <div className="flex flex-col md:flex-row items-center justify-between">
-          <p className="text-sm text-muted-foreground">
-            © 2024 Dhanam. All rights reserved.
-          </p>
+          <p className="text-sm text-muted-foreground">© 2024 Dhanam. All rights reserved.</p>
           <div className="flex items-center gap-6 mt-4 md:mt-0">
             <Link href="/terms" className="text-sm text-muted-foreground hover:text-foreground">
               Terms

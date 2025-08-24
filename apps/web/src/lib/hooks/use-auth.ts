@@ -9,11 +9,12 @@ interface AuthState {
   tokens: AuthTokens | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  
+
   setAuth: (user: UserProfile, tokens: AuthTokens) => void;
   clearAuth: () => void;
   logout: () => Promise<void>;
   refreshTokens: () => Promise<void>;
+  refreshUser: () => Promise<void>;
 }
 
 export const useAuth = create<AuthState>()(
@@ -59,6 +60,21 @@ export const useAuth = create<AuthState>()(
         } catch (error) {
           clearAuth();
           throw error;
+        }
+      },
+
+      refreshUser: async () => {
+        const { tokens } = get();
+        if (!tokens?.accessToken) {
+          return;
+        }
+
+        try {
+          // This would typically be an API call to get the current user
+          // For now, we'll just refresh the tokens which includes user data
+          await get().refreshTokens();
+        } catch (error) {
+          console.error('Failed to refresh user:', error);
         }
       },
     }),

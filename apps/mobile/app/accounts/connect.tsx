@@ -1,9 +1,8 @@
-import React from 'react';
-import { View, ScrollView } from 'react-native';
-import { Text, Card, Button } from 'react-native-paper';
-import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { StyleSheet } from 'react-native';
+import { router } from 'expo-router';
+import React from 'react';
+import { View, ScrollView, StyleSheet } from 'react-native';
+import { Text, Card, Button } from 'react-native-paper';
 
 interface Provider {
   id: string;
@@ -19,7 +18,8 @@ const PROVIDERS: Provider[] = [
   {
     id: 'plaid',
     name: 'US Banks',
-    description: 'Connect your US bank accounts via Plaid (Bank of America, Chase, Wells Fargo, etc.)',
+    description:
+      'Connect your US bank accounts via Plaid (Bank of America, Chase, Wells Fargo, etc.)',
     icon: 'card',
     color: '#00D395',
     type: 'bank',
@@ -72,13 +72,16 @@ export default function ConnectAccountsScreen() {
     }
   };
 
-  const groupedProviders = PROVIDERS.reduce((acc, provider) => {
-    if (!acc[provider.type]) {
-      acc[provider.type] = [];
-    }
-    acc[provider.type].push(provider);
-    return acc;
-  }, {} as Record<string, Provider[]>);
+  const groupedProviders = PROVIDERS.reduce(
+    (acc, provider) => {
+      if (!acc[provider.type]) {
+        acc[provider.type] = [];
+      }
+      acc[provider.type].push(provider);
+      return acc;
+    },
+    {} as Record<string, Provider[]>
+  );
 
   return (
     <View style={styles.container}>
@@ -107,7 +110,8 @@ export default function ConnectAccountsScreen() {
               </Text>
             </View>
             <Text variant="bodyMedium" style={styles.securityText}>
-              Your credentials are encrypted and stored securely. We use read-only access and never store your login information.
+              Your credentials are encrypted and stored securely. We use read-only access and never
+              store your login information.
             </Text>
           </Card.Content>
         </Card>
@@ -121,14 +125,16 @@ export default function ConnectAccountsScreen() {
                 {type === 'bank' ? 'Banking' : type === 'crypto' ? 'Cryptocurrency' : 'Other'}
               </Text>
             </View>
-            
+
             <View style={styles.providersList}>
               {providers.map((provider) => (
                 <Card key={provider.id} style={styles.providerCard}>
                   <Card.Content>
                     <View style={styles.providerHeader}>
                       <View style={styles.providerInfo}>
-                        <View style={[styles.providerIcon, { backgroundColor: `${provider.color}15` }]}>
+                        <View
+                          style={[styles.providerIcon, { backgroundColor: `${provider.color}15` }]}
+                        >
                           <Ionicons name={provider.icon as any} size={24} color={provider.color} />
                         </View>
                         <View style={styles.providerDetails}>
@@ -150,7 +156,7 @@ export default function ConnectAccountsScreen() {
                         </View>
                       </View>
                     </View>
-                    
+
                     <Button
                       mode="contained"
                       onPress={() => handleConnectProvider(provider.id)}
@@ -176,7 +182,8 @@ export default function ConnectAccountsScreen() {
               </Text>
             </View>
             <Text variant="bodyMedium" style={styles.helpText}>
-              If you don't see your bank or have trouble connecting, please contact our support team.
+              If you don&apos;t see your bank or have trouble connecting, please contact our support
+              team.
             </Text>
             <Button
               mode="outlined"

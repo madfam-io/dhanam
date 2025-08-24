@@ -1,13 +1,21 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+
 import { PrismaService } from '../../core/prisma/prisma.service';
 import { SpacesService } from '../spaces/spaces.service';
-import { CreateBudgetDto, UpdateBudgetDto, BudgetResponseDto, BudgetSummaryDto, CategorySummaryDto } from './dto';
+
+import {
+  CreateBudgetDto,
+  UpdateBudgetDto,
+  BudgetResponseDto,
+  BudgetSummaryDto,
+  CategorySummaryDto,
+} from './dto';
 
 @Injectable()
 export class BudgetsService {
   constructor(
     private prisma: PrismaService,
-    private spacesService: SpacesService,
+    private spacesService: SpacesService
   ) {}
 
   async findAll(spaceId: string, userId: string): Promise<BudgetResponseDto[]> {
@@ -27,14 +35,10 @@ export class BudgetsService {
       orderBy: { createdAt: 'desc' },
     });
 
-    return budgets.map(budget => this.transformBudgetToDto(budget));
+    return budgets.map((budget) => this.transformBudgetToDto(budget));
   }
 
-  async findOne(
-    spaceId: string,
-    userId: string,
-    budgetId: string,
-  ): Promise<BudgetResponseDto> {
+  async findOne(spaceId: string, userId: string, budgetId: string): Promise<BudgetResponseDto> {
     await this.spacesService.verifyUserAccess(userId, spaceId, 'viewer');
 
     const budget = await this.prisma.budget.findFirst({
@@ -60,11 +64,7 @@ export class BudgetsService {
     return this.transformBudgetToDto(budget);
   }
 
-  async create(
-    spaceId: string,
-    userId: string,
-    dto: CreateBudgetDto,
-  ): Promise<BudgetResponseDto> {
+  async create(spaceId: string, userId: string, dto: CreateBudgetDto): Promise<BudgetResponseDto> {
     await this.spacesService.verifyUserAccess(userId, spaceId, 'member');
 
     // Check for overlapping budgets
@@ -74,10 +74,7 @@ export class BudgetsService {
         period: dto.period,
         OR: [
           {
-            AND: [
-              { startDate: { lte: dto.startDate } },
-              { endDate: { gte: dto.startDate } },
-            ],
+            AND: [{ startDate: { lte: dto.startDate } }, { endDate: { gte: dto.startDate } }],
           },
           {
             AND: [
@@ -125,7 +122,7 @@ export class BudgetsService {
     spaceId: string,
     userId: string,
     budgetId: string,
-    dto: UpdateBudgetDto,
+    dto: UpdateBudgetDto
   ): Promise<BudgetResponseDto> {
     await this.spacesService.verifyUserAccess(userId, spaceId, 'member');
 
@@ -144,7 +141,7 @@ export class BudgetsService {
     if (dto.startDate || dto.endDate || dto.period) {
       const startDate = dto.startDate || existing.startDate;
       const endDate = dto.endDate || existing.endDate;
-      const period = dto.period || existing.period as any;
+      const period = dto.period || (existing.period as any);
 
       const overlapping = await this.prisma.budget.findFirst({
         where: {
@@ -153,10 +150,7 @@ export class BudgetsService {
           id: { not: budgetId },
           OR: [
             {
-              AND: [
-                { startDate: { lte: startDate } },
-                { endDate: { gte: startDate } },
-              ],
+              AND: [{ startDate: { lte: startDate } }, { endDate: { gte: startDate } }],
             },
             {
               AND: [
@@ -195,11 +189,7 @@ export class BudgetsService {
     return this.transformBudgetToDto(budget);
   }
 
-  async remove(
-    spaceId: string,
-    userId: string,
-    budgetId: string,
-  ): Promise<void> {
+  async remove(spaceId: string, userId: string, budgetId: string): Promise<void> {
     await this.spacesService.verifyUserAccess(userId, spaceId, 'admin');
 
     const budget = await this.prisma.budget.findFirst({
@@ -222,7 +212,7 @@ export class BudgetsService {
   async getBudgetSummary(
     spaceId: string,
     userId: string,
-    budgetId: string,
+    budgetId: string
   ): Promise<BudgetSummaryDto> {
     await this.spacesService.verifyUserAccess(userId, spaceId, 'viewer');
 
@@ -265,13 +255,8 @@ export class BudgetsService {
 
     // Calculate totals by category
     const categoryTotals: CategorySummaryDto[] = budget.categories.map((category) => {
-      const categoryTransactions = transactions.filter(
-        (t) => t.categoryId === category.id,
-      );
-      const spent = categoryTransactions.reduce(
-        (sum, t) => sum + Math.abs(t.amount.toNumber()),
-        0,
-      );
+      const categoryTransactions = transactions.filter((t) => t.categoryId === category.id);
+      const spent = categoryTransactions.reduce((sum, t) => sum + Math.abs(t.amount.toNumber()), 0);
       const budgetedAmount = category.budgetedAmount.toNumber();
       const remaining = budgetedAmount - spent;
       const percentUsed = budgetedAmount > 0 ? (spent / budgetedAmount) * 100 : 0;
@@ -296,7 +281,7 @@ export class BudgetsService {
 
     const totalBudgeted = budget.categories.reduce(
       (sum, c) => sum + c.budgetedAmount.toNumber(),
-      0,
+      0
     );
     const totalSpent = categoryTotals.reduce((sum, c) => sum + c.spent, 0);
     const totalRemaining = totalBudgeted - totalSpent;
@@ -354,18 +339,19 @@ export class BudgetsService {
       endDate: budget.endDate?.toISOString() || null,
       createdAt: budget.createdAt.toISOString(),
       updatedAt: budget.updatedAt.toISOString(),
-      categories: budget.categories?.map((category: any) => ({
-        id: category.id,
-        budgetId: category.budgetId,
-        name: category.name,
-        budgetedAmount: category.budgetedAmount.toNumber(),
-        icon: category.icon,
-        color: category.color,
-        description: category.description,
-        createdAt: category.createdAt.toISOString(),
-        updatedAt: category.updatedAt.toISOString(),
-        _count: category._count,
-      })) || [],
+      categories:
+        budget.categories?.map((category: any) => ({
+          id: category.id,
+          budgetId: category.budgetId,
+          name: category.name,
+          budgetedAmount: category.budgetedAmount.toNumber(),
+          icon: category.icon,
+          color: category.color,
+          description: category.description,
+          createdAt: category.createdAt.toISOString(),
+          updatedAt: category.updatedAt.toISOString(),
+          _count: category._count,
+        })) || [],
     };
   }
 }

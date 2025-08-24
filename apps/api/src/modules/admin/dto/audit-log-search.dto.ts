@@ -1,5 +1,6 @@
-import { IsOptional, IsString, IsEnum, IsDateString } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
+import { IsOptional, IsString, IsEnum, IsDateString } from 'class-validator';
+
 import { PaginationDto } from './pagination.dto';
 
 export enum AuditLogSeverity {

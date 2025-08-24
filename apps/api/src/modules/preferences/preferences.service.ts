@@ -1,12 +1,10 @@
 import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { UserPreferences, Currency } from '@prisma/client';
-import { PrismaService } from '../../core/prisma/prisma.service';
+
 import { AuditService } from '../../core/audit/audit.service';
-import { 
-  UpdatePreferencesDto, 
-  PreferencesResponseDto, 
-  BulkPreferencesUpdateDto 
-} from './dto';
+import { PrismaService } from '../../core/prisma/prisma.service';
+
+import { UpdatePreferencesDto, PreferencesResponseDto, BulkPreferencesUpdateDto } from './dto';
 
 @Injectable()
 export class PreferencesService {
@@ -14,7 +12,7 @@ export class PreferencesService {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly auditService: AuditService,
+    private readonly auditService: AuditService
   ) {}
 
   async getUserPreferences(userId: string): Promise<PreferencesResponseDto> {
@@ -32,7 +30,7 @@ export class PreferencesService {
   }
 
   async updateUserPreferences(
-    userId: string, 
+    userId: string,
     dto: UpdatePreferencesDto
   ): Promise<PreferencesResponseDto> {
     // Ensure preferences exist
@@ -53,10 +51,10 @@ export class PreferencesService {
     // Log preferences update with changes
     const changes = this.getChanges(previousPreferences!, dto);
     if (Object.keys(changes).length > 0) {
-      await this.auditService.log({
+      await this.auditService.logEvent({
         action: 'preferences_updated',
-        entityType: 'user',
-        entityId: userId,
+        resource: 'user',
+        resourceId: userId,
         userId,
         metadata: {
           changes,
@@ -70,7 +68,7 @@ export class PreferencesService {
   }
 
   async bulkUpdatePreferences(
-    userId: string, 
+    userId: string,
     dto: BulkPreferencesUpdateDto
   ): Promise<PreferencesResponseDto> {
     await this.ensurePreferencesExist(userId);
@@ -81,7 +79,7 @@ export class PreferencesService {
 
     // Flatten the bulk update structure
     const flatUpdate: Partial<UserPreferences> = {};
-    
+
     if (dto.notifications) {
       Object.assign(flatUpdate, dto.notifications);
     }
@@ -110,10 +108,10 @@ export class PreferencesService {
     });
 
     // Log bulk update
-    await this.auditService.log({
+    await this.auditService.logEvent({
       action: 'preferences_bulk_updated',
-      entityType: 'user',
-      entityId: userId,
+      resource: 'user',
+      resourceId: userId,
       userId,
       metadata: {
         categories: Object.keys(dto),
@@ -122,7 +120,9 @@ export class PreferencesService {
       },
     });
 
-    this.logger.log(`User ${userId} bulk updated preferences in ${Object.keys(dto).length} categories`);
+    this.logger.log(
+      `User ${userId} bulk updated preferences in ${Object.keys(dto).length} categories`
+    );
     return this.mapToResponseDto(updatedPreferences);
   }
 
@@ -146,10 +146,10 @@ export class PreferencesService {
     // Create fresh default preferences
     const defaultPreferences = await this.createDefaultPreferences(userId);
 
-    await this.auditService.log({
+    await this.auditService.logEvent({
       action: 'preferences_reset',
-      entityType: 'user',
-      entityId: userId,
+      resource: 'user',
+      resourceId: userId,
       userId,
     });
 
@@ -267,9 +267,12 @@ export class PreferencesService {
     };
   }
 
-  private getChanges(previous: UserPreferences, updates: Partial<UserPreferences>): Record<string, { from: any; to: any }> {
+  private getChanges(
+    previous: UserPreferences,
+    updates: Partial<UserPreferences>
+  ): Record<string, { from: any; to: any }> {
     const changes: Record<string, { from: any; to: any }> = {};
-    
+
     for (const [key, newValue] of Object.entries(updates)) {
       if (key in previous && previous[key as keyof UserPreferences] !== newValue) {
         changes[key] = {
@@ -278,7 +281,7 @@ export class PreferencesService {
         };
       }
     }
-    
+
     return changes;
   }
 
@@ -319,13 +322,13 @@ export class PreferencesService {
 
   private countCustomizations(current: UserPreferences, defaults: any): number {
     let count = 0;
-    
+
     for (const [key, defaultValue] of Object.entries(defaults)) {
       if (key in current && current[key as keyof UserPreferences] !== defaultValue) {
         count++;
       }
     }
-    
+
     return count;
   }
 }

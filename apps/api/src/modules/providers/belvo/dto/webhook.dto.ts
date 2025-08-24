@@ -1,5 +1,5 @@
-import { IsString, IsObject, IsEnum } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { IsString, IsObject, IsEnum } from 'class-validator';
 
 export enum BelvoWebhookEvent {
   ACCOUNTS_CREATED = 'accounts_created',

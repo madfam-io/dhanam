@@ -16,15 +16,9 @@ const customJestConfig = {
     '<rootDir>/src/**/*.test.{js,jsx,ts,tsx}',
     '<rootDir>/test/**/*.test.{js,jsx,ts,tsx}',
   ],
-  collectCoverageFrom: [
-    'src/**/*.{js,jsx,ts,tsx}',
-    '!src/**/*.d.ts',
-    '!src/**/index.ts',
-  ],
+  collectCoverageFrom: ['src/**/*.{js,jsx,ts,tsx}', '!src/**/*.d.ts', '!src/**/index.ts'],
   coverageDirectory: './coverage',
-  transformIgnorePatterns: [
-    'node_modules/(?!(.*\\.mjs$|.*\\.js$))',
-  ],
+  transformIgnorePatterns: ['node_modules/(?!(.*\\.mjs$|.*\\.js$))'],
 };
 
 module.exports = createJestConfig(customJestConfig);

@@ -1,5 +1,5 @@
-import { IsString, IsNumber, IsOptional, IsEnum, Min, Max } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { IsString, IsNumber, IsOptional, IsEnum, Min, Max } from 'class-validator';
 
 enum AssetType {
   CRYPTO = 'crypto',

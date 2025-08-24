@@ -19,15 +19,9 @@ export const analyticsApi = {
   /**
    * Get cashflow forecast for the next 60 days
    */
-  getCashflowForecast: async (
-    spaceId: string,
-    days?: number
-  ): Promise<CashflowForecast> => {
+  getCashflowForecast: async (spaceId: string, days?: number): Promise<CashflowForecast> => {
     const params = days ? { days: days.toString() } : {};
-    return apiClient.get<CashflowForecast>(
-      `/analytics/${spaceId}/cashflow-forecast`,
-      params
-    );
+    return apiClient.get<CashflowForecast>(`/analytics/${spaceId}/cashflow-forecast`, params);
   },
 
   /**
@@ -41,7 +35,7 @@ export const analyticsApi = {
     const params: Record<string, string> = {};
     if (startDate) params.startDate = startDate;
     if (endDate) params.endDate = endDate;
-    
+
     return apiClient.get<SpendingByCategory[]>(
       `/analytics/${spaceId}/spending-by-category`,
       params
@@ -51,32 +45,22 @@ export const analyticsApi = {
   /**
    * Get income vs expenses trend
    */
-  getIncomeVsExpenses: async (
-    spaceId: string,
-    months?: number
-  ): Promise<IncomeVsExpenses[]> => {
+  getIncomeVsExpenses: async (spaceId: string, months?: number): Promise<IncomeVsExpenses[]> => {
     const params = months ? { months: months.toString() } : {};
-    return apiClient.get<IncomeVsExpenses[]>(
-      `/analytics/${spaceId}/income-vs-expenses`,
-      params
-    );
+    return apiClient.get<IncomeVsExpenses[]>(`/analytics/${spaceId}/income-vs-expenses`, params);
   },
 
   /**
    * Get account balances with analytics
    */
   getAccountBalances: async (spaceId: string): Promise<AccountBalanceAnalytics[]> => {
-    return apiClient.get<AccountBalanceAnalytics[]>(
-      `/analytics/${spaceId}/account-balances`
-    );
+    return apiClient.get<AccountBalanceAnalytics[]>(`/analytics/${spaceId}/account-balances`);
   },
 
   /**
    * Get portfolio allocation breakdown
    */
   getPortfolioAllocation: async (spaceId: string): Promise<PortfolioAllocation[]> => {
-    return apiClient.get<PortfolioAllocation[]>(
-      `/analytics/${spaceId}/portfolio-allocation`
-    );
+    return apiClient.get<PortfolioAllocation[]>(`/analytics/${spaceId}/portfolio-allocation`);
   },
 };

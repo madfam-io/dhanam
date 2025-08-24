@@ -1,20 +1,17 @@
 import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
-import { PrismaService } from '@core/prisma/prisma.service';
+
 import { LoggerService } from '@core/logger/logger.service';
+import { PrismaService } from '@core/prisma/prisma.service';
 
 export const ADMIN_ROLE_KEY = 'adminRole';
-export const AdminRole = (role?: string) => (target: any, key?: string | symbol, descriptor?: any) => {
-  const actualDecorator = Reflect.metadata(ADMIN_ROLE_KEY, role);
-  return actualDecorator(target, key, descriptor);
-};
+export const AdminRole = (role?: string) => 
+  Reflect.metadata(ADMIN_ROLE_KEY, role);
 
 @Injectable()
 export class AdminGuard implements CanActivate {
   constructor(
-    private reflector: Reflector,
     private prisma: PrismaService,
-    private logger: LoggerService,
+    private logger: LoggerService
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -52,21 +49,15 @@ export class AdminGuard implements CanActivate {
     const isAdmin = adminSpaces.length > 0 || ownedSpaces.length > 0;
 
     if (!isAdmin) {
-      this.logger.warn(`Non-admin user ${user.id} attempted to access admin endpoint`, {
-        userId: user.id,
-        email: user.email,
-        path: request.path,
-      });
+      this.logger.warn(
+        `Non-admin user ${user.id} attempted to access admin endpoint`,
+        'AdminGuard'
+      );
       throw new ForbiddenException('Admin access required');
     }
 
     // Log admin access for audit trail
-    this.logger.info(`Admin access granted to user ${user.id}`, {
-      userId: user.id,
-      email: user.email,
-      path: request.path,
-      method: request.method,
-    });
+    this.logger.log(`Admin access granted to user ${user.id}`, 'AdminGuard');
 
     return true;
   }

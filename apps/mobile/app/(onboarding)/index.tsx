@@ -1,6 +1,7 @@
-import { useEffect } from 'react';
 import { useRouter } from 'expo-router';
+import { useEffect } from 'react';
 import { View, Text, ActivityIndicator } from 'react-native';
+
 import { useOnboarding } from '../../src/contexts/OnboardingContext';
 
 export default function OnboardingIndex() {
@@ -23,9 +24,7 @@ export default function OnboardingIndex() {
   return (
     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
       <ActivityIndicator size="large" color="#6366f1" />
-      <Text style={{ marginTop: 16, color: '#6b7280' }}>
-        Cargando configuración...
-      </Text>
+      <Text style={{ marginTop: 16, color: '#6b7280' }}>Cargando configuración...</Text>
     </View>
   );
 }

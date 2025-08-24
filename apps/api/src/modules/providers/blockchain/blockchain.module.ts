@@ -1,8 +1,10 @@
 import { Module } from '@nestjs/common';
-import { BlockchainService } from './blockchain.service';
-import { BlockchainController } from './blockchain.controller';
-import { CoreModule } from '@core/core.module';
+
 import { AuditModule } from '@core/audit/audit.module';
+import { CoreModule } from '@core/core.module';
+
+import { BlockchainController } from './blockchain.controller';
+import { BlockchainService } from './blockchain.service';
 
 @Module({
   imports: [CoreModule, AuditModule],

@@ -1,4 +1,5 @@
 import { RedisService } from '@core/redis/redis.service';
+
 import { FeatureFlagDto } from '../dto';
 
 export const DEFAULT_FEATURE_FLAGS: Omit<FeatureFlagDto, 'key'>[] = [
@@ -95,16 +96,16 @@ export const DEFAULT_FEATURE_FLAGS: Omit<FeatureFlagDto, 'key'>[] = [
 
 export async function seedFeatureFlags(redis: RedisService) {
   const FEATURE_FLAGS_KEY = 'admin:feature_flags';
-  
+
   for (const flag of DEFAULT_FEATURE_FLAGS) {
     const key = flag.name.toLowerCase().replace(/\s+/g, '_');
     const existingFlag = await redis.hget(FEATURE_FLAGS_KEY, key);
-    
+
     if (!existingFlag) {
       await redis.hset(FEATURE_FLAGS_KEY, key, JSON.stringify(flag));
       console.log(`Created feature flag: ${key}`);
     }
   }
-  
+
   console.log('Feature flags seeding completed');
 }

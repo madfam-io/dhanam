@@ -2,13 +2,7 @@
 
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@dhanam/ui';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@dhanam/ui';
 import { Button } from '@dhanam/ui';
 import { Input } from '@dhanam/ui';
 import { Alert, AlertDescription } from '@dhanam/ui';
@@ -28,8 +22,7 @@ export function TotpVerify({ open, onOpenChange, onSuccess, tempTokens }: TotpVe
   const [useBackupCode, setUseBackupCode] = useState(false);
 
   const verifyMutation = useMutation({
-    mutationFn: (code: string) => 
-      authApi.verifyTwoFactor({ code }),
+    mutationFn: (code: string) => authApi.verifyTwoFactor({ code }),
     onSuccess: () => {
       toast.success('Authentication successful');
       onSuccess(tempTokens);
@@ -38,11 +31,12 @@ export function TotpVerify({ open, onOpenChange, onSuccess, tempTokens }: TotpVe
       setUseBackupCode(false);
     },
     onError: (error: any) => {
-      const message = error.code === 'INVALID_TOTP' 
-        ? useBackupCode 
-          ? 'Invalid backup code' 
-          : 'Invalid verification code'
-        : 'Verification failed';
+      const message =
+        error.code === 'INVALID_TOTP'
+          ? useBackupCode
+            ? 'Invalid backup code'
+            : 'Invalid verification code'
+          : 'Verification failed';
       toast.error(message);
       setTotpCode('');
     },
@@ -56,7 +50,7 @@ export function TotpVerify({ open, onOpenChange, onSuccess, tempTokens }: TotpVe
 
   const handleCodeChange = (value: string) => {
     const maxLength = useBackupCode ? 8 : 6;
-    const sanitized = useBackupCode 
+    const sanitized = useBackupCode
       ? value.replace(/[^a-zA-Z0-9]/g, '').slice(0, maxLength)
       : value.replace(/\D/g, '').slice(0, maxLength);
     setTotpCode(sanitized);

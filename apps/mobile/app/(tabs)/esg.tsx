@@ -1,16 +1,14 @@
-import React, { useState } from 'react';
-import { View, ScrollView, RefreshControl } from 'react-native';
-import { Text, Card, SegmentedButtons, Chip } from 'react-native-paper';
-import { useQuery } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
+import { useQuery } from '@tanstack/react-query';
+import React, { useState } from 'react';
+import { View, ScrollView, RefreshControl, Dimensions, StyleSheet } from 'react-native';
 import { LineChart, BarChart } from 'react-native-chart-kit';
-import { Dimensions } from 'react-native';
+import { Text, Card, SegmentedButtons, Chip } from 'react-native-paper';
 
+import { ErrorState } from '@/components/ErrorState';
+import { LoadingScreen } from '@/components/LoadingScreen';
 import { useSpaces } from '@/hooks/useSpaces';
 import { apiClient } from '@/services/api';
-import { LoadingScreen } from '@/components/LoadingScreen';
-import { ErrorState } from '@/components/ErrorState';
-import { StyleSheet } from 'react-native';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -57,7 +55,7 @@ export default function ESGScreen() {
     error,
   } = useQuery<ESGData>({
     queryKey: ['esg', currentSpace?.id],
-    queryFn: () => apiClient.get(`/esg?spaceId=${currentSpace!.id}`).then(res => res.data),
+    queryFn: () => apiClient.get(`/esg?spaceId=${currentSpace!.id}`).then((res) => res.data),
     enabled: !!currentSpace,
   });
 
@@ -128,23 +126,29 @@ export default function ESGScreen() {
   }
 
   const chartData = {
-    labels: esgData?.trends?.map(t => new Date(t.date).toLocaleDateString().slice(0, 5)) || [],
-    datasets: [{
-      data: esgData?.trends?.map(t => t[selectedMetric as keyof typeof t] as number) || [],
-      color: () => getMetricColor(selectedMetric),
-      strokeWidth: 3,
-    }],
+    labels: esgData?.trends?.map((t) => new Date(t.date).toLocaleDateString().slice(0, 5)) || [],
+    datasets: [
+      {
+        data: esgData?.trends?.map((t) => t[selectedMetric as keyof typeof t] as number) || [],
+        color: () => getMetricColor(selectedMetric),
+        strokeWidth: 3,
+      },
+    ],
   };
 
   const barData = {
     labels: ['E', 'S', 'G'],
-    datasets: [{
-      data: esgData ? [
-        esgData.portfolioScore.environmental,
-        esgData.portfolioScore.social,
-        esgData.portfolioScore.governance,
-      ] : [0, 0, 0],
-    }],
+    datasets: [
+      {
+        data: esgData
+          ? [
+              esgData.portfolioScore.environmental,
+              esgData.portfolioScore.social,
+              esgData.portfolioScore.governance,
+            ]
+          : [0, 0, 0],
+      },
+    ],
   };
 
   return (
@@ -152,9 +156,7 @@ export default function ESGScreen() {
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
-        refreshControl={
-          <RefreshControl refreshing={false} onRefresh={refetch} />
-        }
+        refreshControl={<RefreshControl refreshing={false} onRefresh={refetch} />}
         showsVerticalScrollIndicator={false}
       >
         {/* Header */}
@@ -174,10 +176,21 @@ export default function ESGScreen() {
               <Card.Content>
                 <View style={styles.overviewHeader}>
                   <View style={styles.scoreContainer}>
-                    <Text variant="displaySmall" style={[styles.overallScore, { color: getGradeColor(esgData.portfolioScore.grade) }]}>
+                    <Text
+                      variant="displaySmall"
+                      style={[
+                        styles.overallScore,
+                        { color: getGradeColor(esgData.portfolioScore.grade) },
+                      ]}
+                    >
                       {esgData.portfolioScore.overall}
                     </Text>
-                    <View style={[styles.gradeBadge, { backgroundColor: getGradeColor(esgData.portfolioScore.grade) }]}>
+                    <View
+                      style={[
+                        styles.gradeBadge,
+                        { backgroundColor: getGradeColor(esgData.portfolioScore.grade) },
+                      ]}
+                    >
                       <Text variant="titleMedium" style={styles.gradeText}>
                         {esgData.portfolioScore.grade}
                       </Text>
@@ -197,21 +210,27 @@ export default function ESGScreen() {
                 <View style={styles.breakdown}>
                   <View style={styles.breakdownItem}>
                     <View style={[styles.breakdownDot, { backgroundColor: '#4CAF50' }]} />
-                    <Text variant="bodyMedium" style={styles.breakdownLabel}>Environmental</Text>
+                    <Text variant="bodyMedium" style={styles.breakdownLabel}>
+                      Environmental
+                    </Text>
                     <Text variant="titleMedium" style={styles.breakdownValue}>
                       {esgData.portfolioScore.environmental}
                     </Text>
                   </View>
                   <View style={styles.breakdownItem}>
                     <View style={[styles.breakdownDot, { backgroundColor: '#2196F3' }]} />
-                    <Text variant="bodyMedium" style={styles.breakdownLabel}>Social</Text>
+                    <Text variant="bodyMedium" style={styles.breakdownLabel}>
+                      Social
+                    </Text>
                     <Text variant="titleMedium" style={styles.breakdownValue}>
                       {esgData.portfolioScore.social}
                     </Text>
                   </View>
                   <View style={styles.breakdownItem}>
                     <View style={[styles.breakdownDot, { backgroundColor: '#FF9800' }]} />
-                    <Text variant="bodyMedium" style={styles.breakdownLabel}>Governance</Text>
+                    <Text variant="bodyMedium" style={styles.breakdownLabel}>
+                      Governance
+                    </Text>
                     <Text variant="titleMedium" style={styles.breakdownValue}>
                       {esgData.portfolioScore.governance}
                     </Text>
@@ -251,7 +270,7 @@ export default function ESGScreen() {
                   <Text variant="titleLarge" style={styles.chartTitle}>
                     ESG Trends
                   </Text>
-                  
+
                   <SegmentedButtons
                     value={selectedMetric}
                     onValueChange={setSelectedMetric}
@@ -309,10 +328,18 @@ export default function ESGScreen() {
                         </View>
                       </View>
                       <View style={styles.assetScore}>
-                        <Text variant="titleLarge" style={[styles.score, { color: getGradeColor(asset.grade) }]}>
+                        <Text
+                          variant="titleLarge"
+                          style={[styles.score, { color: getGradeColor(asset.grade) }]}
+                        >
                           {asset.overall}
                         </Text>
-                        <View style={[styles.gradeBadgeSmall, { backgroundColor: getGradeColor(asset.grade) }]}>
+                        <View
+                          style={[
+                            styles.gradeBadgeSmall,
+                            { backgroundColor: getGradeColor(asset.grade) },
+                          ]}
+                        >
                           <Text variant="bodySmall" style={styles.gradeTextSmall}>
                             {asset.grade}
                           </Text>
@@ -322,13 +349,25 @@ export default function ESGScreen() {
 
                     <View style={styles.assetMetrics}>
                       <View style={styles.metricChips}>
-                        <Chip mode="outlined" textStyle={styles.chipText} style={[styles.chip, { borderColor: '#4CAF50' }]}>
+                        <Chip
+                          mode="outlined"
+                          textStyle={styles.chipText}
+                          style={[styles.chip, { borderColor: '#4CAF50' }]}
+                        >
                           E: {asset.environmental}
                         </Chip>
-                        <Chip mode="outlined" textStyle={styles.chipText} style={[styles.chip, { borderColor: '#2196F3' }]}>
+                        <Chip
+                          mode="outlined"
+                          textStyle={styles.chipText}
+                          style={[styles.chip, { borderColor: '#2196F3' }]}
+                        >
                           S: {asset.social}
                         </Chip>
-                        <Chip mode="outlined" textStyle={styles.chipText} style={[styles.chip, { borderColor: '#FF9800' }]}>
+                        <Chip
+                          mode="outlined"
+                          textStyle={styles.chipText}
+                          style={[styles.chip, { borderColor: '#FF9800' }]}
+                        >
                           G: {asset.governance}
                         </Chip>
                       </View>
@@ -353,9 +392,9 @@ export default function ESGScreen() {
                   </Text>
                 </View>
                 <Text variant="bodyMedium" style={styles.methodologyText}>
-                  ESG scores are calculated using the Dhanam Framework v2.0, considering energy consumption, 
-                  decentralization, community governance, and environmental initiatives. Scores range from 0-100, 
-                  with grades from F to A+.
+                  ESG scores are calculated using the Dhanam Framework v2.0, considering energy
+                  consumption, decentralization, community governance, and environmental
+                  initiatives. Scores range from 0-100, with grades from F to A+.
                 </Text>
               </Card.Content>
             </Card>

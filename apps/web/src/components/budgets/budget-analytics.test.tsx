@@ -12,7 +12,9 @@ jest.mock('@/lib/api/budgets', () => ({
 
 // Mock Recharts
 jest.mock('recharts', () => ({
-  ResponsiveContainer: ({ children }: any) => <div data-testid="responsive-container">{children}</div>,
+  ResponsiveContainer: ({ children }: any) => (
+    <div data-testid="responsive-container">{children}</div>
+  ),
   PieChart: ({ children }: any) => <div data-testid="pie-chart">{children}</div>,
   Pie: () => <div data-testid="pie" />,
   Cell: () => <div data-testid="cell" />,
@@ -77,13 +79,7 @@ describe('BudgetAnalytics', () => {
   });
 
   it('should render budget analytics with all sections', async () => {
-    render(
-      <BudgetAnalytics 
-        spaceId="test-space" 
-        budgetId="test-budget" 
-        currency={Currency.USD} 
-      />
-    );
+    render(<BudgetAnalytics spaceId="test-space" budgetId="test-budget" currency={Currency.USD} />);
 
     // Check main sections
     expect(screen.getByText('Budget Overview')).toBeInTheDocument();
@@ -93,13 +89,7 @@ describe('BudgetAnalytics', () => {
   });
 
   it('should display budget summary correctly', async () => {
-    render(
-      <BudgetAnalytics 
-        spaceId="test-space" 
-        budgetId="test-budget" 
-        currency={Currency.USD} 
-      />
-    );
+    render(<BudgetAnalytics spaceId="test-space" budgetId="test-budget" currency={Currency.USD} />);
 
     // Wait for async data and check budget summary
     await screen.findByText('$3,000.00');
@@ -108,32 +98,20 @@ describe('BudgetAnalytics', () => {
   });
 
   it('should show category spending details', async () => {
-    render(
-      <BudgetAnalytics 
-        spaceId="test-space" 
-        budgetId="test-budget" 
-        currency={Currency.USD} 
-      />
-    );
+    render(<BudgetAnalytics spaceId="test-space" budgetId="test-budget" currency={Currency.USD} />);
 
     // Check category details
     await screen.findByText('Groceries');
     await screen.findByText('Dining');
     await screen.findByText('Transportation');
-    
+
     await screen.findByText('70%');
     await screen.findByText('93%');
     await screen.findByText('50%');
   });
 
   it('should display insights', async () => {
-    render(
-      <BudgetAnalytics 
-        spaceId="test-space" 
-        budgetId="test-budget" 
-        currency={Currency.USD} 
-      />
-    );
+    render(<BudgetAnalytics spaceId="test-space" budgetId="test-budget" currency={Currency.USD} />);
 
     // Check insights
     await screen.findByText('You are 93% through your Dining budget');
@@ -142,13 +120,7 @@ describe('BudgetAnalytics', () => {
   });
 
   it('should render charts', async () => {
-    render(
-      <BudgetAnalytics 
-        spaceId="test-space" 
-        budgetId="test-budget" 
-        currency={Currency.USD} 
-      />
-    );
+    render(<BudgetAnalytics spaceId="test-space" budgetId="test-budget" currency={Currency.USD} />);
 
     // Check if chart components are rendered
     expect(screen.getAllByTestId('responsive-container')).toHaveLength(2);
@@ -160,13 +132,7 @@ describe('BudgetAnalytics', () => {
     const { budgetsApi } = require('@/lib/api/budgets');
     budgetsApi.getBudgetAnalytics.mockImplementation(() => new Promise(() => {}));
 
-    render(
-      <BudgetAnalytics 
-        spaceId="test-space" 
-        budgetId="test-budget" 
-        currency={Currency.USD} 
-      />
-    );
+    render(<BudgetAnalytics spaceId="test-space" budgetId="test-budget" currency={Currency.USD} />);
 
     expect(screen.getByText('Loading analytics...')).toBeInTheDocument();
   });
@@ -175,13 +141,7 @@ describe('BudgetAnalytics', () => {
     const { budgetsApi } = require('@/lib/api/budgets');
     budgetsApi.getBudgetAnalytics.mockRejectedValue(new Error('Analytics API Error'));
 
-    render(
-      <BudgetAnalytics 
-        spaceId="test-space" 
-        budgetId="test-budget" 
-        currency={Currency.USD} 
-      />
-    );
+    render(<BudgetAnalytics spaceId="test-space" budgetId="test-budget" currency={Currency.USD} />);
 
     await screen.findByText('Failed to load budget analytics');
   });
@@ -205,13 +165,7 @@ describe('BudgetAnalytics', () => {
     const { budgetsApi } = require('@/lib/api/budgets');
     budgetsApi.getBudgetAnalytics.mockResolvedValue(overBudgetAnalytics);
 
-    render(
-      <BudgetAnalytics 
-        spaceId="test-space" 
-        budgetId="test-budget" 
-        currency={Currency.USD} 
-      />
-    );
+    render(<BudgetAnalytics spaceId="test-space" budgetId="test-budget" currency={Currency.USD} />);
 
     // Should show over-budget indicator
     await screen.findByText('117%'); // Rounded percentage

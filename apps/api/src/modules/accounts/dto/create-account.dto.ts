@@ -1,6 +1,6 @@
-import { IsString, IsNumber, IsIn, IsOptional, Min } from 'class-validator';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { AccountType, Currency } from '@dhanam/shared';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsString, IsNumber, IsIn, IsOptional, Min } from 'class-validator';
 
 export class CreateAccountDto {
   @ApiProperty()

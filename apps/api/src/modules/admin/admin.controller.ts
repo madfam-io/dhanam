@@ -10,15 +10,10 @@ import {
   HttpStatus,
   NotFoundException,
 } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-  ApiParam,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
+
 import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
-import { AdminGuard } from './guards/admin.guard';
+
 import { AdminService } from './admin.service';
 import {
   UserSearchDto,
@@ -30,6 +25,7 @@ import {
   UpdateFeatureFlagDto,
   PaginatedResponseDto,
 } from './dto';
+import { AdminGuard } from './guards/admin.guard';
 
 @ApiTags('Admin')
 @ApiBearerAuth()
@@ -48,18 +44,26 @@ export class AdminController {
   @Get('users/:userId')
   @ApiOperation({ summary: 'Get detailed user information (read-only)' })
   @ApiParam({ name: 'userId', description: 'User ID' })
-  @ApiResponse({ status: HttpStatus.OK, description: 'User details retrieved successfully', type: UserDetailsDto })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'User details retrieved successfully',
+    type: UserDetailsDto,
+  })
   @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'User not found' })
   async getUserDetails(
     @Param('userId') userId: string,
-    @Request() req: any,
+    @Request() req: any
   ): Promise<UserDetailsDto> {
     return this.adminService.getUserDetails(userId, req.user.id);
   }
 
   @Get('stats')
   @ApiOperation({ summary: 'Get system-wide statistics' })
-  @ApiResponse({ status: HttpStatus.OK, description: 'System stats retrieved successfully', type: SystemStatsDto })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'System stats retrieved successfully',
+    type: SystemStatsDto,
+  })
   async getSystemStats(): Promise<SystemStatsDto> {
     return this.adminService.getSystemStats();
   }
@@ -73,14 +77,22 @@ export class AdminController {
 
   @Get('analytics/onboarding-funnel')
   @ApiOperation({ summary: 'Get onboarding funnel analytics' })
-  @ApiResponse({ status: HttpStatus.OK, description: 'Onboarding analytics retrieved successfully', type: OnboardingFunnelDto })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Onboarding analytics retrieved successfully',
+    type: OnboardingFunnelDto,
+  })
   async getOnboardingFunnel(): Promise<OnboardingFunnelDto> {
     return this.adminService.getOnboardingFunnel();
   }
 
   @Get('feature-flags')
   @ApiOperation({ summary: 'List all feature flags' })
-  @ApiResponse({ status: HttpStatus.OK, description: 'Feature flags retrieved successfully', type: [FeatureFlagDto] })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Feature flags retrieved successfully',
+    type: [FeatureFlagDto],
+  })
   async getFeatureFlags(): Promise<FeatureFlagDto[]> {
     return this.adminService.getFeatureFlags();
   }
@@ -88,7 +100,11 @@ export class AdminController {
   @Get('feature-flags/:key')
   @ApiOperation({ summary: 'Get a specific feature flag' })
   @ApiParam({ name: 'key', description: 'Feature flag key' })
-  @ApiResponse({ status: HttpStatus.OK, description: 'Feature flag retrieved successfully', type: FeatureFlagDto })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Feature flag retrieved successfully',
+    type: FeatureFlagDto,
+  })
   @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Feature flag not found' })
   async getFeatureFlag(@Param('key') key: string): Promise<FeatureFlagDto> {
     const flag = await this.adminService.getFeatureFlag(key);
@@ -101,12 +117,16 @@ export class AdminController {
   @Post('feature-flags/:key')
   @ApiOperation({ summary: 'Update a feature flag' })
   @ApiParam({ name: 'key', description: 'Feature flag key' })
-  @ApiResponse({ status: HttpStatus.OK, description: 'Feature flag updated successfully', type: FeatureFlagDto })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Feature flag updated successfully',
+    type: FeatureFlagDto,
+  })
   @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Feature flag not found' })
   async updateFeatureFlag(
     @Param('key') key: string,
     @Body() dto: UpdateFeatureFlagDto,
-    @Request() req: any,
+    @Request() req: any
   ): Promise<FeatureFlagDto> {
     return this.adminService.updateFeatureFlag(key, dto, req.user.id);
   }

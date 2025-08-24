@@ -2,13 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@dhanam/ui';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@dhanam/ui';
 import { Button } from '@dhanam/ui';
 import { Card, CardContent, CardHeader, CardTitle } from '@dhanam/ui';
 import { Loader2, Shield, CreditCard, Building2 } from 'lucide-react';
@@ -158,8 +152,7 @@ export function PlaidConnect({ open, onOpenChange, spaceId, onSuccess }: PlaidCo
   });
 
   const linkAccountMutation = useMutation({
-    mutationFn: (publicToken: string) => 
-      plaidApi.linkAccount(spaceId, { publicToken }),
+    mutationFn: (publicToken: string) => plaidApi.linkAccount(spaceId, { publicToken }),
     onSuccess: (data) => {
       toast.success(
         `Successfully linked ${data.accountsCount} account${data.accountsCount > 1 ? 's' : ''}`
@@ -306,16 +299,22 @@ export function PlaidConnect({ open, onOpenChange, spaceId, onSuccess }: PlaidCo
                 </CardHeader>
                 <CardContent className="pt-0">
                   <div className="text-xs text-yellow-700 space-y-1">
-                    <p><strong>Institution:</strong> Chase (Sandbox)</p>
-                    <p><strong>Username:</strong> user_good</p>
-                    <p><strong>Password:</strong> pass_good</p>
+                    <p>
+                      <strong>Institution:</strong> Chase (Sandbox)
+                    </p>
+                    <p>
+                      <strong>Username:</strong> user_good
+                    </p>
+                    <p>
+                      <strong>Password:</strong> pass_good
+                    </p>
                   </div>
                 </CardContent>
               </Card>
             )}
 
             <p className="text-xs text-center text-muted-foreground">
-              By connecting, you agree to Plaid's{' '}
+              By connecting, you agree to Plaid&apos;s{' '}
               <a
                 href="https://plaid.com/legal/end-user-privacy-policy"
                 target="_blank"

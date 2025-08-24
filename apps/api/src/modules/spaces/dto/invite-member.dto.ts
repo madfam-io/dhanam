@@ -1,6 +1,6 @@
-import { IsEmail, IsIn } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
 import { SpaceRole } from '@dhanam/shared';
+import { ApiProperty } from '@nestjs/swagger';
+import { IsEmail, IsIn } from 'class-validator';
 
 export class InviteMemberDto {
   @ApiProperty()

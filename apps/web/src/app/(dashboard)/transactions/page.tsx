@@ -2,13 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@dhanam/ui';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@dhanam/ui';
 import { Button } from '@dhanam/ui';
 import {
   Dialog,
@@ -27,6 +21,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@dhanam/ui';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@dhanam/ui';
 import { Plus, MoreVertical, Loader2, Receipt, Calendar } from 'lucide-react';
 import { useSpaceStore } from '@/stores/space';
 import { transactionsApi } from '@/lib/api/transactions';
@@ -68,8 +63,13 @@ export default function TransactionsPage() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Parameters<typeof transactionsApi.updateTransaction>[2] }) =>
-      transactionsApi.updateTransaction(currentSpace!.id, id, data),
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: Parameters<typeof transactionsApi.updateTransaction>[2];
+    }) => transactionsApi.updateTransaction(currentSpace!.id, id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions', currentSpace?.id] });
       queryClient.invalidateQueries({ queryKey: ['accounts', currentSpace?.id] });
@@ -102,14 +102,14 @@ export default function TransactionsPage() {
       amount: parseFloat(formData.get('amount') as string),
       date: new Date(formData.get('date') as string),
       description: formData.get('description') as string,
-      merchant: formData.get('merchant') as string || undefined,
+      merchant: (formData.get('merchant') as string) || undefined,
     });
   };
 
   const handleUpdateSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!selectedTransaction) return;
-    
+
     const formData = new FormData(e.currentTarget);
     updateMutation.mutate({
       id: selectedTransaction.id,
@@ -117,7 +117,7 @@ export default function TransactionsPage() {
         amount: parseFloat(formData.get('amount') as string),
         date: new Date(formData.get('date') as string),
         description: formData.get('description') as string,
-        merchant: formData.get('merchant') as string || undefined,
+        merchant: (formData.get('merchant') as string) || undefined,
       },
     });
   };
@@ -131,9 +131,7 @@ export default function TransactionsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Transactions</h1>
-          <p className="text-muted-foreground">
-            View and manage all your transactions
-          </p>
+          <p className="text-muted-foreground">View and manage all your transactions</p>
         </div>
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogTrigger asChild>
@@ -146,26 +144,23 @@ export default function TransactionsPage() {
             <form onSubmit={handleCreateSubmit}>
               <DialogHeader>
                 <DialogTitle>Create Transaction</DialogTitle>
-                <DialogDescription>
-                  Add a new transaction to your account
-                </DialogDescription>
+                <DialogDescription>Add a new transaction to your account</DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
                   <Label htmlFor="accountId">Account</Label>
-                  <select
-                    id="accountId"
-                    name="accountId"
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    required
-                  >
-                    <option value="">Select account</option>
-                    {accounts?.map((account) => (
-                      <option key={account.id} value={account.id}>
-                        {account.name} ({formatCurrency(account.balance, account.currency)})
-                      </option>
-                    ))}
-                  </select>
+                  <Select name="accountId" required>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select account" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {accounts?.map((account) => (
+                        <SelectItem key={account.id} value={account.id}>
+                          {account.name} ({formatCurrency(account.balance, account.currency)})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="amount">Amount</Label>
@@ -199,18 +194,12 @@ export default function TransactionsPage() {
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="merchant">Merchant (Optional)</Label>
-                  <Input
-                    id="merchant"
-                    name="merchant"
-                    placeholder="e.g., Walmart"
-                  />
+                  <Input id="merchant" name="merchant" placeholder="e.g., Walmart" />
                 </div>
               </div>
               <DialogFooter>
                 <Button type="submit" disabled={createMutation.isPending}>
-                  {createMutation.isPending && (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  )}
+                  {createMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Create Transaction
                 </Button>
               </DialogFooter>
@@ -241,14 +230,12 @@ export default function TransactionsPage() {
         <Card>
           <CardHeader>
             <CardTitle>Recent Transactions</CardTitle>
-            <CardDescription>
-              {transactionsData?.total} transactions found
-            </CardDescription>
+            <CardDescription>{transactionsData?.total} transactions found</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               {transactionsData?.data.map((transaction) => {
-                const account = accounts?.find(a => a.id === transaction.accountId);
+                const account = accounts?.find((a) => a.id === transaction.accountId);
                 return (
                   <div
                     key={transaction.id}
@@ -274,10 +261,17 @@ export default function TransactionsPage() {
                     </div>
                     <div className="flex items-center gap-4">
                       <div className="text-right">
-                        <p className={`font-medium ${transaction.amount < 0 ? 'text-red-600' : 'text-green-600'}`}>
-                          {formatCurrency(transaction.amount, account?.currency || transaction.currency)}
+                        <p
+                          className={`font-medium ${transaction.amount < 0 ? 'text-red-600' : 'text-green-600'}`}
+                        >
+                          {formatCurrency(
+                            transaction.amount,
+                            account?.currency || transaction.currency
+                          )}
                         </p>
-                        <p className="text-xs text-muted-foreground">{account?.name || 'Unknown'}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {account?.name || 'Unknown'}
+                        </p>
                       </div>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -286,9 +280,7 @@ export default function TransactionsPage() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={() => setSelectedTransaction(transaction)}
-                          >
+                          <DropdownMenuItem onClick={() => setSelectedTransaction(transaction)}>
                             Edit
                           </DropdownMenuItem>
                           <DropdownMenuItem
@@ -308,15 +300,16 @@ export default function TransactionsPage() {
         </Card>
       )}
 
-      <Dialog open={!!selectedTransaction} onOpenChange={(open) => !open && setSelectedTransaction(null)}>
+      <Dialog
+        open={!!selectedTransaction}
+        onOpenChange={(open) => !open && setSelectedTransaction(null)}
+      >
         <DialogContent>
           {selectedTransaction && (
             <form onSubmit={handleUpdateSubmit}>
               <DialogHeader>
                 <DialogTitle>Edit Transaction</DialogTitle>
-                <DialogDescription>
-                  Update transaction details
-                </DialogDescription>
+                <DialogDescription>Update transaction details</DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
@@ -351,18 +344,12 @@ export default function TransactionsPage() {
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="edit-merchant">Merchant (Optional)</Label>
-                  <Input
-                    id="edit-merchant"
-                    name="merchant"
-                    defaultValue={''}
-                  />
+                  <Input id="edit-merchant" name="merchant" defaultValue="" />
                 </div>
               </div>
               <DialogFooter>
                 <Button type="submit" disabled={updateMutation.isPending}>
-                  {updateMutation.isPending && (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  )}
+                  {updateMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Update Transaction
                 </Button>
               </DialogFooter>

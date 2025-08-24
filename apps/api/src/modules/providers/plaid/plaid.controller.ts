@@ -1,3 +1,4 @@
+import { User } from '@dhanam/shared';
 import {
   Controller,
   Post,
@@ -9,12 +10,14 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
-import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
-import { SpaceGuard } from '../../spaces/guards/space.guard';
-import { PlaidService } from './plaid.service';
-import { CreatePlaidLinkDto, PlaidWebhookDto } from './dto';
+
 import { CurrentUser } from '@core/auth/decorators/current-user.decorator';
-import { User } from '@dhanam/shared';
+import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
+
+import { SpaceGuard } from '../../spaces/guards/space.guard';
+
+import { CreatePlaidLinkDto, PlaidWebhookDto } from './dto';
+import { PlaidService } from './plaid.service';
 
 @ApiTags('Plaid Provider')
 @Controller('providers/plaid')
@@ -42,7 +45,7 @@ export class PlaidController {
   async createLink(
     @Param('spaceId') spaceId: string,
     @CurrentUser() user: User,
-    @Body() createLinkDto: CreatePlaidLinkDto,
+    @Body() createLinkDto: CreatePlaidLinkDto
   ) {
     const result = await this.plaidService.createLink(spaceId, user.id, createLinkDto);
     return {
@@ -57,14 +60,14 @@ export class PlaidController {
   @ApiResponse({ status: 200, description: 'Webhook processed successfully' })
   async handleWebhook(
     @Body() webhookData: PlaidWebhookDto,
-    @Headers('plaid-verification') signature: string,
+    @Headers('plaid-verification') signature: string
   ) {
     if (!signature) {
       throw new BadRequestException('Missing webhook signature');
     }
 
     await this.plaidService.handleWebhook(webhookData, signature);
-    
+
     return {
       message: 'Webhook processed successfully',
     };

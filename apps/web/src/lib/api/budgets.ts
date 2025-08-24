@@ -25,27 +25,19 @@ export const budgetsApi = {
   },
 
   getBudgetSummary: async (spaceId: string, budgetId: string): Promise<any> => {
-    return apiClient.get<any>(
-      `/spaces/${spaceId}/budgets/${budgetId}/summary`,
-    );
+    return apiClient.get<any>(`/spaces/${spaceId}/budgets/${budgetId}/summary`);
   },
 
-  createBudget: async (
-    spaceId: string,
-    dto: CreateBudgetDto,
-  ): Promise<Budget> => {
+  createBudget: async (spaceId: string, dto: CreateBudgetDto): Promise<Budget> => {
     return apiClient.post<Budget>(`/spaces/${spaceId}/budgets`, dto);
   },
 
   updateBudget: async (
     spaceId: string,
     budgetId: string,
-    dto: UpdateBudgetDto,
+    dto: UpdateBudgetDto
   ): Promise<Budget> => {
-    return apiClient.patch<Budget>(
-      `/spaces/${spaceId}/budgets/${budgetId}`,
-      dto,
-    );
+    return apiClient.patch<Budget>(`/spaces/${spaceId}/budgets/${budgetId}`, dto);
   },
 
   deleteBudget: async (spaceId: string, budgetId: string): Promise<void> => {
@@ -53,8 +45,6 @@ export const budgetsApi = {
   },
 
   getBudgetAnalytics: async (spaceId: string, budgetId: string): Promise<any> => {
-    return apiClient.get<any>(
-      `/spaces/${spaceId}/budgets/${budgetId}/analytics`,
-    );
+    return apiClient.get<any>(`/spaces/${spaceId}/budgets/${budgetId}/analytics`);
   },
 };

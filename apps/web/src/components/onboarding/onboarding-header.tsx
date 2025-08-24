@@ -1,7 +1,7 @@
 'use client';
 
 import { useAuth } from '@/lib/hooks/use-auth';
-import { Button } from '@/components/ui/button';
+import { Button } from '@dhanam/ui';
 import { useRouter } from 'next/navigation';
 
 export function OnboardingHeader() {
@@ -36,9 +36,9 @@ export function OnboardingHeader() {
               <p className="text-sm text-gray-900">{user?.name}</p>
               <p className="text-xs text-gray-500">{user?.email}</p>
             </div>
-            
-            <Button 
-              variant="ghost" 
+
+            <Button
+              variant="ghost"
               size="sm"
               onClick={handleLogout}
               className="text-gray-600 hover:text-gray-900"

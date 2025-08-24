@@ -15,7 +15,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (tokenParts.length !== 3) {
         throw new Error('Invalid JWT format');
       }
-      
+
       const payload = JSON.parse(atob(tokenParts[1]!));
       const expiryTime = payload.exp * 1000; // Convert to milliseconds
       const currentTime = Date.now();

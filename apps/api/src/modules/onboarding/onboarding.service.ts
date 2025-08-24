@@ -1,22 +1,22 @@
 import { Injectable, BadRequestException, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { PrismaService } from '../../core/prisma/prisma.service';
-import { CryptoService } from '../../core/crypto/crypto.service';
+
 import { AuditService } from '../../core/audit/audit.service';
+import { PrismaService } from '../../core/prisma/prisma.service';
 import { EmailService } from '../email/email.service';
-import { OnboardingAnalytics } from './onboarding.analytics';
 import { PreferencesService } from '../preferences/preferences.service';
-import { Currency } from '@prisma/client';
-import { 
-  UpdateOnboardingStepDto, 
-  CompleteOnboardingDto, 
+
+import {
+  UpdateOnboardingStepDto,
+  CompleteOnboardingDto,
   UpdatePreferencesDto,
   VerifyEmailDto,
   OnboardingStatusDto,
   OnboardingStep,
-  ONBOARDING_STEPS 
+  ONBOARDING_STEPS,
 } from './dto';
+import { OnboardingAnalytics } from './onboarding.analytics';
 
 interface OnboardingStepConfig {
   name: OnboardingStep;
@@ -28,7 +28,7 @@ interface OnboardingStepConfig {
 @Injectable()
 export class OnboardingService {
   private readonly logger = new Logger(OnboardingService.name);
-  
+
   private readonly STEP_CONFIG: OnboardingStepConfig[] = [
     { name: 'welcome', required: true, order: 1 },
     { name: 'email_verification', required: true, order: 2 },
@@ -42,12 +42,12 @@ export class OnboardingService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
-    private readonly cryptoService: CryptoService,
+    // private readonly cryptoService: CryptoService,
     private readonly auditService: AuditService,
     private readonly jwtService: JwtService,
     private readonly emailService: EmailService,
     private readonly analytics: OnboardingAnalytics,
-    private readonly preferencesService: PreferencesService,
+    private readonly preferencesService: PreferencesService
   ) {}
 
   async getOnboardingStatus(userId: string): Promise<OnboardingStatusDto> {
@@ -79,7 +79,7 @@ export class OnboardingService {
 
     return {
       completed: user.onboardingCompleted,
-      currentStep: user.onboardingStep as OnboardingStep || null,
+      currentStep: (user.onboardingStep as OnboardingStep) || null,
       completedAt: user.onboardingCompletedAt?.toISOString() || null,
       progress,
       stepStatus,
@@ -98,16 +98,18 @@ export class OnboardingService {
     status.email_verification = user.emailVerified;
 
     // Preferences - check if user has customized beyond defaults
-    status.preferences = user.locale !== 'es' || 
-                        user.timezone !== 'America/Mexico_City' || 
-                        user.userSpaces.some((us: any) => us.space.currency !== 'MXN');
+    status.preferences =
+      user.locale !== 'es' ||
+      user.timezone !== 'America/Mexico_City' ||
+      user.userSpaces.some((us: any) => us.space.currency !== 'MXN');
 
     // Space setup - check if user has spaces configured
     status.space_setup = user.userSpaces.length > 0;
 
     // Connect accounts - check if user has connected any providers
-    status.connect_accounts = user.providerConnections.length > 0 ||
-                             user.userSpaces.some((us: any) => us.space.accounts.length > 0);
+    status.connect_accounts =
+      user.providerConnections.length > 0 ||
+      user.userSpaces.some((us: any) => us.space.accounts.length > 0);
 
     // First budget - check if user has created budgets
     status.first_budget = user.userSpaces.some((us: any) => us.space.budgets.length > 0);
@@ -125,33 +127,34 @@ export class OnboardingService {
   }
 
   private getRemainingSteps(stepStatus: Record<string, boolean>): string[] {
-    return this.STEP_CONFIG
-      .filter(config => config.required && !stepStatus[config.name])
-      .map(config => config.name);
+    return this.STEP_CONFIG.filter((config) => config.required && !stepStatus[config.name]).map(
+      (config) => config.name
+    );
   }
 
   private getOptionalSteps(): string[] {
-    return this.STEP_CONFIG
-      .filter(config => !config.required)
-      .map(config => config.name);
+    return this.STEP_CONFIG.filter((config) => !config.required).map((config) => config.name);
   }
 
-  async updateOnboardingStep(userId: string, dto: UpdateOnboardingStepDto): Promise<OnboardingStatusDto> {
+  async updateOnboardingStep(
+    userId: string,
+    dto: UpdateOnboardingStepDto
+  ): Promise<OnboardingStatusDto> {
     // Validate step exists
     if (!ONBOARDING_STEPS.includes(dto.step)) {
       throw new BadRequestException(`Invalid onboarding step: ${dto.step}`);
     }
 
     // Check step dependencies
-    const stepConfig = this.STEP_CONFIG.find(s => s.name === dto.step);
+    const stepConfig = this.STEP_CONFIG.find((s) => s.name === dto.step);
     if (stepConfig?.dependencies) {
       const user = await this.prisma.user.findUnique({
         where: { id: userId },
         include: { userSpaces: { include: { space: true } } },
       });
-      
+
       const currentStatus = await this.calculateStepStatus(user);
-      
+
       for (const dependency of stepConfig.dependencies) {
         if (!currentStatus[dependency]) {
           throw new BadRequestException(`Must complete ${dependency} step first`);
@@ -169,10 +172,10 @@ export class OnboardingService {
     });
 
     // Log step progression
-    await this.auditService.log({
+    await this.auditService.logEvent({
       action: 'onboarding_step_updated',
-      entityType: 'user',
-      entityId: userId,
+      resource: 'user',
+      resourceId: userId,
       userId,
       metadata: {
         step: dto.step,
@@ -191,7 +194,10 @@ export class OnboardingService {
     return await this.getOnboardingStatus(userId);
   }
 
-  async completeOnboarding(userId: string, dto: CompleteOnboardingDto): Promise<OnboardingStatusDto> {
+  async completeOnboarding(
+    userId: string,
+    dto: CompleteOnboardingDto
+  ): Promise<OnboardingStatusDto> {
     const completedAt = new Date();
 
     await this.prisma.user.update({
@@ -216,10 +222,10 @@ export class OnboardingService {
     }
 
     // Log completion
-    await this.auditService.log({
+    await this.auditService.logEvent({
       action: 'onboarding_completed',
-      entityType: 'user',
-      entityId: userId,
+      resource: 'user',
+      resourceId: userId,
       userId,
       metadata: {
         skipOptional: dto.skipOptional,
@@ -236,7 +242,10 @@ export class OnboardingService {
     return await this.getOnboardingStatus(userId);
   }
 
-  async updatePreferences(userId: string, dto: UpdatePreferencesDto): Promise<{ success: boolean }> {
+  async updatePreferences(
+    userId: string,
+    dto: UpdatePreferencesDto
+  ): Promise<{ success: boolean }> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       include: { userSpaces: { include: { space: true } } },
@@ -260,7 +269,7 @@ export class OnboardingService {
 
     // Update space currency if specified
     if (dto.currency) {
-      const personalSpace = user.userSpaces.find(us => us.space.type === 'personal')?.space;
+      const personalSpace = user.userSpaces.find((us) => us.space.type === 'personal')?.space;
       if (personalSpace) {
         await this.prisma.space.update({
           where: { id: personalSpace.id },
@@ -270,12 +279,13 @@ export class OnboardingService {
     }
 
     // Update detailed preferences using preferences service
-    if (dto.emailNotifications !== undefined || 
-        dto.transactionAlerts !== undefined || 
-        dto.budgetAlerts !== undefined ||
-        dto.weeklyReports !== undefined ||
-        dto.monthlyReports !== undefined) {
-      
+    if (
+      dto.emailNotifications !== undefined ||
+      dto.transactionAlerts !== undefined ||
+      dto.budgetAlerts !== undefined ||
+      dto.weeklyReports !== undefined ||
+      dto.monthlyReports !== undefined
+    ) {
       await this.preferencesService.updateUserPreferences(userId, {
         emailNotifications: dto.emailNotifications,
         transactionAlerts: dto.transactionAlerts,
@@ -308,9 +318,9 @@ export class OnboardingService {
     // Generate verification token
     const verificationToken = this.jwtService.sign(
       { userId, email: user.email, type: 'email_verification' },
-      { 
+      {
         secret: this.configService.get('JWT_SECRET'),
-        expiresIn: '24h' 
+        expiresIn: '24h',
       }
     );
 
@@ -321,10 +331,10 @@ export class OnboardingService {
     });
 
     // Log verification sent
-    await this.auditService.log({
+    await this.auditService.logEvent({
       action: 'email_verification_sent',
-      entityType: 'user',
-      entityId: userId,
+      resource: 'user',
+      resourceId: userId,
       userId,
       metadata: { email: user.email },
     });
@@ -371,10 +381,10 @@ export class OnboardingService {
       });
 
       // Log verification
-      await this.auditService.log({
+      await this.auditService.logEvent({
         action: 'email_verified',
-        entityType: 'user',
-        entityId: payload.userId,
+        resource: 'user',
+        resourceId: payload.userId,
         userId: payload.userId,
         metadata: { email: user.email },
       });
@@ -389,9 +399,8 @@ export class OnboardingService {
 
       this.logger.log(`Email verified for user ${payload.userId}`);
       return { success: true, message: 'Email verified successfully' };
-
     } catch (error) {
-      if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
+      if (error instanceof Error && (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError')) {
         throw new BadRequestException('Invalid or expired verification token');
       }
       throw error;
@@ -399,8 +408,8 @@ export class OnboardingService {
   }
 
   async skipOnboardingStep(userId: string, step: OnboardingStep): Promise<OnboardingStatusDto> {
-    const stepConfig = this.STEP_CONFIG.find(s => s.name === step);
-    
+    const stepConfig = this.STEP_CONFIG.find((s) => s.name === step);
+
     if (!stepConfig) {
       throw new BadRequestException(`Invalid step: ${step}`);
     }
@@ -410,19 +419,19 @@ export class OnboardingService {
     }
 
     // Log step skip
-    await this.auditService.log({
+    await this.auditService.logEvent({
       action: 'onboarding_step_skipped',
-      entityType: 'user',
-      entityId: userId,
+      resource: 'user',
+      resourceId: userId,
       userId,
       metadata: { step },
     });
 
     // Find next step
     const currentOrder = stepConfig.order;
-    const nextStep = this.STEP_CONFIG
-      .filter(s => s.order > currentOrder)
-      .sort((a, b) => a.order - b.order)[0];
+    const nextStep = this.STEP_CONFIG.filter((s) => s.order > currentOrder).sort(
+      (a, b) => a.order - b.order
+    )[0];
 
     if (nextStep) {
       return await this.updateOnboardingStep(userId, { step: nextStep.name });
@@ -443,10 +452,10 @@ export class OnboardingService {
     });
 
     // Log reset
-    await this.auditService.log({
+    await this.auditService.logEvent({
       action: 'onboarding_reset',
-      entityType: 'user',
-      entityId: userId,
+      resource: 'user',
+      resourceId: userId,
       userId,
     });
 

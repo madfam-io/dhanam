@@ -1,12 +1,12 @@
+import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import React, { useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Text, Button, Card, Switch } from 'react-native-paper';
-import { router } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
 
-import { useBiometric, getBiometricTypeLabel } from '@/hooks/useBiometric';
-import { LoadingScreen } from '@/components/LoadingScreen';
 import { ErrorState } from '@/components/ErrorState';
+import { LoadingScreen } from '@/components/LoadingScreen';
+import { useBiometric, getBiometricTypeLabel } from '@/hooks/useBiometric';
 
 export default function BiometricSetupScreen() {
   const {
@@ -52,7 +52,7 @@ export default function BiometricSetupScreen() {
 
   const getBiometricIcon = () => {
     if (supportedTypes.includes(1)) return 'finger-print'; // FINGERPRINT
-    if (supportedTypes.includes(2)) return 'face-recognition'; // FACIAL_RECOGNITION  
+    if (supportedTypes.includes(2)) return 'face-recognition'; // FACIAL_RECOGNITION
     return 'shield-checkmark';
   };
 
@@ -150,11 +150,7 @@ export default function BiometricSetupScreen() {
                   Use your {biometricLabel.toLowerCase()} to authenticate
                 </Text>
               </View>
-              <Switch
-                value={isEnabled}
-                onValueChange={handleToggleBiometric}
-                disabled={loading}
-              />
+              <Switch value={isEnabled} onValueChange={handleToggleBiometric} disabled={loading} />
             </View>
           </Card.Content>
         </Card>
@@ -185,11 +181,7 @@ export default function BiometricSetupScreen() {
         >
           Continue to Dashboard
         </Button>
-        <Button
-          mode="text"
-          onPress={handleSkip}
-          disabled={loading}
-        >
+        <Button mode="text" onPress={handleSkip} disabled={loading}>
           Skip for now
         </Button>
       </View>

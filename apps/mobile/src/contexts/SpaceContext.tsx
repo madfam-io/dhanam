@@ -1,4 +1,5 @@
 import React, { createContext, useContext } from 'react';
+
 import { useSpaces, Space } from '@/hooks/useSpaces';
 
 interface SpaceContextType {
@@ -15,11 +16,7 @@ const SpaceContext = createContext<SpaceContextType | undefined>(undefined);
 export function SpaceProvider({ children }: { children: React.ReactNode }) {
   const spaceHook = useSpaces();
 
-  return (
-    <SpaceContext.Provider value={spaceHook}>
-      {children}
-    </SpaceContext.Provider>
-  );
+  return <SpaceContext.Provider value={spaceHook}>{children}</SpaceContext.Provider>;
 }
 
 export function useSpaceContext(): SpaceContextType {

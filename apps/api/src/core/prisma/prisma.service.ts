@@ -1,6 +1,6 @@
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
 import { ConfigService } from '@nestjs/config';
+import { PrismaClient } from '@prisma/client';
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
@@ -11,9 +11,10 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
           url: configService.get('database.url'),
         },
       },
-      log: configService.get('NODE_ENV') === 'development' 
-        ? ['query', 'info', 'warn', 'error']
-        : ['error'],
+      log:
+        configService.get('NODE_ENV') === 'development'
+          ? ['query', 'info', 'warn', 'error']
+          : ['error'],
     });
   }
 
@@ -34,8 +35,6 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
       (key) => typeof key === 'string' && key[0] !== '_' && key[0] !== '$'
     ) as string[];
 
-    return Promise.all(
-      models.map((model) => (this as any)[model].deleteMany())
-    );
+    return Promise.all(models.map((model) => (this as any)[model].deleteMany()));
   }
 }

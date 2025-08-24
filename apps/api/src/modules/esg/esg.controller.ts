@@ -9,28 +9,27 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
-import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
-import { EsgService } from './esg.service';
-import { EnhancedEsgService } from './enhanced-esg.service';
-import { CurrentUser } from '@core/auth/decorators/current-user.decorator';
 import { User } from '@prisma/client';
+
+import { CurrentUser } from '@core/auth/decorators/current-user.decorator';
+import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
+
+import { EnhancedEsgService } from './enhanced-esg.service';
+import { EsgService } from './esg.service';
 
 @ApiTags('ESG Scoring')
 @Controller('esg')
 export class EsgController {
   constructor(
     private readonly esgService: EsgService,
-    private readonly enhancedEsgService: EnhancedEsgService,
+    private readonly enhancedEsgService: EnhancedEsgService
   ) {}
 
   @Get('score/:symbol')
   @ApiOperation({ summary: 'Get ESG score for an asset' })
   @ApiResponse({ status: 200, description: 'ESG score retrieved successfully' })
   @ApiQuery({ name: 'assetType', required: false, enum: ['crypto', 'equity', 'etf'] })
-  async getEsgScore(
-    @Param('symbol') symbol: string,
-    @Query('assetType') assetType = 'crypto',
-  ) {
+  async getEsgScore(@Param('symbol') symbol: string, @Query('assetType') assetType = 'crypto') {
     const score = await this.esgService.getEsgScore(symbol, assetType);
     return {
       ...score,
@@ -56,9 +55,7 @@ export class EsgController {
   @Post('compare')
   @ApiOperation({ summary: 'Compare ESG scores of multiple assets' })
   @ApiResponse({ status: 200, description: 'ESG comparison completed successfully' })
-  async compareAssets(
-    @Body('symbols') symbols: string[],
-  ) {
+  async compareAssets(@Body('symbols') symbols: string[]) {
     if (!symbols || symbols.length === 0) {
       return { error: 'Please provide at least one symbol to compare' };
     }
@@ -93,7 +90,8 @@ export class EsgController {
   getMethodology() {
     return {
       framework: 'Dhanam ESG Framework v2.0',
-      description: 'Comprehensive ESG scoring for digital assets with focus on environmental impact, social value, and governance quality',
+      description:
+        'Comprehensive ESG scoring for digital assets with focus on environmental impact, social value, and governance quality',
       scoring: {
         environmental: {
           description: 'Energy efficiency, carbon footprint, consensus mechanism sustainability',
@@ -102,9 +100,9 @@ export class EsgController {
             'Carbon emissions',
             'Consensus mechanism efficiency',
             'Renewable energy usage',
-            'Environmental commitments'
+            'Environmental commitments',
           ],
-          weight: '33.3%'
+          weight: '33.3%',
         },
         social: {
           description: 'Financial inclusion, accessibility, community development',
@@ -113,9 +111,9 @@ export class EsgController {
             'Transaction accessibility',
             'Community governance',
             'Developer ecosystem',
-            'Educational initiatives'
+            'Educational initiatives',
           ],
-          weight: '33.3%'
+          weight: '33.3%',
         },
         governance: {
           description: 'Decentralization, transparency, decision-making processes',
@@ -124,10 +122,10 @@ export class EsgController {
             'Transparency of development',
             'Community decision-making',
             'Code audit practices',
-            'Regulatory compliance'
+            'Regulatory compliance',
           ],
-          weight: '33.4%'
-        }
+          weight: '33.4%',
+        },
       },
       grading: {
         'A+ (95-100)': 'Exceptional ESG performance',
@@ -141,22 +139,22 @@ export class EsgController {
         'C- (55-59)': 'Very poor ESG performance',
         'D+ (50-54)': 'Concerning ESG performance',
         'D (40-49)': 'Alarming ESG performance',
-        'D- (0-39)': 'Unacceptable ESG performance'
+        'D- (0-39)': 'Unacceptable ESG performance',
       },
       dataSources: [
         'Blockchain network data',
         'Academic research papers',
         'Project documentation',
         'Community governance records',
-        'Environmental impact studies'
+        'Environmental impact studies',
       ],
       limitations: [
         'ESG scores are based on available public information',
         'Cryptocurrency ESG assessment is an evolving field',
         'Scores may not reflect future changes in network parameters',
-        'Environmental data may vary based on energy grid composition'
+        'Environmental data may vary based on energy grid composition',
       ],
-      lastUpdated: new Date().toISOString()
+      lastUpdated: new Date().toISOString(),
     };
   }
 
@@ -175,7 +173,10 @@ export class EsgController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get enhanced portfolio ESG analysis (v2)' })
-  @ApiResponse({ status: 200, description: 'Enhanced portfolio ESG analysis retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Enhanced portfolio ESG analysis retrieved successfully',
+  })
   async getEnhancedPortfolioAnalysis(@CurrentUser() user: User) {
     return this.enhancedEsgService.getPortfolioESGAnalysis(user.id);
   }
@@ -222,10 +223,10 @@ export class EsgController {
     }
 
     await this.enhancedEsgService.refreshESGData(symbols);
-    return { 
-      success: true, 
+    return {
+      success: true,
       message: `ESG data refresh initiated for ${symbols.length} assets`,
-      symbols 
+      symbols,
     };
   }
 

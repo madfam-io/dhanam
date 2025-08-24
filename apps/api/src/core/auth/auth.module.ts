@@ -1,17 +1,19 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
+
+import { AuditModule } from '@core/audit/audit.module';
+import { LoggerModule } from '@core/logger/logger.module';
+import { PrismaModule } from '@core/prisma/prisma.module';
+import { RedisModule } from '@core/redis/redis.module';
+import { EmailModule } from '@modules/email/email.module';
+
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { SessionService } from './session.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
 import { TotpService } from './totp.service';
-import { SessionService } from './session.service';
-import { PrismaModule } from '@core/prisma/prisma.module';
-import { LoggerModule } from '@core/logger/logger.module';
-import { RedisModule } from '@core/redis/redis.module';
-import { AuditModule } from '@core/audit/audit.module';
-import { EmailModule } from '@modules/email/email.module';
 
 @Module({
   imports: [
@@ -31,13 +33,7 @@ import { EmailModule } from '@modules/email/email.module';
     forwardRef(() => EmailModule),
   ],
   controllers: [AuthController],
-  providers: [
-    AuthService,
-    TotpService,
-    SessionService,
-    JwtStrategy,
-    LocalStrategy,
-  ],
+  providers: [AuthService, TotpService, SessionService, JwtStrategy, LocalStrategy],
   exports: [AuthService, TotpService, SessionService],
 })
 export class AuthModule {}

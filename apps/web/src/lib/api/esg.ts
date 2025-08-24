@@ -87,8 +87,13 @@ export const esgApi = {
   /**
    * Get ESG score for a specific asset
    */
-  getAssetScore: async (symbol: string, assetType = 'crypto'): Promise<EsgScore & { methodology: string; dataSource: string }> => {
-    return apiClient.get<EsgScore & { methodology: string; dataSource: string }>(`/esg/score/${symbol}?assetType=${assetType}`);
+  getAssetScore: async (
+    symbol: string,
+    assetType = 'crypto'
+  ): Promise<EsgScore & { methodology: string; dataSource: string }> => {
+    return apiClient.get<EsgScore & { methodology: string; dataSource: string }>(
+      `/esg/score/${symbol}?assetType=${assetType}`
+    );
   },
 
   /**

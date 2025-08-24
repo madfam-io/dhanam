@@ -1,4 +1,8 @@
-export const formatCurrency = (amount: number, currency: string = 'USD', locale: string = 'en-US'): string => {
+export const formatCurrency = (
+  amount: number,
+  currency: string = 'USD',
+  locale: string = 'en-US'
+): string => {
   try {
     return new Intl.NumberFormat(locale, {
       style: 'currency',
@@ -6,7 +10,7 @@ export const formatCurrency = (amount: number, currency: string = 'USD', locale:
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }).format(amount);
-  } catch (error) {
+  } catch {
     // Fallback formatting
     const currencySymbol = getCurrencySymbol(currency);
     return `${currencySymbol}${amount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}`;
@@ -37,7 +41,7 @@ export const formatPercentage = (value: number, decimals: number = 1): string =>
 export const formatCompactNumber = (value: number): string => {
   const absValue = Math.abs(value);
   const sign = value < 0 ? '-' : '';
-  
+
   if (absValue >= 1e9) {
     return `${sign}${(absValue / 1e9).toFixed(1)}B`;
   } else if (absValue >= 1e6) {

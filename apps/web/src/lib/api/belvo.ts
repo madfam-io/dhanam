@@ -18,16 +18,15 @@ export const belvoApi = {
    * Link a Mexican bank account via Belvo
    */
   linkAccount: async (spaceId: string, data: BelvoLinkRequest): Promise<BelvoLinkResponse> => {
-    return apiClient.post<BelvoLinkResponse>(
-      `/providers/belvo/spaces/${spaceId}/link`,
-      data
-    );
+    return apiClient.post<BelvoLinkResponse>(`/providers/belvo/spaces/${spaceId}/link`, data);
   },
 
   /**
    * Get Belvo service health status
    */
   getHealth: async (): Promise<{ service: string; status: string; timestamp: string }> => {
-    return apiClient.get<{ service: string; status: string; timestamp: string }>('/providers/belvo/health');
+    return apiClient.get<{ service: string; status: string; timestamp: string }>(
+      '/providers/belvo/health'
+    );
   },
 };

@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+
 import { PrismaService } from '@core/prisma/prisma.service';
 import { QueueService } from '@modules/jobs/queue.service';
 
@@ -46,7 +47,7 @@ export class MetricsService {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly queueService: QueueService,
+    private readonly queueService: QueueService
   ) {}
 
   async getSystemMetrics(): Promise<SystemMetrics> {
@@ -67,22 +68,17 @@ export class MetricsService {
   }
 
   private async getDatabaseMetrics() {
-    const [
-      totalUsers,
-      totalSpaces,
-      totalAccounts,
-      totalTransactions,
-      connectionsByProvider,
-    ] = await Promise.all([
-      this.prisma.user.count(),
-      this.prisma.space.count(),
-      this.prisma.account.count(),
-      this.prisma.transaction.count(),
-      this.prisma.providerConnection.groupBy({
-        by: ['provider'],
-        _count: { _all: true },
-      }),
-    ]);
+    const [totalUsers, totalSpaces, totalAccounts, totalTransactions, connectionsByProvider] =
+      await Promise.all([
+        this.prisma.user.count(),
+        this.prisma.space.count(),
+        this.prisma.account.count(),
+        this.prisma.transaction.count(),
+        this.prisma.providerConnection.groupBy({
+          by: ['provider'],
+          _count: { _all: true },
+        }),
+      ]);
 
     return {
       totalUsers,
@@ -102,8 +98,11 @@ export class MetricsService {
   private async getJobMetrics() {
     try {
       const queueStats = await this.queueService.getAllQueueStats();
-      
-      const totalJobs = queueStats.reduce((sum: number, q) => sum + q.active + q.waiting + q.completed + q.failed, 0);
+
+      const totalJobs = queueStats.reduce(
+        (sum: number, q) => sum + q.active + q.waiting + q.completed + q.failed,
+        0
+      );
       const activeJobs = queueStats.reduce((sum: number, q) => sum + q.active, 0);
       const completedJobs = queueStats.reduce((sum: number, q) => sum + q.completed, 0);
       const failedJobs = queueStats.reduce((sum: number, q) => sum + q.failed, 0);
@@ -197,22 +196,32 @@ export class MetricsService {
   // Custom metrics tracking
   async recordSyncMetrics(provider: string, duration: number, success: boolean) {
     // In a real implementation, this would store metrics in a time-series database
-    this.logger.log(`Sync metrics: ${provider} - ${duration}ms - ${success ? 'success' : 'failure'}`);
+    this.logger.log(
+      `Sync metrics: ${provider} - ${duration}ms - ${success ? 'success' : 'failure'}`
+    );
   }
 
   async recordESGUpdateMetrics(symbolCount: number, duration: number, cacheHitRate: number) {
-    this.logger.log(`ESG update metrics: ${symbolCount} symbols - ${duration}ms - ${cacheHitRate}% cache hit rate`);
+    this.logger.log(
+      `ESG update metrics: ${symbolCount} symbols - ${duration}ms - ${cacheHitRate}% cache hit rate`
+    );
   }
 
-  async recordCategorizationMetrics(transactionCount: number, categorized: number, duration: number) {
-    this.logger.log(`Categorization metrics: ${categorized}/${transactionCount} transactions - ${duration}ms`);
+  async recordCategorizationMetrics(
+    transactionCount: number,
+    categorized: number,
+    duration: number
+  ) {
+    this.logger.log(
+      `Categorization metrics: ${categorized}/${transactionCount} transactions - ${duration}ms`
+    );
   }
 
   // System resource metrics
   getResourceMetrics() {
     const memUsage = process.memoryUsage();
     const cpuUsage = process.cpuUsage();
-    
+
     return {
       memory: {
         heapUsed: Math.round(memUsage.heapUsed / 1024 / 1024), // MB

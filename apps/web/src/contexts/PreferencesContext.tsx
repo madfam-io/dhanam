@@ -1,12 +1,12 @@
 'use client';
 
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { useAuth } from './AuthContext';
+import { useAuth } from '@/lib/hooks/use-auth';
 
 export interface UserPreferences {
   id: string;
   userId: string;
-  
+
   // Notification preferences
   emailNotifications: boolean;
   transactionAlerts: boolean;
@@ -61,11 +61,40 @@ interface PreferencesContextValue {
   refreshPreferences: () => Promise<void>;
   updatePreferences: (updates: Partial<UserPreferences>) => Promise<void>;
   bulkUpdatePreferences: (updates: {
-    notifications?: Partial<Pick<UserPreferences, 'emailNotifications' | 'transactionAlerts' | 'budgetAlerts' | 'weeklyReports' | 'monthlyReports' | 'securityAlerts' | 'promotionalEmails' | 'pushNotifications' | 'transactionPush' | 'budgetPush' | 'securityPush'>>;
-    privacy?: Partial<Pick<UserPreferences, 'dataSharing' | 'analyticsTracking' | 'personalizedAds'>>;
-    display?: Partial<Pick<UserPreferences, 'dashboardLayout' | 'chartType' | 'themeMode' | 'compactView' | 'showBalances'>>;
-    financial?: Partial<Pick<UserPreferences, 'defaultCurrency' | 'hideSensitiveData' | 'autoCategorizeTxns' | 'includeWeekends'>>;
-    esg?: Partial<Pick<UserPreferences, 'esgScoreVisibility' | 'sustainabilityAlerts' | 'impactReporting'>>;
+    notifications?: Partial<
+      Pick<
+        UserPreferences,
+        | 'emailNotifications'
+        | 'transactionAlerts'
+        | 'budgetAlerts'
+        | 'weeklyReports'
+        | 'monthlyReports'
+        | 'securityAlerts'
+        | 'promotionalEmails'
+        | 'pushNotifications'
+        | 'transactionPush'
+        | 'budgetPush'
+        | 'securityPush'
+      >
+    >;
+    privacy?: Partial<
+      Pick<UserPreferences, 'dataSharing' | 'analyticsTracking' | 'personalizedAds'>
+    >;
+    display?: Partial<
+      Pick<
+        UserPreferences,
+        'dashboardLayout' | 'chartType' | 'themeMode' | 'compactView' | 'showBalances'
+      >
+    >;
+    financial?: Partial<
+      Pick<
+        UserPreferences,
+        'defaultCurrency' | 'hideSensitiveData' | 'autoCategorizeTxns' | 'includeWeekends'
+      >
+    >;
+    esg?: Partial<
+      Pick<UserPreferences, 'esgScoreVisibility' | 'sustainabilityAlerts' | 'impactReporting'>
+    >;
     backup?: Partial<Pick<UserPreferences, 'autoBackup' | 'backupFrequency' | 'exportFormat'>>;
   }) => Promise<void>;
   resetPreferences: () => Promise<void>;
@@ -81,14 +110,14 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
 
   const fetchPreferences = useCallback(async () => {
     if (!token) return;
-    
+
     setIsLoading(true);
     setError(null);
-    
+
     try {
       const response = await fetch('/api/preferences', {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -105,77 +134,112 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
     }
   }, [token]);
 
-  const updatePreferences = useCallback(async (updates: Partial<UserPreferences>) => {
-    if (!token) return;
-    
-    setError(null);
-    
-    try {
-      const response = await fetch('/api/preferences', {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updates),
-      });
+  const updatePreferences = useCallback(
+    async (updates: Partial<UserPreferences>) => {
+      if (!token) return;
 
-      if (!response.ok) {
-        throw new Error('Failed to update preferences');
+      setError(null);
+
+      try {
+        const response = await fetch('/api/preferences', {
+          method: 'PATCH',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(updates),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to update preferences');
+        }
+
+        const data = await response.json();
+        setPreferences(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to update preferences');
+        throw err;
       }
+    },
+    [token]
+  );
 
-      const data = await response.json();
-      setPreferences(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update preferences');
-      throw err;
-    }
-  }, [token]);
+  const bulkUpdatePreferences = useCallback(
+    async (updates: {
+      notifications?: Partial<
+        Pick<
+          UserPreferences,
+          | 'emailNotifications'
+          | 'transactionAlerts'
+          | 'budgetAlerts'
+          | 'weeklyReports'
+          | 'monthlyReports'
+          | 'securityAlerts'
+          | 'promotionalEmails'
+          | 'pushNotifications'
+          | 'transactionPush'
+          | 'budgetPush'
+          | 'securityPush'
+        >
+      >;
+      privacy?: Partial<
+        Pick<UserPreferences, 'dataSharing' | 'analyticsTracking' | 'personalizedAds'>
+      >;
+      display?: Partial<
+        Pick<
+          UserPreferences,
+          'dashboardLayout' | 'chartType' | 'themeMode' | 'compactView' | 'showBalances'
+        >
+      >;
+      financial?: Partial<
+        Pick<
+          UserPreferences,
+          'defaultCurrency' | 'hideSensitiveData' | 'autoCategorizeTxns' | 'includeWeekends'
+        >
+      >;
+      esg?: Partial<
+        Pick<UserPreferences, 'esgScoreVisibility' | 'sustainabilityAlerts' | 'impactReporting'>
+      >;
+      backup?: Partial<Pick<UserPreferences, 'autoBackup' | 'backupFrequency' | 'exportFormat'>>;
+    }) => {
+      if (!token) return;
 
-  const bulkUpdatePreferences = useCallback(async (updates: {
-    notifications?: Partial<Pick<UserPreferences, 'emailNotifications' | 'transactionAlerts' | 'budgetAlerts' | 'weeklyReports' | 'monthlyReports' | 'securityAlerts' | 'promotionalEmails' | 'pushNotifications' | 'transactionPush' | 'budgetPush' | 'securityPush'>>;
-    privacy?: Partial<Pick<UserPreferences, 'dataSharing' | 'analyticsTracking' | 'personalizedAds'>>;
-    display?: Partial<Pick<UserPreferences, 'dashboardLayout' | 'chartType' | 'themeMode' | 'compactView' | 'showBalances'>>;
-    financial?: Partial<Pick<UserPreferences, 'defaultCurrency' | 'hideSensitiveData' | 'autoCategorizeTxns' | 'includeWeekends'>>;
-    esg?: Partial<Pick<UserPreferences, 'esgScoreVisibility' | 'sustainabilityAlerts' | 'impactReporting'>>;
-    backup?: Partial<Pick<UserPreferences, 'autoBackup' | 'backupFrequency' | 'exportFormat'>>;
-  }) => {
-    if (!token) return;
-    
-    setError(null);
-    
-    try {
-      const response = await fetch('/api/preferences/bulk', {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updates),
-      });
+      setError(null);
 
-      if (!response.ok) {
-        throw new Error('Failed to bulk update preferences');
+      try {
+        const response = await fetch('/api/preferences/bulk', {
+          method: 'PUT',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(updates),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to bulk update preferences');
+        }
+
+        const data = await response.json();
+        setPreferences(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to bulk update preferences');
+        throw err;
       }
-
-      const data = await response.json();
-      setPreferences(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to bulk update preferences');
-      throw err;
-    }
-  }, [token]);
+    },
+    [token]
+  );
 
   const resetPreferences = useCallback(async () => {
     if (!token) return;
-    
+
     setError(null);
-    
+
     try {
       const response = await fetch('/api/preferences/reset', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
       });
 

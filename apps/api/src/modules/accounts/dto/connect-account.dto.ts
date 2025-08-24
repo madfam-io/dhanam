@@ -1,6 +1,6 @@
-import { IsString, IsIn, IsOptional, IsObject } from 'class-validator';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Provider } from '@dhanam/shared';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsString, IsIn, IsOptional, IsObject } from 'class-validator';
 
 export class ConnectAccountDto {
   @ApiProperty({ enum: ['belvo', 'plaid', 'bitso'] })

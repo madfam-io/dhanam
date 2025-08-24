@@ -3,16 +3,10 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { onboardingApi } from '@/lib/api/onboarding';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { 
-  CheckCircleIcon, 
-  XCircleIcon, 
-  MailIcon, 
-  LoaderIcon,
-  HomeIcon 
-} from 'lucide-react';
+import { Button } from '@dhanam/ui';
+import { Card, CardContent } from '@dhanam/ui';
+import { Alert, AlertDescription } from '@dhanam/ui';
+import { CheckCircleIcon, XCircleIcon, MailIcon, LoaderIcon, HomeIcon } from 'lucide-react';
 
 export function EmailVerification() {
   const router = useRouter();
@@ -38,11 +32,11 @@ export function EmailVerification() {
 
     try {
       const response = await onboardingApi.verifyEmail(token);
-      
+
       if (response.success) {
         setStatus('success');
         setMessage(response.message);
-        
+
         // Redirect to onboarding after a short delay
         setTimeout(() => {
           setIsRedirecting(true);
@@ -55,8 +49,8 @@ export function EmailVerification() {
     } catch (error: any) {
       setStatus('error');
       setMessage(
-        error.response?.data?.message || 
-        'Error al verificar el email. El token puede haber expirado.'
+        error.response?.data?.message ||
+          'Error al verificar el email. El token puede haber expirado.'
       );
     }
   };
@@ -67,9 +61,7 @@ export function EmailVerification() {
         <Card className="w-full max-w-md">
           <CardContent className="p-8 text-center">
             <LoaderIcon className="w-12 h-12 text-indigo-600 mx-auto mb-4 animate-spin" />
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">
-              Verificando tu email...
-            </h2>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">Verificando tu email...</h2>
             <p className="text-gray-600">
               Por favor espera mientras confirmamos tu dirección de correo
             </p>
@@ -87,13 +79,9 @@ export function EmailVerification() {
             <div className="w-16 h-16 bg-green-100 rounded-full mx-auto mb-4 flex items-center justify-center">
               <CheckCircleIcon className="w-8 h-8 text-green-600" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">
-              ¡Email verificado!
-            </h2>
-            <p className="text-gray-600 mb-6">
-              {message}
-            </p>
-            
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">¡Email verificado!</h2>
+            <p className="text-gray-600 mb-6">{message}</p>
+
             <div className="space-y-3">
               {isRedirecting ? (
                 <div className="flex items-center justify-center space-x-2 text-indigo-600">
@@ -101,10 +89,7 @@ export function EmailVerification() {
                   <span>Redirigiendo a la configuración...</span>
                 </div>
               ) : (
-                <Button 
-                  onClick={() => router.push('/onboarding')}
-                  className="w-full"
-                >
+                <Button onClick={() => router.push('/onboarding')} className="w-full">
                   Continuar configuración
                 </Button>
               )}
@@ -123,30 +108,19 @@ export function EmailVerification() {
           <div className="w-16 h-16 bg-red-100 rounded-full mx-auto mb-4 flex items-center justify-center">
             <XCircleIcon className="w-8 h-8 text-red-600" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">
-            Error de verificación
-          </h2>
-          
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Error de verificación</h2>
+
           <Alert variant="destructive" className="mb-6 text-left">
-            <AlertDescription>
-              {message}
-            </AlertDescription>
+            <AlertDescription>{message}</AlertDescription>
           </Alert>
 
           <div className="space-y-3">
-            <Button 
-              onClick={() => router.push('/onboarding')}
-              className="w-full"
-            >
+            <Button onClick={() => router.push('/onboarding')} className="w-full">
               <MailIcon className="w-4 h-4 mr-2" />
               Solicitar nuevo enlace
             </Button>
-            
-            <Button 
-              variant="outline" 
-              onClick={() => router.push('/')}
-              className="w-full"
-            >
+
+            <Button variant="outline" onClick={() => router.push('/')} className="w-full">
               <HomeIcon className="w-4 h-4 mr-2" />
               Volver al inicio
             </Button>

@@ -18,10 +18,7 @@ export class ApiClient {
   private refreshToken?: string;
   private onTokenRefresh?: (tokens: AuthTokens) => void;
 
-  constructor(config: {
-    baseUrl?: string;
-    onTokenRefresh?: (tokens: AuthTokens) => void;
-  }) {
+  constructor(config: { baseUrl?: string; onTokenRefresh?: (tokens: AuthTokens) => void }) {
     this.baseUrl = config.baseUrl || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/v1';
     this.onTokenRefresh = config.onTokenRefresh;
   }
@@ -36,10 +33,7 @@ export class ApiClient {
     this.refreshToken = undefined;
   }
 
-  private async request<T>(
-    path: string,
-    options: RequestInit = {}
-  ): Promise<T> {
+  private async request<T>(path: string, options: RequestInit = {}): Promise<T> {
     const url = `${this.baseUrl}${path}`;
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -76,7 +70,7 @@ export class ApiClient {
             this.accessToken = tokens.accessToken;
             this.refreshToken = tokens.refreshToken;
             this.onTokenRefresh?.(tokens);
-            
+
             return this.request<T>(path, options);
           } catch (refreshError) {
             this.clearTokens();
@@ -107,9 +101,7 @@ export class ApiClient {
   }
 
   async get<T>(path: string, params?: Record<string, any>): Promise<T> {
-    const queryString = params
-      ? '?' + new URLSearchParams(params).toString()
-      : '';
+    const queryString = params ? '?' + new URLSearchParams(params).toString() : '';
     return this.request<T>(`${path}${queryString}`, {
       method: 'GET',
     });

@@ -1,17 +1,9 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  UseGuards,
-  Req,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import { CategoriesService } from './categories.service';
+
 import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
+
+import { CategoriesService } from './categories.service';
 import { CreateCategoryDto, UpdateCategoryDto } from './dto';
 
 interface AuthenticatedRequest {
@@ -39,7 +31,7 @@ export class CategoriesController {
   findByBudget(
     @Param('spaceId') spaceId: string,
     @Param('budgetId') budgetId: string,
-    @Req() req: AuthenticatedRequest,
+    @Req() req: AuthenticatedRequest
   ) {
     return this.categoriesService.findByBudget(spaceId, req.user!.id, budgetId);
   }
@@ -49,7 +41,7 @@ export class CategoriesController {
   findOne(
     @Param('spaceId') spaceId: string,
     @Param('id') id: string,
-    @Req() req: AuthenticatedRequest,
+    @Req() req: AuthenticatedRequest
   ) {
     return this.categoriesService.findOne(spaceId, req.user!.id, id);
   }
@@ -59,7 +51,7 @@ export class CategoriesController {
   getCategorySpending(
     @Param('spaceId') spaceId: string,
     @Param('id') id: string,
-    @Req() req: AuthenticatedRequest,
+    @Req() req: AuthenticatedRequest
   ) {
     return this.categoriesService.getCategorySpending(spaceId, req.user!.id, id);
   }
@@ -69,7 +61,7 @@ export class CategoriesController {
   create(
     @Param('spaceId') spaceId: string,
     @Body() createCategoryDto: CreateCategoryDto,
-    @Req() req: AuthenticatedRequest,
+    @Req() req: AuthenticatedRequest
   ) {
     return this.categoriesService.create(spaceId, req.user!.id, createCategoryDto);
   }
@@ -80,14 +72,9 @@ export class CategoriesController {
     @Param('spaceId') spaceId: string,
     @Param('id') id: string,
     @Body() updateCategoryDto: UpdateCategoryDto,
-    @Req() req: AuthenticatedRequest,
+    @Req() req: AuthenticatedRequest
   ) {
-    return this.categoriesService.update(
-      spaceId,
-      req.user!.id,
-      id,
-      updateCategoryDto,
-    );
+    return this.categoriesService.update(spaceId, req.user!.id, id, updateCategoryDto);
   }
 
   @Delete(':id')
@@ -95,7 +82,7 @@ export class CategoriesController {
   remove(
     @Param('spaceId') spaceId: string,
     @Param('id') id: string,
-    @Req() req: AuthenticatedRequest,
+    @Req() req: AuthenticatedRequest
   ) {
     return this.categoriesService.remove(spaceId, req.user!.id, id);
   }

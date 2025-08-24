@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import Redis from 'ioredis';
+
 import { PrismaService } from '@core/prisma/prisma.service';
 import { QueueService } from '@modules/jobs/queue.service';
-import Redis from 'ioredis';
 
 export interface HealthStatus {
   status: 'healthy' | 'degraded' | 'unhealthy';
@@ -32,7 +33,7 @@ export class HealthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
-    private readonly queueService: QueueService,
+    private readonly queueService: QueueService
   ) {}
 
   async getHealthStatus(): Promise<HealthStatus> {
@@ -43,7 +44,7 @@ export class HealthService {
       this.checkExternalServices(),
     ]);
 
-    const mappedChecks = checks.map(result => 
+    const mappedChecks = checks.map((result) =>
       result.status === 'fulfilled' ? result.value : this.createFailedCheck(result.reason)
     );
 
@@ -73,9 +74,9 @@ export class HealthService {
   async getReadinessStatus(): Promise<{ ready: boolean; checks: any }> {
     const health = await this.getHealthStatus();
     const criticalServices = [health.checks.database, health.checks.redis];
-    
-    const ready = criticalServices.every(check => check.status === 'up');
-    
+
+    const ready = criticalServices.every((check) => check.status === 'up');
+
     return {
       ready,
       checks: health.checks,
@@ -91,10 +92,10 @@ export class HealthService {
 
   private async checkDatabase(): Promise<HealthCheck> {
     const start = Date.now();
-    
+
     try {
       await this.prisma.$queryRaw`SELECT 1`;
-      
+
       return {
         status: 'up',
         responseTime: Date.now() - start,
@@ -114,7 +115,7 @@ export class HealthService {
   private async checkRedis(): Promise<HealthCheck> {
     const start = Date.now();
     const redisUrl = this.configService.get('REDIS_URL');
-    
+
     if (!redisUrl) {
       return {
         status: 'down',
@@ -126,7 +127,7 @@ export class HealthService {
       const redis = new Redis(redisUrl);
       await redis.ping();
       redis.disconnect();
-      
+
       return {
         status: 'up',
         responseTime: Date.now() - start,
@@ -145,18 +146,21 @@ export class HealthService {
 
   private async checkQueues(): Promise<HealthCheck> {
     const start = Date.now();
-    
+
     try {
       const queueStats = await this.queueService.getAllQueueStats();
-      
+
       const hasFailedQueues = queueStats.some((queue: any) => queue.failed > 0);
-      
+
       return {
         status: hasFailedQueues ? 'down' : 'up',
         responseTime: Date.now() - start,
         details: {
           queues: queueStats.length,
-          totalJobs: queueStats.reduce((sum: number, q: any) => sum + q.active + q.waiting + q.completed, 0),
+          totalJobs: queueStats.reduce(
+            (sum: number, q: any) => sum + q.active + q.waiting + q.completed,
+            0
+          ),
           failedJobs: queueStats.reduce((sum: number, q: any) => sum + q.failed, 0),
         },
       };
@@ -189,7 +193,7 @@ export class HealthService {
         });
 
         clearTimeout(timeoutId);
-        
+
         checks.push({
           name: endpoint.name,
           status: response.ok ? 'up' : 'down',
@@ -204,8 +208,8 @@ export class HealthService {
       }
     }
 
-    const allUp = checks.every(check => check.status === 'up');
-    
+    const allUp = checks.every((check) => check.status === 'up');
+
     return {
       status: allUp ? 'up' : 'down',
       responseTime: Date.now() - start,
@@ -214,7 +218,7 @@ export class HealthService {
   }
 
   private determineOverallStatus(checks: HealthCheck[]): 'healthy' | 'degraded' | 'unhealthy' {
-    const upCount = checks.filter(check => check.status === 'up').length;
+    const upCount = checks.filter((check) => check.status === 'up').length;
     const totalChecks = checks.length;
 
     if (upCount === totalChecks) {

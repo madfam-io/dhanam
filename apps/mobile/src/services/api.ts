@@ -37,7 +37,9 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => {
     if (__DEV__) {
-      console.log(`🟢 ${response.config.method?.toUpperCase()} ${response.config.url} - ${response.status}`);
+      console.log(
+        `🟢 ${response.config.method?.toUpperCase()} ${response.config.url} - ${response.status}`
+      );
     }
     return response;
   },
@@ -53,7 +55,8 @@ apiClient.interceptors.response.use(
     }
 
     // Transform error for better error handling
-    const errorMessage = error.response?.data?.message || error.message || 'An unexpected error occurred';
+    const errorMessage =
+      error.response?.data?.message || error.message || 'An unexpected error occurred';
     return Promise.reject(new Error(errorMessage));
   }
 );

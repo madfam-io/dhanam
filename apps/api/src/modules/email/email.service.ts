@@ -1,12 +1,15 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { InjectQueue } from '@nestjs/bull';
-import { Queue } from 'bull';
-import { PrismaService } from '../../core/prisma/prisma.service';
-import * as nodemailer from 'nodemailer';
-import * as handlebars from 'handlebars';
 import * as fs from 'fs/promises';
 import * as path from 'path';
+
+import { InjectQueue } from '@nestjs/bull';
+import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { Queue } from 'bull';
+import * as handlebars from 'handlebars';
+import * as nodemailer from 'nodemailer';
+
+import { PrismaService } from '../../core/prisma/prisma.service';
+
 import { EmailJobData, EmailTemplate, EmailOptions } from './types';
 
 @Injectable()
@@ -19,7 +22,7 @@ export class EmailService {
   constructor(
     private readonly configService: ConfigService,
     private readonly prisma: PrismaService,
-    @InjectQueue('email') private readonly emailQueue: Queue<EmailJobData>,
+    @InjectQueue('email') private readonly emailQueue: Queue<EmailJobData>
   ) {
     this.initializeTransporter();
     this.loadTemplates();
@@ -69,7 +72,7 @@ export class EmailService {
         const htmlPath = path.join(this.templatesDir, `${template}.hbs`);
         const htmlContent = await fs.readFile(htmlPath, 'utf-8');
         this.templates.set(template, handlebars.compile(htmlContent));
-        
+
         // Register partials
         await this.registerPartials();
       } catch (error) {
@@ -82,7 +85,7 @@ export class EmailService {
     const partialsDir = path.join(this.templatesDir, 'partials');
     try {
       const files = await fs.readdir(partialsDir);
-      
+
       for (const file of files) {
         if (file.endsWith('.hbs')) {
           const name = path.basename(file, '.hbs');
@@ -163,7 +166,7 @@ export class EmailService {
 
   async sendPasswordResetEmail(email: string, name: string, resetToken: string): Promise<void> {
     const resetUrl = `${this.configService.get('APP_URL')}/reset-password?token=${resetToken}`;
-    
+
     await this.sendEmail({
       to: email,
       subject: 'Reset Your Password',
@@ -198,7 +201,7 @@ export class EmailService {
       to: email,
       subject: 'New Login to Your Account',
       template: 'login-alert',
-      context: { 
+      context: {
         name,
         ...loginInfo,
         loginTime: new Date().toLocaleString(),
@@ -208,9 +211,9 @@ export class EmailService {
   }
 
   async sendBudgetAlertEmail(
-    email: string, 
-    name: string, 
-    budgetName: string, 
+    email: string,
+    name: string,
+    budgetName: string,
     percentage: number,
     spent: number,
     limit: number,
@@ -220,7 +223,7 @@ export class EmailService {
       to: email,
       subject: `Budget Alert: ${budgetName} at ${percentage}%`,
       template: 'budget-alert',
-      context: { 
+      context: {
         name,
         budgetName,
         percentage,
@@ -242,7 +245,7 @@ export class EmailService {
       to: email,
       subject: `${transactions.length} Transactions Categorized`,
       template: 'transaction-categorized',
-      context: { 
+      context: {
         name,
         transactions,
         count: transactions.length,
@@ -262,7 +265,7 @@ export class EmailService {
       to: email,
       subject: `${provider} Sync Completed`,
       template: 'sync-completed',
-      context: { 
+      context: {
         name,
         provider,
         accountsUpdated,
@@ -283,7 +286,7 @@ export class EmailService {
       to: email,
       subject: `${provider} Sync Failed`,
       template: 'sync-failed',
-      context: { 
+      context: {
         name,
         provider,
         error,
@@ -293,16 +296,12 @@ export class EmailService {
     });
   }
 
-  async sendWeeklySummaryEmail(
-    email: string,
-    name: string,
-    summaryData: any
-  ): Promise<void> {
+  async sendWeeklySummaryEmail(email: string, name: string, summaryData: any): Promise<void> {
     await this.sendEmail({
       to: email,
       subject: 'Your Weekly Financial Summary',
       template: 'weekly-summary',
-      context: { 
+      context: {
         name,
         ...summaryData,
       },
@@ -317,17 +316,21 @@ export class EmailService {
     reportData: any,
     pdfBuffer?: Buffer
   ): Promise<void> {
-    const attachments = pdfBuffer ? [{
-      filename: `dhanam-report-${new Date().toISOString().slice(0, 7)}.pdf`,
-      content: pdfBuffer,
-      contentType: 'application/pdf',
-    }] : undefined;
+    const attachments = pdfBuffer
+      ? [
+          {
+            filename: `dhanam-report-${new Date().toISOString().slice(0, 7)}.pdf`,
+            content: pdfBuffer,
+            contentType: 'application/pdf',
+          },
+        ]
+      : undefined;
 
     await this.sendEmail({
       to: email,
       subject: 'Your Monthly Financial Report',
       template: 'monthly-report',
-      context: { 
+      context: {
         name,
         ...reportData,
       },
@@ -343,7 +346,7 @@ export class EmailService {
     template: EmailTemplate,
     context: Record<string, any>
   ): Promise<void> {
-    const jobs = recipients.map(to => ({
+    const jobs = recipients.map((to) => ({
       name: 'send-email',
       data: {
         to,
@@ -360,10 +363,13 @@ export class EmailService {
 
   // New onboarding-specific email methods
 
-  async sendEmailVerification(userId: string, data: {
-    verificationToken: string;
-    verificationUrl: string;
-  }): Promise<void> {
+  async sendEmailVerification(
+    userId: string,
+    data: {
+      verificationToken: string;
+      verificationUrl: string;
+    }
+  ): Promise<void> {
     // Get user details
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
@@ -387,11 +393,14 @@ export class EmailService {
     this.logger.log(`Email verification sent to ${user.email}`);
   }
 
-  async sendOnboardingComplete(userId: string, data: {
-    skipOptional: boolean;
-    completedAt: string;
-    metadata: Record<string, any>;
-  }): Promise<void> {
+  async sendOnboardingComplete(
+    userId: string,
+    data: {
+      skipOptional: boolean;
+      completedAt: string;
+      metadata: Record<string, any>;
+    }
+  ): Promise<void> {
     // Get user details
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
@@ -402,7 +411,7 @@ export class EmailService {
     }
 
     // Calculate completion time if available
-    const completionTime = data.metadata.timeSpent 
+    const completionTime = data.metadata.timeSpent
       ? this.formatDuration(data.metadata.timeSpent)
       : 'N/A';
 

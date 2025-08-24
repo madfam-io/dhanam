@@ -1,16 +1,15 @@
-import React, { useState } from 'react';
-import { View, ScrollView, RefreshControl } from 'react-native';
-import { Text, Card, Chip, SearchBar, FAB, SegmentedButtons, Button } from 'react-native-paper';
+import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import React, { useState } from 'react';
+import { View, ScrollView, RefreshControl, StyleSheet } from 'react-native';
+import { Text, Card, Chip, FAB, SegmentedButtons, Button, Searchbar } from 'react-native-paper';
 
+import { ErrorState } from '@/components/ErrorState';
+import { LoadingScreen } from '@/components/LoadingScreen';
 import { useSpaces } from '@/hooks/useSpaces';
 import { apiClient } from '@/services/api';
-import { LoadingScreen } from '@/components/LoadingScreen';
-import { ErrorState } from '@/components/ErrorState';
 import { formatCurrency } from '@/utils/currency';
-import { StyleSheet } from 'react-native';
 
 interface Transaction {
   id: string;
@@ -44,7 +43,7 @@ export default function TransactionsScreen() {
         ...(filterType !== 'all' && { type: filterType }),
         ...(searchQuery && { search: searchQuery }),
       });
-      return apiClient.get(`/transactions?${params}`).then(res => res.data);
+      return apiClient.get(`/transactions?${params}`).then((res) => res.data);
     },
     enabled: !!currentSpace,
   });
@@ -52,7 +51,7 @@ export default function TransactionsScreen() {
   const getTransactionIcon = (type: string, category: string) => {
     if (type === 'income') return 'arrow-down-circle';
     if (type === 'transfer') return 'swap-horizontal';
-    
+
     switch (category.toLowerCase()) {
       case 'food':
       case 'groceries':
@@ -91,24 +90,31 @@ export default function TransactionsScreen() {
 
   const getCategoryChipColor = (category: string) => {
     const colors = [
-      '#E3F2FD', '#F3E5F5', '#E8F5E8', '#FFF3E0',
-      '#FFEBEE', '#F1F8E9', '#FCE4EC', '#E0F2F1',
+      '#E3F2FD',
+      '#F3E5F5',
+      '#E8F5E8',
+      '#FFF3E0',
+      '#FFEBEE',
+      '#F1F8E9',
+      '#FCE4EC',
+      '#E0F2F1',
     ];
     const index = category.length % colors.length;
     return colors[index];
   };
 
-  const filteredTransactions = transactions?.filter(transaction => {
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      return (
-        transaction.description.toLowerCase().includes(query) ||
-        transaction.category.toLowerCase().includes(query) ||
-        transaction.accountName.toLowerCase().includes(query)
-      );
-    }
-    return true;
-  }) || [];
+  const filteredTransactions =
+    transactions?.filter((transaction) => {
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        return (
+          transaction.description.toLowerCase().includes(query) ||
+          transaction.category.toLowerCase().includes(query) ||
+          transaction.accountName.toLowerCase().includes(query)
+        );
+      }
+      return true;
+    }) || [];
 
   if (isLoading) {
     return <LoadingScreen message="Loading transactions..." />;
@@ -141,9 +147,7 @@ export default function TransactionsScreen() {
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
-        refreshControl={
-          <RefreshControl refreshing={false} onRefresh={refetch} />
-        }
+        refreshControl={<RefreshControl refreshing={false} onRefresh={refetch} />}
         showsVerticalScrollIndicator={false}
       >
         {/* Header */}
@@ -158,13 +162,13 @@ export default function TransactionsScreen() {
 
         {/* Search and Filters */}
         <View style={styles.filtersContainer}>
-          <SearchBar
+          <Searchbar
             placeholder="Search transactions..."
             onChangeText={setSearchQuery}
             value={searchQuery}
             style={styles.searchBar}
           />
-          
+
           <SegmentedButtons
             value={filterType}
             onValueChange={setFilterType}
@@ -186,7 +190,12 @@ export default function TransactionsScreen() {
                 <Card.Content>
                   <View style={styles.transactionHeader}>
                     <View style={styles.transactionInfo}>
-                      <View style={[styles.transactionIcon, { backgroundColor: `${getTransactionColor(transaction.type)}15` }]}>
+                      <View
+                        style={[
+                          styles.transactionIcon,
+                          { backgroundColor: `${getTransactionColor(transaction.type)}15` },
+                        ]}
+                      >
                         <Ionicons
                           name={getTransactionIcon(transaction.type, transaction.category) as any}
                           size={20}
@@ -217,11 +226,19 @@ export default function TransactionsScreen() {
                           },
                         ]}
                       >
-                        {transaction.type === 'expense' ? '-' : transaction.type === 'income' ? '+' : ''}
+                        {transaction.type === 'expense'
+                          ? '-'
+                          : transaction.type === 'income'
+                            ? '+'
+                            : ''}
                         {formatCurrency(Math.abs(transaction.amount), transaction.currency)}
                       </Text>
                       {transaction.pending && (
-                        <Chip mode="outlined" textStyle={styles.pendingChipText} style={styles.pendingChip}>
+                        <Chip
+                          mode="outlined"
+                          textStyle={styles.pendingChipText}
+                          style={styles.pendingChip}
+                        >
                           Pending
                         </Chip>
                       )}
@@ -233,7 +250,10 @@ export default function TransactionsScreen() {
                     <Chip
                       mode="flat"
                       textStyle={styles.categoryChipText}
-                      style={[styles.categoryChip, { backgroundColor: getCategoryChipColor(transaction.category) }]}
+                      style={[
+                        styles.categoryChip,
+                        { backgroundColor: getCategoryChipColor(transaction.category) },
+                      ]}
                     >
                       {transaction.category}
                     </Chip>
@@ -266,13 +286,14 @@ export default function TransactionsScreen() {
           <View style={styles.emptyState}>
             <Ionicons name="receipt-outline" size={80} color="#E0E0E0" style={styles.emptyIcon} />
             <Text variant="headlineSmall" style={styles.emptyTitle}>
-              {searchQuery || filterType !== 'all' ? 'No Matching Transactions' : 'No Transactions Yet'}
+              {searchQuery || filterType !== 'all'
+                ? 'No Matching Transactions'
+                : 'No Transactions Yet'}
             </Text>
             <Text variant="bodyLarge" style={styles.emptyMessage}>
               {searchQuery || filterType !== 'all'
                 ? 'Try adjusting your search or filters'
-                : 'Connect your accounts to start tracking transactions'
-              }
+                : 'Connect your accounts to start tracking transactions'}
             </Text>
             {!searchQuery && filterType === 'all' && (
               <Button
@@ -291,11 +312,7 @@ export default function TransactionsScreen() {
       </ScrollView>
 
       {/* FAB */}
-      <FAB
-        icon="plus"
-        style={styles.fab}
-        onPress={() => router.push('/transactions/add')}
-      />
+      <FAB icon="plus" style={styles.fab} onPress={() => router.push('/transactions/add')} />
     </View>
   );
 }

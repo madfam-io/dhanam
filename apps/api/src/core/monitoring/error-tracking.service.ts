@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+
 import { PrismaService } from '@core/prisma/prisma.service';
 
 export interface ErrorReport {
@@ -126,7 +127,7 @@ export class ErrorTrackingService {
 
   private logError(report: Omit<ErrorReport, 'id'>) {
     const logMessage = `${report.message} - Context: ${JSON.stringify(report.context)}`;
-    
+
     switch (report.level) {
       case 'error':
         this.logger.error(logMessage, report.stack);
@@ -166,38 +167,37 @@ export class ErrorTrackingService {
     userId?: string,
     connectionId?: string
   ) {
-    await this.reportError(error, {
-      userId,
-      endpoint: `providers/${provider}/${operation}`,
-    }, {
-      provider,
-      operation,
-      connectionId,
-    });
-  }
-
-  async reportJobError(
-    jobType: string,
-    jobId: string,
-    error: Error,
-    payload?: any
-  ) {
-    await this.reportError(error, {
-      endpoint: `jobs/${jobType}`,
-    }, {
-      jobType,
-      jobId,
-      payload: payload ? JSON.stringify(payload) : undefined,
-    });
-  }
-
-  async reportValidationError(
-    endpoint: string,
-    validationErrors: any[],
-    userId?: string
-  ) {
     await this.reportError(
-      `Validation failed: ${validationErrors.map(e => e.message).join(', ')}`,
+      error,
+      {
+        userId,
+        endpoint: `providers/${provider}/${operation}`,
+      },
+      {
+        provider,
+        operation,
+        connectionId,
+      }
+    );
+  }
+
+  async reportJobError(jobType: string, jobId: string, error: Error, payload?: any) {
+    await this.reportError(
+      error,
+      {
+        endpoint: `jobs/${jobType}`,
+      },
+      {
+        jobType,
+        jobId,
+        payload: payload ? JSON.stringify(payload) : undefined,
+      }
+    );
+  }
+
+  async reportValidationError(endpoint: string, validationErrors: any[], userId?: string) {
+    await this.reportError(
+      `Validation failed: ${validationErrors.map((e) => e.message).join(', ')}`,
       {
         userId,
         endpoint,
@@ -209,12 +209,7 @@ export class ErrorTrackingService {
     );
   }
 
-  async reportSecurityEvent(
-    event: string,
-    details: string,
-    userId?: string,
-    ip?: string
-  ) {
+  async reportSecurityEvent(event: string, details: string, userId?: string, ip?: string) {
     await this.reportError(
       `Security event: ${event} - ${details}`,
       {

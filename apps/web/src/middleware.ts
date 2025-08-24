@@ -6,8 +6,8 @@ const publicPaths = ['/login', '/register', '/forgot-password', '/reset-password
 
 export function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
-  const isPublicPath = publicPaths.some(p => path.startsWith(p));
-  
+  const isPublicPath = publicPaths.some((p) => path.startsWith(p));
+
   // Get token from cookies (Next.js will handle this in the client)
   const token = request.cookies.get('auth-storage');
 

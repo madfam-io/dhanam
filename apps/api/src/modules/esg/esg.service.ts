@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../../core/prisma/prisma.service';
 import { Decimal } from '@prisma/client/runtime/library';
+
+import { PrismaService } from '../../core/prisma/prisma.service';
 
 // Dhanam ESG data (based on the Dhanam package)
 const DHANAM_ESG_DATA = {
@@ -121,16 +122,16 @@ const DHANAM_ESG_DATA = {
   // ESG grading scale
   gradingScale: {
     'A+': { min: 95, max: 100 },
-    'A': { min: 90, max: 94 },
+    A: { min: 90, max: 94 },
     'A-': { min: 85, max: 89 },
     'B+': { min: 80, max: 84 },
-    'B': { min: 75, max: 79 },
+    B: { min: 75, max: 79 },
     'B-': { min: 70, max: 74 },
     'C+': { min: 65, max: 69 },
-    'C': { min: 60, max: 64 },
+    C: { min: 60, max: 64 },
     'C-': { min: 55, max: 59 },
     'D+': { min: 50, max: 54 },
-    'D': { min: 40, max: 49 },
+    D: { min: 40, max: 49 },
     'D-': { min: 0, max: 39 },
   },
 };
@@ -156,10 +157,10 @@ export class EsgService {
 
   async getEsgScore(symbol: string, assetType = 'crypto'): Promise<EsgScore> {
     const normalizedSymbol = symbol.toUpperCase();
-    
+
     // Check if we have data for this asset
     const esgData = DHANAM_ESG_DATA.crypto[normalizedSymbol as keyof typeof DHANAM_ESG_DATA.crypto];
-    
+
     if (!esgData) {
       // Return default ESG score for unknown assets
       return this.getDefaultEsgScore(normalizedSymbol, assetType);
@@ -196,7 +197,7 @@ export class EsgService {
         lastUpdated: new Date(),
       };
     }
-    
+
     // Default for other asset types
     return {
       symbol,
@@ -245,7 +246,10 @@ export class EsgService {
 
     // Calculate total portfolio value
     const totalValue = cryptoAccounts.reduce((sum, account) => {
-      return sum + (account.balance instanceof Decimal ? account.balance.toNumber() : Number(account.balance));
+      return (
+        sum +
+        (account.balance instanceof Decimal ? account.balance.toNumber() : Number(account.balance))
+      );
     }, 0);
 
     // Get ESG scores for each holding
@@ -254,9 +258,10 @@ export class EsgService {
         const metadata = account.metadata as any;
         const symbol = metadata?.cryptoCurrency || 'UNKNOWN';
         const esgScore = await this.getEsgScore(symbol);
-        const balance = account.balance instanceof Decimal ? account.balance.toNumber() : Number(account.balance);
+        const balance =
+          account.balance instanceof Decimal ? account.balance.toNumber() : Number(account.balance);
         const weight = balance / totalValue;
-        
+
         return {
           symbol,
           weight,
@@ -362,22 +367,20 @@ export class EsgService {
     };
     summary: string;
   }> {
-    const scores = await Promise.all(
-      symbols.map((symbol) => this.getEsgScore(symbol))
-    );
+    const scores = await Promise.all(symbols.map((symbol) => this.getEsgScore(symbol)));
 
     // Find best performers in each category
     const bestPerformer = {
-      overall: scores.reduce((best, current) => 
+      overall: scores.reduce((best, current) =>
         current.overallScore > best.overallScore ? current : best
       ).symbol,
-      environmental: scores.reduce((best, current) => 
+      environmental: scores.reduce((best, current) =>
         current.environmentalScore > best.environmentalScore ? current : best
       ).symbol,
-      social: scores.reduce((best, current) => 
+      social: scores.reduce((best, current) =>
         current.socialScore > best.socialScore ? current : best
       ).symbol,
-      governance: scores.reduce((best, current) => 
+      governance: scores.reduce((best, current) =>
         current.governanceScore > best.governanceScore ? current : best
       ).symbol,
     };

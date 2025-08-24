@@ -55,11 +55,11 @@ export interface EmailJobData {
   };
 }
 
-export type QueueJobData = 
-  | SyncTransactionsJobData 
-  | CategorizeTransactionsJobData 
-  | ESGUpdateJobData 
-  | ValuationSnapshotJobData 
+export type QueueJobData =
+  | SyncTransactionsJobData
+  | CategorizeTransactionsJobData
+  | ESGUpdateJobData
+  | ValuationSnapshotJobData
   | EmailJobData;
 
 @Injectable()
@@ -111,7 +111,7 @@ export class QueueService implements OnModuleInit, OnModuleDestroy {
   private async initializeQueues() {
     const queueNames = [
       'sync-transactions',
-      'categorize-transactions', 
+      'categorize-transactions',
       'esg-updates',
       'valuation-snapshots',
       'email-notifications',
@@ -158,7 +158,7 @@ export class QueueService implements OnModuleInit, OnModuleDestroy {
   async addSyncTransactionsJob(
     data: SyncTransactionsJobData['payload'],
     priority: number = 50,
-    delay: number = 0,
+    delay: number = 0
   ): Promise<Job> {
     const queue = this.queues.get('sync-transactions');
     if (!queue) throw new Error('Sync transactions queue not initialized');
@@ -172,7 +172,7 @@ export class QueueService implements OnModuleInit, OnModuleDestroy {
 
   async addCategorizeTransactionsJob(
     data: CategorizeTransactionsJobData['payload'],
-    priority: number = 30,
+    priority: number = 30
   ): Promise<Job> {
     const queue = this.queues.get('categorize-transactions');
     if (!queue) throw new Error('Categorize transactions queue not initialized');
@@ -183,10 +183,7 @@ export class QueueService implements OnModuleInit, OnModuleDestroy {
     });
   }
 
-  async addESGUpdateJob(
-    data: ESGUpdateJobData['payload'],
-    priority: number = 20,
-  ): Promise<Job> {
+  async addESGUpdateJob(data: ESGUpdateJobData['payload'], priority: number = 20): Promise<Job> {
     const queue = this.queues.get('esg-updates');
     if (!queue) throw new Error('ESG updates queue not initialized');
 
@@ -198,7 +195,7 @@ export class QueueService implements OnModuleInit, OnModuleDestroy {
 
   async addValuationSnapshotJob(
     data: ValuationSnapshotJobData['payload'],
-    priority: number = 10,
+    priority: number = 10
   ): Promise<Job> {
     const queue = this.queues.get('valuation-snapshots');
     if (!queue) throw new Error('Valuation snapshots queue not initialized');
@@ -209,10 +206,7 @@ export class QueueService implements OnModuleInit, OnModuleDestroy {
     });
   }
 
-  async addEmailJob(
-    data: EmailJobData['payload'],
-    priority: number = 40,
-  ): Promise<Job> {
+  async addEmailJob(data: EmailJobData['payload'], priority: number = 40): Promise<Job> {
     const queue = this.queues.get('email-notifications');
     if (!queue) throw new Error('Email notifications queue not initialized');
 
@@ -229,7 +223,7 @@ export class QueueService implements OnModuleInit, OnModuleDestroy {
     queueName: string,
     jobName: string,
     data: any,
-    cronPattern: string,
+    cronPattern: string
   ): Promise<Job> {
     const queue = this.queues.get(queueName);
     if (!queue) throw new Error(`Queue ${queueName} not initialized`);
@@ -274,7 +268,7 @@ export class QueueService implements OnModuleInit, OnModuleDestroy {
   async pauseQueue(queueName: string): Promise<void> {
     const queue = this.queues.get(queueName);
     if (!queue) throw new Error(`Queue ${queueName} not found`);
-    
+
     await queue.pause();
     this.logger.log(`Queue ${queueName} paused`);
   }
@@ -282,7 +276,7 @@ export class QueueService implements OnModuleInit, OnModuleDestroy {
   async resumeQueue(queueName: string): Promise<void> {
     const queue = this.queues.get(queueName);
     if (!queue) throw new Error(`Queue ${queueName} not found`);
-    
+
     await queue.resume();
     this.logger.log(`Queue ${queueName} resumed`);
   }
@@ -290,7 +284,7 @@ export class QueueService implements OnModuleInit, OnModuleDestroy {
   async clearQueue(queueName: string): Promise<void> {
     const queue = this.queues.get(queueName);
     if (!queue) throw new Error(`Queue ${queueName} not found`);
-    
+
     await queue.obliterate({ force: true });
     this.logger.log(`Queue ${queueName} cleared`);
   }
@@ -298,20 +292,23 @@ export class QueueService implements OnModuleInit, OnModuleDestroy {
   async retryFailedJobs(queueName: string): Promise<void> {
     const queue = this.queues.get(queueName);
     if (!queue) throw new Error(`Queue ${queueName} not found`);
-    
+
     const failedJobs = await queue.getFailed();
-    
+
     for (const job of failedJobs) {
       await job.retry();
     }
-    
+
     this.logger.log(`Retried ${failedJobs.length} failed jobs in queue ${queueName}`);
   }
 
   registerWorker(queueName: string, processor: (job: Job) => Promise<any>): Worker {
     const worker = new Worker(queueName, processor, {
       connection: this.redis,
-      concurrency: this.configService.get(`QUEUE_${queueName.toUpperCase().replace('-', '_')}_CONCURRENCY`, 5),
+      concurrency: this.configService.get(
+        `QUEUE_${queueName.toUpperCase().replace('-', '_')}_CONCURRENCY`,
+        5
+      ),
     });
 
     worker.on('completed', (job) => {
@@ -328,7 +325,7 @@ export class QueueService implements OnModuleInit, OnModuleDestroy {
 
     this.workers.set(queueName, worker);
     this.logger.log(`Worker registered for queue ${queueName}`);
-    
+
     return worker;
   }
 }

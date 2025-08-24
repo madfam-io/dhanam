@@ -40,7 +40,7 @@ export const accountsApi = {
   updateAccount: async (
     spaceId: string,
     accountId: string,
-    dto: UpdateAccountDto,
+    dto: UpdateAccountDto
   ): Promise<Account> => {
     return apiClient.patch<Account>(`/spaces/${spaceId}/accounts/${accountId}`, dto);
   },

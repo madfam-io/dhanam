@@ -1,16 +1,15 @@
-import React from 'react';
-import { View, ScrollView, RefreshControl } from 'react-native';
-import { Text, Card, FAB, Button } from 'react-native-paper';
+import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import React from 'react';
+import { View, ScrollView, RefreshControl, StyleSheet } from 'react-native';
+import { Text, Card, FAB, Button } from 'react-native-paper';
 
+import { ErrorState } from '@/components/ErrorState';
+import { LoadingScreen } from '@/components/LoadingScreen';
 import { useSpaces } from '@/hooks/useSpaces';
 import { apiClient } from '@/services/api';
-import { LoadingScreen } from '@/components/LoadingScreen';
-import { ErrorState } from '@/components/ErrorState';
 import { formatCurrency } from '@/utils/currency';
-import { StyleSheet } from 'react-native';
 
 interface Account {
   id: string;
@@ -32,7 +31,7 @@ export default function AccountsScreen() {
     error,
   } = useQuery<Account[]>({
     queryKey: ['accounts', currentSpace?.id],
-    queryFn: () => apiClient.get(`/accounts?spaceId=${currentSpace!.id}`).then(res => res.data),
+    queryFn: () => apiClient.get(`/accounts?spaceId=${currentSpace!.id}`).then((res) => res.data),
     enabled: !!currentSpace,
   });
 
@@ -96,9 +95,7 @@ export default function AccountsScreen() {
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
-        refreshControl={
-          <RefreshControl refreshing={false} onRefresh={refetch} />
-        }
+        refreshControl={<RefreshControl refreshing={false} onRefresh={refetch} />}
         showsVerticalScrollIndicator={false}
       >
         {/* Header */}
@@ -185,11 +182,7 @@ export default function AccountsScreen() {
       </ScrollView>
 
       {/* FAB */}
-      <FAB
-        icon="plus"
-        style={styles.fab}
-        onPress={() => router.push('/accounts/connect')}
-      />
+      <FAB icon="plus" style={styles.fab} onPress={() => router.push('/accounts/connect')} />
     </View>
   );
 }

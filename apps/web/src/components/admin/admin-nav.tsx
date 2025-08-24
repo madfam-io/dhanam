@@ -3,14 +3,7 @@
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { cn } from '~/lib/utils';
-import {
-  LayoutDashboard,
-  Users,
-  FileText,
-  BarChart3,
-  Flag,
-  Activity,
-} from 'lucide-react';
+import { LayoutDashboard, Users, FileText, BarChart3, Flag } from 'lucide-react';
 
 const navigation = [
   { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
@@ -28,9 +21,10 @@ export function AdminNav() {
       <div className="py-4">
         <ul className="space-y-1 px-3">
           {navigation.map((item) => {
-            const isActive = pathname === item.href || 
+            const isActive =
+              pathname === item.href ||
               (item.href !== '/admin/dashboard' && pathname.startsWith(item.href));
-            
+
             return (
               <li key={item.name}>
                 <Link

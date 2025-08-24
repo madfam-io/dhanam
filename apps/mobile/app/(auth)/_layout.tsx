@@ -1,5 +1,6 @@
 import { Stack } from 'expo-router';
 import { useColorScheme } from 'react-native';
+
 import { theme } from '@/theme';
 
 export default function AuthLayout() {

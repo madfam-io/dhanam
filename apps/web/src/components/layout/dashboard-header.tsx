@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { Button } from '@dhanam/ui';
-import { 
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -31,7 +31,7 @@ export function DashboardHeader() {
       <div className="flex h-16 items-center px-6">
         <div className="flex items-center gap-4">
           <h1 className="text-2xl font-bold">Dhanam</h1>
-          
+
           {spaces && spaces.length > 0 && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -44,15 +44,10 @@ export function DashboardHeader() {
                 <DropdownMenuLabel>Your Spaces</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 {spaces.map((space: any) => (
-                  <DropdownMenuItem
-                    key={space.id}
-                    onClick={() => setCurrentSpace(space)}
-                  >
+                  <DropdownMenuItem key={space.id} onClick={() => setCurrentSpace(space)}>
                     <div className="flex items-center justify-between w-full">
                       <span>{space.name}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {space.type}
-                      </span>
+                      <span className="text-xs text-muted-foreground">{space.type}</span>
                     </div>
                   </DropdownMenuItem>
                 ))}
@@ -85,7 +80,7 @@ export function DashboardHeader() {
                 Settings
               </DropdownMenuItem>
               {/* Show admin link for users with admin/owner roles */}
-              {user?.spaces?.some(space => space.role === 'admin' || space.role === 'owner') && (
+              {user?.spaces?.some((space) => space.role === 'admin' || space.role === 'owner') && (
                 <DropdownMenuItem onClick={() => router.push('/admin/dashboard')}>
                   <Shield className="mr-2 h-4 w-4" />
                   Admin Dashboard

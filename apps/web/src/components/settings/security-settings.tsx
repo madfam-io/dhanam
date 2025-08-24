@@ -7,14 +7,7 @@ import { Button } from '@dhanam/ui';
 import { Badge } from '@dhanam/ui';
 import { Alert, AlertDescription } from '@dhanam/ui';
 import { Separator } from '@dhanam/ui';
-import { 
-  Shield, 
-  Smartphone, 
-  Key, 
-  AlertTriangle, 
-  Check,
-  Loader2 
-} from 'lucide-react';
+import { Shield, Smartphone, Key, AlertTriangle, Check, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { TotpSetup } from '~/components/auth/totp-setup';
 
@@ -97,7 +90,7 @@ export function SecuritySettings() {
             <div className="space-y-1">
               <p className="text-sm font-medium">Authenticator App</p>
               <p className="text-sm text-muted-foreground">
-                {totpStatus?.enabled 
+                {totpStatus?.enabled
                   ? 'Two-factor authentication is enabled'
                   : 'Use your phone to generate verification codes'}
               </p>
@@ -119,8 +112,8 @@ export function SecuritySettings() {
               <Alert>
                 <Shield className="h-4 w-4" />
                 <AlertDescription>
-                  Your account is protected with two-factor authentication.
-                  You have {totpStatus.backupCodesRemaining} backup codes remaining.
+                  Your account is protected with two-factor authentication. You have{' '}
+                  {totpStatus.backupCodesRemaining} backup codes remaining.
                 </AlertDescription>
               </Alert>
 
@@ -143,7 +136,7 @@ export function SecuritySettings() {
                     </>
                   )}
                 </Button>
-                
+
                 <Button
                   variant="destructive"
                   onClick={() => disableTotpMutation.mutate()}
@@ -166,8 +159,8 @@ export function SecuritySettings() {
               <Alert className="border-yellow-200 bg-yellow-50">
                 <AlertTriangle className="h-4 w-4 text-yellow-600" />
                 <AlertDescription className="text-yellow-800">
-                  Your account is not protected by two-factor authentication.
-                  We strongly recommend enabling it for enhanced security.
+                  Your account is not protected by two-factor authentication. We strongly recommend
+                  enabling it for enhanced security.
                 </AlertDescription>
               </Alert>
 

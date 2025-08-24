@@ -13,16 +13,16 @@ import { transactionsApi } from '~/lib/api/transactions';
 import { budgetsApi } from '~/lib/api/budgets';
 import { analyticsApi } from '~/lib/api/analytics';
 import { formatCurrency } from '~/lib/utils';
-import { 
-  TrendingUp, 
-  TrendingDown, 
-  CreditCard, 
-  PiggyBank, 
+import {
+  TrendingUp,
+  TrendingDown,
+  CreditCard,
+  PiggyBank,
   Target,
   Wallet,
   Receipt,
   Building2,
-  Loader2
+  Loader2,
 } from 'lucide-react';
 import { SyncStatus } from '@/components/sync/sync-status';
 
@@ -81,9 +81,13 @@ export default function DashboardPage() {
   }
 
   // Use analytics data when available, fallback to account calculations
-  const totalAssets = netWorthData?.totalAssets ?? (accounts?.filter(a => a.balance > 0).reduce((sum, a) => sum + a.balance, 0) || 0);
-  const totalLiabilities = netWorthData?.totalLiabilities ?? Math.abs(accounts?.filter(a => a.balance < 0).reduce((sum, a) => sum + a.balance, 0) || 0);
-  const netWorth = netWorthData?.netWorth ?? (totalAssets - totalLiabilities);
+  const totalAssets =
+    netWorthData?.totalAssets ??
+    (accounts?.filter((a) => a.balance > 0).reduce((sum, a) => sum + a.balance, 0) || 0);
+  const totalLiabilities =
+    netWorthData?.totalLiabilities ??
+    Math.abs(accounts?.filter((a) => a.balance < 0).reduce((sum, a) => sum + a.balance, 0) || 0);
+  const netWorth = netWorthData?.netWorth ?? totalAssets - totalLiabilities;
   const netWorthChange = netWorthData?.changePercent ?? 0;
 
   const accountTypeIcons: Record<string, React.ElementType> = {
@@ -98,12 +102,8 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight">
-          Welcome back, {user?.name}
-        </h2>
-        <p className="text-muted-foreground">
-          Here's an overview of your financial status
-        </p>
+        <h2 className="text-3xl font-bold tracking-tight">Welcome back, {user?.name}</h2>
+        <p className="text-muted-foreground">Here&apos;s an overview of your financial status</p>
       </div>
 
       {/* Key Metrics */}
@@ -153,7 +153,7 @@ export default function DashboardPage() {
               )}
             </div>
             <p className="text-xs text-muted-foreground">
-              Across {accounts?.filter(a => a.balance > 0).length || 0} accounts
+              Across {accounts?.filter((a) => a.balance > 0).length || 0} accounts
             </p>
           </CardContent>
         </Card>
@@ -172,7 +172,7 @@ export default function DashboardPage() {
               )}
             </div>
             <p className="text-xs text-muted-foreground">
-              Across {accounts?.filter(a => a.balance < 0).length || 0} accounts
+              Across {accounts?.filter((a) => a.balance < 0).length || 0} accounts
             </p>
           </CardContent>
         </Card>
@@ -193,7 +193,7 @@ export default function DashboardPage() {
               )}
             </div>
             <p className="text-xs text-muted-foreground">
-              {currentBudgetSummary 
+              {currentBudgetSummary
                 ? `${formatCurrency(currentBudgetSummary.summary.totalRemaining, currentSpace.currency)} remaining`
                 : 'Create a budget to track'}
             </p>
@@ -206,9 +206,7 @@ export default function DashboardPage() {
         <Card className="col-span-4">
           <CardHeader>
             <CardTitle>Accounts</CardTitle>
-            <CardDescription>
-              Your connected accounts and balances
-            </CardDescription>
+            <CardDescription>Your connected accounts and balances</CardDescription>
           </CardHeader>
           <CardContent>
             {isLoadingAccounts ? (
@@ -227,9 +225,7 @@ export default function DashboardPage() {
                     <div key={account.id} className="flex items-center">
                       <Icon className="h-4 w-4 text-muted-foreground mr-2" />
                       <div className="space-y-1 flex-1">
-                        <p className="text-sm font-medium leading-none">
-                          {account.name}
-                        </p>
+                        <p className="text-sm font-medium leading-none">{account.name}</p>
                         <p className="text-sm text-muted-foreground">
                           {account.type} • {account.provider}
                         </p>
@@ -249,9 +245,7 @@ export default function DashboardPage() {
         <Card className="col-span-3">
           <CardHeader>
             <CardTitle>Recent Transactions</CardTitle>
-            <CardDescription>
-              Your latest financial activity
-            </CardDescription>
+            <CardDescription>Your latest financial activity</CardDescription>
           </CardHeader>
           <CardContent>
             {isLoadingTransactions ? (
@@ -259,23 +253,21 @@ export default function DashboardPage() {
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
               </div>
             ) : recentTransactions?.data.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-8">
-                No transactions yet
-              </p>
+              <p className="text-sm text-muted-foreground text-center py-8">No transactions yet</p>
             ) : (
               <div className="space-y-4">
                 {recentTransactions?.data.map((transaction) => (
                   <div key={transaction.id} className="flex items-center">
                     <Receipt className="h-4 w-4 text-muted-foreground mr-2" />
                     <div className="space-y-1 flex-1">
-                      <p className="text-sm font-medium leading-none">
-                        {transaction.description}
-                      </p>
+                      <p className="text-sm font-medium leading-none">{transaction.description}</p>
                       <p className="text-sm text-muted-foreground">
                         {new Date(transaction.date).toLocaleDateString()}
                       </p>
                     </div>
-                    <div className={`font-medium ${transaction.amount < 0 ? 'text-red-600' : 'text-green-600'}`}>
+                    <div
+                      className={`font-medium ${transaction.amount < 0 ? 'text-red-600' : 'text-green-600'}`}
+                    >
                       {formatCurrency(transaction.amount, currentSpace.currency)}
                     </div>
                   </div>
@@ -291,9 +283,7 @@ export default function DashboardPage() {
         <Card>
           <CardHeader>
             <CardTitle>60-Day Cashflow Forecast</CardTitle>
-            <CardDescription>
-              Projected income, expenses, and balance trends
-            </CardDescription>
+            <CardDescription>Projected income, expenses, and balance trends</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -312,20 +302,36 @@ export default function DashboardPage() {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Net Cashflow</p>
-                  <p className={`text-lg font-semibold ${(cashflowForecast.summary.totalIncome - cashflowForecast.summary.totalExpenses) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    {formatCurrency(cashflowForecast.summary.totalIncome - cashflowForecast.summary.totalExpenses, currentSpace.currency)}
+                  <p
+                    className={`text-lg font-semibold ${cashflowForecast.summary.totalIncome - cashflowForecast.summary.totalExpenses >= 0 ? 'text-green-600' : 'text-red-600'}`}
+                  >
+                    {formatCurrency(
+                      cashflowForecast.summary.totalIncome - cashflowForecast.summary.totalExpenses,
+                      currentSpace.currency
+                    )}
                   </p>
                 </div>
               </div>
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span>Current Balance</span>
-                  <span>{formatCurrency(cashflowForecast.summary.currentBalance, currentSpace.currency)}</span>
+                  <span>
+                    {formatCurrency(cashflowForecast.summary.currentBalance, currentSpace.currency)}
+                  </span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span>Projected Balance (60d)</span>
-                  <span className={cashflowForecast.summary.projectedBalance >= 0 ? 'text-green-600' : 'text-red-600'}>
-                    {formatCurrency(cashflowForecast.summary.projectedBalance, currentSpace.currency)}
+                  <span
+                    className={
+                      cashflowForecast.summary.projectedBalance >= 0
+                        ? 'text-green-600'
+                        : 'text-red-600'
+                    }
+                  >
+                    {formatCurrency(
+                      cashflowForecast.summary.projectedBalance,
+                      currentSpace.currency
+                    )}
                   </span>
                 </div>
               </div>
@@ -339,19 +345,14 @@ export default function DashboardPage() {
         <Card>
           <CardHeader>
             <CardTitle>Portfolio Allocation</CardTitle>
-            <CardDescription>
-              Asset distribution across your accounts
-            </CardDescription>
+            <CardDescription>Asset distribution across your accounts</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               {portfolioAllocation.slice(0, 6).map((allocation) => (
                 <div key={allocation.assetType} className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div
-                      className="w-3 h-3 rounded-full"
-                      style={{ backgroundColor: '#6366f1' }}
-                    />
+                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#6366f1' }} />
                     <span className="text-sm font-medium">{allocation.assetType}</span>
                   </div>
                   <div className="text-right">
@@ -374,9 +375,7 @@ export default function DashboardPage() {
         <Card>
           <CardHeader>
             <CardTitle>Current Budget: {budgets?.[0]?.name || 'N/A'}</CardTitle>
-            <CardDescription>
-              Track your spending across categories
-            </CardDescription>
+            <CardDescription>Track your spending across categories</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -391,7 +390,8 @@ export default function DashboardPage() {
                       <span className="text-sm font-medium">{category.name}</span>
                     </div>
                     <span className="text-sm text-muted-foreground">
-                      {formatCurrency(category.spent, currentSpace.currency)} / {formatCurrency(category.budgetedAmount, currentSpace.currency)}
+                      {formatCurrency(category.spent, currentSpace.currency)} /{' '}
+                      {formatCurrency(category.budgetedAmount, currentSpace.currency)}
                     </span>
                   </div>
                   <Progress value={category.percentUsed} />
@@ -410,7 +410,7 @@ export default function DashboardPage() {
 
 function EmptyState() {
   const router = useRouter();
-  
+
   return (
     <Card>
       <CardContent className="flex flex-col items-center justify-center py-10">
@@ -419,9 +419,7 @@ function EmptyState() {
         <p className="text-sm text-muted-foreground text-center mb-4">
           Create a space to start tracking your finances
         </p>
-        <Button onClick={() => router.push('/spaces/new')}>
-          Create Your First Space
-        </Button>
+        <Button onClick={() => router.push('/spaces/new')}>Create Your First Space</Button>
       </CardContent>
     </Card>
   );

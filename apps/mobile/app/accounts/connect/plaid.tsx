@@ -1,14 +1,13 @@
-import React, { useState } from 'react';
-import { View, ScrollView } from 'react-native';
-import { Text, Card, Button } from 'react-native-paper';
-import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { StyleSheet } from 'react-native';
+import { router } from 'expo-router';
+import React, { useState } from 'react';
+import { View, ScrollView, StyleSheet } from 'react-native';
+import { Text, Card, Button } from 'react-native-paper';
 
+import { ErrorState } from '@/components/ErrorState';
+import { LoadingScreen } from '@/components/LoadingScreen';
 import { useSpaces } from '@/hooks/useSpaces';
 import { apiClient } from '@/services/api';
-import { LoadingScreen } from '@/components/LoadingScreen';
-import { ErrorState } from '@/components/ErrorState';
 
 export default function PlaidConnectScreen() {
   const { currentSpace } = useSpaces();
@@ -38,7 +37,7 @@ export default function PlaidConnectScreen() {
       console.log('Opening Plaid Link with token:', linkToken);
 
       // Simulate Plaid Link flow
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise((resolve) => setTimeout(resolve, 2000));
 
       // Mock successful connection
       const mockPublicToken = 'public-sandbox-' + Math.random().toString(36).substring(7);
@@ -70,7 +69,6 @@ export default function PlaidConnectScreen() {
       router.back();
       // You might want to show a success toast here
       console.log('Connected accounts:', accounts);
-
     } catch (err: any) {
       console.error('Plaid connection error:', err);
       setError(err.response?.data?.message || 'Failed to connect to Plaid');
@@ -123,7 +121,7 @@ export default function PlaidConnectScreen() {
             <Text variant="bodyMedium" style={styles.banksSubtitle}>
               Works with 11,000+ US financial institutions
             </Text>
-            
+
             <View style={styles.banksList}>
               {[
                 'Bank of America',
@@ -156,7 +154,7 @@ export default function PlaidConnectScreen() {
                 Your Data is Secure
               </Text>
             </View>
-            
+
             <View style={styles.securityFeatures}>
               <View style={styles.securityItem}>
                 <Ionicons name="lock-closed" size={16} color="#4CAF50" />
@@ -184,9 +182,9 @@ export default function PlaidConnectScreen() {
         <Card style={styles.importCard}>
           <Card.Content>
             <Text variant="titleMedium" style={styles.importTitle}>
-              What We'll Import
+              What We&apos;ll Import
             </Text>
-            
+
             <View style={styles.importFeatures}>
               <View style={styles.importItem}>
                 <Ionicons name="wallet" size={16} color="#2196F3" />
@@ -238,11 +236,7 @@ export default function PlaidConnectScreen() {
         >
           Connect with Plaid
         </Button>
-        <Button
-          mode="text"
-          onPress={() => router.back()}
-          disabled={loading}
-        >
+        <Button mode="text" onPress={() => router.back()} disabled={loading}>
           Cancel
         </Button>
       </View>

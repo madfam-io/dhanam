@@ -8,6 +8,7 @@ export interface User {
   timezone: string;
   totpEnabled: boolean;
   emailVerified: boolean;
+  onboardingCompleted: boolean;
   createdAt: string;
   updatedAt: string;
 }

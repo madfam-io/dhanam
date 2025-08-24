@@ -4,9 +4,9 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/hooks/use-auth';
 import { useOnboarding } from '../onboarding-provider';
 import { onboardingApi } from '@/lib/api/onboarding';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@dhanam/ui';
+import { Card, CardContent } from '@dhanam/ui';
+import { Alert, AlertDescription } from '@dhanam/ui';
 import { MailIcon, CheckCircleIcon, RefreshCwIcon } from 'lucide-react';
 
 export function EmailVerificationStep() {
@@ -33,6 +33,7 @@ export function EmailVerificationStep() {
       return () => clearTimeout(timer);
     } else {
       setCanResend(true);
+      return () => {}; // No cleanup needed
     }
   }, [countdown]);
 
@@ -63,7 +64,7 @@ export function EmailVerificationStep() {
       if (!user?.emailVerified) {
         setMessage('Email aún no verificado. Revisa tu bandeja de entrada y spam.');
       }
-    } catch (err) {
+    } catch {
       setError('Error al verificar el estado del email');
     } finally {
       setIsChecking(false);
@@ -83,9 +84,7 @@ export function EmailVerificationStep() {
       <div className="max-w-2xl mx-auto text-center">
         <div className="mb-8">
           <CheckCircleIcon className="w-20 h-20 text-green-500 mx-auto mb-4" />
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">
-            ¡Email verificado!
-          </h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">¡Email verificado!</h1>
           <p className="text-lg text-gray-600">
             Tu dirección de correo ha sido confirmada exitosamente
           </p>
@@ -104,38 +103,40 @@ export function EmailVerificationStep() {
         <div className="w-20 h-20 bg-indigo-100 rounded-full mx-auto mb-6 flex items-center justify-center">
           <MailIcon className="w-10 h-10 text-indigo-600" />
         </div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">
-          Verifica tu email
-        </h1>
-        <p className="text-lg text-gray-600 mb-2">
-          Hemos enviado un enlace de verificación a:
-        </p>
-        <p className="text-xl font-medium text-indigo-600">
-          {user?.email}
-        </p>
+        <h1 className="text-3xl font-bold text-gray-900 mb-4">Verifica tu email</h1>
+        <p className="text-lg text-gray-600 mb-2">Hemos enviado un enlace de verificación a:</p>
+        <p className="text-xl font-medium text-indigo-600">{user?.email}</p>
       </div>
 
       <Card className="mb-6">
         <CardContent className="p-6">
           <div className="text-center">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
-              Instrucciones
-            </h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Instrucciones</h2>
             <div className="space-y-3 text-left max-w-md mx-auto">
               <div className="flex items-start space-x-3">
-                <span className="flex-shrink-0 w-6 h-6 bg-indigo-600 text-white rounded-full flex items-center justify-center text-sm">1</span>
+                <span className="flex-shrink-0 w-6 h-6 bg-indigo-600 text-white rounded-full flex items-center justify-center text-sm">
+                  1
+                </span>
                 <p className="text-gray-700">Revisa tu bandeja de entrada de email</p>
               </div>
               <div className="flex items-start space-x-3">
-                <span className="flex-shrink-0 w-6 h-6 bg-indigo-600 text-white rounded-full flex items-center justify-center text-sm">2</span>
-                <p className="text-gray-700">Busca el email de "Dhanam - Verifica tu cuenta"</p>
+                <span className="flex-shrink-0 w-6 h-6 bg-indigo-600 text-white rounded-full flex items-center justify-center text-sm">
+                  2
+                </span>
+                <p className="text-gray-700">
+                  Busca el email de &quot;Dhanam - Verifica tu cuenta&quot;
+                </p>
               </div>
               <div className="flex items-start space-x-3">
-                <span className="flex-shrink-0 w-6 h-6 bg-indigo-600 text-white rounded-full flex items-center justify-center text-sm">3</span>
-                <p className="text-gray-700">Haz clic en el botón "Verificar mi email"</p>
+                <span className="flex-shrink-0 w-6 h-6 bg-indigo-600 text-white rounded-full flex items-center justify-center text-sm">
+                  3
+                </span>
+                <p className="text-gray-700">Haz clic en el botón &quot;Verificar mi email&quot;</p>
               </div>
               <div className="flex items-start space-x-3">
-                <span className="flex-shrink-0 w-6 h-6 bg-indigo-600 text-white rounded-full flex items-center justify-center text-sm">4</span>
+                <span className="flex-shrink-0 w-6 h-6 bg-indigo-600 text-white rounded-full flex items-center justify-center text-sm">
+                  4
+                </span>
                 <p className="text-gray-700">Regresa a esta página para continuar</p>
               </div>
             </div>
@@ -176,10 +177,7 @@ export function EmailVerificationStep() {
           )}
         </Button>
 
-        <Button
-          onClick={handleCheckVerification}
-          disabled={isChecking}
-        >
+        <Button onClick={handleCheckVerification} disabled={isChecking}>
           {isChecking ? (
             <>
               <RefreshCwIcon className="w-4 h-4 mr-2 animate-spin" />

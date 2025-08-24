@@ -11,7 +11,8 @@ import { Eye, EyeOff, Loader2 } from 'lucide-react';
 
 const registerSchema = z.object({
   email: z.string().email('Invalid email address'),
-  password: z.string()
+  password: z
+    .string()
     .min(8, 'Password must be at least 8 characters')
     .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
     .regex(/[0-9]/, 'Password must contain at least one number'),
@@ -27,7 +28,7 @@ interface RegisterFormProps {
 
 export function RegisterForm({ onSubmit, isLoading }: RegisterFormProps) {
   const [showPassword, setShowPassword] = useState(false);
-  
+
   const {
     register,
     handleSubmit,
@@ -51,9 +52,7 @@ export function RegisterForm({ onSubmit, isLoading }: RegisterFormProps) {
           {...register('name')}
           disabled={isLoading}
         />
-        {errors.name && (
-          <p className="text-sm text-destructive">{errors.name.message}</p>
-        )}
+        {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
       </div>
 
       <div className="space-y-2">
@@ -65,9 +64,7 @@ export function RegisterForm({ onSubmit, isLoading }: RegisterFormProps) {
           {...register('email')}
           disabled={isLoading}
         />
-        {errors.email && (
-          <p className="text-sm text-destructive">{errors.email.message}</p>
-        )}
+        {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
       </div>
 
       <div className="space-y-2">
@@ -88,9 +85,7 @@ export function RegisterForm({ onSubmit, isLoading }: RegisterFormProps) {
             {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
           </button>
         </div>
-        {errors.password && (
-          <p className="text-sm text-destructive">{errors.password.message}</p>
-        )}
+        {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
         <p className="text-xs text-muted-foreground">
           Must contain at least 8 characters, one uppercase letter, and one number
         </p>

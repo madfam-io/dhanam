@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
-import * as LocalAuthentication from 'expo-local-authentication';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as LocalAuthentication from 'expo-local-authentication';
+import { useEffect, useState } from 'react';
 
 interface BiometricState {
   isAvailable: boolean;
@@ -51,7 +51,9 @@ export function useBiometric(): BiometricHook {
     }
   };
 
-  const authenticate = async (reason = 'Authenticate to access your account'): Promise<{ success: boolean; error?: string }> => {
+  const authenticate = async (
+    reason = 'Authenticate to access your account'
+  ): Promise<{ success: boolean; error?: string }> => {
     try {
       if (!biometricState.isAvailable || !biometricState.isEnrolled) {
         return {
@@ -103,12 +105,12 @@ export function useBiometric(): BiometricHook {
     }
 
     await AsyncStorage.setItem(BIOMETRIC_ENABLED_KEY, 'true');
-    setBiometricState(prev => ({ ...prev, isEnabled: true }));
+    setBiometricState((prev) => ({ ...prev, isEnabled: true }));
   };
 
   const disableBiometric = async (): Promise<void> => {
     await AsyncStorage.removeItem(BIOMETRIC_ENABLED_KEY);
-    setBiometricState(prev => ({ ...prev, isEnabled: false }));
+    setBiometricState((prev) => ({ ...prev, isEnabled: false }));
   };
 
   useEffect(() => {

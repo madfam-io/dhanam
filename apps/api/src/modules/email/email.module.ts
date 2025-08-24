@@ -1,13 +1,15 @@
+import { BullModule } from '@nestjs/bull';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { EmailService } from './email.service';
+
+import { PrismaModule } from '@core/prisma/prisma.module';
+import { AnalyticsModule } from '@modules/analytics/analytics.module';
+
 import { EmailController } from './email.controller';
 import { EmailProcessor } from './email.processor';
-import { BullModule } from '@nestjs/bull';
-import { WeeklySummaryTask } from './tasks/weekly-summary.task';
+import { EmailService } from './email.service';
 import { MonthlyReportTask } from './tasks/monthly-report.task';
-import { AnalyticsModule } from '@modules/analytics/analytics.module';
-import { PrismaModule } from '@core/prisma/prisma.module';
+import { WeeklySummaryTask } from './tasks/weekly-summary.task';
 
 @Module({
   imports: [
@@ -28,12 +30,7 @@ import { PrismaModule } from '@core/prisma/prisma.module';
     }),
   ],
   controllers: [EmailController],
-  providers: [
-    EmailService, 
-    EmailProcessor,
-    WeeklySummaryTask,
-    MonthlyReportTask,
-  ],
+  providers: [EmailService, EmailProcessor, WeeklySummaryTask, MonthlyReportTask],
   exports: [EmailService],
 })
 export class EmailModule {}

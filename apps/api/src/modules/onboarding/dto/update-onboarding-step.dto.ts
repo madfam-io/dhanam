@@ -12,22 +12,22 @@ export const ONBOARDING_STEPS = [
   'completed',
 ] as const;
 
-export type OnboardingStep = typeof ONBOARDING_STEPS[number];
+export type OnboardingStep = (typeof ONBOARDING_STEPS)[number];
 
 export class UpdateOnboardingStepDto {
-  @ApiProperty({ 
+  @ApiProperty({
     description: 'Current onboarding step',
     enum: ONBOARDING_STEPS,
-    example: 'preferences' 
+    example: 'preferences',
   })
   @IsString()
   @IsIn(ONBOARDING_STEPS)
   step: OnboardingStep;
 
-  @ApiProperty({ 
+  @ApiProperty({
     description: 'Step-specific data',
     example: { completed: true, skipped: false },
-    required: false 
+    required: false,
   })
   @IsOptional()
   @IsObject()

@@ -3,16 +3,16 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useOnboarding } from '../onboarding-provider';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { 
-  PiggyBankIcon, 
+import { Button } from '@dhanam/ui';
+import { Card, CardContent, CardHeader, CardTitle } from '@dhanam/ui';
+import {
+  PiggyBankIcon,
   PlusIcon,
   ArrowRightIcon,
   SkipForwardIcon,
   TrendingUpIcon,
   AlertTriangleIcon,
-  BarChart3Icon
+  BarChart3Icon,
 } from 'lucide-react';
 
 export function FirstBudgetStep() {
@@ -54,11 +54,10 @@ export function FirstBudgetStep() {
         <div className="w-20 h-20 bg-green-100 rounded-full mx-auto mb-6 flex items-center justify-center">
           <PiggyBankIcon className="w-10 h-10 text-green-600" />
         </div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">
-          Crea tu primer presupuesto
-        </h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-4">Crea tu primer presupuesto</h1>
         <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          Los presupuestos te ayudan a controlar tus gastos y alcanzar tus metas financieras. ¡Es más fácil de lo que piensas!
+          Los presupuestos te ayudan a controlar tus gastos y alcanzar tus metas financieras. ¡Es
+          más fácil de lo que piensas!
         </p>
       </div>
 
@@ -70,9 +69,7 @@ export function FirstBudgetStep() {
               <TrendingUpIcon className="w-6 h-6 text-blue-600" />
             </div>
             <h3 className="font-semibold text-gray-900 mb-2">Control total</h3>
-            <p className="text-sm text-gray-600">
-              Ve exactamente en qué gastas tu dinero cada mes
-            </p>
+            <p className="text-sm text-gray-600">Ve exactamente en qué gastas tu dinero cada mes</p>
           </CardContent>
         </Card>
 
@@ -82,9 +79,7 @@ export function FirstBudgetStep() {
               <AlertTriangleIcon className="w-6 h-6 text-yellow-600" />
             </div>
             <h3 className="font-semibold text-gray-900 mb-2">Alertas inteligentes</h3>
-            <p className="text-sm text-gray-600">
-              Te avisamos cuando te acerques a tus límites
-            </p>
+            <p className="text-sm text-gray-600">Te avisamos cuando te acerques a tus límites</p>
           </CardContent>
         </Card>
 
@@ -94,9 +89,7 @@ export function FirstBudgetStep() {
               <BarChart3Icon className="w-6 h-6 text-purple-600" />
             </div>
             <h3 className="font-semibold text-gray-900 mb-2">Análisis avanzado</h3>
-            <p className="text-sm text-gray-600">
-              Reportes detallados de tus hábitos de gasto
-            </p>
+            <p className="text-sm text-gray-600">Reportes detallados de tus hábitos de gasto</p>
           </CardContent>
         </Card>
       </div>
@@ -114,10 +107,10 @@ export function FirstBudgetStep() {
         </CardHeader>
         <CardContent>
           <p className="text-gray-600 mb-4">
-            Configura límites de gasto por categoría (alimentación, transporte, entretenimiento, etc.) 
-            y recibe alertas automáticas para mantener el control.
+            Configura límites de gasto por categoría (alimentación, transporte, entretenimiento,
+            etc.) y recibe alertas automáticas para mantener el control.
           </p>
-          
+
           <div className="bg-white rounded-lg p-4 mb-4">
             <h4 className="font-medium text-gray-900 mb-2">Ejemplo de presupuesto mensual:</h4>
             <div className="space-y-2 text-sm">
@@ -145,10 +138,7 @@ export function FirstBudgetStep() {
             </div>
           </div>
 
-          <Button 
-            onClick={handleCreateBudget}
-            className="w-full bg-green-600 hover:bg-green-700"
-          >
+          <Button onClick={handleCreateBudget} className="w-full bg-green-600 hover:bg-green-700">
             <PlusIcon className="w-4 h-4 mr-2" />
             Crear presupuesto ahora
           </Button>
@@ -157,9 +147,7 @@ export function FirstBudgetStep() {
 
       {/* Tips */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
-        <h3 className="font-semibold text-blue-900 mb-3">
-          💡 Tips para tu primer presupuesto:
-        </h3>
+        <h3 className="font-semibold text-blue-900 mb-3">💡 Tips para tu primer presupuesto:</h3>
         <ul className="space-y-2 text-sm text-blue-800">
           <li>• Empieza con categorías básicas: alimentación, transporte, servicios</li>
           <li>• Revisa tus gastos de los últimos 3 meses como referencia</li>
@@ -179,20 +167,16 @@ export function FirstBudgetStep() {
           <SkipForwardIcon className="w-4 h-4 mr-2" />
           {isSkipping ? 'Saltando...' : 'Lo haré después'}
         </Button>
-        
-        <Button
-          size="lg"
-          onClick={handleContinue}
-          disabled={isLoading}
-          className="px-6"
-        >
+
+        <Button size="lg" onClick={handleContinue} disabled={isLoading} className="px-6">
           {isLoading ? 'Cargando...' : 'Ya creé mi presupuesto'}
         </Button>
       </div>
 
       <div className="text-center mt-6">
         <p className="text-sm text-gray-500">
-          Recuerda: los presupuestos se pueden crear y modificar en cualquier momento desde el dashboard
+          Recuerda: los presupuestos se pueden crear y modificar en cualquier momento desde el
+          dashboard
         </p>
       </div>
     </div>

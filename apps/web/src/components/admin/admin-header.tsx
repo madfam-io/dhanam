@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { Button } from '@dhanam/ui/components/button';
+import { Button } from '@dhanam/ui';
 import { useAuth } from '~/lib/hooks/use-auth';
 import { Shield, LogOut, Home } from 'lucide-react';
 
@@ -31,9 +31,7 @@ export function AdminHeader() {
             </div>
           </div>
           <div className="flex items-center space-x-4">
-            <span className="text-sm text-gray-500 dark:text-gray-400">
-              {user?.email}
-            </span>
+            <span className="text-sm text-gray-500 dark:text-gray-400">{user?.email}</span>
             <Button
               variant="outline"
               size="sm"
