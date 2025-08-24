@@ -16,6 +16,7 @@ import { AnalyticsModule } from '@modules/analytics/analytics.module';
 import { JobsModule } from '@modules/jobs/jobs.module';
 import { ProvidersModule } from '@modules/providers/providers.module';
 import { MonitoringModule } from '@core/monitoring/monitoring.module';
+import { EmailModule } from '@modules/email/email.module';
 
 import { configuration } from './config/configuration';
 import { validationSchema } from './config/validation';
@@ -43,6 +44,7 @@ import { validationSchema } from './config/validation';
     JobsModule,
     ProvidersModule,
     MonitoringModule,
+    EmailModule,
   ],
 })
 export class AppModule {}

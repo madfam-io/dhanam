@@ -1,0 +1,55 @@
+{{> header subject=(concat "Budget Alert: " budgetName " at " percentage "%")}}
+
+<h2 style="margin: 0 0 20px; color: #f57c00; font-size: 24px;">⚠️ Budget Alert</h2>
+
+<p style="margin: 0 0 20px;">Hi {{name}},</p>
+
+<p style="margin: 0 0 20px;">Your <strong>{{budgetName}}</strong> budget has reached <strong>{{percentage}}%</strong> of its limit for this period.</p>
+
+<div style="margin: 30px 0; padding: 20px; background-color: #fff3e0; border-radius: 4px;">
+  <h3 style="margin: 0 0 15px; color: #e65100; font-size: 18px;">Budget Status</h3>
+  
+  <table style="width: 100%; border-collapse: collapse;">
+    <tr>
+      <td style="padding: 8px 0; color: #666;">Budget Limit:</td>
+      <td style="padding: 8px 0; text-align: right; font-weight: 600;">{{currency}} {{limit}}</td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0; color: #666;">Amount Spent:</td>
+      <td style="padding: 8px 0; text-align: right; font-weight: 600; color: #f57c00;">{{currency}} {{spent}}</td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0; color: #666;">Remaining:</td>
+      <td style="padding: 8px 0; text-align: right; font-weight: 600; color: {{#if (gt remaining 0)}}#4caf50{{else}}#f44336{{/if}};">{{currency}} {{remaining}}</td>
+    </tr>
+  </table>
+  
+  <!-- Progress Bar -->
+  <div style="margin-top: 20px; background-color: #e0e0e0; border-radius: 4px; height: 20px; overflow: hidden;">
+    <div style="width: {{percentage}}%; background-color: {{#if (lt percentage 75)}}#4caf50{{else if (lt percentage 90)}}#ff9800{{else}}#f44336{{/if}}; height: 100%; transition: width 0.3s ease;"></div>
+  </div>
+  <p style="margin: 5px 0 0; text-align: center; color: #666; font-size: 14px;">{{percentage}}% used</p>
+</div>
+
+<h3 style="margin: 30px 0 15px; color: #333; font-size: 18px;">Recommendations:</h3>
+
+<ul style="margin: 0 0 30px; padding-left: 20px;">
+  {{#if (gt percentage 90)}}
+    <li style="margin-bottom: 10px;">You're very close to your budget limit</li>
+    <li style="margin-bottom: 10px;">Consider postponing non-essential purchases</li>
+    <li style="margin-bottom: 10px;">Review your recent transactions for any errors</li>
+  {{else if (gt percentage 75)}}
+    <li style="margin-bottom: 10px;">Monitor your spending closely for the rest of the period</li>
+    <li style="margin-bottom: 10px;">Look for opportunities to reduce expenses</li>
+    <li style="margin-bottom: 10px;">Consider if your budget limit needs adjustment</li>
+  {{else}}
+    <li style="margin-bottom: 10px;">You're on track with your budget</li>
+    <li style="margin-bottom: 10px;">Keep monitoring to stay within limits</li>
+  {{/if}}
+</ul>
+
+{{> button text="View Budget Details" url=(concat appUrl "/budgets/" budgetId)}}
+
+<p style="margin: 0;">Want to change your alert settings? Visit your <a href="{{appUrl}}/settings/notifications" style="color: #1a73e8;">notification preferences</a>.</p>
+
+{{> footer}}

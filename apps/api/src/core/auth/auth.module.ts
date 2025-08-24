@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { AuthController } from './auth.controller';
@@ -11,6 +11,7 @@ import { PrismaModule } from '@core/prisma/prisma.module';
 import { LoggerModule } from '@core/logger/logger.module';
 import { RedisModule } from '@core/redis/redis.module';
 import { AuditModule } from '@core/audit/audit.module';
+import { EmailModule } from '@modules/email/email.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { AuditModule } from '@core/audit/audit.module';
     LoggerModule,
     RedisModule,
     AuditModule,
+    forwardRef(() => EmailModule),
   ],
   controllers: [AuthController],
   providers: [

@@ -1,0 +1,46 @@
+{{> header subject=(concat count " Transactions Categorized")}}
+
+<h2 style="margin: 0 0 20px; color: #1a73e8; font-size: 24px;">✨ Transactions Auto-Categorized</h2>
+
+<p style="margin: 0 0 20px;">Hi {{name}},</p>
+
+<p style="margin: 0 0 20px;">We've automatically categorized <strong>{{count}}</strong> new transaction{{#if (gt count 1)}}s{{/if}} based on your rules:</p>
+
+<div style="margin: 30px 0;">
+  <table style="width: 100%; border-collapse: collapse;">
+    <thead>
+      <tr style="background-color: #f5f5f5;">
+        <th style="padding: 10px; text-align: left; font-weight: 600;">Date</th>
+        <th style="padding: 10px; text-align: left; font-weight: 600;">Description</th>
+        <th style="padding: 10px; text-align: left; font-weight: 600;">Category</th>
+        <th style="padding: 10px; text-align: right; font-weight: 600;">Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#each transactions}}
+      <tr>
+        <td style="padding: 10px; border-bottom: 1px solid #e0e0e0;">{{this.date}}</td>
+        <td style="padding: 10px; border-bottom: 1px solid #e0e0e0;">{{this.description}}</td>
+        <td style="padding: 10px; border-bottom: 1px solid #e0e0e0;">
+          <span style="display: inline-block; padding: 2px 8px; background-color: {{this.categoryColor}}20; color: {{this.categoryColor}}; border-radius: 4px; font-size: 14px;">
+            {{this.category}}
+          </span>
+        </td>
+        <td style="padding: 10px; border-bottom: 1px solid #e0e0e0; text-align: right; color: {{#if (lt this.amount 0)}}#d32f2f{{else}}#2e7d32{{/if}};">
+          {{this.currency}} {{this.amount}}
+        </td>
+      </tr>
+      {{/each}}
+    </tbody>
+  </table>
+</div>
+
+<p style="margin: 20px 0;">These categorizations were made based on your auto-categorization rules. You can review and adjust them if needed.</p>
+
+{{> button text="Review All Transactions" url=(concat appUrl "/transactions")}}
+
+<p style="margin: 30px 0; padding: 15px; background-color: #e3f2fd; border-radius: 4px; font-size: 14px;">
+  <strong>💡 Tip:</strong> The more you categorize transactions, the smarter our auto-categorization becomes. You can also create custom rules in your settings.
+</p>
+
+{{> footer}}

@@ -3,6 +3,8 @@ import {
   UnauthorizedException,
   BadRequestException,
   ConflictException,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
@@ -10,6 +12,7 @@ import { PrismaService } from '@core/prisma/prisma.service';
 import { LoggerService } from '@core/logger/logger.service';
 import { SessionService } from './session.service';
 import { TotpService } from './totp.service';
+import { EmailService } from '@modules/email/email.service';
 import {
   LoginDto,
   RegisterDto,
@@ -34,6 +37,8 @@ export class AuthService {
     private logger: LoggerService,
     private sessionService: SessionService,
     private totpService: TotpService,
+    @Inject(forwardRef(() => EmailService))
+    private emailService: EmailService,
   ) {}
 
   async register(dto: RegisterDto): Promise<AuthTokens> {
@@ -81,6 +86,9 @@ export class AuthService {
     });
 
     this.logger.log(`User registered: ${user.email}`, 'AuthService');
+    
+    // Send welcome email
+    await this.emailService.sendWelcomeEmail(user.email, user.name);
 
     return this.generateTokens(user.id, user.email);
   }

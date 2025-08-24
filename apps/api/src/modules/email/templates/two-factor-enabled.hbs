@@ -1,0 +1,30 @@
+{{> header subject="Two-Factor Authentication Enabled"}}
+
+<h2 style="margin: 0 0 20px; color: #4caf50; font-size: 24px;">🔐 2FA Enabled Successfully</h2>
+
+<p style="margin: 0 0 20px;">Hi {{name}},</p>
+
+<p style="margin: 0 0 20px;">Great news! Two-factor authentication (2FA) has been successfully enabled on your Dhanam account. This adds an extra layer of security to protect your financial data.</p>
+
+<div style="margin: 30px 0; padding: 20px; background-color: #e8f5e9; border-radius: 4px;">
+  <h3 style="margin: 0 0 15px; color: #2e7d32; font-size: 18px;">What this means for you:</h3>
+  <ul style="margin: 0; padding-left: 20px;">
+    <li style="margin-bottom: 10px;">You'll need your authenticator app to log in</li>
+    <li style="margin-bottom: 10px;">Your account is now protected against unauthorized access</li>
+    <li style="margin-bottom: 10px;">Even if someone gets your password, they can't access your account</li>
+  </ul>
+</div>
+
+<h3 style="margin: 30px 0 15px; color: #333; font-size: 18px;">Important: Save Your Recovery Codes</h3>
+
+<p style="margin: 0 0 20px;">Make sure you've saved your recovery codes in a secure location. You'll need these if you lose access to your authenticator app.</p>
+
+{{> button text="View Recovery Codes" url=(concat appUrl "/settings/security")}}
+
+<p style="margin: 0 0 20px; padding: 15px; background-color: #fff3cd; border-radius: 4px; font-size: 14px;">
+  <strong>⚠️ Warning:</strong> If you didn't enable 2FA, someone else may have access to your account. Please contact support immediately.
+</p>
+
+<p style="margin: 0;">Thank you for taking steps to secure your account!</p>
+
+{{> footer}}

@@ -1,0 +1,83 @@
+{{> header subject="Your Weekly Financial Summary"}}
+
+<h2 style="margin: 0 0 20px; color: #1a73e8; font-size: 24px;">📊 Weekly Summary</h2>
+
+<p style="margin: 0 0 20px;">Hi {{name}},</p>
+
+<p style="margin: 0 0 20px;">Here's your financial activity for the week of {{weekStart}} - {{weekEnd}}:</p>
+
+<!-- Overview Cards -->
+<table style="width: 100%; margin: 30px 0;">
+  <tr>
+    <td style="width: 48%; padding: 20px; background-color: #e3f2fd; border-radius: 4px; text-align: center;">
+      <p style="margin: 0; color: #1976d2; font-size: 14px;">Total Spent</p>
+      <p style="margin: 5px 0 0; color: #1976d2; font-size: 28px; font-weight: 700;">{{currency}} {{totalSpent}}</p>
+    </td>
+    <td style="width: 4%;"></td>
+    <td style="width: 48%; padding: 20px; background-color: {{#if (gt netChange 0)}}#e8f5e9{{else}}#ffebee{{/if}}; border-radius: 4px; text-align: center;">
+      <p style="margin: 0; color: {{#if (gt netChange 0)}}#2e7d32{{else}}#c62828{{/if}}; font-size: 14px;">Net Change</p>
+      <p style="margin: 5px 0 0; color: {{#if (gt netChange 0)}}#2e7d32{{else}}#c62828{{/if}}; font-size: 28px; font-weight: 700;">
+        {{#if (gt netChange 0)}}+{{/if}}{{currency}} {{netChange}}
+      </p>
+    </td>
+  </tr>
+</table>
+
+<!-- Top Categories -->
+<div style="margin: 30px 0;">
+  <h3 style="margin: 0 0 15px; color: #333; font-size: 18px;">Top Spending Categories</h3>
+  <table style="width: 100%; border-collapse: collapse;">
+    {{#each topCategories}}
+    <tr>
+      <td style="padding: 12px 0; border-bottom: 1px solid #e0e0e0;">
+        <span style="display: inline-block; width: 12px; height: 12px; background-color: {{this.color}}; border-radius: 2px; margin-right: 10px;"></span>
+        {{this.name}}
+      </td>
+      <td style="padding: 12px 0; border-bottom: 1px solid #e0e0e0; text-align: right; font-weight: 600;">
+        {{../currency}} {{this.amount}}
+      </td>
+      <td style="padding: 12px 0; border-bottom: 1px solid #e0e0e0; text-align: right; color: #666;">
+        {{this.percentage}}%
+      </td>
+    </tr>
+    {{/each}}
+  </table>
+</div>
+
+<!-- Budget Status -->
+{{#if budgets}}
+<div style="margin: 30px 0;">
+  <h3 style="margin: 0 0 15px; color: #333; font-size: 18px;">Budget Status</h3>
+  {{#each budgets}}
+  <div style="margin-bottom: 15px;">
+    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+      <span style="color: #333;">{{this.name}}</span>
+      <span style="color: #666; font-size: 14px;">{{this.spent}} / {{this.limit}} {{../currency}}</span>
+    </div>
+    <div style="background-color: #e0e0e0; border-radius: 4px; height: 8px; overflow: hidden;">
+      <div style="width: {{this.percentage}}%; background-color: {{#if (lt this.percentage 75)}}#4caf50{{else if (lt this.percentage 90)}}#ff9800{{else}}#f44336{{/if}}; height: 100%;"></div>
+    </div>
+  </div>
+  {{/each}}
+</div>
+{{/if}}
+
+<!-- Insights -->
+{{#if insights}}
+<div style="margin: 30px 0; padding: 20px; background-color: #f5f5f5; border-radius: 4px;">
+  <h3 style="margin: 0 0 15px; color: #333; font-size: 18px;">💡 Insights</h3>
+  <ul style="margin: 0; padding-left: 20px;">
+    {{#each insights}}
+    <li style="margin-bottom: 10px;">{{this}}</li>
+    {{/each}}
+  </ul>
+</div>
+{{/if}}
+
+{{> button text="View Full Report" url=(concat appUrl "/analytics")}}
+
+<p style="margin: 30px 0 0; color: #666; font-size: 14px;">
+  This summary is sent every Monday. You can change your email preferences in your <a href="{{appUrl}}/settings/notifications" style="color: #1a73e8;">account settings</a>.
+</p>
+
+{{> footer}}

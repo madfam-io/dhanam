@@ -1,0 +1,113 @@
+{{> header subject="Your Monthly Financial Report"}}
+
+<h2 style="margin: 0 0 20px; color: #1a73e8; font-size: 24px;">📈 Monthly Report - {{month}} {{year}}</h2>
+
+<p style="margin: 0 0 20px;">Hi {{name}},</p>
+
+<p style="margin: 0 0 20px;">Here's your comprehensive financial report for {{month}} {{year}}:</p>
+
+<!-- Key Metrics -->
+<div style="margin: 30px 0; padding: 20px; background-color: #e3f2fd; border-radius: 4px;">
+  <h3 style="margin: 0 0 15px; color: #1976d2; font-size: 18px;">Key Metrics</h3>
+  
+  <table style="width: 100%;">
+    <tr>
+      <td style="width: 50%; padding: 10px 0;">
+        <p style="margin: 0; color: #666; font-size: 14px;">Total Income</p>
+        <p style="margin: 5px 0 0; color: #2e7d32; font-size: 24px; font-weight: 700;">{{currency}} {{totalIncome}}</p>
+      </td>
+      <td style="width: 50%; padding: 10px 0;">
+        <p style="margin: 0; color: #666; font-size: 14px;">Total Expenses</p>
+        <p style="margin: 5px 0 0; color: #d32f2f; font-size: 24px; font-weight: 700;">{{currency}} {{totalExpenses}}</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="width: 50%; padding: 10px 0;">
+        <p style="margin: 0; color: #666; font-size: 14px;">Net Savings</p>
+        <p style="margin: 5px 0 0; color: {{#if (gt netSavings 0)}}#2e7d32{{else}}#d32f2f{{/if}}; font-size: 24px; font-weight: 700;">
+          {{#if (gt netSavings 0)}}+{{/if}}{{currency}} {{netSavings}}
+        </p>
+      </td>
+      <td style="width: 50%; padding: 10px 0;">
+        <p style="margin: 0; color: #666; font-size: 14px;">Savings Rate</p>
+        <p style="margin: 5px 0 0; color: #1976d2; font-size: 24px; font-weight: 700;">{{savingsRate}}%</p>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<!-- Budget Performance -->
+<div style="margin: 30px 0;">
+  <h3 style="margin: 0 0 15px; color: #333; font-size: 18px;">Budget Performance</h3>
+  
+  <table style="width: 100%; border-collapse: collapse;">
+    <thead>
+      <tr style="background-color: #f5f5f5;">
+        <th style="padding: 10px; text-align: left; font-weight: 600;">Category</th>
+        <th style="padding: 10px; text-align: right; font-weight: 600;">Budget</th>
+        <th style="padding: 10px; text-align: right; font-weight: 600;">Actual</th>
+        <th style="padding: 10px; text-align: right; font-weight: 600;">Variance</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#each budgetPerformance}}
+      <tr>
+        <td style="padding: 10px; border-bottom: 1px solid #e0e0e0;">{{this.category}}</td>
+        <td style="padding: 10px; border-bottom: 1px solid #e0e0e0; text-align: right;">{{../currency}} {{this.budgeted}}</td>
+        <td style="padding: 10px; border-bottom: 1px solid #e0e0e0; text-align: right;">{{../currency}} {{this.actual}}</td>
+        <td style="padding: 10px; border-bottom: 1px solid #e0e0e0; text-align: right; color: {{#if (gt this.variance 0)}}#2e7d32{{else}}#d32f2f{{/if}};">
+          {{#if (gt this.variance 0)}}+{{/if}}{{../currency}} {{this.variance}}
+        </td>
+      </tr>
+      {{/each}}
+    </tbody>
+  </table>
+</div>
+
+<!-- Net Worth Trend -->
+{{#if netWorthTrend}}
+<div style="margin: 30px 0;">
+  <h3 style="margin: 0 0 15px; color: #333; font-size: 18px;">Net Worth Trend</h3>
+  <p style="margin: 0 0 10px;">
+    Your net worth {{#if (gt netWorthChange 0)}}increased{{else}}decreased{{/if}} by 
+    <span style="color: {{#if (gt netWorthChange 0)}}#2e7d32{{else}}#d32f2f{{/if}}; font-weight: 600;">
+      {{currency}} {{abs netWorthChange}} ({{netWorthChangePercent}}%)
+    </span>
+    this month.
+  </p>
+  <p style="margin: 0;">Current Net Worth: <strong>{{currency}} {{currentNetWorth}}</strong></p>
+</div>
+{{/if}}
+
+<!-- ESG Impact (for crypto users) -->
+{{#if esgData}}
+<div style="margin: 30px 0; padding: 20px; background-color: #e8f5e9; border-radius: 4px;">
+  <h3 style="margin: 0 0 15px; color: #2e7d32; font-size: 18px;">🌱 ESG Impact</h3>
+  <p style="margin: 0 0 10px;">Your crypto portfolio's environmental score: <strong>{{esgData.score}}/100</strong></p>
+  <p style="margin: 0;">{{esgData.insight}}</p>
+</div>
+{{/if}}
+
+<!-- Recommendations -->
+<div style="margin: 30px 0;">
+  <h3 style="margin: 0 0 15px; color: #333; font-size: 18px;">📝 Recommendations</h3>
+  <ul style="margin: 0; padding-left: 20px;">
+    {{#each recommendations}}
+    <li style="margin-bottom: 10px;">{{this}}</li>
+    {{/each}}
+  </ul>
+</div>
+
+{{> button text="View Detailed Analytics" url=(concat appUrl "/analytics/monthly/" year "/" monthNumber)}}
+
+{{#if hasAttachment}}
+<p style="margin: 30px 0; padding: 15px; background-color: #f5f5f5; border-radius: 4px;">
+  📎 <strong>Attachment:</strong> Your detailed report PDF is attached to this email.
+</p>
+{{/if}}
+
+<p style="margin: 30px 0 0; color: #666; font-size: 14px;">
+  This report is generated on the 1st of each month. Manage your preferences in <a href="{{appUrl}}/settings/notifications" style="color: #1a73e8;">account settings</a>.
+</p>
+
+{{> footer}}
