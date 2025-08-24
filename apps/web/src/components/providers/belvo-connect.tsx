@@ -6,17 +6,55 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@dhanam/ui';
 import { Button } from '@dhanam/ui';
 import { Input } from '@dhanam/ui';
-import { Label } from '@dhanam/ui';
+import { Card, CardContent, CardHeader, CardTitle } from '@dhanam/ui';
 import { Alert, AlertDescription } from '@dhanam/ui';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { Loader2, Shield, Building2, MapPin, Globe } from 'lucide-react';
 import { toast } from 'sonner';
-import { apiClient } from '@/lib/api/client';
+import { belvoApi } from '~/lib/api/belvo';
+
+const BELVO_INSTITUTIONS = [
+  {
+    name: 'BBVA México',
+    code: 'bbva_mx',
+    logo: '🏦',
+    description: 'Bancomer - Largest bank in Mexico',
+  },
+  {
+    name: 'Banamex',
+    code: 'banamex',
+    logo: '🏛️', 
+    description: 'Citibanamex - Major Mexican bank',
+  },
+  {
+    name: 'Banorte',
+    code: 'banorte',
+    logo: '🏢',
+    description: 'Banco del Bajío group bank',
+  },
+  {
+    name: 'Santander México',
+    code: 'santander_mx',
+    logo: '🔴',
+    description: 'Spanish multinational bank',
+  },
+  {
+    name: 'HSBC México',
+    code: 'hsbc_mx',
+    logo: '🔺',
+    description: 'International banking presence',
+  },
+  {
+    name: 'Scotiabank México',
+    code: 'scotiabank_mx',
+    logo: '🟥',
+    description: 'Canadian multinational bank',
+  },
+];
 
 interface BelvoConnectProps {
   open: boolean;
@@ -25,126 +63,188 @@ interface BelvoConnectProps {
   onSuccess: () => void;
 }
 
-const BELVO_INSTITUTIONS = [
-  { id: 'erebor_mx_retail', name: 'Erebor Bank (Sandbox)', country: 'MX' },
-  { id: 'gringotts_mx_retail', name: 'Gringotts Bank (Sandbox)', country: 'MX' },
-];
-
 export function BelvoConnect({ open, onOpenChange, spaceId, onSuccess }: BelvoConnectProps) {
   const [institution, setInstitution] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
-  const connectMutation = useMutation({
-    mutationFn: async (data: { institution: string; username: string; password: string }) => {
-      return apiClient.post(`/providers/belvo/spaces/${spaceId}/link`, data);
-    },
-    onSuccess: () => {
-      toast.success('Bank account connected successfully');
+  const linkAccountMutation = useMutation({
+    mutationFn: (data: { institution: string; username: string; password: string }) =>
+      belvoApi.linkAccount(spaceId, data),
+    onSuccess: (data) => {
+      const selectedBank = BELVO_INSTITUTIONS.find(bank => bank.code === institution);
+      toast.success(
+        `Successfully linked ${data.accountsCount} account${data.accountsCount > 1 ? 's' : ''} from ${selectedBank?.name || institution}`
+      );
       onSuccess();
       onOpenChange(false);
-      resetForm();
+      setInstitution('');
+      setUsername('');
+      setPassword('');
     },
     onError: (error: any) => {
-      const message = error.response?.data?.message || 'Failed to connect bank account';
+      const message = error.code === 'INVALID_CREDENTIALS' 
+        ? 'Invalid username or password'
+        : error.code === 'INSTITUTION_ERROR'
+        ? 'Bank is temporarily unavailable'
+        : error.code === 'MFA_REQUIRED'
+        ? 'Multi-factor authentication required (not yet supported)'
+        : 'Failed to connect bank account';
       toast.error(message);
     },
   });
 
-  const resetForm = () => {
-    setInstitution('');
-    setUsername('');
-    setPassword('');
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    connectMutation.mutate({ institution, username, password });
+  const handleConnect = () => {
+    if (institution && username && password) {
+      linkAccountMutation.mutate({ institution, username, password });
+    }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <form onSubmit={handleSubmit}>
-          <DialogHeader>
-            <DialogTitle>Connect Mexican Bank Account</DialogTitle>
-            <DialogDescription>
-              Connect your bank account using Belvo to automatically sync transactions
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4 py-4">
-            <Alert>
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                For testing, use the sandbox credentials:
-                <br />
-                Username: <code>johndoe</code>
-                <br />
-                Password: <code>MyPassword</code>
-              </AlertDescription>
-            </Alert>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <MapPin className="h-5 w-5 text-green-600" />
+            Connect Mexican Bank Account
+          </DialogTitle>
+          <DialogDescription>
+            Securely connect your Mexican bank account using Belvo. Your credentials are encrypted
+            and used only to fetch your financial data.
+          </DialogDescription>
+        </DialogHeader>
 
-            <div className="grid gap-2">
-              <Label htmlFor="institution">Bank</Label>
-              <select
-                id="institution"
-                value={institution}
-                onChange={(e) => setInstitution(e.target.value)}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                required
-              >
-                <option value="">Select a bank</option>
-                {BELVO_INSTITUTIONS.map((inst) => (
-                  <option key={inst.id} value={inst.id}>
-                    {inst.name}
-                  </option>
-                ))}
-              </select>
+        <div className="space-y-6">
+          {/* Security Notice */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Shield className="h-4 w-4 text-green-600" />
+                Bank-Level Security
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <ul className="text-sm text-muted-foreground space-y-1">
+                <li>• 256-bit AES encryption for credentials</li>
+                <li>• Read-only access to your accounts</li>
+                <li>• CNBV regulated financial data access</li>
+                <li>• Credentials encrypted with AWS KMS</li>
+              </ul>
+            </CardContent>
+          </Card>
+
+          {/* Supported Institutions */}
+          <div>
+            <h4 className="font-medium mb-3 flex items-center gap-2">
+              <Building2 className="h-4 w-4" />
+              Supported Mexican Banks
+            </h4>
+            <div className="grid grid-cols-2 gap-3">
+              {BELVO_INSTITUTIONS.map((bank) => (
+                <div
+                  key={bank.code}
+                  className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                    institution === bank.code ? 'bg-primary/10 border-primary' : 'bg-card hover:bg-accent'
+                  }`}
+                  onClick={() => setInstitution(bank.code)}
+                >
+                  <span className="text-2xl">{bank.logo}</span>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-sm">{bank.name}</p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {bank.description}
+                    </p>
+                  </div>
+                </div>
+              ))}
             </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              And 40+ other Mexican financial institutions
+            </p>
+          </div>
 
-            <div className="grid gap-2">
-              <Label htmlFor="username">Username</Label>
+          {/* Connection Form */}
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label htmlFor="username" className="text-sm font-medium">
+                Username / Client ID
+              </label>
               <Input
                 id="username"
-                type="text"
+                placeholder="Your online banking username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="Enter your bank username"
-                required
+                className="w-full"
               />
             </div>
 
-            <div className="grid gap-2">
-              <Label htmlFor="password">Password</Label>
+            <div className="space-y-2">
+              <label htmlFor="password" className="text-sm font-medium">
+                Password
+              </label>
               <Input
                 id="password"
                 type="password"
+                placeholder="Your online banking password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your bank password"
-                required
+                className="w-full"
               />
             </div>
-          </div>
 
-          <DialogFooter>
+            <Alert>
+              <Globe className="h-4 w-4" />
+              <AlertDescription>
+                We'll only access your account balances and transaction history. 
+                No transfers or payments can be made through this connection.
+              </AlertDescription>
+            </Alert>
+
             <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={connectMutation.isPending}
+              onClick={handleConnect}
+              disabled={!institution || !username || !password || linkAccountMutation.isPending}
+              className="w-full"
+              size="lg"
             >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={connectMutation.isPending}>
-              {connectMutation.isPending && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              {linkAccountMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Connecting...
+                </>
+              ) : (
+                'Connect Bank Account'
               )}
-              Connect Account
             </Button>
-          </DialogFooter>
-        </form>
+
+            {/* Demo Credentials for Development */}
+            {process.env.NODE_ENV === 'development' && (
+              <Card className="bg-blue-50 border-blue-200">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm text-blue-800">Demo Credentials</CardTitle>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <div className="text-xs text-blue-700 space-y-1">
+                    <p><strong>Institution:</strong> sandbox_mx</p>
+                    <p><strong>Username:</strong> test_user</p>
+                    <p><strong>Password:</strong> test_password</p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            <p className="text-xs text-center text-muted-foreground">
+              By connecting, you agree to Belvo's{' '}
+              <a
+                href="https://belvo.com/privacy/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline"
+              >
+                Privacy Policy
+              </a>
+            </p>
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   );

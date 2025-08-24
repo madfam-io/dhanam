@@ -15,6 +15,7 @@ export default function LoginPage() {
   const router = useRouter();
   const { setAuth } = useAuth();
   const [error, setError] = useState<string | null>(null);
+  const [showTotpField, setShowTotpField] = useState(false);
 
   const loginMutation = useMutation({
     mutationFn: authApi.login,
@@ -25,8 +26,13 @@ export default function LoginPage() {
     onError: (error: ApiError) => {
       if (error.code === 'INVALID_CREDENTIALS') {
         setError('Invalid email or password');
-      } else if (error.code === '2FA_REQUIRED') {
+        setShowTotpField(false);
+      } else if (error.code === 'TOTP_REQUIRED') {
         setError('Please enter your 2FA code');
+        setShowTotpField(true);
+      } else if (error.code === 'INVALID_TOTP') {
+        setError('Invalid 2FA code. Please try again.');
+        setShowTotpField(true);
       } else {
         setError('An error occurred. Please try again.');
       }
@@ -53,6 +59,7 @@ export default function LoginPage() {
             loginMutation.mutate(data);
           }}
           isLoading={loginMutation.isPending}
+          showTotpField={showTotpField}
         />
       </CardContent>
       <CardFooter className="flex flex-col space-y-2">

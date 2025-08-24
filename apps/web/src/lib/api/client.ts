@@ -136,4 +136,15 @@ export class ApiClient {
   }
 }
 
-export const apiClient = new ApiClient({});
+// Create the client with token refresh callback
+export const apiClient = new ApiClient({
+  onTokenRefresh: (tokens) => {
+    // Import auth store dynamically to avoid circular dependency
+    import('../hooks/use-auth').then(({ useAuth }) => {
+      const store = useAuth.getState();
+      if (store.user) {
+        store.setAuth(store.user, tokens);
+      }
+    });
+  },
+});

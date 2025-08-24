@@ -11,6 +11,7 @@ import { useSpaceStore } from '~/stores/space';
 import { accountsApi } from '~/lib/api/accounts';
 import { transactionsApi } from '~/lib/api/transactions';
 import { budgetsApi } from '~/lib/api/budgets';
+import { analyticsApi } from '~/lib/api/analytics';
 import { formatCurrency } from '~/lib/utils';
 import { 
   TrendingUp, 
@@ -55,13 +56,34 @@ export default function DashboardPage() {
     enabled: !!currentSpace && !!budgets && budgets.length > 0 && !!budgets[0],
   });
 
+  // New analytics queries
+  const { data: netWorthData } = useQuery({
+    queryKey: ['net-worth', currentSpace?.id],
+    queryFn: () => analyticsApi.getNetWorth(currentSpace!.id),
+    enabled: !!currentSpace,
+  });
+
+  const { data: cashflowForecast } = useQuery({
+    queryKey: ['cashflow-forecast', currentSpace?.id],
+    queryFn: () => analyticsApi.getCashflowForecast(currentSpace!.id),
+    enabled: !!currentSpace,
+  });
+
+  const { data: portfolioAllocation } = useQuery({
+    queryKey: ['portfolio-allocation', currentSpace?.id],
+    queryFn: () => analyticsApi.getPortfolioAllocation(currentSpace!.id),
+    enabled: !!currentSpace,
+  });
+
   if (!currentSpace) {
     return <EmptyState />;
   }
 
-  const totalAssets = accounts?.filter(a => a.balance > 0).reduce((sum, a) => sum + a.balance, 0) || 0;
-  const totalLiabilities = Math.abs(accounts?.filter(a => a.balance < 0).reduce((sum, a) => sum + a.balance, 0) || 0);
-  const netWorth = totalAssets - totalLiabilities;
+  // Use analytics data when available, fallback to account calculations
+  const totalAssets = netWorthData?.totalAssets ?? (accounts?.filter(a => a.balance > 0).reduce((sum, a) => sum + a.balance, 0) || 0);
+  const totalLiabilities = netWorthData?.totalLiabilities ?? Math.abs(accounts?.filter(a => a.balance < 0).reduce((sum, a) => sum + a.balance, 0) || 0);
+  const netWorth = netWorthData?.netWorth ?? (totalAssets - totalLiabilities);
+  const netWorthChange = netWorthData?.changePercent ?? 0;
 
   const accountTypeIcons: Record<string, React.ElementType> = {
     checking: Building2,
@@ -98,7 +120,19 @@ export default function DashboardPage() {
                 formatCurrency(netWorth, currentSpace.currency)
               )}
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground flex items-center gap-1">
+              {netWorthChange !== 0 && (
+                <>
+                  {netWorthChange > 0 ? (
+                    <TrendingUp className="h-3 w-3 text-green-600" />
+                  ) : (
+                    <TrendingDown className="h-3 w-3 text-red-600" />
+                  )}
+                  <span className={netWorthChange > 0 ? 'text-green-600' : 'text-red-600'}>
+                    {Math.abs(netWorthChange).toFixed(1)}%
+                  </span>
+                </>
+              )}
               {netWorth > 0 ? 'Positive' : 'Negative'} net worth
             </p>
           </CardContent>
@@ -250,6 +284,89 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Cashflow Forecast */}
+      {cashflowForecast && (
+        <Card>
+          <CardHeader>
+            <CardTitle>60-Day Cashflow Forecast</CardTitle>
+            <CardDescription>
+              Projected income, expenses, and balance trends
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="grid grid-cols-3 gap-4 text-center">
+                <div>
+                  <p className="text-sm text-muted-foreground">Projected Income</p>
+                  <p className="text-lg font-semibold text-green-600">
+                    {formatCurrency(cashflowForecast.summary.totalIncome, currentSpace.currency)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Projected Expenses</p>
+                  <p className="text-lg font-semibold text-red-600">
+                    {formatCurrency(cashflowForecast.summary.totalExpenses, currentSpace.currency)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Net Cashflow</p>
+                  <p className={`text-lg font-semibold ${(cashflowForecast.summary.totalIncome - cashflowForecast.summary.totalExpenses) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    {formatCurrency(cashflowForecast.summary.totalIncome - cashflowForecast.summary.totalExpenses, currentSpace.currency)}
+                  </p>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span>Current Balance</span>
+                  <span>{formatCurrency(cashflowForecast.summary.currentBalance, currentSpace.currency)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span>Projected Balance (60d)</span>
+                  <span className={cashflowForecast.summary.projectedBalance >= 0 ? 'text-green-600' : 'text-red-600'}>
+                    {formatCurrency(cashflowForecast.summary.projectedBalance, currentSpace.currency)}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Portfolio Allocation */}
+      {portfolioAllocation && portfolioAllocation.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Portfolio Allocation</CardTitle>
+            <CardDescription>
+              Asset distribution across your accounts
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {portfolioAllocation.slice(0, 6).map((allocation) => (
+                <div key={allocation.assetType} className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="w-3 h-3 rounded-full"
+                      style={{ backgroundColor: '#6366f1' }}
+                    />
+                    <span className="text-sm font-medium">{allocation.assetType}</span>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-medium">
+                      {formatCurrency(allocation.value, currentSpace.currency)}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {allocation.percentage.toFixed(1)}%
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Budget Overview */}
       {currentBudgetSummary && (
