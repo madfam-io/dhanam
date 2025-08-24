@@ -22,7 +22,6 @@ export class SessionService {
       db: parseInt(process.env.REDIS_DB || '0'),
       maxRetriesPerRequest: 3,
       connectTimeout: 10000,
-      retryDelayOnFailover: 100,
     });
   }
 
@@ -73,7 +72,7 @@ export class SessionService {
 
       return sessionData;
     } catch (error) {
-      this.logger.error('Failed to parse session data', error as Error, 'SessionService');
+      this.logger.error('Failed to parse session data', (error as Error).message, 'SessionService');
       await this.revokeRefreshToken(token);
       return null;
     }
@@ -89,7 +88,7 @@ export class SessionService {
         const sessionData: SessionData = JSON.parse(sessionDataStr);
         await this.redis.srem(`user_sessions:${sessionData.userId}`, hashedToken);
       } catch (error) {
-        this.logger.error('Failed to parse session data during revocation', error as Error, 'SessionService');
+        this.logger.error('Failed to parse session data during revocation', (error as Error).message, 'SessionService');
       }
     }
 
@@ -153,7 +152,7 @@ export class SessionService {
 
       return resetData.userId;
     } catch (error) {
-      this.logger.error('Failed to parse reset token data', error as Error, 'SessionService');
+      this.logger.error('Failed to parse reset token data', (error as Error).message, 'SessionService');
       await this.redis.del(`password_reset:${hashedToken}`);
       return null;
     }

@@ -45,7 +45,7 @@ export class AuditService {
         );
       }
     } catch (error) {
-      this.logger.error('Failed to log audit event', error as Error, 'AuditService');
+      this.logger.error('Failed to log audit event', (error as Error).message, 'AuditService');
     }
   }
 

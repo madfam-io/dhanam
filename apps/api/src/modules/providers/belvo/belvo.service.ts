@@ -2,6 +2,7 @@ import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '@core/prisma/prisma.service';
 import { CryptoService } from '@core/crypto/crypto.service';
+import { AuditService } from '@core/audit/audit.service';
 import { CreateBelvoLinkDto, BelvoWebhookDto, BelvoWebhookEvent } from './dto';
 import { Account, Transaction, Prisma, Currency, AccountType } from '@prisma/client';
 const { default: Belvo } = require('belvo');
@@ -15,6 +16,7 @@ export class BelvoService {
     private configService: ConfigService,
     private prisma: PrismaService,
     private cryptoService: CryptoService,
+    private auditService: AuditService,
   ) {
     const secretKeyId = this.configService.get<string>('BELVO_SECRET_KEY_ID');
     const secretKeyPassword = this.configService.get<string>('BELVO_SECRET_KEY_PASSWORD');
@@ -76,8 +78,24 @@ export class BelvoService {
       // Fetch initial transactions
       await this.syncTransactions(spaceId, userId, link.id);
 
+      // Log successful connection
+      await this.auditService.logProviderConnection(
+        'belvo',
+        userId,
+        spaceId,
+        true,
+      );
+
       return { linkId: link.id, accounts };
     } catch (error) {
+      // Log failed connection
+      await this.auditService.logProviderConnection(
+        'belvo',
+        userId,
+        spaceId,
+        false,
+      );
+      
       this.logger.error('Failed to create Belvo link', error);
       throw new BadRequestException('Failed to connect to financial institution');
     }

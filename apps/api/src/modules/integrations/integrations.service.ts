@@ -129,25 +129,61 @@ export class IntegrationsService {
 
   private async checkBelvoHealth(): Promise<{ latency: number }> {
     const start = Date.now();
-    // In a real implementation, we would make a health check call to Belvo
-    // For now, we'll simulate a successful health check
-    await new Promise((resolve) => setTimeout(resolve, 100));
-    return { latency: Date.now() - start };
+    try {
+      if (!this.isBelvoConfigured()) {
+        throw new Error('Belvo not configured');
+      }
+      
+      const { default: Belvo } = require('belvo');
+      const client = new Belvo(
+        this.configService.get('BELVO_SECRET_KEY_ID'),
+        this.configService.get('BELVO_SECRET_KEY_PASSWORD'),
+        this.configService.get('BELVO_ENV', 'sandbox')
+      );
+      
+      // Simple health check - list institutions (lightweight operation)
+      await client.institutions.list();
+      return { latency: Date.now() - start };
+    } catch (error) {
+      throw new Error(`Belvo health check failed: ${(error as Error).message}`);
+    }
   }
 
   private async checkPlaidHealth(): Promise<{ latency: number }> {
     const start = Date.now();
-    // In a real implementation, we would make a health check call to Plaid
-    // For now, we'll simulate a successful health check
-    await new Promise((resolve) => setTimeout(resolve, 150));
-    return { latency: Date.now() - start };
+    try {
+      if (!this.isPlaidConfigured()) {
+        throw new Error('Plaid not configured');
+      }
+      
+      const { PlaidApi, Configuration, PlaidEnvironments } = require('plaid');
+      const configuration = new Configuration({
+        basePath: PlaidEnvironments[this.configService.get('PLAID_ENV', 'sandbox')],
+        baseOptions: {
+          headers: {
+            'PLAID-CLIENT-ID': this.configService.get('PLAID_CLIENT_ID'),
+            'PLAID-SECRET': this.configService.get('PLAID_SECRET'),
+          },
+        },
+      });
+      
+      const client = new PlaidApi(configuration);
+      await client.categoriesGet({});
+      return { latency: Date.now() - start };
+    } catch (error) {
+      throw new Error(`Plaid health check failed: ${(error as Error).message}`);
+    }
   }
 
   private async checkBitsoHealth(): Promise<{ latency: number }> {
     const start = Date.now();
-    // In a real implementation, we would make a health check call to Bitso
-    // For now, we'll simulate a successful health check
-    await new Promise((resolve) => setTimeout(resolve, 120));
-    return { latency: Date.now() - start };
+    try {
+      const axios = require('axios');
+      // Public endpoint that doesn't require authentication
+      await axios.get('https://api.bitso.com/v3/ticker', { timeout: 5000 });
+      return { latency: Date.now() - start };
+    } catch (error) {
+      throw new Error(`Bitso health check failed: ${(error as Error).message}`);
+    }
   }
 }

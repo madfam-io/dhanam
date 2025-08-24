@@ -76,31 +76,101 @@ export class AnalyticsService {
   ): Promise<CashflowForecast> {
     await this.spacesService.verifyUserAccess(userId, spaceId, 'viewer');
 
-    // Simplified implementation
+    // Get current liquid account balances
+    const liquidAccounts = await this.prisma.account.findMany({
+      where: { 
+        spaceId,
+        type: { in: ['checking', 'savings'] },
+      },
+    });
+
+    const currentBalance = liquidAccounts.reduce(
+      (sum, account) => sum + account.balance.toNumber(),
+      0,
+    );
+
+    // Analyze historical patterns for forecasting
+    const historicalData = await this.getHistoricalCashflowPatterns(spaceId, 90); // Last 90 days
+    
     const forecast = [];
+    let runningBalance = currentBalance;
     const today = new Date();
     
-    for (let i = 0; i < days; i += 7) { // Weekly forecast
-      const date = new Date(today);
-      date.setDate(date.getDate() + i);
+    for (let i = 0; i < days; i += 7) { // Weekly granularity
+      const forecastDate = new Date(today);
+      forecastDate.setDate(today.getDate() + i);
+      
+      // Predict weekly income/expenses based on historical averages
+      const weeklyIncome = historicalData.avgWeeklyIncome || 0;
+      const weeklyExpenses = historicalData.avgWeeklyExpenses || 0;
+      const weeklyNet = weeklyIncome - weeklyExpenses;
+      
+      runningBalance += weeklyNet;
       
       forecast.push({
-        date: date.toISOString(),
-        income: 0,
-        expenses: 0,
-        balance: 0,
+        date: forecastDate.toISOString(),
+        income: weeklyIncome,
+        expenses: weeklyExpenses,
+        balance: runningBalance,
       });
     }
+
+    const totalProjectedIncome = forecast.reduce((sum, week) => sum + week.income, 0);
+    const totalProjectedExpenses = forecast.reduce((sum, week) => sum + week.expenses, 0);
 
     return {
       forecast,
       summary: {
-        currentBalance: 0,
-        projectedBalance: 0,
-        totalIncome: 0,
-        totalExpenses: 0,
+        currentBalance,
+        projectedBalance: runningBalance,
+        totalIncome: totalProjectedIncome,
+        totalExpenses: totalProjectedExpenses,
         currency: 'MXN',
       },
+    };
+  }
+
+  private async getHistoricalCashflowPatterns(spaceId: string, days: number): Promise<{
+    avgWeeklyIncome: number;
+    avgWeeklyExpenses: number;
+    incomeVariability: number;
+    expenseVariability: number;
+  }> {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+
+    // Get income transactions (positive amounts)
+    const incomeData = await this.prisma.transaction.aggregate({
+      where: {
+        account: { spaceId },
+        date: { gte: startDate },
+        amount: { gt: 0 },
+      },
+      _sum: { amount: true },
+      _count: true,
+    });
+
+    // Get expense transactions (negative amounts)
+    const expenseData = await this.prisma.transaction.aggregate({
+      where: {
+        account: { spaceId },
+        date: { gte: startDate },
+        amount: { lt: 0 },
+      },
+      _sum: { amount: true },
+      _count: true,
+    });
+
+    const totalIncome = incomeData._sum.amount?.toNumber() || 0;
+    const totalExpenses = Math.abs(expenseData._sum.amount?.toNumber() || 0);
+    
+    const weeksInPeriod = days / 7;
+    
+    return {
+      avgWeeklyIncome: totalIncome / weeksInPeriod,
+      avgWeeklyExpenses: totalExpenses / weeksInPeriod,
+      incomeVariability: 0.1, // 10% variance
+      expenseVariability: 0.15, // 15% variance
     };
   }
 

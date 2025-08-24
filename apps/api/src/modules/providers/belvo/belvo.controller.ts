@@ -5,15 +5,14 @@ import {
   Body,
   Param,
   UseGuards,
-  Req,
   Headers,
   BadRequestException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { BelvoService } from './belvo.service';
 import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
+import { CurrentUser, AuthenticatedUser } from '@core/auth/decorators/current-user.decorator';
 import { CreateBelvoLinkDto, BelvoWebhookDto } from './dto';
-import { Request } from 'express';
 import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
 
@@ -32,9 +31,9 @@ export class BelvoController {
   async createLink(
     @Param('spaceId') spaceId: string,
     @Body() dto: CreateBelvoLinkDto,
-    @Req() req: Request,
+    @CurrentUser() user: AuthenticatedUser,
   ) {
-    return this.belvoService.createLink(spaceId, req.user!.id, dto);
+    return this.belvoService.createLink(spaceId, user.userId, dto);
   }
 
   @Post('spaces/:spaceId/sync/:linkId')
@@ -44,10 +43,10 @@ export class BelvoController {
   async syncLink(
     @Param('spaceId') spaceId: string,
     @Param('linkId') linkId: string,
-    @Req() req: Request,
+    @CurrentUser() user: AuthenticatedUser,
   ) {
-    const accounts = await this.belvoService.syncAccounts(spaceId, req.user!.id, linkId);
-    const transactions = await this.belvoService.syncTransactions(spaceId, req.user!.id, linkId);
+    const accounts = await this.belvoService.syncAccounts(spaceId, user.userId, linkId);
+    const transactions = await this.belvoService.syncTransactions(spaceId, user.userId, linkId);
     
     return {
       accounts: accounts.length,
@@ -62,9 +61,9 @@ export class BelvoController {
   @ApiOperation({ summary: 'Delete a Belvo link' })
   async deleteLink(
     @Param('linkId') linkId: string,
-    @Req() req: Request,
+    @CurrentUser() user: AuthenticatedUser,
   ) {
-    await this.belvoService.deleteLink(req.user!.id, linkId);
+    await this.belvoService.deleteLink(user.userId, linkId);
     return { success: true };
   }
 
