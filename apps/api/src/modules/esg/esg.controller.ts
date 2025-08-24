@@ -6,17 +6,22 @@ import {
   UseGuards,
   Post,
   Body,
+  NotFoundException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
 import { EsgService } from './esg.service';
+import { EnhancedEsgService } from './enhanced-esg.service';
 import { CurrentUser } from '@core/auth/decorators/current-user.decorator';
 import { User } from '@prisma/client';
 
 @ApiTags('ESG Scoring')
 @Controller('esg')
 export class EsgController {
-  constructor(private readonly esgService: EsgService) {}
+  constructor(
+    private readonly esgService: EsgService,
+    private readonly enhancedEsgService: EnhancedEsgService,
+  ) {}
 
   @Get('score/:symbol')
   @ApiOperation({ summary: 'Get ESG score for an asset' })
@@ -153,5 +158,93 @@ export class EsgController {
       ],
       lastUpdated: new Date().toISOString()
     };
+  }
+
+  @Get('v2/score/:symbol')
+  @ApiOperation({ summary: 'Get enhanced ESG score for an asset (v2)' })
+  @ApiResponse({ status: 200, description: 'Enhanced ESG score retrieved successfully' })
+  async getEnhancedEsgScore(@Param('symbol') symbol: string) {
+    const esgData = await this.enhancedEsgService.getAssetESG(symbol);
+    if (!esgData) {
+      throw new NotFoundException(`ESG data not found for symbol: ${symbol}`);
+    }
+    return esgData;
+  }
+
+  @Get('v2/portfolio')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get enhanced portfolio ESG analysis (v2)' })
+  @ApiResponse({ status: 200, description: 'Enhanced portfolio ESG analysis retrieved successfully' })
+  async getEnhancedPortfolioAnalysis(@CurrentUser() user: User) {
+    return this.enhancedEsgService.getPortfolioESGAnalysis(user.id);
+  }
+
+  @Get('v2/spaces/:spaceId/portfolio')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get space-specific portfolio ESG analysis (v2)' })
+  @ApiResponse({ status: 200, description: 'Space portfolio ESG analysis retrieved successfully' })
+  async getSpacePortfolioAnalysis(@Param('spaceId') spaceId: string) {
+    return this.enhancedEsgService.getSpacePortfolioESG(spaceId);
+  }
+
+  @Post('v2/compare')
+  @ApiOperation({ summary: 'Compare enhanced ESG scores of multiple assets (v2)' })
+  @ApiResponse({ status: 200, description: 'Enhanced ESG comparison completed successfully' })
+  async compareEnhancedAssets(@Body('symbols') symbols: string[]) {
+    if (!symbols || symbols.length === 0) {
+      return { error: 'Please provide at least one symbol to compare' };
+    }
+
+    if (symbols.length > 20) {
+      return { error: 'Maximum 20 symbols allowed for comparison' };
+    }
+
+    return this.enhancedEsgService.compareAssets(symbols);
+  }
+
+  @Get('v2/trends')
+  @ApiOperation({ summary: 'Get enhanced ESG trends and insights (v2)' })
+  @ApiResponse({ status: 200, description: 'Enhanced ESG trends retrieved successfully' })
+  async getEnhancedTrends() {
+    return this.enhancedEsgService.getESGTrends();
+  }
+
+  @Post('v2/refresh')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Refresh ESG data for specified assets' })
+  @ApiResponse({ status: 200, description: 'ESG data refresh completed' })
+  async refreshEsgData(@Body('symbols') symbols: string[]) {
+    if (!symbols || symbols.length === 0) {
+      return { error: 'Please provide symbols to refresh' };
+    }
+
+    await this.enhancedEsgService.refreshESGData(symbols);
+    return { 
+      success: true, 
+      message: `ESG data refresh initiated for ${symbols.length} assets`,
+      symbols 
+    };
+  }
+
+  @Get('v2/cache/stats')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get ESG cache statistics' })
+  @ApiResponse({ status: 200, description: 'Cache statistics retrieved' })
+  async getCacheStats() {
+    return this.enhancedEsgService.getCacheStats();
+  }
+
+  @Post('v2/cache/clear')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Clear ESG cache' })
+  @ApiResponse({ status: 200, description: 'Cache cleared successfully' })
+  async clearCache() {
+    await this.enhancedEsgService.clearESGCache();
+    return { success: true, message: 'ESG cache cleared' };
   }
 }

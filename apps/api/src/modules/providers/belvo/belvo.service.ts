@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '@core/prisma/prisma.service';
 import { CryptoService } from '@core/crypto/crypto.service';
 import { AuditService } from '@core/audit/audit.service';
+import { MonitorPerformance } from '@core/decorators/monitor-performance.decorator';
 import { CreateBelvoLinkDto, BelvoWebhookDto, BelvoWebhookEvent } from './dto';
 import { Account, Transaction, Prisma, Currency, AccountType } from '@prisma/client';
 const { default: Belvo } = require('belvo');
@@ -185,10 +186,135 @@ export class BelvoService {
     linkId: string,
     dateFrom?: string,
     dateTo?: string,
-  ): Promise<Transaction[]> {
+  ): Promise<Transaction[]>;
+  async syncTransactions(
+    accessToken: string,
+    linkId: string,
+    cursor?: string,
+  ): Promise<{ transactionCount: number; accountCount: number; nextCursor?: string }>;
+  @MonitorPerformance(2000) // 2 second threshold for transaction sync
+  async syncTransactions(
+    spaceIdOrAccessToken: string,
+    userIdOrLinkId: string,
+    linkIdOrCursor?: string,
+    dateFrom?: string,
+    dateTo?: string,
+  ): Promise<Transaction[] | { transactionCount: number; accountCount: number; nextCursor?: string }> {
     if (!this.belvoClient) {
       throw new BadRequestException('Belvo integration not configured');
     }
+
+    // Check if this is the new overloaded signature (3 parameters with different meaning)
+    if (typeof linkIdOrCursor === 'string' && dateFrom === undefined && dateTo === undefined) {
+      // This is the new signature: syncTransactions(accessToken, linkId, cursor?)
+      // accessToken parameter not needed in our implementation
+      const linkId = userIdOrLinkId;
+      const cursor = linkIdOrCursor;
+
+      try {
+        // Get connection to find space
+        const connection = await this.prisma.providerConnection.findFirst({
+          where: {
+            provider: 'belvo',
+            providerUserId: linkId,
+          },
+          include: {
+            user: {
+              include: {
+                userSpaces: {
+                  include: { space: true },
+                },
+              },
+            },
+          },
+        });
+
+        if (!connection) {
+          throw new Error(`No connection found for Belvo link: ${linkId}`);
+        }
+
+        const spaceId = connection.user.userSpaces[0]?.space?.id;
+        if (!spaceId) {
+          throw new Error(`No space found for user: ${connection.userId}`);
+        }
+
+        // Default to last 90 days if no cursor
+        const endDate = new Date().toISOString().split('T')[0];
+        const startDate = cursor || new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+        // Fetch transactions from Belvo
+        const belvoTransactions = await this.belvoClient.transactions.retrieve(
+          linkId,
+          startDate,
+          endDate,
+        );
+
+        let transactionCount = 0;
+
+        for (const belvoTx of belvoTransactions) {
+          // Find the corresponding account
+          const account = await this.prisma.account.findFirst({
+            where: {
+              spaceId,
+              provider: 'belvo',
+              providerAccountId: belvoTx.account.id,
+            },
+          });
+
+          if (!account) {
+            this.logger.warn(`Account not found for transaction: ${belvoTx.id}`);
+            continue;
+          }
+
+          // Check if transaction already exists
+          const existingTx = await this.prisma.transaction.findFirst({
+            where: {
+              accountId: account.id,
+              metadata: {
+                path: ['belvoId'],
+                equals: belvoTx.id,
+              },
+            },
+          });
+
+          if (!existingTx) {
+            // Create new transaction
+            await this.prisma.transaction.create({
+              data: {
+                accountId: account.id,
+                amount: belvoTx.type === 'INFLOW' ? belvoTx.amount : -belvoTx.amount,
+                currency: account.currency as Currency,
+                date: new Date(belvoTx.value_date),
+                description: belvoTx.description,
+                merchant: belvoTx.merchant?.name || null,
+                metadata: {
+                  belvoId: belvoTx.id,
+                  category: belvoTx.category,
+                  type: belvoTx.type,
+                  status: belvoTx.status,
+                  mcc: belvoTx.mcc,
+                } as Prisma.JsonObject,
+              },
+            });
+            transactionCount++;
+          }
+        }
+
+        return {
+          transactionCount,
+          accountCount: 1,
+          nextCursor: endDate,
+        };
+      } catch (error) {
+        this.logger.error('Failed to sync Belvo transactions via job', error);
+        throw error;
+      }
+    }
+
+    // Original signature: syncTransactions(spaceId, userId, linkId, dateFrom?, dateTo?)
+    const spaceId = spaceIdOrAccessToken;
+    // userId parameter not used in this implementation
+    const linkId = linkIdOrCursor!;
 
     try {
       // Default to last 90 days if not specified

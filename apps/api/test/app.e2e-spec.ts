@@ -1,8 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
+import request from 'supertest';
 import { AppModule } from '../src/app.module';
-import { PrismaService } from '../src/common/services/prisma.service';
+import { PrismaService } from '../src/core/prisma/prisma.service';
 import { hash } from 'argon2';
 
 describe('AppController (e2e)', () => {
@@ -31,7 +31,7 @@ describe('AppController (e2e)', () => {
     await prisma.user.deleteMany();
 
     // Create test user
-    const testUser = await prisma.user.create({
+    await prisma.user.create({
       data: {
         email: 'test@example.com',
         passwordHash: await hash('password123'),

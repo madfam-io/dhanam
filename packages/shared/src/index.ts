@@ -9,3 +9,6 @@ export * from './constants';
 
 // i18n
 export * from './i18n';
+
+// Test utilities
+export * from './test-utils';

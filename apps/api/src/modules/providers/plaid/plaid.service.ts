@@ -2,6 +2,7 @@ import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../../core/prisma/prisma.service';
 import { CryptoService } from '../../../core/crypto/crypto.service';
+import { MonitorPerformance } from '@core/decorators/monitor-performance.decorator';
 import {
   PlaidApi,
   Configuration,
@@ -191,7 +192,8 @@ export class PlaidService {
     return accounts;
   }
 
-  private async syncTransactions(accessToken: string, itemId: string) {
+  @MonitorPerformance(2000) // 2 second threshold for transaction sync
+  async syncTransactions(accessToken: string, itemId: string): Promise<{ transactionCount: number; accountCount: number; nextCursor?: string }> {
     try {
       // Use transactions sync for better performance
       const request: TransactionsSyncRequest = {
@@ -235,8 +237,15 @@ export class PlaidService {
       this.logger.log(
         `Synced transactions for item ${itemId}: ${added.length} added, ${modified.length} modified, ${removed.length} removed`,
       );
+
+      return {
+        transactionCount: added.length + modified.length,
+        accountCount: 1, // Will be determined by account sync
+        nextCursor: next_cursor,
+      };
     } catch (error) {
       this.logger.error(`Failed to sync transactions for item ${itemId}:`, error);
+      throw error;
     }
   }
 

@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@dhanam/shared": "workspace:*",
+    "@dhanam/esg": "workspace:*",
     "@fastify/compress": "^6.5.0",
     "@fastify/cors": "^8.5.0",
     "@fastify/helmet": "^11.1.1",

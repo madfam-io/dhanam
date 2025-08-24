@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException, BadRequestException } from '@nestjs/common';
+import { NotFoundException } from '@nestjs/common';
 import { AccountsService } from './accounts.service';
-import { PrismaService } from '../../common/services/prisma.service';
+import { PrismaService } from '../../core/prisma/prisma.service';
 import { mockDeep, DeepMockProxy } from 'jest-mock-extended';
 import { Provider, AccountType, Currency } from '@dhanam/shared';
 
@@ -68,12 +68,11 @@ describe('AccountsService', () => {
 
       prisma.account.findMany.mockResolvedValue(mockAccounts);
 
-      const result = await service.findAllBySpace(spaceId);
+      const result = await service.findAll(spaceId);
 
       expect(result).toEqual(mockAccounts);
       expect(prisma.account.findMany).toHaveBeenCalledWith({
         where: { spaceId },
-        orderBy: { createdAt: 'desc' },
       });
     });
   });
@@ -101,11 +100,11 @@ describe('AccountsService', () => {
 
       prisma.account.findFirst.mockResolvedValue(mockAccount);
 
-      const result = await service.findOne(spaceId, accountId);
+      const result = await service.findOne(accountId);
 
       expect(result).toEqual(mockAccount);
       expect(prisma.account.findFirst).toHaveBeenCalledWith({
-        where: { id: accountId, spaceId },
+        where: { id: accountId },
       });
     });
 
@@ -115,7 +114,7 @@ describe('AccountsService', () => {
 
       prisma.account.findFirst.mockResolvedValue(null);
 
-      await expect(service.findOne(spaceId, accountId)).rejects.toThrow(
+      await expect(service.findOne(accountId)).rejects.toThrow(
         NotFoundException
       );
     });
@@ -150,7 +149,7 @@ describe('AccountsService', () => {
 
       prisma.account.create.mockResolvedValue(mockAccount);
 
-      const result = await service.create(spaceId, createDto);
+      const result = await service.create(createDto, spaceId);
 
       expect(result).toEqual(mockAccount);
       expect(prisma.account.create).toHaveBeenCalledWith({
@@ -203,7 +202,7 @@ describe('AccountsService', () => {
       prisma.account.findFirst.mockResolvedValue(existingAccount);
       prisma.account.update.mockResolvedValue(updatedAccount);
 
-      const result = await service.update(spaceId, accountId, updateDto);
+      const result = await service.update(accountId, updateDto);
 
       expect(result).toEqual(updatedAccount);
       expect(prisma.account.update).toHaveBeenCalledWith({
@@ -219,7 +218,7 @@ describe('AccountsService', () => {
 
       prisma.account.findFirst.mockResolvedValue(null);
 
-      await expect(service.update(spaceId, accountId, updateDto)).rejects.toThrow(
+      await expect(service.update(accountId, updateDto)).rejects.toThrow(
         NotFoundException
       );
     });
@@ -250,7 +249,7 @@ describe('AccountsService', () => {
       prisma.account.findFirst.mockResolvedValue(mockAccount);
       prisma.account.delete.mockResolvedValue(mockAccount);
 
-      await service.remove(spaceId, accountId);
+      await service.remove(accountId);
 
       expect(prisma.account.delete).toHaveBeenCalledWith({
         where: { id: accountId },
@@ -263,7 +262,7 @@ describe('AccountsService', () => {
 
       prisma.account.findFirst.mockResolvedValue(null);
 
-      await expect(service.remove(spaceId, accountId)).rejects.toThrow(
+      await expect(service.remove(accountId)).rejects.toThrow(
         NotFoundException
       );
     });
@@ -274,7 +273,7 @@ describe('AccountsService', () => {
       const spaceId = 'space_id';
       const connectDto = { provider: 'belvo' as Exclude<Provider, 'manual'> };
 
-      const result = await service.connectAccount(spaceId, connectDto);
+      const result = await service.connectAccount(spaceId, 'userId', connectDto);
 
       expect(result).toEqual({
         url: expect.stringContaining('connect'),

@@ -14,7 +14,8 @@ import { CategoriesModule } from '@modules/categories/categories.module';
 import { IntegrationsModule } from '@modules/integrations/integrations.module';
 import { AnalyticsModule } from '@modules/analytics/analytics.module';
 import { JobsModule } from '@modules/jobs/jobs.module';
-import { BelvoModule } from '@modules/providers/belvo/belvo.module';
+import { ProvidersModule } from '@modules/providers/providers.module';
+import { MonitoringModule } from '@core/monitoring/monitoring.module';
 
 import { configuration } from './config/configuration';
 import { validationSchema } from './config/validation';
@@ -40,7 +41,8 @@ import { validationSchema } from './config/validation';
     IntegrationsModule,
     AnalyticsModule,
     JobsModule,
-    BelvoModule,
+    ProvidersModule,
+    MonitoringModule,
   ],
 })
 export class AppModule {}

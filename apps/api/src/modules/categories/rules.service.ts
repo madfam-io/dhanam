@@ -312,4 +312,38 @@ export class RulesService {
 
     return rules;
   }
+
+  async categorizeSpecificTransactions(
+    spaceId: string,
+    transactionIds: string[]
+  ): Promise<{ categorized: number; total: number }> {
+    const transactions = await this.prisma.transaction.findMany({
+      where: {
+        id: { in: transactionIds },
+        account: { spaceId },
+      },
+    });
+
+    let categorizedCount = 0;
+
+    for (const transaction of transactions) {
+      const categoryId = await this.categorizeTransaction(transaction);
+      if (categoryId) {
+        await this.prisma.transaction.update({
+          where: { id: transaction.id },
+          data: { categoryId },
+        });
+        categorizedCount++;
+      }
+    }
+
+    this.logger.log(
+      `Specific categorization complete: ${categorizedCount}/${transactions.length} transactions categorized`,
+    );
+
+    return {
+      categorized: categorizedCount,
+      total: transactions.length,
+    };
+  }
 }

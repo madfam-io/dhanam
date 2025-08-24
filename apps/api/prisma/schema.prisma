@@ -347,3 +347,19 @@ model WebhookEvent {
   @@index([provider, processed, createdAt])
   @@map("webhook_events")
 }
+
+model ErrorLog {
+  id            String        @id @default(uuid())
+  timestamp     DateTime      @default(now())
+  level         String
+  message       String
+  stack         String?
+  context       Json?
+  metadata      Json?
+  createdAt     DateTime      @default(now()) @map("created_at")
+
+  @@index([timestamp])
+  @@index([level])
+  @@index([message])
+  @@map("error_logs")
+}

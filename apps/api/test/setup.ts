@@ -8,7 +8,7 @@ process.env.REDIS_URL = 'redis://localhost:6379';
 process.env.JWT_SECRET = 'test-jwt-secret-key-very-long-string';
 process.env.JWT_ACCESS_EXPIRY = '15m';
 process.env.JWT_REFRESH_EXPIRY = '30d';
-process.env.ENCRYPTION_KEY = 'test-encryption-key-32-characters';
+process.env.ENCRYPTION_KEY = 'test-encryption-key-32-characters!';
 
 // Increase timeout for database operations
 jest.setTimeout(30000);

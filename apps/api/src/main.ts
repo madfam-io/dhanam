@@ -12,6 +12,9 @@ import fastifyCompress from '@fastify/compress';
 import fastifyRateLimit from '@fastify/rate-limit';
 
 import { AppModule } from './app.module';
+import { GlobalExceptionFilter } from '@core/filters/global-exception.filter';
+import { LoggingInterceptor } from '@core/interceptors/logging.interceptor';
+import { RequestIdMiddleware } from '@core/middleware/request-id.middleware';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
@@ -55,6 +58,11 @@ async function bootstrap() {
     max: 100,
     timeWindow: '15 minutes',
   });
+
+  // Global middleware and filters
+  app.use(new RequestIdMiddleware().use);
+  app.useGlobalInterceptors(new LoggingInterceptor());
+  app.useGlobalFilters(new GlobalExceptionFilter());
 
   // Validation
   app.useGlobalPipes(
