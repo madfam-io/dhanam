@@ -1,0 +1,56 @@
+version: '3.8'
+
+# Development-specific overrides and additional services
+services:
+  postgres:
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: dhanam
+      POSTGRES_PASSWORD: dhanam_dev_password
+      POSTGRES_DB: dhanam_dev
+      # Enable query logging for development
+      POSTGRES_INITDB_ARGS: "-c log_statement=all"
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: dhanam-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@dhanam.local
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: dhanam-redis-commander
+    environment:
+      REDIS_HOSTS: local:redis:6379
+    ports:
+      - "8081:8081"
+    depends_on:
+      - redis
+
+  # Mock provider services for development
+  mock-belvo:
+    image: stoplight/prism:latest
+    container_name: dhanam-mock-belvo
+    command: mock -h 0.0.0.0 -p 4010 https://raw.githubusercontent.com/belvo-finance/belvo-openapi/main/openapi.yml
+    ports:
+      - "4010:4010"
+
+  mock-plaid:
+    image: stoplight/prism:latest
+    container_name: dhanam-mock-plaid
+    command: mock -h 0.0.0.0 -p 4011 https://raw.githubusercontent.com/plaid/plaid-openapi/master/2020-09-14.yml
+    ports:
+      - "4011:4011"
+
+volumes:
+  pgadmin_data:
+    driver: local

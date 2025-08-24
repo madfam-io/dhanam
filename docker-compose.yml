@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: dhanam-postgres
+    environment:
+      POSTGRES_USER: dhanam
+      POSTGRES_PASSWORD: dhanam_dev_password
+      POSTGRES_DB: dhanam_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dhanam"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: dhanam-redis
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: dhanam-mailhog
+    ports:
+      - "1025:1025" # SMTP server
+      - "8025:8025" # Web UI
+    environment:
+      MH_STORAGE: memory
+
+  localstack:
+    image: localstack/localstack:latest
+    container_name: dhanam-localstack
+    ports:
+      - "4566:4566" # LocalStack Gateway
+    environment:
+      - SERVICES=s3,kms,secretsmanager
+      - DEBUG=0
+      - DATA_DIR=/tmp/localstack/data
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_DEFAULT_REGION=us-east-1
+    volumes:
+      - localstack_data:/tmp/localstack
+      - /var/run/docker.sock:/var/run/docker.sock
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  localstack_data:
+    driver: local
+
+networks:
+  default:
+    name: dhanam-network
+    driver: bridge
