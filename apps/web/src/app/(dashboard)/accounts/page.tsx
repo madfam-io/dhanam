@@ -5,11 +5,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
-} from '@dhanam/ui/card';
-import { Button } from '@dhanam/ui/button';
+} from '@dhanam/ui';
+import { Button } from '@dhanam/ui';
 import {
   Dialog,
   DialogContent,
@@ -18,23 +17,25 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@dhanam/ui/dialog';
-import { Badge } from '@dhanam/ui/badge';
-import { Input } from '@dhanam/ui/input';
-import { Label } from '@dhanam/ui/label';
+} from '@dhanam/ui';
+import { Badge } from '@dhanam/ui';
+import { Input } from '@dhanam/ui';
+import { Label } from '@dhanam/ui';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@dhanam/ui/dropdown-menu';
+} from '@dhanam/ui';
 import { Plus, MoreVertical, Loader2, Building2, CreditCard, TrendingUp, Coins } from 'lucide-react';
 import { useSpaceStore } from '@/stores/space';
 import { accountsApi } from '@/lib/api/accounts';
-import { Account, AccountType, Currency, Provider } from '@dhanam/shared';
+import { AccountType, Currency, Provider } from '@dhanam/shared';
 import { formatCurrency } from '@/lib/utils';
 import { toast } from 'sonner';
-import { BelvoConnect } from '@/components/providers/belvo-connect';\nimport { PlaidConnect } from '@/components/providers/plaid-connect';\nimport { BitsoConnect } from '@/components/providers/bitso-connect';
+import { BelvoConnect } from '@/components/providers/belvo-connect';
+import { PlaidConnect } from '@/components/providers/plaid-connect';
+import { BitsoConnect } from '@/components/providers/bitso-connect';
 
 const accountTypeIcons: Record<AccountType, React.ElementType> = {
   checking: Building2,
@@ -59,7 +60,8 @@ export default function AccountsPage() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
   const [isBelvoOpen, setIsBelvoOpen] = useState(false);
-  const [isPlaidOpen, setIsPlaidOpen] = useState(false);\n  const [isBitsoOpen, setIsBitsoOpen] = useState(false);
+  const [isPlaidOpen, setIsPlaidOpen] = useState(false);
+  const [isBitsoOpen, setIsBitsoOpen] = useState(false);
 
   const { data: accounts, isLoading } = useQuery({
     queryKey: ['accounts', currentSpace?.id],

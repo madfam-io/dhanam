@@ -33,34 +33,30 @@ export const bitsoApi = {
     spaceId: string, 
     data: ConnectBitsoRequest
   ): Promise<ConnectBitsoResponse> => {
-    const response = await apiClient.post<ConnectBitsoResponse>(
+    return apiClient.post<ConnectBitsoResponse>(
       `/providers/bitso/spaces/${spaceId}/connect`,
       data
     );
-    return response.data;
   },
 
   /**
    * Sync Bitso portfolio
    */
   syncPortfolio: async (): Promise<{ message: string }> => {
-    const response = await apiClient.post('/providers/bitso/sync');
-    return response.data;
+    return apiClient.post<{ message: string }>('/providers/bitso/sync');
   },
 
   /**
    * Get Bitso portfolio summary
    */
   getPortfolioSummary: async (): Promise<PortfolioSummary> => {
-    const response = await apiClient.get<PortfolioSummary>('/providers/bitso/portfolio');
-    return response.data;
+    return apiClient.get<PortfolioSummary>('/providers/bitso/portfolio');
   },
 
   /**
    * Get Bitso service health status
    */
   getHealth: async (): Promise<{ service: string; status: string; timestamp: string }> => {
-    const response = await apiClient.get('/providers/bitso/health');
-    return response.data;
+    return apiClient.get<{ service: string; status: string; timestamp: string }>('/providers/bitso/health');
   },
 };

@@ -1,4 +1,4 @@
-import { ApiResponse, AuthTokens } from '@dhanam/shared';
+import { AuthTokens } from '@dhanam/shared';
 
 export class ApiError extends Error {
   constructor(
@@ -41,9 +41,9 @@ export class ApiClient {
     options: RequestInit = {}
   ): Promise<T> {
     const url = `${this.baseUrl}${path}`;
-    const headers: HeadersInit = {
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      ...options.headers,
+      ...(options.headers as Record<string, string>),
     };
 
     if (this.accessToken) {

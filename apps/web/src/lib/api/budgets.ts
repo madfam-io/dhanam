@@ -17,28 +17,24 @@ export interface UpdateBudgetDto {
 
 export const budgetsApi = {
   getBudgets: async (spaceId: string): Promise<Budget[]> => {
-    const response = await apiClient.get(`/spaces/${spaceId}/budgets`);
-    return response.data;
+    return apiClient.get<Budget[]>(`/spaces/${spaceId}/budgets`);
   },
 
   getBudget: async (spaceId: string, budgetId: string): Promise<Budget> => {
-    const response = await apiClient.get(`/spaces/${spaceId}/budgets/${budgetId}`);
-    return response.data;
+    return apiClient.get<Budget>(`/spaces/${spaceId}/budgets/${budgetId}`);
   },
 
   getBudgetSummary: async (spaceId: string, budgetId: string): Promise<any> => {
-    const response = await apiClient.get(
+    return apiClient.get<any>(
       `/spaces/${spaceId}/budgets/${budgetId}/summary`,
     );
-    return response.data;
   },
 
   createBudget: async (
     spaceId: string,
     dto: CreateBudgetDto,
   ): Promise<Budget> => {
-    const response = await apiClient.post(`/spaces/${spaceId}/budgets`, dto);
-    return response.data;
+    return apiClient.post<Budget>(`/spaces/${spaceId}/budgets`, dto);
   },
 
   updateBudget: async (
@@ -46,11 +42,10 @@ export const budgetsApi = {
     budgetId: string,
     dto: UpdateBudgetDto,
   ): Promise<Budget> => {
-    const response = await apiClient.patch(
+    return apiClient.patch<Budget>(
       `/spaces/${spaceId}/budgets/${budgetId}`,
       dto,
     );
-    return response.data;
   },
 
   deleteBudget: async (spaceId: string, budgetId: string): Promise<void> => {

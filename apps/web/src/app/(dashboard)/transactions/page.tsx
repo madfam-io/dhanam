@@ -8,8 +8,8 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@dhanam/ui/card';
-import { Button } from '@dhanam/ui/button';
+} from '@dhanam/ui';
+import { Button } from '@dhanam/ui';
 import {
   Dialog,
   DialogContent,
@@ -18,21 +18,20 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@dhanam/ui/dialog';
-import { Badge } from '@dhanam/ui/badge';
-import { Input } from '@dhanam/ui/input';
-import { Label } from '@dhanam/ui/label';
+} from '@dhanam/ui';
+import { Input } from '@dhanam/ui';
+import { Label } from '@dhanam/ui';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@dhanam/ui/dropdown-menu';
-import { Plus, MoreVertical, Loader2, Receipt, Calendar, DollarSign } from 'lucide-react';
+} from '@dhanam/ui';
+import { Plus, MoreVertical, Loader2, Receipt, Calendar } from 'lucide-react';
 import { useSpaceStore } from '@/stores/space';
 import { transactionsApi } from '@/lib/api/transactions';
 import { accountsApi } from '@/lib/api/accounts';
-import { Transaction, Account } from '@dhanam/shared';
+import { Transaction } from '@dhanam/shared';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -249,7 +248,7 @@ export default function TransactionsPage() {
           <CardContent>
             <div className="space-y-4">
               {transactionsData?.data.map((transaction) => {
-                const account = transaction.account as Account;
+                const account = accounts?.find(a => a.id === transaction.accountId);
                 return (
                   <div
                     key={transaction.id}
@@ -264,10 +263,10 @@ export default function TransactionsPage() {
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <Calendar className="h-3 w-3" />
                           {formatDate(transaction.date)}
-                          {transaction.merchant && (
+                          {account && (
                             <>
                               <span>•</span>
-                              <span>{transaction.merchant}</span>
+                              <span>{account.name}</span>
                             </>
                           )}
                         </div>
@@ -276,9 +275,9 @@ export default function TransactionsPage() {
                     <div className="flex items-center gap-4">
                       <div className="text-right">
                         <p className={`font-medium ${transaction.amount < 0 ? 'text-red-600' : 'text-green-600'}`}>
-                          {formatCurrency(transaction.amount, account.currency)}
+                          {formatCurrency(transaction.amount, account?.currency || transaction.currency)}
                         </p>
-                        <p className="text-xs text-muted-foreground">{account.name}</p>
+                        <p className="text-xs text-muted-foreground">{account?.name || 'Unknown'}</p>
                       </div>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -355,7 +354,7 @@ export default function TransactionsPage() {
                   <Input
                     id="edit-merchant"
                     name="merchant"
-                    defaultValue={selectedTransaction.merchant || ''}
+                    defaultValue={''}
                   />
                 </div>
               </div>

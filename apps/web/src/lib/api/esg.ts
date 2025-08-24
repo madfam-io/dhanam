@@ -88,39 +88,34 @@ export const esgApi = {
    * Get ESG score for a specific asset
    */
   getAssetScore: async (symbol: string, assetType = 'crypto'): Promise<EsgScore & { methodology: string; dataSource: string }> => {
-    const response = await apiClient.get(`/esg/score/${symbol}?assetType=${assetType}`);
-    return response.data;
+    return apiClient.get<EsgScore & { methodology: string; dataSource: string }>(`/esg/score/${symbol}?assetType=${assetType}`);
   },
 
   /**
    * Get portfolio ESG analysis
    */
   getPortfolioAnalysis: async (): Promise<PortfolioEsgAnalysis> => {
-    const response = await apiClient.get<PortfolioEsgAnalysis>('/esg/portfolio');
-    return response.data;
+    return apiClient.get<PortfolioEsgAnalysis>('/esg/portfolio');
   },
 
   /**
    * Compare ESG scores of multiple assets
    */
   compareAssets: async (symbols: string[]): Promise<AssetComparison> => {
-    const response = await apiClient.post<AssetComparison>('/esg/compare', { symbols });
-    return response.data;
+    return apiClient.post<AssetComparison>('/esg/compare', { symbols });
   },
 
   /**
    * Get ESG trends and market insights
    */
   getTrends: async (): Promise<EsgTrends> => {
-    const response = await apiClient.get<EsgTrends>('/esg/trends');
-    return response.data;
+    return apiClient.get<EsgTrends>('/esg/trends');
   },
 
   /**
    * Get ESG scoring methodology
    */
   getMethodology: async (): Promise<EsgMethodology> => {
-    const response = await apiClient.get<EsgMethodology>('/esg/methodology');
-    return response.data;
+    return apiClient.get<EsgMethodology>('/esg/methodology');
   },
 };

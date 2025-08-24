@@ -45,28 +45,23 @@ export const transactionsApi = {
     spaceId: string,
     filter: TransactionsFilterDto,
   ): Promise<TransactionsResponse> => {
-    const response = await apiClient.get(`/spaces/${spaceId}/transactions`, {
-      params: filter,
-    });
-    return response.data;
+    return apiClient.get<TransactionsResponse>(`/spaces/${spaceId}/transactions`, filter);
   },
 
   getTransaction: async (
     spaceId: string,
     transactionId: string,
   ): Promise<Transaction> => {
-    const response = await apiClient.get(
+    return apiClient.get<Transaction>(
       `/spaces/${spaceId}/transactions/${transactionId}`,
     );
-    return response.data;
   },
 
   createTransaction: async (
     spaceId: string,
     dto: CreateTransactionDto,
   ): Promise<Transaction> => {
-    const response = await apiClient.post(`/spaces/${spaceId}/transactions`, dto);
-    return response.data;
+    return apiClient.post<Transaction>(`/spaces/${spaceId}/transactions`, dto);
   },
 
   updateTransaction: async (
@@ -74,11 +69,10 @@ export const transactionsApi = {
     transactionId: string,
     dto: UpdateTransactionDto,
   ): Promise<Transaction> => {
-    const response = await apiClient.patch(
+    return apiClient.patch<Transaction>(
       `/spaces/${spaceId}/transactions/${transactionId}`,
       dto,
     );
-    return response.data;
   },
 
   deleteTransaction: async (
@@ -93,13 +87,12 @@ export const transactionsApi = {
     transactionIds: string[],
     categoryId: string,
   ): Promise<Transaction[]> => {
-    const response = await apiClient.post(
+    return apiClient.post<Transaction[]>(
       `/spaces/${spaceId}/transactions/bulk-categorize`,
       {
         transactionIds,
         categoryId,
       },
     );
-    return response.data;
   },
 };

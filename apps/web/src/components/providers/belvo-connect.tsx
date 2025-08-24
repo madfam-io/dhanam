@@ -9,11 +9,11 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@dhanam/ui/dialog';
-import { Button } from '@dhanam/ui/button';
-import { Input } from '@dhanam/ui/input';
-import { Label } from '@dhanam/ui/label';
-import { Alert, AlertDescription } from '@dhanam/ui/alert';
+} from '@dhanam/ui';
+import { Button } from '@dhanam/ui';
+import { Input } from '@dhanam/ui';
+import { Label } from '@dhanam/ui';
+import { Alert, AlertDescription } from '@dhanam/ui';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiClient } from '@/lib/api/client';
@@ -37,8 +37,7 @@ export function BelvoConnect({ open, onOpenChange, spaceId, onSuccess }: BelvoCo
 
   const connectMutation = useMutation({
     mutationFn: async (data: { institution: string; username: string; password: string }) => {
-      const response = await apiClient.post(`/providers/belvo/spaces/${spaceId}/link`, data);
-      return response.data;
+      return apiClient.post(`/providers/belvo/spaces/${spaceId}/link`, data);
     },
     onSuccess: () => {
       toast.success('Bank account connected successfully');

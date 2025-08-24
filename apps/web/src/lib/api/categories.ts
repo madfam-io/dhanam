@@ -20,46 +20,41 @@ export interface UpdateCategoryDto {
 
 export const categoriesApi = {
   getCategories: async (spaceId: string): Promise<Category[]> => {
-    const response = await apiClient.get(`/spaces/${spaceId}/categories`);
-    return response.data;
+    return apiClient.get<Category[]>(`/spaces/${spaceId}/categories`);
   },
 
   getCategoriesByBudget: async (
     spaceId: string,
     budgetId: string,
   ): Promise<Category[]> => {
-    const response = await apiClient.get(
+    return apiClient.get<Category[]>(
       `/spaces/${spaceId}/categories/budget/${budgetId}`,
     );
-    return response.data;
   },
 
   getCategory: async (
     spaceId: string,
     categoryId: string,
   ): Promise<Category> => {
-    const response = await apiClient.get(
+    return apiClient.get<Category>(
       `/spaces/${spaceId}/categories/${categoryId}`,
     );
-    return response.data;
   },
 
   getCategorySpending: async (
     spaceId: string,
     categoryId: string,
   ): Promise<any> => {
-    const response = await apiClient.get(
+    return apiClient.get<any>(
       `/spaces/${spaceId}/categories/${categoryId}/spending`,
     );
-    return response.data;
   },
 
   createCategory: async (
     spaceId: string,
     dto: CreateCategoryDto,
   ): Promise<Category> => {
-    const response = await apiClient.post(`/spaces/${spaceId}/categories`, dto);
-    return response.data;
+    return apiClient.post<Category>(`/spaces/${spaceId}/categories`, dto);
   },
 
   updateCategory: async (
@@ -67,11 +62,10 @@ export const categoriesApi = {
     categoryId: string,
     dto: UpdateCategoryDto,
   ): Promise<Category> => {
-    const response = await apiClient.patch(
+    return apiClient.patch<Category>(
       `/spaces/${spaceId}/categories/${categoryId}`,
       dto,
     );
-    return response.data;
   },
 
   deleteCategory: async (

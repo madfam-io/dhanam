@@ -8,12 +8,12 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '@dhanam/ui/dialog';
-import { Button } from '@dhanam/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@dhanam/ui/card';
-import { Badge } from '@dhanam/ui/badge';
+} from '@dhanam/ui';
+import { Button } from '@dhanam/ui';
+import { Card, CardContent, CardHeader, CardTitle } from '@dhanam/ui';
 import { Loader2, Shield, CreditCard, Building2 } from 'lucide-react';
-import { toast } from 'sonner';\nimport { plaidApi } from '@/lib/api/plaid';
+import { toast } from 'sonner';
+import { plaidApi } from '@/lib/api/plaid';
 
 // Plaid Link types
 interface PlaidLinkOptions {
@@ -144,6 +144,7 @@ export function PlaidConnect({ open, onOpenChange, spaceId, onSuccess }: PlaidCo
     } else if (window.Plaid) {
       setIsScriptLoaded(true);
     }
+    return;
   }, []);
 
   const createLinkTokenMutation = useMutation({
@@ -172,14 +173,14 @@ export function PlaidConnect({ open, onOpenChange, spaceId, onSuccess }: PlaidCo
   });
 
   const onPlaidSuccess = useCallback(
-    (publicToken: string, metadata: PlaidLinkOnSuccessMetadata) => {
+    (publicToken: string, _metadata: PlaidLinkOnSuccessMetadata) => {
       linkAccountMutation.mutate(publicToken);
     },
     [linkAccountMutation]
   );
 
   const onPlaidExit = useCallback(
-    (err: PlaidLinkError | null, metadata: PlaidLinkOnExitMetadata) => {
+    (err: PlaidLinkError | null, _metadata: PlaidLinkOnExitMetadata) => {
       if (err) {
         console.error('Plaid Link exit error:', err);
         toast.error(err.display_message || 'Failed to connect bank account');

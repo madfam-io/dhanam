@@ -11,10 +11,9 @@ export function useSpaces() {
   return useQuery({
     queryKey: SPACES_KEY,
     queryFn: async () => {
-      const response = await apiClient.get<Space[]>('/spaces');
-      const spaces = response.data;
+      const spaces = await apiClient.get<Space[]>('/spaces');
       if (spaces.length > 0 && !useSpaceStore.getState().currentSpace) {
-        setCurrentSpace(spaces[0]);
+        setCurrentSpace(spaces[0] || null);
       }
       return spaces;
     },
@@ -25,8 +24,7 @@ export function useSpace(spaceId: string) {
   return useQuery({
     queryKey: [...SPACES_KEY, spaceId],
     queryFn: async () => {
-      const response = await apiClient.get<Space>(`/spaces/${spaceId}`);
-      return response.data;
+      return apiClient.get<Space>(`/spaces/${spaceId}`);
     },
     enabled: !!spaceId,
   });
@@ -38,8 +36,7 @@ export function useCreateSpace() {
 
   return useMutation({
     mutationFn: async (data: CreateSpaceDto) => {
-      const response = await apiClient.post<Space>('/spaces', data);
-      return response.data;
+      return apiClient.post<Space>('/spaces', data);
     },
     onSuccess: (space) => {
       queryClient.invalidateQueries({ queryKey: SPACES_KEY });
@@ -53,8 +50,7 @@ export function useUpdateSpace(spaceId: string) {
 
   return useMutation({
     mutationFn: async (data: UpdateSpaceDto) => {
-      const response = await apiClient.patch<Space>(`/spaces/${spaceId}`, data);
-      return response.data;
+      return apiClient.patch<Space>(`/spaces/${spaceId}`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: SPACES_KEY });

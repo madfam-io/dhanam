@@ -5,11 +5,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
-} from '@dhanam/ui/card';
-import { Button } from '@dhanam/ui/button';
+} from '@dhanam/ui';
+import { Button } from '@dhanam/ui';
 import {
   Dialog,
   DialogContent,
@@ -18,16 +17,16 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@dhanam/ui/dialog';
-import { Badge } from '@dhanam/ui/badge';
-import { Input } from '@dhanam/ui/input';
-import { Label } from '@dhanam/ui/label';
-import { Progress } from '@dhanam/ui/progress';
-import { Plus, MoreVertical, Loader2, PiggyBank, TrendingUp, AlertCircle } from 'lucide-react';
+} from '@dhanam/ui';
+import { Badge } from '@dhanam/ui';
+import { Input } from '@dhanam/ui';
+import { Label } from '@dhanam/ui';
+import { Progress } from '@dhanam/ui';
+import { Plus, Loader2, PiggyBank } from 'lucide-react';
 import { useSpaceStore } from '@/stores/space';
 import { budgetsApi } from '@/lib/api/budgets';
 import { categoriesApi } from '@/lib/api/categories';
-import { Budget, Category, BudgetPeriod } from '@dhanam/shared';
+import { Budget, BudgetPeriod } from '@dhanam/shared';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -77,17 +76,6 @@ export default function BudgetsPage() {
     },
   });
 
-  const deleteBudgetMutation = useMutation({
-    mutationFn: (budgetId: string) =>
-      budgetsApi.deleteBudget(currentSpace!.id, budgetId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['budgets', currentSpace?.id] });
-      toast.success('Budget deleted successfully');
-    },
-    onError: () => {
-      toast.error('Failed to delete budget');
-    },
-  });
 
   const handleCreateSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -216,7 +204,7 @@ export default function BudgetsPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-xs text-muted-foreground mb-4">
-                  {formatDate(budget.startDate)} - {formatDate(budget.endDate)}
+                  {formatDate(budget.startDate)} - {budget.endDate ? formatDate(budget.endDate) : 'Ongoing'}
                 </div>
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
@@ -226,7 +214,7 @@ export default function BudgetsPage() {
                   {budget.categories && budget.categories.length > 0 && (
                     <div className="text-xs text-muted-foreground">
                       Total Budget: {formatCurrency(
-                        budget.categories.reduce((sum, cat) => sum + cat.budgetedAmount, 0),
+                        budget.categories.reduce((sum, cat) => sum + cat.budgeted, 0),
                         currentSpace.currency
                       )}
                     </div>
@@ -245,7 +233,7 @@ export default function BudgetsPage() {
               <DialogHeader>
                 <DialogTitle>{selectedBudget.name}</DialogTitle>
                 <DialogDescription>
-                  {formatDate(selectedBudget.startDate)} - {formatDate(selectedBudget.endDate)}
+                  {formatDate(selectedBudget.startDate)} - {selectedBudget.endDate ? formatDate(selectedBudget.endDate) : 'Ongoing'}
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4">

@@ -8,13 +8,12 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '@dhanam/ui/dialog';
-import { Button } from '@dhanam/ui/button';
-import { Input } from '@dhanam/ui/input';
-import { Label } from '@dhanam/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@dhanam/ui/card';
-import { Badge } from '@dhanam/ui/badge';
-import { Alert, AlertDescription } from '@dhanam/ui/alert';
+} from '@dhanam/ui';
+import { Button } from '@dhanam/ui';
+import { Input } from '@dhanam/ui';
+import { Label } from '@dhanam/ui';
+import { Alert, AlertDescription } from '@dhanam/ui';
+import { Badge } from '@dhanam/ui';
 import { 
   Loader2, 
   Shield, 

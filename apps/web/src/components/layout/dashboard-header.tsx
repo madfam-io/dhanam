@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { Button } from '@dhanam/ui/button';
+import { Button } from '@dhanam/ui';
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -9,7 +9,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@dhanam/ui/dropdown-menu';
+} from '@dhanam/ui';
 import { Bell, Settings, User, LogOut, ChevronDown } from 'lucide-react';
 import { useAuth } from '~/lib/hooks/use-auth';
 import { useSpaces } from '~/lib/hooks/use-spaces';
@@ -43,7 +43,7 @@ export function DashboardHeader() {
               <DropdownMenuContent className="w-[200px]">
                 <DropdownMenuLabel>Your Spaces</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                {spaces.map((space) => (
+                {spaces.map((space: any) => (
                   <DropdownMenuItem
                     key={space.id}
                     onClick={() => setCurrentSpace(space)}

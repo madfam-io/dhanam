@@ -2,11 +2,10 @@
 
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@dhanam/ui/card';
-import { Skeleton } from '@dhanam/ui/skeleton';
-import { Button } from '@dhanam/ui/button';
-import { Progress } from '@dhanam/ui/progress';
-import { Badge } from '@dhanam/ui/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@dhanam/ui';
+import { Skeleton } from '@dhanam/ui';
+import { Button } from '@dhanam/ui';
+import { Progress } from '@dhanam/ui';
 import { useAuth } from '~/lib/hooks/use-auth';
 import { useSpaceStore } from '~/stores/space';
 import { accountsApi } from '~/lib/api/accounts';
@@ -16,7 +15,6 @@ import { formatCurrency } from '~/lib/utils';
 import { 
   TrendingUp, 
   TrendingDown, 
-  DollarSign, 
   CreditCard, 
   PiggyBank, 
   Target,
@@ -27,7 +25,6 @@ import {
 } from 'lucide-react';
 
 export default function DashboardPage() {
-  const router = useRouter();
   const { user } = useAuth();
   const { currentSpace } = useSpaceStore();
 
@@ -51,15 +48,17 @@ export default function DashboardPage() {
 
   const { data: currentBudgetSummary } = useQuery({
     queryKey: ['current-budget-summary', currentSpace?.id, budgets?.[0]?.id],
-    queryFn: () => budgetsApi.getBudgetSummary(currentSpace!.id, budgets![0].id),
-    enabled: !!currentSpace && !!budgets && budgets.length > 0,
+    queryFn: () => {
+      if (!budgets || budgets.length === 0 || !budgets[0]) return null;
+      return budgetsApi.getBudgetSummary(currentSpace!.id, budgets[0].id);
+    },
+    enabled: !!currentSpace && !!budgets && budgets.length > 0 && !!budgets[0],
   });
 
   if (!currentSpace) {
     return <EmptyState />;
   }
 
-  const totalBalance = accounts?.reduce((sum, account) => sum + account.balance, 0) || 0;
   const totalAssets = accounts?.filter(a => a.balance > 0).reduce((sum, a) => sum + a.balance, 0) || 0;
   const totalLiabilities = Math.abs(accounts?.filter(a => a.balance < 0).reduce((sum, a) => sum + a.balance, 0) || 0);
   const netWorth = totalAssets - totalLiabilities;
@@ -188,7 +187,7 @@ export default function DashboardPage() {
             ) : (
               <div className="space-y-4">
                 {accounts?.map((account) => {
-                  const Icon = accountTypeIcons[account.type];
+                  const Icon = accountTypeIcons[account.type] || Building2;
                   return (
                     <div key={account.id} className="flex items-center">
                       <Icon className="h-4 w-4 text-muted-foreground mr-2" />
@@ -256,7 +255,7 @@ export default function DashboardPage() {
       {currentBudgetSummary && (
         <Card>
           <CardHeader>
-            <CardTitle>Current Budget: {budgets![0].name}</CardTitle>
+            <CardTitle>Current Budget: {budgets?.[0]?.name || 'N/A'}</CardTitle>
             <CardDescription>
               Track your spending across categories
             </CardDescription>
@@ -284,30 +283,6 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       )}
-    </div>
-  );
-}
-
-function DashboardSkeleton() {
-  return (
-    <div className="space-y-6">
-      <div>
-        <Skeleton className="h-9 w-64" />
-        <Skeleton className="h-5 w-48 mt-2" />
-      </div>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {[...Array(4)].map((_, i) => (
-          <Card key={i}>
-            <CardHeader className="space-y-0 pb-2">
-              <Skeleton className="h-4 w-24" />
-            </CardHeader>
-            <CardContent>
-              <Skeleton className="h-8 w-32" />
-              <Skeleton className="h-3 w-24 mt-2" />
-            </CardContent>
-          </Card>
-        ))}
-      </div>
     </div>
   );
 }

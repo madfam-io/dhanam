@@ -8,11 +8,11 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@dhanam/ui/card';
-import { Button } from '@dhanam/ui/button';
-import { Badge } from '@dhanam/ui/badge';
-import { Progress } from '@dhanam/ui/progress';
-import { Alert, AlertDescription } from '@dhanam/ui/alert';
+} from '@dhanam/ui';
+import { Button } from '@dhanam/ui';
+import { Badge } from '@dhanam/ui';
+import { Progress } from '@dhanam/ui';
+import { Alert, AlertDescription } from '@dhanam/ui';
 import {
   Leaf,
   Users,
@@ -25,7 +25,6 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { esgApi } from '@/lib/api/esg';
-import { formatCurrency } from '@/lib/utils';
 
 function getGradeColor(grade: string) {
   if (grade.startsWith('A')) return 'bg-green-500';
@@ -42,14 +41,14 @@ function getScoreColor(score: number) {
 }
 
 export default function EsgPage() {
-  const [selectedAssets, setSelectedAssets] = useState<string[]>(['BTC', 'ETH', 'ADA']);
+  const [selectedAssets] = useState<string[]>(['BTC', 'ETH', 'ADA']);
 
   const { data: portfolioEsg, isLoading: portfolioLoading, refetch: refetchPortfolio } = useQuery({
     queryKey: ['esg', 'portfolio'],
     queryFn: () => esgApi.getPortfolioAnalysis(),
   });
 
-  const { data: comparison, isLoading: comparisonLoading } = useQuery({
+  const { data: comparison } = useQuery({
     queryKey: ['esg', 'comparison', selectedAssets],
     queryFn: () => esgApi.compareAssets(selectedAssets),
     enabled: selectedAssets.length > 0,
