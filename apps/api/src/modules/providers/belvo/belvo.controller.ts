@@ -13,16 +13,11 @@ import { BelvoService } from './belvo.service';
 import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
 import { CurrentUser, AuthenticatedUser } from '@core/auth/decorators/current-user.decorator';
 import { CreateBelvoLinkDto, BelvoWebhookDto } from './dto';
-import { ConfigService } from '@nestjs/config';
-import * as crypto from 'crypto';
 
 @ApiTags('providers/belvo')
 @Controller('providers/belvo')
 export class BelvoController {
-  constructor(
-    private readonly belvoService: BelvoService,
-    private readonly configService: ConfigService,
-  ) {}
+  constructor(private readonly belvoService: BelvoService) {}
 
   @Post('spaces/:spaceId/link')
   @UseGuards(JwtAuthGuard)
@@ -73,21 +68,13 @@ export class BelvoController {
     @Body() dto: BelvoWebhookDto,
     @Headers('belvo-signature') signature: string,
   ) {
-    // Verify webhook signature
-    const webhookSecret = this.configService.get<string>('BELVO_WEBHOOK_SECRET');
-    if (webhookSecret) {
-      const payload = JSON.stringify(dto);
-      const expectedSignature = crypto
-        .createHmac('sha256', webhookSecret)
-        .update(payload)
-        .digest('hex');
-
-      if (signature !== expectedSignature) {
-        throw new BadRequestException('Invalid webhook signature');
-      }
+    if (!signature) {
+      throw new BadRequestException('Missing webhook signature');
     }
 
-    await this.belvoService.handleWebhook(dto);
-    return { received: true };
+    await this.belvoService.handleWebhook(dto, signature);
+    return {
+      message: 'Webhook processed successfully',
+    };
   }
 }

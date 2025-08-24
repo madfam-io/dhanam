@@ -363,3 +363,19 @@ model ErrorLog {
   @@index([message])
   @@map("error_logs")
 }
+
+model ExchangeRate {
+  id            String        @id @default(uuid())
+  fromCurrency  Currency      @map("from_currency")
+  toCurrency    Currency      @map("to_currency")
+  rate          Float
+  date          DateTime      @db.Date
+  source        String        @default("banxico")
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @updatedAt @map("updated_at")
+
+  @@unique([fromCurrency, toCurrency, date])
+  @@index([fromCurrency, toCurrency])
+  @@index([date])
+  @@map("exchange_rates")
+}

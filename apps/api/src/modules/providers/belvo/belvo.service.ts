@@ -6,12 +6,14 @@ import { AuditService } from '@core/audit/audit.service';
 import { MonitorPerformance } from '@core/decorators/monitor-performance.decorator';
 import { CreateBelvoLinkDto, BelvoWebhookDto, BelvoWebhookEvent } from './dto';
 import { Account, Transaction, Prisma, Currency, AccountType } from '@prisma/client';
+import * as crypto from 'crypto';
 const { default: Belvo } = require('belvo');
 
 @Injectable()
 export class BelvoService {
   private readonly logger = new Logger(BelvoService.name);
   private belvoClient: any;
+  private readonly webhookSecret: string;
 
   constructor(
     private configService: ConfigService,
@@ -22,6 +24,8 @@ export class BelvoService {
     const secretKeyId = this.configService.get<string>('BELVO_SECRET_KEY_ID');
     const secretKeyPassword = this.configService.get<string>('BELVO_SECRET_KEY_PASSWORD');
     const environment = this.configService.get<string>('BELVO_ENV', 'sandbox');
+
+    this.webhookSecret = this.configService.get('BELVO_WEBHOOK_SECRET', '');
 
     if (secretKeyId && secretKeyPassword) {
       this.belvoClient = new Belvo(
@@ -386,7 +390,12 @@ export class BelvoService {
     }
   }
 
-  async handleWebhook(dto: BelvoWebhookDto): Promise<void> {
+  async handleWebhook(dto: BelvoWebhookDto, signature: string): Promise<void> {
+    // Verify webhook signature
+    if (!this.verifyWebhookSignature(JSON.stringify(dto), signature)) {
+      throw new BadRequestException('Invalid webhook signature');
+    }
+
     this.logger.log(`Received Belvo webhook: ${dto.event}`);
 
     // Find the connection
@@ -485,5 +494,21 @@ export class BelvoService {
         // Default to MXN for Mexico-focused Belvo
         return Currency.MXN;
     }
+  }
+
+  private verifyWebhookSignature(payload: string, signature: string): boolean {
+    if (!this.webhookSecret || !signature) {
+      return false;
+    }
+
+    const expectedSignature = crypto
+      .createHmac('sha256', this.webhookSecret)
+      .update(payload, 'utf8')
+      .digest('hex');
+
+    return crypto.timingSafeEqual(
+      Buffer.from(signature, 'hex'),
+      Buffer.from(expectedSignature, 'hex'),
+    );
   }
 }
