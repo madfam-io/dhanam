@@ -11,8 +11,8 @@ import {
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 
 import { UsersService } from './users.service';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
+import { CurrentUser } from '@core/auth/decorators/current-user.decorator';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User, UserProfile } from '@dhanam/shared';
 

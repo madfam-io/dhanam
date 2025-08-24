@@ -13,8 +13,8 @@ import {
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 
 import { SpacesService } from './spaces.service';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
+import { CurrentUser } from '@core/auth/decorators/current-user.decorator';
 import { SpaceGuard } from './guards/space.guard';
 import { RequireRole } from './decorators/require-role.decorator';
 import { CreateSpaceDto } from './dto/create-space.dto';

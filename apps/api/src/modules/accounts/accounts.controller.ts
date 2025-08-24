@@ -15,7 +15,7 @@ import {
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 
 import { AccountsService } from './accounts.service';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
 import { SpaceGuard } from '../spaces/guards/space.guard';
 import { RequireRole } from '../spaces/decorators/require-role.decorator';
 import { CreateAccountDto } from './dto/create-account.dto';

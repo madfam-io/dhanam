@@ -9,11 +9,11 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
 import { SpaceGuard } from '../../spaces/guards/space.guard';
 import { PlaidService } from './plaid.service';
 import { CreatePlaidLinkDto, PlaidWebhookDto } from './dto';
-import { CurrentUser } from '../../auth/decorators/current-user.decorator';
+import { CurrentUser } from '@core/auth/decorators/current-user.decorator';
 import { User } from '@dhanam/shared';
 
 @ApiTags('Plaid Provider')

@@ -7,7 +7,7 @@ import {
   Param,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
 import { AnalyticsService } from './analytics.service';
 import { 
   NetWorthResponse,

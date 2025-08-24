@@ -8,9 +8,9 @@ import {
   Body,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
 import { EsgService } from './esg.service';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { CurrentUser } from '@core/auth/decorators/current-user.decorator';
 import { User } from '@prisma/client';
 
 @ApiTags('ESG Scoring')

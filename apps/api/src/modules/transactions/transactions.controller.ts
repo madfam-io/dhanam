@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { TransactionsService } from './transactions.service';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
 import {
   CreateTransactionDto,
   UpdateTransactionDto,

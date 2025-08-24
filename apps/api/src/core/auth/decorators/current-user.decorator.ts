@@ -8,3 +8,12 @@ export const CurrentUser = createParamDecorator(
     return data ? user?.[data] : user;
   },
 );
+
+export interface AuthenticatedUser {
+  userId: string;
+  email: string;
+  name: string;
+  locale: string;
+  timezone: string;
+  totpEnabled: boolean;
+}

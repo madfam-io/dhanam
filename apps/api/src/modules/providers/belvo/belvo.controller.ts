@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { BelvoService } from './belvo.service';
-import { JwtAuthGuard } from '@modules/auth/guards/jwt-auth.guard';
+import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
 import { CreateBelvoLinkDto, BelvoWebhookDto } from './dto';
 import { Request } from 'express';
 import { ConfigService } from '@nestjs/config';

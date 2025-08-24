@@ -2,7 +2,9 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 
 import { CoreModule } from '@core/core.module';
-import { AuthModule } from '@modules/auth/auth.module';
+import { AuthModule } from '@core/auth/auth.module';
+import { RateLimitingModule } from '@core/security/rate-limiting.module';
+import { AuditModule } from '@core/audit/audit.module';
 import { UsersModule } from '@modules/users/users.module';
 import { SpacesModule } from '@modules/spaces/spaces.module';
 import { AccountsModule } from '@modules/accounts/accounts.module';
@@ -26,6 +28,8 @@ import { validationSchema } from './config/validation';
     }),
     CoreModule,
     AuthModule,
+    RateLimitingModule,
+    AuditModule,
     UsersModule,
     SpacesModule,
     AccountsModule,

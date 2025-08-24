@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiOkResponse } from '@nestjs/swagger';
 import { BudgetsService } from './budgets.service';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
 import { CreateBudgetDto, UpdateBudgetDto, BudgetResponseDto, BudgetSummaryDto } from './dto';
 import { Request } from 'express';
 

@@ -67,8 +67,12 @@ model User {
   locale           String        @default("es")
   timezone         String        @default("America/Mexico_City")
   totpSecret       String?       @map("totp_secret")
+  totpTempSecret   String?       @map("totp_temp_secret")
   totpEnabled      Boolean       @default(false) @map("totp_enabled")
+  totpBackupCodes  String[]      @default([]) @map("totp_backup_codes")
   emailVerified    Boolean       @default(false) @map("email_verified")
+  isActive         Boolean       @default(true) @map("is_active")
+  lastLoginAt      DateTime?     @map("last_login_at")
   createdAt        DateTime      @default(now()) @map("created_at")
   updatedAt        DateTime      @updatedAt @map("updated_at")
 
@@ -311,18 +315,21 @@ model AuditLog {
   id               String        @id @default(uuid())
   userId           String?       @map("user_id")
   action           String
-  resourceType     String        @map("resource_type")
+  resource         String?
   resourceId       String?       @map("resource_id")
-  changes          Json?
+  metadata         String?       // JSON string
   ipAddress        String?       @map("ip_address")
   userAgent        String?       @map("user_agent")
+  severity         String        @default("low") // low, medium, high, critical
+  timestamp        DateTime      @default(now())
   createdAt        DateTime      @default(now()) @map("created_at")
 
   // Relations
   user             User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
 
-  @@index([userId, action, createdAt(sort: Desc)])
-  @@index([resourceType, resourceId])
+  @@index([userId, action, timestamp(sort: Desc)])
+  @@index([resource, resourceId])
+  @@index([severity, timestamp(sort: Desc)])
   @@map("audit_logs")
 }
 
