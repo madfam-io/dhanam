@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
+import { PrismaService } from '../../core/prisma/prisma.service';
 import * as nodemailer from 'nodemailer';
 import * as handlebars from 'handlebars';
 import * as fs from 'fs/promises';
@@ -17,6 +18,7 @@ export class EmailService {
 
   constructor(
     private readonly configService: ConfigService,
+    private readonly prisma: PrismaService,
     @InjectQueue('email') private readonly emailQueue: Queue<EmailJobData>,
   ) {
     this.initializeTransporter();
@@ -354,5 +356,86 @@ export class EmailService {
 
     await this.emailQueue.addBulk(jobs);
     this.logger.log(`Queued ${recipients.length} batch emails`);
+  }
+
+  // New onboarding-specific email methods
+
+  async sendEmailVerification(userId: string, data: {
+    verificationToken: string;
+    verificationUrl: string;
+  }): Promise<void> {
+    // Get user details
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    await this.sendEmail({
+      to: user.email,
+      subject: 'Verifica tu email - Dhanam',
+      template: 'email-verification',
+      context: {
+        userName: user.name,
+        verificationUrl: data.verificationUrl,
+      },
+      priority: 'high',
+    });
+
+    this.logger.log(`Email verification sent to ${user.email}`);
+  }
+
+  async sendOnboardingComplete(userId: string, data: {
+    skipOptional: boolean;
+    completedAt: string;
+    metadata: Record<string, any>;
+  }): Promise<void> {
+    // Get user details
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // Calculate completion time if available
+    const completionTime = data.metadata.timeSpent 
+      ? this.formatDuration(data.metadata.timeSpent)
+      : 'N/A';
+
+    const stepsCompleted = data.metadata.stepsCompleted || '7';
+    const dashboardUrl = `${this.configService.get('WEB_URL')}/dashboard`;
+
+    await this.sendEmail({
+      to: user.email,
+      subject: '🎉 ¡Tu cuenta de Dhanam está lista! - Configuración completada',
+      template: 'onboarding-complete',
+      context: {
+        userName: user.name,
+        completionTime,
+        stepsCompleted,
+        dashboardUrl,
+        skipOptional: data.skipOptional,
+      },
+      priority: 'high',
+    });
+
+    this.logger.log(`Onboarding completion email sent to ${user.email}`);
+  }
+
+  private formatDuration(seconds: number): string {
+    if (seconds < 60) {
+      return `${seconds}s`;
+    } else if (seconds < 3600) {
+      const minutes = Math.floor(seconds / 60);
+      return `${minutes}m`;
+    } else {
+      const hours = Math.floor(seconds / 3600);
+      const minutes = Math.floor((seconds % 3600) / 60);
+      return `${hours}h ${minutes}m`;
+    }
   }
 }

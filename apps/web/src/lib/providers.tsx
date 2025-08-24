@@ -3,6 +3,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from '~/components/theme-provider';
 import { AuthProvider } from '~/components/auth-provider';
+import { PreferencesProvider } from '~/contexts/PreferencesContext';
 import { useState } from 'react';
 
 export function Providers({ children }: { children: React.ReactNode }) {
@@ -27,7 +28,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
         disableTransitionOnChange
       >
         <AuthProvider>
-          {children}
+          <PreferencesProvider>
+            {children}
+          </PreferencesProvider>
         </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>

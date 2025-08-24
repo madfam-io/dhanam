@@ -16,6 +16,8 @@ import { AnalyticsModule } from '@modules/analytics/analytics.module';
 import { JobsModule } from '@modules/jobs/jobs.module';
 import { ProvidersModule } from '@modules/providers/providers.module';
 import { FxRatesModule } from '@modules/fx-rates/fx-rates.module';
+import { OnboardingModule } from '@modules/onboarding/onboarding.module';
+import { PreferencesModule } from '@modules/preferences/preferences.module';
 import { MonitoringModule } from '@core/monitoring/monitoring.module';
 import { EmailModule } from '@modules/email/email.module';
 
@@ -45,6 +47,8 @@ import { validationSchema } from './config/validation';
     JobsModule,
     ProvidersModule,
     FxRatesModule,
+    OnboardingModule,
+    PreferencesModule,
     MonitoringModule,
     EmailModule,
   ],

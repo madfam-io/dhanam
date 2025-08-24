@@ -1,5 +1,7 @@
 export type EmailTemplate = 
   | 'welcome'
+  | 'email-verification'
+  | 'onboarding-complete'
   | 'password-reset'
   | 'password-changed'
   | 'two-factor-enabled'

@@ -1,0 +1,42 @@
+{{> header}}
+
+<div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+  <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 20px; text-align: center;">
+    <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 600;">¡Verifica tu email!</h1>
+    <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 16px;">Solo falta un paso para activar tu cuenta</p>
+  </div>
+  
+  <div style="padding: 40px 30px;">
+    <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 24px 0;">
+      ¡Hola {{userName}}!
+    </p>
+    
+    <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 24px 0;">
+      ¡Gracias por registrarte en Dhanam! Para completar tu registro y acceder a todas las funcionalidades, necesitamos verificar tu dirección de correo electrónico.
+    </p>
+
+    <div style="text-align: center; margin: 32px 0;">
+      {{> button url=verificationUrl text="Verificar mi email" color="#667eea"}}
+    </div>
+
+    <p style="color: #6b7280; font-size: 14px; line-height: 1.5; margin: 24px 0;">
+      Si no puedes hacer clic en el botón, copia y pega el siguiente enlace en tu navegador:
+    </p>
+    
+    <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 12px; margin: 16px 0;">
+      <a href="{{verificationUrl}}" style="color: #667eea; text-decoration: none; font-size: 14px; word-break: break-all;">{{verificationUrl}}</a>
+    </div>
+
+    <div style="background: #fef3c7; border: 1px solid #f59e0b; border-radius: 6px; padding: 16px; margin: 24px 0;">
+      <p style="color: #92400e; font-size: 14px; margin: 0; font-weight: 500;">
+        ⏰ Este enlace expira en 24 horas por tu seguridad
+      </p>
+    </div>
+
+    <p style="color: #6b7280; font-size: 14px; line-height: 1.5; margin: 24px 0 0 0;">
+      Si no creaste una cuenta en Dhanam, puedes ignorar este correo de manera segura.
+    </p>
+  </div>
+</div>
+
+{{> footer}}

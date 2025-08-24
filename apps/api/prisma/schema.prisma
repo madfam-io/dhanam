@@ -72,6 +72,9 @@ model User {
   totpBackupCodes  String[]      @default([]) @map("totp_backup_codes")
   emailVerified    Boolean       @default(false) @map("email_verified")
   isActive         Boolean       @default(true) @map("is_active")
+  onboardingCompleted Boolean    @default(false) @map("onboarding_completed")
+  onboardingCompletedAt DateTime? @map("onboarding_completed_at")
+  onboardingStep   String?       @map("onboarding_step")
   lastLoginAt      DateTime?     @map("last_login_at")
   createdAt        DateTime      @default(now()) @map("created_at")
   updatedAt        DateTime      @updatedAt @map("updated_at")
@@ -81,8 +84,65 @@ model User {
   sessions         Session[]
   auditLogs        AuditLog[]
   providerConnections ProviderConnection[]
+  preferences      UserPreferences?
 
   @@map("users")
+}
+
+model UserPreferences {
+  id                    String        @id @default(uuid())
+  userId                String        @unique @map("user_id")
+  
+  // Notification preferences
+  emailNotifications    Boolean       @default(true) @map("email_notifications")
+  transactionAlerts     Boolean       @default(true) @map("transaction_alerts")
+  budgetAlerts          Boolean       @default(true) @map("budget_alerts")
+  weeklyReports         Boolean       @default(true) @map("weekly_reports")
+  monthlyReports        Boolean       @default(true) @map("monthly_reports")
+  securityAlerts        Boolean       @default(true) @map("security_alerts")
+  promotionalEmails     Boolean       @default(false) @map("promotional_emails")
+  
+  // Mobile/Push notifications
+  pushNotifications     Boolean       @default(true) @map("push_notifications")
+  transactionPush       Boolean       @default(true) @map("transaction_push")
+  budgetPush            Boolean       @default(true) @map("budget_push")
+  securityPush          Boolean       @default(true) @map("security_push")
+  
+  // Privacy preferences
+  dataSharing           Boolean       @default(false) @map("data_sharing")
+  analyticsTracking     Boolean       @default(true) @map("analytics_tracking")
+  personalizedAds       Boolean       @default(false) @map("personalized_ads")
+  
+  // Display preferences
+  dashboardLayout       String        @default("standard") @map("dashboard_layout")
+  chartType             String        @default("line") @map("chart_type")
+  themeMode             String        @default("light") @map("theme_mode")
+  compactView           Boolean       @default(false) @map("compact_view")
+  showBalances          Boolean       @default(true) @map("show_balances")
+  
+  // Financial preferences
+  defaultCurrency       Currency      @default(MXN) @map("default_currency")
+  hideSensitiveData     Boolean       @default(false) @map("hide_sensitive_data")
+  autoCategorizeTxns    Boolean       @default(true) @map("auto_categorize_txns")
+  includeWeekends       Boolean       @default(true) @map("include_weekends")
+  
+  // ESG preferences
+  esgScoreVisibility    Boolean       @default(true) @map("esg_score_visibility")
+  sustainabilityAlerts  Boolean       @default(false) @map("sustainability_alerts")
+  impactReporting       Boolean       @default(false) @map("impact_reporting")
+  
+  // Backup and export
+  autoBackup            Boolean       @default(false) @map("auto_backup")
+  backupFrequency       String?       @map("backup_frequency")
+  exportFormat          String        @default("csv") @map("export_format")
+  
+  createdAt             DateTime      @default(now()) @map("created_at")
+  updatedAt             DateTime      @updatedAt @map("updated_at")
+
+  // Relations
+  user                  User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_preferences")
 }
 
 model Session {
