@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@dhanam/ui';
-import { Bell, Settings, User, LogOut, ChevronDown } from 'lucide-react';
+import { Bell, Settings, User, LogOut, ChevronDown, Shield } from 'lucide-react';
 import { useAuth } from '~/lib/hooks/use-auth';
 import { useSpaces } from '~/lib/hooks/use-spaces';
 import { useSpaceStore } from '~/stores/space';
@@ -84,6 +84,14 @@ export function DashboardHeader() {
                 <Settings className="mr-2 h-4 w-4" />
                 Settings
               </DropdownMenuItem>
+              {/* Show admin link for users with admin/owner roles */}
+              {user?.spaces?.some(space => space.role === 'admin' || space.role === 'owner') && (
+                <DropdownMenuItem onClick={() => router.push('/admin/dashboard')}>
+                  <Shield className="mr-2 h-4 w-4" />
+                  Admin Dashboard
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleLogout}>
                 <LogOut className="mr-2 h-4 w-4" />
                 Logout

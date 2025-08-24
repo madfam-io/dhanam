@@ -1,16 +1,16 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { AuthTokens, User } from '@dhanam/shared';
+import { AuthTokens, UserProfile } from '@dhanam/shared';
 import { apiClient } from '../api/client';
 import { authApi } from '../api/auth';
 
 interface AuthState {
-  user: User | null;
+  user: UserProfile | null;
   tokens: AuthTokens | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   
-  setAuth: (user: User, tokens: AuthTokens) => void;
+  setAuth: (user: UserProfile, tokens: AuthTokens) => void;
   clearAuth: () => void;
   logout: () => Promise<void>;
   refreshTokens: () => Promise<void>;

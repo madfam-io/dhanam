@@ -20,6 +20,7 @@ import { OnboardingModule } from '@modules/onboarding/onboarding.module';
 import { PreferencesModule } from '@modules/preferences/preferences.module';
 import { MonitoringModule } from '@core/monitoring/monitoring.module';
 import { EmailModule } from '@modules/email/email.module';
+import { AdminModule } from '@modules/admin/admin.module';
 
 import { configuration } from './config/configuration';
 import { validationSchema } from './config/validation';
@@ -51,6 +52,7 @@ import { validationSchema } from './config/validation';
     PreferencesModule,
     MonitoringModule,
     EmailModule,
+    AdminModule,
   ],
 })
 export class AppModule {}

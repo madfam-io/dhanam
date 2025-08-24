@@ -1,5 +1,5 @@
 import { UUID } from './common.types';
-import { User } from './user.types';
+import { User, UserProfile } from './user.types';
 
 export interface LoginDto {
   email: string;
@@ -22,7 +22,7 @@ export interface AuthTokens {
 }
 
 export interface AuthResponse {
-  user: User;
+  user: UserProfile;
   tokens: AuthTokens;
 }
 
