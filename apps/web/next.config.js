@@ -6,6 +6,11 @@ const nextConfig = {
   env: {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/v1',
   },
+  
+  eslint: {
+    // Disable ESLint during builds as it's configured with monorepo-level linting
+    ignoreDuringBuilds: true,
+  },
 
   experimental: {
     serverActions: {
