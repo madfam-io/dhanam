@@ -72,6 +72,7 @@ model User {
   totpBackupCodes  String[]      @default([]) @map("totp_backup_codes")
   emailVerified    Boolean       @default(false) @map("email_verified")
   isActive         Boolean       @default(true) @map("is_active")
+  isAdmin          Boolean       @default(false) @map("is_admin")
   onboardingCompleted Boolean    @default(false) @map("onboarding_completed")
   onboardingCompletedAt DateTime? @map("onboarding_completed_at")
   onboardingStep   String?       @map("onboarding_step")

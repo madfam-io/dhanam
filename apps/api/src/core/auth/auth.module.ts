@@ -14,6 +14,7 @@ import { SessionService } from './session.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
 import { TotpService } from './totp.service';
+import { GuestAuthService } from './guest-auth.service';
 
 @Module({
   imports: [
@@ -33,7 +34,7 @@ import { TotpService } from './totp.service';
     forwardRef(() => EmailModule),
   ],
   controllers: [AuthController],
-  providers: [AuthService, TotpService, SessionService, JwtStrategy, LocalStrategy],
-  exports: [AuthService, TotpService, SessionService],
+  providers: [AuthService, TotpService, SessionService, GuestAuthService, JwtStrategy, LocalStrategy],
+  exports: [AuthService, TotpService, SessionService, GuestAuthService],
 })
 export class AuthModule {}

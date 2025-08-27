@@ -1,0 +1,96 @@
+#!/bin/bash
+
+# Dhanam Quick Start - Bypasses Prisma permission issues
+# Usage: ./dhanam-quick
+
+set -e
+
+# Colors
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+echo -e "${BLUE}🚀 Dhanam Quick Start (Bypassing Prisma Issues)${NC}"
+echo "================================================"
+
+# 1. Ensure Docker is running
+echo -e "${BLUE}▶ Checking Docker services...${NC}"
+if ! docker ps | grep -q dhanam-postgres; then
+    echo "Starting Docker services..."
+    docker-compose -f docker-compose.local.yml up -d 2>/dev/null || {
+        # If docker-compose.local.yml doesn't exist, start manually
+        docker run -d --name dhanam-postgres \
+            -e POSTGRES_USER=dhanam \
+            -e POSTGRES_PASSWORD=localdev \
+            -e POSTGRES_DB=dhanam \
+            -p 5432:5432 postgres:15-alpine 2>/dev/null || true
+            
+        docker run -d --name dhanam-redis \
+            -p 6379:6379 redis:7-alpine 2>/dev/null || true
+    }
+    sleep 5
+fi
+
+# 2. Fix database permissions
+echo -e "${BLUE}▶ Fixing database permissions...${NC}"
+docker exec dhanam-postgres psql -U dhanam -d dhanam -c "
+    GRANT ALL PRIVILEGES ON DATABASE dhanam TO dhanam;
+    GRANT ALL ON SCHEMA public TO dhanam;
+    ALTER SCHEMA public OWNER TO dhanam;
+" 2>/dev/null || true
+
+# 3. Kill any existing servers
+echo -e "${BLUE}▶ Cleaning up old processes...${NC}"
+pkill -f "nest start" 2>/dev/null || true
+pkill -f "next dev" 2>/dev/null || true
+
+# 4. Ensure dependencies are installed
+echo -e "${BLUE}▶ Checking dependencies...${NC}"
+if [ ! -d "node_modules" ]; then
+    pnpm install
+fi
+
+# 5. Generate Prisma Client
+echo -e "${BLUE}▶ Generating Prisma client...${NC}"
+cd apps/api
+npx prisma generate 2>/dev/null || true
+cd ../..
+
+# 6. Start API server
+echo -e "${BLUE}▶ Starting API server...${NC}"
+cd apps/api
+pnpm dev > ~/.dhanam/api.log 2>&1 &
+echo $! > ~/.dhanam/api.pid
+cd ../..
+
+# 7. Start Web server
+echo -e "${BLUE}▶ Starting Web server...${NC}"
+cd apps/web
+pnpm dev > ~/.dhanam/web.log 2>&1 &
+echo $! > ~/.dhanam/web.pid
+cd ../..
+
+# 8. Wait and verify
+echo -e "${YELLOW}⏳ Waiting for services to start...${NC}"
+sleep 10
+
+# 9. Check status
+if curl -s http://localhost:3000 > /dev/null; then
+    echo ""
+    echo -e "${GREEN}✅ Platform is ready!${NC}"
+    echo ""
+    echo "Access points:"
+    echo "  🌐 Web UI: http://localhost:3000"
+    echo "  📡 API: http://localhost:4000"
+    echo "  📧 Email: http://localhost:8025"
+    echo "  🗄️ Database: http://localhost:8080"
+    echo ""
+    echo "View logs:"
+    echo "  tail -f ~/.dhanam/web.log"
+    echo "  tail -f ~/.dhanam/api.log"
+else
+    echo -e "${YELLOW}⚠️ Services may still be starting. Check logs:${NC}"
+    echo "  tail -f ~/.dhanam/web.log"
+    echo "  tail -f ~/.dhanam/api.log"
+fi

@@ -27,6 +27,7 @@ import { AuthService } from './auth.service';
 import { CurrentUser, AuthenticatedUser } from './decorators/current-user.decorator';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { TotpService } from './totp.service';
+import { GuestAuthService } from './guest-auth.service';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -34,7 +35,8 @@ export class AuthController {
   constructor(
     private authService: AuthService,
     private totpService: TotpService,
-    private auditService: AuditService
+    private auditService: AuditService,
+    private guestAuthService: GuestAuthService
   ) {}
 
   @Post('register')
@@ -95,6 +97,39 @@ export class AuthController {
       await this.auditService.logAuthFailure(dto.email, ip, userAgent);
       throw error;
     }
+  }
+
+  @Post('guest')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Login as guest for demo access' })
+  @ApiResponse({
+    status: 200,
+    description: 'Guest session created successfully',
+  })
+  async guestLogin(
+    @Ip() ip: string,
+    @Headers('user-agent') userAgent: string
+  ): Promise<{ 
+    tokens: AuthTokens; 
+    user: any;
+    message: string;
+  }> {
+    const session = await this.guestAuthService.createGuestSession();
+    
+    return {
+      tokens: {
+        accessToken: session.accessToken,
+        refreshToken: session.refreshToken,
+        expiresIn: session.expiresIn,
+      },
+      user: {
+        id: session.user.id,
+        email: session.user.email,
+        name: session.user.name,
+        isGuest: true,
+      },
+      message: 'Welcome to Dhanam demo! This is a read-only guest session.',
+    };
   }
 
   @Post('refresh')
