@@ -160,13 +160,14 @@ export function FeatureTourStep() {
       <Card className="mb-8">
         <CardContent className="p-8">
           {features[currentFeature] && (
-            <div className="text-center mb-6">
-              <div className="text-6xl mb-4">{features[currentFeature].image}</div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">{features[currentFeature].title}</h2>
-              <p className="text-gray-600 max-w-2xl mx-auto">{features[currentFeature].description}</p>
-          </div>
+            <>
+              <div className="text-center mb-6">
+                <div className="text-6xl mb-4">{features[currentFeature].image}</div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">{features[currentFeature].title}</h2>
+                <p className="text-gray-600 max-w-2xl mx-auto">{features[currentFeature].description}</p>
+              </div>
 
-            <div className="bg-gray-50 rounded-lg p-6">
+              <div className="bg-gray-50 rounded-lg p-6">
               <h3 className="font-semibold text-gray-900 mb-3">✨ Características principales:</h3>
               <ul className="space-y-2">
                 {features[currentFeature].tips.map((tip, index) => (
@@ -176,7 +177,8 @@ export function FeatureTourStep() {
                   </li>
                 ))}
               </ul>
-            </div>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>

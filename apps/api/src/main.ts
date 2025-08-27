@@ -1,7 +1,7 @@
-import fastifyCompress from '@fastify/compress';
-import fastifyCors from '@fastify/cors';
-import fastifyHelmet from '@fastify/helmet';
-import fastifyRateLimit from '@fastify/rate-limit';
+// import fastifyCompress from '@fastify/compress';
+// import fastifyCors from '@fastify/cors';
+// import fastifyHelmet from '@fastify/helmet';
+// import fastifyRateLimit from '@fastify/rate-limit';
 import { ValidationPipe, VersioningType } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
@@ -30,8 +30,8 @@ async function bootstrap() {
     type: VersioningType.URI,
   });
 
-  // Security
-  await app.register(fastifyHelmet, {
+  // Security - temporarily disabled for startup
+  /*await app.register(fastifyHelmet, {
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
@@ -40,22 +40,22 @@ async function bootstrap() {
         imgSrc: ["'self'", 'data:', 'https:'],
       },
     },
-  });
+  });*/
 
-  // CORS
-  await app.register(fastifyCors, {
+  // CORS - temporarily disabled for startup
+  /*await app.register(fastifyCors, {
     origin: configService.get('CORS_ORIGINS')?.split(',') || 'http://localhost:3000',
     credentials: true,
-  });
+  });*/
 
-  // Compression
-  await app.register(fastifyCompress, { encodings: ['gzip', 'deflate'] });
+  // Compression - temporarily disabled for startup
+  /*await app.register(fastifyCompress, { encodings: ['gzip', 'deflate'] });*/
 
-  // Rate limiting
-  await app.register(fastifyRateLimit, {
+  // Rate limiting - temporarily disabled for startup
+  /*await app.register(fastifyRateLimit, {
     max: 100,
     timeWindow: '15 minutes',
-  });
+  });*/
 
   // Global middleware and filters
   app.use(new RequestIdMiddleware().use);

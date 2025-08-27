@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useMutation } from '@tanstack/react-query';
 import { LoginForm } from '~/components/forms/login-form';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@dhanam/ui';
-import { Alert, AlertDescription } from '@dhanam/ui';
+import { Alert, AlertDescription, Button, Separator } from '@dhanam/ui';
 import { useAuth } from '~/lib/hooks/use-auth';
 import { authApi } from '~/lib/api/auth';
 import { ApiError } from '~/lib/api/client';
@@ -39,6 +39,17 @@ export default function LoginPage() {
     },
   });
 
+  const guestLoginMutation = useMutation({
+    mutationFn: authApi.loginAsGuest,
+    onSuccess: (response) => {
+      setAuth(response.user, response.tokens);
+      router.push('/dashboard');
+    },
+    onError: (error: ApiError) => {
+      setError('Failed to access demo. Please try again.');
+    },
+  });
+
   return (
     <Card>
       <CardHeader>
@@ -60,16 +71,30 @@ export default function LoginPage() {
           showTotpField={showTotpField}
         />
       </CardContent>
-      <CardFooter className="flex flex-col space-y-2">
-        <div className="text-sm text-muted-foreground">
-          Don&apos;t have an account?{' '}
-          <Link href="/register" className="text-primary hover:underline">
-            Sign up
+      <CardFooter className="flex flex-col space-y-4">
+        <Separator />
+        <Button 
+          variant="outline" 
+          className="w-full"
+          onClick={() => {
+            setError(null);
+            guestLoginMutation.mutate();
+          }}
+          disabled={guestLoginMutation.isPending}
+        >
+          {guestLoginMutation.isPending ? 'Accessing demo...' : 'Try Demo'}
+        </Button>
+        <div className="flex flex-col space-y-2">
+          <div className="text-sm text-muted-foreground">
+            Don&apos;t have an account?{' '}
+            <Link href="/register" className="text-primary hover:underline">
+              Sign up
+            </Link>
+          </div>
+          <Link href="/forgot-password" className="text-sm text-primary hover:underline">
+            Forgot your password?
           </Link>
         </div>
-        <Link href="/forgot-password" className="text-sm text-primary hover:underline">
-          Forgot your password?
-        </Link>
       </CardFooter>
     </Card>
   );

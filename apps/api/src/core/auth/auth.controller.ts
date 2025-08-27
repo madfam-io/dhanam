@@ -107,8 +107,8 @@ export class AuthController {
     description: 'Guest session created successfully',
   })
   async guestLogin(
-    @Ip() ip: string,
-    @Headers('user-agent') userAgent: string
+    @Ip() _ip: string,
+    @Headers('user-agent') _userAgent: string
   ): Promise<{ 
     tokens: AuthTokens; 
     user: any;
