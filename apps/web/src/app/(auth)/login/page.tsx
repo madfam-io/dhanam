@@ -45,7 +45,7 @@ export default function LoginPage() {
       setAuth(response.user, response.tokens);
       router.push('/dashboard');
     },
-    onError: (error: ApiError) => {
+    onError: (_error: ApiError) => {
       setError('Failed to access demo. Please try again.');
     },
   });
@@ -73,8 +73,8 @@ export default function LoginPage() {
       </CardContent>
       <CardFooter className="flex flex-col space-y-4">
         <Separator />
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           className="w-full"
           onClick={() => {
             setError(null);

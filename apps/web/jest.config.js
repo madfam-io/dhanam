@@ -8,7 +8,7 @@ const customJestConfig = {
   displayName: 'web',
   setupFilesAfterEnv: ['<rootDir>/test/setup.ts'],
   testEnvironment: 'jsdom',
-  moduleNameMapping: {
+  moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
     '^@dhanam/(.*)$': '<rootDir>/../../packages/$1/src',
   },

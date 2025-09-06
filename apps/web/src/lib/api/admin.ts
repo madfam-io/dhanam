@@ -120,42 +120,34 @@ export interface PaginatedResponse<T> {
 // API client
 export const adminApi = {
   async searchUsers(params: UserSearchParams = {}): Promise<PaginatedResponse<UserDetails>> {
-    const response = await apiClient.get('/admin/users', { params });
-    return response.data;
+    return apiClient.get<PaginatedResponse<UserDetails>>('/admin/users', params);
   },
 
   async getUserDetails(userId: string): Promise<UserDetails> {
-    const response = await apiClient.get(`/admin/users/${userId}`);
-    return response.data;
+    return apiClient.get<UserDetails>(`/admin/users/${userId}`);
   },
 
   async getSystemStats(): Promise<SystemStats> {
-    const response = await apiClient.get('/admin/stats');
-    return response.data;
+    return apiClient.get<SystemStats>('/admin/stats');
   },
 
   async searchAuditLogs(params: AuditLogSearchParams = {}): Promise<PaginatedResponse<AuditLog>> {
-    const response = await apiClient.get('/admin/audit-logs', { params });
-    return response.data;
+    return apiClient.get<PaginatedResponse<AuditLog>>('/admin/audit-logs', params);
   },
 
   async getOnboardingFunnel(): Promise<OnboardingFunnel> {
-    const response = await apiClient.get('/admin/analytics/onboarding-funnel');
-    return response.data;
+    return apiClient.get<OnboardingFunnel>('/admin/analytics/onboarding-funnel');
   },
 
   async getFeatureFlags(): Promise<FeatureFlag[]> {
-    const response = await apiClient.get('/admin/feature-flags');
-    return response.data;
+    return apiClient.get<FeatureFlag[]>('/admin/feature-flags');
   },
 
   async getFeatureFlag(key: string): Promise<FeatureFlag> {
-    const response = await apiClient.get(`/admin/feature-flags/${key}`);
-    return response.data;
+    return apiClient.get<FeatureFlag>(`/admin/feature-flags/${key}`);
   },
 
   async updateFeatureFlag(key: string, updates: Partial<FeatureFlag>): Promise<FeatureFlag> {
-    const response = await apiClient.post(`/admin/feature-flags/${key}`, updates);
-    return response.data;
+    return apiClient.post<FeatureFlag>(`/admin/feature-flags/${key}`, updates);
   },
 };

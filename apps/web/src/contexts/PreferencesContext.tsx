@@ -103,13 +103,13 @@ interface PreferencesContextValue {
 const PreferencesContext = createContext<PreferencesContextValue | undefined>(undefined);
 
 export function PreferencesProvider({ children }: { children: React.ReactNode }) {
-  const { user, token } = useAuth();
+  const { user, tokens } = useAuth();
   const [preferences, setPreferences] = useState<UserPreferences | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchPreferences = useCallback(async () => {
-    if (!token) return;
+    if (!tokens) return;
 
     setIsLoading(true);
     setError(null);
@@ -117,7 +117,7 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
     try {
       const response = await fetch('/api/preferences', {
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${tokens?.accessToken}`,
         },
       });
 
@@ -144,7 +144,7 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
         const response = await fetch('/api/preferences', {
           method: 'PATCH',
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${tokens?.accessToken}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(updates),
@@ -210,7 +210,7 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
         const response = await fetch('/api/preferences/bulk', {
           method: 'PUT',
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${tokens?.accessToken}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(updates),
@@ -239,7 +239,7 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
       const response = await fetch('/api/preferences/reset', {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${tokens?.accessToken}`,
         },
       });
 

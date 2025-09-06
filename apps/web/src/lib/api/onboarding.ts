@@ -24,55 +24,50 @@ export interface UpdatePreferencesData {
 export const onboardingApi = {
   // Get onboarding status
   getStatus: async (): Promise<OnboardingStatus> => {
-    const response = await apiClient.get('/onboarding/status');
-    return response.data;
+    return apiClient.get<OnboardingStatus>('/onboarding/status');
   },
 
   // Update onboarding step
   updateStep: async (step: string, data?: any): Promise<OnboardingStatus> => {
-    const response = await apiClient.put('/onboarding/step', { step, data });
-    return response.data;
+    return apiClient.put<OnboardingStatus>('/onboarding/step', { step, data });
   },
 
   // Complete onboarding
   complete: async (skipOptional = false): Promise<OnboardingStatus> => {
-    const response = await apiClient.post('/onboarding/complete', {
+    return apiClient.post<OnboardingStatus>('/onboarding/complete', {
       skipOptional,
       metadata: {
         source: 'web',
         timestamp: new Date().toISOString(),
       },
     });
-    return response.data;
   },
 
   // Skip optional step
   skipStep: async (step: string): Promise<OnboardingStatus> => {
-    const response = await apiClient.post(`/onboarding/skip/${step}`);
-    return response.data;
+    return apiClient.post<OnboardingStatus>(`/onboarding/skip/${step}`);
   },
 
   // Update user preferences
   updatePreferences: async (preferences: UpdatePreferencesData): Promise<{ success: boolean }> => {
-    const response = await apiClient.put('/onboarding/preferences', preferences);
-    return response.data;
+    return apiClient.put<{ success: boolean }>('/onboarding/preferences', preferences);
   },
 
   // Verify email
   verifyEmail: async (token: string): Promise<{ success: boolean; message: string }> => {
-    const response = await apiClient.post('/onboarding/verify-email', { token });
-    return response.data;
+    return apiClient.post<{ success: boolean; message: string }>(
+      '/onboarding/verify-email',
+      { token },
+    );
   },
 
   // Resend email verification
   resendVerification: async (): Promise<{ success: boolean; message: string }> => {
-    const response = await apiClient.post('/onboarding/resend-verification');
-    return response.data;
+    return apiClient.post<{ success: boolean; message: string }>('/onboarding/resend-verification');
   },
 
   // Reset onboarding (for testing/support)
   reset: async (): Promise<OnboardingStatus> => {
-    const response = await apiClient.post('/onboarding/reset');
-    return response.data;
+    return apiClient.post<OnboardingStatus>('/onboarding/reset');
   },
 };
