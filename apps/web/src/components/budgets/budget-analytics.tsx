@@ -155,8 +155,8 @@ export function BudgetAnalytics({ spaceId, budgetId, currency }: BudgetAnalytics
                   margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" fontSize={12} angle={-45} textAnchor="end" height={80} />
-                  <YAxis fontSize={12} />
+                  <XAxis dataKey="name" tick={{ fontSize: 12, angle: -45, textAnchor: 'end' }} height={80} />
+                  <YAxis tick={{ fontSize: 12 }} />
                   <Tooltip
                     formatter={(value: number) => [formatCurrency(value, currency), '']}
                     labelStyle={{ color: '#000' }}
@@ -213,8 +213,8 @@ export function BudgetAnalytics({ spaceId, budgetId, currency }: BudgetAnalytics
                   margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="week" fontSize={12} />
-                  <YAxis fontSize={12} />
+                  <XAxis dataKey="week" tick={{ fontSize: 12 }} />
+                  <YAxis tick={{ fontSize: 12 }} />
                   <Tooltip
                     formatter={(value: number) => [formatCurrency(value, currency), '']}
                     labelStyle={{ color: '#000' }}
