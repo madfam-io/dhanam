@@ -145,7 +145,7 @@ export default function AnalyticsPage() {
                 <Progress value={step.percentage} className="h-2" />
 
                 {!isLastStep && index < funnel.dropoff.length && funnel.dropoff[index] && (() => {
-                  const dropoff = funnel.dropoff[index];
+                  const dropoff = funnel.dropoff[index]!; // Non-null assertion: already verified above
                   return (
                     <div className="mt-2 mb-4 pl-8 text-sm text-red-600 dark:text-red-400 flex items-center">
                       <TrendingDown className="h-4 w-4 mr-1" />
