@@ -1,7 +1,7 @@
-// import fastifyCompress from '@fastify/compress';
-// import fastifyCors from '@fastify/cors';
-// import fastifyHelmet from '@fastify/helmet';
-// import fastifyRateLimit from '@fastify/rate-limit';
+import fastifyCompress from '@fastify/compress';
+import fastifyCors from '@fastify/cors';
+import fastifyHelmet from '@fastify/helmet';
+import fastifyRateLimit from '@fastify/rate-limit';
 import { ValidationPipe, VersioningType } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
@@ -15,6 +15,18 @@ import { RequestIdMiddleware } from '@core/middleware/request-id.middleware';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
+  // Setup global error handlers for unhandled rejections and exceptions
+  process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+    // In production, you might want to log to an error tracking service (e.g., Sentry)
+  });
+
+  process.on('uncaughtException', (error) => {
+    console.error('Uncaught Exception:', error);
+    // Gracefully shut down the application
+    process.exit(1);
+  });
+
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
     new FastifyAdapter({
@@ -30,8 +42,8 @@ async function bootstrap() {
     type: VersioningType.URI,
   });
 
-  // Security - temporarily disabled for startup
-  /*await app.register(fastifyHelmet, {
+  // Security headers
+  await app.register(fastifyHelmet, {
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
@@ -40,22 +52,23 @@ async function bootstrap() {
         imgSrc: ["'self'", 'data:', 'https:'],
       },
     },
-  });*/
+  });
 
-  // CORS - temporarily disabled for startup
-  /*await app.register(fastifyCors, {
-    origin: configService.get('CORS_ORIGINS')?.split(',') || 'http://localhost:3000',
+  // CORS configuration
+  const corsOrigins = configService.get('CORS_ORIGINS');
+  await app.register(fastifyCors, {
+    origin: corsOrigins ? corsOrigins.split(',') : ['http://localhost:3000', 'http://localhost:19006'],
     credentials: true,
-  });*/
+  });
 
-  // Compression - temporarily disabled for startup
-  /*await app.register(fastifyCompress, { encodings: ['gzip', 'deflate'] });*/
+  // Compression
+  await app.register(fastifyCompress, { encodings: ['gzip', 'deflate'] });
 
-  // Rate limiting - temporarily disabled for startup
-  /*await app.register(fastifyRateLimit, {
-    max: 100,
-    timeWindow: '15 minutes',
-  });*/
+  // Rate limiting
+  await app.register(fastifyRateLimit, {
+    max: configService.get('RATE_LIMIT_MAX') ? parseInt(configService.get('RATE_LIMIT_MAX')!) : 100,
+    timeWindow: configService.get('RATE_LIMIT_WINDOW') || '15 minutes',
+  });
 
   // Global middleware and filters
   app.use(new RequestIdMiddleware().use);

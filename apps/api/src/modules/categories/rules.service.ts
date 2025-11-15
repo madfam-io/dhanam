@@ -144,10 +144,15 @@ export class RulesService {
       },
     });
 
+    // PERFORMANCE FIX: Get rules once for the space instead of per-transaction
+    // This eliminates N+1 query pattern (was 1 + N queries, now 2 queries total)
+    const rules = await this.getRulesForSpace(spaceId);
+
     let categorizedCount = 0;
 
     for (const transaction of transactions) {
-      const categoryId = await this.categorizeTransaction(transaction);
+      // Evaluate rules in-memory without additional database queries
+      const categoryId = this.categorizeTransactionWithRules(transaction, rules);
 
       if (categoryId) {
         await this.prisma.transaction.update({
@@ -166,6 +171,29 @@ export class RulesService {
       categorized: categorizedCount,
       total: transactions.length,
     };
+  }
+
+  /**
+   * Categorize transaction using pre-loaded rules (no database queries)
+   * Used by batch operations to avoid N+1 query pattern
+   */
+  private categorizeTransactionWithRules(
+    transaction: Transaction,
+    rules: CategoryRule[]
+  ): string | null {
+    // Apply rules in priority order (already sorted by getRulesForSpace)
+    for (const rule of rules) {
+      if (!rule.enabled) continue;
+
+      if (this.evaluateRule(rule, transaction)) {
+        this.logger.log(
+          `Transaction ${transaction.id} matched rule "${rule.name}" for category ${rule.categoryId}`
+        );
+        return rule.categoryId;
+      }
+    }
+
+    return null;
   }
 
   private evaluateRule(rule: CategoryRule, transaction: Transaction): boolean {

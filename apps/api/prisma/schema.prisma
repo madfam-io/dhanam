@@ -238,6 +238,7 @@ model Account {
 
   @@unique([spaceId, provider, providerAccountId])
   @@index([spaceId])
+  @@index([spaceId, lastSyncedAt(sort: Desc)])
   @@map("accounts")
 }
 
@@ -278,23 +279,25 @@ model Transaction {
   @@unique([accountId, providerTransactionId])
   @@index([accountId, date(sort: Desc)])
   @@index([categoryId])
+  @@index([pending])
   @@map("transactions")
 }
 
 model Category {
-  id               String        @id @default(uuid())
-  budgetId         String        @map("budget_id")
+  id               String             @id @default(uuid())
+  budgetId         String             @map("budget_id")
   name             String
-  budgetedAmount   Decimal       @map("budgeted_amount") @db.Decimal(19, 4)
+  budgetedAmount   Decimal            @map("budgeted_amount") @db.Decimal(19, 4)
   icon             String?
   color            String?
   description      String?
-  createdAt        DateTime      @default(now()) @map("created_at")
-  updatedAt        DateTime      @updatedAt @map("updated_at")
+  createdAt        DateTime           @default(now()) @map("created_at")
+  updatedAt        DateTime           @updatedAt @map("updated_at")
 
   // Relations
-  budget           Budget        @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+  budget           Budget             @relation(fields: [budgetId], references: [id], onDelete: Cascade)
   transactions     Transaction[]
+  rules            TransactionRule[]
 
   @@unique([budgetId, name])
   @@index([budgetId])
@@ -306,7 +309,7 @@ model TransactionRule {
   spaceId          String        @map("space_id")
   name             String
   conditions       Json
-  categoryId       String        @map("category_id")
+  categoryId       String?       @map("category_id")
   priority         Int           @default(0)
   enabled          Boolean       @default(true)
   createdAt        DateTime      @default(now()) @map("created_at")
@@ -314,6 +317,7 @@ model TransactionRule {
 
   // Relations
   space            Space         @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  category         Category?     @relation(fields: [categoryId], references: [id], onDelete: SetNull)
 
   @@index([spaceId, enabled])
   @@map("transaction_rules")

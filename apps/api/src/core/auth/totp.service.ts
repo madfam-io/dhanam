@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { randomBytes } from 'crypto';
 import * as qrcode from 'qrcode';
 import * as speakeasy from 'speakeasy';
 
@@ -118,8 +119,8 @@ export class TotpService {
   generateBackupCodes(): string[] {
     const codes = [];
     for (let i = 0; i < 10; i++) {
-      // Generate 8-digit backup codes
-      const code = Math.random().toString().slice(2, 10);
+      // Generate cryptographically secure 8-character backup codes
+      const code = randomBytes(4).toString('hex').toUpperCase();
       codes.push(code);
     }
     return codes;

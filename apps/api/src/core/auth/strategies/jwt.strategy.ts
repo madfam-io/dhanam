@@ -9,10 +9,16 @@ import { JwtPayload } from '../auth.service';
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(private prisma: PrismaService) {
+    // Validate JWT_SECRET is set
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) {
+      throw new Error('JWT_SECRET environment variable is required');
+    }
+
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: process.env.JWT_SECRET || 'fallback-secret-change-in-production',
+      secretOrKey: jwtSecret,
       issuer: 'dhanam-api',
       audience: 'dhanam-web',
     });

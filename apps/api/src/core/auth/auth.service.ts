@@ -157,9 +157,10 @@ export class AuthService {
 
     const resetToken = await this.sessionService.createPasswordResetToken(user.id);
 
-    // TODO: Send email with reset link
-    // For now, log the token (remove in production)
-    this.logger.log(`Password reset token for ${user.email}: ${resetToken}`, 'AuthService');
+    // Send password reset email
+    await this.emailService.sendPasswordResetEmail(user.email, user.name, resetToken);
+
+    this.logger.log(`Password reset requested for user: ${user.id}`, 'AuthService');
   }
 
   async resetPassword(dto: ResetPasswordDto): Promise<void> {

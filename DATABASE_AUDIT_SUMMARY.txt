@@ -1,0 +1,198 @@
+================================================================================
+DHANAM LEDGER - DATABASE ARCHITECTURE AUDIT SUMMARY
+================================================================================
+Date: November 15, 2025
+Thorough Analysis: YES
+
+================================================================================
+FILES ANALYZED
+================================================================================
+
+PRIMARY SCHEMA FILES:
+  ✓ /home/user/dhanam/apps/api/prisma/schema.prisma (442 lines)
+  ✓ /home/user/dhanam/apps/api/prisma/migrations/20250824063952_init/migration.sql (350 lines)
+  ✓ /home/user/dhanam/apps/api/prisma/migrations/000_error_logs_table/migration.sql (18 lines)
+
+SEED/INITIALIZATION:
+  ✓ /home/user/dhanam/apps/api/prisma/seed.ts (289 lines)
+  ✓ /home/user/dhanam/apps/api/prisma/seed-enhanced.ts (797 lines)
+
+SERVICE/BUSINESS LOGIC:
+  ✓ /home/user/dhanam/apps/api/src/modules/categories/rules.service.ts (362 lines)
+  ✓ /home/user/dhanam/apps/api/src/modules/transactions/transactions.service.ts (272 lines)
+  ✓ /home/user/dhanam/apps/api/src/modules/accounts/accounts.service.ts (145+ lines)
+  ✓ /home/user/dhanam/apps/api/src/modules/spaces/spaces.service.ts (283 lines)
+  ✓ /home/user/dhanam/apps/api/src/modules/budgets/budgets.service.ts (80+ lines)
+  ✓ /home/user/dhanam/apps/api/src/modules/providers/belvo/belvo.service.ts (80+ lines)
+  ✓ /home/user/dhanam/apps/api/src/modules/esg/esg.service.ts (100+ lines)
+  ✓ /home/user/dhanam/apps/api/src/modules/jobs/processors/sync-transactions.processor.ts (100+ lines)
+
+SECURITY/CORE:
+  ✓ /home/user/dhanam/apps/api/src/core/crypto/crypto.service.ts (59 lines)
+  ✓ /home/user/dhanam/apps/api/src/core/audit/audit.service.ts (80+ lines)
+
+================================================================================
+CRITICAL FINDINGS (7 TOTAL)
+================================================================================
+
+[CRITICAL #1] TransactionRule Missing Foreign Key Constraint
+────────────────────────────────────────────────────────────
+Location: apps/api/prisma/schema.prisma lines 304-320
+Issue: categoryId field has NO @relation annotation; migration lacks FK constraint
+Impact: Data integrity violation - orphaned rules possible
+Evidence: 
+  - Schema has categoryId String but no -> Category relation
+  - Migration only adds FK to spaces, not categories
+  - rules.service.ts line 305 tries to use this relationship
+
+[CRITICAL #2] Seed File References Non-Existent Database Models
+────────────────────────────────────────────────────────────
+Location: apps/api/prisma/seed-enhanced.ts
+Missing Models:
+  - prisma.eSGAssetScore (lines 613, 636) 
+    Expected: ESGScore model exists with different field names
+  - prisma.valuationSnapshot (line 672)
+    Expected: AssetValuation exists but at account level, not space level
+  - prisma.featureFlag (line 705)
+    Missing entirely
+  - prisma.rule (line 761)
+    Expected: transactionRule with different schema
+Impact: pnpm db:seed will FAIL immediately
+
+[CRITICAL #3] Account Model Missing Required Fields
+────────────────────────────────────────────────────
+Location: apps/api/prisma/schema.prisma lines 216-242 vs seed-enhanced.ts
+Missing Fields in Schema:
+  - creditLimit (4 references: lines 125, 203, 360, 474 in seed)
+  - institutionName (8+ references throughout seed)
+Impact: Schema validation error on seed execution
+
+[CRITICAL #4] Transaction Model Field Name/Existence Mismatches
+───────────────────────────────────────────────────────────────
+Location: apps/api/prisma/schema.prisma vs seed-enhanced.ts lines 571-602
+Issues:
+  - spaceId referenced in seed (lines 574, 592, 599) but NOT in schema
+  - merchantName should be merchant (implicit requirement)
+Impact: Seed will fail with "Unknown field" errors
+
+[CRITICAL #5] Budget Model Missing Core Fields
+──────────────────────────────────────────────
+Location: apps/api/prisma/schema.prisma lines 322-338 vs seed
+Missing:
+  - amount (referenced line 224, 369, 494 in seed)
+  - currency (referenced line 225, 370, 494 in seed)
+Impact: Budget creation in seed will fail
+
+[CRITICAL #6] Encryption Key Not Enforced - Data Loss Risk
+──────────────────────────────────────────────────────────
+Location: apps/api/src/core/crypto/crypto.service.ts lines 11-18
+Issue:
+  const keyString = process.env.ENCRYPTION_KEY || this.generateKey();
+Problem: If env var not set, generates random key that's lost on server restart
+Impact: PRODUCTION DATA LOSS - All encrypted tokens become unrecoverable
+
+[CRITICAL #7] Audit Log Schema Mismatch with Migration
+──────────────────────────────────────────────────────
+Location: Mismatch between migrations vs schema.prisma
+Migration expects: "resource_type" TEXT, "changes" JSONB
+Schema defines: resource String?, metadata String?
+Impact: Prisma client generation may fail; audit logging broken
+
+================================================================================
+HIGH PRIORITY ISSUES (3 TOTAL)
+================================================================================
+
+[HIGH #1] N+1 Query Pattern in RulesService.batchCategorizeTransactions
+────────────────────────────────────────────────────────────────────
+File: apps/api/src/modules/categories/rules.service.ts lines 132-169
+Pattern: 
+  for each of N transactions {
+    fetch rules for space (should be fetched once!)
+    update transaction individually
+  }
+Current Cost: N + rules_fetch_count + N queries = 201 queries for 100 transactions
+Should Be: 3 queries (fetch, rules, batch update)
+Performance Impact: 201 * 30ms = 6+ seconds (FAILS <1.5s SLA)
+
+[HIGH #2] Missing Index on Transaction.pending
+──────────────────────────────────────────────
+Location: Migration lacks this index
+Issue: Queries for pending transactions full table scan
+Recommendation: CREATE INDEX transactions_pending_idx ON transactions(pending)
+
+[HIGH #3] Missing Index on Account(spaceId, lastSyncedAt)
+──────────────────────────────────────────────────────────
+Location: Account sync operations
+Issue: Bulk sync jobs cannot efficiently find accounts needing sync
+Recommendation: CREATE INDEX accounts_space_sync_idx ON accounts(space_id, last_synced_at ASC)
+
+================================================================================
+MEDIUM PRIORITY ISSUES (6 TOTAL)
+================================================================================
+
+1. ExchangeRate uses Float instead of Decimal (currency precision issue)
+2. Account.encryptedCredentials field never used in code
+3. No space-level wealth snapshots (only account-level AssetValuation)
+4. Missing 60-day cashflow forecasting model entirely
+5. Space model missing businessName, businessType, taxId fields
+6. Potential N+1 in BudgetsService.findAll using _count
+
+================================================================================
+GOOD PRACTICES IDENTIFIED
+================================================================================
+
+✓ Multi-Tenancy: Space + UserSpace pattern correctly implemented
+✓ Encryption: AES-256-GCM with IV + Auth Tag (good algorithm choice)
+✓ Audit Logging: Comprehensive with 3 strategic indexes
+✓ Foreign Keys: CASCADE/SET NULL rules appropriate for data retention
+✓ Type Safety: Decimal(19,4) for currency (prevents floating point errors)
+✓ Enums: 7 well-defined enum types for constrained values
+✓ Indexes: 22 total indexes, most well-designed
+✓ Date Handling: Proper separation of Date vs DateTime
+
+================================================================================
+SCHEMA QUALITY ASSESSMENT
+================================================================================
+
+Metrics:
+  Models: 18
+  Enums: 7
+  Indexes: 22
+  Foreign Keys: 13 (missing 1 critical)
+  
+Design Quality: 7.5/10
+  ✓ Good architecture
+  ✗ Poor execution (mismatches, missing constraints)
+
+Status: NOT READY FOR PRODUCTION
+
+Blocking Issues: 7
+  - Cannot run pnpm db:seed
+  - Cannot ensure data integrity
+  - Encryption key can be lost
+  - N+1 queries will cause performance failures
+
+Estimated Fix Time: 2-3 weeks
+  - Critical issues: 2-3 days
+  - High priority: 3-5 days  
+  - Medium priority: 1-2 weeks
+
+================================================================================
+DETAILED REPORT
+================================================================================
+
+Complete analysis available in:
+  /home/user/dhanam/DATABASE_ARCHITECTURE_AUDIT.md
+
+This comprehensive report includes:
+  - 12+ sections of detailed analysis
+  - Code examples showing all issues
+  - Performance impact calculations
+  - Migration/schema mismatches
+  - N+1 query patterns with fix recommendations
+  - Testing recommendations
+  - Alignment with CLAUDE.md requirements
+
+================================================================================
+END OF SUMMARY
+================================================================================
