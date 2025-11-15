@@ -248,13 +248,13 @@ async function main() {
     update: {},
     create: {
       email: 'carlos@business.com',
-      passwordHash: await hash('demo123'),
+      passwordHash: await hash(process.env.DEMO_USER_PASSWORD || 'ChangeMeInProduction123!'),
       name: 'Carlos Mendoza',
       locale: 'es',
       timezone: 'America/Mexico_City',
       emailVerified: true,
-      totpEnabled: true,
-      totpSecret: 'DEMO_TOTP_SECRET',
+      totpEnabled: false,
+      // TOTP should be set up through proper flow, not in seed data
       onboardingCompleted: true,
       onboardingCompletedAt: subDays(new Date(), 90),
       preferences: {
@@ -393,13 +393,13 @@ async function main() {
     update: {},
     create: {
       email: 'admin@enterprise.com',
-      passwordHash: await hash('demo123'),
+      passwordHash: await hash(process.env.DEMO_USER_PASSWORD || 'ChangeMeInProduction123!'),
       name: 'Patricia Ruiz',
       locale: 'en',
       timezone: 'America/Mexico_City',
       emailVerified: true,
-      totpEnabled: true,
-      totpSecret: 'ENTERPRISE_TOTP_SECRET',
+      totpEnabled: false,
+      // TOTP should be set up through proper flow, not in seed data
       onboardingCompleted: true,
       onboardingCompletedAt: subMonths(new Date(), 6),
       preferences: {
@@ -518,14 +518,14 @@ async function main() {
     update: {},
     create: {
       email: 'admin@dhanam.app',
-      passwordHash: await hash('admin123'),
+      passwordHash: await hash(process.env.ADMIN_PASSWORD || 'AdminChangeMeInProduction123!'),
       name: 'Admin',
       locale: 'en',
       timezone: 'America/Mexico_City',
       emailVerified: true,
       isAdmin: true,
-      totpEnabled: true,
-      totpSecret: 'ADMIN_TOTP_SECRET',
+      totpEnabled: false,
+      // TOTP should be set up through proper flow, not in seed data
       onboardingCompleted: true,
       preferences: {
         create: {

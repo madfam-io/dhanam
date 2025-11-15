@@ -6,13 +6,19 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Seeding database...');
 
+  // Get demo password from environment or generate a secure default
+  const demoPassword = process.env.DEMO_USER_PASSWORD || 'ChangeMeInProduction123!';
+  if (!process.env.DEMO_USER_PASSWORD) {
+    console.warn('⚠️  WARNING: Using default demo password. Set DEMO_USER_PASSWORD environment variable for production.');
+  }
+
   // Create demo user
   const demoUser = await prisma.user.upsert({
     where: { email: 'demo@dhanam.app' },
     update: {},
     create: {
       email: 'demo@dhanam.app',
-      passwordHash: await hash('demo123'),
+      passwordHash: await hash(demoPassword),
       name: 'Demo User',
       locale: 'es',
       timezone: 'America/Mexico_City',
