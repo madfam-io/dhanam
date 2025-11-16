@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/lib/hooks/use-auth';
 import { onboardingApi } from '@/lib/api/onboarding';
 
@@ -27,7 +27,7 @@ interface OnboardingContextType {
   steps: OnboardingStep[];
   isLoading: boolean;
   error: string | null;
-  updateStep: (step: string, data?: any) => Promise<void>;
+  updateStep: (step: string, data?: Record<string, unknown>) => Promise<void>;
   completeOnboarding: (skipOptional?: boolean) => Promise<void>;
   skipStep: (step: string) => Promise<void>;
   refreshStatus: () => Promise<void>;
@@ -95,7 +95,7 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
     completed: status?.stepStatus[step.id] || false,
   }));
 
-  const refreshStatus = async () => {
+  const refreshStatus = useCallback(async () => {
     if (!user) return;
 
     try {
@@ -108,9 +108,9 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user]);
 
-  const updateStep = async (step: string, data?: any) => {
+  const updateStep = async (step: string, data?: Record<string, unknown>) => {
     try {
       setError(null);
       const response = await onboardingApi.updateStep(step, data);
@@ -149,7 +149,7 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
     } else if (user?.onboardingCompleted) {
       setIsLoading(false);
     }
-  }, [user]);
+  }, [user, refreshStatus]);
 
   const value: OnboardingContextType = {
     status,

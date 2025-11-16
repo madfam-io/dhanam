@@ -49,7 +49,7 @@ export function BudgetAnalytics({ spaceId, budgetId, currency }: BudgetAnalytics
   const COLORS = ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
 
   const categorySpendingData: CategoryData[] = analytics.categories.map(
-    (cat: any, index: number) => ({
+    (cat: { name: string; spent: number; budgeted: number; color?: string }, index: number) => ({
       name: cat.name,
       spent: cat.spent,
       budgeted: cat.budgeted,
@@ -58,14 +58,16 @@ export function BudgetAnalytics({ spaceId, budgetId, currency }: BudgetAnalytics
   );
 
   const weeklyTrendData =
-    analytics.weeklyTrend?.map((week: any) => ({
-      week: new Date(week.weekStart).toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-      }),
-      spent: week.spent,
-      budget: week.budgetedForWeek,
-    })) || [];
+    analytics.weeklyTrend?.map(
+      (week: { weekStart: string; spent: number; budgetedForWeek: number }) => ({
+        week: new Date(week.weekStart).toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+        }),
+        spent: week.spent,
+        budget: week.budgetedForWeek,
+      })
+    ) || [];
 
   const categoryPieData = categorySpendingData.map((cat) => ({
     name: cat.name,
@@ -155,11 +157,16 @@ export function BudgetAnalytics({ spaceId, budgetId, currency }: BudgetAnalytics
                   margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" tick={{ fontSize: 12, angle: -45, textAnchor: 'end' }} height={80} />
+                  <XAxis
+                    dataKey="name"
+                    tick={{ fontSize: 12, angle: -45, textAnchor: 'end' }}
+                    height={80}
+                  />
                   <YAxis tick={{ fontSize: 12 }} />
                   <Tooltip
                     formatter={(value: string | number | (string | number)[]) => {
-                      const numValue = typeof value === 'number' ? value : parseFloat(String(value));
+                      const numValue =
+                        typeof value === 'number' ? value : parseFloat(String(value));
                       return [formatCurrency(numValue, currency), ''];
                     }}
                     labelStyle={{ color: '#000' }}
@@ -186,7 +193,12 @@ export function BudgetAnalytics({ spaceId, budgetId, currency }: BudgetAnalytics
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(value: string | number | (string | number)[]) => [formatCurrency(Number(value), currency), '']} />
+                  <Tooltip
+                    formatter={(value: string | number | (string | number)[]) => [
+                      formatCurrency(Number(value), currency),
+                      '',
+                    ]}
+                  />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -219,7 +231,10 @@ export function BudgetAnalytics({ spaceId, budgetId, currency }: BudgetAnalytics
                   <XAxis dataKey="week" tick={{ fontSize: 12 }} />
                   <YAxis tick={{ fontSize: 12 }} />
                   <Tooltip
-                    formatter={(value: string | number | (string | number)[]) => [formatCurrency(Number(value), currency), '']}
+                    formatter={(value: string | number | (string | number)[]) => [
+                      formatCurrency(Number(value), currency),
+                      '',
+                    ]}
                     labelStyle={{ color: '#000' }}
                   />
                   <Line

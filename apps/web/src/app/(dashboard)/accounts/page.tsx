@@ -69,13 +69,18 @@ export default function AccountsPage() {
 
   const { data: accounts, isLoading } = useQuery({
     queryKey: ['accounts', currentSpace?.id],
-    queryFn: () => accountsApi.getAccounts(currentSpace!.id),
+    queryFn: () => {
+      if (!currentSpace) throw new Error('No current space');
+      return accountsApi.getAccounts(currentSpace.id);
+    },
     enabled: !!currentSpace,
   });
 
   const connectMutation = useMutation({
-    mutationFn: (provider: Exclude<Provider, 'manual'>) =>
-      accountsApi.connectAccount(currentSpace!.id, { provider }),
+    mutationFn: (provider: Exclude<Provider, 'manual'>) => {
+      if (!currentSpace) throw new Error('No current space');
+      return accountsApi.connectAccount(currentSpace.id, { provider });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['accounts', currentSpace?.id] });
       setIsConnectOpen(false);
@@ -87,8 +92,10 @@ export default function AccountsPage() {
   });
 
   const createMutation = useMutation({
-    mutationFn: (data: Parameters<typeof accountsApi.createAccount>[1]) =>
-      accountsApi.createAccount(currentSpace!.id, data),
+    mutationFn: (data: Parameters<typeof accountsApi.createAccount>[1]) => {
+      if (!currentSpace) throw new Error('No current space');
+      return accountsApi.createAccount(currentSpace.id, data);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['accounts', currentSpace?.id] });
       setIsCreateOpen(false);
@@ -100,7 +107,10 @@ export default function AccountsPage() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (accountId: string) => accountsApi.deleteAccount(currentSpace!.id, accountId),
+    mutationFn: (accountId: string) => {
+      if (!currentSpace) throw new Error('No current space');
+      return accountsApi.deleteAccount(currentSpace.id, accountId);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['accounts', currentSpace?.id] });
       toast.success('Account deleted successfully');

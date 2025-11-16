@@ -17,7 +17,11 @@ export const authApi = {
     return apiClient.post<AuthResponse>('/auth/login', data);
   },
 
-  async loginAsGuest(): Promise<{ tokens: AuthResponse['tokens']; user: any; message: string }> {
+  async loginAsGuest(): Promise<{
+    tokens: AuthResponse['tokens'];
+    user: AuthResponse['user'];
+    message: string;
+  }> {
     return apiClient.post('/auth/guest');
   },
 

@@ -25,6 +25,7 @@ export function EmailVerification() {
     }
 
     verifyEmail();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   const verifyEmail = async () => {
@@ -46,12 +47,22 @@ export function EmailVerification() {
         setStatus('error');
         setMessage(response.message);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       setStatus('error');
-      setMessage(
-        error.response?.data?.message ||
-          'Error al verificar el email. El token puede haber expirado.'
-      );
+      const errorMessage =
+        error &&
+        typeof error === 'object' &&
+        'response' in error &&
+        error.response &&
+        typeof error.response === 'object' &&
+        'data' in error.response &&
+        error.response.data &&
+        typeof error.response.data === 'object' &&
+        'message' in error.response.data &&
+        typeof error.response.data.message === 'string'
+          ? error.response.data.message
+          : 'Error al verificar el email. El token puede haber expirado.';
+      setMessage(errorMessage);
     }
   };
 

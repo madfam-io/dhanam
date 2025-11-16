@@ -42,7 +42,7 @@ export function PreferencesSection() {
     );
   }
 
-  const handleSingleUpdate = async (field: keyof typeof preferences, value: any) => {
+  const handleSingleUpdate = async (field: keyof typeof preferences, value: unknown) => {
     try {
       setIsSaving(true);
       await updatePreferences({ [field]: value });

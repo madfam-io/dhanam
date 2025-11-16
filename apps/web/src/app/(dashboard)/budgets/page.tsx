@@ -38,19 +38,27 @@ export default function BudgetsPage() {
 
   const { data: budgets, isLoading } = useQuery({
     queryKey: ['budgets', currentSpace?.id],
-    queryFn: () => budgetsApi.getBudgets(currentSpace!.id),
+    queryFn: () => {
+      if (!currentSpace) throw new Error('No current space');
+      return budgetsApi.getBudgets(currentSpace.id);
+    },
     enabled: !!currentSpace,
   });
 
   const { data: budgetSummary } = useQuery({
     queryKey: ['budget-summary', currentSpace?.id, selectedBudget?.id],
-    queryFn: () => budgetsApi.getBudgetSummary(currentSpace!.id, selectedBudget!.id),
+    queryFn: () => {
+      if (!currentSpace || !selectedBudget) throw new Error('Missing required data');
+      return budgetsApi.getBudgetSummary(currentSpace.id, selectedBudget.id);
+    },
     enabled: !!currentSpace && !!selectedBudget,
   });
 
   const createBudgetMutation = useMutation({
-    mutationFn: (data: Parameters<typeof budgetsApi.createBudget>[1]) =>
-      budgetsApi.createBudget(currentSpace!.id, data),
+    mutationFn: (data: Parameters<typeof budgetsApi.createBudget>[1]) => {
+      if (!currentSpace) throw new Error('No current space');
+      return budgetsApi.createBudget(currentSpace.id, data);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['budgets', currentSpace?.id] });
       setIsCreateOpen(false);
@@ -62,8 +70,10 @@ export default function BudgetsPage() {
   });
 
   const createCategoryMutation = useMutation({
-    mutationFn: (data: Parameters<typeof categoriesApi.createCategory>[1]) =>
-      categoriesApi.createCategory(currentSpace!.id, data),
+    mutationFn: (data: Parameters<typeof categoriesApi.createCategory>[1]) => {
+      if (!currentSpace) throw new Error('No current space');
+      return categoriesApi.createCategory(currentSpace.id, data);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['budgets', currentSpace?.id] });
       queryClient.invalidateQueries({
@@ -89,9 +99,10 @@ export default function BudgetsPage() {
 
   const handleAddCategorySubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!selectedBudget) return;
     const formData = new FormData(e.currentTarget);
     createCategoryMutation.mutate({
-      budgetId: selectedBudget!.id,
+      budgetId: selectedBudget.id,
       name: formData.get('name') as string,
       budgetedAmount: parseFloat(formData.get('budgetedAmount') as string),
     });
@@ -290,31 +301,45 @@ export default function BudgetsPage() {
                       Add Category
                     </Button>
                   </div>
-                  {budgetSummary.categories.map((category: any) => (
-                    <Card key={category.id}>
-                      <CardContent className="pt-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2">
-                            <div
-                              className="w-3 h-3 rounded-full"
-                              style={{ backgroundColor: category.color }}
-                            />
-                            <span className="font-medium">{category.name}</span>
+                  {budgetSummary.categories.map(
+                    (category: {
+                      id: string;
+                      name: string;
+                      color: string;
+                      spent: number;
+                      remaining: number;
+                      percentUsed: number;
+                      budgetedAmount: number;
+                    }) => (
+                      <Card key={category.id}>
+                        <CardContent className="pt-4">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <div
+                                className="w-3 h-3 rounded-full"
+                                style={{ backgroundColor: category.color }}
+                              />
+                              <span className="font-medium">{category.name}</span>
+                            </div>
+                            <Badge
+                              variant={category.percentUsed > 90 ? 'destructive' : 'secondary'}
+                            >
+                              {category.percentUsed.toFixed(0)}% used
+                            </Badge>
                           </div>
-                          <Badge variant={category.percentUsed > 90 ? 'destructive' : 'secondary'}>
-                            {category.percentUsed.toFixed(0)}% used
-                          </Badge>
-                        </div>
-                        <Progress value={category.percentUsed} className="mb-2" />
-                        <div className="flex justify-between text-sm text-muted-foreground">
-                          <span>{formatCurrency(category.spent, currentSpace.currency)} spent</span>
-                          <span>
-                            {formatCurrency(category.remaining, currentSpace.currency)} remaining
-                          </span>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                          <Progress value={category.percentUsed} className="mb-2" />
+                          <div className="flex justify-between text-sm text-muted-foreground">
+                            <span>
+                              {formatCurrency(category.spent, currentSpace.currency)} spent
+                            </span>
+                            <span>
+                              {formatCurrency(category.remaining, currentSpace.currency)} remaining
+                            </span>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )
+                  )}
                 </div>
               </div>
             </>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/lib/hooks/use-auth';
 import { useOnboarding } from '../onboarding-provider';
 import { onboardingApi } from '@/lib/api/onboarding';
@@ -19,12 +19,20 @@ export function EmailVerificationStep() {
   const [canResend, setCanResend] = useState(true);
   const [countdown, setCountdown] = useState(0);
 
+  const handleContinue = useCallback(async () => {
+    try {
+      await updateStep('preferences');
+    } catch (error) {
+      console.error('Error proceeding to next step:', error);
+    }
+  }, [updateStep]);
+
   // Check if email is already verified
   useEffect(() => {
     if (user?.emailVerified) {
       handleContinue();
     }
-  }, [user?.emailVerified]);
+  }, [user?.emailVerified, handleContinue]);
 
   // Countdown timer for resend button
   useEffect(() => {
@@ -47,8 +55,21 @@ export function EmailVerificationStep() {
       setMessage('Email de verificación enviado. Revisa tu bandeja de entrada.');
       setCanResend(false);
       setCountdown(60); // 60 second cooldown
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Error al enviar email de verificación');
+    } catch (err: unknown) {
+      const errorMessage =
+        err &&
+        typeof err === 'object' &&
+        'response' in err &&
+        err.response &&
+        typeof err.response === 'object' &&
+        'data' in err.response &&
+        err.response.data &&
+        typeof err.response.data === 'object' &&
+        'message' in err.response.data &&
+        typeof err.response.data.message === 'string'
+          ? err.response.data.message
+          : 'Error al enviar email de verificación';
+      setError(errorMessage);
     } finally {
       setIsResending(false);
     }
@@ -68,14 +89,6 @@ export function EmailVerificationStep() {
       setError('Error al verificar el estado del email');
     } finally {
       setIsChecking(false);
-    }
-  };
-
-  const handleContinue = async () => {
-    try {
-      await updateStep('preferences');
-    } catch (error) {
-      console.error('Error proceeding to next step:', error);
     }
   };
 

@@ -8,7 +8,7 @@ export interface CreateTransactionDto {
   description: string;
   merchant?: string;
   categoryId?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface UpdateTransactionDto {
@@ -17,7 +17,7 @@ export interface UpdateTransactionDto {
   description?: string;
   merchant?: string;
   categoryId?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface TransactionsFilterDto {

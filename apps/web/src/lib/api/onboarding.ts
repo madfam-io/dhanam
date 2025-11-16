@@ -28,7 +28,7 @@ export const onboardingApi = {
   },
 
   // Update onboarding step
-  updateStep: async (step: string, data?: any): Promise<OnboardingStatus> => {
+  updateStep: async (step: string, data?: Record<string, unknown>): Promise<OnboardingStatus> => {
     return apiClient.put<OnboardingStatus>('/onboarding/step', { step, data });
   },
 
@@ -55,10 +55,9 @@ export const onboardingApi = {
 
   // Verify email
   verifyEmail: async (token: string): Promise<{ success: boolean; message: string }> => {
-    return apiClient.post<{ success: boolean; message: string }>(
-      '/onboarding/verify-email',
-      { token },
-    );
+    return apiClient.post<{ success: boolean; message: string }>('/onboarding/verify-email', {
+      token,
+    });
   },
 
   // Resend email verification

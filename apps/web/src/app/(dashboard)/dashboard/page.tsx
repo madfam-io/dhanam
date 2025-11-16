@@ -32,27 +32,36 @@ export default function DashboardPage() {
 
   const { data: accounts, isLoading: isLoadingAccounts } = useQuery({
     queryKey: ['accounts', currentSpace?.id],
-    queryFn: () => accountsApi.getAccounts(currentSpace!.id),
+    queryFn: () => {
+      if (!currentSpace) throw new Error('No current space');
+      return accountsApi.getAccounts(currentSpace.id);
+    },
     enabled: !!currentSpace,
   });
 
   const { data: recentTransactions, isLoading: isLoadingTransactions } = useQuery({
     queryKey: ['recent-transactions', currentSpace?.id],
-    queryFn: () => transactionsApi.getTransactions(currentSpace!.id, { limit: 5 }),
+    queryFn: () => {
+      if (!currentSpace) throw new Error('No current space');
+      return transactionsApi.getTransactions(currentSpace.id, { limit: 5 });
+    },
     enabled: !!currentSpace,
   });
 
   const { data: budgets, isLoading: isLoadingBudgets } = useQuery({
     queryKey: ['budgets', currentSpace?.id],
-    queryFn: () => budgetsApi.getBudgets(currentSpace!.id),
+    queryFn: () => {
+      if (!currentSpace) throw new Error('No current space');
+      return budgetsApi.getBudgets(currentSpace.id);
+    },
     enabled: !!currentSpace,
   });
 
   const { data: currentBudgetSummary } = useQuery({
     queryKey: ['current-budget-summary', currentSpace?.id, budgets?.[0]?.id],
     queryFn: () => {
-      if (!budgets || budgets.length === 0 || !budgets[0]) return null;
-      return budgetsApi.getBudgetSummary(currentSpace!.id, budgets[0].id);
+      if (!currentSpace || !budgets || budgets.length === 0 || !budgets[0]) return null;
+      return budgetsApi.getBudgetSummary(currentSpace.id, budgets[0].id);
     },
     enabled: !!currentSpace && !!budgets && budgets.length > 0 && !!budgets[0],
   });
@@ -60,19 +69,28 @@ export default function DashboardPage() {
   // New analytics queries
   const { data: netWorthData } = useQuery({
     queryKey: ['net-worth', currentSpace?.id],
-    queryFn: () => analyticsApi.getNetWorth(currentSpace!.id),
+    queryFn: () => {
+      if (!currentSpace) throw new Error('No current space');
+      return analyticsApi.getNetWorth(currentSpace.id);
+    },
     enabled: !!currentSpace,
   });
 
   const { data: cashflowForecast } = useQuery({
     queryKey: ['cashflow-forecast', currentSpace?.id],
-    queryFn: () => analyticsApi.getCashflowForecast(currentSpace!.id),
+    queryFn: () => {
+      if (!currentSpace) throw new Error('No current space');
+      return analyticsApi.getCashflowForecast(currentSpace.id);
+    },
     enabled: !!currentSpace,
   });
 
   const { data: portfolioAllocation } = useQuery({
     queryKey: ['portfolio-allocation', currentSpace?.id],
-    queryFn: () => analyticsApi.getPortfolioAllocation(currentSpace!.id),
+    queryFn: () => {
+      if (!currentSpace) throw new Error('No current space');
+      return analyticsApi.getPortfolioAllocation(currentSpace.id);
+    },
     enabled: !!currentSpace,
   });
 
@@ -379,24 +397,35 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {currentBudgetSummary.categories.slice(0, 5).map((category: any) => (
-                <div key={category.id} className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div
-                        className="w-3 h-3 rounded-full"
-                        style={{ backgroundColor: category.color }}
-                      />
-                      <span className="text-sm font-medium">{category.name}</span>
+              {currentBudgetSummary.categories
+                .slice(0, 5)
+                .map(
+                  (category: {
+                    id: string;
+                    name: string;
+                    color: string;
+                    spent: number;
+                    budgetedAmount: number;
+                    percentUsed: number;
+                  }) => (
+                    <div key={category.id} className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="w-3 h-3 rounded-full"
+                            style={{ backgroundColor: category.color }}
+                          />
+                          <span className="text-sm font-medium">{category.name}</span>
+                        </div>
+                        <span className="text-sm text-muted-foreground">
+                          {formatCurrency(category.spent, currentSpace.currency)} /{' '}
+                          {formatCurrency(category.budgetedAmount, currentSpace.currency)}
+                        </span>
+                      </div>
+                      <Progress value={category.percentUsed} />
                     </div>
-                    <span className="text-sm text-muted-foreground">
-                      {formatCurrency(category.spent, currentSpace.currency)} /{' '}
-                      {formatCurrency(category.budgetedAmount, currentSpace.currency)}
-                    </span>
-                  </div>
-                  <Progress value={category.percentUsed} />
-                </div>
-              ))}
+                  )
+                )}
             </div>
           </CardContent>
         </Card>

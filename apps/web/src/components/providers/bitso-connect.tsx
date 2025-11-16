@@ -62,8 +62,20 @@ export function BitsoConnect({ open, onOpenChange, spaceId, onSuccess }: BitsoCo
       setStep('instructions');
       setFormData({ apiKey: '', apiSecret: '', autoSync: true });
     },
-    onError: (error: any) => {
-      const message = error.response?.data?.message || 'Failed to connect Bitso account';
+    onError: (error: unknown) => {
+      const message =
+        error &&
+        typeof error === 'object' &&
+        'response' in error &&
+        error.response &&
+        typeof error.response === 'object' &&
+        'data' in error.response &&
+        error.response.data &&
+        typeof error.response.data === 'object' &&
+        'message' in error.response.data &&
+        typeof error.response.data.message === 'string'
+          ? error.response.data.message
+          : 'Failed to connect Bitso account';
       toast.error(message);
     },
   });

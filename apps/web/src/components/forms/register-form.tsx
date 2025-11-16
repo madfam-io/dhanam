@@ -34,7 +34,7 @@ export function RegisterForm({ onSubmit, isLoading }: RegisterFormProps) {
     handleSubmit,
     formState: { errors },
   } = useForm<RegisterDto>({
-    resolver: zodResolver(registerSchema as any),
+    resolver: zodResolver(registerSchema),
     defaultValues: {
       locale: 'es',
       timezone: 'America/Mexico_City',

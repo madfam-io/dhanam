@@ -4,7 +4,7 @@ import { Account, Provider, AccountType, Currency } from '@dhanam/shared';
 export interface ConnectAccountDto {
   provider: Exclude<Provider, 'manual'>;
   linkToken?: string;
-  credentials?: Record<string, any>;
+  credentials?: Record<string, unknown>;
 }
 
 export interface CreateAccountDto {

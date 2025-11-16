@@ -10,7 +10,7 @@ interface BelvoLinkRequest {
 interface BelvoLinkResponse {
   message: string;
   accountsCount: number;
-  accounts: any[];
+  accounts: Array<Record<string, unknown>>;
 }
 
 export const belvoApi = {

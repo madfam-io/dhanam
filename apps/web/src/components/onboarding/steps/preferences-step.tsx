@@ -73,8 +73,21 @@ export function PreferencesStep() {
 
       // Move to next step
       await updateStep('space_setup', { preferences: data });
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Error al guardar preferencias');
+    } catch (err: unknown) {
+      const errorMessage =
+        err &&
+        typeof err === 'object' &&
+        'response' in err &&
+        err.response &&
+        typeof err.response === 'object' &&
+        'data' in err.response &&
+        err.response.data &&
+        typeof err.response.data === 'object' &&
+        'message' in err.response.data &&
+        typeof err.response.data.message === 'string'
+          ? err.response.data.message
+          : 'Error al guardar preferencias';
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
