@@ -60,6 +60,7 @@ export interface BudgetAnalytics {
     totalBudgeted: number;
     totalSpent: number;
     totalRemaining: number;
+    totalPercentUsed: number;
     averageSpending: number;
     projectedSpending: number;
   };
