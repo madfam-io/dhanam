@@ -23,7 +23,6 @@ export function PreferencesSection() {
   const {
     preferences,
     updatePreferences,
-    bulkUpdatePreferences,
     resetPreferences,
     isLoading: _isLoading,
     error,
