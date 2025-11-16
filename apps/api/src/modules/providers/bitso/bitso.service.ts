@@ -7,6 +7,11 @@ import axios, { AxiosInstance } from 'axios';
 
 import { CryptoService } from '../../../core/crypto/crypto.service';
 import { PrismaService } from '../../../core/prisma/prisma.service';
+import {
+  BitsoAccountMetadata,
+  BitsoConnectionMetadata,
+} from '../../../types/metadata.types';
+import { isUniqueConstraintError } from '../../../types/prisma-errors.types';
 
 import { ConnectBitsoDto, BitsoWebhookDto } from './dto';
 
@@ -89,6 +94,36 @@ export class BitsoService {
     this.logger.log('Bitso client initialized successfully');
   }
 
+  /**
+   * Fetch and update balances for a specific Bitso connection
+   * @param connectionId - The provider connection ID
+   * @returns Array of updated accounts
+   */
+  async fetchBalances(connectionId: string): Promise<Account[]> {
+    const connection = await this.prisma.providerConnection.findUnique({
+      where: { id: connectionId },
+      include: { user: { include: { spaces: { take: 1 } } } },
+    });
+
+    if (!connection || connection.provider !== 'bitso') {
+      throw new BadRequestException('Invalid Bitso connection');
+    }
+
+    const apiKey = this.cryptoService.decrypt(JSON.parse(connection.encryptedToken));
+    const connectionMetadata = connection.metadata as BitsoConnectionMetadata;
+    const apiSecret = this.cryptoService.decrypt(
+      JSON.parse(connectionMetadata.encryptedApiSecret)
+    );
+    const spaceId = connection.user.spaces[0]?.id;
+
+    if (!spaceId) {
+      throw new BadRequestException('No space found for user');
+    }
+
+    const client = this.createTempClient(apiKey, apiSecret);
+    return this.updateBalances(spaceId, client, connection.providerUserId);
+  }
+
   async connectAccount(
     spaceId: string,
     userId: string,
@@ -141,7 +176,7 @@ export class BitsoService {
       };
     } catch (error) {
       this.logger.error('Failed to connect Bitso account:', error);
-      if ((error as any).response?.status === 401) {
+      if (axios.isAxiosError(error) && error.response?.status === 401) {
         throw new BadRequestException('Invalid Bitso API credentials');
       }
       throw new BadRequestException('Failed to connect Bitso account');
@@ -231,6 +266,129 @@ export class BitsoService {
     }
   }
 
+  /**
+   * Update balances for existing accounts and create valuation snapshots
+   */
+  private async updateBalances(
+    spaceId: string,
+    client: AxiosInstance,
+    clientId: string
+  ): Promise<Account[]> {
+    try {
+      const balancesResponse = await client.get('/balance');
+      const balances: BitsoBalance[] = balancesResponse.data.payload.balances;
+
+      const accounts: Account[] = [];
+
+      // Get current crypto prices for valuation
+      const tickerResponse = await axios.get('https://api.bitso.com/v3/ticker');
+      const tickers: BitsoTicker[] = tickerResponse.data.payload;
+      const priceMap = this.createPriceMap(tickers);
+
+      for (const balance of balances) {
+        const totalAmount = parseFloat(balance.total);
+
+        // Calculate USD value
+        const usdPrice = priceMap[`${balance.currency.toLowerCase()}_mxn`] || 0;
+        const mxnToUsdRate = priceMap['usd_mxn'] ? 1 / priceMap['usd_mxn'] : 0.05; // Fallback rate
+        const usdValue = Math.round(usdPrice * mxnToUsdRate * totalAmount * 100) / 100;
+
+        const providerAccountId = `bitso_${balance.currency.toLowerCase()}_${clientId}`;
+
+        // Find existing account
+        const existingAccount = await this.prisma.account.findFirst({
+          where: {
+            provider: 'bitso',
+            providerAccountId,
+          },
+        });
+
+        if (existingAccount) {
+          // Update existing account
+          const existingMetadata = (existingAccount.metadata as BitsoAccountMetadata) || ({} as BitsoAccountMetadata);
+          const updatedAccount = await this.prisma.account.update({
+            where: { id: existingAccount.id },
+            data: {
+              balance: usdValue,
+              lastSyncedAt: new Date(),
+              metadata: {
+                ...existingMetadata,
+                cryptoCurrency: balance.currency.toUpperCase(),
+                cryptoAmount: totalAmount,
+                availableAmount: parseFloat(balance.available),
+                lockedAmount: parseFloat(balance.locked),
+                usdPrice: usdPrice * mxnToUsdRate,
+                lastPriceUpdate: new Date().toISOString(),
+              } as Prisma.JsonObject,
+            },
+          });
+
+          // Create valuation snapshot for daily tracking
+          await this.prisma.assetValuation.create({
+            data: {
+              accountId: updatedAccount.id,
+              date: new Date(),
+              value: usdValue,
+              metadata: {
+                cryptoCurrency: balance.currency.toUpperCase(),
+                cryptoAmount: totalAmount,
+                usdPrice: usdPrice * mxnToUsdRate,
+              } as Prisma.JsonObject,
+            },
+          });
+
+          accounts.push(updatedAccount);
+        } else if (totalAmount > 0) {
+          // Create new account if balance is positive
+          const accountData = {
+            spaceId,
+            provider: 'bitso' as const,
+            providerAccountId,
+            name: `${balance.currency.toUpperCase()} Wallet`,
+            type: 'crypto' as const,
+            subtype: 'crypto',
+            currency: Currency.USD,
+            balance: usdValue,
+            lastSyncedAt: new Date(),
+            metadata: {
+              cryptoCurrency: balance.currency.toUpperCase(),
+              cryptoAmount: totalAmount,
+              availableAmount: parseFloat(balance.available),
+              lockedAmount: parseFloat(balance.locked),
+              usdPrice: usdPrice * mxnToUsdRate,
+              lastPriceUpdate: new Date().toISOString(),
+              clientId,
+            } as Prisma.JsonObject,
+          };
+
+          const newAccount = await this.prisma.account.create({ data: accountData });
+
+          // Create initial valuation snapshot
+          await this.prisma.assetValuation.create({
+            data: {
+              accountId: newAccount.id,
+              date: new Date(),
+              value: usdValue,
+              metadata: {
+                cryptoCurrency: balance.currency.toUpperCase(),
+                cryptoAmount: totalAmount,
+                usdPrice: usdPrice * mxnToUsdRate,
+              } as Prisma.JsonObject,
+            },
+          });
+
+          accounts.push(newAccount);
+        }
+      }
+
+      this.logger.log(`Updated ${accounts.length} Bitso accounts for client ${clientId}`);
+      return accounts;
+    } catch (error) {
+      this.logger.error('Failed to update Bitso balances:', error);
+      throw error;
+    }
+  }
+
   private createPriceMap(tickers: BitsoTicker[]): Record<string, number> {
     const priceMap: Record<string, number> = {};
 
@@ -302,7 +460,7 @@ export class BitsoService {
         },
       });
     } catch (error) {
-      if ((error as any).code === 'P2002') {
+      if (isUniqueConstraintError(error)) {
         // Transaction already exists, skip
         return;
       }
@@ -321,8 +479,9 @@ export class BitsoService {
 
       for (const connection of connections) {
         const apiKey = this.cryptoService.decrypt(JSON.parse(connection.encryptedToken));
+        const connectionMetadata = connection.metadata as BitsoConnectionMetadata;
         const apiSecret = this.cryptoService.decrypt(
-          JSON.parse((connection.metadata as any).encryptedApiSecret)
+          JSON.parse(connectionMetadata.encryptedApiSecret)
         );
 
         const client = this.createTempClient(apiKey, apiSecret);
@@ -334,7 +493,8 @@ export class BitsoService {
         });
 
         for (const userSpace of userSpaces) {
-          await this.syncBalances(userSpace.spaceId, client, connection.providerUserId);
+          // Use updateBalances to handle both updates and creates
+          await this.updateBalances(userSpace.spaceId, client, connection.providerUserId);
         }
 
         // Sync recent trades
@@ -446,7 +606,7 @@ export class BitsoService {
     const totalValue = accounts.reduce((sum, account) => sum + Number(account.balance), 0);
 
     const holdings = accounts.map((account) => {
-      const metadata = account.metadata as any;
+      const metadata = account.metadata as BitsoAccountMetadata;
       return {
         currency: metadata.cryptoCurrency,
         amount: metadata.cryptoAmount,

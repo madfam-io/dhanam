@@ -15,6 +15,17 @@ export const validationSchema = Joi.object({
 
   ENCRYPTION_KEY: Joi.string().required().length(32),
 
+  AWS_REGION: Joi.string().when('NODE_ENV', {
+    is: 'production',
+    then: Joi.required(),
+    otherwise: Joi.optional().default('us-east-1'),
+  }),
+  KMS_KEY_ID: Joi.string().when('NODE_ENV', {
+    is: 'production',
+    then: Joi.required(),
+    otherwise: Joi.optional(),
+  }),
+
   BELVO_SECRET_KEY_ID: Joi.string().when('NODE_ENV', {
     is: 'production',
     then: Joi.required(),

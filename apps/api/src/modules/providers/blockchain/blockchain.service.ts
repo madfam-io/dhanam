@@ -11,6 +11,11 @@ import { MonitorPerformance } from '@core/decorators/monitor-performance.decorat
 import { AuditService } from '../../../core/audit/audit.service';
 // import { CryptoService } from '../../../core/crypto/crypto.service';
 import { PrismaService } from '../../../core/prisma/prisma.service';
+import { BlockchainAccountMetadata } from '../../../types/metadata.types';
+import {
+  isPrismaError,
+  isUniqueConstraintError,
+} from '../../../types/prisma-errors.types';
 
 import { AddWalletDto, ImportWalletDto } from './dto';
 
@@ -309,6 +314,40 @@ export class BlockchainService {
     };
   }
 
+  /**
+   * Get ERC-20 token balance for an address
+   * @param address - Ethereum address
+   * @param tokenAddress - ERC-20 token contract address
+   * @param tokenSymbol - Token symbol (e.g., 'USDT', 'USDC')
+   * @param decimals - Token decimals (default: 18)
+   */
+  async getErc20Balance(
+    address: string,
+    tokenAddress: string,
+    tokenSymbol: string,
+    decimals: number = 18
+  ): Promise<BlockchainBalance> {
+    const erc20Abi = [
+      'function balanceOf(address) view returns (uint256)',
+      'function decimals() view returns (uint8)',
+    ];
+
+    const contract = new ethers.Contract(tokenAddress, erc20Abi, this.ethProvider!);
+
+    const balance = await contract.balanceOf(address);
+    const tokenDecimals = decimals || (await contract.decimals());
+    const formattedBalance = ethers.formatUnits(balance, tokenDecimals);
+    const blockNumber = await this.ethProvider!.getBlockNumber();
+
+    return {
+      address,
+      balance: formattedBalance,
+      currency: tokenSymbol.toUpperCase(),
+      usdValue: 0, // Will be calculated separately
+      lastBlock: blockNumber,
+    };
+  }
+
   private async getBtcBalance(address: string): Promise<BlockchainBalance> {
     const response = await this.btcClient!.get(`/rawaddr/${address}?limit=0`);
     const data = response.data;
@@ -493,7 +532,7 @@ export class BlockchainService {
 
       if (!account) return;
 
-      const metadata = account.metadata as any;
+      const metadata = account.metadata as BlockchainAccountMetadata;
       const isIncoming = tx.to.toLowerCase() === walletAddress.toLowerCase();
       const amount = isIncoming ? parseFloat(tx.value) : -parseFloat(tx.value);
 
@@ -524,7 +563,7 @@ export class BlockchainService {
         },
       });
     } catch (error) {
-      if ((error as any).code === 'P2002') {
+      if (isUniqueConstraintError(error)) {
         // Transaction already exists
         return;
       }
@@ -546,7 +585,7 @@ export class BlockchainService {
       });
 
       for (const account of accounts) {
-        const metadata = account.metadata as any;
+        const metadata = account.metadata as BlockchainAccountMetadata;
 
         // Update balance
         const balance = await this.getBalance(
@@ -556,7 +595,7 @@ export class BlockchainService {
         const usdPrice = await this.getCryptoPrice(metadata.cryptoCurrency.toLowerCase());
         const usdValue = parseFloat(balance.balance) * usdPrice;
 
-        await this.prisma.account.update({
+        const updatedAccount = await this.prisma.account.update({
           where: { id: account.id },
           data: {
             balance: Math.round(usdValue * 100) / 100,
@@ -567,6 +606,21 @@ export class BlockchainService {
               lastBlock: balance.lastBlock,
               lastPriceUpdate: new Date().toISOString(),
             },
+          },
+        });
+
+        // Create valuation snapshot for daily tracking
+        await this.prisma.assetValuation.create({
+          data: {
+            accountId: updatedAccount.id,
+            date: new Date(),
+            value: updatedAccount.balance,
+            metadata: {
+              cryptoCurrency: metadata.cryptoCurrency,
+              cryptoBalance: balance.balance,
+              usdPrice: usdPrice,
+              network: metadata.network,
+            } as Prisma.JsonObject,
           },
         });
 
@@ -607,27 +661,29 @@ export class BlockchainService {
     }
 
     // Soft delete by marking as inactive
+    const currentMetadata = account.metadata as BlockchainAccountMetadata;
     await this.prisma.account.update({
       where: { id: accountId },
       data: {
         // Remove isActive as it doesn't exist on Account model
         metadata: {
-          ...(account.metadata as any),
+          ...currentMetadata,
           deletedAt: new Date().toISOString(),
           deletedBy: userId,
-        },
+        } as Prisma.JsonObject,
       },
     });
 
     // Audit log
+    const metadata = account.metadata as BlockchainAccountMetadata;
     await this.auditService.logEvent({
       action: 'wallet_removed',
       resource: 'account',
       resourceId: accountId,
       userId,
       metadata: {
-        address: (account.metadata as any).address,
-        currency: (account.metadata as any).cryptoCurrency,
+        address: metadata.address,
+        currency: metadata.cryptoCurrency,
       },
     });
 

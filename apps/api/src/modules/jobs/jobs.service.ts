@@ -4,6 +4,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '@core/prisma/prisma.service';
 import { RulesService } from '@modules/categories/rules.service';
 import { BitsoService } from '@modules/providers/bitso/bitso.service';
+import { BlockchainService } from '@modules/providers/blockchain/blockchain.service';
 
 @Injectable()
 export class JobsService {
@@ -12,7 +13,8 @@ export class JobsService {
   constructor(
     private prisma: PrismaService,
     private rulesService: RulesService,
-    private bitsoService: BitsoService
+    private bitsoService: BitsoService,
+    private blockchainService: BlockchainService
   ) {}
 
   // Run every hour - categorize new transactions
@@ -68,6 +70,54 @@ export class JobsService {
       this.logger.log(`Crypto sync complete for ${connections.length} users`);
     } catch (error) {
       this.logger.error('Failed to sync crypto portfolios:', error);
+    }
+  }
+
+  // Run every 6 hours - sync blockchain wallets (ETH, BTC)
+  @Cron('0 */6 * * *')
+  async syncBlockchainWallets(): Promise<void> {
+    this.logger.log('Starting scheduled blockchain wallet sync');
+
+    try {
+      const accounts = await this.prisma.account.findMany({
+        where: {
+          provider: 'manual',
+          metadata: {
+            path: ['readOnly'],
+            equals: true,
+          },
+        },
+        include: {
+          space: {
+            include: {
+              userSpaces: {
+                select: { userId: true },
+                take: 1,
+              },
+            },
+          },
+        },
+        distinct: ['spaceId'],
+      });
+
+      const uniqueUserIds = new Set(
+        accounts
+          .map((account) => account.space.userSpaces[0]?.userId)
+          .filter((userId): userId is string => !!userId)
+      );
+
+      for (const userId of uniqueUserIds) {
+        try {
+          await this.blockchainService.syncWallets(userId);
+          this.logger.log(`Synced blockchain wallets for user ${userId}`);
+        } catch (error) {
+          this.logger.error(`Failed to sync blockchain wallets for user ${userId}:`, error);
+        }
+      }
+
+      this.logger.log(`Blockchain wallet sync complete for ${uniqueUserIds.size} users`);
+    } catch (error) {
+      this.logger.error('Failed to sync blockchain wallets:', error);
     }
   }
 
