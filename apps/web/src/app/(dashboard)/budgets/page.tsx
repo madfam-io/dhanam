@@ -20,7 +20,7 @@ import { Progress } from '@dhanam/ui';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@dhanam/ui';
 import { Plus, Loader2, PiggyBank, Settings } from 'lucide-react';
 import { useSpaceStore } from '@/stores/space';
-import { budgetsApi } from '@/lib/api/budgets';
+import { budgetsApi, CategorySummary } from '@/lib/api/budgets';
 import { categoriesApi } from '@/lib/api/categories';
 import { Budget, BudgetPeriod } from '@dhanam/shared';
 import { formatCurrency, formatDate } from '@/lib/utils';
@@ -302,22 +302,14 @@ export default function BudgetsPage() {
                     </Button>
                   </div>
                   {budgetSummary.categories.map(
-                    (category: {
-                      id: string;
-                      name: string;
-                      color: string;
-                      spent: number;
-                      remaining: number;
-                      percentUsed: number;
-                      budgetedAmount: number;
-                    }) => (
+                    (category: CategorySummary) => (
                       <Card key={category.id}>
                         <CardContent className="pt-4">
                           <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-2">
                               <div
                                 className="w-3 h-3 rounded-full"
-                                style={{ backgroundColor: category.color }}
+                                style={{ backgroundColor: category.color || '#6b7280' }}
                               />
                               <span className="font-medium">{category.name}</span>
                             </div>

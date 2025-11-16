@@ -334,11 +334,11 @@ export function RuleManager({ open, onOpenChange, spaceId }: RuleManagerProps) {
                   <CheckCircle className="h-4 w-4" />
                   <AlertDescription>
                     <strong>Test Results:</strong> Would match {testResult.matchCount} transactions
-                    {testResult.sampleMatches?.length > 0 && (
+                    {(testResult.sampleMatches?.length ?? 0) > 0 && (
                       <div className="mt-2 space-y-1">
                         <p className="text-xs font-medium">Sample matches:</p>
                         {testResult.sampleMatches
-                          .slice(0, 3)
+                          ?.slice(0, 3)
                           .map((match: { id: string; description: string; amount: number }) => (
                             <p key={match.id} className="text-xs text-muted-foreground">
                               • {match.description} ({match.amount < 0 ? '-' : ''}$

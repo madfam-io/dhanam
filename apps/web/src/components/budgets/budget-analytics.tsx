@@ -53,7 +53,7 @@ export function BudgetAnalytics({ spaceId, budgetId, currency }: BudgetAnalytics
       name: cat.name,
       spent: cat.spent,
       budgeted: cat.budgeted,
-      color: cat.color || COLORS[index % COLORS.length],
+      color: (cat.color || COLORS[index % COLORS.length]) as string,
     })
   );
 

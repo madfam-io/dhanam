@@ -1,0 +1,314 @@
+================================================================================
+DHANAM LEDGER - LOCALIZATION & i18n IMPLEMENTATION AUDIT - EXECUTIVE SUMMARY
+================================================================================
+
+Report Generated: November 16, 2025
+Audit Scope: Full localization implementation review
+Target: Spanish (ES) default + English (EN) support
+
+================================================================================
+OVERALL STATUS: INCOMPLETE (25-30% Implemented)
+================================================================================
+
+CRITICAL FINDINGS:
+------------------
+1. Translation System: MINIMAL (4 terms only)
+2. Frontend i18n: NO dedicated library (hardcoded text)
+3. Date/Time Localization: HARDCODED en-US (ignores user locale)
+4. Timezone Support: STORED but UNUSED
+5. Backend i18n: NONE (English-only API responses)
+6. Mobile i18n: NONE
+
+================================================================================
+DETAILED BREAKDOWN BY COMPONENT
+================================================================================
+
+1. TRANSLATION FILES
+   Status: ✗ CRITICAL GAP
+   - Location: /packages/shared/src/i18n/index.ts
+   - Coverage: 4 terms (save, cancel, delete, loading)
+   - Required: 100+ terms across all features
+   - Affected: Onboarding, dashboard, preferences, settings, errors
+   - Library: None (no next-intl, react-i18next, etc.)
+   Effort: 40 hours
+
+2. FRONTEND i18n SETUP
+   Status: ✗ CRITICAL GAP
+   - No i18n library installed
+   - Root layout hardcoded to "lang=en"
+   - No middleware for locale routing
+   - No locale detection (Accept-Language)
+   - 100+ hardcoded Spanish strings in components
+   Effort: 16 hours
+
+3. CURRENCY FORMATTING
+   Status: ✓ GOOD (90%)
+   - MXN/USD/EUR supported
+   - Proper Intl.NumberFormat usage
+   - Locale-aware formatting (MXN→es-MX, others→en-US)
+   - Banxico FX integration working
+   - Redis caching implemented
+   - Issue: Not user preference aware
+   Effort: 2 hours (minor improvements)
+
+4. DATE/TIME FORMATTING
+   Status: ✗ HIGH PRIORITY
+   - formatDate() hardcoded to 'en-US'
+   - formatDateTime() hardcoded to 'en-US'
+   - 39 instances of date formatting across codebase
+   - 15+ instances of toLocaleDateString() without locale
+   - date-fns imported but not used for localization
+   - No timezone conversion
+   Effort: 12 hours
+
+5. TIMEZONE HANDLING
+   Status: ✗ MEDIUM PRIORITY
+   - User.timezone stored (default: America/Mexico_City)
+   - Space.timezone stored (default: America/Mexico_City)
+   - Timezone ONLY used in onboarding status check
+   - Timezone NEVER used for date display
+   - No conversion or formatting utilities
+   Effort: 16 hours
+
+6. USER PREFERENCES
+   Status: ⚠ PARTIAL (40%)
+   - Full CRUD preference management working
+   - Default currency based on locale working
+   - Preferences UI hardcoded in Spanish
+   - No dynamic locale switching
+   - Timezone preference selection available but limited (4 options)
+   Effort: 8 hours
+
+7. BACKEND i18n
+   Status: ✗ NONE
+   - API responses in English only
+   - Error messages not localized
+   - No Content-Language header
+   - Email templates likely hardcoded (not verified)
+   Effort: 20 hours
+
+8. MOBILE i18n
+   Status: ✗ NONE
+   - No i18n implementation in React Native app
+   - No translation files
+   - No locale switching
+   Effort: 24 hours
+
+================================================================================
+SPECIFIC ISSUES & HARDCODED TEXT
+================================================================================
+
+Onboarding Components (preferences-step.tsx):
+- "Configura tus preferencias" (Configure your preferences)
+- "Configuración Regional" (Regional Settings)
+- "Idioma" (Language)
+- "Zona horaria" (Timezone)
+- "Moneda Principal" (Main Currency)
+- "Notificaciones" (Notifications)
+- "Alertas de transacciones" (Transaction alerts)
+- "Alertas de presupuesto" (Budget alerts)
+- "Resumen semanal" (Weekly report)
+- "Reporte mensual" (Monthly report)
+- "Guardar y continuar" (Save and continue)
+
+Settings Components (PreferencesSection.tsx):
+- "Preferencias actualizadas correctamente" (Preferences updated successfully)
+- "¿Estás seguro que quieres restablecer..." (Are you sure you want to reset...)
+- "Última actualización:" (Last updated:)
+
+Root Layout (layout.tsx):
+- <html lang="en"> hardcoded (should be dynamic)
+
+Date Formatting (utils.ts):
+- Intl.DateTimeFormat('en-US') hardcoded in 2 functions
+- Used in 39+ component instances
+
+================================================================================
+KEY FILES ANALYZED
+================================================================================
+
+i18n Setup Files:
+✓ /packages/shared/src/i18n/index.ts (minimal)
+✓ /packages/shared/src/constants/locales.ts
+✓ /packages/shared/src/constants/currencies.ts
+
+Currency Formatting:
+✓ /packages/shared/src/utils/currency.ts (good)
+✓ /apps/web/src/lib/utils.ts (hardcoded locale selection)
+✓ /apps/api/src/modules/fx-rates/fx-rates.service.ts (excellent)
+
+Date Formatting:
+✗ /packages/shared/src/utils/date.ts (basic, no localization)
+✗ /apps/web/src/lib/utils.ts (hardcoded en-US)
+✗ /apps/web/src/app/layout.tsx (lang="en")
+✗ /apps/web/src/middleware.ts (no locale routing)
+
+User Management:
+✓ /apps/api/prisma/schema.prisma (locale/timezone fields)
+✓ /apps/api/src/modules/preferences/preferences.service.ts
+✓ /apps/api/src/modules/users/users.service.ts
+✓ /apps/web/src/contexts/PreferencesContext.tsx
+
+Components with Hardcoded Text:
+✗ /apps/web/src/components/onboarding/steps/preferences-step.tsx
+✗ /apps/web/src/components/settings/PreferencesSection.tsx
+✗ /apps/web/src/components/forms/register-form.tsx
+✗ /apps/web/src/app/(auth)/login/page.tsx
+✗ 40+ other components
+
+================================================================================
+RECOMMENDED IMPLEMENTATION PHASES
+================================================================================
+
+PHASE 1: FOUNDATION (1-2 weeks, 40-50 hours)
+Priority: CRITICAL
+- Install next-intl library
+- Create translation JSON files (en.json, es.json)
+- Set up i18n configuration and middleware
+- Update root layout for dynamic language support
+- Extract hardcoded strings from key components
+Dependencies: None
+Risk: Medium
+
+PHASE 2: DATE/TIME LOCALIZATION (1 week, 12 hours)
+Priority: HIGH
+- Install date-fns with locale support
+- Create locale-aware date utilities
+- Replace hardcoded 'en-US' throughout codebase
+- Test all date formats for both locales
+Dependencies: Phase 1 (needs locale context)
+Risk: Low
+
+PHASE 3: TIMEZONE SUPPORT (1 week, 16 hours)
+Priority: MEDIUM
+- Install date-fns-tz
+- Create timezone utilities
+- Implement timezone-aware date display
+- Move timezone to user preferences
+Dependencies: Phase 1
+Risk: Medium
+
+PHASE 4: BACKEND INTERNATIONALIZATION (1 week, 20 hours)
+Priority: HIGH
+- Install nestjs-i18n
+- Create backend translation files
+- Localize error messages and responses
+- Add Content-Language header to all responses
+Dependencies: Phase 1 (shared translations)
+Risk: Medium
+
+PHASE 5: MOBILE & POLISH (1-2 weeks, 24+ hours)
+Priority: MEDIUM
+- Implement i18next for React Native
+- Sync translations across web and mobile
+- Implement locale auto-detection
+- Enhanced timezone selector
+- Full QA and testing
+
+TOTAL ESTIMATED EFFORT: 128 hours (~3-4 weeks full-time development)
+
+================================================================================
+COMPLIANCE WITH CLAUDE.MD REQUIREMENTS
+================================================================================
+
+Requirement 1: "Default Spanish (ES) for Mexico region, English elsewhere"
+Status: ✗ PARTIAL
+- Locale defaults working in backend
+- Frontend does NOT respect user locale
+- Root layout hardcoded to English
+Gap: Frontend routing and language switching
+
+Requirement 2: "Currency formatting for MXN/USD/EUR with Banxico FX rates"
+Status: ✓ GOOD
+- All currencies supported
+- Banxico integration working
+- FX rate caching implemented
+- Hourly automated updates
+Gap: Minor - user preference not always respected
+
+Requirement 3: "All user-facing text must support i18n via packages/shared/i18n"
+Status: ✗ CRITICAL FAILURE
+- Only 4 terms translated
+- 100+ hardcoded strings in components
+- No comprehensive translation system
+- No way to switch languages
+Gap: Entire frontend translation system missing
+
+================================================================================
+RISK ASSESSMENT
+================================================================================
+
+HIGH RISK AREAS:
+1. User-facing text entirely in Spanish (blocking English users)
+2. Dates always show in English format (confusing for Spanish users)
+3. API errors in English only (poor UX for Spanish speakers)
+4. Timezone feature completely unused (data loss potential)
+
+MEDIUM RISK AREAS:
+1. No locale detection (defaults work but suboptimal)
+2. Limited timezone selector (4 options vs. full IANA)
+3. Mobile app has no localization
+
+LOW RISK AREAS:
+1. Currency formatting already correct
+2. Infrastructure in place (storage fields ready)
+3. No performance concerns
+
+================================================================================
+RECOMMENDATIONS SUMMARY
+================================================================================
+
+DO FIRST (This Week):
+1. Install next-intl and set up basic i18n structure
+2. Create en.json and es.json translation files with 100+ terms
+3. Update middleware to support locale-based routing
+4. Update root layout to use dynamic language
+
+DO NEXT (Next Week):
+1. Extract hardcoded strings from components
+2. Replace date formatting with locale-aware functions
+3. Implement timezone display utilities
+4. Test language switching end-to-end
+
+DO SOON (Following Weeks):
+1. Implement backend i18n
+2. Add mobile i18n
+3. Implement locale auto-detection
+4. Full QA and user testing
+
+================================================================================
+SUCCESS CRITERIA
+================================================================================
+
+Phase 1 Complete When:
+- [ ] Language can be switched via UI
+- [ ] All major UI text translated (100+ terms)
+- [ ] Browser shows correct lang attribute
+- [ ] 39 format instances pass locale parameter
+
+Phase 2 Complete When:
+- [ ] Dates display in correct locale format
+- [ ] Timezone selector shows full IANA list
+- [ ] Dates display in user's timezone
+
+Phase 3 Complete When:
+- [ ] API responses include Content-Language header
+- [ ] Error messages localized
+- [ ] Email templates translated
+
+Final Complete When:
+- [ ] Mobile app has full i18n support
+- [ ] Locale auto-detection working
+- [ ] All 3 regions (MX, US, EU) tested
+- [ ] Performance: <1.5s p95 page load
+- [ ] 100% component test coverage
+
+================================================================================
+DETAILED AUDIT REPORTS
+================================================================================
+
+This is a summary document. For detailed analysis, see:
+- I18N_AUDIT_REPORT.md (445 lines, comprehensive breakdown)
+- I18N_IMPLEMENTATION_GAPS.md (detailed code examples and implementation)
+
+================================================================================

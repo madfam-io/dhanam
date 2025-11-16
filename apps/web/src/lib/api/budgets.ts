@@ -15,6 +15,58 @@ export interface UpdateBudgetDto {
   endDate?: Date;
 }
 
+export interface CategorySummary {
+  id: string;
+  budgetId: string;
+  name: string;
+  budgetedAmount: number;
+  icon: string | null;
+  color: string | null;
+  description: string | null;
+  createdAt: string;
+  updatedAt: string;
+  _count?: {
+    transactions: number;
+  };
+  spent: number;
+  remaining: number;
+  percentUsed: number;
+  transactionCount: number;
+}
+
+export interface BudgetSummary extends Budget {
+  categories: CategorySummary[];
+  summary: {
+    totalBudgeted: number;
+    totalSpent: number;
+    totalRemaining: number;
+    totalPercentUsed: number;
+  };
+}
+
+export interface BudgetAnalytics {
+  categories: Array<{
+    name: string;
+    spent: number;
+    budgeted: number;
+    color?: string;
+  }>;
+  weeklyTrend?: Array<{
+    weekStart: string;
+    spent: number;
+    budgetedForWeek: number;
+  }>;
+  summary: {
+    totalBudgeted: number;
+    totalSpent: number;
+    totalRemaining: number;
+    totalPercentUsed: number;
+    averageSpending: number;
+    projectedSpending: number;
+    daysRemaining: number;
+  };
+}
+
 export const budgetsApi = {
   getBudgets: async (spaceId: string): Promise<Budget[]> => {
     return apiClient.get<Budget[]>(`/spaces/${spaceId}/budgets`);
@@ -24,8 +76,8 @@ export const budgetsApi = {
     return apiClient.get<Budget>(`/spaces/${spaceId}/budgets/${budgetId}`);
   },
 
-  getBudgetSummary: async (spaceId: string, budgetId: string): Promise<Record<string, unknown>> => {
-    return apiClient.get<Record<string, unknown>>(`/spaces/${spaceId}/budgets/${budgetId}/summary`);
+  getBudgetSummary: async (spaceId: string, budgetId: string): Promise<BudgetSummary> => {
+    return apiClient.get<BudgetSummary>(`/spaces/${spaceId}/budgets/${budgetId}/summary`);
   },
 
   createBudget: async (spaceId: string, dto: CreateBudgetDto): Promise<Budget> => {
@@ -47,8 +99,8 @@ export const budgetsApi = {
   getBudgetAnalytics: async (
     spaceId: string,
     budgetId: string
-  ): Promise<Record<string, unknown>> => {
-    return apiClient.get<Record<string, unknown>>(
+  ): Promise<BudgetAnalytics> => {
+    return apiClient.get<BudgetAnalytics>(
       `/spaces/${spaceId}/budgets/${budgetId}/analytics`
     );
   },
