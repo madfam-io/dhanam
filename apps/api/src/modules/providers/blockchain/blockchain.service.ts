@@ -309,6 +309,40 @@ export class BlockchainService {
     };
   }
 
+  /**
+   * Get ERC-20 token balance for an address
+   * @param address - Ethereum address
+   * @param tokenAddress - ERC-20 token contract address
+   * @param tokenSymbol - Token symbol (e.g., 'USDT', 'USDC')
+   * @param decimals - Token decimals (default: 18)
+   */
+  async getErc20Balance(
+    address: string,
+    tokenAddress: string,
+    tokenSymbol: string,
+    decimals: number = 18
+  ): Promise<BlockchainBalance> {
+    const erc20Abi = [
+      'function balanceOf(address) view returns (uint256)',
+      'function decimals() view returns (uint8)',
+    ];
+
+    const contract = new ethers.Contract(tokenAddress, erc20Abi, this.ethProvider!);
+
+    const balance = await contract.balanceOf(address);
+    const tokenDecimals = decimals || (await contract.decimals());
+    const formattedBalance = ethers.formatUnits(balance, tokenDecimals);
+    const blockNumber = await this.ethProvider!.getBlockNumber();
+
+    return {
+      address,
+      balance: formattedBalance,
+      currency: tokenSymbol.toUpperCase(),
+      usdValue: 0, // Will be calculated separately
+      lastBlock: blockNumber,
+    };
+  }
+
   private async getBtcBalance(address: string): Promise<BlockchainBalance> {
     const response = await this.btcClient!.get(`/rawaddr/${address}?limit=0`);
     const data = response.data;
@@ -556,7 +590,7 @@ export class BlockchainService {
         const usdPrice = await this.getCryptoPrice(metadata.cryptoCurrency.toLowerCase());
         const usdValue = parseFloat(balance.balance) * usdPrice;
 
-        await this.prisma.account.update({
+        const updatedAccount = await this.prisma.account.update({
           where: { id: account.id },
           data: {
             balance: Math.round(usdValue * 100) / 100,
@@ -567,6 +601,21 @@ export class BlockchainService {
               lastBlock: balance.lastBlock,
               lastPriceUpdate: new Date().toISOString(),
             },
+          },
+        });
+
+        // Create valuation snapshot for daily tracking
+        await this.prisma.assetValuation.create({
+          data: {
+            accountId: updatedAccount.id,
+            date: new Date(),
+            value: updatedAccount.balance,
+            metadata: {
+              cryptoCurrency: metadata.cryptoCurrency,
+              cryptoBalance: balance.balance,
+              usdPrice: usdPrice,
+              network: metadata.network,
+            } as Prisma.JsonObject,
           },
         });
 
