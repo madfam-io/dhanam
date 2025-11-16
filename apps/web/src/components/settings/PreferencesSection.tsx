@@ -23,7 +23,6 @@ export function PreferencesSection() {
   const {
     preferences,
     updatePreferences,
-    bulkUpdatePreferences,
     resetPreferences,
     isLoading: _isLoading,
     error,
@@ -51,19 +50,6 @@ export function PreferencesSection() {
       setTimeout(() => setSuccessMessage(null), 3000);
     } catch (err) {
       console.error('Error updating preference:', err);
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const _handleBulkUpdate = async (category: string, updates: any) => {
-    try {
-      setIsSaving(true);
-      await bulkUpdatePreferences({ [category]: updates });
-      setSuccessMessage(`Preferencias de ${category} actualizadas correctamente`);
-      setTimeout(() => setSuccessMessage(null), 3000);
-    } catch (err) {
-      console.error('Error bulk updating preferences:', err);
     } finally {
       setIsSaving(false);
     }
