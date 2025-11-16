@@ -132,11 +132,11 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
     } finally {
       setIsLoading(false);
     }
-  }, [token]);
+  }, [tokens]);
 
   const updatePreferences = useCallback(
     async (updates: Partial<UserPreferences>) => {
-      if (!token) return;
+      if (!tokens) return;
 
       setError(null);
 
@@ -161,7 +161,7 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
         throw err;
       }
     },
-    [token]
+    [tokens]
   );
 
   const bulkUpdatePreferences = useCallback(
@@ -202,7 +202,7 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
       >;
       backup?: Partial<Pick<UserPreferences, 'autoBackup' | 'backupFrequency' | 'exportFormat'>>;
     }) => {
-      if (!token) return;
+      if (!tokens) return;
 
       setError(null);
 
@@ -227,11 +227,11 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
         throw err;
       }
     },
-    [token]
+    [tokens]
   );
 
   const resetPreferences = useCallback(async () => {
-    if (!token) return;
+    if (!tokens) return;
 
     setError(null);
 
@@ -253,7 +253,7 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
       setError(err instanceof Error ? err.message : 'Failed to reset preferences');
       throw err;
     }
-  }, [token]);
+  }, [tokens]);
 
   const refreshPreferences = useCallback(async () => {
     await fetchPreferences();
@@ -261,10 +261,10 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
 
   // Load preferences when user logs in
   useEffect(() => {
-    if (user && token) {
+    if (user && tokens) {
       fetchPreferences();
     }
-  }, [user, token, fetchPreferences]);
+  }, [user, tokens, fetchPreferences]);
 
   const value: PreferencesContextValue = {
     preferences,
