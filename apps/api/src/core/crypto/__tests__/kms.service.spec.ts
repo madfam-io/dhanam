@@ -2,7 +2,6 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 
 import { KmsService } from '../kms.service';
-import { CryptoService } from '../crypto.service';
 
 describe('KmsService', () => {
   let service: KmsService;

@@ -1,7 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import * as speakeasy from 'speakeasy';
-import * as qrcode from 'qrcode';
-import { randomBytes } from 'crypto';
 
 import { PrismaService } from '@core/prisma/prisma.service';
 import { LoggerService } from '@core/logger/logger.service';

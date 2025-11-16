@@ -155,8 +155,10 @@ describe('LogSanitizer', () => {
 
   describe('sanitizeError', () => {
     it('should sanitize error objects', () => {
-      const error = new Error('Invalid token: eyJhbGci.test.token');
-      error.stack = 'Error: Invalid token\n  at Function.test\n  accessToken=abc123';
+      // Use a realistic JWT token with proper length sections
+      const jwtToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c';
+      const error = new Error(`Invalid token: ${jwtToken}`);
+      error.stack = `Error: Invalid token\n  at Function.test\n  accessToken=${jwtToken}`;
 
       const result = LogSanitizer.sanitizeError(error);
 

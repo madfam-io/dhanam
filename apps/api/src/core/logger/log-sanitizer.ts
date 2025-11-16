@@ -143,6 +143,19 @@ export class LogSanitizer {
   private static isSensitiveKey(key: string): boolean {
     const lowerKey = key.toLowerCase();
 
+    // Exact matches for common non-sensitive fields containing sensitive words
+    const nonSensitiveExact = [
+      'tokencount',
+      'tokencounter',
+      'tokentype',
+      'tokenlimit',
+      'secretsanta',
+    ];
+
+    if (nonSensitiveExact.includes(lowerKey)) {
+      return false;
+    }
+
     return this.SENSITIVE_PATTERNS.some((pattern) =>
       lowerKey.includes(pattern.toLowerCase()),
     );
