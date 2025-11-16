@@ -186,7 +186,7 @@ export function BudgetAnalytics({ spaceId, budgetId, currency }: BudgetAnalytics
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(value: number) => [formatCurrency(value, currency), '']} />
+                  <Tooltip formatter={(value: string | number | (string | number)[]) => [formatCurrency(Number(value), currency), '']} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
