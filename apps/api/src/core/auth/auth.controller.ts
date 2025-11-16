@@ -154,6 +154,8 @@ export class AuthController {
   }
 
   @Post('forgot-password')
+  @UseGuards(ThrottleAuthGuard)
+  @Throttle({ default: { limit: 3, ttl: 3600000 } }) // 3 requests per hour
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Request password reset' })
   @ApiResponse({ status: 200, description: 'Reset email sent if user exists' })
@@ -163,6 +165,8 @@ export class AuthController {
   }
 
   @Post('reset-password')
+  @UseGuards(ThrottleAuthGuard)
+  @Throttle({ default: { limit: 5, ttl: 3600000 } }) // 5 attempts per hour
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Reset password with token' })
   @ApiResponse({ status: 200, description: 'Password reset successful' })
@@ -189,7 +193,8 @@ export class AuthController {
   }
 
   @Post('totp/enable')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ThrottleAuthGuard)
+  @Throttle({ default: { limit: 5, ttl: 300000 } }) // 5 attempts per 5 minutes
   @ApiOperation({ summary: 'Enable TOTP 2FA' })
   @ApiResponse({ status: 200, description: 'TOTP enabled successfully' })
   async enableTotp(@CurrentUser() user: AuthenticatedUser, @Body() body: { token: string }) {
@@ -198,7 +203,8 @@ export class AuthController {
   }
 
   @Post('totp/disable')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ThrottleAuthGuard)
+  @Throttle({ default: { limit: 5, ttl: 300000 } }) // 5 attempts per 5 minutes
   @ApiOperation({ summary: 'Disable TOTP 2FA' })
   @ApiResponse({ status: 200, description: 'TOTP disabled successfully' })
   async disableTotp(@CurrentUser() user: AuthenticatedUser, @Body() body: { token: string }) {

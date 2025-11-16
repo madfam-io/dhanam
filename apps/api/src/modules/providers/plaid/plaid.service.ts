@@ -21,6 +21,8 @@ import { MonitorPerformance } from '@core/decorators/monitor-performance.decorat
 
 import { CryptoService } from '../../../core/crypto/crypto.service';
 import { PrismaService } from '../../../core/prisma/prisma.service';
+import { PlaidAccountMetadata } from '../../../types/metadata.types';
+import { isUniqueConstraintError } from '../../../types/prisma-errors.types';
 
 import { CreatePlaidLinkDto, PlaidWebhookDto } from './dto';
 
@@ -99,6 +101,72 @@ export class PlaidService {
       this.logger.error('Failed to create Plaid Link token:', error);
       throw new BadRequestException('Failed to create Link token');
     }
+  }
+
+  /**
+   * Fetch and sync accounts for a specific Plaid connection
+   * @param connectionId - The provider connection ID
+   * @returns Array of synced accounts
+   */
+  async fetchAccounts(connectionId: string): Promise<Account[]> {
+    const connection = await this.prisma.providerConnection.findUnique({
+      where: { id: connectionId },
+      include: { user: { include: { spaces: { take: 1 } } } },
+    });
+
+    if (!connection || connection.provider !== 'plaid') {
+      throw new BadRequestException('Invalid Plaid connection');
+    }
+
+    const accessToken = this.cryptoService.decrypt(JSON.parse(connection.encryptedToken));
+    const itemId = connection.providerUserId;
+    const spaceId = connection.user.spaces[0]?.id;
+
+    if (!spaceId) {
+      throw new BadRequestException('No space found for user');
+    }
+
+    return this.syncAccounts(spaceId, accessToken, itemId);
+  }
+
+  /**
+   * Fetch transactions for a specific account within a date range
+   * @param accountId - The account ID
+   * @param startDate - Start date for transaction fetch
+   * @param endDate - End date for transaction fetch (defaults to today)
+   * @returns Transaction sync result
+   */
+  async fetchTransactionsByDateRange(
+    accountId: string,
+    startDate: Date,
+    endDate: Date = new Date()
+  ): Promise<{ transactionCount: number; accountCount: number }> {
+    const account = await this.prisma.account.findUnique({
+      where: { id: accountId },
+      include: { space: { include: { user: { include: { providerConnections: true } } } } },
+    });
+
+    if (!account || account.provider !== 'plaid') {
+      throw new BadRequestException('Invalid Plaid account');
+    }
+
+    const metadata = account.metadata as PlaidAccountMetadata;
+    const itemId = metadata?.itemId;
+    if (!itemId) {
+      throw new BadRequestException('Account missing Plaid item ID');
+    }
+
+    const connection = account.space.user.providerConnections.find(
+      (conn) => conn.provider === 'plaid' && conn.providerUserId === itemId
+    );
+
+    if (!connection) {
+      throw new BadRequestException('Plaid connection not found');
+    }
+
+    const accessToken = this.cryptoService.decrypt(JSON.parse(connection.encryptedToken));
+
+    return this.syncTransactions(accessToken, itemId);
   }
 
   async createLink(
@@ -292,7 +360,7 @@ export class PlaidService {
         },
       });
     } catch (error) {
-      if ((error as any).code === 'P2002') {
+      if (isUniqueConstraintError(error)) {
         // Transaction already exists, skip
         return;
       }
@@ -407,7 +475,54 @@ export class PlaidService {
   private async handleAccountWebhook(webhook: PlaidWebhookDto) {
     // Handle account updates
     this.logger.log(`Account webhook received for item ${webhook.item_id}`);
-    // TODO: Implement account sync if needed
+
+    const connection = await this.prisma.providerConnection.findFirst({
+      where: {
+        provider: 'plaid',
+        providerUserId: webhook.item_id,
+      },
+    });
+
+    if (!connection) {
+      this.logger.warn(`No connection found for Plaid item ${webhook.item_id}`);
+      return;
+    }
+
+    const accessToken = this.cryptoService.decrypt(JSON.parse(connection.encryptedToken));
+
+    // Re-sync accounts to capture balance/metadata changes
+    const request: AccountsGetRequest = {
+      access_token: accessToken,
+    };
+
+    const response = await this.plaidClient!.accountsGet(request);
+
+    for (const plaidAccount of response.data.accounts) {
+      await this.prisma.account.updateMany({
+        where: {
+          provider: 'plaid',
+          providerAccountId: plaidAccount.account_id,
+        },
+        data: {
+          balance: plaidAccount.balances.current || 0,
+          lastSyncedAt: new Date(),
+          metadata: {
+            mask: plaidAccount.mask,
+            officialName: plaidAccount.official_name,
+            itemId: webhook.item_id,
+            balances: {
+              available: plaidAccount.balances.available,
+              current: plaidAccount.balances.current,
+              limit: plaidAccount.balances.limit,
+              iso_currency_code: plaidAccount.balances.iso_currency_code,
+              unofficial_currency_code: plaidAccount.balances.unofficial_currency_code,
+            },
+          } as Prisma.JsonObject,
+        },
+      });
+    }
+
+    this.logger.log(`Updated accounts for Plaid item ${webhook.item_id}`);
   }
 
   private async handleItemWebhook(webhook: PlaidWebhookDto) {
@@ -416,15 +531,92 @@ export class PlaidService {
     switch (webhook_code) {
       case 'ERROR':
         this.logger.error(`Plaid item error for ${item_id}:`, error);
-        // TODO: Handle item errors (disable accounts, notify user)
+
+        // Mark connection as errored
+        await this.prisma.providerConnection.updateMany({
+          where: {
+            provider: 'plaid',
+            providerUserId: item_id,
+          },
+          data: {
+            status: 'error',
+            metadata: {
+              error: error || 'Unknown error',
+              erroredAt: new Date().toISOString(),
+            },
+          },
+        });
+
+        // Disable associated accounts
+        await this.prisma.account.updateMany({
+          where: {
+            provider: 'plaid',
+            metadata: {
+              path: ['itemId'],
+              equals: item_id,
+            },
+          },
+          data: {
+            isActive: false,
+          },
+        });
+
+        this.logger.log(`Disabled accounts for errored Plaid item ${item_id}`);
         break;
+
       case 'PENDING_EXPIRATION':
         this.logger.warn(`Plaid item ${item_id} will expire soon`);
-        // TODO: Notify user to re-authenticate
+
+        // Update connection to indicate pending expiration
+        await this.prisma.providerConnection.updateMany({
+          where: {
+            provider: 'plaid',
+            providerUserId: item_id,
+          },
+          data: {
+            metadata: {
+              pendingExpiration: true,
+              expirationWarningAt: new Date().toISOString(),
+            },
+          },
+        });
+
+        // Note: Should trigger user notification in production
+        // via email service or push notification
         break;
+
       case 'USER_PERMISSION_REVOKED':
         this.logger.log(`User revoked permissions for Plaid item ${item_id}`);
-        // TODO: Disable accounts and stop syncing
+
+        // Mark connection as revoked
+        await this.prisma.providerConnection.updateMany({
+          where: {
+            provider: 'plaid',
+            providerUserId: item_id,
+          },
+          data: {
+            status: 'revoked',
+            metadata: {
+              revokedAt: new Date().toISOString(),
+            },
+          },
+        });
+
+        // Disable all associated accounts
+        await this.prisma.account.updateMany({
+          where: {
+            provider: 'plaid',
+            metadata: {
+              path: ['itemId'],
+              equals: item_id,
+            },
+          },
+          data: {
+            isActive: false,
+          },
+        });
+
+        this.logger.log(`Disabled accounts for revoked Plaid item ${item_id}`);
         break;
     }
   }

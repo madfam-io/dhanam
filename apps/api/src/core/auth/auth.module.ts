@@ -20,7 +20,7 @@ import { GuestAuthService } from './guest-auth.service';
   imports: [
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({
-      secret: process.env.JWT_SECRET || 'fallback-secret-change-in-production',
+      secret: process.env.JWT_SECRET,
       signOptions: {
         expiresIn: '15m',
         issuer: 'dhanam-api',
