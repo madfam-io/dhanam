@@ -159,33 +159,38 @@ export function FeatureTourStep() {
       {/* Feature showcase */}
       <Card className="mb-8">
         <CardContent className="p-8">
-          {features[currentFeature] && (
-            <>
-              <div className="text-center mb-6">
-                <div className="text-6xl mb-4">{features[currentFeature].image}</div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                  {features[currentFeature].title}
-                </h2>
-                <p className="text-gray-600 max-w-2xl mx-auto">
-                  {features[currentFeature].description}
-                </p>
-              </div>
+          {(() => {
+            const feature = features[currentFeature];
+            if (!feature) return null;
 
-              <div className="bg-gray-50 rounded-lg p-6">
-                <h3 className="font-semibold text-gray-900 mb-3">
-                  ✨ Características principales:
-                </h3>
-                <ul className="space-y-2">
-                  {features[currentFeature].tips.map((tip, index) => (
-                    <li key={index} className="flex items-start space-x-2">
-                      <CheckCircleIcon className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
-                      <span className="text-gray-700">{tip}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </>
-          )}
+            return (
+              <>
+                <div className="text-center mb-6">
+                  <div className="text-6xl mb-4">{feature.image}</div>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                    {feature.title}
+                  </h2>
+                  <p className="text-gray-600 max-w-2xl mx-auto">
+                    {feature.description}
+                  </p>
+                </div>
+
+                <div className="bg-gray-50 rounded-lg p-6">
+                  <h3 className="font-semibold text-gray-900 mb-3">
+                    ✨ Características principales:
+                  </h3>
+                  <ul className="space-y-2">
+                    {feature.tips.map((tip, index) => (
+                      <li key={index} className="flex items-start space-x-2">
+                        <CheckCircleIcon className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+                        <span className="text-gray-700">{tip}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </>
+            );
+          })()}
         </CardContent>
       </Card>
 
