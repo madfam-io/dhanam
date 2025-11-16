@@ -44,6 +44,27 @@ export interface BudgetSummary extends Budget {
   };
 }
 
+export interface BudgetAnalytics {
+  categories: Array<{
+    name: string;
+    spent: number;
+    budgeted: number;
+    color?: string;
+  }>;
+  weeklyTrend?: Array<{
+    weekStart: string;
+    spent: number;
+    budgetedForWeek: number;
+  }>;
+  summary: {
+    totalBudgeted: number;
+    totalSpent: number;
+    totalRemaining: number;
+    averageSpending: number;
+    projectedSpending: number;
+  };
+}
+
 export const budgetsApi = {
   getBudgets: async (spaceId: string): Promise<Budget[]> => {
     return apiClient.get<Budget[]>(`/spaces/${spaceId}/budgets`);
@@ -76,8 +97,8 @@ export const budgetsApi = {
   getBudgetAnalytics: async (
     spaceId: string,
     budgetId: string
-  ): Promise<Record<string, unknown>> => {
-    return apiClient.get<Record<string, unknown>>(
+  ): Promise<BudgetAnalytics> => {
+    return apiClient.get<BudgetAnalytics>(
       `/spaces/${spaceId}/budgets/${budgetId}/analytics`
     );
   },
