@@ -186,7 +186,7 @@ export function BudgetAnalytics({ spaceId, budgetId, currency }: BudgetAnalytics
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(value: any) => [formatCurrency(Number(value), currency), '']} />
+                  <Tooltip formatter={(value: string | number | (string | number)[]) => [formatCurrency(Number(value), currency), '']} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -219,7 +219,7 @@ export function BudgetAnalytics({ spaceId, budgetId, currency }: BudgetAnalytics
                   <XAxis dataKey="week" tick={{ fontSize: 12 }} />
                   <YAxis tick={{ fontSize: 12 }} />
                   <Tooltip
-                    formatter={(value: any) => [formatCurrency(Number(value), currency), '']}
+                    formatter={(value: string | number | (string | number)[]) => [formatCurrency(Number(value), currency), '']}
                     labelStyle={{ color: '#000' }}
                   />
                   <Line
