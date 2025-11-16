@@ -21,6 +21,8 @@ import { MonitorPerformance } from '@core/decorators/monitor-performance.decorat
 
 import { CryptoService } from '../../../core/crypto/crypto.service';
 import { PrismaService } from '../../../core/prisma/prisma.service';
+import { PlaidAccountMetadata } from '../../../types/metadata.types';
+import { isUniqueConstraintError } from '../../../types/prisma-errors.types';
 
 import { CreatePlaidLinkDto, PlaidWebhookDto } from './dto';
 
@@ -148,7 +150,8 @@ export class PlaidService {
       throw new BadRequestException('Invalid Plaid account');
     }
 
-    const itemId = (account.metadata as any)?.itemId;
+    const metadata = account.metadata as PlaidAccountMetadata;
+    const itemId = metadata?.itemId;
     if (!itemId) {
       throw new BadRequestException('Account missing Plaid item ID');
     }
@@ -357,7 +360,7 @@ export class PlaidService {
         },
       });
     } catch (error) {
-      if ((error as any).code === 'P2002') {
+      if (isUniqueConstraintError(error)) {
         // Transaction already exists, skip
         return;
       }

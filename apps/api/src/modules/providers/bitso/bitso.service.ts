@@ -7,6 +7,11 @@ import axios, { AxiosInstance } from 'axios';
 
 import { CryptoService } from '../../../core/crypto/crypto.service';
 import { PrismaService } from '../../../core/prisma/prisma.service';
+import {
+  BitsoAccountMetadata,
+  BitsoConnectionMetadata,
+} from '../../../types/metadata.types';
+import { isUniqueConstraintError } from '../../../types/prisma-errors.types';
 
 import { ConnectBitsoDto, BitsoWebhookDto } from './dto';
 
@@ -105,8 +110,9 @@ export class BitsoService {
     }
 
     const apiKey = this.cryptoService.decrypt(JSON.parse(connection.encryptedToken));
+    const connectionMetadata = connection.metadata as BitsoConnectionMetadata;
     const apiSecret = this.cryptoService.decrypt(
-      JSON.parse((connection.metadata as any).encryptedApiSecret)
+      JSON.parse(connectionMetadata.encryptedApiSecret)
     );
     const spaceId = connection.user.spaces[0]?.id;
 
@@ -170,7 +176,7 @@ export class BitsoService {
       };
     } catch (error) {
       this.logger.error('Failed to connect Bitso account:', error);
-      if ((error as any).response?.status === 401) {
+      if (axios.isAxiosError(error) && error.response?.status === 401) {
         throw new BadRequestException('Invalid Bitso API credentials');
       }
       throw new BadRequestException('Failed to connect Bitso account');
@@ -299,13 +305,14 @@ export class BitsoService {
 
         if (existingAccount) {
           // Update existing account
+          const existingMetadata = (existingAccount.metadata as BitsoAccountMetadata) || ({} as BitsoAccountMetadata);
           const updatedAccount = await this.prisma.account.update({
             where: { id: existingAccount.id },
             data: {
               balance: usdValue,
               lastSyncedAt: new Date(),
               metadata: {
-                ...((existingAccount.metadata as any) || {}),
+                ...existingMetadata,
                 cryptoCurrency: balance.currency.toUpperCase(),
                 cryptoAmount: totalAmount,
                 availableAmount: parseFloat(balance.available),
@@ -453,7 +460,7 @@ export class BitsoService {
         },
       });
     } catch (error) {
-      if ((error as any).code === 'P2002') {
+      if (isUniqueConstraintError(error)) {
         // Transaction already exists, skip
         return;
       }
@@ -472,8 +479,9 @@ export class BitsoService {
 
       for (const connection of connections) {
         const apiKey = this.cryptoService.decrypt(JSON.parse(connection.encryptedToken));
+        const connectionMetadata = connection.metadata as BitsoConnectionMetadata;
         const apiSecret = this.cryptoService.decrypt(
-          JSON.parse((connection.metadata as any).encryptedApiSecret)
+          JSON.parse(connectionMetadata.encryptedApiSecret)
         );
 
         const client = this.createTempClient(apiKey, apiSecret);
@@ -598,7 +606,7 @@ export class BitsoService {
     const totalValue = accounts.reduce((sum, account) => sum + Number(account.balance), 0);
 
     const holdings = accounts.map((account) => {
-      const metadata = account.metadata as any;
+      const metadata = account.metadata as BitsoAccountMetadata;
       return {
         currency: metadata.cryptoCurrency,
         amount: metadata.cryptoAmount,

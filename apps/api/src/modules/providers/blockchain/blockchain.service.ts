@@ -11,6 +11,11 @@ import { MonitorPerformance } from '@core/decorators/monitor-performance.decorat
 import { AuditService } from '../../../core/audit/audit.service';
 // import { CryptoService } from '../../../core/crypto/crypto.service';
 import { PrismaService } from '../../../core/prisma/prisma.service';
+import { BlockchainAccountMetadata } from '../../../types/metadata.types';
+import {
+  isPrismaError,
+  isUniqueConstraintError,
+} from '../../../types/prisma-errors.types';
 
 import { AddWalletDto, ImportWalletDto } from './dto';
 
@@ -527,7 +532,7 @@ export class BlockchainService {
 
       if (!account) return;
 
-      const metadata = account.metadata as any;
+      const metadata = account.metadata as BlockchainAccountMetadata;
       const isIncoming = tx.to.toLowerCase() === walletAddress.toLowerCase();
       const amount = isIncoming ? parseFloat(tx.value) : -parseFloat(tx.value);
 
@@ -558,7 +563,7 @@ export class BlockchainService {
         },
       });
     } catch (error) {
-      if ((error as any).code === 'P2002') {
+      if (isUniqueConstraintError(error)) {
         // Transaction already exists
         return;
       }
@@ -580,7 +585,7 @@ export class BlockchainService {
       });
 
       for (const account of accounts) {
-        const metadata = account.metadata as any;
+        const metadata = account.metadata as BlockchainAccountMetadata;
 
         // Update balance
         const balance = await this.getBalance(
@@ -656,27 +661,29 @@ export class BlockchainService {
     }
 
     // Soft delete by marking as inactive
+    const currentMetadata = account.metadata as BlockchainAccountMetadata;
     await this.prisma.account.update({
       where: { id: accountId },
       data: {
         // Remove isActive as it doesn't exist on Account model
         metadata: {
-          ...(account.metadata as any),
+          ...currentMetadata,
           deletedAt: new Date().toISOString(),
           deletedBy: userId,
-        },
+        } as Prisma.JsonObject,
       },
     });
 
     // Audit log
+    const metadata = account.metadata as BlockchainAccountMetadata;
     await this.auditService.logEvent({
       action: 'wallet_removed',
       resource: 'account',
       resourceId: accountId,
       userId,
       metadata: {
-        address: (account.metadata as any).address,
-        currency: (account.metadata as any).cryptoCurrency,
+        address: metadata.address,
+        currency: metadata.cryptoCurrency,
       },
     });
 
