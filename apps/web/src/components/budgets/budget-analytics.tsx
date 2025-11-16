@@ -219,7 +219,7 @@ export function BudgetAnalytics({ spaceId, budgetId, currency }: BudgetAnalytics
                   <XAxis dataKey="week" tick={{ fontSize: 12 }} />
                   <YAxis tick={{ fontSize: 12 }} />
                   <Tooltip
-                    formatter={(value: number) => [formatCurrency(value, currency), '']}
+                    formatter={(value: string | number | (string | number)[]) => [formatCurrency(Number(value), currency), '']}
                     labelStyle={{ color: '#000' }}
                   />
                   <Line
