@@ -10,7 +10,7 @@ import { useAuth } from '~/lib/hooks/use-auth';
 import { useSpaceStore } from '~/stores/space';
 import { accountsApi } from '~/lib/api/accounts';
 import { transactionsApi } from '~/lib/api/transactions';
-import { budgetsApi } from '~/lib/api/budgets';
+import { budgetsApi, CategorySummary } from '~/lib/api/budgets';
 import { analyticsApi } from '~/lib/api/analytics';
 import { formatCurrency } from '~/lib/utils';
 import {
@@ -400,20 +400,13 @@ export default function DashboardPage() {
               {currentBudgetSummary.categories
                 .slice(0, 5)
                 .map(
-                  (category: {
-                    id: string;
-                    name: string;
-                    color: string;
-                    spent: number;
-                    budgetedAmount: number;
-                    percentUsed: number;
-                  }) => (
+                  (category: CategorySummary) => (
                     <div key={category.id} className="space-y-2">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <div
                             className="w-3 h-3 rounded-full"
-                            style={{ backgroundColor: category.color }}
+                            style={{ backgroundColor: category.color || '#6b7280' }}
                           />
                           <span className="text-sm font-medium">{category.name}</span>
                         </div>
