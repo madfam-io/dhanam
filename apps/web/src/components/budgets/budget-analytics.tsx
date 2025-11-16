@@ -158,7 +158,10 @@ export function BudgetAnalytics({ spaceId, budgetId, currency }: BudgetAnalytics
                   <XAxis dataKey="name" tick={{ fontSize: 12, angle: -45, textAnchor: 'end' }} height={80} />
                   <YAxis tick={{ fontSize: 12 }} />
                   <Tooltip
-                    formatter={(value: number) => [formatCurrency(value, currency), '']}
+                    formatter={(value: string | number | (string | number)[]) => {
+                      const numValue = typeof value === 'number' ? value : parseFloat(String(value));
+                      return [formatCurrency(numValue, currency), ''];
+                    }}
                     labelStyle={{ color: '#000' }}
                   />
                   <Bar dataKey="budgeted" fill="#e5e7eb" name="Budgeted" />
