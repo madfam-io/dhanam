@@ -5,7 +5,7 @@ export class ApiError extends Error {
     public status: number,
     public code: string,
     message: string,
-    public details?: any
+    public details?: Record<string, unknown>
   ) {
     super(message);
     this.name = 'ApiError';
@@ -100,28 +100,30 @@ export class ApiClient {
     return data.data.tokens;
   }
 
-  async get<T>(path: string, params?: Record<string, any>): Promise<T> {
-    const queryString = params ? '?' + new URLSearchParams(params).toString() : '';
+  async get<T>(path: string, params?: Record<string, unknown>): Promise<T> {
+    const queryString = params
+      ? '?' + new URLSearchParams(params as Record<string, string>).toString()
+      : '';
     return this.request<T>(`${path}${queryString}`, {
       method: 'GET',
     });
   }
 
-  async post<T>(path: string, body?: any): Promise<T> {
+  async post<T>(path: string, body?: Record<string, unknown>): Promise<T> {
     return this.request<T>(path, {
       method: 'POST',
       body: body ? JSON.stringify(body) : undefined,
     });
   }
 
-  async patch<T>(path: string, body?: any): Promise<T> {
+  async patch<T>(path: string, body?: Record<string, unknown>): Promise<T> {
     return this.request<T>(path, {
       method: 'PATCH',
       body: body ? JSON.stringify(body) : undefined,
     });
   }
 
-  async put<T>(path: string, body?: any): Promise<T> {
+  async put<T>(path: string, body?: Record<string, unknown>): Promise<T> {
     return this.request<T>(path, {
       method: 'PUT',
       body: body ? JSON.stringify(body) : undefined,

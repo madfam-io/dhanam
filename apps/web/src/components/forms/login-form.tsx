@@ -28,7 +28,7 @@ export function LoginForm({ onSubmit, isLoading, showTotpField }: LoginFormProps
     handleSubmit,
     formState: { errors },
   } = useForm<LoginDto>({
-    resolver: zodResolver(loginSchema as any),
+    resolver: zodResolver(loginSchema),
   });
 
   return (

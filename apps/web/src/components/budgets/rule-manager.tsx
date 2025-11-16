@@ -22,7 +22,10 @@ interface RuleManagerProps {
 
 export function RuleManager({ open, onOpenChange, spaceId }: RuleManagerProps) {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [testResult, setTestResult] = useState<any>(null);
+  const [testResult, setTestResult] = useState<{
+    matchCount: number;
+    sampleMatches?: Array<{ id: string; description: string; amount: number }>;
+  } | null>(null);
   const queryClient = useQueryClient();
 
   const { data: rules, isLoading } = useQuery({
@@ -334,12 +337,14 @@ export function RuleManager({ open, onOpenChange, spaceId }: RuleManagerProps) {
                     {testResult.sampleMatches?.length > 0 && (
                       <div className="mt-2 space-y-1">
                         <p className="text-xs font-medium">Sample matches:</p>
-                        {testResult.sampleMatches.slice(0, 3).map((match: any) => (
-                          <p key={match.id} className="text-xs text-muted-foreground">
-                            • {match.description} ({match.amount < 0 ? '-' : ''}$
-                            {Math.abs(match.amount)})
-                          </p>
-                        ))}
+                        {testResult.sampleMatches
+                          .slice(0, 3)
+                          .map((match: { id: string; description: string; amount: number }) => (
+                            <p key={match.id} className="text-xs text-muted-foreground">
+                              • {match.description} ({match.amount < 0 ? '-' : ''}$
+                              {Math.abs(match.amount)})
+                            </p>
+                          ))}
                       </div>
                     )}
                   </AlertDescription>

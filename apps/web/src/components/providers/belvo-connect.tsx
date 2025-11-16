@@ -76,13 +76,17 @@ export function BelvoConnect({ open, onOpenChange, spaceId, onSuccess }: BelvoCo
       setUsername('');
       setPassword('');
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      const errorCode =
+        error && typeof error === 'object' && 'code' in error && typeof error.code === 'string'
+          ? error.code
+          : '';
       const message =
-        error.code === 'INVALID_CREDENTIALS'
+        errorCode === 'INVALID_CREDENTIALS'
           ? 'Invalid username or password'
-          : error.code === 'INSTITUTION_ERROR'
+          : errorCode === 'INSTITUTION_ERROR'
             ? 'Bank is temporarily unavailable'
-            : error.code === 'MFA_REQUIRED'
+            : errorCode === 'MFA_REQUIRED'
               ? 'Multi-factor authentication required (not yet supported)'
               : 'Failed to connect bank account';
       toast.error(message);

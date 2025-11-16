@@ -10,11 +10,16 @@ import { Loader2, Shield, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { authApi } from '~/lib/api/auth';
 
+interface AuthTokens {
+  accessToken: string;
+  refreshToken: string;
+}
+
 interface TotpVerifyProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess: (tokens: any) => void;
-  tempTokens: any;
+  onSuccess: (tokens: AuthTokens) => void;
+  tempTokens: AuthTokens;
 }
 
 export function TotpVerify({ open, onOpenChange, onSuccess, tempTokens }: TotpVerifyProps) {
@@ -30,9 +35,9 @@ export function TotpVerify({ open, onOpenChange, onSuccess, tempTokens }: TotpVe
       setTotpCode('');
       setUseBackupCode(false);
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       const message =
-        error.code === 'INVALID_TOTP'
+        (error as { code?: string })?.code === 'INVALID_TOTP'
           ? useBackupCode
             ? 'Invalid backup code'
             : 'Invalid verification code'

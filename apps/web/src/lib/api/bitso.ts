@@ -10,7 +10,7 @@ interface ConnectBitsoRequest {
 interface ConnectBitsoResponse {
   message: string;
   accountsCount: number;
-  accounts: any[];
+  accounts: Array<Record<string, unknown>>;
 }
 
 interface PortfolioSummary {

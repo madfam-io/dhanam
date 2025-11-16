@@ -118,7 +118,11 @@ interface PlaidConnectProps {
 
 export function PlaidConnect({ open, onOpenChange, spaceId, onSuccess }: PlaidConnectProps) {
   const [linkToken, setLinkToken] = useState<string | null>(null);
-  const [plaidHandler, setPlaidHandler] = useState<any>(null);
+  const [plaidHandler, setPlaidHandler] = useState<{
+    open: () => void;
+    exit: () => void;
+    destroy: () => void;
+  } | null>(null);
   const [isScriptLoaded, setIsScriptLoaded] = useState(false);
 
   // Load Plaid Link script

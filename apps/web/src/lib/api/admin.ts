@@ -62,7 +62,7 @@ export interface AuditLog {
   action: string;
   resource: string;
   resourceId?: string;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
   ipAddress?: string;
   userAgent?: string;
   createdAt: string;
@@ -104,7 +104,7 @@ export interface FeatureFlag {
   enabled: boolean;
   rolloutPercentage?: number;
   targetedUsers?: string[];
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
 }

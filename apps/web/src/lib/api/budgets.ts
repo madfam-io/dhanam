@@ -24,8 +24,8 @@ export const budgetsApi = {
     return apiClient.get<Budget>(`/spaces/${spaceId}/budgets/${budgetId}`);
   },
 
-  getBudgetSummary: async (spaceId: string, budgetId: string): Promise<any> => {
-    return apiClient.get<any>(`/spaces/${spaceId}/budgets/${budgetId}/summary`);
+  getBudgetSummary: async (spaceId: string, budgetId: string): Promise<Record<string, unknown>> => {
+    return apiClient.get<Record<string, unknown>>(`/spaces/${spaceId}/budgets/${budgetId}/summary`);
   },
 
   createBudget: async (spaceId: string, dto: CreateBudgetDto): Promise<Budget> => {
@@ -44,7 +44,12 @@ export const budgetsApi = {
     await apiClient.delete(`/spaces/${spaceId}/budgets/${budgetId}`);
   },
 
-  getBudgetAnalytics: async (spaceId: string, budgetId: string): Promise<any> => {
-    return apiClient.get<any>(`/spaces/${spaceId}/budgets/${budgetId}/analytics`);
+  getBudgetAnalytics: async (
+    spaceId: string,
+    budgetId: string
+  ): Promise<Record<string, unknown>> => {
+    return apiClient.get<Record<string, unknown>>(
+      `/spaces/${spaceId}/budgets/${budgetId}/analytics`
+    );
   },
 };

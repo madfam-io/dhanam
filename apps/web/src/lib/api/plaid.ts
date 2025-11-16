@@ -14,7 +14,7 @@ interface PlaidLinkRequest {
 interface PlaidLinkResponse {
   message: string;
   accountsCount: number;
-  accounts: any[];
+  accounts: Array<Record<string, unknown>>;
 }
 
 export const plaidApi = {

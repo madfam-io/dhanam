@@ -31,8 +31,13 @@ export const categoriesApi = {
     return apiClient.get<Category>(`/spaces/${spaceId}/categories/${categoryId}`);
   },
 
-  getCategorySpending: async (spaceId: string, categoryId: string): Promise<any> => {
-    return apiClient.get<any>(`/spaces/${spaceId}/categories/${categoryId}/spending`);
+  getCategorySpending: async (
+    spaceId: string,
+    categoryId: string
+  ): Promise<Record<string, unknown>> => {
+    return apiClient.get<Record<string, unknown>>(
+      `/spaces/${spaceId}/categories/${categoryId}/spending`
+    );
   },
 
   createCategory: async (spaceId: string, dto: CreateCategoryDto): Promise<Category> => {

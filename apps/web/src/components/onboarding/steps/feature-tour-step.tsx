@@ -167,12 +167,8 @@ export function FeatureTourStep() {
               <>
                 <div className="text-center mb-6">
                   <div className="text-6xl mb-4">{feature.image}</div>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                    {feature.title}
-                  </h2>
-                  <p className="text-gray-600 max-w-2xl mx-auto">
-                    {feature.description}
-                  </p>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2">{feature.title}</h2>
+                  <p className="text-gray-600 max-w-2xl mx-auto">{feature.description}</p>
                 </div>
 
                 <div className="bg-gray-50 rounded-lg p-6">

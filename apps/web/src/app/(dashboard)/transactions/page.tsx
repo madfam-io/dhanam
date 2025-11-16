@@ -38,19 +38,27 @@ export default function TransactionsPage() {
 
   const { data: transactionsData, isLoading: isLoadingTransactions } = useQuery({
     queryKey: ['transactions', currentSpace?.id],
-    queryFn: () => transactionsApi.getTransactions(currentSpace!.id, {}),
+    queryFn: () => {
+      if (!currentSpace) throw new Error('No current space');
+      return transactionsApi.getTransactions(currentSpace.id, {});
+    },
     enabled: !!currentSpace,
   });
 
   const { data: accounts } = useQuery({
     queryKey: ['accounts', currentSpace?.id],
-    queryFn: () => accountsApi.getAccounts(currentSpace!.id),
+    queryFn: () => {
+      if (!currentSpace) throw new Error('No current space');
+      return accountsApi.getAccounts(currentSpace.id);
+    },
     enabled: !!currentSpace,
   });
 
   const createMutation = useMutation({
-    mutationFn: (data: Parameters<typeof transactionsApi.createTransaction>[1]) =>
-      transactionsApi.createTransaction(currentSpace!.id, data),
+    mutationFn: (data: Parameters<typeof transactionsApi.createTransaction>[1]) => {
+      if (!currentSpace) throw new Error('No current space');
+      return transactionsApi.createTransaction(currentSpace.id, data);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions', currentSpace?.id] });
       queryClient.invalidateQueries({ queryKey: ['accounts', currentSpace?.id] });
@@ -69,7 +77,10 @@ export default function TransactionsPage() {
     }: {
       id: string;
       data: Parameters<typeof transactionsApi.updateTransaction>[2];
-    }) => transactionsApi.updateTransaction(currentSpace!.id, id, data),
+    }) => {
+      if (!currentSpace) throw new Error('No current space');
+      return transactionsApi.updateTransaction(currentSpace.id, id, data);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions', currentSpace?.id] });
       queryClient.invalidateQueries({ queryKey: ['accounts', currentSpace?.id] });
@@ -82,8 +93,10 @@ export default function TransactionsPage() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (transactionId: string) =>
-      transactionsApi.deleteTransaction(currentSpace!.id, transactionId),
+    mutationFn: (transactionId: string) => {
+      if (!currentSpace) throw new Error('No current space');
+      return transactionsApi.deleteTransaction(currentSpace.id, transactionId);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions', currentSpace?.id] });
       queryClient.invalidateQueries({ queryKey: ['accounts', currentSpace?.id] });
