@@ -260,7 +260,7 @@ export class PreferencesService {
       sustainabilityAlerts: preferences.sustainabilityAlerts,
       impactReporting: preferences.impactReporting,
       autoBackup: preferences.autoBackup,
-      backupFrequency: preferences.backupFrequency,
+      backupFrequency: preferences.backupFrequency ?? null,
       exportFormat: preferences.exportFormat,
       createdAt: preferences.createdAt.toISOString(),
       updatedAt: preferences.updatedAt.toISOString(),

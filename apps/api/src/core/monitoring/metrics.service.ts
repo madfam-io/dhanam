@@ -86,7 +86,7 @@ export class MetricsService {
       totalAccounts,
       totalTransactions,
       connectionsByProvider: connectionsByProvider.reduce(
-        (acc, item) => {
+        (acc: Record<string, number>, item: any) => {
           acc[item.provider] = item._count._all;
           return acc;
         },

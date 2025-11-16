@@ -205,7 +205,7 @@ export class AnalyticsService {
     return transactions
       .filter((t) => t.categoryId)
       .map((t) => {
-        const category = categoryMap.get(t.categoryId!);
+        const category = categoryMap.get(t.categoryId!) as typeof categories[0] | undefined;
         return {
           categoryId: t.categoryId!,
           categoryName: category?.name || 'Unknown',
@@ -306,11 +306,14 @@ export class AnalyticsService {
       {} as Record<string, { value: number; count: number }>
     );
 
-    return Object.entries(typeGroups).map(([type, data]) => ({
-      assetType: type,
-      value: data.value,
-      percentage: totalValue > 0 ? (data.value / totalValue) * 100 : 0,
-      accountCount: data.count,
-    }));
+    return Object.entries(typeGroups).map(([type, data]) => {
+      const typedData = data as { value: number; count: number };
+      return {
+        assetType: type,
+        value: typedData.value,
+        percentage: totalValue > 0 ? (typedData.value / totalValue) * 100 : 0,
+        accountCount: typedData.count,
+      };
+    });
   }
 }

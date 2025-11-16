@@ -42,8 +42,9 @@ export class KmsService implements OnModuleInit {
           `✅ KMS Service initialized with region: ${this.region}, key: ${this.keyId}`,
         );
       } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
         throw new Error(
-          `Failed to initialize AWS KMS: ${error.message}. ` +
+          `Failed to initialize AWS KMS: ${errorMessage}. ` +
             'Ensure @aws-sdk/client-kms is installed.',
         );
       }
@@ -76,8 +77,9 @@ export class KmsService implements OnModuleInit {
       const response = await this.kmsClient.send(command);
       return Buffer.from(response.CiphertextBlob).toString('base64');
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
       throw new Error(
-        `KMS encryption failed: ${error.message}. ` +
+        `KMS encryption failed: ${errorMessage}. ` +
           'Ensure IAM role has kms:Encrypt permission.',
       );
     }
@@ -104,8 +106,9 @@ export class KmsService implements OnModuleInit {
       const response = await this.kmsClient.send(command);
       return Buffer.from(response.Plaintext).toString('utf8');
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
       throw new Error(
-        `KMS decryption failed: ${error.message}. ` +
+        `KMS decryption failed: ${errorMessage}. ` +
           'Ensure IAM role has kms:Decrypt permission and key is correct.',
       );
     }

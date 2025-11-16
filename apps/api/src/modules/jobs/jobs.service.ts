@@ -100,7 +100,7 @@ export class JobsService {
         distinct: ['spaceId'],
       });
 
-      const uniqueUserIds = new Set(
+      const uniqueUserIds = new Set<string>(
         accounts
           .map((account) => account.space.userSpaces[0]?.userId)
           .filter((userId): userId is string => !!userId)
