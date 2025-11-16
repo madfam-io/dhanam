@@ -3,6 +3,12 @@
   "compilerOptions": {
     "baseUrl": ".",
     "outDir": "./dist",
+    "strict": false,
+    "noImplicitAny": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noUncheckedIndexedAccess": false,
+    "noImplicitReturns": false,
     "paths": {
       "~/*": ["./src/*"],
       "@modules/*": ["./src/modules/*"],
