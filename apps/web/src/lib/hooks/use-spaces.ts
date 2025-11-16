@@ -1,11 +1,11 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, UseQueryResult, UseMutationResult } from '@tanstack/react-query';
 import { apiClient } from '../api/client';
 import { Space, CreateSpaceDto, UpdateSpaceDto } from '@dhanam/shared';
 import { useSpaceStore } from '@/stores/space';
 
 const SPACES_KEY = ['spaces'];
 
-export function useSpaces() {
+export function useSpaces(): UseQueryResult<Space[], Error> {
   const { setCurrentSpace } = useSpaceStore();
 
   return useQuery({
@@ -20,7 +20,7 @@ export function useSpaces() {
   });
 }
 
-export function useSpace(spaceId: string) {
+export function useSpace(spaceId: string): UseQueryResult<Space, Error> {
   return useQuery({
     queryKey: [...SPACES_KEY, spaceId],
     queryFn: async () => {
@@ -30,7 +30,7 @@ export function useSpace(spaceId: string) {
   });
 }
 
-export function useCreateSpace() {
+export function useCreateSpace(): UseMutationResult<Space, Error, CreateSpaceDto> {
   const queryClient = useQueryClient();
   const { setCurrentSpace } = useSpaceStore();
 
@@ -45,7 +45,7 @@ export function useCreateSpace() {
   });
 }
 
-export function useUpdateSpace(spaceId: string) {
+export function useUpdateSpace(spaceId: string): UseMutationResult<Space, Error, UpdateSpaceDto> {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -59,7 +59,7 @@ export function useUpdateSpace(spaceId: string) {
   });
 }
 
-export function useDeleteSpace() {
+export function useDeleteSpace(): UseMutationResult<void, Error, string> {
   const queryClient = useQueryClient();
   const { currentSpace, setCurrentSpace } = useSpaceStore();
 
