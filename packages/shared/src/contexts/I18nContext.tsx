@@ -4,7 +4,8 @@
  */
 
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
-import { translations, type Locale, type Translations } from '../i18n';
+import { translations, type Translations } from '../i18n';
+import type { Locale } from '../types';
 
 export interface I18nContextValue {
   locale: Locale;

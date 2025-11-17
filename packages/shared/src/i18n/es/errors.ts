@@ -73,7 +73,6 @@ export const errors = {
   // Not Found
   notFound: 'No encontrado',
   userNotFound: 'Usuario no encontrado',
-  accountNotFound: 'Cuenta no encontrada',
   transactionNotFound: 'Transacción no encontrada',
   budgetNotFound: 'Presupuesto no encontrado',
   categoryNotFound: 'Categoría no encontrada',

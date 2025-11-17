@@ -28,7 +28,7 @@ export const translations = {
 } as const;
 
 // Type exports
-export type Locale = 'en' | 'es';
+// Note: Locale type is exported from ./types/common.types.ts
 export type TranslationNamespace = keyof typeof translations.es;
 export type Translations = typeof translations;
 

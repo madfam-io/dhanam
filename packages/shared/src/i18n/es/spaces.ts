@@ -42,7 +42,7 @@ export const spaces = {
   // Roles
   owner: 'Propietario',
   admin: 'Administrador',
-  member: 'Miembro',
+  memberRole: 'Miembro',
   viewer: 'Visualizador',
   role: 'Rol',
   changeRole: 'Cambiar rol',

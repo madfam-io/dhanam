@@ -83,7 +83,6 @@ export const accounts = {
   // Sync
   syncInProgress: 'Sincronización en progreso',
   syncCompleted: 'Sincronización completada',
-  syncFailed: 'Sincronización fallida',
   lastSyncedAt: 'Última sincronización: {{time}}',
   neverSynced: 'Nunca sincronizado',
   autoSync: 'Sincronización automática',

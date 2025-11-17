@@ -4,7 +4,8 @@
  * Supports MXN, USD, EUR with proper locale formatting
  */
 
-export type Locale = 'en' | 'es';
+import type { Locale } from '../types';
+
 export type Currency = 'MXN' | 'USD' | 'EUR' | 'BTC' | 'ETH';
 
 /**
