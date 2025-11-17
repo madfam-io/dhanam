@@ -2,6 +2,9 @@
 
 > **A comprehensive budget and wealth tracking application with ESG crypto insights, targeting LATAM-first users with multilingual support.**
 
+[![Test Coverage](https://github.com/madfam-io/dhanam/actions/workflows/test-coverage.yml/badge.svg)](https://github.com/madfam-io/dhanam/actions/workflows/test-coverage.yml)
+[![Lint](https://github.com/madfam-io/dhanam/actions/workflows/lint.yml/badge.svg)](https://github.com/madfam-io/dhanam/actions/workflows/lint.yml)
+[![codecov](https://codecov.io/gh/madfam-io/dhanam/branch/main/graph/badge.svg)](https://codecov.io/gh/madfam-io/dhanam)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue.svg)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-18.2-blue.svg)](https://reactjs.org/)
@@ -193,16 +196,33 @@ http://localhost:4000/docs
 
 ## Testing
 
+We maintain 80%+ test coverage across the codebase with comprehensive unit, integration, and E2E tests.
+
 ```bash
-# Unit tests
+# Run all tests
 pnpm test
 
-# E2E tests
+# Run tests with coverage report
+pnpm test:cov
+
+# Run E2E tests
 pnpm test:e2e
 
-# Test coverage
-pnpm test:cov
+# Run tests in watch mode
+pnpm test:watch
+
+# Simulate CI environment locally
+./scripts/test-ci.sh
 ```
+
+### Test Infrastructure
+
+- **Test Helpers**: Database management, authentication utilities, data factories
+- **Coverage Target**: 80%+ across branches, functions, lines, and statements
+- **CI/CD**: Automated testing on every push and PR via GitHub Actions
+- **Coverage Reporting**: Integrated with Codecov for trend tracking
+
+For detailed testing guide, see [TEST_COVERAGE_GUIDE.md](apps/api/TEST_COVERAGE_GUIDE.md)
 
 ## Deployment
 
