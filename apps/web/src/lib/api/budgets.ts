@@ -34,7 +34,7 @@ export interface CategorySummary {
   transactionCount: number;
 }
 
-export interface BudgetSummary extends Budget {
+export interface BudgetSummary extends Omit<Budget, 'categories'> {
   categories: CategorySummary[];
   summary: {
     totalBudgeted: number;
