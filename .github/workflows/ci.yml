@@ -90,6 +90,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Generate Prisma Client
+        run: pnpm db:generate
+        env:
+          DATABASE_URL: postgresql://dummy:dummy@localhost:5432/dummy
+
       - name: Build packages
         run: pnpm build:packages
 
@@ -157,9 +162,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build packages
-        run: pnpm build:packages
-
       - name: Setup test environment
         run: |
           cp apps/api/.env.example apps/api/.env
@@ -169,9 +171,16 @@ jobs:
           echo "JWT_REFRESH_SECRET=test_jwt_refresh_secret_for_ci_testing_only" >> apps/api/.env
           echo "ENCRYPTION_KEY=test_encryption_key_32_characters" >> apps/api/.env
 
+      - name: Generate Prisma Client
+        working-directory: apps/api
+        run: pnpm prisma generate
+
       - name: Run database migrations
         working-directory: apps/api
         run: pnpm prisma migrate deploy
+
+      - name: Build packages
+        run: pnpm build:packages
 
       - name: Run tests
         run: pnpm test
@@ -218,6 +227,11 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma Client
+        run: pnpm db:generate
+        env:
+          DATABASE_URL: postgresql://dummy:dummy@localhost:5432/dummy
 
       - name: Build all apps and packages
         run: pnpm build
