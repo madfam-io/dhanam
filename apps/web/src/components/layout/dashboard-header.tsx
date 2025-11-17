@@ -43,7 +43,7 @@ export function DashboardHeader() {
               <DropdownMenuContent className="w-[200px]">
                 <DropdownMenuLabel>Your Spaces</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                {spaces.map((space: { id: string; name: string; type: string }) => (
+                {spaces.map((space) => (
                   <DropdownMenuItem key={space.id} onClick={() => setCurrentSpace(space)}>
                     <div className="flex items-center justify-between w-full">
                       <span>{space.name}</span>
