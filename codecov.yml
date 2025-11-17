@@ -1,0 +1,102 @@
+# Codecov Configuration
+# https://docs.codecov.com/docs/codecov-yaml
+
+# Validation: https://docs.codecov.com/docs/codecov-yaml#validate-your-repository-yaml
+# Command: curl -X POST --data-binary @codecov.yml https://codecov.io/validate
+
+coverage:
+  precision: 2
+  round: down
+  range: "70...100"
+
+  status:
+    project:
+      default:
+        target: 80%
+        threshold: 1%
+        base: auto
+        if_ci_failed: error
+
+    patch:
+      default:
+        target: 80%
+        threshold: 5%
+        base: auto
+
+    changes:
+      default:
+        target: 80%
+        threshold: 1%
+
+# Comments on pull requests
+comment:
+  layout: "header, diff, flags, components, footer"
+  behavior: default
+  require_changes: false
+  require_base: no
+  require_head: yes
+
+# Component coverage (per app/package)
+component_management:
+  default_rules:
+    statuses:
+      - type: project
+        target: 80%
+  individual_components:
+    - component_id: api
+      name: API
+      paths:
+        - apps/api/src/**
+    - component_id: web
+      name: Web
+      paths:
+        - apps/web/src/**
+    - component_id: shared
+      name: Shared
+      paths:
+        - packages/shared/src/**
+    - component_id: ui
+      name: UI
+      paths:
+        - packages/ui/src/**
+
+# Ignore paths
+ignore:
+  - "**/*.spec.ts"
+  - "**/*.test.ts"
+  - "**/__tests__/**"
+  - "**/test/**"
+  - "**/*.d.ts"
+  - "**/*.config.ts"
+  - "**/*.config.js"
+  - "**/dist/**"
+  - "**/coverage/**"
+  - "**/node_modules/**"
+  - "**/.next/**"
+  - "**/prisma/migrations/**"
+  - "**/prisma/seed.ts"
+
+# Flags for different test types
+flags:
+  api:
+    paths:
+      - apps/api/src
+    carryforward: true
+
+  web:
+    paths:
+      - apps/web/src
+    carryforward: true
+
+  shared:
+    paths:
+      - packages/shared/src
+    carryforward: true
+
+# GitHub status checks
+github_checks:
+  annotations: true
+
+# Slack/GitHub notifications (optional)
+# slack:
+#   url: "secret:SLACK_WEBHOOK_URL"
