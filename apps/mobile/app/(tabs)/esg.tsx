@@ -55,7 +55,10 @@ export default function ESGScreen() {
     error,
   } = useQuery<ESGData>({
     queryKey: ['esg', currentSpace?.id],
-    queryFn: () => apiClient.get(`/esg?spaceId=${currentSpace!.id}`).then((res) => res.data),
+    queryFn: () => {
+      if (!currentSpace) throw new Error('No space selected');
+      return apiClient.get(`/esg?spaceId=${currentSpace.id}`).then((res) => res.data);
+    },
     enabled: !!currentSpace,
   });
 

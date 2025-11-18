@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import React from 'react';
+import { ComponentProps } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Text, Button } from 'react-native-paper';
 
@@ -8,7 +8,7 @@ interface ErrorStateProps {
   message: string;
   action?: () => void;
   actionLabel?: string;
-  icon?: string;
+  icon?: ComponentProps<typeof Ionicons>['name'];
 }
 
 export function ErrorState({
@@ -20,7 +20,7 @@ export function ErrorState({
 }: ErrorStateProps) {
   return (
     <View style={styles.container}>
-      <Ionicons name={icon as any} size={80} color="#E0E0E0" style={styles.icon} />
+      <Ionicons name={icon} size={80} color="#E0E0E0" style={styles.icon} />
       <Text variant="headlineSmall" style={styles.title}>
         {title}
       </Text>

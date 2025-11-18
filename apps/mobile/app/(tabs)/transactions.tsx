@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
-import React, { useState } from 'react';
+import { ComponentProps, useState } from 'react';
 import { View, ScrollView, RefreshControl, StyleSheet } from 'react-native';
 import { Text, Card, Chip, FAB, SegmentedButtons, Button, Searchbar } from 'react-native-paper';
 
@@ -38,8 +38,9 @@ export default function TransactionsScreen() {
   } = useQuery<Transaction[]>({
     queryKey: ['transactions', currentSpace?.id, filterType, searchQuery],
     queryFn: () => {
+      if (!currentSpace) throw new Error('No space selected');
       const params = new URLSearchParams({
-        spaceId: currentSpace!.id,
+        spaceId: currentSpace.id,
         ...(filterType !== 'all' && { type: filterType }),
         ...(searchQuery && { search: searchQuery }),
       });
@@ -48,7 +49,10 @@ export default function TransactionsScreen() {
     enabled: !!currentSpace,
   });
 
-  const getTransactionIcon = (type: string, category: string) => {
+  const getTransactionIcon = (
+    type: string,
+    category: string
+  ): ComponentProps<typeof Ionicons>['name'] => {
     if (type === 'income') return 'arrow-down-circle';
     if (type === 'transfer') return 'swap-horizontal';
 
@@ -197,7 +201,7 @@ export default function TransactionsScreen() {
                         ]}
                       >
                         <Ionicons
-                          name={getTransactionIcon(transaction.type, transaction.category) as any}
+                          name={getTransactionIcon(transaction.type, transaction.category)}
                           size={20}
                           color={getTransactionColor(transaction.type)}
                         />

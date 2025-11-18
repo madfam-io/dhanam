@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
-import React from 'react';
+import { ComponentProps } from 'react';
 import { View, ScrollView, RefreshControl, StyleSheet } from 'react-native';
 import { Text, Card, ProgressBar, FAB, Button, Chip } from 'react-native-paper';
 
@@ -35,7 +35,10 @@ export default function BudgetsScreen() {
     error,
   } = useQuery<Budget[]>({
     queryKey: ['budgets', currentSpace?.id],
-    queryFn: () => apiClient.get(`/budgets?spaceId=${currentSpace!.id}`).then((res) => res.data),
+    queryFn: () => {
+      if (!currentSpace) throw new Error('No space selected');
+      return apiClient.get(`/budgets?spaceId=${currentSpace.id}`).then((res) => res.data);
+    },
     enabled: !!currentSpace,
   });
 
@@ -60,7 +63,7 @@ export default function BudgetsScreen() {
     }
   };
 
-  const getStatusIcon = (status: string) => {
+  const getStatusIcon = (status: string): ComponentProps<typeof Ionicons>['name'] => {
     switch (status) {
       case 'active':
         return 'play-circle';
@@ -73,7 +76,7 @@ export default function BudgetsScreen() {
     }
   };
 
-  const getCategoryIcon = (category: string) => {
+  const getCategoryIcon = (category: string): ComponentProps<typeof Ionicons>['name'] => {
     switch (category.toLowerCase()) {
       case 'food':
       case 'groceries':
@@ -226,7 +229,7 @@ export default function BudgetsScreen() {
                           </Chip>
                           <View style={styles.statusContainer}>
                             <Ionicons
-                              name={getStatusIcon(budget.status) as any}
+                              name={getStatusIcon(budget.status)}
                               size={16}
                               color={getStatusColor(budget.status)}
                             />
@@ -277,11 +280,7 @@ export default function BudgetsScreen() {
                       <View style={styles.categoriesList}>
                         {budget.categories.slice(0, 3).map((category) => (
                           <View key={category} style={styles.categoryItem}>
-                            <Ionicons
-                              name={getCategoryIcon(category) as any}
-                              size={16}
-                              color="#757575"
-                            />
+                            <Ionicons name={getCategoryIcon(category)} size={16} color="#757575" />
                             <Text variant="bodySmall" style={styles.categoryText}>
                               {category}
                             </Text>

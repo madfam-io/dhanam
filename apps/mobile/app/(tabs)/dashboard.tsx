@@ -28,7 +28,10 @@ export default function DashboardScreen() {
     refetch: refetchAccounts,
   } = useQuery({
     queryKey: ['accounts', currentSpace?.id],
-    queryFn: () => apiClient.get(`/accounts?spaceId=${currentSpace!.id}`).then((res) => res.data),
+    queryFn: () => {
+      if (!currentSpace) throw new Error('No space selected');
+      return apiClient.get(`/accounts?spaceId=${currentSpace.id}`).then((res) => res.data);
+    },
     enabled: !!currentSpace,
   });
 
@@ -38,15 +41,23 @@ export default function DashboardScreen() {
     refetch: refetchTransactions,
   } = useQuery({
     queryKey: ['transactions', currentSpace?.id],
-    queryFn: () =>
-      apiClient.get(`/transactions?spaceId=${currentSpace!.id}&limit=10`).then((res) => res.data),
+    queryFn: () => {
+      if (!currentSpace) throw new Error('No space selected');
+      return apiClient
+        .get(`/transactions?spaceId=${currentSpace.id}&limit=10`)
+        .then((res) => res.data);
+    },
     enabled: !!currentSpace,
   });
 
   const { data: analytics, isLoading: analyticsLoading } = useQuery({
     queryKey: ['analytics', currentSpace?.id],
-    queryFn: () =>
-      apiClient.get(`/analytics/dashboard?spaceId=${currentSpace!.id}`).then((res) => res.data),
+    queryFn: () => {
+      if (!currentSpace) throw new Error('No space selected');
+      return apiClient
+        .get(`/analytics/dashboard?spaceId=${currentSpace.id}`)
+        .then((res) => res.data);
+    },
     enabled: !!currentSpace,
   });
 
