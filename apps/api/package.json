@@ -65,7 +65,7 @@
     "@types/uuid": "^10.0.0",
     "argon2": "^0.31.2",
     "axios": "^1.11.0",
-    "bcryptjs": "^3.0.2",
+    "bcryptjs": "^3.0.3",
     "belvo": "^0.28.0",
     "bitcoinjs-lib": "^6.1.5",
     "bull": "^4.11.5",
