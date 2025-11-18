@@ -11,7 +11,7 @@ import { useContext } from 'react';
 import { I18nContext } from '../contexts/I18nContext';
 import type { TranslationNamespace } from '../i18n';
 
-export function useTranslation(namespace?: TranslationNamespace) {
+export function useTranslation(_namespace?: TranslationNamespace) {
   const context = useContext(I18nContext);
 
   if (!context) {
@@ -67,7 +67,8 @@ export function useTranslation(namespace?: TranslationNamespace) {
    * Get all translations for a namespace
    */
   const getNamespace = (ns: TranslationNamespace) => {
-    return translations[locale][ns];
+    // Type assertion needed because en locale doesn't have all namespaces yet
+    return (translations[locale] as any)[ns];
   };
 
   return {
