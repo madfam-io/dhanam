@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 import { apiClient } from '@/services/api';
 
@@ -20,13 +20,7 @@ export function useSpaces() {
   const [currentSpace, setCurrentSpace] = useState<Space | null>(null);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (isAuthenticated && user) {
-      loadSpaces();
-    }
-  }, [isAuthenticated, user]);
-
-  const loadSpaces = async () => {
+  const loadSpaces = useCallback(async () => {
     try {
       setLoading(true);
       const response = await apiClient.get('/spaces');
@@ -41,7 +35,13 @@ export function useSpaces() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentSpace]);
+
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      loadSpaces();
+    }
+  }, [isAuthenticated, user, loadSpaces]);
 
   const createSpace = async (data: Omit<Space, 'id' | 'createdAt' | 'updatedAt'>) => {
     try {

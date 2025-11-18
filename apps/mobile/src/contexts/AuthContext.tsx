@@ -2,7 +2,7 @@ import { User } from '@dhanam/shared';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useCallback } from 'react';
 
 import { apiClient } from '@/services/api';
 
@@ -87,7 +87,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     loadStoredAuth();
-  }, []);
+  }, [loadStoredAuth]);
 
   useEffect(() => {
     if (state.accessToken) {
@@ -97,7 +97,52 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [state.accessToken]);
 
-  const loadStoredAuth = async () => {
+  const refreshAuth = useCallback(async () => {
+    try {
+      if (!state.refreshToken || !state.user) {
+        throw new Error('No refresh token or user available');
+      }
+
+      const response = await apiClient.post('/auth/refresh', {
+        refreshToken: state.refreshToken,
+      });
+
+      const { accessToken, refreshToken: newRefreshToken } = response.data;
+
+      await storeAuth(state.user, accessToken, newRefreshToken);
+
+      dispatch({
+        type: 'SET_AUTH',
+        payload: {
+          user: state.user,
+          accessToken,
+          refreshToken: newRefreshToken,
+        },
+      });
+    } catch (error) {
+      console.error('Token refresh failed:', error);
+      await clearStoredAuth();
+      dispatch({ type: 'CLEAR_AUTH' });
+      router.replace('/(auth)/welcome');
+    }
+  }, [state.refreshToken, state.user]);
+
+  const verifyToken = useCallback(
+    async (token: string) => {
+      try {
+        const response = await apiClient.get('/auth/me', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        dispatch({ type: 'SET_USER', payload: response.data });
+      } catch {
+        // Token is invalid, try to refresh
+        await refreshAuth();
+      }
+    },
+    [refreshAuth]
+  );
+
+  const loadStoredAuth = useCallback(async () => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
 
@@ -127,19 +172,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await clearStoredAuth();
       dispatch({ type: 'CLEAR_AUTH' });
     }
-  };
-
-  const verifyToken = async (token: string) => {
-    try {
-      const response = await apiClient.get('/auth/me', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      dispatch({ type: 'SET_USER', payload: response.data });
-    } catch {
-      // Token is invalid, try to refresh
-      await refreshAuth();
-    }
-  };
+  }, [verifyToken]);
 
   const storeAuth = async (user: User, accessToken: string, refreshToken: string) => {
     await SecureStore.setItemAsync(TOKEN_KEY, JSON.stringify({ accessToken, refreshToken }));
@@ -164,7 +197,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         type: 'SET_AUTH',
         payload: { user, accessToken, refreshToken },
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       dispatch({ type: 'SET_LOADING', payload: false });
       throw error;
     }
@@ -188,7 +221,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         type: 'SET_AUTH',
         payload: { user, accessToken, refreshToken },
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       dispatch({ type: 'SET_LOADING', payload: false });
       throw error;
     }
@@ -207,34 +240,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await clearStoredAuth();
       dispatch({ type: 'CLEAR_AUTH' });
       router.replace('/(auth)/welcome');
-    }
-  };
-
-  const refreshAuth = async () => {
-    try {
-      if (!state.refreshToken) {
-        throw new Error('No refresh token available');
-      }
-
-      const response = await apiClient.post('/auth/refresh', {
-        refreshToken: state.refreshToken,
-      });
-
-      const { accessToken, refreshToken: newRefreshToken } = response.data;
-
-      await storeAuth(state.user!, accessToken, newRefreshToken);
-
-      dispatch({
-        type: 'SET_AUTH',
-        payload: {
-          user: state.user!,
-          accessToken,
-          refreshToken: newRefreshToken,
-        },
-      });
-    } catch (error) {
-      console.error('Token refresh failed:', error);
-      await logout();
     }
   };
 

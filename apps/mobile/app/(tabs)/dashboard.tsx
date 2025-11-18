@@ -28,7 +28,10 @@ export default function DashboardScreen() {
     refetch: refetchAccounts,
   } = useQuery({
     queryKey: ['accounts', currentSpace?.id],
-    queryFn: () => apiClient.get(`/accounts?spaceId=${currentSpace!.id}`).then((res) => res.data),
+    queryFn: () => {
+      if (!currentSpace) throw new Error('No space selected');
+      return apiClient.get(`/accounts?spaceId=${currentSpace.id}`).then((res) => res.data);
+    },
     enabled: !!currentSpace,
   });
 
@@ -38,15 +41,23 @@ export default function DashboardScreen() {
     refetch: refetchTransactions,
   } = useQuery({
     queryKey: ['transactions', currentSpace?.id],
-    queryFn: () =>
-      apiClient.get(`/transactions?spaceId=${currentSpace!.id}&limit=10`).then((res) => res.data),
+    queryFn: () => {
+      if (!currentSpace) throw new Error('No space selected');
+      return apiClient
+        .get(`/transactions?spaceId=${currentSpace.id}&limit=10`)
+        .then((res) => res.data);
+    },
     enabled: !!currentSpace,
   });
 
   const { data: analytics, isLoading: analyticsLoading } = useQuery({
     queryKey: ['analytics', currentSpace?.id],
-    queryFn: () =>
-      apiClient.get(`/analytics/dashboard?spaceId=${currentSpace!.id}`).then((res) => res.data),
+    queryFn: () => {
+      if (!currentSpace) throw new Error('No space selected');
+      return apiClient
+        .get(`/analytics/dashboard?spaceId=${currentSpace.id}`)
+        .then((res) => res.data);
+    },
     enabled: !!currentSpace,
   });
 
@@ -59,7 +70,7 @@ export default function DashboardScreen() {
 
   const netWorth = useMemo(() => {
     if (!accounts) return 0;
-    return accounts.reduce((sum: number, account: any) => sum + account.balance, 0);
+    return accounts.reduce((sum: number, account) => sum + (account.balance || 0), 0);
   }, [accounts]);
 
   const chartData = useMemo(() => {
@@ -70,12 +81,12 @@ export default function DashboardScreen() {
       };
     }
     return {
-      labels: analytics.balanceHistory.map((item: any) =>
+      labels: analytics.balanceHistory.map((item) =>
         new Date(item.date).toLocaleDateString('en', { month: 'short' })
       ),
       datasets: [
         {
-          data: analytics.balanceHistory.map((item: any) => item.balance),
+          data: analytics.balanceHistory.map((item) => item.balance),
           strokeWidth: 3,
         },
       ],
@@ -214,7 +225,7 @@ export default function DashboardScreen() {
                 View All
               </Button>
             </View>
-            {accounts.slice(0, 3).map((account: any) => (
+            {accounts.slice(0, 3).map((account) => (
               <AccountCard key={account.id} account={account} />
             ))}
           </View>
@@ -233,7 +244,7 @@ export default function DashboardScreen() {
             </View>
             <Card style={styles.transactionsCard}>
               <Card.Content>
-                {transactions.data.slice(0, 5).map((transaction: any) => (
+                {transactions.data.slice(0, 5).map((transaction) => (
                   <TransactionItem key={transaction.id} transaction={transaction} />
                 ))}
               </Card.Content>

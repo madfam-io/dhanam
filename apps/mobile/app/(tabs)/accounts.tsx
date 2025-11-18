@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
-import React from 'react';
+import { ComponentProps } from 'react';
 import { View, ScrollView, RefreshControl, StyleSheet } from 'react-native';
 import { Text, Card, FAB, Button } from 'react-native-paper';
 
@@ -31,11 +31,14 @@ export default function AccountsScreen() {
     error,
   } = useQuery<Account[]>({
     queryKey: ['accounts', currentSpace?.id],
-    queryFn: () => apiClient.get(`/accounts?spaceId=${currentSpace!.id}`).then((res) => res.data),
+    queryFn: () => {
+      if (!currentSpace) throw new Error('No space selected');
+      return apiClient.get(`/accounts?spaceId=${currentSpace.id}`).then((res) => res.data);
+    },
     enabled: !!currentSpace,
   });
 
-  const getAccountIcon = (type: string) => {
+  const getAccountIcon = (type: string): ComponentProps<typeof Ionicons>['name'] => {
     switch (type) {
       case 'checking':
       case 'savings':
@@ -117,11 +120,7 @@ export default function AccountsScreen() {
                   <View style={styles.accountHeader}>
                     <View style={styles.accountInfo}>
                       <View style={styles.accountIconContainer}>
-                        <Ionicons
-                          name={getAccountIcon(account.type) as any}
-                          size={24}
-                          color="#4CAF50"
-                        />
+                        <Ionicons name={getAccountIcon(account.type)} size={24} color="#4CAF50" />
                       </View>
                       <View style={styles.accountDetails}>
                         <Text variant="titleMedium" style={styles.accountName}>

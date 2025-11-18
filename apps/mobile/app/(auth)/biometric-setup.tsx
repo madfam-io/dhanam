@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useState, ComponentProps } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Text, Button, Card, Switch } from 'react-native-paper';
 
@@ -35,8 +35,8 @@ export default function BiometricSetupScreen() {
       } else {
         await enableBiometric();
       }
-    } catch (err: any) {
-      setError(err.message || 'Failed to update biometric settings');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to update biometric settings');
     } finally {
       setLoading(false);
     }
@@ -50,7 +50,7 @@ export default function BiometricSetupScreen() {
     router.replace('/(tabs)/dashboard');
   };
 
-  const getBiometricIcon = () => {
+  const getBiometricIcon = (): ComponentProps<typeof Ionicons>['name'] => {
     if (supportedTypes.includes(1)) return 'finger-print'; // FINGERPRINT
     if (supportedTypes.includes(2)) return 'face-recognition'; // FACIAL_RECOGNITION
     return 'shield-checkmark';
@@ -99,7 +99,7 @@ export default function BiometricSetupScreen() {
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.iconContainer}>
-            <Ionicons name={getBiometricIcon() as any} size={64} color="#4CAF50" />
+            <Ionicons name={getBiometricIcon()} size={64} color="#4CAF50" />
           </View>
           <Text variant="headlineMedium" style={styles.title}>
             Secure Your Account

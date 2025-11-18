@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import React from 'react';
+import { ComponentProps } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Card, Text } from 'react-native-paper';
 
@@ -18,7 +18,7 @@ interface AccountCardProps {
 }
 
 export function AccountCard({ account, onPress }: AccountCardProps) {
-  const getAccountIcon = (type: string) => {
+  const getAccountIcon = (type: string): ComponentProps<typeof Ionicons>['name'] => {
     switch (type.toLowerCase()) {
       case 'checking':
       case 'savings':
@@ -62,7 +62,7 @@ export function AccountCard({ account, onPress }: AccountCardProps) {
             ]}
           >
             <Ionicons
-              name={getAccountIcon(account.type) as any}
+              name={getAccountIcon(account.type)}
               size={24}
               color={getAccountColor(account.type)}
             />

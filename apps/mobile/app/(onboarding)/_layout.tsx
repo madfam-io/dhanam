@@ -25,7 +25,7 @@ export default function OnboardingLayout() {
       router.replace('/(tabs)/dashboard');
       return;
     }
-  }, [user, isAuthenticated, isLoading, segments]);
+  }, [user, isAuthenticated, isLoading, segments, router]);
 
   if (isLoading) {
     return (

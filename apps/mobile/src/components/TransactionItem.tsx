@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import React from 'react';
+import { ComponentProps } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { List, Text, Chip } from 'react-native-paper';
 
@@ -20,7 +20,10 @@ interface TransactionItemProps {
 }
 
 export function TransactionItem({ transaction, onPress }: TransactionItemProps) {
-  const getTransactionIcon = (type: string, category: string) => {
+  const getTransactionIcon = (
+    type: string,
+    category: string
+  ): ComponentProps<typeof Ionicons>['name'] => {
     if (type === 'income') return 'arrow-down-circle';
     if (type === 'transfer') return 'swap-horizontal';
 
@@ -93,7 +96,7 @@ export function TransactionItem({ transaction, onPress }: TransactionItemProps) 
           ]}
         >
           <Ionicons
-            name={getTransactionIcon(transaction.type, transaction.category) as any}
+            name={getTransactionIcon(transaction.type, transaction.category)}
             size={20}
             color={getTransactionColor(transaction.type)}
           />

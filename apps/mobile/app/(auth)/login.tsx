@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as LocalAuthentication from 'expo-local-authentication';
 import { router } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, ScrollView, Alert } from 'react-native';
 import { Text, TextInput, Button, Checkbox } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -24,7 +24,7 @@ export default function LoginScreen() {
   const [showTwoFactor, setShowTwoFactor] = useState(false);
   const [biometricAvailable, setBiometricAvailable] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     checkBiometricAvailability();
   }, []);
 
@@ -64,11 +64,12 @@ export default function LoginScreen() {
     try {
       await login(formData);
       router.replace('/(tabs)/dashboard');
-    } catch (error: any) {
-      if (error.message?.includes('2FA') || error.message?.includes('TOTP')) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      if (errorMessage?.includes('2FA') || errorMessage?.includes('TOTP')) {
         setShowTwoFactor(true);
       } else {
-        Alert.alert('Login Failed', error.message || 'Please check your credentials and try again');
+        Alert.alert('Login Failed', errorMessage || 'Please check your credentials and try again');
       }
     } finally {
       setLoading(false);

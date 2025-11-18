@@ -19,7 +19,7 @@ export default function OnboardingIndex() {
     // Navigate to current step or welcome
     const currentStep = status?.currentStep || 'welcome';
     router.replace(`/(onboarding)/${currentStep}`);
-  }, [status, isLoading]);
+  }, [status, isLoading, router]);
 
   return (
     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>

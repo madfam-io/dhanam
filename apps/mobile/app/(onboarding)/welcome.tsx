@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useState, ComponentProps } from 'react';
 import {
   View,
   Text,
@@ -17,7 +17,12 @@ import { useOnboarding } from '../../src/contexts/OnboardingContext';
 
 const { width } = Dimensions.get('window');
 
-const features = [
+const features: Array<{
+  icon: ComponentProps<typeof Ionicons>['name'];
+  title: string;
+  description: string;
+  color: string;
+}> = [
   {
     icon: 'trending-up-outline',
     title: 'Gestión Inteligente',
@@ -147,7 +152,7 @@ export default function WelcomeScreen() {
                     marginBottom: 12,
                   }}
                 >
-                  <Ionicons name={feature.icon as any} size={20} color={feature.color} />
+                  <Ionicons name={feature.icon} size={20} color={feature.color} />
                 </View>
                 <Text
                   style={{

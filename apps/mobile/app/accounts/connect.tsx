@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import React from 'react';
+import React, { ComponentProps } from 'react';
 import { View, ScrollView, StyleSheet } from 'react-native';
 import { Text, Card, Button } from 'react-native-paper';
 
@@ -8,7 +8,7 @@ interface Provider {
   id: string;
   name: string;
   description: string;
-  icon: string;
+  icon: ComponentProps<typeof Ionicons>['name'];
   color: string;
   type: 'bank' | 'crypto' | 'investment';
   regions: string[];
@@ -56,10 +56,10 @@ const PROVIDERS: Provider[] = [
 
 export default function ConnectAccountsScreen() {
   const handleConnectProvider = (providerId: string) => {
-    router.push(`/accounts/connect/${providerId}` as any);
+    router.push(`/accounts/connect/${providerId}` as `/accounts/connect/${string}`);
   };
 
-  const getTypeIcon = (type: string) => {
+  const getTypeIcon = (type: string): ComponentProps<typeof Ionicons>['name'] => {
     switch (type) {
       case 'bank':
         return 'business';
@@ -120,7 +120,7 @@ export default function ConnectAccountsScreen() {
         {Object.entries(groupedProviders).map(([type, providers]) => (
           <View key={type} style={styles.providerGroup}>
             <View style={styles.groupHeader}>
-              <Ionicons name={getTypeIcon(type) as any} size={20} color="#757575" />
+              <Ionicons name={getTypeIcon(type)} size={20} color="#757575" />
               <Text variant="titleMedium" style={styles.groupTitle}>
                 {type === 'bank' ? 'Banking' : type === 'crypto' ? 'Cryptocurrency' : 'Other'}
               </Text>
@@ -135,7 +135,7 @@ export default function ConnectAccountsScreen() {
                         <View
                           style={[styles.providerIcon, { backgroundColor: `${provider.color}15` }]}
                         >
-                          <Ionicons name={provider.icon as any} size={24} color={provider.color} />
+                          <Ionicons name={provider.icon} size={24} color={provider.color} />
                         </View>
                         <View style={styles.providerDetails}>
                           <Text variant="titleMedium" style={styles.providerName}>

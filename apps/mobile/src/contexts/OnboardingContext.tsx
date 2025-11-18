@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 
 import { onboardingApi } from '../services/api';
 
@@ -18,7 +18,7 @@ interface OnboardingContextType {
   status: OnboardingStatus | null;
   isLoading: boolean;
   error: string | null;
-  updateStep: (step: string, data?: any) => Promise<void>;
+  updateStep: (step: string, data?: Record<string, unknown>) => Promise<void>;
   completeOnboarding: (skipOptional?: boolean) => Promise<void>;
   skipStep: (step: string) => Promise<void>;
   refreshStatus: () => Promise<void>;
@@ -36,7 +36,7 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const refreshStatus = async () => {
+  const refreshStatus = useCallback(async () => {
     if (!user) return;
 
     try {
@@ -44,20 +44,20 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
       setIsLoading(true);
       const response = await onboardingApi.getStatus();
       setStatus(response);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError('Error al cargar el estado del onboarding');
       console.error('Error fetching onboarding status:', err);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user]);
 
-  const updateStep = async (step: string, data?: any) => {
+  const updateStep = async (step: string, data?: Record<string, unknown>) => {
     try {
       setError(null);
       const response = await onboardingApi.updateStep(step, data);
       setStatus(response);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError('Error al actualizar el paso del onboarding');
       throw err;
     }
@@ -68,7 +68,7 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
       setError(null);
       const response = await onboardingApi.complete(skipOptional);
       setStatus(response);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError('Error al completar el onboarding');
       throw err;
     }
@@ -79,7 +79,7 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
       setError(null);
       const response = await onboardingApi.skipStep(step);
       setStatus(response);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError('Error al saltar el paso');
       throw err;
     }
@@ -91,7 +91,7 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
     } else if (user?.onboardingCompleted) {
       setIsLoading(false);
     }
-  }, [user]);
+  }, [user, refreshStatus]);
 
   const value: OnboardingContextType = {
     status,

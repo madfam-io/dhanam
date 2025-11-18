@@ -66,9 +66,21 @@ export default function BitsoConnectScreen() {
       router.back();
       console.log('Connected Bitso accounts:', accounts);
       console.log('Success message:', message);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Bitso connection error:', err);
-      const errorMessage = err.response?.data?.message || 'Failed to connect to Bitso';
+      const errorMessage =
+        err &&
+        typeof err === 'object' &&
+        'response' in err &&
+        err.response &&
+        typeof err.response === 'object' &&
+        'data' in err.response &&
+        err.response.data &&
+        typeof err.response.data === 'object' &&
+        'message' in err.response.data &&
+        typeof err.response.data.message === 'string'
+          ? err.response.data.message
+          : 'Failed to connect to Bitso';
 
       if (errorMessage.includes('Invalid API')) {
         setFieldErrors({

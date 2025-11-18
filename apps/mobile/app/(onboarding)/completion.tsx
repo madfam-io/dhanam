@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { useEffect } from 'react';
+import { useEffect, ComponentProps } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -9,7 +9,12 @@ import { useAuth } from '../../src/contexts/AuthContext';
 
 const { width } = Dimensions.get('window');
 
-const completionFeatures = [
+const completionFeatures: Array<{
+  icon: ComponentProps<typeof Ionicons>['name'];
+  title: string;
+  description: string;
+  color: string;
+}> = [
   {
     icon: 'checkmark-circle-outline',
     title: 'Configuración completa',
@@ -37,7 +42,7 @@ export default function CompletionScreen() {
   // Refresh user data to get updated onboarding status
   useEffect(() => {
     refreshUser();
-  }, []);
+  }, [refreshUser]);
 
   const handleGoToDashboard = () => {
     router.replace('/(tabs)/dashboard');
@@ -135,7 +140,7 @@ export default function CompletionScreen() {
                   marginRight: 16,
                 }}
               >
-                <Ionicons name={feature.icon as any} size={24} color={feature.color} />
+                <Ionicons name={feature.icon} size={24} color={feature.color} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text
