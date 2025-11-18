@@ -37,7 +37,7 @@ export default function CompletionScreen() {
   // Refresh user data to get updated onboarding status
   useEffect(() => {
     refreshUser();
-  }, []);
+  }, [refreshUser]);
 
   const handleGoToDashboard = () => {
     router.replace('/(tabs)/dashboard');

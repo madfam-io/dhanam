@@ -69,9 +69,22 @@ export default function PlaidConnectScreen() {
       router.back();
       // You might want to show a success toast here
       console.log('Connected accounts:', accounts);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Plaid connection error:', err);
-      setError(err.response?.data?.message || 'Failed to connect to Plaid');
+      const errorMessage =
+        err &&
+        typeof err === 'object' &&
+        'response' in err &&
+        err.response &&
+        typeof err.response === 'object' &&
+        'data' in err.response &&
+        err.response.data &&
+        typeof err.response.data === 'object' &&
+        'message' in err.response.data &&
+        typeof err.response.data.message === 'string'
+          ? err.response.data.message
+          : 'Failed to connect to Plaid';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

@@ -1,13 +1,17 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import React from 'react';
+import React, { ComponentProps } from 'react';
 import { View, ScrollView } from 'react-native';
 import { Text, Button, Card } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { styles } from '@/styles/auth';
 
-const features = [
+const features: Array<{
+  icon: ComponentProps<typeof Ionicons>['name'];
+  title: string;
+  description: string;
+}> = [
   {
     icon: 'analytics-outline',
     title: 'Track Your Wealth',
@@ -56,7 +60,7 @@ export default function WelcomeScreen() {
             <Card key={index} style={styles.featureCard}>
               <Card.Content style={styles.featureContent}>
                 <Ionicons
-                  name={feature.icon as any}
+                  name={feature.icon}
                   size={32}
                   color="#4CAF50"
                   style={styles.featureIcon}

@@ -2,7 +2,7 @@ import { User } from '@dhanam/shared';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useCallback } from 'react';
 
 import { apiClient } from '@/services/api';
 
@@ -87,7 +87,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     loadStoredAuth();
-  }, []);
+  }, [loadStoredAuth]);
 
   useEffect(() => {
     if (state.accessToken) {
@@ -97,7 +97,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [state.accessToken]);
 
-  const loadStoredAuth = async () => {
+  const loadStoredAuth = useCallback(async () => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
 
@@ -127,7 +127,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await clearStoredAuth();
       dispatch({ type: 'CLEAR_AUTH' });
     }
-  };
+  }, []);
 
   const verifyToken = async (token: string) => {
     try {
@@ -164,7 +164,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         type: 'SET_AUTH',
         payload: { user, accessToken, refreshToken },
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       dispatch({ type: 'SET_LOADING', payload: false });
       throw error;
     }
@@ -188,7 +188,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         type: 'SET_AUTH',
         payload: { user, accessToken, refreshToken },
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       dispatch({ type: 'SET_LOADING', payload: false });
       throw error;
     }
