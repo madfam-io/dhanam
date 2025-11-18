@@ -83,6 +83,12 @@ importers:
       '@prisma/client':
         specifier: ^5.8.0
         version: 5.8.0(prisma@5.8.0)
+      '@sentry/node':
+        specifier: ^7.99.0
+        version: 7.99.0
+      '@sentry/profiling-node':
+        specifier: ^7.99.0
+        version: 7.100.0
       '@types/bcryptjs':
         specifier: ^3.0.0
         version: 3.0.0
@@ -179,6 +185,9 @@ importers:
       plaid:
         specifier: ^38.0.0
         version: 38.0.0
+      posthog-node:
+        specifier: ^5.11.2
+        version: 5.11.2
       qrcode:
         specifier: ^1.5.4
         version: 1.5.4
@@ -472,6 +481,9 @@ importers:
       next-themes:
         specifier: ^0.2.1
         version: 0.2.1(next@14.1.0)(react-dom@18.2.0)(react@18.2.0)
+      posthog-js:
+        specifier: ^1.294.0
+        version: 1.294.0
       qrcode.react:
         specifier: ^4.2.0
         version: 4.2.0(react@18.2.0)
@@ -640,6 +652,12 @@ importers:
       '@types/node':
         specifier: ^20.11.0
         version: 20.11.0
+      '@types/react':
+        specifier: ^18.2.0
+        version: 18.2.47
+      react:
+        specifier: ^18.2.0
+        version: 18.2.0
       tsup:
         specifier: ^8.0.1
         version: 8.0.1(typescript@5.3.3)
@@ -5129,6 +5147,12 @@ packages:
     engines: {node: ^12.20.0 || ^14.18.0 || >=16.0.0}
     dev: true
 
+  /@posthog/core@1.5.2:
+    resolution: {integrity: sha512-iedUP3EnOPPxTA2VaIrsrd29lSZnUV+ZrMnvY56timRVeZAXoYCkmjfIs3KBAsF8OUT5h1GXLSkoQdrV0r31OQ==}
+    dependencies:
+      cross-spawn: 7.0.6
+    dev: false
+
   /@prisma/client@5.8.0(prisma@5.8.0):
     resolution: {integrity: sha512-QxO6C4MaA/ysTIbC+EcAH1aX/YkpymhXtO6zPdk+FvA7+59tNibIYpd+7koPdViLg2iKES4ojsxWNUGNJaEcbA==}
     engines: {node: '>=16.13'}
@@ -6911,6 +6935,55 @@ packages:
     dependencies:
       component-type: 1.2.2
       join-component: 1.1.0
+    dev: false
+
+  /@sentry-internal/tracing@7.99.0:
+    resolution: {integrity: sha512-z3JQhHjoM1KdM20qrHwRClKJrNLr2CcKtCluq7xevLtXHJWNAQQbafnWD+Aoj85EWXBzKt9yJMv2ltcXJ+at+w==}
+    engines: {node: '>=8'}
+    dependencies:
+      '@sentry/core': 7.99.0
+      '@sentry/types': 7.99.0
+      '@sentry/utils': 7.99.0
+    dev: false
+
+  /@sentry/core@7.99.0:
+    resolution: {integrity: sha512-vOAtzcAXEUtS/oW7wi3wMkZ3hsb5Ch96gKyrrj/mXdOp2zrcwdNV6N9/pawq2E9P/7Pw8AXw4CeDZztZrjQLuA==}
+    engines: {node: '>=8'}
+    dependencies:
+      '@sentry/types': 7.99.0
+      '@sentry/utils': 7.99.0
+    dev: false
+
+  /@sentry/node@7.99.0:
+    resolution: {integrity: sha512-34wYtLddnPcQ8qvKq62AfxowaMFw+GMUZGv7fIs9FxeBqqqn6Ckl0gFCTADudIIBQ3rSbmN7sHJIXdyiQv+pcw==}
+    engines: {node: '>=8'}
+    dependencies:
+      '@sentry-internal/tracing': 7.99.0
+      '@sentry/core': 7.99.0
+      '@sentry/types': 7.99.0
+      '@sentry/utils': 7.99.0
+    dev: false
+
+  /@sentry/profiling-node@7.100.0:
+    resolution: {integrity: sha512-48TMIiMtPTeCf9YBw5YkE0zoyJX4TpzcouR+SCMt7ot8QLPX26jVMezgnxeRTu8kYOvNRmeca6iZi73LVuAQxQ==}
+    engines: {node: '>=8.0.0'}
+    hasBin: true
+    requiresBuild: true
+    dependencies:
+      detect-libc: 2.0.4
+      node-abi: 3.85.0
+    dev: false
+
+  /@sentry/types@7.99.0:
+    resolution: {integrity: sha512-94qwOw4w40sAs5mCmzcGyj8ZUu/KhnWnuMZARRq96k+SjRW/tHFAOlIdnFSrt3BLPvSOK7R3bVAskZQ0N4FTmA==}
+    engines: {node: '>=8'}
+    dev: false
+
+  /@sentry/utils@7.99.0:
+    resolution: {integrity: sha512-cYZy5WNTkWs5GgggGnjfGqC44CWir0pAv4GVVSx0fsup4D4pMKBJPrtub15f9uC+QkUf3vVkqwpBqeFxtmJQTQ==}
+    engines: {node: '>=8'}
+    dependencies:
+      '@sentry/types': 7.99.0
     dev: false
 
   /@sideway/address@4.1.5:
@@ -10014,6 +10087,11 @@ packages:
     requiresBuild: true
     dev: false
 
+  /core-js@3.46.0:
+    resolution: {integrity: sha512-vDMm9B0xnqqZ8uSBpZ8sNtRtOdmfShrvT6h2TuQGLs0Is+cR0DYbj/KWP6ALVNbWPpqA/qPLoOuppJN07humpA==}
+    requiresBuild: true
+    dev: false
+
   /core-util-is@1.0.3:
     resolution: {integrity: sha512-ZQBvi1DcpJ4GDqanjucZ2Hj3wEO5pZDS89BWbkcrvdxksJorwUDDZamX9ldFkp9aw2lmBDLgkObEA4DWNJ9FYQ==}
 
@@ -12073,6 +12151,10 @@ packages:
 
   /fetch-retry@4.1.1:
     resolution: {integrity: sha512-e6eB7zN6UBSwGVwrbWVH+gdLnkW9WwHhmq2YDK1Sh30pzx1onRVGBvogTlUeWxwTa+L86NYdo4hFkh7O8ZjSnA==}
+    dev: false
+
+  /fflate@0.4.8:
+    resolution: {integrity: sha512-FJqqoDBR00Mdj9ppamLa/Y7vxm+PRmNWA67N846RvsoYVMKB4q3y/de5PA7gUmRMYK/8CMz2GDZQmCRN1wBcWA==}
     dev: false
 
   /figures@3.2.0:
@@ -15154,6 +15236,13 @@ packages:
     resolution: {integrity: sha512-WDD0bdg9mbq6F4mRxEYcPWwfA1vxd0mrvKOyxI7Xj/atfRHVeutzuWByG//jfm4uPzp0y4Kj051EORCBSQMycw==}
     engines: {node: '>=12.0.0'}
 
+  /node-abi@3.85.0:
+    resolution: {integrity: sha512-zsFhmbkAzwhTft6nd3VxcG0cvJsT70rL+BIGHWVq5fi6MwGrHwzqKaxXE+Hl2GmnGItnDKPPkO5/LQqjVkIdFg==}
+    engines: {node: '>=10'}
+    dependencies:
+      semver: 7.7.3
+    dev: false
+
   /node-abort-controller@3.1.1:
     resolution: {integrity: sha512-AGK2yQKIjRuqnc6VkX2Xj5d+QW8xZ87pa1UK6yA6ouUyuxfHuMP6umE5QK7UmTeOAymo+Zx1Fxiuw9rVx8taHQ==}
 
@@ -15876,6 +15965,27 @@ packages:
       nanoid: 3.3.11
       picocolors: 1.1.1
       source-map-js: 1.2.1
+    dev: false
+
+  /posthog-js@1.294.0:
+    resolution: {integrity: sha512-fbQgG1mT/UeVm1+TGRilwFCP4GifxTngwbiNiON2VNHRZGlQzdgBIcBS8v14Z4b1RoqN0/pgo+GH7vk9WtXHHA==}
+    dependencies:
+      '@posthog/core': 1.5.2
+      core-js: 3.46.0
+      fflate: 0.4.8
+      preact: 10.27.2
+      web-vitals: 4.2.4
+    dev: false
+
+  /posthog-node@5.11.2:
+    resolution: {integrity: sha512-z+XekcBUmGePMsjPlGaEF2bJFiDHKHYPQjS4OEw4YPDQz8s7Owuim/L7xNX+6UJkyIRniBza9iC7bW8yrGTv1g==}
+    engines: {node: '>=20'}
+    dependencies:
+      '@posthog/core': 1.5.2
+    dev: false
+
+  /preact@10.27.2:
+    resolution: {integrity: sha512-5SYSgFKSyhCbk6SrXyMpqjb5+MQBgfvEKE/OC+PujcY34sOpqtr+0AZQtPYx5IA6VxynQ7rUPCtKzyovpj9Bpg==}
     dev: false
 
   /prelude-ls@1.2.1:
@@ -18777,6 +18887,10 @@ packages:
   /web-streams-polyfill@3.3.3:
     resolution: {integrity: sha512-d2JWLCivmZYTSIoge9MsgFCZrt571BikcWGYkjC1khllbTeDlGqZ2D8vD8E/lJa8WGWbb7Plm8/XJYV7IJHZZw==}
     engines: {node: '>= 8'}
+    dev: false
+
+  /web-vitals@4.2.4:
+    resolution: {integrity: sha512-r4DIlprAGwJ7YM11VZp4R884m0Vmgr6EAKe3P+kO0PPj3Unqyvv59rczf6UiGcb9Z8QxZVcqKNwv/g0WNdWwsw==}
     dev: false
 
   /webidl-conversions@3.0.1:

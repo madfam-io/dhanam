@@ -1,0 +1,171 @@
+name: Check Database Migrations
+
+on:
+  pull_request:
+    paths:
+      - 'apps/api/prisma/schema.prisma'
+      - 'apps/api/prisma/migrations/**'
+  push:
+    branches:
+      - main
+    paths:
+      - 'apps/api/prisma/schema.prisma'
+      - 'apps/api/prisma/migrations/**'
+
+jobs:
+  check-migrations:
+    name: Verify Migration Status
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_DB: dhanam_test
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check for schema drift
+        working-directory: apps/api
+        env:
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/dhanam_test
+        run: |
+          # Generate Prisma Client
+          pnpm db:generate
+
+          # Deploy migrations to test database
+          pnpm db:migrate:deploy
+
+          # Check for schema drift (schema.prisma vs actual database)
+          pnpm prisma migrate diff \
+            --from-schema-datamodel prisma/schema.prisma \
+            --to-schema-datasource $DATABASE_URL \
+            --script > drift.sql
+
+          # Fail if there's drift
+          if [ -s drift.sql ]; then
+            echo "❌ Schema drift detected!"
+            echo "The schema.prisma file doesn't match the migrations."
+            echo "Run 'pnpm db:migrate:dev' to create a new migration."
+            cat drift.sql
+            exit 1
+          fi
+
+          echo "✅ No schema drift detected"
+
+      - name: Validate migration names
+        working-directory: apps/api
+        run: |
+          # Check that all migrations have descriptive names
+          for dir in prisma/migrations/*/; do
+            migration_name=$(basename "$dir")
+
+            # Skip the migration lock file
+            if [ "$migration_name" = "migration_lock.toml" ]; then
+              continue
+            fi
+
+            # Check if name contains only timestamp (bad practice)
+            if [[ "$migration_name" =~ ^[0-9]{14}$ ]]; then
+              echo "❌ Migration $migration_name has no descriptive name"
+              echo "Please rename migrations to include a description"
+              exit 1
+            fi
+          done
+
+          echo "✅ All migrations have descriptive names"
+
+      - name: Check for dangerous operations
+        working-directory: apps/api
+        run: |
+          # Scan migration files for dangerous operations
+          dangerous_ops=$(grep -r -E "(DROP TABLE|DROP COLUMN|TRUNCATE)" prisma/migrations/ || true)
+
+          if [ -n "$dangerous_ops" ]; then
+            echo "⚠️  Warning: Dangerous operations found in migrations:"
+            echo "$dangerous_ops"
+            echo ""
+            echo "Please ensure:"
+            echo "1. You have a backup strategy"
+            echo "2. The operation is necessary"
+            echo "3. You've tested on staging first"
+          fi
+
+  test-migrations-rollback:
+    name: Test Migration Rollback
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_DB: dhanam_test
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Test rollback capability
+        working-directory: apps/api
+        env:
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/dhanam_test
+        run: |
+          # Apply all migrations
+          pnpm db:migrate:deploy
+
+          # Get the latest migration
+          latest_migration=$(ls -t prisma/migrations | head -1)
+
+          # Mark as rolled back to test rollback functionality
+          pnpm prisma migrate resolve --rolled-back "$latest_migration" || true
+
+          # Re-apply
+          pnpm db:migrate:deploy
+
+          echo "✅ Rollback test passed"

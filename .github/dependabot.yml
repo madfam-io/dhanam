@@ -1,0 +1,106 @@
+# Dependabot configuration for automated dependency updates
+# https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+
+version: 2
+updates:
+  # Enable version updates for npm (pnpm)
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "madfam-io/developers"
+    assignees:
+      - "madfam-io/developers"
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "automated"
+    versioning-strategy: increase
+    groups:
+      # Group all Prisma-related updates
+      prisma:
+        patterns:
+          - "@prisma/*"
+          - "prisma"
+      # Group all NestJS updates
+      nestjs:
+        patterns:
+          - "@nestjs/*"
+      # Group all Next.js updates
+      nextjs:
+        patterns:
+          - "next"
+          - "react"
+          - "react-dom"
+      # Group all testing libraries
+      testing:
+        patterns:
+          - "jest"
+          - "@types/jest"
+          - "@testing-library/*"
+          - "supertest"
+          - "@types/supertest"
+      # Group all ESLint updates
+      eslint:
+        patterns:
+          - "eslint*"
+          - "@typescript-eslint/*"
+      # Group minor and patch updates
+      minor-patch:
+        update-types:
+          - "minor"
+          - "patch"
+
+  # API workspace
+  - package-ecosystem: "npm"
+    directory: "/apps/api"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "api"
+
+  # Web workspace
+  - package-ecosystem: "npm"
+    directory: "/apps/web"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "web"
+
+  # Mobile workspace
+  - package-ecosystem: "npm"
+    directory: "/apps/mobile"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "mobile"
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "github-actions"
+
+  # Docker
+  - package-ecosystem: "docker"
+    directory: "/infra/docker"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "docker"

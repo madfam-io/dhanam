@@ -19,8 +19,12 @@
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "clean": "turbo clean && rm -rf node_modules",
     "db:generate": "turbo db:generate",
+    "db:migrate:dev": "turbo db:migrate:dev",
+    "db:migrate:deploy": "turbo db:migrate:deploy",
+    "db:migrate:status": "turbo db:migrate:status",
     "db:push": "turbo db:push",
     "db:seed": "turbo db:seed",
+    "db:studio": "turbo db:studio",
     "dev:infra": "docker compose -f infra/docker/docker-compose.yml up -d",
     "dev:infra:down": "docker compose -f infra/docker/docker-compose.yml down"
   },

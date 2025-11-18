@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { onboardingApi } from '@/lib/api/onboarding';
 import { Button } from '@dhanam/ui';
@@ -8,7 +8,7 @@ import { Card, CardContent } from '@dhanam/ui';
 import { Alert, AlertDescription } from '@dhanam/ui';
 import { CheckCircleIcon, XCircleIcon, MailIcon, LoaderIcon, HomeIcon } from 'lucide-react';
 
-export function EmailVerification() {
+function EmailVerificationContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [status, setStatus] = useState<'loading' | 'success' | 'error' | 'invalid'>('loading');
@@ -143,5 +143,24 @@ export function EmailVerification() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export function EmailVerification() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-purple-50">
+          <Card className="w-full max-w-md">
+            <CardContent className="p-8 text-center">
+              <LoaderIcon className="w-12 h-12 text-indigo-600 mx-auto mb-4 animate-spin" />
+              <h2 className="text-xl font-semibold text-gray-900 mb-2">Cargando...</h2>
+            </CardContent>
+          </Card>
+        </div>
+      }
+    >
+      <EmailVerificationContent />
+    </Suspense>
   );
 }

@@ -5,9 +5,12 @@ import {
   HttpException,
   HttpStatus,
   Logger,
+  Inject,
+  Optional,
 } from '@nestjs/common';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { FastifyReply, FastifyRequest } from 'fastify';
+import type { SentryService } from '@core/monitoring/sentry.service';
 
 export interface ErrorResponse {
   success: false;
@@ -28,6 +31,10 @@ export interface ErrorResponse {
 export class GlobalExceptionFilter implements ExceptionFilter {
   private readonly logger = new Logger(GlobalExceptionFilter.name);
 
+  constructor(
+    @Optional() @Inject('SentryService') private readonly sentryService?: SentryService
+  ) {}
+
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<FastifyReply>();
@@ -38,7 +45,58 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     // Log error with context
     this.logError(exception, request, errorResponse);
 
+    // Capture in Sentry for 5xx errors
+    if (errorResponse.meta.status >= 500 && this.sentryService) {
+      this.captureInSentry(exception, request, errorResponse);
+    }
+
     response.status(errorResponse.meta.status || 500).send(errorResponse);
+  }
+
+  private captureInSentry(
+    exception: unknown,
+    request: FastifyRequest,
+    errorResponse: ErrorResponse & { meta: { status: number } }
+  ) {
+    if (!this.sentryService) return;
+
+    const user = (request as any).user;
+    if (user) {
+      this.sentryService.setUser(user);
+    }
+
+    this.sentryService.setContext('request', {
+      url: request.url,
+      method: request.method,
+      headers: this.sanitizeHeaders(request.headers),
+      query: request.query,
+      params: request.params,
+    });
+
+    this.sentryService.setTags({
+      errorCode: errorResponse.error.code,
+      statusCode: errorResponse.meta.status.toString(),
+      path: request.url,
+      method: request.method,
+    });
+
+    if (exception instanceof Error) {
+      this.sentryService.captureException(exception);
+    } else {
+      this.sentryService.captureMessage(
+        `Non-Error exception: ${JSON.stringify(exception)}`,
+        'error'
+      );
+    }
+  }
+
+  private sanitizeHeaders(headers: Record<string, any>): Record<string, any> {
+    const sanitized = { ...headers };
+    // Remove sensitive headers
+    delete sanitized.authorization;
+    delete sanitized.cookie;
+    delete sanitized['x-api-key'];
+    return sanitized;
   }
 
   private createErrorResponse(

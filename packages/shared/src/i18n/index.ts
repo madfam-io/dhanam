@@ -1,20 +1,41 @@
-export const i18n = {
+/**
+ * i18n Module
+ * Centralized internationalization for Dhanam Ledger
+ * Supports English (en) and Spanish (es)
+ */
+
+import * as es from './es';
+import { common as enCommon } from './en/common';
+
+// Export translation objects
+export const translations = {
   en: {
-    common: {
-      save: 'Save',
-      cancel: 'Cancel',
-      delete: 'Delete',
-      loading: 'Loading...',
-    },
+    common: enCommon,
+    // Note: Other English modules should mirror Spanish structure
+    // For now, using minimal common translations for English
   },
   es: {
-    common: {
-      save: 'Guardar',
-      cancel: 'Cancelar', 
-      delete: 'Eliminar',
-      loading: 'Cargando...',
-    },
+    common: es.common,
+    auth: es.auth,
+    transactions: es.transactions,
+    budgets: es.budgets,
+    accounts: es.accounts,
+    spaces: es.spaces,
+    wealth: es.wealth,
+    errors: es.errors,
+    validations: es.validations,
   },
 } as const;
 
-export type TranslationKey = keyof typeof i18n.en;
+// Type exports
+// Note: Locale type is exported from ./types/common.types.ts
+export type TranslationNamespace = keyof typeof translations.es;
+export type Translations = typeof translations;
+
+// Legacy export for backwards compatibility
+export const i18n = translations;
+
+// Export React components and hooks
+export { I18nProvider, I18nContext, withI18n } from '../contexts/I18nContext';
+export type { I18nContextValue, I18nProviderProps } from '../contexts/I18nContext';
+export { useTranslation } from '../hooks/useTranslation';

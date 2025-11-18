@@ -30,12 +30,29 @@
       "cache": false,
       "env": ["DATABASE_URL"]
     },
+    "db:migrate:dev": {
+      "cache": false,
+      "env": ["DATABASE_URL"]
+    },
+    "db:migrate:deploy": {
+      "cache": false,
+      "env": ["DATABASE_URL"]
+    },
+    "db:migrate:status": {
+      "cache": false,
+      "env": ["DATABASE_URL"]
+    },
     "db:push": {
       "cache": false,
       "env": ["DATABASE_URL"]
     },
     "db:seed": {
       "cache": false,
+      "env": ["DATABASE_URL"]
+    },
+    "db:studio": {
+      "cache": false,
+      "persistent": true,
       "env": ["DATABASE_URL"]
     },
     "clean": {

@@ -4,6 +4,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from '~/components/theme-provider';
 import { AuthProvider } from '~/components/auth-provider';
 import { PreferencesProvider } from '~/contexts/PreferencesContext';
+import { I18nProvider } from '@dhanam/shared';
+import PostHogProvider from '~/providers/PostHogProvider';
 import { useState } from 'react';
 
 export function Providers({ children }: { children: React.ReactNode }) {
@@ -22,9 +24,13 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-        <AuthProvider>
-          <PreferencesProvider>{children}</PreferencesProvider>
-        </AuthProvider>
+        <I18nProvider>
+          <PostHogProvider>
+            <AuthProvider>
+              <PreferencesProvider>{children}</PreferencesProvider>
+            </AuthProvider>
+          </PostHogProvider>
+        </I18nProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );
