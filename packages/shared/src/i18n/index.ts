@@ -34,3 +34,8 @@ export type Translations = typeof translations;
 
 // Legacy export for backwards compatibility
 export const i18n = translations;
+
+// Export React components and hooks
+export { I18nProvider, I18nContext, withI18n } from '../contexts/I18nContext';
+export type { I18nContextValue, I18nProviderProps } from '../contexts/I18nContext';
+export { useTranslation } from '../hooks/useTranslation';

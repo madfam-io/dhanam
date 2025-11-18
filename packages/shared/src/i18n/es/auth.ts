@@ -13,6 +13,10 @@ export const auth = {
   forgotPassword: '¿Olvidaste tu contraseña?',
   loginButton: 'Iniciar sesión',
   loginWith: 'Iniciar sesión con {{provider}}',
+  tryDemo: 'Probar Demo',
+  accessingDemo: 'Accediendo a la demo...',
+  noAccount: '¿No tienes una cuenta?',
+  signUp: 'Regístrate',
 
   // Signup
   signup: 'Registrarse',
@@ -95,7 +99,7 @@ export const auth = {
   loggedOut: 'Sesión cerrada exitosamente',
 
   // Errors
-  invalidCredentials: 'Credenciales inválidas',
+  invalidCredentials: 'Correo o contraseña incorrectos',
   accountNotFound: 'Cuenta no encontrada',
   emailAlreadyExists: 'El correo ya está registrado',
   accountDisabled: 'Cuenta deshabilitada',
@@ -106,6 +110,10 @@ export const auth = {
   forbidden: 'Acceso denegado',
   tokenInvalid: 'Token inválido',
   tokenExpired: 'Token expirado',
+  totpRequired: 'Por favor ingresa tu código 2FA',
+  invalidTotp: 'Código 2FA inválido. Intenta de nuevo',
+  genericError: 'Ocurrió un error. Por favor intenta de nuevo',
+  demoAccessFailed: 'Error al acceder a la demo. Intenta de nuevo',
 
   // Success
   loginSuccessful: 'Inicio de sesión exitoso',

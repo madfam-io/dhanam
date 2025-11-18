@@ -10,10 +10,13 @@ import { Alert, AlertDescription, Button, Separator } from '@dhanam/ui';
 import { useAuth } from '~/lib/hooks/use-auth';
 import { authApi } from '~/lib/api/auth';
 import { ApiError } from '~/lib/api/client';
+import { useTranslation } from '@dhanam/shared';
+import { LocaleSwitcher } from '~/components/locale-switcher';
 
 export default function LoginPage() {
   const router = useRouter();
   const { setAuth } = useAuth();
+  const { t } = useTranslation('auth');
   const [error, setError] = useState<string | null>(null);
   const [showTotpField, setShowTotpField] = useState(false);
 
@@ -25,16 +28,16 @@ export default function LoginPage() {
     },
     onError: (error: ApiError) => {
       if (error.code === 'INVALID_CREDENTIALS') {
-        setError('Invalid email or password');
+        setError(t('invalidCredentials'));
         setShowTotpField(false);
       } else if (error.code === 'TOTP_REQUIRED') {
-        setError('Please enter your 2FA code');
+        setError(t('totpRequired'));
         setShowTotpField(true);
       } else if (error.code === 'INVALID_TOTP') {
-        setError('Invalid 2FA code. Please try again.');
+        setError(t('invalidTotp'));
         setShowTotpField(true);
       } else {
-        setError('An error occurred. Please try again.');
+        setError(t('genericError'));
       }
     },
   });
@@ -46,56 +49,61 @@ export default function LoginPage() {
       router.push('/dashboard');
     },
     onError: (_error: ApiError) => {
-      setError('Failed to access demo. Please try again.');
+      setError(t('demoAccessFailed'));
     },
   });
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Welcome back</CardTitle>
-        <CardDescription>Sign in to your account to continue</CardDescription>
-      </CardHeader>
-      <CardContent>
-        {error && (
-          <Alert variant="destructive" className="mb-4">
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-        <LoginForm
-          onSubmit={(data) => {
-            setError(null);
-            loginMutation.mutate(data);
-          }}
-          isLoading={loginMutation.isPending}
-          showTotpField={showTotpField}
-        />
-      </CardContent>
-      <CardFooter className="flex flex-col space-y-4">
-        <Separator />
-        <Button
-          variant="outline"
-          className="w-full"
-          onClick={() => {
-            setError(null);
-            guestLoginMutation.mutate();
-          }}
-          disabled={guestLoginMutation.isPending}
-        >
-          {guestLoginMutation.isPending ? 'Accessing demo...' : 'Try Demo'}
-        </Button>
-        <div className="flex flex-col space-y-2">
-          <div className="text-sm text-muted-foreground">
-            Don&apos;t have an account?{' '}
-            <Link href="/register" className="text-primary hover:underline">
-              Sign up
+    <div className="flex flex-col space-y-4">
+      <div className="flex justify-end">
+        <LocaleSwitcher />
+      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>{t('loginTitle')}</CardTitle>
+          <CardDescription>{t('loginSubtitle')}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {error && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+          <LoginForm
+            onSubmit={(data) => {
+              setError(null);
+              loginMutation.mutate(data);
+            }}
+            isLoading={loginMutation.isPending}
+            showTotpField={showTotpField}
+          />
+        </CardContent>
+        <CardFooter className="flex flex-col space-y-4">
+          <Separator />
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={() => {
+              setError(null);
+              guestLoginMutation.mutate();
+            }}
+            disabled={guestLoginMutation.isPending}
+          >
+            {guestLoginMutation.isPending ? t('accessingDemo') : t('tryDemo')}
+          </Button>
+          <div className="flex flex-col space-y-2">
+            <div className="text-sm text-muted-foreground">
+              {t('noAccount')}{' '}
+              <Link href="/register" className="text-primary hover:underline">
+                {t('signUp')}
+              </Link>
+            </div>
+            <Link href="/forgot-password" className="text-sm text-primary hover:underline">
+              {t('forgotPassword')}
             </Link>
           </div>
-          <Link href="/forgot-password" className="text-sm text-primary hover:underline">
-            Forgot your password?
-          </Link>
-        </div>
-      </CardFooter>
-    </Card>
+        </CardFooter>
+      </Card>
+    </div>
   );
 }
