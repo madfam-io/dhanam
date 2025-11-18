@@ -63,7 +63,7 @@
     "@types/qrcode": "^1.5.5",
     "@types/speakeasy": "^2.0.10",
     "@types/uuid": "^10.0.0",
-    "argon2": "^0.31.2",
+    "argon2": "^0.44.0",
     "axios": "^1.11.0",
     "bcryptjs": "^3.0.2",
     "belvo": "^0.28.0",
