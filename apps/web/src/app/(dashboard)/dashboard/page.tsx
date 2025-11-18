@@ -397,28 +397,24 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {currentBudgetSummary.categories
-                .slice(0, 5)
-                .map(
-                  (category: CategorySummary) => (
-                    <div key={category.id} className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <div
-                            className="w-3 h-3 rounded-full"
-                            style={{ backgroundColor: category.color || '#6b7280' }}
-                          />
-                          <span className="text-sm font-medium">{category.name}</span>
-                        </div>
-                        <span className="text-sm text-muted-foreground">
-                          {formatCurrency(category.spent, currentSpace.currency)} /{' '}
-                          {formatCurrency(category.budgetedAmount, currentSpace.currency)}
-                        </span>
-                      </div>
-                      <Progress value={category.percentUsed} />
+              {currentBudgetSummary.categories.slice(0, 5).map((category: CategorySummary) => (
+                <div key={category.id} className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="w-3 h-3 rounded-full"
+                        style={{ backgroundColor: category.color || '#6b7280' }}
+                      />
+                      <span className="text-sm font-medium">{category.name}</span>
                     </div>
-                  )
-                )}
+                    <span className="text-sm text-muted-foreground">
+                      {formatCurrency(category.spent, currentSpace.currency)} /{' '}
+                      {formatCurrency(category.budgetedAmount, currentSpace.currency)}
+                    </span>
+                  </div>
+                  <Progress value={category.percentUsed} />
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>

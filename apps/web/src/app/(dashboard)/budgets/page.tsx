@@ -301,37 +301,31 @@ export default function BudgetsPage() {
                       Add Category
                     </Button>
                   </div>
-                  {budgetSummary.categories.map(
-                    (category: CategorySummary) => (
-                      <Card key={category.id}>
-                        <CardContent className="pt-4">
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center gap-2">
-                              <div
-                                className="w-3 h-3 rounded-full"
-                                style={{ backgroundColor: category.color || '#6b7280' }}
-                              />
-                              <span className="font-medium">{category.name}</span>
-                            </div>
-                            <Badge
-                              variant={category.percentUsed > 90 ? 'destructive' : 'secondary'}
-                            >
-                              {category.percentUsed.toFixed(0)}% used
-                            </Badge>
+                  {budgetSummary.categories.map((category: CategorySummary) => (
+                    <Card key={category.id}>
+                      <CardContent className="pt-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <div
+                              className="w-3 h-3 rounded-full"
+                              style={{ backgroundColor: category.color || '#6b7280' }}
+                            />
+                            <span className="font-medium">{category.name}</span>
                           </div>
-                          <Progress value={category.percentUsed} className="mb-2" />
-                          <div className="flex justify-between text-sm text-muted-foreground">
-                            <span>
-                              {formatCurrency(category.spent, currentSpace.currency)} spent
-                            </span>
-                            <span>
-                              {formatCurrency(category.remaining, currentSpace.currency)} remaining
-                            </span>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    )
-                  )}
+                          <Badge variant={category.percentUsed > 90 ? 'destructive' : 'secondary'}>
+                            {category.percentUsed.toFixed(0)}% used
+                          </Badge>
+                        </div>
+                        <Progress value={category.percentUsed} className="mb-2" />
+                        <div className="flex justify-between text-sm text-muted-foreground">
+                          <span>{formatCurrency(category.spent, currentSpace.currency)} spent</span>
+                          <span>
+                            {formatCurrency(category.remaining, currentSpace.currency)} remaining
+                          </span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
                 </div>
               </div>
             </>
