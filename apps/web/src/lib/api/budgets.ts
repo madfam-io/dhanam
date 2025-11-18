@@ -96,12 +96,7 @@ export const budgetsApi = {
     await apiClient.delete(`/spaces/${spaceId}/budgets/${budgetId}`);
   },
 
-  getBudgetAnalytics: async (
-    spaceId: string,
-    budgetId: string
-  ): Promise<BudgetAnalytics> => {
-    return apiClient.get<BudgetAnalytics>(
-      `/spaces/${spaceId}/budgets/${budgetId}/analytics`
-    );
+  getBudgetAnalytics: async (spaceId: string, budgetId: string): Promise<BudgetAnalytics> => {
+    return apiClient.get<BudgetAnalytics>(`/spaces/${spaceId}/budgets/${budgetId}/analytics`);
   },
 };

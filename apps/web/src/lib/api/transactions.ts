@@ -45,7 +45,10 @@ export const transactionsApi = {
     spaceId: string,
     filter: TransactionsFilterDto
   ): Promise<TransactionsResponse> => {
-    return apiClient.get<TransactionsResponse>(`/spaces/${spaceId}/transactions`, filter as Record<string, unknown>);
+    return apiClient.get<TransactionsResponse>(
+      `/spaces/${spaceId}/transactions`,
+      filter as Record<string, unknown>
+    );
   },
 
   getTransaction: async (spaceId: string, transactionId: string): Promise<Transaction> => {

@@ -93,14 +93,14 @@ export function usePostHog() {
     /**
      * Capture an analytics event
      */
-    capture: (event: string, properties?: Record<string, any>) => {
+    capture: (event: string, properties?: Record<string, unknown>) => {
       posthog.capture(event, properties);
     },
 
     /**
      * Identify the current user
      */
-    identify: (userId: string, properties?: Record<string, any>) => {
+    identify: (userId: string, properties?: Record<string, unknown>) => {
       posthog.identify(userId, properties);
     },
 
@@ -114,7 +114,7 @@ export function usePostHog() {
     /**
      * Set user properties
      */
-    setPersonProperties: (properties: Record<string, any>) => {
+    setPersonProperties: (properties: Record<string, unknown>) => {
       posthog.setPersonProperties(properties);
     },
 

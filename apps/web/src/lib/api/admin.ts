@@ -120,7 +120,10 @@ export interface PaginatedResponse<T> {
 // API client
 export const adminApi = {
   async searchUsers(params: UserSearchParams = {}): Promise<PaginatedResponse<UserDetails>> {
-    return apiClient.get<PaginatedResponse<UserDetails>>('/admin/users', params as Record<string, unknown>);
+    return apiClient.get<PaginatedResponse<UserDetails>>(
+      '/admin/users',
+      params as Record<string, unknown>
+    );
   },
 
   async getUserDetails(userId: string): Promise<UserDetails> {
@@ -132,7 +135,10 @@ export const adminApi = {
   },
 
   async searchAuditLogs(params: AuditLogSearchParams = {}): Promise<PaginatedResponse<AuditLog>> {
-    return apiClient.get<PaginatedResponse<AuditLog>>('/admin/audit-logs', params as Record<string, unknown>);
+    return apiClient.get<PaginatedResponse<AuditLog>>(
+      '/admin/audit-logs',
+      params as Record<string, unknown>
+    );
   },
 
   async getOnboardingFunnel(): Promise<OnboardingFunnel> {

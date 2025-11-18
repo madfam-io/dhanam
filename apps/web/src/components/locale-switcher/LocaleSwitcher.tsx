@@ -65,14 +65,16 @@ export function LocaleSwitcher() {
     { code: 'en' as const, name: 'English', flag: '🇺🇸' },
   ];
 
-  const currentLocale = locales.find((l) => l.code === locale) ?? locales[0]!
+  const currentLocale = locales.find((l) => l.code === locale) ?? locales[0];
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="sm" className="gap-2">
           <Globe className="h-4 w-4" />
-          <span className="hidden sm:inline">{currentLocale.flag} {currentLocale.name}</span>
+          <span className="hidden sm:inline">
+            {currentLocale.flag} {currentLocale.name}
+          </span>
           <span className="sm:hidden">{currentLocale.flag}</span>
         </Button>
       </DropdownMenuTrigger>
@@ -86,9 +88,7 @@ export function LocaleSwitcher() {
             <span className="mr-2">{l.flag}</span>
             <span>{l.name}</span>
             {locale === l.code && (
-              <span className="ml-auto text-xs text-muted-foreground">
-                {t('common.active')}
-              </span>
+              <span className="ml-auto text-xs text-muted-foreground">{t('common.active')}</span>
             )}
           </DropdownMenuItem>
         ))}
