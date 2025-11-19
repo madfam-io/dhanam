@@ -27,9 +27,9 @@ export class ProviderFactoryService {
     private readonly belvoProvider: BelvoExecutionProvider
   ) {
     this.providers = new Map([
-      [ProviderType.BITSO, this.bitsoProvider],
-      [ProviderType.PLAID, this.plaidProvider],
-      [ProviderType.BELVO, this.belvoProvider],
+      [ProviderType.BITSO, this.bitsoProvider as ExecutionProvider],
+      [ProviderType.PLAID, this.plaidProvider as ExecutionProvider],
+      [ProviderType.BELVO, this.belvoProvider as ExecutionProvider],
     ]);
   }
 

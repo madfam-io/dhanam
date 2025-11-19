@@ -138,7 +138,7 @@ export class StripeService {
    * Get upcoming invoice for customer
    */
   async getUpcomingInvoice(customerId: string): Promise<Stripe.Invoice> {
-    return await this.stripe.invoices.upcoming({
+    return await (this.stripe.invoices as any).upcoming({
       customer: customerId,
     });
   }

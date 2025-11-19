@@ -105,7 +105,7 @@ export class BillingController {
     try {
       // Verify webhook signature
       event = this.stripeService.constructWebhookEvent(
-        req.rawBody || req.body,
+        (req.rawBody || req.body) as Buffer,
         signature,
         webhookSecret
       );

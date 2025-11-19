@@ -43,7 +43,7 @@ export class UsageLimitGuard implements CanActivate {
       const limit = limits[user.subscriptionTier][metricType];
 
       throw new UsageLimitExceededException(
-        `Daily limit of ${limit} ${metricType.replace(/_/g, ' ')} reached. Upgrade to Premium for unlimited access.`
+        `Daily limit of ${limit} ${(metricType as string).replace(/_/g, ' ')} reached. Upgrade to Premium for unlimited access.`
       );
     }
 

@@ -147,8 +147,8 @@ export class BillingService {
       where: { id: user.id },
       data: {
         subscriptionTier: 'premium',
-        subscriptionStartedAt: new Date(subscription.current_period_start * 1000),
-        subscriptionExpiresAt: new Date(subscription.current_period_end * 1000),
+        subscriptionStartedAt: new Date((subscription as any).current_period_start * 1000),
+        subscriptionExpiresAt: new Date((subscription as any).current_period_end * 1000),
         stripeSubscriptionId: subscription.id,
       },
     });
@@ -198,7 +198,7 @@ export class BillingService {
     await this.prisma.user.update({
       where: { id: user.id },
       data: {
-        subscriptionExpiresAt: new Date(subscription.current_period_end * 1000),
+        subscriptionExpiresAt: new Date((subscription as any).current_period_end * 1000),
       },
     });
 
@@ -278,7 +278,7 @@ export class BillingService {
         stripeEventId: event.id,
         metadata: {
           invoiceId: invoice.id,
-          subscriptionId: invoice.subscription as string,
+          subscriptionId: (invoice as any).subscription as string,
         },
       },
     });
@@ -312,7 +312,7 @@ export class BillingService {
         stripeEventId: event.id,
         metadata: {
           invoiceId: invoice.id,
-          subscriptionId: invoice.subscription as string,
+          subscriptionId: (invoice as any).subscription as string,
         },
       },
     });

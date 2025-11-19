@@ -393,7 +393,7 @@ export class EstatePlanningService {
 
     // Check each asset type sums to 100%
     for (const [assetType, designations] of Object.entries(byAssetType)) {
-      const total = designations.reduce((sum, d) => sum + Number(d.percentage), 0);
+      const total = (designations as any[]).reduce((sum, d) => sum + Number(d.percentage), 0);
 
       if (Math.abs(total - 100) > 0.01) {
         // Allow for small floating point errors

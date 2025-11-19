@@ -788,8 +788,10 @@ export class TransactionExecutionService {
     const limits = await this.prisma.orderLimit.findMany({
       where: {
         userId,
-        OR: [{ spaceId }, { spaceId: null }], // Global or space-specific
-        OR: [{ orderType: orderType as any }, { orderType: null }], // Type-specific or all types
+        AND: [
+          { OR: [{ spaceId }, { spaceId: null }] }, // Global or space-specific
+          { OR: [{ orderType: orderType as any }, { orderType: null }] }, // Type-specific or all types
+        ],
         enforced: true,
         resetAt: { gt: now },
       },
@@ -822,8 +824,10 @@ export class TransactionExecutionService {
     const limits = await this.prisma.orderLimit.findMany({
       where: {
         userId,
-        OR: [{ spaceId }, { spaceId: null }],
-        OR: [{ orderType: orderType as any }, { orderType: null }],
+        AND: [
+          { OR: [{ spaceId }, { spaceId: null }] },
+          { OR: [{ orderType: orderType as any }, { orderType: null }] },
+        ],
         enforced: true,
         resetAt: { gt: now },
       },
