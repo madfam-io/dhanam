@@ -4,8 +4,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios, { AxiosInstance } from 'axios';
 
-import { PrismaService } from '../../../core/prisma/prisma.service';
 import { CryptoService } from '../../../core/crypto/crypto.service';
+import { PrismaService } from '../../../core/prisma/prisma.service';
 
 import {
   ExecutionProvider,

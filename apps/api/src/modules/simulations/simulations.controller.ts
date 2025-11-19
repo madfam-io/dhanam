@@ -8,17 +8,15 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { SimulationsService } from './simulations.service';
-import {
-  RunSimulationDto,
-  CalculateGoalProbabilityDto,
-  SimulateRetirementDto,
-} from './dto';
+
 import { JwtAuthGuard } from '../../core/auth/guards/jwt-auth.guard';
-import { SubscriptionGuard } from '../billing/guards/subscription.guard';
-import { UsageLimitGuard } from '../billing/guards/usage-limit.guard';
 import { RequiresPremium } from '../billing/decorators/requires-tier.decorator';
 import { TrackUsage } from '../billing/decorators/track-usage.decorator';
+import { SubscriptionGuard } from '../billing/guards/subscription.guard';
+import { UsageLimitGuard } from '../billing/guards/usage-limit.guard';
+
+import { RunSimulationDto, CalculateGoalProbabilityDto, SimulateRetirementDto } from './dto';
+import { SimulationsService } from './simulations.service';
 
 /**
  * Simulations Controller
@@ -71,10 +69,7 @@ export class SimulationsController {
   @RequiresPremium()
   @TrackUsage('goal_probability')
   @HttpCode(HttpStatus.OK)
-  async calculateGoalProbability(
-    @Body() dto: CalculateGoalProbabilityDto,
-    @Req() req: any
-  ) {
+  async calculateGoalProbability(@Body() dto: CalculateGoalProbabilityDto, @Req() req: any) {
     return this.simulationsService.calculateGoalProbability(
       {
         goalId: dto.goalId,
@@ -175,7 +170,11 @@ export class SimulationsController {
   @Post('recommended-allocation')
   @HttpCode(HttpStatus.OK)
   async getRecommendedAllocation(
-    @Body() body: { riskTolerance: 'conservative' | 'moderate' | 'aggressive'; yearsToRetirement: number }
+    @Body()
+    body: {
+      riskTolerance: 'conservative' | 'moderate' | 'aggressive';
+      yearsToRetirement: number;
+    }
   ) {
     return this.simulationsService.getRecommendedAllocation(
       body.riskTolerance,

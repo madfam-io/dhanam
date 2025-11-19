@@ -1,8 +1,23 @@
-import { Injectable, Logger, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
-import { PrismaService } from '../../core/prisma/prisma.service';
-import { AuditService } from '../../core/audit/audit.service';
-import { CreateWillDto, UpdateWillDto, AddBeneficiaryDto, UpdateBeneficiaryDto, AddExecutorDto, UpdateExecutorDto } from './dto';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  BadRequestException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { Will, BeneficiaryDesignation, WillExecutor, AssetType } from '@prisma/client';
+
+import { AuditService } from '../../core/audit/audit.service';
+import { PrismaService } from '../../core/prisma/prisma.service';
+
+import {
+  CreateWillDto,
+  UpdateWillDto,
+  AddBeneficiaryDto,
+  UpdateBeneficiaryDto,
+  AddExecutorDto,
+  UpdateExecutorDto,
+} from './dto';
 
 @Injectable()
 export class EstatePlanningService {
@@ -275,7 +290,9 @@ export class EstatePlanningService {
     // Validate beneficiary allocations sum to 100% per asset type
     const validationResult = await this.validateBeneficiaryAllocations(willId);
     if (!validationResult.isValid) {
-      throw new BadRequestException(`Beneficiary allocations are invalid: ${validationResult.errors.join(', ')}`);
+      throw new BadRequestException(
+        `Beneficiary allocations are invalid: ${validationResult.errors.join(', ')}`
+      );
     }
 
     // Revoke any other active will for this household
@@ -359,7 +376,9 @@ export class EstatePlanningService {
   /**
    * Validate beneficiary allocations (must sum to 100% per asset type)
    */
-  async validateBeneficiaryAllocations(willId: string): Promise<{ isValid: boolean; errors: string[] }> {
+  async validateBeneficiaryAllocations(
+    willId: string
+  ): Promise<{ isValid: boolean; errors: string[] }> {
     const beneficiaries = await this.prisma.beneficiaryDesignation.findMany({
       where: { willId },
     });
@@ -367,19 +386,23 @@ export class EstatePlanningService {
     const errors: string[] = [];
 
     // Group by asset type
-    const byAssetType = beneficiaries.reduce((acc, b) => {
-      if (!acc[b.assetType]) {
-        acc[b.assetType] = [];
-      }
-      acc[b.assetType].push(b);
-      return acc;
-    }, {} as Record<AssetType, BeneficiaryDesignation[]>);
+    const byAssetType = beneficiaries.reduce(
+      (acc, b) => {
+        if (!acc[b.assetType]) {
+          acc[b.assetType] = [];
+        }
+        acc[b.assetType].push(b);
+        return acc;
+      },
+      {} as Record<AssetType, BeneficiaryDesignation[]>
+    );
 
     // Check each asset type sums to 100%
     for (const [assetType, designations] of Object.entries(byAssetType)) {
       const total = designations.reduce((sum, d) => sum + Number(d.percentage), 0);
 
-      if (Math.abs(total - 100) > 0.01) { // Allow for small floating point errors
+      if (Math.abs(total - 100) > 0.01) {
+        // Allow for small floating point errors
         errors.push(`${assetType}: allocations sum to ${total}% (must be 100%)`);
       }
     }
@@ -393,7 +416,11 @@ export class EstatePlanningService {
   /**
    * Add a beneficiary to a will
    */
-  async addBeneficiary(willId: string, dto: AddBeneficiaryDto, userId: string): Promise<BeneficiaryDesignation> {
+  async addBeneficiary(
+    willId: string,
+    dto: AddBeneficiaryDto,
+    userId: string
+  ): Promise<BeneficiaryDesignation> {
     const will = await this.findById(willId, userId);
 
     if (will.status === 'executed') {

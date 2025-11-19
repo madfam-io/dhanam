@@ -1,6 +1,16 @@
-import { IsString, IsNotEmpty, IsEnum, IsNumber, IsDateString, IsOptional, Min, Max, IsUUID } from 'class-validator';
 import { GoalType, Currency } from '@prisma/client';
 import { Type } from 'class-transformer';
+import {
+  IsString,
+  IsNotEmpty,
+  IsEnum,
+  IsNumber,
+  IsDateString,
+  IsOptional,
+  Min,
+  Max,
+  IsUUID,
+} from 'class-validator';
 
 export class CreateGoalDto {
   @IsUUID()

@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { StatisticsUtil } from '../utils/statistics.util';
+
 import {
   MonteCarloConfig,
   SimulationResult,
@@ -7,6 +7,7 @@ import {
   MarketShock,
   ScenarioConfig,
 } from '../types/simulation.types';
+import { StatisticsUtil } from '../utils/statistics.util';
 
 /**
  * Monte Carlo Simulation Engine
@@ -22,7 +23,9 @@ export class MonteCarloEngine {
    * Run Monte Carlo simulation
    */
   simulate(config: MonteCarloConfig): SimulationResult {
-    this.logger.log(`Starting Monte Carlo simulation: ${config.iterations} iterations, ${config.months} months`);
+    this.logger.log(
+      `Starting Monte Carlo simulation: ${config.iterations} iterations, ${config.months} months`
+    );
 
     const startTime = Date.now();
 
@@ -35,14 +38,12 @@ export class MonteCarloEngine {
 
     // Run all iterations
     const finalValues: number[] = [];
-    const allTimeSeries: number[][] = Array(config.months + 1).fill(null).map(() => []);
+    const allTimeSeries: number[][] = Array(config.months + 1)
+      .fill(null)
+      .map(() => []);
 
     for (let iteration = 0; iteration < config.iterations; iteration++) {
-      const result = this.runSingleIteration(
-        config,
-        monthlyReturn,
-        monthlyVolatility
-      );
+      const result = this.runSingleIteration(config, monthlyReturn, monthlyVolatility);
 
       finalValues.push(result.finalValue);
 
@@ -57,8 +58,8 @@ export class MonteCarloEngine {
       month,
       median: StatisticsUtil.median(values),
       mean: StatisticsUtil.mean(values),
-      p10: StatisticsUtil.percentile(values, 0.10),
-      p90: StatisticsUtil.percentile(values, 0.90),
+      p10: StatisticsUtil.percentile(values, 0.1),
+      p90: StatisticsUtil.percentile(values, 0.9),
     }));
 
     // Calculate summary statistics
@@ -127,25 +128,19 @@ export class MonteCarloEngine {
   /**
    * Run simulation with market shocks (scenario analysis)
    */
-  simulateWithShocks(
-    config: MonteCarloConfig,
-    shocks: MarketShock[]
-  ): SimulationResult {
+  simulateWithShocks(config: MonteCarloConfig, shocks: MarketShock[]): SimulationResult {
     this.logger.log(`Running scenario simulation with ${shocks.length} market shocks`);
 
     const monthlyReturn = StatisticsUtil.monthlyReturn(config.expectedReturn);
     const monthlyVolatility = StatisticsUtil.monthlyVolatility(config.volatility);
 
     const finalValues: number[] = [];
-    const allTimeSeries: number[][] = Array(config.months + 1).fill(null).map(() => []);
+    const allTimeSeries: number[][] = Array(config.months + 1)
+      .fill(null)
+      .map(() => []);
 
     for (let iteration = 0; iteration < config.iterations; iteration++) {
-      const result = this.runSingleIteration(
-        config,
-        monthlyReturn,
-        monthlyVolatility,
-        shocks
-      );
+      const result = this.runSingleIteration(config, monthlyReturn, monthlyVolatility, shocks);
 
       finalValues.push(result.finalValue);
 
@@ -158,8 +153,8 @@ export class MonteCarloEngine {
       month,
       median: StatisticsUtil.median(values),
       mean: StatisticsUtil.mean(values),
-      p10: StatisticsUtil.percentile(values, 0.10),
-      p90: StatisticsUtil.percentile(values, 0.90),
+      p10: StatisticsUtil.percentile(values, 0.1),
+      p90: StatisticsUtil.percentile(values, 0.9),
     }));
 
     const summary = StatisticsUtil.summary(finalValues);
@@ -185,7 +180,7 @@ export class MonteCarloEngine {
    * Calculate probability of reaching a target amount
    */
   calculateSuccessRate(finalValues: number[], targetAmount: number): number {
-    const successfulIterations = finalValues.filter(value => value >= targetAmount).length;
+    const successfulIterations = finalValues.filter((value) => value >= targetAmount).length;
     return successfulIterations / finalValues.length;
   }
 
@@ -194,8 +189,8 @@ export class MonteCarloEngine {
    */
   calculateExpectedShortfall(finalValues: number[], targetAmount: number): number {
     const shortfalls = finalValues
-      .filter(value => value < targetAmount)
-      .map(value => targetAmount - value);
+      .filter((value) => value < targetAmount)
+      .map((value) => targetAmount - value);
 
     if (shortfalls.length === 0) return 0;
 
@@ -295,7 +290,9 @@ export class MonteCarloEngine {
     }
 
     if (config.iterations > 50000) {
-      this.logger.warn(`High iteration count (${config.iterations}). Consider reducing for performance.`);
+      this.logger.warn(
+        `High iteration count (${config.iterations}). Consider reducing for performance.`
+      );
     }
   }
 
@@ -326,7 +323,7 @@ export class MonteCarloEngine {
       shocks: [
         {
           type: 'crash' as const,
-          magnitude: -0.30,
+          magnitude: -0.3,
           startMonth: 12,
           durationMonths: 6,
           recoveryMonths: 12,
@@ -339,7 +336,7 @@ export class MonteCarloEngine {
       shocks: [
         {
           type: 'crash' as const,
-          magnitude: -0.50,
+          magnitude: -0.5,
           startMonth: 24,
           durationMonths: 12,
           recoveryMonths: 24,
@@ -378,7 +375,7 @@ export class MonteCarloEngine {
       shocks: [
         {
           type: 'correction' as const,
-          magnitude: -0.10,
+          magnitude: -0.1,
           startMonth: 36,
           durationMonths: 1,
           recoveryMonths: 3,
@@ -391,7 +388,7 @@ export class MonteCarloEngine {
       shocks: [
         {
           type: 'recession' as const,
-          magnitude: -0.20,
+          magnitude: -0.2,
           startMonth: 12,
           durationMonths: 24,
           recoveryMonths: 36,
@@ -411,7 +408,7 @@ export class MonteCarloEngine {
         },
         {
           type: 'recession' as const,
-          magnitude: -0.20,
+          magnitude: -0.2,
           startMonth: 36,
           durationMonths: 6,
           recoveryMonths: 12,
@@ -424,7 +421,7 @@ export class MonteCarloEngine {
       shocks: [
         {
           type: 'crash' as const,
-          magnitude: -0.30,
+          magnitude: -0.3,
           startMonth: 6,
           durationMonths: 18,
           recoveryMonths: 60,
@@ -450,7 +447,7 @@ export class MonteCarloEngine {
       shocks: [
         {
           type: 'boom' as const,
-          magnitude: 0.40,
+          magnitude: 0.4,
           startMonth: 12,
           durationMonths: 24,
           recoveryMonths: 0,
@@ -463,14 +460,14 @@ export class MonteCarloEngine {
       shocks: [
         {
           type: 'boom' as const,
-          magnitude: 0.60,
+          magnitude: 0.6,
           startMonth: 6,
           durationMonths: 18,
           recoveryMonths: 0,
         },
         {
           type: 'crash' as const,
-          magnitude: -0.50,
+          magnitude: -0.5,
           startMonth: 30,
           durationMonths: 12,
           recoveryMonths: 24,

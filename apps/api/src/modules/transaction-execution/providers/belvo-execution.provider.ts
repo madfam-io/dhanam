@@ -2,8 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios, { AxiosInstance } from 'axios';
 
-import { PrismaService } from '../../../core/prisma/prisma.service';
 import { CryptoService } from '../../../core/crypto/crypto.service';
+import { PrismaService } from '../../../core/prisma/prisma.service';
 
 import {
   ExecutionProvider,
@@ -119,9 +119,7 @@ export class BelvoExecutionProvider extends ExecutionProvider {
       return;
     }
 
-    const baseURL = this.isProduction
-      ? 'https://api.belvo.com'
-      : 'https://sandbox.belvo.com';
+    const baseURL = this.isProduction ? 'https://api.belvo.com' : 'https://sandbox.belvo.com';
 
     const authString = Buffer.from(`${secretId}:${secretPassword}`).toString('base64');
 
@@ -134,7 +132,9 @@ export class BelvoExecutionProvider extends ExecutionProvider {
       },
     });
 
-    this.logger.log(`Belvo execution provider initialized (${this.isProduction ? 'production' : 'sandbox'})`);
+    this.logger.log(
+      `Belvo execution provider initialized (${this.isProduction ? 'production' : 'sandbox'})`
+    );
   }
 
   async executeBuy(order: ExecutionOrder): Promise<ExecutionResult> {
@@ -302,10 +302,7 @@ export class BelvoExecutionProvider extends ExecutionProvider {
       errors.push(`Order amount below minimum: $${this.capabilities.minOrderAmount} MXN`);
     }
 
-    if (
-      this.capabilities.maxOrderAmount &&
-      order.amount > this.capabilities.maxOrderAmount
-    ) {
+    if (this.capabilities.maxOrderAmount && order.amount > this.capabilities.maxOrderAmount) {
       errors.push(`Order amount exceeds maximum: $${this.capabilities.maxOrderAmount} MXN`);
     }
 
@@ -345,9 +342,7 @@ export class BelvoExecutionProvider extends ExecutionProvider {
       throw new Error('Belvo client not initialized');
     }
 
-    const response = await this.belvoClient.get(
-      `/payments/payment-transactions/${transactionId}`
-    );
+    const response = await this.belvoClient.get(`/payments/payment-transactions/${transactionId}`);
 
     return response.data;
   }

@@ -1,10 +1,15 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { PrismaService } from '../../core/prisma/prisma.service';
+
 import { AuditService } from '../../core/audit/audit.service';
-import { TransactionExecutionService } from '../transaction-execution/transaction-execution.service';
+import { PrismaService } from '../../core/prisma/prisma.service';
+import {
+  OrderType,
+  OrderPriority,
+  ExecutionProvider,
+} from '../transaction-execution/dto/create-order.dto';
 import { ProviderFactoryService } from '../transaction-execution/providers/provider-factory.service';
-import { OrderType, OrderPriority, ExecutionProvider } from '../transaction-execution/dto/create-order.dto';
+import { TransactionExecutionService } from '../transaction-execution/transaction-execution.service';
 
 interface RebalancingAction {
   goalId: string;

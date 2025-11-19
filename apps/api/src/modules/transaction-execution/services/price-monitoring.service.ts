@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
+
 import { PrismaService } from '../../../core/prisma/prisma.service';
 import { TransactionExecutionService } from '../transaction-execution.service';
 
@@ -239,11 +240,7 @@ export class PriceMonitoringService {
    * Trigger order for execution
    * Converts advanced order to market order and executes
    */
-  private async triggerOrder(
-    order: any,
-    triggerPrice: number,
-    reason: string
-  ): Promise<void> {
+  private async triggerOrder(order: any, triggerPrice: number, reason: string): Promise<void> {
     try {
       // Update order status and convert to market order
       await this.prisma.transactionOrder.update({
@@ -266,11 +263,7 @@ export class PriceMonitoringService {
       }
 
       // Execute the order
-      await this.transactionExecution.executeOrder(
-        order.spaceId,
-        order.userId,
-        order.id
-      );
+      await this.transactionExecution.executeOrder(order.spaceId, order.userId, order.id);
 
       this.logger.log(`Successfully triggered and executed order ${order.id}`);
     } catch (error) {

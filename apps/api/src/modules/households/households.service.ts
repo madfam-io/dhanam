@@ -1,8 +1,16 @@
-import { Injectable, Logger, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
-import { PrismaService } from '../../core/prisma/prisma.service';
-import { AuditService } from '../../core/audit/audit.service';
-import { CreateHouseholdDto, UpdateHouseholdDto, AddMemberDto, UpdateMemberDto } from './dto';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  BadRequestException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { Household, HouseholdMember, Prisma } from '@prisma/client';
+
+import { AuditService } from '../../core/audit/audit.service';
+import { PrismaService } from '../../core/prisma/prisma.service';
+
+import { CreateHouseholdDto, UpdateHouseholdDto, AddMemberDto, UpdateMemberDto } from './dto';
 
 @Injectable()
 export class HouseholdsService {
@@ -212,7 +220,9 @@ export class HouseholdsService {
     });
 
     if (household._count.spaces > 0 || household._count.goals > 0) {
-      throw new BadRequestException('Cannot delete household with associated spaces or goals. Please remove them first.');
+      throw new BadRequestException(
+        'Cannot delete household with associated spaces or goals. Please remove them first.'
+      );
     }
 
     await this.prisma.household.delete({
@@ -234,7 +244,11 @@ export class HouseholdsService {
   /**
    * Add a member to a household
    */
-  async addMember(householdId: string, dto: AddMemberDto, userId: string): Promise<HouseholdMember> {
+  async addMember(
+    householdId: string,
+    dto: AddMemberDto,
+    userId: string
+  ): Promise<HouseholdMember> {
     // Verify access to household
     await this.findById(householdId, userId);
 
@@ -330,7 +344,7 @@ export class HouseholdsService {
         ...(dto.relationship && { relationship: dto.relationship }),
         ...(dto.isMinor !== undefined && { isMinor: dto.isMinor }),
         ...(dto.accessStartDate !== undefined && {
-          accessStartDate: dto.accessStartDate ? new Date(dto.accessStartDate) : null
+          accessStartDate: dto.accessStartDate ? new Date(dto.accessStartDate) : null,
         }),
         ...(dto.notes !== undefined && { notes: dto.notes }),
       },
@@ -388,7 +402,9 @@ export class HouseholdsService {
     });
 
     if (memberCount <= 1) {
-      throw new BadRequestException('Cannot remove the last member of a household. Delete the household instead.');
+      throw new BadRequestException(
+        'Cannot remove the last member of a household. Delete the household instead.'
+      );
     }
 
     await this.prisma.householdMember.delete({
@@ -413,7 +429,10 @@ export class HouseholdsService {
   /**
    * Get household-level net worth aggregation
    */
-  async getNetWorth(householdId: string, userId: string): Promise<{
+  async getNetWorth(
+    householdId: string,
+    userId: string
+  ): Promise<{
     totalNetWorth: number;
     bySpace: Array<{
       spaceId: string;
@@ -491,7 +510,10 @@ export class HouseholdsService {
   /**
    * Get household-level goal summary
    */
-  async getGoalSummary(householdId: string, userId: string): Promise<{
+  async getGoalSummary(
+    householdId: string,
+    userId: string
+  ): Promise<{
     totalGoals: number;
     activeGoals: number;
     achievedGoals: number;
@@ -507,8 +529,8 @@ export class HouseholdsService {
 
     const summary = {
       totalGoals: goals.length,
-      activeGoals: goals.filter(g => g.status === 'active').length,
-      achievedGoals: goals.filter(g => g.status === 'achieved').length,
+      activeGoals: goals.filter((g) => g.status === 'active').length,
+      achievedGoals: goals.filter((g) => g.status === 'achieved').length,
       totalTargetAmount: goals.reduce((sum, g) => sum + Number(g.targetAmount), 0),
       byType: {} as Record<string, number>,
     };

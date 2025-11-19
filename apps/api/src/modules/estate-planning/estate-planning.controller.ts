@@ -12,11 +12,20 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
-import { EstatePlanningService } from './estate-planning.service';
-import { CreateWillDto, UpdateWillDto, AddBeneficiaryDto, UpdateBeneficiaryDto, AddExecutorDto, UpdateExecutorDto } from './dto';
+
 import { JwtAuthGuard } from '../../core/auth/guards/jwt-auth.guard';
-import { SubscriptionGuard } from '../billing/guards/subscription.guard';
 import { RequiresPremium } from '../billing/decorators/requires-tier.decorator';
+import { SubscriptionGuard } from '../billing/guards/subscription.guard';
+
+import {
+  CreateWillDto,
+  UpdateWillDto,
+  AddBeneficiaryDto,
+  UpdateBeneficiaryDto,
+  AddExecutorDto,
+  UpdateExecutorDto,
+} from './dto';
+import { EstatePlanningService } from './estate-planning.service';
 
 @Controller('wills')
 @UseGuards(JwtAuthGuard, SubscriptionGuard)
@@ -99,11 +108,7 @@ export class EstatePlanningController {
    * Add a beneficiary to a will
    */
   @Post(':id/beneficiaries')
-  async addBeneficiary(
-    @Param('id') id: string,
-    @Body() dto: AddBeneficiaryDto,
-    @Req() req: any
-  ) {
+  async addBeneficiary(@Param('id') id: string, @Body() dto: AddBeneficiaryDto, @Req() req: any) {
     return this.estatePlanningService.addBeneficiary(id, dto, req.user.id);
   }
 
@@ -137,11 +142,7 @@ export class EstatePlanningController {
    * Add an executor to a will
    */
   @Post(':id/executors')
-  async addExecutor(
-    @Param('id') id: string,
-    @Body() dto: AddExecutorDto,
-    @Req() req: any
-  ) {
+  async addExecutor(@Param('id') id: string, @Body() dto: AddExecutorDto, @Req() req: any) {
     return this.estatePlanningService.addExecutor(id, dto, req.user.id);
   }
 

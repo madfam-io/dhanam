@@ -1,9 +1,9 @@
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 
-import { BitsoExecutionProvider } from './bitso-execution.provider';
-import { PlaidExecutionProvider } from './plaid-execution.provider';
 import { BelvoExecutionProvider } from './belvo-execution.provider';
+import { BitsoExecutionProvider } from './bitso-execution.provider';
 import { ExecutionProvider } from './execution-provider.interface';
+import { PlaidExecutionProvider } from './plaid-execution.provider';
 
 export enum ProviderType {
   BITSO = 'bitso',

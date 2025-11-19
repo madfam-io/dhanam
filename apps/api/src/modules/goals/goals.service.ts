@@ -1,9 +1,15 @@
 import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
-import { PrismaService } from '../../core/prisma/prisma.service';
-import { AuditService } from '../../core/audit/audit.service';
-import { CreateGoalDto, UpdateGoalDto, AddAllocationDto } from './dto';
-import { GoalProgress, GoalAllocationProgress, GoalSummary } from './interfaces/goal-progress.interface';
 import { Goal, GoalAllocation } from '@prisma/client';
+
+import { AuditService } from '../../core/audit/audit.service';
+import { PrismaService } from '../../core/prisma/prisma.service';
+
+import { CreateGoalDto, UpdateGoalDto, AddAllocationDto } from './dto';
+import {
+  GoalProgress,
+  GoalAllocationProgress,
+  GoalSummary,
+} from './interfaces/goal-progress.interface';
 
 @Injectable()
 export class GoalsService {
@@ -122,7 +128,10 @@ export class GoalsService {
   /**
    * Get a single goal by ID
    */
-  async findById(goalId: string, userId: string): Promise<Goal & { allocations: GoalAllocation[] }> {
+  async findById(
+    goalId: string,
+    userId: string
+  ): Promise<Goal & { allocations: GoalAllocation[] }> {
     const goal = await this.findByIdWithAccess(goalId, userId);
 
     return this.prisma.goal.findUnique({
@@ -177,17 +186,18 @@ export class GoalsService {
           },
         },
       },
-      orderBy: [
-        { priority: 'asc' },
-        { targetDate: 'asc' },
-      ],
+      orderBy: [{ priority: 'asc' }, { targetDate: 'asc' }],
     });
   }
 
   /**
    * Add an allocation to a goal
    */
-  async addAllocation(goalId: string, dto: AddAllocationDto, userId: string): Promise<GoalAllocation> {
+  async addAllocation(
+    goalId: string,
+    dto: AddAllocationDto,
+    userId: string
+  ): Promise<GoalAllocation> {
     const goal = await this.findByIdWithAccess(goalId, userId);
 
     // Verify account exists and belongs to the same space
@@ -221,7 +231,10 @@ export class GoalsService {
       where: { goalId },
     });
 
-    const totalPercentage = currentAllocations.reduce((sum, alloc) => sum + Number(alloc.percentage), 0);
+    const totalPercentage = currentAllocations.reduce(
+      (sum, alloc) => sum + Number(alloc.percentage),
+      0
+    );
 
     if (totalPercentage + dto.percentage > 100) {
       throw new BadRequestException(
@@ -303,7 +316,8 @@ export class GoalsService {
     const allocationProgress: GoalAllocationProgress[] = [];
 
     for (const allocation of goal.allocations) {
-      const contributedValue = Number(allocation.account.balance) * (Number(allocation.percentage) / 100);
+      const contributedValue =
+        Number(allocation.account.balance) * (Number(allocation.percentage) / 100);
       currentValue += contributedValue;
 
       allocationProgress.push({
@@ -331,17 +345,24 @@ export class GoalsService {
     const onTrack = currentValue >= expectedValue * 0.9; // Within 10% tolerance
 
     // Calculate monthly contribution needed
-    const monthsRemaining = Math.max((targetDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24 * 30), 0);
+    const monthsRemaining = Math.max(
+      (targetDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24 * 30),
+      0
+    );
     const remainingAmount = Math.max(targetAmount - currentValue, 0);
     const monthlyContributionNeeded = monthsRemaining > 0 ? remainingAmount / monthsRemaining : 0;
 
     // Project completion date (simple linear projection)
     let projectedCompletion: Date | null = null;
     if (currentValue > 0 && currentValue < targetAmount) {
-      const monthlyRate = currentValue / Math.max((now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24 * 30), 1);
+      const monthlyRate =
+        currentValue /
+        Math.max((now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24 * 30), 1);
       if (monthlyRate > 0) {
         const monthsToCompletion = remainingAmount / monthlyRate;
-        projectedCompletion = new Date(now.getTime() + monthsToCompletion * 30 * 24 * 60 * 60 * 1000);
+        projectedCompletion = new Date(
+          now.getTime() + monthsToCompletion * 30 * 24 * 60 * 60 * 1000
+        );
       }
     }
 
@@ -374,14 +395,16 @@ export class GoalsService {
 
       // Calculate current value for this goal
       for (const allocation of goal.allocations) {
-        const contributedValue = Number(allocation.account.balance) * (Number(allocation.percentage) / 100);
+        const contributedValue =
+          Number(allocation.account.balance) * (Number(allocation.percentage) / 100);
         totalCurrentValue += contributedValue;
       }
     }
 
     const activeGoals = goals.filter((g) => g.status === 'active').length;
     const achievedGoals = goals.filter((g) => g.status === 'achieved').length;
-    const overallProgress = totalTargetAmount > 0 ? (totalCurrentValue / totalTargetAmount) * 100 : 0;
+    const overallProgress =
+      totalTargetAmount > 0 ? (totalCurrentValue / totalTargetAmount) * 100 : 0;
 
     return {
       totalGoals: goals.length,

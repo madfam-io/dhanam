@@ -1,5 +1,5 @@
-import { IsEnum, IsBoolean, IsOptional, IsDateString, IsString } from 'class-validator';
 import { RelationshipType } from '@prisma/client';
+import { IsEnum, IsBoolean, IsOptional, IsDateString, IsString } from 'class-validator';
 
 export class UpdateMemberDto {
   @IsEnum(RelationshipType)

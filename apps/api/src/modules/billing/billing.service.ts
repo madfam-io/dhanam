@@ -1,10 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { PrismaService } from '../../core/database/prisma.service';
-import { AuditService } from '../../core/audit/audit.service';
-import { StripeService } from './stripe.service';
 import { UsageMetricType, SubscriptionTier } from '@prisma/client';
 import Stripe from 'stripe';
+
+import { AuditService } from '../../core/audit/audit.service';
+import { PrismaService } from '../../core/database/prisma.service';
+
+import { StripeService } from './stripe.service';
 
 @Injectable()
 export class BillingService {

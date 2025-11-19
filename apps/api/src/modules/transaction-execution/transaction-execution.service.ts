@@ -11,17 +11,20 @@ import {
 import { Prisma } from '@prisma/client';
 import { addDays, addWeeks, addMonths, isAfter } from 'date-fns';
 
-import { PrismaService } from '../../core/prisma/prisma.service';
 import { AuditService } from '../../core/audit/audit.service';
+import { PrismaService } from '../../core/prisma/prisma.service';
 import { SpacesService } from '../spaces/spaces.service';
 
 import { CreateOrderDto, VerifyOrderDto, UpdateOrderDto, OrderFilterDto } from './dto';
-import { ProviderFactoryService } from './providers/provider-factory.service';
-import { ExecutionOrder, OrderType as ProviderOrderType } from './providers/execution-provider.interface';
 
 // Import enums from DTO
 import { OrderType, OrderPriority, ExecutionProvider } from './dto/create-order.dto';
 import { OrderStatus } from './dto/order-filter.dto';
+import {
+  ExecutionOrder,
+  OrderType as ProviderOrderType,
+} from './providers/execution-provider.interface';
+import { ProviderFactoryService } from './providers/provider-factory.service';
 
 interface OrderExecutionResult {
   success: boolean;
@@ -62,12 +65,7 @@ export class TransactionExecutionService {
     await this.spacesService.verifyUserAccess(userId, spaceId, 'member');
 
     // Check idempotency
-    const existingOrder = await this.checkIdempotency(
-      userId,
-      spaceId,
-      dto.idempotencyKey,
-      dto
-    );
+    const existingOrder = await this.checkIdempotency(userId, spaceId, dto.idempotencyKey, dto);
     if (existingOrder) {
       this.logger.log(`Idempotent request detected for key ${dto.idempotencyKey}`);
       return existingOrder;
@@ -149,15 +147,7 @@ export class TransactionExecutionService {
     });
 
     // Store idempotency key
-    await this.storeIdempotencyKey(
-      userId,
-      spaceId,
-      dto.idempotencyKey,
-      dto,
-      order.id,
-      200,
-      order
-    );
+    await this.storeIdempotencyKey(userId, spaceId, dto.idempotencyKey, dto, order.id, 200, order);
 
     // Audit log
     await this.auditService.log({
@@ -272,19 +262,12 @@ export class TransactionExecutionService {
    * Execute a pending order
    * Main orchestration method that handles the execution flow
    */
-  async executeOrder(
-    orderId: string,
-    userId: string,
-    ipAddress?: string,
-    userAgent?: string
-  ) {
+  async executeOrder(orderId: string, userId: string, ipAddress?: string, userAgent?: string) {
     const order = await this.findOrderById(orderId, userId);
 
     // Validate order can be executed
     if (order.status !== 'pending_execution') {
-      throw new BadRequestException(
-        `Order cannot be executed in status: ${order.status}`
-      );
+      throw new BadRequestException(`Order cannot be executed in status: ${order.status}`);
     }
 
     // Check if order has expired
@@ -418,9 +401,7 @@ export class TransactionExecutionService {
           severity: 'high',
         });
 
-        throw new BadRequestException(
-          result.errorMessage || 'Order execution failed'
-        );
+        throw new BadRequestException(result.errorMessage || 'Order execution failed');
       }
     } catch (error) {
       // Handle unexpected errors
@@ -546,19 +527,11 @@ export class TransactionExecutionService {
   /**
    * Cancel a pending order
    */
-  async cancelOrder(
-    orderId: string,
-    userId: string,
-    ipAddress?: string,
-    userAgent?: string
-  ) {
+  async cancelOrder(orderId: string, userId: string, ipAddress?: string, userAgent?: string) {
     const order = await this.findOrderById(orderId, userId);
 
     // Can only cancel pending orders
-    if (
-      order.status !== 'pending_verification' &&
-      order.status !== 'pending_execution'
-    ) {
+    if (order.status !== 'pending_verification' && order.status !== 'pending_execution') {
       throw new BadRequestException(`Cannot cancel order in status: ${order.status}`);
     }
 
@@ -670,10 +643,7 @@ export class TransactionExecutionService {
     const order = await this.findOrderById(orderId, userId);
 
     // Can only update pending orders
-    if (
-      order.status !== 'pending_verification' &&
-      order.status !== 'pending_execution'
-    ) {
+    if (order.status !== 'pending_verification' && order.status !== 'pending_execution') {
       throw new BadRequestException(`Cannot update order in status: ${order.status}`);
     }
 
@@ -734,12 +704,7 @@ export class TransactionExecutionService {
   /**
    * Helper: Check idempotency
    */
-  private async checkIdempotency(
-    userId: string,
-    spaceId: string,
-    key: string,
-    requestBody: any
-  ) {
+  private async checkIdempotency(userId: string, spaceId: string, key: string, requestBody: any) {
     const requestHash = crypto
       .createHash('sha256')
       .update(JSON.stringify(requestBody))
@@ -752,9 +717,7 @@ export class TransactionExecutionService {
     if (existing) {
       // Check if request body matches
       if (existing.requestHash !== requestHash) {
-        throw new ConflictException(
-          'Idempotency key already used with different request body'
-        );
+        throw new ConflictException('Idempotency key already used with different request body');
       }
 
       // Check if expired
@@ -883,11 +846,7 @@ export class TransactionExecutionService {
   /**
    * Helper: Validate account balance for sell/transfer orders
    */
-  private async validateAccountBalance(
-    accountId: string,
-    amount: number,
-    currency: string
-  ) {
+  private async validateAccountBalance(accountId: string, amount: number, currency: string) {
     const account = await this.prisma.account.findUnique({
       where: { id: accountId },
     });

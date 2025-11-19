@@ -1,10 +1,11 @@
 import { Injectable, NestInterceptor, ExecutionContext, CallHandler, Logger } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { UsageMetricType } from '@prisma/client';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
-import { UsageMetricType } from '@prisma/client';
-import { USAGE_METRIC_KEY } from '../decorators';
+
 import { BillingService } from '../billing.service';
+import { USAGE_METRIC_KEY } from '../decorators';
 
 @Injectable()
 export class UsageTrackingInterceptor implements NestInterceptor {
@@ -16,10 +17,7 @@ export class UsageTrackingInterceptor implements NestInterceptor {
   ) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
-    const metricType = this.reflector.get<UsageMetricType>(
-      USAGE_METRIC_KEY,
-      context.getHandler()
-    );
+    const metricType = this.reflector.get<UsageMetricType>(USAGE_METRIC_KEY, context.getHandler());
 
     // No usage tracking configured - proceed without tracking
     if (!metricType) {

@@ -11,9 +11,11 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { HouseholdsService } from './households.service';
-import { CreateHouseholdDto, UpdateHouseholdDto, AddMemberDto, UpdateMemberDto } from './dto';
+
 import { JwtAuthGuard } from '../../core/auth/guards/jwt-auth.guard';
+
+import { CreateHouseholdDto, UpdateHouseholdDto, AddMemberDto, UpdateMemberDto } from './dto';
+import { HouseholdsService } from './households.service';
 
 @Controller('households')
 @UseGuards(JwtAuthGuard)
@@ -81,11 +83,7 @@ export class HouseholdsController {
    * Add a member to a household
    */
   @Post(':id/members')
-  async addMember(
-    @Param('id') id: string,
-    @Body() dto: AddMemberDto,
-    @Req() req: any
-  ) {
+  async addMember(@Param('id') id: string, @Body() dto: AddMemberDto, @Req() req: any) {
     return this.householdsService.addMember(id, dto, req.user.id);
   }
 

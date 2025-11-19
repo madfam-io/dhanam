@@ -1,6 +1,15 @@
-import { IsUUID, IsNotEmpty, IsEnum, IsNumber, IsOptional, IsString, Min, Max } from 'class-validator';
 import { AssetType } from '@prisma/client';
 import { Type } from 'class-transformer';
+import {
+  IsUUID,
+  IsNotEmpty,
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Min,
+  Max,
+} from 'class-validator';
 
 export class AddBeneficiaryDto {
   @IsUUID()

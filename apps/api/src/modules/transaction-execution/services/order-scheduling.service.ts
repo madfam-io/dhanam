@@ -1,7 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { PrismaService } from '../../../core/prisma/prisma.service';
-import { TransactionExecutionService } from '../transaction-execution.service';
 import {
   addDays,
   addMonths,
@@ -12,6 +10,9 @@ import {
   setDay,
   startOfDay,
 } from 'date-fns';
+
+import { PrismaService } from '../../../core/prisma/prisma.service';
+import { TransactionExecutionService } from '../transaction-execution.service';
 
 @Injectable()
 export class OrderSchedulingService {
@@ -88,11 +89,7 @@ export class OrderSchedulingService {
       this.logger.log(`Executing scheduled order ${order.id}`);
 
       // Execute the order
-      await this.transactionExecution.executeOrder(
-        order.spaceId,
-        order.userId,
-        order.id
-      );
+      await this.transactionExecution.executeOrder(order.spaceId, order.userId, order.id);
 
       // Handle recurrence
       if (order.recurrence && order.recurrence !== 'once') {

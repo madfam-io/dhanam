@@ -13,11 +13,13 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
-import { TransactionExecutionService } from './transaction-execution.service';
-import { CreateOrderDto, VerifyOrderDto, UpdateOrderDto, OrderFilterDto } from './dto';
+
 import { JwtAuthGuard } from '../../core/auth/guards/jwt-auth.guard';
-import { SubscriptionGuard } from '../billing/guards/subscription.guard';
 import { RequiresPremium } from '../billing/decorators/requires-tier.decorator';
+import { SubscriptionGuard } from '../billing/guards/subscription.guard';
+
+import { CreateOrderDto, VerifyOrderDto, UpdateOrderDto, OrderFilterDto } from './dto';
+import { TransactionExecutionService } from './transaction-execution.service';
 
 @Controller('spaces/:spaceId/orders')
 @UseGuards(JwtAuthGuard, SubscriptionGuard)
@@ -111,11 +113,7 @@ export class TransactionExecutionController {
    */
   @Post(':id/execute')
   @Throttle({ default: { limit: 10, ttl: 60000 } })
-  async executeOrder(
-    @Param('spaceId') spaceId: string,
-    @Param('id') id: string,
-    @Req() req: any
-  ) {
+  async executeOrder(@Param('spaceId') spaceId: string, @Param('id') id: string, @Req() req: any) {
     return this.transactionExecutionService.executeOrder(
       id,
       req.user.id,
@@ -129,11 +127,7 @@ export class TransactionExecutionController {
    */
   @Post(':id/cancel')
   @HttpCode(HttpStatus.OK)
-  async cancelOrder(
-    @Param('spaceId') spaceId: string,
-    @Param('id') id: string,
-    @Req() req: any
-  ) {
+  async cancelOrder(@Param('spaceId') spaceId: string, @Param('id') id: string, @Req() req: any) {
     return this.transactionExecutionService.cancelOrder(
       id,
       req.user.id,

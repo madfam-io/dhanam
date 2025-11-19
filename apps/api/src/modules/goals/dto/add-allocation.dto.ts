@@ -1,5 +1,5 @@
-import { IsUUID, IsNumber, Min, Max, IsString, IsOptional } from 'class-validator';
 import { Type } from 'class-transformer';
+import { IsUUID, IsNumber, Min, Max, IsString, IsOptional } from 'class-validator';
 
 export class AddAllocationDto {
   @IsUUID()

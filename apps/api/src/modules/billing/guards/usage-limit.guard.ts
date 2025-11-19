@@ -1,9 +1,10 @@
 import { Injectable, CanActivate, ExecutionContext, Logger } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { UsageMetricType } from '@prisma/client';
+
+import { BillingService } from '../billing.service';
 import { USAGE_METRIC_KEY } from '../decorators';
 import { UsageLimitExceededException } from '../exceptions';
-import { BillingService } from '../billing.service';
 
 @Injectable()
 export class UsageLimitGuard implements CanActivate {
@@ -15,10 +16,7 @@ export class UsageLimitGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const metricType = this.reflector.get<UsageMetricType>(
-      USAGE_METRIC_KEY,
-      context.getHandler()
-    );
+    const metricType = this.reflector.get<UsageMetricType>(USAGE_METRIC_KEY, context.getHandler());
 
     // No usage tracking - allow access
     if (!metricType) {

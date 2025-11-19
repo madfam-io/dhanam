@@ -119,17 +119,13 @@ export class StripeService {
    * Retrieve a customer
    */
   async getCustomer(customerId: string): Promise<Stripe.Customer> {
-    return await this.stripe.customers.retrieve(customerId) as Stripe.Customer;
+    return (await this.stripe.customers.retrieve(customerId)) as Stripe.Customer;
   }
 
   /**
    * Construct webhook event from raw payload
    */
-  constructWebhookEvent(
-    payload: string | Buffer,
-    signature: string,
-    secret: string
-  ): Stripe.Event {
+  constructWebhookEvent(payload: string | Buffer, signature: string, secret: string): Stripe.Event {
     try {
       return this.stripe.webhooks.constructEvent(payload, signature, secret);
     } catch (error) {

@@ -2,8 +2,8 @@ import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios, { AxiosInstance } from 'axios';
 
-import { PrismaService } from '../../../core/prisma/prisma.service';
 import { CryptoService } from '../../../core/crypto/crypto.service';
+import { PrismaService } from '../../../core/prisma/prisma.service';
 
 import {
   ExecutionProvider,
@@ -109,7 +109,9 @@ export class PlaidExecutionProvider extends ExecutionProvider {
       },
     });
 
-    this.logger.log(`Plaid execution provider initialized (${this.isProduction ? 'production' : 'sandbox'})`);
+    this.logger.log(
+      `Plaid execution provider initialized (${this.isProduction ? 'production' : 'sandbox'})`
+    );
   }
 
   async executeBuy(order: ExecutionOrder): Promise<ExecutionResult> {
@@ -142,9 +144,7 @@ export class PlaidExecutionProvider extends ExecutionProvider {
         throw new Error('Account not linked to Plaid');
       }
 
-      const accessToken = this.cryptoService.decrypt(
-        JSON.parse(account.plaidAccessToken)
-      );
+      const accessToken = this.cryptoService.decrypt(JSON.parse(account.plaidAccessToken));
 
       // Step 1: Create transfer authorization
       this.logger.log(`Creating Plaid transfer authorization for order ${order.id}`);
@@ -267,10 +267,7 @@ export class PlaidExecutionProvider extends ExecutionProvider {
       errors.push(`Order amount below minimum: $${this.capabilities.minOrderAmount}`);
     }
 
-    if (
-      this.capabilities.maxOrderAmount &&
-      order.amount > this.capabilities.maxOrderAmount
-    ) {
+    if (this.capabilities.maxOrderAmount && order.amount > this.capabilities.maxOrderAmount) {
       errors.push(
         `Order amount exceeds same-day ACH maximum: $${this.capabilities.maxOrderAmount}`
       );

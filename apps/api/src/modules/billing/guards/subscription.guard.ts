@@ -1,11 +1,9 @@
 import { Injectable, CanActivate, ExecutionContext, Logger } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { SubscriptionTier } from '@prisma/client';
+
 import { TIER_KEY } from '../decorators';
-import {
-  PaymentRequiredException,
-  SubscriptionExpiredException,
-} from '../exceptions';
+import { PaymentRequiredException, SubscriptionExpiredException } from '../exceptions';
 
 @Injectable()
 export class SubscriptionGuard implements CanActivate {
