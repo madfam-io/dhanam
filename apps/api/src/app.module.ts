@@ -9,15 +9,18 @@ import { RateLimitingModule } from '@core/security/rate-limiting.module';
 import { AccountsModule } from '@modules/accounts/accounts.module';
 import { AdminModule } from '@modules/admin/admin.module';
 import { AnalyticsModule } from '@modules/analytics/analytics.module';
+import { BillingModule } from '@modules/billing/billing.module';
 import { BudgetsModule } from '@modules/budgets/budgets.module';
 import { CategoriesModule } from '@modules/categories/categories.module';
 import { EmailModule } from '@modules/email/email.module';
 import { FxRatesModule } from '@modules/fx-rates/fx-rates.module';
+import { GoalsModule } from '@modules/goals/goals.module';
 import { IntegrationsModule } from '@modules/integrations/integrations.module';
 import { JobsModule } from '@modules/jobs/jobs.module';
 import { OnboardingModule } from '@modules/onboarding/onboarding.module';
 import { PreferencesModule } from '@modules/preferences/preferences.module';
 import { ProvidersModule } from '@modules/providers/providers.module';
+import { SimulationsModule } from '@modules/simulations/simulations.module';
 import { SpacesModule } from '@modules/spaces/spaces.module';
 import { TransactionsModule } from '@modules/transactions/transactions.module';
 import { UsersModule } from '@modules/users/users.module';
@@ -53,6 +56,9 @@ import { validationSchema } from './config/validation';
     MonitoringModule,
     EmailModule,
     AdminModule,
+    BillingModule,
+    GoalsModule,
+    SimulationsModule,
   ],
 })
 export class AppModule {}

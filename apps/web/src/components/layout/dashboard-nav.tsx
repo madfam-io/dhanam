@@ -12,6 +12,8 @@ import {
   Settings,
   FileText,
   Leaf,
+  Target,
+  AlertTriangle,
 } from 'lucide-react';
 
 const navigation = [
@@ -36,6 +38,11 @@ const navigation = [
     icon: PiggyBank,
   },
   {
+    name: 'Goals',
+    href: '/goals',
+    icon: Target,
+  },
+  {
     name: 'Analytics',
     href: '/dashboard/analytics',
     icon: TrendingUp,
@@ -44,6 +51,16 @@ const navigation = [
     name: 'ESG Insights',
     href: '/dashboard/esg',
     icon: Leaf,
+  },
+  {
+    name: 'Retirement',
+    href: '/retirement',
+    icon: Target,
+  },
+  {
+    name: 'Scenarios',
+    href: '/scenarios',
+    icon: AlertTriangle,
   },
   {
     name: 'Reports',

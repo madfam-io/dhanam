@@ -58,6 +58,55 @@ enum Currency {
   EUR
 }
 
+enum SubscriptionTier {
+  free
+  premium
+}
+
+enum BillingEventType {
+  subscription_created
+  subscription_renewed
+  subscription_cancelled
+  payment_succeeded
+  payment_failed
+  refund_issued
+}
+
+enum BillingStatus {
+  pending
+  succeeded
+  failed
+  refunded
+}
+
+enum UsageMetricType {
+  esg_calculation
+  monte_carlo_simulation
+  goal_probability
+  scenario_analysis
+  portfolio_rebalance
+  api_request
+}
+
+enum GoalType {
+  retirement
+  education
+  house_purchase
+  emergency_fund
+  legacy
+  travel
+  business
+  debt_payoff
+  other
+}
+
+enum GoalStatus {
+  active
+  paused
+  achieved
+  abandoned
+}
+
 // Models
 model User {
   id               String        @id @default(uuid())
@@ -77,6 +126,14 @@ model User {
   onboardingCompletedAt DateTime? @map("onboarding_completed_at")
   onboardingStep   String?       @map("onboarding_step")
   lastLoginAt      DateTime?     @map("last_login_at")
+
+  // Subscription fields
+  subscriptionTier       SubscriptionTier @default(free) @map("subscription_tier")
+  subscriptionStartedAt  DateTime?        @map("subscription_started_at")
+  subscriptionExpiresAt  DateTime?        @map("subscription_expires_at")
+  stripeCustomerId       String?          @unique @map("stripe_customer_id")
+  stripeSubscriptionId   String?          @unique @map("stripe_subscription_id")
+
   createdAt        DateTime      @default(now()) @map("created_at")
   updatedAt        DateTime      @updatedAt @map("updated_at")
 
@@ -86,6 +143,8 @@ model User {
   auditLogs        AuditLog[]
   providerConnections ProviderConnection[]
   preferences      UserPreferences?
+  billingEvents    BillingEvent[]
+  usageMetrics     UsageMetric[]
 
   @@map("users")
 }
@@ -195,6 +254,7 @@ model Space {
   accounts         Account[]
   budgets          Budget[]
   transactionRules TransactionRule[]
+  goals            Goal[]
 
   @@map("spaces")
 }
@@ -235,6 +295,7 @@ model Account {
   assetValuations       AssetValuation[]
   esgScores             ESGScore[]
   connection            Connection?
+  goalAllocations       GoalAllocation[]
 
   @@unique([spaceId, provider, providerAccountId])
   @@index([spaceId])
@@ -443,4 +504,83 @@ model ExchangeRate {
   @@index([fromCurrency, toCurrency])
   @@index([date])
   @@map("exchange_rates")
+}
+
+model BillingEvent {
+  id               String           @id @default(uuid())
+  userId           String           @map("user_id")
+  type             BillingEventType
+  amount           Decimal          @db.Decimal(10, 2)
+  currency         Currency         @default(USD)
+  status           BillingStatus
+  stripeEventId    String?          @unique @map("stripe_event_id")
+  metadata         Json?
+  createdAt        DateTime         @default(now()) @map("created_at")
+
+  // Relations
+  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([status])
+  @@map("billing_events")
+}
+
+model UsageMetric {
+  id               String           @id @default(uuid())
+  userId           String           @map("user_id")
+  metricType       UsageMetricType  @map("metric_type")
+  count            Int              @default(1)
+  date             DateTime         @db.Date
+  metadata         Json?
+
+  // Relations
+  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, metricType, date])
+  @@index([userId, date(sort: Desc)])
+  @@index([metricType, date])
+  @@map("usage_metrics")
+}
+
+model Goal {
+  id               String        @id @default(uuid())
+  spaceId          String        @map("space_id")
+  name             String
+  description      String?
+  type             GoalType
+  targetAmount     Decimal       @db.Decimal(19, 4)
+  currency         Currency      @default(USD)
+  targetDate       DateTime      @db.Date
+  priority         Int           @default(1)
+  status           GoalStatus    @default(active)
+  notes            String?
+  createdAt        DateTime      @default(now()) @map("created_at")
+  updatedAt        DateTime      @updatedAt @map("updated_at")
+
+  // Relations
+  space            Space         @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  allocations      GoalAllocation[]
+
+  @@index([spaceId, status])
+  @@index([spaceId, createdAt(sort: Desc)])
+  @@map("goals")
+}
+
+model GoalAllocation {
+  id               String        @id @default(uuid())
+  goalId           String        @map("goal_id")
+  accountId        String        @map("account_id")
+  percentage       Decimal       @db.Decimal(5, 2)
+  notes            String?
+  createdAt        DateTime      @default(now()) @map("created_at")
+  updatedAt        DateTime      @updatedAt @map("updated_at")
+
+  // Relations
+  goal             Goal          @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  account          Account       @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@unique([goalId, accountId])
+  @@index([goalId])
+  @@index([accountId])
+  @@map("goal_allocations")
 }
