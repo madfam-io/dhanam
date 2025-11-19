@@ -205,7 +205,7 @@ export class AnalyticsService {
     return transactions
       .filter((t) => t.categoryId)
       .map((t) => {
-        const category = categoryMap.get(t.categoryId!) as typeof categories[0] | undefined;
+        const category = categoryMap.get(t.categoryId!) as (typeof categories)[0] | undefined;
         return {
           categoryId: t.categoryId!,
           categoryName: category?.name || 'Unknown',

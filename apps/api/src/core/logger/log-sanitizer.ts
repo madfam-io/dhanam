@@ -156,9 +156,7 @@ export class LogSanitizer {
       return false;
     }
 
-    return this.SENSITIVE_PATTERNS.some((pattern) =>
-      lowerKey.includes(pattern.toLowerCase()),
-    );
+    return this.SENSITIVE_PATTERNS.some((pattern) => lowerKey.includes(pattern.toLowerCase()));
   }
 
   /**
@@ -223,13 +221,7 @@ export class LogSanitizer {
     const sanitized = { ...headers };
 
     // Always redact these headers
-    const sensitiveHeaders = [
-      'authorization',
-      'cookie',
-      'set-cookie',
-      'x-api-key',
-      'x-auth-token',
-    ];
+    const sensitiveHeaders = ['authorization', 'cookie', 'set-cookie', 'x-api-key', 'x-auth-token'];
 
     for (const header of sensitiveHeaders) {
       if (sanitized[header]) {

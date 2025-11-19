@@ -12,9 +12,7 @@ import { AuditService } from '../../../core/audit/audit.service';
 // import { CryptoService } from '../../../core/crypto/crypto.service';
 import { PrismaService } from '../../../core/prisma/prisma.service';
 import { BlockchainAccountMetadata } from '../../../types/metadata.types';
-import {
-  isUniqueConstraintError,
-} from '../../../types/prisma-errors.types';
+import { isUniqueConstraintError } from '../../../types/prisma-errors.types';
 
 import { AddWalletDto, ImportWalletDto } from './dto';
 

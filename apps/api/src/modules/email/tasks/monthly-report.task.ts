@@ -130,7 +130,9 @@ export class MonthlyReportTask {
         });
 
         const categories = budget.categories.map((category) => {
-          const categoryTransactions = budgetTransactions.filter((t) => t.categoryId === category.id);
+          const categoryTransactions = budgetTransactions.filter(
+            (t) => t.categoryId === category.id
+          );
           const actualSpent = categoryTransactions
             .filter((t) => t.amount.lt(0))
             .reduce((sum, t) => sum + Math.abs(t.amount.toNumber()), 0);

@@ -4,8 +4,7 @@ import { LoggerService } from '@core/logger/logger.service';
 import { PrismaService } from '@core/prisma/prisma.service';
 
 export const ADMIN_ROLE_KEY = 'adminRole';
-export const AdminRole = (role?: string) => 
-  Reflect.metadata(ADMIN_ROLE_KEY, role);
+export const AdminRole = (role?: string) => Reflect.metadata(ADMIN_ROLE_KEY, role);
 
 @Injectable()
 export class AdminGuard implements CanActivate {

@@ -1,5 +1,6 @@
-import { Injectable } from '@nestjs/common';
 import { randomBytes, createHash } from 'crypto';
+
+import { Injectable } from '@nestjs/common';
 import * as qrcode from 'qrcode';
 import * as speakeasy from 'speakeasy';
 
@@ -133,9 +134,7 @@ export class TotpService {
 
   async storeBackupCodes(userId: string, codes: string[]): Promise<void> {
     // Hash backup codes before storing
-    const hashedCodes = codes.map((code) =>
-      createHash('sha256').update(code).digest('hex')
-    );
+    const hashedCodes = codes.map((code) => createHash('sha256').update(code).digest('hex'));
 
     await this.prisma.user.update({
       where: { id: userId },

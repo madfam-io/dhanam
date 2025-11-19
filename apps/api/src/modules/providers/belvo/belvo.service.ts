@@ -11,6 +11,7 @@ import { PrismaService } from '@core/prisma/prisma.service';
 
 import { CreateBelvoLinkDto, BelvoWebhookDto, BelvoWebhookEvent } from './dto';
 
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const { default: Belvo } = require('belvo');
 
 @Injectable()

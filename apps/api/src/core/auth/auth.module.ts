@@ -10,11 +10,11 @@ import { EmailModule } from '@modules/email/email.module';
 
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { GuestAuthService } from './guest-auth.service';
 import { SessionService } from './session.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
 import { TotpService } from './totp.service';
-import { GuestAuthService } from './guest-auth.service';
 
 @Module({
   imports: [
@@ -34,7 +34,14 @@ import { GuestAuthService } from './guest-auth.service';
     forwardRef(() => EmailModule),
   ],
   controllers: [AuthController],
-  providers: [AuthService, TotpService, SessionService, GuestAuthService, JwtStrategy, LocalStrategy],
+  providers: [
+    AuthService,
+    TotpService,
+    SessionService,
+    GuestAuthService,
+    JwtStrategy,
+    LocalStrategy,
+  ],
   exports: [AuthService, TotpService, SessionService, GuestAuthService],
 })
 export class AuthModule {}

@@ -85,7 +85,12 @@ export class WeeklySummaryTask {
     currency: Currency
   ) {
     // Get spending summary
-    const spending = await this.analyticsService.getSpendingByCategory(userId, spaceId, startDate, endDate);
+    const spending = await this.analyticsService.getSpendingByCategory(
+      userId,
+      spaceId,
+      startDate,
+      endDate
+    );
 
     // Get total spent
     const totalSpent = spending.reduce((sum, cat) => sum + cat.amount, 0);
@@ -123,7 +128,11 @@ export class WeeklySummaryTask {
     const budgetStatus = await Promise.all(
       budgets.map(async (budget) => {
         // Placeholder implementation - would need proper budget spending calculation
-        const totalBudgetAmount = budget.categories?.reduce((sum: number, c: any) => sum + (c.budgetedAmount?.toNumber() || 0), 0) || 0;
+        const totalBudgetAmount =
+          budget.categories?.reduce(
+            (sum: number, c: any) => sum + (c.budgetedAmount?.toNumber() || 0),
+            0
+          ) || 0;
 
         return {
           name: budget.name,

@@ -400,7 +400,10 @@ export class OnboardingService {
       this.logger.log(`Email verified for user ${payload.userId}`);
       return { success: true, message: 'Email verified successfully' };
     } catch (error) {
-      if (error instanceof Error && (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError')) {
+      if (
+        error instanceof Error &&
+        (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError')
+      ) {
         throw new BadRequestException('Invalid or expired verification token');
       }
       throw error;

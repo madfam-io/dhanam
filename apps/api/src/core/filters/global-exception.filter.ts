@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { FastifyReply, FastifyRequest } from 'fastify';
+
 import type { SentryService } from '@core/monitoring/sentry.service';
 
 export interface ErrorResponse {

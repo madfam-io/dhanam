@@ -226,7 +226,7 @@ export class AdminService {
         if (
           account.lastSyncedAt &&
           account.lastSyncedAt >
-          (connectionsByProvider[account.provider].lastSyncedAt || new Date(0))
+            (connectionsByProvider[account.provider].lastSyncedAt || new Date(0))
         ) {
           connectionsByProvider[account.provider].lastSyncedAt = account.lastSyncedAt;
         }
@@ -638,7 +638,10 @@ export class AdminService {
       `;
       return parseInt(result[0]?.connection_count || '0');
     } catch (error) {
-      this.logger.error('Failed to get database connections', error instanceof Error ? error.message : String(error));
+      this.logger.error(
+        'Failed to get database connections',
+        error instanceof Error ? error.message : String(error)
+      );
       return 0;
     }
   }
@@ -667,7 +670,10 @@ export class AdminService {
 
       return activeJobs > 0 ? 'active' : 'idle';
     } catch (error) {
-      this.logger.error('Failed to get queue status', error instanceof Error ? error.message : String(error));
+      this.logger.error(
+        'Failed to get queue status',
+        error instanceof Error ? error.message : String(error)
+      );
       return 'error';
     }
   }
