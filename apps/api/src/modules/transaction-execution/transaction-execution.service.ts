@@ -16,6 +16,8 @@ import { AuditService } from '../../core/audit/audit.service';
 import { SpacesService } from '../spaces/spaces.service';
 
 import { CreateOrderDto, VerifyOrderDto, UpdateOrderDto, OrderFilterDto } from './dto';
+import { ProviderFactoryService } from './providers/provider-factory.service';
+import { ExecutionOrder, OrderType as ProviderOrderType } from './providers/execution-provider.interface';
 
 // Import enums from DTO
 import { OrderType, OrderPriority, ExecutionProvider } from './dto/create-order.dto';
@@ -41,7 +43,8 @@ export class TransactionExecutionService {
   constructor(
     private prisma: PrismaService,
     private auditService: AuditService,
-    private spacesService: SpacesService
+    private spacesService: SpacesService,
+    private providerFactory: ProviderFactoryService
   ) {}
 
   /**
@@ -474,16 +477,70 @@ export class TransactionExecutionService {
 
   /**
    * Execute real order through provider
-   * This is a placeholder - actual implementation would integrate with providers
    */
   private async executeReal(order: any): Promise<OrderExecutionResult> {
     this.logger.log(`Executing real order ${order.id} via ${order.provider}`);
 
-    // TODO: Implement actual provider integration
-    // For now, return a placeholder response
-    throw new BadRequestException(
-      'Real order execution not yet implemented. Use dryRun mode for testing.'
-    );
+    try {
+      // Get provider instance
+      const provider = this.providerFactory.getProvider(order.provider);
+
+      // Build execution order
+      const executionOrder: ExecutionOrder = {
+        id: order.id,
+        type: order.type as ProviderOrderType,
+        amount: Number(order.amount),
+        currency: order.currency,
+        assetSymbol: order.assetSymbol,
+        targetPrice: order.targetPrice ? Number(order.targetPrice) : undefined,
+        maxSlippage: order.maxSlippage ? Number(order.maxSlippage) : undefined,
+        accountId: order.accountId,
+        toAccountId: order.toAccountId,
+        metadata: order.metadata,
+      };
+
+      // Validate order with provider
+      const validation = await provider.validateOrder(executionOrder);
+      if (!validation.valid) {
+        return {
+          success: false,
+          errorCode: 'VALIDATION_ERROR',
+          errorMessage: validation.errors?.join(', ') || 'Order validation failed',
+        };
+      }
+
+      // Execute based on order type
+      let result: OrderExecutionResult;
+
+      switch (order.type) {
+        case 'buy':
+          result = await provider.executeBuy(executionOrder);
+          break;
+        case 'sell':
+          result = await provider.executeSell(executionOrder);
+          break;
+        case 'transfer':
+          result = await provider.executeTransfer(executionOrder);
+          break;
+        case 'deposit':
+          result = await provider.executeDeposit(executionOrder);
+          break;
+        case 'withdraw':
+          result = await provider.executeWithdraw(executionOrder);
+          break;
+        default:
+          throw new BadRequestException(`Unsupported order type: ${order.type}`);
+      }
+
+      return result;
+    } catch (error) {
+      this.logger.error(`Provider execution failed for order ${order.id}:`, error);
+      return {
+        success: false,
+        errorCode: 'PROVIDER_ERROR',
+        errorMessage: error.message,
+      };
+    }
   }
 
   /**
