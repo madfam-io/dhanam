@@ -1,4 +1,4 @@
-import { Space, SpaceMember, SpaceRole } from '@dhanam/shared';
+import { Space, SpaceMember, SpaceRole, Currency } from '@dhanam/shared';
 import {
   Injectable,
   NotFoundException,
@@ -29,6 +29,7 @@ export class SpacesService {
 
     return userSpaces.map((us) => ({
       ...us.space,
+      currency: us.space.currency as Currency,
       role: us.role,
       createdAt: us.space.createdAt.toISOString(),
       updatedAt: us.space.updatedAt.toISOString(),
@@ -54,6 +55,7 @@ export class SpacesService {
 
     return {
       ...space,
+      currency: space.currency as Currency,
       createdAt: space.createdAt.toISOString(),
       updatedAt: space.updatedAt.toISOString(),
       role: 'owner' as SpaceRole,
@@ -71,6 +73,7 @@ export class SpacesService {
 
     return {
       ...space,
+      currency: space.currency as Currency,
       createdAt: space.createdAt.toISOString(),
       updatedAt: space.updatedAt.toISOString(),
     };
@@ -89,6 +92,7 @@ export class SpacesService {
 
     return {
       ...space,
+      currency: space.currency as Currency,
       createdAt: space.createdAt.toISOString(),
       updatedAt: space.updatedAt.toISOString(),
     };

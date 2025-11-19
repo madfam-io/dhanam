@@ -5,6 +5,7 @@ import {
   IncomeVsExpenses,
   AccountBalanceAnalytics,
   PortfolioAllocation,
+  Currency,
 } from '@dhanam/shared';
 import { Injectable } from '@nestjs/common';
 
@@ -62,7 +63,7 @@ export class AnalyticsService {
       totalAssets,
       totalLiabilities,
       netWorth,
-      currency: 'MXN',
+      currency: Currency.MXN,
       lastUpdated: new Date().toISOString(),
       trend,
       changePercent: 0, // TODO: Calculate actual change
@@ -123,7 +124,7 @@ export class AnalyticsService {
         projectedBalance: runningBalance,
         totalIncome: totalProjectedIncome,
         totalExpenses: totalProjectedExpenses,
-        currency: 'MXN',
+        currency: Currency.MXN,
       },
     };
   }
@@ -276,7 +277,7 @@ export class AnalyticsService {
       accountName: account.name,
       accountType: account.type,
       balance: account.balance.toNumber(),
-      currency: account.currency,
+      currency: account.currency as Currency,
       lastSynced: account.lastSyncedAt?.toISOString(),
     }));
   }

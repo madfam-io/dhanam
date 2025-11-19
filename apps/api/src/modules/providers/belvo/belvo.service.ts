@@ -509,10 +509,10 @@ export class BelvoService {
 
     try {
       return crypto.timingSafeEqual(
-        Buffer.from(signature, 'hex'),
-        Buffer.from(expectedSignature, 'hex')
+        new Uint8Array(Buffer.from(signature, 'hex')),
+        new Uint8Array(Buffer.from(expectedSignature, 'hex'))
       );
-    } catch (error) {
+    } catch (_error) {
       // If conversion to hex buffer fails (invalid hex string), signature is invalid
       return false;
     }
