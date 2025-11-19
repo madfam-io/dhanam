@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { randomBytes } from 'crypto';
+import { randomBytes, createHash } from 'crypto';
 import * as qrcode from 'qrcode';
 import * as speakeasy from 'speakeasy';
 
@@ -27,6 +27,7 @@ export class TotpService {
     });
 
     // Generate QR code
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const qrCodeUrl = await qrcode.toDataURL(secret.otpauth_url!);
 
     // Store temporary secret (not activated until verified)
@@ -37,10 +38,14 @@ export class TotpService {
 
     this.logger.log(`TOTP setup initiated for user: ${userId}`, 'TotpService');
 
+    // speakeasy always generates these values
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const base32Secret = secret.base32!;
+
     return {
       qrCodeUrl,
-      secret: secret.base32!,
-      manualEntryKey: secret.base32!,
+      secret: base32Secret,
+      manualEntryKey: base32Secret,
     };
   }
 
@@ -129,7 +134,7 @@ export class TotpService {
   async storeBackupCodes(userId: string, codes: string[]): Promise<void> {
     // Hash backup codes before storing
     const hashedCodes = codes.map((code) =>
-      require('crypto').createHash('sha256').update(code).digest('hex')
+      createHash('sha256').update(code).digest('hex')
     );
 
     await this.prisma.user.update({
@@ -150,7 +155,7 @@ export class TotpService {
       return false;
     }
 
-    const hashedCode = require('crypto').createHash('sha256').update(code).digest('hex');
+    const hashedCode = createHash('sha256').update(code).digest('hex');
     const codeIndex = user.totpBackupCodes.indexOf(hashedCode);
 
     if (codeIndex === -1) {

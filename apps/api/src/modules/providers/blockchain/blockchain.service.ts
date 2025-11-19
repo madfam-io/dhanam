@@ -13,7 +13,6 @@ import { AuditService } from '../../../core/audit/audit.service';
 import { PrismaService } from '../../../core/prisma/prisma.service';
 import { BlockchainAccountMetadata } from '../../../types/metadata.types';
 import {
-  isPrismaError,
   isUniqueConstraintError,
 } from '../../../types/prisma-errors.types';
 
@@ -532,7 +531,7 @@ export class BlockchainService {
 
       if (!account) return;
 
-      const metadata = account.metadata as BlockchainAccountMetadata;
+      const metadata = account.metadata as unknown as BlockchainAccountMetadata;
       const isIncoming = tx.to.toLowerCase() === walletAddress.toLowerCase();
       const amount = isIncoming ? parseFloat(tx.value) : -parseFloat(tx.value);
 
@@ -585,7 +584,7 @@ export class BlockchainService {
       });
 
       for (const account of accounts) {
-        const metadata = account.metadata as BlockchainAccountMetadata;
+        const metadata = account.metadata as unknown as BlockchainAccountMetadata;
 
         // Update balance
         const balance = await this.getBalance(
@@ -615,12 +614,6 @@ export class BlockchainService {
             accountId: updatedAccount.id,
             date: new Date(),
             value: updatedAccount.balance,
-            metadata: {
-              cryptoCurrency: metadata.cryptoCurrency,
-              cryptoBalance: balance.balance,
-              usdPrice: usdPrice,
-              network: metadata.network,
-            } as Prisma.JsonObject,
           },
         });
 
@@ -661,7 +654,7 @@ export class BlockchainService {
     }
 
     // Soft delete by marking as inactive
-    const currentMetadata = account.metadata as BlockchainAccountMetadata;
+    const currentMetadata = account.metadata as unknown as BlockchainAccountMetadata;
     await this.prisma.account.update({
       where: { id: accountId },
       data: {

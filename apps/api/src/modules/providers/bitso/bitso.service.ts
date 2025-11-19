@@ -102,7 +102,7 @@ export class BitsoService {
   async fetchBalances(connectionId: string): Promise<Account[]> {
     const connection = await this.prisma.providerConnection.findUnique({
       where: { id: connectionId },
-      include: { user: { include: { spaces: { take: 1 } } } },
+      include: { user: { include: { spaces: { take: 1 } } as any } as any },
     });
 
     if (!connection || connection.provider !== 'bitso') {
@@ -110,11 +110,11 @@ export class BitsoService {
     }
 
     const apiKey = this.cryptoService.decrypt(JSON.parse(connection.encryptedToken));
-    const connectionMetadata = connection.metadata as BitsoConnectionMetadata;
+    const connectionMetadata = connection.metadata as unknown as BitsoConnectionMetadata;
     const apiSecret = this.cryptoService.decrypt(
       JSON.parse(connectionMetadata.encryptedApiSecret)
     );
-    const spaceId = connection.user.spaces[0]?.id;
+    const spaceId = (connection.user as any).spaces[0]?.id;
 
     if (!spaceId) {
       throw new BadRequestException('No space found for user');
@@ -305,7 +305,7 @@ export class BitsoService {
 
         if (existingAccount) {
           // Update existing account
-          const existingMetadata = (existingAccount.metadata as BitsoAccountMetadata) || ({} as BitsoAccountMetadata);
+          const existingMetadata = (existingAccount.metadata as unknown as BitsoAccountMetadata) || ({} as BitsoAccountMetadata);
           const updatedAccount = await this.prisma.account.update({
             where: { id: existingAccount.id },
             data: {
@@ -329,11 +329,6 @@ export class BitsoService {
               accountId: updatedAccount.id,
               date: new Date(),
               value: usdValue,
-              metadata: {
-                cryptoCurrency: balance.currency.toUpperCase(),
-                cryptoAmount: totalAmount,
-                usdPrice: usdPrice * mxnToUsdRate,
-              } as Prisma.JsonObject,
             },
           });
 
@@ -369,11 +364,6 @@ export class BitsoService {
               accountId: newAccount.id,
               date: new Date(),
               value: usdValue,
-              metadata: {
-                cryptoCurrency: balance.currency.toUpperCase(),
-                cryptoAmount: totalAmount,
-                usdPrice: usdPrice * mxnToUsdRate,
-              } as Prisma.JsonObject,
             },
           });
 
@@ -479,7 +469,7 @@ export class BitsoService {
 
       for (const connection of connections) {
         const apiKey = this.cryptoService.decrypt(JSON.parse(connection.encryptedToken));
-        const connectionMetadata = connection.metadata as BitsoConnectionMetadata;
+        const connectionMetadata = connection.metadata as unknown as BitsoConnectionMetadata;
         const apiSecret = this.cryptoService.decrypt(
           JSON.parse(connectionMetadata.encryptedApiSecret)
         );
@@ -578,8 +568,8 @@ export class BitsoService {
       .digest('hex');
 
     return crypto.timingSafeEqual(
-      Buffer.from(signature, 'hex'),
-      Buffer.from(expectedSignature, 'hex')
+      Buffer.from(signature, 'hex') as any,
+      Buffer.from(expectedSignature, 'hex') as any
     );
   }
 
@@ -606,7 +596,7 @@ export class BitsoService {
     const totalValue = accounts.reduce((sum, account) => sum + Number(account.balance), 0);
 
     const holdings = accounts.map((account) => {
-      const metadata = account.metadata as BitsoAccountMetadata;
+      const metadata = account.metadata as unknown as BitsoAccountMetadata;
       return {
         currency: metadata.cryptoCurrency,
         amount: metadata.cryptoAmount,

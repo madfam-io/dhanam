@@ -96,7 +96,7 @@ export class UsersService {
   }
 
   private sanitizeUser(user: any): User {
-    const { passwordHash, totpSecret, ...sanitized } = user;
+    const { passwordHash: _passwordHash, totpSecret: _totpSecret, ...sanitized } = user;
     return sanitized;
   }
 }

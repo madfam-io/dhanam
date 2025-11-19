@@ -113,9 +113,10 @@ export function getUniqueConstraintFields(error: PrismaError): string[] {
  */
 export function getPrismaErrorMessage(error: PrismaError): string {
   switch (error.code) {
-    case PrismaErrorCode.UniqueConstraintViolation:
+    case PrismaErrorCode.UniqueConstraintViolation: {
       const fields = getUniqueConstraintFields(error);
       return `A record with this ${fields.join(', ')} already exists.`;
+    }
 
     case PrismaErrorCode.ForeignKeyConstraintViolation:
       return 'Cannot perform this operation due to related records.';
