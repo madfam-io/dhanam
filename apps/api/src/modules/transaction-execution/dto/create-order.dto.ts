@@ -1,5 +1,13 @@
 import { IsString, IsNumber, IsOptional, IsEnum, IsBoolean, IsUUID, Min, Max } from 'class-validator';
-import { Currency } from '@prisma/client';
+
+export enum Currency {
+  USD = 'USD',
+  MXN = 'MXN',
+  EUR = 'EUR',
+  GBP = 'GBP',
+  BTC = 'BTC',
+  ETH = 'ETH',
+}
 
 export enum OrderType {
   buy = 'buy',

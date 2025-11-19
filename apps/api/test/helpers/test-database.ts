@@ -37,14 +37,22 @@ export class TestDatabase {
     }
 
     try {
-      // Reset database using migrations (safer than db push)
-      execSync('pnpm prisma migrate reset --force --skip-seed', {
+      // Use db push for tests (faster than migrations, no migration files needed)
+      execSync('pnpm prisma db push --force-reset --skip-generate', {
         env: { ...process.env },
-        stdio: 'ignore', // Suppress output in tests
+        stdio: 'pipe', // Capture output
       });
     } catch (error) {
-      console.error('Failed to reset test database:', error);
-      throw error;
+      // If migrations exist, try using them instead
+      try {
+        execSync('pnpm prisma migrate reset --force --skip-seed', {
+          env: { ...process.env },
+          stdio: 'ignore',
+        });
+      } catch (migrationError) {
+        console.error('Failed to setup test database:', error);
+        throw error;
+      }
     }
 
     this.prisma = new PrismaClient({
@@ -74,7 +82,26 @@ export class TestDatabase {
     try {
       // Delete in order to respect foreign key constraints
       await this.prisma.$transaction([
-        // Delete child records first
+        // Delete Phase 2 transaction execution records first
+        this.prisma.orderExecution.deleteMany(),
+        this.prisma.transactionOrder.deleteMany(),
+        this.prisma.orderLimit.deleteMany(),
+        this.prisma.idempotencyKey.deleteMany(),
+
+        // Delete Phase 1 estate planning records
+        this.prisma.beneficiary.deleteMany(),
+        this.prisma.will.deleteMany(),
+        this.prisma.trust.deleteMany(),
+        this.prisma.powerOfAttorney.deleteMany(),
+        this.prisma.healthcareDirective.deleteMany(),
+        this.prisma.householdMember.deleteMany(),
+        this.prisma.household.deleteMany(),
+
+        // Delete goals and allocations
+        this.prisma.goalAllocation.deleteMany(),
+        this.prisma.goal.deleteMany(),
+
+        // Delete original child records
         this.prisma.transaction.deleteMany(),
         this.prisma.assetValuation.deleteMany(),
         this.prisma.eSGScore.deleteMany(),
@@ -92,6 +119,8 @@ export class TestDatabase {
         this.prisma.webhookEvent.deleteMany(),
         this.prisma.errorLog.deleteMany(),
         this.prisma.exchangeRate.deleteMany(),
+        this.prisma.usageMetric.deleteMany(),
+        this.prisma.subscription.deleteMany(),
 
         // Delete parent records last
         this.prisma.user.deleteMany(),
@@ -169,6 +198,26 @@ export class TestDatabase {
     }
 
     const tables = [
+      // Phase 2 transaction execution tables
+      'order_executions',
+      'transaction_orders',
+      'order_limits',
+      'idempotency_keys',
+
+      // Phase 1 estate planning tables
+      'beneficiaries',
+      'wills',
+      'trusts',
+      'power_of_attorneys',
+      'healthcare_directives',
+      'household_members',
+      'households',
+
+      // Goals tables
+      'goal_allocations',
+      'goals',
+
+      // Original tables
       'transactions',
       'asset_valuations',
       'esg_scores',
@@ -186,6 +235,8 @@ export class TestDatabase {
       'webhook_events',
       'error_logs',
       'exchange_rates',
+      'usage_metrics',
+      'subscriptions',
       'users',
     ];
 

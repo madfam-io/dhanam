@@ -170,9 +170,16 @@ describe('TransactionExecutionService', () => {
     });
 
     it('should return existing order for duplicate idempotency key', async () => {
+      // Compute the actual hash from the DTO
+      const crypto = require('crypto');
+      const requestHash = crypto
+        .createHash('sha256')
+        .update(JSON.stringify(createOrderDto))
+        .digest('hex');
+
       const existingIdempotencyKey = {
         key: 'test-idempotency-key',
-        requestHash: 'hash123',
+        requestHash,
         orderId: mockOrder.id,
         expiresAt: new Date(Date.now() + 86400000), // 24 hours from now
       };
