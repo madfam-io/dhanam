@@ -55,7 +55,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: '18'
+          node-version: '20'
           cache: 'pnpm'
 
       - name: Get pnpm store directory
@@ -92,7 +92,7 @@ jobs:
         run: pnpm lint
 
       - name: Type check
-        run: pnpm type-check
+        run: pnpm typecheck
 
       - name: Run unit tests with coverage
         run: |
@@ -197,7 +197,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: '18'
+          node-version: '20'
           cache: 'pnpm'
 
       - name: Install dependencies
@@ -245,11 +245,18 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: '18'
+          node-version: '20'
           cache: 'pnpm'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma Client
+        run: |
+          cd apps/api
+          pnpm prisma generate
+        env:
+          PRISMA_ENGINES_CHECKSUM_IGNORE_MISSING: 1
 
       - name: Build all packages
         run: pnpm build
