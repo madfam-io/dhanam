@@ -6,24 +6,24 @@ export const CURRENCIES: Record<Currency, {
   name: string;
   decimals: number;
 }> = {
-  MXN: {
-    code: 'MXN',
+  [Currency.MXN]: {
+    code: Currency.MXN,
     symbol: '$',
     name: 'Mexican Peso',
     decimals: 2,
   },
-  USD: {
-    code: 'USD',
+  [Currency.USD]: {
+    code: Currency.USD,
     symbol: '$',
     name: 'US Dollar',
     decimals: 2,
   },
-  EUR: {
-    code: 'EUR',
+  [Currency.EUR]: {
+    code: Currency.EUR,
     symbol: '€',
     name: 'Euro',
     decimals: 2,
   },
 };
 
-export const DEFAULT_CURRENCY: Currency = 'MXN';
+export const DEFAULT_CURRENCY: Currency = Currency.MXN;

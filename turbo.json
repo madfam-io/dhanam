@@ -18,12 +18,12 @@
       "outputs": []
     },
     "test": {
-      "dependsOn": ["^test"],
+      "dependsOn": ["^build"],
       "outputs": ["coverage/**"],
       "env": ["NODE_ENV"]
     },
     "typecheck": {
-      "dependsOn": ["^typecheck"],
+      "dependsOn": ["^build"],
       "outputs": []
     },
     "db:generate": {
