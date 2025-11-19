@@ -1,3 +1,4 @@
+import { Account } from '@dhanam/shared';
 import { Ionicons } from '@expo/vector-icons';
 import { ComponentProps } from 'react';
 import { View, StyleSheet } from 'react-native';
@@ -6,14 +7,7 @@ import { Card, Text } from 'react-native-paper';
 import { formatCurrency } from '@/utils/currency';
 
 interface AccountCardProps {
-  account: {
-    id: string;
-    name: string;
-    type: string;
-    institution: string;
-    balance: number;
-    currency: string;
-  };
+  account: Account;
   onPress?: () => void;
 }
 
@@ -72,7 +66,7 @@ export function AccountCard({ account, onPress }: AccountCardProps) {
               {account.name}
             </Text>
             <Text variant="bodySmall" style={styles.institution}>
-              {account.institution}
+              {account.provider}
             </Text>
           </View>
         </View>

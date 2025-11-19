@@ -5,7 +5,7 @@ import { theme } from '@/theme';
 
 export default function AuthLayout() {
   const colorScheme = useColorScheme();
-  const colors = theme[colorScheme ?? 'light'].colors;
+  const colors = theme[colorScheme === 'dark' ? 'dark' : 'light'].colors;
 
   return (
     <Stack

@@ -61,4 +61,24 @@ apiClient.interceptors.response.use(
   }
 );
 
+// Onboarding API
+export const onboardingApi = {
+  getStatus: async () => {
+    const response = await apiClient.get('/onboarding/status');
+    return response.data;
+  },
+  updateStep: async (step: string, data?: Record<string, unknown>) => {
+    const response = await apiClient.post('/onboarding/step', { step, data });
+    return response.data;
+  },
+  complete: async (skipOptional = false) => {
+    const response = await apiClient.post('/onboarding/complete', { skipOptional });
+    return response.data;
+  },
+  skipStep: async (step: string) => {
+    const response = await apiClient.post('/onboarding/skip', { step });
+    return response.data;
+  },
+};
+
 export default apiClient;

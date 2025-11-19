@@ -52,7 +52,7 @@ export default function BiometricSetupScreen() {
 
   const getBiometricIcon = (): ComponentProps<typeof Ionicons>['name'] => {
     if (supportedTypes.includes(1)) return 'finger-print'; // FINGERPRINT
-    if (supportedTypes.includes(2)) return 'face-recognition'; // FACIAL_RECOGNITION
+    if (supportedTypes.includes(2)) return 'scan-outline'; // FACIAL_RECOGNITION
     return 'shield-checkmark';
   };
 

@@ -19,6 +19,7 @@ interface AuthContextType extends AuthState {
   register: (data: RegisterData) => Promise<void>;
   logout: () => Promise<void>;
   refreshAuth: () => Promise<void>;
+  refreshUser: () => Promise<void>;
 }
 
 interface LoginCredentials {
@@ -84,10 +85,6 @@ const USER_KEY = 'user_data';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(authReducer, initialState);
-
-  useEffect(() => {
-    loadStoredAuth();
-  }, [loadStoredAuth]);
 
   useEffect(() => {
     if (state.accessToken) {
@@ -174,6 +171,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [verifyToken]);
 
+  useEffect(() => {
+    loadStoredAuth();
+  }, [loadStoredAuth]);
+
   const storeAuth = async (user: User, accessToken: string, refreshToken: string) => {
     await SecureStore.setItemAsync(TOKEN_KEY, JSON.stringify({ accessToken, refreshToken }));
     await AsyncStorage.setItem(USER_KEY, JSON.stringify(user));
@@ -243,12 +244,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const refreshUser = useCallback(async () => {
+    try {
+      if (!state.accessToken) {
+        throw new Error('No access token available');
+      }
+
+      const response = await apiClient.get('/auth/me');
+      dispatch({ type: 'SET_USER', payload: response.data });
+
+      // Update stored user data
+      await AsyncStorage.setItem(USER_KEY, JSON.stringify(response.data));
+    } catch (error) {
+      console.error('Failed to refresh user:', error);
+      throw error;
+    }
+  }, [state.accessToken]);
+
   const value: AuthContextType = {
     ...state,
     login,
     register,
     logout,
     refreshAuth,
+    refreshUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

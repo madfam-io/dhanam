@@ -1,3 +1,4 @@
+import { Transaction } from '@dhanam/shared';
 import { Ionicons } from '@expo/vector-icons';
 import { ComponentProps } from 'react';
 import { View, StyleSheet } from 'react-native';
@@ -6,20 +7,15 @@ import { List, Text, Chip } from 'react-native-paper';
 import { formatCurrency } from '@/utils/currency';
 
 interface TransactionItemProps {
-  transaction: {
-    id: string;
-    amount: number;
-    currency: string;
-    description: string;
-    category: string;
-    type: 'income' | 'expense' | 'transfer';
-    date: string;
-    pending?: boolean;
-  };
+  transaction: Transaction;
   onPress?: () => void;
 }
 
 export function TransactionItem({ transaction, onPress }: TransactionItemProps) {
+  // Determine transaction type based on amount (positive = income, negative = expense)
+  const transactionType = transaction.amount > 0 ? 'income' : 'expense';
+  const categoryName = transaction.category?.name || 'Uncategorized';
+
   const getTransactionIcon = (
     type: string,
     category: string
@@ -84,7 +80,7 @@ export function TransactionItem({ transaction, onPress }: TransactionItemProps) 
             {formatDate(transaction.date)}
           </Text>
           <Chip mode="flat" textStyle={styles.categoryText} style={styles.category}>
-            {transaction.category}
+            {categoryName}
           </Chip>
         </View>
       }
@@ -92,13 +88,13 @@ export function TransactionItem({ transaction, onPress }: TransactionItemProps) 
         <View
           style={[
             styles.iconContainer,
-            { backgroundColor: `${getTransactionColor(transaction.type)}15` },
+            { backgroundColor: `${getTransactionColor(transactionType)}15` },
           ]}
         >
           <Ionicons
-            name={getTransactionIcon(transaction.type, transaction.category)}
+            name={getTransactionIcon(transactionType, categoryName)}
             size={20}
-            color={getTransactionColor(transaction.type)}
+            color={getTransactionColor(transactionType)}
           />
         </View>
       )}
@@ -106,9 +102,9 @@ export function TransactionItem({ transaction, onPress }: TransactionItemProps) 
         <View style={styles.amount}>
           <Text
             variant="titleMedium"
-            style={[styles.amountText, { color: getTransactionColor(transaction.type) }]}
+            style={[styles.amountText, { color: getTransactionColor(transactionType) }]}
           >
-            {transaction.type === 'expense' ? '-' : transaction.type === 'income' ? '+' : ''}
+            {transactionType === 'expense' ? '-' : transactionType === 'income' ? '+' : ''}
             {formatCurrency(Math.abs(transaction.amount), transaction.currency)}
           </Text>
           {transaction.pending && (
