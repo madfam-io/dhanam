@@ -501,8 +501,8 @@ export class BelvoService {
       .digest('hex');
 
     return crypto.timingSafeEqual(
-      Buffer.from(signature, 'hex'),
-      Buffer.from(expectedSignature, 'hex')
+      Buffer.from(signature, 'hex') as any,
+      Buffer.from(expectedSignature, 'hex') as any
     );
   }
 }

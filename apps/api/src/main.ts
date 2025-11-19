@@ -67,7 +67,7 @@ async function bootstrap() {
   // Rate limiting
   await app.register(fastifyRateLimit, {
     max: configService.get('RATE_LIMIT_MAX') ? parseInt(configService.get('RATE_LIMIT_MAX')!) : 100,
-    timeWindow: configService.get('RATE_LIMIT_WINDOW') || '15 minutes',
+    timeWindow: (configService.get('RATE_LIMIT_WINDOW') as string) || '15 minutes',
   });
 
   // Global middleware and filters

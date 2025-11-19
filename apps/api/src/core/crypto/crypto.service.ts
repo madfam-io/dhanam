@@ -20,7 +20,7 @@ export class CryptoService {
 
   encrypt(text: string): string {
     const iv = randomBytes(16);
-    const cipher = createCipheriv(this.algorithm, this.key, iv);
+    const cipher = createCipheriv(this.algorithm, this.key as any, iv);
 
     let encrypted = cipher.update(text, 'utf8', 'hex');
     encrypted += cipher.final('hex');
@@ -39,8 +39,8 @@ export class CryptoService {
 
     const iv = Buffer.from(ivHex, 'hex');
     const authTag = Buffer.from(authTagHex, 'hex');
-    const decipher = createDecipheriv(this.algorithm, this.key, iv);
-    decipher.setAuthTag(authTag);
+    const decipher = createDecipheriv(this.algorithm, this.key as any, iv);
+    decipher.setAuthTag(authTag as any);
 
     let decrypted = decipher.update(encrypted, 'hex', 'utf8');
     decrypted += decipher.final('utf8');
