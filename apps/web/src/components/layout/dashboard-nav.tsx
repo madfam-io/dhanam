@@ -12,6 +12,7 @@ import {
   Settings,
   FileText,
   Leaf,
+  Target,
 } from 'lucide-react';
 
 const navigation = [
@@ -44,6 +45,11 @@ const navigation = [
     name: 'ESG Insights',
     href: '/dashboard/esg',
     icon: Leaf,
+  },
+  {
+    name: 'Retirement',
+    href: '/retirement',
+    icon: Target,
   },
   {
     name: 'Reports',
