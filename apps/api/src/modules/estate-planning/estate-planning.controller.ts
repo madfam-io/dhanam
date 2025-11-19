@@ -11,12 +11,16 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { EstatePlanningService } from './estate-planning.service';
 import { CreateWillDto, UpdateWillDto, AddBeneficiaryDto, UpdateBeneficiaryDto, AddExecutorDto, UpdateExecutorDto } from './dto';
 import { JwtAuthGuard } from '../../core/auth/guards/jwt-auth.guard';
+import { SubscriptionGuard } from '../billing/guards/subscription.guard';
+import { RequiresPremium } from '../billing/decorators/requires-tier.decorator';
 
 @Controller('wills')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, SubscriptionGuard)
+@RequiresPremium()
 export class EstatePlanningController {
   constructor(private estatePlanningService: EstatePlanningService) {}
 
@@ -63,16 +67,20 @@ export class EstatePlanningController {
 
   /**
    * Activate a will
+   * Rate limited to prevent abuse: 3 activations per hour
    */
   @Post(':id/activate')
+  @Throttle({ default: { limit: 3, ttl: 3600000 } }) // 3 activations per hour
   async activateWill(@Param('id') id: string, @Req() req: any) {
     return this.estatePlanningService.activateWill(id, req.user.id);
   }
 
   /**
    * Revoke a will
+   * Rate limited to prevent abuse: 5 revocations per hour
    */
   @Post(':id/revoke')
+  @Throttle({ default: { limit: 5, ttl: 3600000 } }) // 5 revocations per hour
   async revokeWill(@Param('id') id: string, @Req() req: any) {
     return this.estatePlanningService.revokeWill(id, req.user.id);
   }

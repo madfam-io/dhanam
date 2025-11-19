@@ -1,11 +1,12 @@
 import { Module } from '@nestjs/common';
 import { EstatePlanningController } from './estate-planning.controller';
 import { EstatePlanningService } from './estate-planning.service';
-import { PrismaModule } from '../../core/database/prisma.module';
+import { PrismaModule } from '../../core/prisma/prisma.module';
 import { AuditModule } from '../../core/audit/audit.module';
+import { BillingModule } from '../billing/billing.module';
 
 @Module({
-  imports: [PrismaModule, AuditModule],
+  imports: [PrismaModule, AuditModule, BillingModule],
   controllers: [EstatePlanningController],
   providers: [EstatePlanningService],
   exports: [EstatePlanningService],
