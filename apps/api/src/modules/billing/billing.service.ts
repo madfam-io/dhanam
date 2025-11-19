@@ -1,10 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { PrismaService } from '../../core/database/prisma.service';
-import { AuditService } from '../../core/audit/audit.service';
-import { StripeService } from './stripe.service';
-import { UsageMetricType, SubscriptionTier } from '@prisma/client';
+import { UsageMetricType } from '@prisma/client';
 import Stripe from 'stripe';
+
+import { AuditService } from '../../core/audit/audit.service';
+import { PrismaService } from '../../core/prisma/prisma.service';
+
+import { StripeService } from './stripe.service';
 
 @Injectable()
 export class BillingService {
@@ -94,7 +96,7 @@ export class BillingService {
       userId,
       action: 'BILLING_UPGRADE_INITIATED',
       severity: 'medium',
-      metadata: JSON.stringify({ sessionId: session.id }),
+      metadata: { sessionId: session.id },
     });
 
     this.logger.log(`Upgrade initiated for user ${userId}, session: ${session.id}`);
@@ -145,8 +147,8 @@ export class BillingService {
       where: { id: user.id },
       data: {
         subscriptionTier: 'premium',
-        subscriptionStartedAt: new Date(subscription.current_period_start * 1000),
-        subscriptionExpiresAt: new Date(subscription.current_period_end * 1000),
+        subscriptionStartedAt: new Date((subscription as any).current_period_start * 1000),
+        subscriptionExpiresAt: new Date((subscription as any).current_period_end * 1000),
         stripeSubscriptionId: subscription.id,
       },
     });
@@ -167,10 +169,10 @@ export class BillingService {
       userId: user.id,
       action: 'SUBSCRIPTION_ACTIVATED',
       severity: 'high',
-      metadata: JSON.stringify({
+      metadata: {
         tier: 'premium',
         subscriptionId: subscription.id,
-      }),
+      },
     });
 
     this.logger.log(`Subscription created for user ${user.id}`);
@@ -196,7 +198,7 @@ export class BillingService {
     await this.prisma.user.update({
       where: { id: user.id },
       data: {
-        subscriptionExpiresAt: new Date(subscription.current_period_end * 1000),
+        subscriptionExpiresAt: new Date((subscription as any).current_period_end * 1000),
       },
     });
 
@@ -244,7 +246,7 @@ export class BillingService {
       userId: user.id,
       action: 'SUBSCRIPTION_CANCELLED',
       severity: 'medium',
-      metadata: JSON.stringify({ subscriptionId: subscription.id }),
+      metadata: { subscriptionId: subscription.id },
     });
 
     this.logger.log(`Subscription cancelled for user ${user.id}`);
@@ -276,7 +278,7 @@ export class BillingService {
         stripeEventId: event.id,
         metadata: {
           invoiceId: invoice.id,
-          subscriptionId: invoice.subscription as string,
+          subscriptionId: (invoice as any).subscription as string,
         },
       },
     });
@@ -310,7 +312,7 @@ export class BillingService {
         stripeEventId: event.id,
         metadata: {
           invoiceId: invoice.id,
-          subscriptionId: invoice.subscription as string,
+          subscriptionId: (invoice as any).subscription as string,
         },
       },
     });
@@ -319,10 +321,10 @@ export class BillingService {
       userId: user.id,
       action: 'PAYMENT_FAILED',
       severity: 'high',
-      metadata: JSON.stringify({
+      metadata: {
         amount: invoice.amount_due / 100,
         invoiceId: invoice.id,
-      }),
+      },
     });
 
     this.logger.warn(`Payment failed for user ${user.id}, amount: ${invoice.amount_due / 100}`);

@@ -1,5 +1,5 @@
-import { IsOptional, IsEnum, IsString, IsInt, Min, Max } from 'class-validator';
 import { Type } from 'class-transformer';
+import { IsOptional, IsEnum, IsString, IsInt, Min, Max } from 'class-validator';
 
 export enum OrderStatus {
   pending_verification = 'pending_verification',

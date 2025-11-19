@@ -1,4 +1,13 @@
-import { IsString, IsNumber, IsOptional, IsEnum, IsBoolean, IsUUID, Min, Max } from 'class-validator';
+import {
+  IsString,
+  IsNumber,
+  IsOptional,
+  IsEnum,
+  IsBoolean,
+  IsUUID,
+  Min,
+  Max,
+} from 'class-validator';
 
 export enum Currency {
   USD = 'USD',

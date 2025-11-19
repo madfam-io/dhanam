@@ -5,7 +5,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Info } from 'lucide-react';
@@ -19,7 +25,9 @@ interface RetirementCalculatorFormProps {
 export function RetirementCalculatorForm({ onResults }: RetirementCalculatorFormProps) {
   const { simulateRetirement, getRecommendedAllocation, loading, error } = useSimulations();
 
-  const [riskTolerance, setRiskTolerance] = useState<'conservative' | 'moderate' | 'aggressive'>('moderate');
+  const [riskTolerance, setRiskTolerance] = useState<'conservative' | 'moderate' | 'aggressive'>(
+    'moderate'
+  );
   const [inputs, setInputs] = useState<RetirementConfig>({
     initialBalance: 50000,
     monthlyContribution: 1500,
@@ -41,7 +49,7 @@ export function RetirementCalculatorForm({ onResults }: RetirementCalculatorForm
       const allocation = await getRecommendedAllocation(riskTolerance, yearsToRetirement);
 
       if (allocation) {
-        setInputs(prev => ({
+        setInputs((prev) => ({
           ...prev,
           expectedReturn: allocation.expectedReturn,
           volatility: allocation.volatility,
@@ -61,7 +69,7 @@ export function RetirementCalculatorForm({ onResults }: RetirementCalculatorForm
   };
 
   const handleInputChange = (field: keyof RetirementConfig, value: number) => {
-    setInputs(prev => ({ ...prev, [field]: value }));
+    setInputs((prev) => ({ ...prev, [field]: value }));
   };
 
   const yearsToRetirement = inputs.retirementAge - inputs.currentAge;
@@ -101,7 +109,9 @@ export function RetirementCalculatorForm({ onResults }: RetirementCalculatorForm
                 <Label htmlFor="initialBalance">Current Retirement Savings</Label>
                 <TooltipProvider>
                   <Tooltip>
-                    <TooltipTrigger><Info className="h-4 w-4 text-muted-foreground" /></TooltipTrigger>
+                    <TooltipTrigger>
+                      <Info className="h-4 w-4 text-muted-foreground" />
+                    </TooltipTrigger>
                     <TooltipContent>
                       <p>Total value of all retirement accounts (401k, IRA, etc.)</p>
                     </TooltipContent>
@@ -127,12 +137,15 @@ export function RetirementCalculatorForm({ onResults }: RetirementCalculatorForm
                 id="monthlyContribution"
                 type="number"
                 value={inputs.monthlyContribution}
-                onChange={(e) => handleInputChange('monthlyContribution', parseFloat(e.target.value))}
+                onChange={(e) =>
+                  handleInputChange('monthlyContribution', parseFloat(e.target.value))
+                }
                 min={0}
                 step={100}
               />
               <p className="text-sm text-muted-foreground">
-                ${inputs.monthlyContribution.toLocaleString()}/month = ${(inputs.monthlyContribution * 12).toLocaleString()}/year
+                ${inputs.monthlyContribution.toLocaleString()}/month = $
+                {(inputs.monthlyContribution * 12).toLocaleString()}/year
               </p>
             </div>
           </div>
@@ -199,7 +212,8 @@ export function RetirementCalculatorForm({ onResults }: RetirementCalculatorForm
                 step={100}
               />
               <p className="text-sm text-muted-foreground">
-                ${(inputs.monthlyExpenses || 0).toLocaleString()}/month = ${((inputs.monthlyExpenses || 0) * 12).toLocaleString()}/year
+                ${(inputs.monthlyExpenses || 0).toLocaleString()}/month = $
+                {((inputs.monthlyExpenses || 0) * 12).toLocaleString()}/year
               </p>
             </div>
 
@@ -209,12 +223,17 @@ export function RetirementCalculatorForm({ onResults }: RetirementCalculatorForm
                 id="socialSecurityIncome"
                 type="number"
                 value={inputs.socialSecurityIncome || 0}
-                onChange={(e) => handleInputChange('socialSecurityIncome', parseFloat(e.target.value))}
+                onChange={(e) =>
+                  handleInputChange('socialSecurityIncome', parseFloat(e.target.value))
+                }
                 min={0}
                 step={100}
               />
               <p className="text-sm text-muted-foreground">
-                Net monthly need: ${((inputs.monthlyExpenses || 0) - (inputs.socialSecurityIncome || 0)).toLocaleString()}
+                Net monthly need: $
+                {(
+                  (inputs.monthlyExpenses || 0) - (inputs.socialSecurityIncome || 0)
+                ).toLocaleString()}
               </p>
             </div>
           </div>
@@ -230,7 +249,9 @@ export function RetirementCalculatorForm({ onResults }: RetirementCalculatorForm
                   id="expectedReturn"
                   type="number"
                   value={(inputs.expectedReturn * 100).toFixed(1)}
-                  onChange={(e) => handleInputChange('expectedReturn', parseFloat(e.target.value) / 100)}
+                  onChange={(e) =>
+                    handleInputChange('expectedReturn', parseFloat(e.target.value) / 100)
+                  }
                   min={-20}
                   max={20}
                   step={0.5}
@@ -246,7 +267,9 @@ export function RetirementCalculatorForm({ onResults }: RetirementCalculatorForm
                   id="volatility"
                   type="number"
                   value={(inputs.volatility * 100).toFixed(1)}
-                  onChange={(e) => handleInputChange('volatility', parseFloat(e.target.value) / 100)}
+                  onChange={(e) =>
+                    handleInputChange('volatility', parseFloat(e.target.value) / 100)
+                  }
                   min={0}
                   max={80}
                   step={1}
@@ -273,12 +296,12 @@ export function RetirementCalculatorForm({ onResults }: RetirementCalculatorForm
                 {error.statusCode === 429 && (
                   <div>
                     <p className="font-semibold">{error.message}</p>
-                    <p className="text-sm mt-1">Try again tomorrow or upgrade for unlimited access.</p>
+                    <p className="text-sm mt-1">
+                      Try again tomorrow or upgrade for unlimited access.
+                    </p>
                   </div>
                 )}
-                {error.statusCode !== 402 && error.statusCode !== 429 && (
-                  <p>{error.message}</p>
-                )}
+                {error.statusCode !== 402 && error.statusCode !== 429 && <p>{error.message}</p>}
               </AlertDescription>
             </Alert>
           )}

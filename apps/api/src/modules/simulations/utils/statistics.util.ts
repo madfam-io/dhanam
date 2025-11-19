@@ -6,6 +6,30 @@ import * as jStat from 'jstat';
 
 export class StatisticsUtil {
   /**
+   * Calculate minimum value in an array
+   */
+  static min(values: number[]): number {
+    if (values.length === 0) return 0;
+    return Math.min(...values);
+  }
+
+  /**
+   * Calculate maximum value in an array
+   */
+  static max(values: number[]): number {
+    if (values.length === 0) return 0;
+    return Math.max(...values);
+  }
+
+  /**
+   * Calculate sum of all values in an array
+   */
+  static sum(values: number[]): number {
+    if (values.length === 0) return 0;
+    return values.reduce((acc, val) => acc + val, 0);
+  }
+
+  /**
    * Calculate mean (average) of an array of numbers
    */
   static mean(values: number[]): number {
@@ -119,7 +143,7 @@ export class StatisticsUtil {
    * Calculate monthly return from annualized return
    */
   static monthlyReturn(annualReturn: number): number {
-    return Math.pow(1 + annualReturn, 1/12) - 1;
+    return Math.pow(1 + annualReturn, 1 / 12) - 1;
   }
 
   /**
@@ -173,7 +197,7 @@ export class StatisticsUtil {
    * @param riskFreeRate Risk-free rate (same period as returns)
    */
   static sharpeRatio(returns: number[], riskFreeRate: number): number {
-    const excessReturns = returns.map(r => r - riskFreeRate);
+    const excessReturns = returns.map((r) => r - riskFreeRate);
     const meanExcess = this.mean(excessReturns);
     const stdDevExcess = this.stdDev(excessReturns);
 
@@ -240,10 +264,10 @@ export class StatisticsUtil {
       variance: this.variance(values),
       min: Math.min(...values),
       max: Math.max(...values),
-      p10: this.percentile(values, 0.10),
+      p10: this.percentile(values, 0.1),
       p25: this.percentile(values, 0.25),
       p75: this.percentile(values, 0.75),
-      p90: this.percentile(values, 0.90),
+      p90: this.percentile(values, 0.9),
     };
   }
 
@@ -266,7 +290,7 @@ export class StatisticsUtil {
    */
   static geometricMean(values: number[]): number {
     if (values.length === 0) return 0;
-    if (values.some(v => v <= 0)) {
+    if (values.some((v) => v <= 0)) {
       throw new Error('All values must be positive for geometric mean');
     }
 

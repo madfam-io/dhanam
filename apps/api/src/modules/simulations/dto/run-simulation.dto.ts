@@ -1,5 +1,5 @@
-import { IsNumber, IsOptional, Min, Max } from 'class-validator';
 import { Type } from 'class-transformer';
+import { IsNumber, IsOptional, Min, Max } from 'class-validator';
 
 export class RunSimulationDto {
   @IsNumber()
@@ -14,7 +14,7 @@ export class RunSimulationDto {
 
   @IsNumber()
   @Min(1)
-  @Max(1200)  // Max 100 years
+  @Max(1200) // Max 100 years
   @Type(() => Number)
   months: number;
 
@@ -26,8 +26,8 @@ export class RunSimulationDto {
   iterations?: number;
 
   @IsNumber()
-  @Min(-0.50)
-  @Max(0.50)
+  @Min(-0.5)
+  @Max(0.5)
   @Type(() => Number)
   expectedReturn: number;
 
@@ -39,7 +39,7 @@ export class RunSimulationDto {
 
   @IsNumber()
   @Min(0)
-  @Max(0.20)
+  @Max(0.2)
   @IsOptional()
   @Type(() => Number)
   inflationRate?: number;

@@ -1,5 +1,5 @@
-import { IsBoolean, IsOptional, IsNumber, IsString, Min } from 'class-validator';
 import { Type } from 'class-transformer';
+import { IsBoolean, IsOptional, IsNumber, IsString, Min } from 'class-validator';
 
 export class UpdateExecutorDto {
   @IsBoolean()

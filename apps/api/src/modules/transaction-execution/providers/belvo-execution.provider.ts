@@ -2,8 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios, { AxiosInstance } from 'axios';
 
-import { PrismaService } from '../../../core/prisma/prisma.service';
 import { CryptoService } from '../../../core/crypto/crypto.service';
+import { PrismaService } from '../../../core/prisma/prisma.service';
 
 import {
   ExecutionProvider,
@@ -119,9 +119,7 @@ export class BelvoExecutionProvider extends ExecutionProvider {
       return;
     }
 
-    const baseURL = this.isProduction
-      ? 'https://api.belvo.com'
-      : 'https://sandbox.belvo.com';
+    const baseURL = this.isProduction ? 'https://api.belvo.com' : 'https://sandbox.belvo.com';
 
     const authString = Buffer.from(`${secretId}:${secretPassword}`).toString('base64');
 
@@ -134,10 +132,12 @@ export class BelvoExecutionProvider extends ExecutionProvider {
       },
     });
 
-    this.logger.log(`Belvo execution provider initialized (${this.isProduction ? 'production' : 'sandbox'})`);
+    this.logger.log(
+      `Belvo execution provider initialized (${this.isProduction ? 'production' : 'sandbox'})`
+    );
   }
 
-  async executeBuy(order: ExecutionOrder): Promise<ExecutionResult> {
+  async executeBuy(_order: ExecutionOrder): Promise<ExecutionResult> {
     return {
       success: false,
       errorCode: 'NOT_SUPPORTED',
@@ -145,7 +145,7 @@ export class BelvoExecutionProvider extends ExecutionProvider {
     };
   }
 
-  async executeSell(order: ExecutionOrder): Promise<ExecutionResult> {
+  async executeSell(_order: ExecutionOrder): Promise<ExecutionResult> {
     return {
       success: false,
       errorCode: 'NOT_SUPPORTED',
@@ -287,7 +287,7 @@ export class BelvoExecutionProvider extends ExecutionProvider {
     });
   }
 
-  async getMarketPrice(assetSymbol: string, currency: string): Promise<number> {
+  async getMarketPrice(_assetSymbol: string, _currency: string): Promise<number> {
     throw new Error('Belvo does not provide market prices');
   }
 
@@ -302,10 +302,7 @@ export class BelvoExecutionProvider extends ExecutionProvider {
       errors.push(`Order amount below minimum: $${this.capabilities.minOrderAmount} MXN`);
     }
 
-    if (
-      this.capabilities.maxOrderAmount &&
-      order.amount > this.capabilities.maxOrderAmount
-    ) {
+    if (this.capabilities.maxOrderAmount && order.amount > this.capabilities.maxOrderAmount) {
       errors.push(`Order amount exceeds maximum: $${this.capabilities.maxOrderAmount} MXN`);
     }
 
@@ -345,9 +342,7 @@ export class BelvoExecutionProvider extends ExecutionProvider {
       throw new Error('Belvo client not initialized');
     }
 
-    const response = await this.belvoClient.get(
-      `/payments/payment-transactions/${transactionId}`
-    );
+    const response = await this.belvoClient.get(`/payments/payment-transactions/${transactionId}`);
 
     return response.data;
   }

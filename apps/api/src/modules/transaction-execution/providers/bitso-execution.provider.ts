@@ -4,8 +4,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios, { AxiosInstance } from 'axios';
 
-import { PrismaService } from '../../../core/prisma/prisma.service';
 import { CryptoService } from '../../../core/crypto/crypto.service';
+import { PrismaService } from '../../../core/prisma/prisma.service';
 
 import {
   ExecutionProvider,
@@ -248,7 +248,7 @@ export class BitsoExecutionProvider extends ExecutionProvider {
     }
   }
 
-  async executeTransfer(order: ExecutionOrder): Promise<ExecutionResult> {
+  async executeTransfer(_order: ExecutionOrder): Promise<ExecutionResult> {
     return {
       success: false,
       errorCode: 'NOT_SUPPORTED',
@@ -256,7 +256,7 @@ export class BitsoExecutionProvider extends ExecutionProvider {
     };
   }
 
-  async executeDeposit(order: ExecutionOrder): Promise<ExecutionResult> {
+  async executeDeposit(_order: ExecutionOrder): Promise<ExecutionResult> {
     return {
       success: false,
       errorCode: 'NOT_SUPPORTED',
@@ -264,7 +264,7 @@ export class BitsoExecutionProvider extends ExecutionProvider {
     };
   }
 
-  async executeWithdraw(order: ExecutionOrder): Promise<ExecutionResult> {
+  async executeWithdraw(_order: ExecutionOrder): Promise<ExecutionResult> {
     return {
       success: false,
       errorCode: 'NOT_SUPPORTED',

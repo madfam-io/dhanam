@@ -25,8 +25,8 @@ export default function RetirementPage() {
         <Info className="h-4 w-4" />
         <AlertTitle>How it works</AlertTitle>
         <AlertDescription>
-          This calculator runs 10,000 simulations of your financial future using Monte Carlo methods.
-          It models two phases: <strong>accumulation</strong> (saving until retirement) and{' '}
+          This calculator runs 10,000 simulations of your financial future using Monte Carlo
+          methods. It models two phases: <strong>accumulation</strong> (saving until retirement) and{' '}
           <strong>withdrawal</strong> (spending during retirement). The results show the probability
           of your money lasting through your expected lifespan.
         </AlertDescription>
@@ -62,21 +62,30 @@ export default function RetirementPage() {
                   <div className="text-center">
                     <p className="text-sm text-muted-foreground">Final Balance</p>
                     <p className="text-lg font-semibold">
-                      ${results.simulation.median.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                      $
+                      {results.simulation.median.toLocaleString(undefined, {
+                        maximumFractionDigits: 0,
+                      })}
                     </p>
                     <p className="text-xs text-muted-foreground">Median</p>
                   </div>
                   <div className="text-center">
                     <p className="text-sm text-muted-foreground">Worst 10%</p>
                     <p className="text-lg font-semibold text-red-600">
-                      ${results.simulation.p10.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                      $
+                      {results.simulation.p10.toLocaleString(undefined, {
+                        maximumFractionDigits: 0,
+                      })}
                     </p>
                     <p className="text-xs text-muted-foreground">10th Percentile</p>
                   </div>
                   <div className="text-center">
                     <p className="text-sm text-muted-foreground">Best 10%</p>
                     <p className="text-lg font-semibold text-green-600">
-                      ${results.simulation.p90.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                      $
+                      {results.simulation.p90.toLocaleString(undefined, {
+                        maximumFractionDigits: 0,
+                      })}
                     </p>
                     <p className="text-xs text-muted-foreground">90th Percentile</p>
                   </div>
@@ -117,8 +126,8 @@ export default function RetirementPage() {
           <div>
             <h3 className="font-semibold mb-2">Safe Withdrawal Rate</h3>
             <p className="text-sm text-muted-foreground">
-              The monthly amount you can safely withdraw during retirement with 75% confidence
-              of not running out of money.
+              The monthly amount you can safely withdraw during retirement with 75% confidence of
+              not running out of money.
             </p>
           </div>
         </div>

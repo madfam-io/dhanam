@@ -1,7 +1,8 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../../core/database/prisma.service';
+
+import { PrismaService } from '../../core/prisma/prisma.service';
+
 import { MonteCarloEngine } from './engines/monte-carlo.engine';
-import { StatisticsUtil } from './utils/statistics.util';
 import {
   MonteCarloConfig,
   SimulationResult,
@@ -11,6 +12,7 @@ import {
   GoalProbabilityResult,
   ScenarioComparisonResult,
 } from './types/simulation.types';
+import { StatisticsUtil } from './utils/statistics.util';
 
 @Injectable()
 export class SimulationsService {
@@ -18,10 +20,10 @@ export class SimulationsService {
 
   // Default simulation parameters
   private readonly DEFAULT_ITERATIONS = 10000;
-  private readonly DEFAULT_EXPECTED_RETURN = 0.07;  // 7% annual
-  private readonly DEFAULT_VOLATILITY = 0.15;       // 15% annual
-  private readonly DEFAULT_INFLATION = 0.03;        // 3% annual
-  private readonly DEFAULT_RISK_FREE_RATE = 0.02;  // 2% annual
+  private readonly DEFAULT_EXPECTED_RETURN = 0.07; // 7% annual
+  private readonly DEFAULT_VOLATILITY = 0.15; // 15% annual
+  private readonly DEFAULT_INFLATION = 0.03; // 3% annual
+  private readonly DEFAULT_RISK_FREE_RATE = 0.02; // 2% annual
 
   constructor(
     private prisma: PrismaService,
@@ -85,7 +87,7 @@ export class SimulationsService {
         volatility: config.volatility,
       },
       config.targetAmount,
-      0.90  // 90% success rate
+      0.9 // 90% success rate
     );
 
     return {
@@ -107,7 +109,7 @@ export class SimulationsService {
    */
   async simulateRetirement(
     config: RetirementSimulationConfig,
-    userId: string
+    _userId: string
   ): Promise<RetirementSimulationResult> {
     this.logger.log(`Simulating retirement: age ${config.currentAge} → ${config.lifeExpectancy}`);
 
@@ -133,10 +135,7 @@ export class SimulationsService {
 
     // Sample 1000 outcomes from accumulation phase for performance
     const sampleSize = Math.min(1000, accumulationResult.finalValues.length);
-    const sampledRetirementBalances = this.sampleArray(
-      accumulationResult.finalValues,
-      sampleSize
-    );
+    const sampledRetirementBalances = this.sampleArray(accumulationResult.finalValues, sampleSize);
 
     for (const retirementBalance of sampledRetirementBalances) {
       const withdrawalResult = this.simulateSingleWithdrawal(
@@ -156,7 +155,7 @@ export class SimulationsService {
     const medianDepletionMonths = StatisticsUtil.median(depletionMonths);
 
     // Calculate probability of not running out
-    const successfulRetirements = finalBalances.filter(balance => balance > 0).length;
+    const successfulRetirements = finalBalances.filter((balance) => balance > 0).length;
     const probabilityOfNotRunningOut = successfulRetirements / finalBalances.length;
 
     // Calculate safe withdrawal rate (4% rule adjusted)
@@ -166,7 +165,7 @@ export class SimulationsService {
       monthsInRetirement,
       config.expectedReturn,
       config.volatility,
-      0.95  // 95% success rate
+      0.95 // 95% success rate
     );
 
     // Combine time series from both phases
@@ -216,10 +215,7 @@ export class SimulationsService {
 
     // Run scenario simulation
     const scenario = MonteCarloEngine.SCENARIOS[scenarioName];
-    const scenarioResult = this.monteCarlo.simulateWithShocks(
-      baseConfig,
-      scenario.shocks
-    );
+    const scenarioResult = this.monteCarlo.simulateWithShocks(baseConfig, scenario.shocks);
 
     // Calculate differences
     const comparison = {
@@ -254,7 +250,7 @@ export class SimulationsService {
       conservative: {
         baseStocks: 40,
         expectedReturn: 0.05,
-        volatility: 0.10,
+        volatility: 0.1,
       },
       moderate: {
         baseStocks: 60,
@@ -264,7 +260,7 @@ export class SimulationsService {
       aggressive: {
         baseStocks: 80,
         expectedReturn: 0.09,
-        volatility: 0.20,
+        volatility: 0.2,
       },
     };
 
@@ -324,7 +320,7 @@ export class SimulationsService {
 
     // Binary search for safe withdrawal rate
     let low = 0;
-    let high = 0.10;  // 10% monthly (very high)
+    let high = 0.1; // 10% monthly (very high)
 
     for (let i = 0; i < 10; i++) {
       const mid = (low + high) / 2;
@@ -349,7 +345,7 @@ export class SimulationsService {
       const currentSuccessRate = successes / trials;
 
       if (Math.abs(currentSuccessRate - successRate) < 0.05) {
-        return mid * 12;  // Convert to annual rate
+        return mid * 12; // Convert to annual rate
       }
 
       if (currentSuccessRate < successRate) {
@@ -359,7 +355,7 @@ export class SimulationsService {
       }
     }
 
-    return ((low + high) / 2) * 12;  // Convert to annual rate
+    return ((low + high) / 2) * 12; // Convert to annual rate
   }
 
   /**
@@ -367,11 +363,11 @@ export class SimulationsService {
    */
   private createRetirementTimeSeries(
     accumulationResult: SimulationResult,
-    sampledBalances: number[],
-    withdrawalMonths: number,
-    monthlyWithdrawal: number,
-    annualReturn: number,
-    annualVolatility: number
+    _sampledBalances: number[],
+    _withdrawalMonths: number,
+    _monthlyWithdrawal: number,
+    _annualReturn: number,
+    _annualVolatility: number
   ) {
     // For simplicity, return accumulation time series
     // Full implementation would combine both phases
@@ -399,7 +395,7 @@ export class SimulationsService {
       throw new NotFoundException('Goal not found');
     }
 
-    const hasAccess = goal.space.userSpaces.some(us => us.userId === userId);
+    const hasAccess = goal.space.userSpaces.some((us) => us.userId === userId);
 
     if (!hasAccess) {
       throw new NotFoundException('Goal not found or you do not have access');

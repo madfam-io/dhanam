@@ -99,7 +99,10 @@ describe.skip('BudgetAnalytics', () => {
   });
 
   it('should render budget analytics with all sections', async () => {
-    render(<BudgetAnalytics spaceId="test-space" budgetId="test-budget" currency={Currency.USD} />, { wrapper: TestWrapper });
+    render(
+      <BudgetAnalytics spaceId="test-space" budgetId="test-budget" currency={Currency.USD} />,
+      { wrapper: TestWrapper }
+    );
 
     // Check main sections
     expect(screen.getByText('Budget Overview')).toBeInTheDocument();
@@ -109,7 +112,10 @@ describe.skip('BudgetAnalytics', () => {
   });
 
   it('should display budget summary correctly', async () => {
-    render(<BudgetAnalytics spaceId="test-space" budgetId="test-budget" currency={Currency.USD} />, { wrapper: TestWrapper });
+    render(
+      <BudgetAnalytics spaceId="test-space" budgetId="test-budget" currency={Currency.USD} />,
+      { wrapper: TestWrapper }
+    );
 
     // Wait for async data and check budget summary
     await screen.findByText('$3,000.00');
@@ -118,7 +124,10 @@ describe.skip('BudgetAnalytics', () => {
   });
 
   it('should show category spending details', async () => {
-    render(<BudgetAnalytics spaceId="test-space" budgetId="test-budget" currency={Currency.USD} />, { wrapper: TestWrapper });
+    render(
+      <BudgetAnalytics spaceId="test-space" budgetId="test-budget" currency={Currency.USD} />,
+      { wrapper: TestWrapper }
+    );
 
     // Check category details
     await screen.findByText('Groceries');
@@ -131,7 +140,10 @@ describe.skip('BudgetAnalytics', () => {
   });
 
   it('should display insights', async () => {
-    render(<BudgetAnalytics spaceId="test-space" budgetId="test-budget" currency={Currency.USD} />, { wrapper: TestWrapper });
+    render(
+      <BudgetAnalytics spaceId="test-space" budgetId="test-budget" currency={Currency.USD} />,
+      { wrapper: TestWrapper }
+    );
 
     // Check insights
     await screen.findByText('You are 93% through your Dining budget');
@@ -140,7 +152,10 @@ describe.skip('BudgetAnalytics', () => {
   });
 
   it('should render charts', async () => {
-    render(<BudgetAnalytics spaceId="test-space" budgetId="test-budget" currency={Currency.USD} />, { wrapper: TestWrapper });
+    render(
+      <BudgetAnalytics spaceId="test-space" budgetId="test-budget" currency={Currency.USD} />,
+      { wrapper: TestWrapper }
+    );
 
     // Check if chart components are rendered
     expect(screen.getAllByTestId('responsive-container')).toHaveLength(2);
@@ -152,7 +167,10 @@ describe.skip('BudgetAnalytics', () => {
     const { budgetsApi } = require('@/lib/api/budgets');
     budgetsApi.getBudgetAnalytics.mockImplementation(() => new Promise(() => {}));
 
-    render(<BudgetAnalytics spaceId="test-space" budgetId="test-budget" currency={Currency.USD} />, { wrapper: TestWrapper });
+    render(
+      <BudgetAnalytics spaceId="test-space" budgetId="test-budget" currency={Currency.USD} />,
+      { wrapper: TestWrapper }
+    );
 
     expect(screen.getByText('Loading analytics...')).toBeInTheDocument();
   });
@@ -161,7 +179,10 @@ describe.skip('BudgetAnalytics', () => {
     const { budgetsApi } = require('@/lib/api/budgets');
     budgetsApi.getBudgetAnalytics.mockRejectedValue(new Error('Analytics API Error'));
 
-    render(<BudgetAnalytics spaceId="test-space" budgetId="test-budget" currency={Currency.USD} />, { wrapper: TestWrapper });
+    render(
+      <BudgetAnalytics spaceId="test-space" budgetId="test-budget" currency={Currency.USD} />,
+      { wrapper: TestWrapper }
+    );
 
     await screen.findByText('Failed to load budget analytics');
   });
@@ -189,7 +210,10 @@ describe.skip('BudgetAnalytics', () => {
     const { budgetsApi } = require('@/lib/api/budgets');
     budgetsApi.getBudgetAnalytics.mockResolvedValue(overBudgetAnalytics);
 
-    render(<BudgetAnalytics spaceId="test-space" budgetId="test-budget" currency={Currency.USD} />, { wrapper: TestWrapper });
+    render(
+      <BudgetAnalytics spaceId="test-space" budgetId="test-budget" currency={Currency.USD} />,
+      { wrapper: TestWrapper }
+    );
 
     // Should show over-budget indicator
     await screen.findByText('117%'); // Rounded percentage

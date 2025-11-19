@@ -152,6 +152,14 @@ export function OrderList({ spaceId, filters, onOrderClick }: OrderListProps) {
               key={order.id}
               className="p-4 hover:bg-muted/50 cursor-pointer transition-colors"
               onClick={() => onOrderClick?.(order)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  onOrderClick?.(order);
+                }
+              }}
+              role="button"
+              tabIndex={0}
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="flex items-start gap-3 flex-1">
@@ -182,11 +190,11 @@ export function OrderList({ spaceId, filters, onOrderClick }: OrderListProps) {
                       )}
                     </div>
 
-                    {order.notes && (
-                      <p className="text-sm text-muted-foreground">{order.notes}</p>
-                    )}
+                    {order.notes && <p className="text-sm text-muted-foreground">{order.notes}</p>}
 
-                    <div className="text-xs text-muted-foreground">{formatDate(order.createdAt)}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {formatDate(order.createdAt)}
+                    </div>
                   </div>
                 </div>
 

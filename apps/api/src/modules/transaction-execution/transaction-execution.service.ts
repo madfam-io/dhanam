@@ -9,19 +9,20 @@ import {
   Logger,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import { addDays, addWeeks, addMonths, isAfter } from 'date-fns';
+import { addDays, isAfter } from 'date-fns';
 
-import { PrismaService } from '../../core/prisma/prisma.service';
 import { AuditService } from '../../core/audit/audit.service';
+import { PrismaService } from '../../core/prisma/prisma.service';
 import { SpacesService } from '../spaces/spaces.service';
 
 import { CreateOrderDto, VerifyOrderDto, UpdateOrderDto, OrderFilterDto } from './dto';
-import { ProviderFactoryService } from './providers/provider-factory.service';
-import { ExecutionOrder, OrderType as ProviderOrderType } from './providers/execution-provider.interface';
-
 // Import enums from DTO
-import { OrderType, OrderPriority, ExecutionProvider } from './dto/create-order.dto';
-import { OrderStatus } from './dto/order-filter.dto';
+import { OrderType, OrderPriority } from './dto/create-order.dto';
+import {
+  ExecutionOrder,
+  OrderType as ProviderOrderType,
+} from './providers/execution-provider.interface';
+import { ProviderFactoryService } from './providers/provider-factory.service';
 
 interface OrderExecutionResult {
   success: boolean;
@@ -62,12 +63,7 @@ export class TransactionExecutionService {
     await this.spacesService.verifyUserAccess(userId, spaceId, 'member');
 
     // Check idempotency
-    const existingOrder = await this.checkIdempotency(
-      userId,
-      spaceId,
-      dto.idempotencyKey,
-      dto
-    );
+    const existingOrder = await this.checkIdempotency(userId, spaceId, dto.idempotencyKey, dto);
     if (existingOrder) {
       this.logger.log(`Idempotent request detected for key ${dto.idempotencyKey}`);
       return existingOrder;
@@ -149,15 +145,7 @@ export class TransactionExecutionService {
     });
 
     // Store idempotency key
-    await this.storeIdempotencyKey(
-      userId,
-      spaceId,
-      dto.idempotencyKey,
-      dto,
-      order.id,
-      200,
-      order
-    );
+    await this.storeIdempotencyKey(userId, spaceId, dto.idempotencyKey, dto, order.id, 200, order);
 
     // Audit log
     await this.auditService.log({
@@ -165,14 +153,14 @@ export class TransactionExecutionService {
       action: 'order_created',
       resource: 'transaction_order',
       resourceId: order.id,
-      metadata: JSON.stringify({
+      metadata: {
         type: dto.type,
         amount: dto.amount,
         currency: dto.currency,
         provider: dto.provider,
         dryRun: dto.dryRun,
         requiresOtp,
-      }),
+      },
       ipAddress,
       userAgent,
       severity: dto.amount >= this.HIGH_VALUE_THRESHOLD ? 'high' : 'medium',
@@ -217,7 +205,7 @@ export class TransactionExecutionService {
         action: 'order_verification_failed',
         resource: 'transaction_order',
         resourceId: orderId,
-        metadata: JSON.stringify({ reason: 'Invalid OTP code' }),
+        metadata: { reason: 'Invalid OTP code' },
         ipAddress,
         userAgent,
         severity: 'high',
@@ -248,7 +236,7 @@ export class TransactionExecutionService {
       action: 'order_verified',
       resource: 'transaction_order',
       resourceId: orderId,
-      metadata: JSON.stringify({ verificationMethod: 'otp' }),
+      metadata: { verificationMethod: 'otp' },
       ipAddress,
       userAgent,
       severity: 'high',
@@ -272,19 +260,12 @@ export class TransactionExecutionService {
    * Execute a pending order
    * Main orchestration method that handles the execution flow
    */
-  async executeOrder(
-    orderId: string,
-    userId: string,
-    ipAddress?: string,
-    userAgent?: string
-  ) {
+  async executeOrder(orderId: string, userId: string, ipAddress?: string, userAgent?: string) {
     const order = await this.findOrderById(orderId, userId);
 
     // Validate order can be executed
     if (order.status !== 'pending_execution') {
-      throw new BadRequestException(
-        `Order cannot be executed in status: ${order.status}`
-      );
+      throw new BadRequestException(`Order cannot be executed in status: ${order.status}`);
     }
 
     // Check if order has expired
@@ -369,14 +350,14 @@ export class TransactionExecutionService {
           action: 'order_executed',
           resource: 'transaction_order',
           resourceId: orderId,
-          metadata: JSON.stringify({
+          metadata: {
             type: order.type,
             amount: result.executedAmount,
             price: result.executedPrice,
             fees: result.fees,
             provider: order.provider,
             dryRun: order.dryRun,
-          }),
+          },
           ipAddress,
           userAgent,
           severity: 'high',
@@ -409,18 +390,16 @@ export class TransactionExecutionService {
           action: 'order_execution_failed',
           resource: 'transaction_order',
           resourceId: orderId,
-          metadata: JSON.stringify({
+          metadata: {
             errorCode: result.errorCode,
             errorMessage: result.errorMessage,
-          }),
+          },
           ipAddress,
           userAgent,
           severity: 'high',
         });
 
-        throw new BadRequestException(
-          result.errorMessage || 'Order execution failed'
-        );
+        throw new BadRequestException(result.errorMessage || 'Order execution failed');
       }
     } catch (error) {
       // Handle unexpected errors
@@ -546,19 +525,11 @@ export class TransactionExecutionService {
   /**
    * Cancel a pending order
    */
-  async cancelOrder(
-    orderId: string,
-    userId: string,
-    ipAddress?: string,
-    userAgent?: string
-  ) {
+  async cancelOrder(orderId: string, userId: string, ipAddress?: string, userAgent?: string) {
     const order = await this.findOrderById(orderId, userId);
 
     // Can only cancel pending orders
-    if (
-      order.status !== 'pending_verification' &&
-      order.status !== 'pending_execution'
-    ) {
+    if (order.status !== 'pending_verification' && order.status !== 'pending_execution') {
       throw new BadRequestException(`Cannot cancel order in status: ${order.status}`);
     }
 
@@ -581,7 +552,7 @@ export class TransactionExecutionService {
       action: 'order_cancelled',
       resource: 'transaction_order',
       resourceId: orderId,
-      metadata: JSON.stringify({ reason: 'User requested cancellation' }),
+      metadata: { reason: 'User requested cancellation' },
       ipAddress,
       userAgent,
       severity: 'medium',
@@ -597,14 +568,14 @@ export class TransactionExecutionService {
   async findAll(spaceId: string, userId: string, filter: OrderFilterDto) {
     await this.spacesService.verifyUserAccess(userId, spaceId, 'viewer');
 
-    const where: Prisma.TransactionOrderWhereInput = {
+    const where: any = {
       spaceId,
       ...(filter.accountId && { accountId: filter.accountId }),
       ...(filter.status && { status: filter.status as any }),
       ...(filter.goalId && { goalId: filter.goalId }),
     };
 
-    const orderBy: Prisma.TransactionOrderOrderByWithRelationInput = filter.sortBy
+    const orderBy: any = filter.sortBy
       ? { [filter.sortBy]: filter.sortOrder || 'desc' }
       : { createdAt: 'desc' };
 
@@ -670,10 +641,7 @@ export class TransactionExecutionService {
     const order = await this.findOrderById(orderId, userId);
 
     // Can only update pending orders
-    if (
-      order.status !== 'pending_verification' &&
-      order.status !== 'pending_execution'
-    ) {
+    if (order.status !== 'pending_verification' && order.status !== 'pending_execution') {
       throw new BadRequestException(`Cannot update order in status: ${order.status}`);
     }
 
@@ -699,7 +667,7 @@ export class TransactionExecutionService {
       action: 'order_updated',
       resource: 'transaction_order',
       resourceId: orderId,
-      metadata: JSON.stringify(dto),
+      metadata: dto,
       ipAddress,
       userAgent,
       severity: 'medium',
@@ -734,12 +702,7 @@ export class TransactionExecutionService {
   /**
    * Helper: Check idempotency
    */
-  private async checkIdempotency(
-    userId: string,
-    spaceId: string,
-    key: string,
-    requestBody: any
-  ) {
+  private async checkIdempotency(userId: string, spaceId: string, key: string, requestBody: any) {
     const requestHash = crypto
       .createHash('sha256')
       .update(JSON.stringify(requestBody))
@@ -752,9 +715,7 @@ export class TransactionExecutionService {
     if (existing) {
       // Check if request body matches
       if (existing.requestHash !== requestHash) {
-        throw new ConflictException(
-          'Idempotency key already used with different request body'
-        );
+        throw new ConflictException('Idempotency key already used with different request body');
       }
 
       // Check if expired
@@ -827,8 +788,10 @@ export class TransactionExecutionService {
     const limits = await this.prisma.orderLimit.findMany({
       where: {
         userId,
-        OR: [{ spaceId }, { spaceId: null }], // Global or space-specific
-        OR: [{ orderType: orderType as any }, { orderType: null }], // Type-specific or all types
+        AND: [
+          { OR: [{ spaceId }, { spaceId: null }] }, // Global or space-specific
+          { OR: [{ orderType: orderType as any }, { orderType: null }] }, // Type-specific or all types
+        ],
         enforced: true,
         resetAt: { gt: now },
       },
@@ -861,8 +824,10 @@ export class TransactionExecutionService {
     const limits = await this.prisma.orderLimit.findMany({
       where: {
         userId,
-        OR: [{ spaceId }, { spaceId: null }],
-        OR: [{ orderType: orderType as any }, { orderType: null }],
+        AND: [
+          { OR: [{ spaceId }, { spaceId: null }] },
+          { OR: [{ orderType: orderType as any }, { orderType: null }] },
+        ],
         enforced: true,
         resetAt: { gt: now },
       },
@@ -883,11 +848,7 @@ export class TransactionExecutionService {
   /**
    * Helper: Validate account balance for sell/transfer orders
    */
-  private async validateAccountBalance(
-    accountId: string,
-    amount: number,
-    currency: string
-  ) {
+  private async validateAccountBalance(accountId: string, amount: number, _currency: string) {
     const account = await this.prisma.account.findUnique({
       where: { id: accountId },
     });

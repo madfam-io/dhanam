@@ -1,6 +1,6 @@
-import { IsEnum, IsNumber, IsOptional, IsString, IsUUID, Min, Max } from 'class-validator';
 import { AssetType } from '@prisma/client';
 import { Type } from 'class-transformer';
+import { IsEnum, IsNumber, IsOptional, IsString, IsUUID, Min, Max } from 'class-validator';
 
 export class UpdateBeneficiaryDto {
   @IsEnum(AssetType)

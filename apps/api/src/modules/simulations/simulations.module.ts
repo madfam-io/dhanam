@@ -1,10 +1,12 @@
 import { Module } from '@nestjs/common';
+
+import { AuditModule } from '../../core/audit/audit.module';
+import { PrismaModule } from '../../core/prisma/prisma.module';
+import { GoalsModule } from '../goals/goals.module';
+
+import { MonteCarloEngine } from './engines/monte-carlo.engine';
 import { SimulationsController } from './simulations.controller';
 import { SimulationsService } from './simulations.service';
-import { MonteCarloEngine } from './engines/monte-carlo.engine';
-import { PrismaModule } from '../../core/database/prisma.module';
-import { AuditModule } from '../../core/audit/audit.module';
-import { GoalsModule } from '../goals/goals.module';
 
 /**
  * Simulations Module

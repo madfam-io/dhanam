@@ -30,17 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Users,
-  Plus,
-  Home,
-  Building2,
-  Briefcase,
-  TrendingUp,
-  Target,
-  Loader2,
-  DollarSign,
-} from 'lucide-react';
+import { Users, Plus, Home, Building2, Briefcase, Target, Loader2, DollarSign } from 'lucide-react';
 
 export default function HouseholdsPage() {
   const {
@@ -163,9 +153,7 @@ export default function HouseholdsPage() {
                 <Input
                   id="name"
                   value={newHousehold.name}
-                  onChange={(e) =>
-                    setNewHousehold({ ...newHousehold, name: e.target.value })
-                  }
+                  onChange={(e) => setNewHousehold({ ...newHousehold, name: e.target.value })}
                   placeholder="Smith Family"
                 />
               </div>
@@ -173,9 +161,7 @@ export default function HouseholdsPage() {
                 <Label htmlFor="type">Type</Label>
                 <Select
                   value={newHousehold.type}
-                  onValueChange={(value: any) =>
-                    setNewHousehold({ ...newHousehold, type: value })
-                  }
+                  onValueChange={(value: any) => setNewHousehold({ ...newHousehold, type: value })}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -367,7 +353,10 @@ export default function HouseholdsPage() {
                     <div className="flex justify-between mt-4 pt-4 border-t">
                       <span className="text-muted-foreground">Target Amount:</span>
                       <span className="font-medium">
-                        {formatCurrency(goalSummary.totalTargetAmount, selectedHousehold.baseCurrency)}
+                        {formatCurrency(
+                          goalSummary.totalTargetAmount,
+                          selectedHousehold.baseCurrency
+                        )}
                       </span>
                     </div>
                   </div>

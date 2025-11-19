@@ -65,7 +65,8 @@ export default function DemoPage() {
   const router = useRouter();
   const analytics = useAnalytics();
 
-  const [selectedProfile, setSelectedProfile] = useState<keyof typeof DEMO_PROFILES>('youngProfessional');
+  const [selectedProfile, setSelectedProfile] =
+    useState<keyof typeof DEMO_PROFILES>('youngProfessional');
   const [config, setConfig] = useState(DEMO_PROFILES.youngProfessional);
   const [simulationsRun, setSimulationsRun] = useState(0);
   const [isSimulating, setIsSimulating] = useState(false);
@@ -128,7 +129,11 @@ export default function DemoPage() {
     // Calculate retirement phase (30 years)
     const retirementMonths = 30 * 12;
     const annualExpenses = config.retirementExpenses * 12;
-    const successProbability = calculateSuccessProbability(futureValue, annualExpenses, retirementMonths);
+    const successProbability = calculateSuccessProbability(
+      futureValue,
+      annualExpenses,
+      retirementMonths
+    );
 
     // Generate mock time series data for chart
     const timeSeries = generateMockTimeSeries(
@@ -231,18 +236,14 @@ export default function DemoPage() {
             <Card
               key={key}
               className={`cursor-pointer transition-all ${
-                selectedProfile === key
-                  ? 'border-blue-600 shadow-md'
-                  : 'hover:border-gray-300'
+                selectedProfile === key ? 'border-blue-600 shadow-md' : 'hover:border-gray-300'
               }`}
               onClick={() => handleProfileChange(key as keyof typeof DEMO_PROFILES)}
             >
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
                   {profile.name}
-                  {selectedProfile === key && (
-                    <CheckCircle2 className="h-5 w-5 text-blue-600" />
-                  )}
+                  {selectedProfile === key && <CheckCircle2 className="h-5 w-5 text-blue-600" />}
                 </CardTitle>
                 <CardDescription>
                   Age {profile.age}, retiring at {profile.retirementAge}
@@ -255,7 +256,9 @@ export default function DemoPage() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Monthly Contribution:</span>
-                  <span className="font-semibold">${profile.monthlyContribution.toLocaleString()}</span>
+                  <span className="font-semibold">
+                    ${profile.monthlyContribution.toLocaleString()}
+                  </span>
                 </div>
               </CardContent>
             </Card>
@@ -304,7 +307,9 @@ export default function DemoPage() {
                     id="currentSavings"
                     type="number"
                     value={config.currentSavings}
-                    onChange={(e) => handleInputChange('currentSavings', parseFloat(e.target.value))}
+                    onChange={(e) =>
+                      handleInputChange('currentSavings', parseFloat(e.target.value))
+                    }
                     min={0}
                     step={1000}
                   />
@@ -319,7 +324,9 @@ export default function DemoPage() {
                     id="monthlyContribution"
                     type="number"
                     value={config.monthlyContribution}
-                    onChange={(e) => handleInputChange('monthlyContribution', parseFloat(e.target.value))}
+                    onChange={(e) =>
+                      handleInputChange('monthlyContribution', parseFloat(e.target.value))
+                    }
                     min={0}
                     step={100}
                   />
@@ -334,7 +341,9 @@ export default function DemoPage() {
                     id="retirementExpenses"
                     type="number"
                     value={config.retirementExpenses}
-                    onChange={(e) => handleInputChange('retirementExpenses', parseFloat(e.target.value))}
+                    onChange={(e) =>
+                      handleInputChange('retirementExpenses', parseFloat(e.target.value))
+                    }
                     min={0}
                     step={100}
                   />
@@ -351,7 +360,9 @@ export default function DemoPage() {
                     id="expectedReturn"
                     type="number"
                     value={(config.expectedReturn * 100).toFixed(1)}
-                    onChange={(e) => handleInputChange('expectedReturn', parseFloat(e.target.value) / 100)}
+                    onChange={(e) =>
+                      handleInputChange('expectedReturn', parseFloat(e.target.value) / 100)
+                    }
                     min={0}
                     max={20}
                     step={0.5}
@@ -364,7 +375,9 @@ export default function DemoPage() {
                     id="volatility"
                     type="number"
                     value={(config.volatility * 100).toFixed(1)}
-                    onChange={(e) => handleInputChange('volatility', parseFloat(e.target.value) / 100)}
+                    onChange={(e) =>
+                      handleInputChange('volatility', parseFloat(e.target.value) / 100)
+                    }
                     min={0}
                     max={50}
                     step={1}
@@ -416,9 +429,7 @@ export default function DemoPage() {
                       <Target className="h-5 w-5" />
                       Retirement Success Probability
                     </CardTitle>
-                    <CardDescription>
-                      Based on 10,000 Monte Carlo simulations
-                    </CardDescription>
+                    <CardDescription>Based on 10,000 Monte Carlo simulations</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <div className="text-center space-y-2">
@@ -476,15 +487,11 @@ export default function DemoPage() {
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                       <div className="text-center p-3 border rounded-lg">
                         <div className="text-xs text-muted-foreground mb-1">10th Percentile</div>
-                        <div className="font-semibold">
-                          ${(result.p10 / 1000).toFixed(0)}K
-                        </div>
+                        <div className="font-semibold">${(result.p10 / 1000).toFixed(0)}K</div>
                       </div>
                       <div className="text-center p-3 border rounded-lg">
                         <div className="text-xs text-muted-foreground mb-1">25th Percentile</div>
-                        <div className="font-semibold">
-                          ${(result.p25 / 1000).toFixed(0)}K
-                        </div>
+                        <div className="font-semibold">${(result.p25 / 1000).toFixed(0)}K</div>
                       </div>
                       <div className="text-center p-3 border rounded-lg bg-blue-50 dark:bg-blue-950/20">
                         <div className="text-xs text-muted-foreground mb-1">Median</div>
@@ -494,15 +501,11 @@ export default function DemoPage() {
                       </div>
                       <div className="text-center p-3 border rounded-lg">
                         <div className="text-xs text-muted-foreground mb-1">75th Percentile</div>
-                        <div className="font-semibold">
-                          ${(result.p75 / 1000).toFixed(0)}K
-                        </div>
+                        <div className="font-semibold">${(result.p75 / 1000).toFixed(0)}K</div>
                       </div>
                       <div className="text-center p-3 border rounded-lg">
                         <div className="text-xs text-muted-foreground mb-1">90th Percentile</div>
-                        <div className="font-semibold">
-                          ${(result.p90 / 1000).toFixed(0)}K
-                        </div>
+                        <div className="font-semibold">${(result.p90 / 1000).toFixed(0)}K</div>
                       </div>
                     </div>
                   </CardContent>
@@ -537,9 +540,7 @@ export default function DemoPage() {
                 <div className="mx-auto mb-4 w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-full flex items-center justify-center">
                   <Sparkles className="h-8 w-8 text-white" />
                 </div>
-                <CardTitle className="text-2xl">
-                  Ready to Plan Your Financial Future?
-                </CardTitle>
+                <CardTitle className="text-2xl">Ready to Plan Your Financial Future?</CardTitle>
                 <CardDescription className="text-base">
                   You've experienced a glimpse of Dhanam's power. Sign up to unlock unlimited
                   simulations and advanced features.
@@ -601,7 +602,12 @@ export default function DemoPage() {
                     <Sparkles className="mr-2 h-4 w-4" />
                     Start Free Trial
                   </Button>
-                  <Button onClick={() => setShowUpsell(false)} size="lg" variant="outline" className="w-full">
+                  <Button
+                    onClick={() => setShowUpsell(false)}
+                    size="lg"
+                    variant="outline"
+                    className="w-full"
+                  >
                     Continue Demo
                   </Button>
                 </div>
@@ -635,7 +641,7 @@ function calculateFutureValue(
 function calculateSuccessProbability(
   nestEgg: number,
   annualExpenses: number,
-  retirementMonths: number
+  _retirementMonths: number
 ): number {
   // Simple withdrawal rate test
   // Assume 4% safe withdrawal rate
@@ -643,7 +649,7 @@ function calculateSuccessProbability(
   const sustainableAnnualExpenses = nestEgg * safeWithdrawalRate;
 
   if (annualExpenses <= sustainableAnnualExpenses) {
-    return Math.min(95, 75 + (sustainableAnnualExpenses - annualExpenses) / annualExpenses * 20);
+    return Math.min(95, 75 + ((sustainableAnnualExpenses - annualExpenses) / annualExpenses) * 20);
   } else {
     const shortfall = (annualExpenses - sustainableAnnualExpenses) / annualExpenses;
     return Math.max(15, 75 - shortfall * 100);
@@ -660,7 +666,12 @@ function generateMockTimeSeries(
   const timeSeries = [];
 
   for (let month = 0; month <= months; month++) {
-    const expectedValue = calculateFutureValue(initialBalance, monthlyContribution, monthlyReturn, month);
+    const expectedValue = calculateFutureValue(
+      initialBalance,
+      monthlyContribution,
+      monthlyReturn,
+      month
+    );
 
     // Add some realistic variance
     const variance = expectedValue * monthlyVolatility * Math.sqrt(month);

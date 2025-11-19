@@ -1,5 +1,5 @@
-import { IsString, IsNotEmpty, IsEnum, IsOptional } from 'class-validator';
 import { HouseholdType, Currency } from '@prisma/client';
+import { IsString, IsNotEmpty, IsEnum, IsOptional } from 'class-validator';
 
 export class CreateHouseholdDto {
   @IsString()

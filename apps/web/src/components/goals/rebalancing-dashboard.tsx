@@ -10,11 +10,7 @@ import {
   CheckCircle,
   RefreshCw,
 } from 'lucide-react';
-import {
-  RebalancingSuggestion,
-  RebalancingAction,
-  ordersApi,
-} from '../../lib/api/orders';
+import { RebalancingSuggestion, ordersApi } from '../../lib/api/orders';
 
 interface RebalancingDashboardProps {
   spaceId: string;
@@ -22,11 +18,7 @@ interface RebalancingDashboardProps {
   goalName: string;
 }
 
-export function RebalancingDashboard({
-  spaceId,
-  goalId,
-  goalName,
-}: RebalancingDashboardProps) {
+export function RebalancingDashboard({ spaceId, goalId, goalName }: RebalancingDashboardProps) {
   const [suggestion, setSuggestion] = useState<RebalancingSuggestion | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isExecuting, setIsExecuting] = useState(false);
@@ -106,12 +98,7 @@ export function RebalancingDashboard({
           <h3 className="text-lg font-semibold">Rebalancing Recommendations</h3>
           <p className="text-sm text-muted-foreground">for {goalName}</p>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={loadSuggestions}
-          disabled={isLoading}
-        >
+        <Button variant="outline" size="sm" onClick={loadSuggestions} disabled={isLoading}>
           <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
           Refresh
         </Button>
@@ -169,10 +156,7 @@ export function RebalancingDashboard({
 
           <div className="space-y-2">
             {suggestion.actions.map((action, index) => (
-              <div
-                key={index}
-                className="flex items-center gap-4 p-4 border rounded-lg"
-              >
+              <div key={index} className="flex items-center gap-4 p-4 border rounded-lg">
                 <div
                   className={`p-2 rounded-lg ${
                     action.action === 'buy'
@@ -209,17 +193,13 @@ export function RebalancingDashboard({
           <div className="flex items-center gap-2 p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
             <AlertCircle className="h-5 w-5 text-amber-600" />
             <p className="text-sm text-amber-800 dark:text-amber-200">
-              Executing rebalancing will create {suggestion.actions.length} order(s) to bring
-              your portfolio back to target allocations.
+              Executing rebalancing will create {suggestion.actions.length} order(s) to bring your
+              portfolio back to target allocations.
             </p>
           </div>
 
           <div className="flex justify-end gap-2">
-            <Button
-              variant="default"
-              onClick={handleExecuteRebalancing}
-              disabled={isExecuting}
-            >
+            <Button variant="default" onClick={handleExecuteRebalancing} disabled={isExecuting}>
               {isExecuting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -239,8 +219,8 @@ export function RebalancingDashboard({
           <CheckCircle className="h-12 w-12 text-green-600 dark:text-green-400 mb-4" />
           <h4 className="text-lg font-semibold mb-2">Portfolio is Balanced</h4>
           <p className="text-sm text-muted-foreground text-center max-w-md">
-            Your portfolio is currently within the target allocation ranges. No rebalancing
-            actions are needed at this time.
+            Your portfolio is currently within the target allocation ranges. No rebalancing actions
+            are needed at this time.
           </p>
         </div>
       )}

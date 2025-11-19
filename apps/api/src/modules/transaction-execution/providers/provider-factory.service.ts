@@ -1,9 +1,9 @@
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 
-import { BitsoExecutionProvider } from './bitso-execution.provider';
-import { PlaidExecutionProvider } from './plaid-execution.provider';
 import { BelvoExecutionProvider } from './belvo-execution.provider';
+import { BitsoExecutionProvider } from './bitso-execution.provider';
 import { ExecutionProvider } from './execution-provider.interface';
+import { PlaidExecutionProvider } from './plaid-execution.provider';
 
 export enum ProviderType {
   BITSO = 'bitso',
@@ -27,9 +27,9 @@ export class ProviderFactoryService {
     private readonly belvoProvider: BelvoExecutionProvider
   ) {
     this.providers = new Map([
-      [ProviderType.BITSO, this.bitsoProvider],
-      [ProviderType.PLAID, this.plaidProvider],
-      [ProviderType.BELVO, this.belvoProvider],
+      [ProviderType.BITSO, this.bitsoProvider as ExecutionProvider],
+      [ProviderType.PLAID, this.plaidProvider as ExecutionProvider],
+      [ProviderType.BELVO, this.belvoProvider as ExecutionProvider],
     ]);
   }
 

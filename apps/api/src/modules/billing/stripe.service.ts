@@ -16,7 +16,7 @@ export class StripeService {
     }
 
     this.stripe = new Stripe(secretKey, {
-      apiVersion: '2024-11-20.acacia',
+      apiVersion: '2025-11-17.clover',
       typescript: true,
     });
 
@@ -119,17 +119,13 @@ export class StripeService {
    * Retrieve a customer
    */
   async getCustomer(customerId: string): Promise<Stripe.Customer> {
-    return await this.stripe.customers.retrieve(customerId) as Stripe.Customer;
+    return (await this.stripe.customers.retrieve(customerId)) as Stripe.Customer;
   }
 
   /**
    * Construct webhook event from raw payload
    */
-  constructWebhookEvent(
-    payload: string | Buffer,
-    signature: string,
-    secret: string
-  ): Stripe.Event {
+  constructWebhookEvent(payload: string | Buffer, signature: string, secret: string): Stripe.Event {
     try {
       return this.stripe.webhooks.constructEvent(payload, signature, secret);
     } catch (error) {
@@ -142,7 +138,7 @@ export class StripeService {
    * Get upcoming invoice for customer
    */
   async getUpcomingInvoice(customerId: string): Promise<Stripe.Invoice> {
-    return await this.stripe.invoices.retrieveUpcoming({
+    return await (this.stripe.invoices as any).upcoming({
       customer: customerId,
     });
   }

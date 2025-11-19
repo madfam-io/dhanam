@@ -1,10 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { PrismaService } from '../../core/prisma/prisma.service';
+
 import { AuditService } from '../../core/audit/audit.service';
-import { TransactionExecutionService } from '../transaction-execution/transaction-execution.service';
+import { PrismaService } from '../../core/prisma/prisma.service';
+import { OrderType, OrderPriority } from '../transaction-execution/dto/create-order.dto';
 import { ProviderFactoryService } from '../transaction-execution/providers/provider-factory.service';
-import { OrderType, OrderPriority, ExecutionProvider } from '../transaction-execution/dto/create-order.dto';
+import { TransactionExecutionService } from '../transaction-execution/transaction-execution.service';
 
 interface RebalancingAction {
   goalId: string;
@@ -91,7 +92,8 @@ export class GoalsExecutionService {
     }
 
     // Calculate current total value across all allocated accounts
-    const currentTotalValue = goal.allocations.reduce((sum: number, allocation: any) => {
+    // (Used for future rebalancing logic)
+    const _currentTotalValue = goal.allocations.reduce((sum: number, allocation: any) => {
       return sum + Number(allocation.account.balance);
     }, 0);
 
@@ -186,12 +188,12 @@ export class GoalsExecutionService {
           action: 'goal_auto_rebalance',
           resource: 'goal',
           resourceId: goal.id,
-          metadata: JSON.stringify({
+          metadata: {
             orderId: order.id,
             action: action.action,
             amount: action.amount,
             reason: action.reason,
-          }),
+          },
           severity: 'high',
         });
 

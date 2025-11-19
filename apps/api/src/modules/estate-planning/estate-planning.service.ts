@@ -1,8 +1,17 @@
-import { Injectable, Logger, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
-import { PrismaService } from '../../core/prisma/prisma.service';
-import { AuditService } from '../../core/audit/audit.service';
-import { CreateWillDto, UpdateWillDto, AddBeneficiaryDto, UpdateBeneficiaryDto, AddExecutorDto, UpdateExecutorDto } from './dto';
+import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { Will, BeneficiaryDesignation, WillExecutor, AssetType } from '@prisma/client';
+
+import { AuditService } from '../../core/audit/audit.service';
+import { PrismaService } from '../../core/prisma/prisma.service';
+
+import {
+  CreateWillDto,
+  UpdateWillDto,
+  AddBeneficiaryDto,
+  UpdateBeneficiaryDto,
+  AddExecutorDto,
+  UpdateExecutorDto,
+} from './dto';
 
 @Injectable()
 export class EstatePlanningService {
@@ -49,10 +58,10 @@ export class EstatePlanningService {
       resource: 'will',
       resourceId: will.id,
       severity: 'medium',
-      metadata: JSON.stringify({
+      metadata: {
         willName: will.name,
         householdId: will.householdId,
-      }),
+      },
     });
 
     this.logger.log(`Will created: ${will.id} by user ${userId}`);
@@ -215,7 +224,7 @@ export class EstatePlanningService {
       resource: 'will',
       resourceId: willId,
       severity: 'low',
-      metadata: JSON.stringify({ changes: Object.keys(dto) }),
+      metadata: { changes: Object.keys(dto) },
     });
 
     this.logger.log(`Will updated: ${willId} by user ${userId}`);
@@ -243,7 +252,7 @@ export class EstatePlanningService {
       resource: 'will',
       resourceId: willId,
       severity: 'medium',
-      metadata: JSON.stringify({ willName: will.name }),
+      metadata: { willName: will.name },
     });
 
     this.logger.log(`Will deleted: ${willId} by user ${userId}`);
@@ -275,7 +284,9 @@ export class EstatePlanningService {
     // Validate beneficiary allocations sum to 100% per asset type
     const validationResult = await this.validateBeneficiaryAllocations(willId);
     if (!validationResult.isValid) {
-      throw new BadRequestException(`Beneficiary allocations are invalid: ${validationResult.errors.join(', ')}`);
+      throw new BadRequestException(
+        `Beneficiary allocations are invalid: ${validationResult.errors.join(', ')}`
+      );
     }
 
     // Revoke any other active will for this household
@@ -309,10 +320,10 @@ export class EstatePlanningService {
       resource: 'will',
       resourceId: willId,
       severity: 'high',
-      metadata: JSON.stringify({
+      metadata: {
         willName: will.name,
         householdId: will.householdId,
-      }),
+      },
     });
 
     this.logger.log(`Will activated: ${willId} by user ${userId}`);
@@ -348,7 +359,7 @@ export class EstatePlanningService {
       resource: 'will',
       resourceId: willId,
       severity: 'high',
-      metadata: JSON.stringify({ willName: will.name }),
+      metadata: { willName: will.name },
     });
 
     this.logger.log(`Will revoked: ${willId} by user ${userId}`);
@@ -359,7 +370,9 @@ export class EstatePlanningService {
   /**
    * Validate beneficiary allocations (must sum to 100% per asset type)
    */
-  async validateBeneficiaryAllocations(willId: string): Promise<{ isValid: boolean; errors: string[] }> {
+  async validateBeneficiaryAllocations(
+    willId: string
+  ): Promise<{ isValid: boolean; errors: string[] }> {
     const beneficiaries = await this.prisma.beneficiaryDesignation.findMany({
       where: { willId },
     });
@@ -367,19 +380,23 @@ export class EstatePlanningService {
     const errors: string[] = [];
 
     // Group by asset type
-    const byAssetType = beneficiaries.reduce((acc, b) => {
-      if (!acc[b.assetType]) {
-        acc[b.assetType] = [];
-      }
-      acc[b.assetType].push(b);
-      return acc;
-    }, {} as Record<AssetType, BeneficiaryDesignation[]>);
+    const byAssetType = beneficiaries.reduce(
+      (acc, b) => {
+        if (!acc[b.assetType]) {
+          acc[b.assetType] = [];
+        }
+        acc[b.assetType].push(b);
+        return acc;
+      },
+      {} as Record<AssetType, BeneficiaryDesignation[]>
+    );
 
     // Check each asset type sums to 100%
     for (const [assetType, designations] of Object.entries(byAssetType)) {
-      const total = designations.reduce((sum, d) => sum + Number(d.percentage), 0);
+      const total = (designations as any[]).reduce((sum, d) => sum + Number(d.percentage), 0);
 
-      if (Math.abs(total - 100) > 0.01) { // Allow for small floating point errors
+      if (Math.abs(total - 100) > 0.01) {
+        // Allow for small floating point errors
         errors.push(`${assetType}: allocations sum to ${total}% (must be 100%)`);
       }
     }
@@ -393,7 +410,11 @@ export class EstatePlanningService {
   /**
    * Add a beneficiary to a will
    */
-  async addBeneficiary(willId: string, dto: AddBeneficiaryDto, userId: string): Promise<BeneficiaryDesignation> {
+  async addBeneficiary(
+    willId: string,
+    dto: AddBeneficiaryDto,
+    userId: string
+  ): Promise<BeneficiaryDesignation> {
     const will = await this.findById(willId, userId);
 
     if (will.status === 'executed') {
@@ -443,11 +464,11 @@ export class EstatePlanningService {
       resource: 'will',
       resourceId: willId,
       severity: 'medium',
-      metadata: JSON.stringify({
+      metadata: {
         beneficiaryId: dto.beneficiaryId,
         assetType: dto.assetType,
         percentage: dto.percentage,
-      }),
+      },
     });
 
     this.logger.log(`Beneficiary added to will: ${willId} by user ${userId}`);
@@ -511,10 +532,10 @@ export class EstatePlanningService {
       resource: 'will',
       resourceId: willId,
       severity: 'medium',
-      metadata: JSON.stringify({
+      metadata: {
         beneficiaryDesignationId: beneficiaryId,
         changes: Object.keys(dto),
-      }),
+      },
     });
 
     this.logger.log(`Beneficiary updated in will: ${willId} by user ${userId}`);
@@ -553,7 +574,7 @@ export class EstatePlanningService {
       resource: 'will',
       resourceId: willId,
       severity: 'medium',
-      metadata: JSON.stringify({ beneficiaryDesignationId: beneficiaryId }),
+      metadata: { beneficiaryDesignationId: beneficiaryId },
     });
 
     this.logger.log(`Beneficiary removed from will: ${willId} by user ${userId}`);
@@ -610,10 +631,10 @@ export class EstatePlanningService {
       resource: 'will',
       resourceId: willId,
       severity: 'medium',
-      metadata: JSON.stringify({
+      metadata: {
         executorId: dto.executorId,
         isPrimary: dto.isPrimary,
-      }),
+      },
     });
 
     this.logger.log(`Executor added to will: ${willId} by user ${userId}`);
@@ -675,10 +696,10 @@ export class EstatePlanningService {
       resource: 'will',
       resourceId: willId,
       severity: 'medium',
-      metadata: JSON.stringify({
+      metadata: {
         executorId,
         changes: Object.keys(dto),
-      }),
+      },
     });
 
     this.logger.log(`Executor updated in will: ${willId} by user ${userId}`);
@@ -717,7 +738,7 @@ export class EstatePlanningService {
       resource: 'will',
       resourceId: willId,
       severity: 'medium',
-      metadata: JSON.stringify({ executorId }),
+      metadata: { executorId },
     });
 
     this.logger.log(`Executor removed from will: ${willId} by user ${userId}`);

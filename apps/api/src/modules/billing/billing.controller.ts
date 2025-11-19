@@ -12,10 +12,12 @@ import {
   Logger,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { BillingService } from './billing.service';
-import { StripeService } from './stripe.service';
+
 import { JwtAuthGuard } from '../../core/auth/guards/jwt-auth.guard';
+
+import { BillingService } from './billing.service';
 import { UpgradeToPremiumDto } from './dto';
+import { StripeService } from './stripe.service';
 
 @Controller('billing')
 export class BillingController {
@@ -32,7 +34,7 @@ export class BillingController {
    */
   @Post('upgrade')
   @UseGuards(JwtAuthGuard)
-  async upgradeToPremium(@Req() req: any, @Body() dto: UpgradeToPremiumDto) {
+  async upgradeToPremium(@Req() req: any, @Body() _dto: UpgradeToPremiumDto) {
     return this.billingService.upgradeToPremium(req.user.id);
   }
 
@@ -75,8 +77,9 @@ export class BillingController {
       tier: user.subscriptionTier,
       startedAt: user.subscriptionStartedAt,
       expiresAt: user.subscriptionExpiresAt,
-      isActive: user.subscriptionTier === 'premium' &&
-                (!user.subscriptionExpiresAt || new Date(user.subscriptionExpiresAt) > new Date()),
+      isActive:
+        user.subscriptionTier === 'premium' &&
+        (!user.subscriptionExpiresAt || new Date(user.subscriptionExpiresAt) > new Date()),
     };
   }
 
@@ -102,7 +105,7 @@ export class BillingController {
     try {
       // Verify webhook signature
       event = this.stripeService.constructWebhookEvent(
-        req.rawBody || req.body,
+        (req.rawBody || req.body) as Buffer,
         signature,
         webhookSecret
       );

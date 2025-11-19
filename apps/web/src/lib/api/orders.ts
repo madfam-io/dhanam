@@ -217,10 +217,7 @@ export const ordersApi = {
     return apiClient.get<GoalProgress>(`/spaces/${spaceId}/goals/${goalId}/progress`);
   },
 
-  suggestRebalancing: async (
-    spaceId: string,
-    goalId: string
-  ): Promise<RebalancingSuggestion> => {
+  suggestRebalancing: async (spaceId: string, goalId: string): Promise<RebalancingSuggestion> => {
     return apiClient.get<RebalancingSuggestion>(
       `/spaces/${spaceId}/goals/${goalId}/rebalancing/suggest`
     );

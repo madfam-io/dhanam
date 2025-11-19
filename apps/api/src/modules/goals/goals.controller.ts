@@ -11,10 +11,12 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { GoalsService } from './goals.service';
-import { GoalsExecutionService } from './goals-execution.service';
-import { CreateGoalDto, UpdateGoalDto, AddAllocationDto } from './dto';
+
 import { JwtAuthGuard } from '../../core/auth/guards/jwt-auth.guard';
+
+import { CreateGoalDto, UpdateGoalDto, AddAllocationDto } from './dto';
+import { GoalsExecutionService } from './goals-execution.service';
+import { GoalsService } from './goals.service';
 
 @Controller('goals')
 @UseGuards(JwtAuthGuard)
@@ -85,11 +87,7 @@ export class GoalsController {
    * Add an allocation to a goal
    */
   @Post(':id/allocations')
-  async addAllocation(
-    @Param('id') id: string,
-    @Body() dto: AddAllocationDto,
-    @Req() req: any
-  ) {
+  async addAllocation(@Param('id') id: string, @Body() dto: AddAllocationDto, @Req() req: any) {
     return this.goalsService.addAllocation(id, dto, req.user.id);
   }
 
@@ -109,8 +107,8 @@ export class GoalsController {
   /**
    * Get goal progress including rebalancing recommendations
    */
-  @Get(':id/progress')
-  async getProgress(@Param('id') id: string, @Req() req: any) {
+  @Get(':id/progress/detailed')
+  async getDetailedProgress(@Param('id') id: string, @Req() _req: any) {
     return this.goalsExecutionService.calculateGoalProgress(id);
   }
 

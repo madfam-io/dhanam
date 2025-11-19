@@ -1,5 +1,13 @@
-import { IsUUID, IsNotEmpty, IsBoolean, IsOptional, IsNumber, IsString, Min } from 'class-validator';
 import { Type } from 'class-transformer';
+import {
+  IsUUID,
+  IsNotEmpty,
+  IsBoolean,
+  IsOptional,
+  IsNumber,
+  IsString,
+  Min,
+} from 'class-validator';
 
 export class AddExecutorDto {
   @IsUUID()

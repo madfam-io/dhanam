@@ -68,7 +68,11 @@ export function useAnalytics() {
     track('rule_created', { rule_id, category, pattern });
   };
 
-  const trackTxnCategorized = (transaction_id: string, category: string, method: 'manual' | 'rule') => {
+  const trackTxnCategorized = (
+    transaction_id: string,
+    category: string,
+    method: 'manual' | 'rule'
+  ) => {
     track('txn_categorized', { transaction_id, category, method });
   };
 
@@ -88,7 +92,12 @@ export function useAnalytics() {
   // GOAL TRACKING EVENTS
   // ============================================================================
 
-  const trackGoalCreated = (goal_id: string, type: string, target_amount: number, months_to_target: number) => {
+  const trackGoalCreated = (
+    goal_id: string,
+    type: string,
+    target_amount: number,
+    months_to_target: number
+  ) => {
     track('goal_created', { goal_id, type, target_amount, months_to_target });
   };
 
@@ -100,7 +109,11 @@ export function useAnalytics() {
     track('goal_deleted', { goal_id, type, was_achieved });
   };
 
-  const trackGoalProgressViewed = (goal_id: string, percent_complete: number, on_track: boolean) => {
+  const trackGoalProgressViewed = (
+    goal_id: string,
+    percent_complete: number,
+    on_track: boolean
+  ) => {
     track('goal_progress_viewed', { goal_id, percent_complete, on_track });
   };
 

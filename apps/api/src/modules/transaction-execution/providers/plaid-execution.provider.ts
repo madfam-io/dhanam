@@ -1,9 +1,9 @@
-import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios, { AxiosInstance } from 'axios';
 
-import { PrismaService } from '../../../core/prisma/prisma.service';
 import { CryptoService } from '../../../core/crypto/crypto.service';
+import { PrismaService } from '../../../core/prisma/prisma.service';
 
 import {
   ExecutionProvider,
@@ -109,10 +109,12 @@ export class PlaidExecutionProvider extends ExecutionProvider {
       },
     });
 
-    this.logger.log(`Plaid execution provider initialized (${this.isProduction ? 'production' : 'sandbox'})`);
+    this.logger.log(
+      `Plaid execution provider initialized (${this.isProduction ? 'production' : 'sandbox'})`
+    );
   }
 
-  async executeBuy(order: ExecutionOrder): Promise<ExecutionResult> {
+  async executeBuy(_order: ExecutionOrder): Promise<ExecutionResult> {
     return {
       success: false,
       errorCode: 'NOT_SUPPORTED',
@@ -120,7 +122,7 @@ export class PlaidExecutionProvider extends ExecutionProvider {
     };
   }
 
-  async executeSell(order: ExecutionOrder): Promise<ExecutionResult> {
+  async executeSell(_order: ExecutionOrder): Promise<ExecutionResult> {
     return {
       success: false,
       errorCode: 'NOT_SUPPORTED',
@@ -142,9 +144,7 @@ export class PlaidExecutionProvider extends ExecutionProvider {
         throw new Error('Account not linked to Plaid');
       }
 
-      const accessToken = this.cryptoService.decrypt(
-        JSON.parse(account.plaidAccessToken)
-      );
+      const accessToken = this.cryptoService.decrypt(JSON.parse(account.plaidAccessToken));
 
       // Step 1: Create transfer authorization
       this.logger.log(`Creating Plaid transfer authorization for order ${order.id}`);
@@ -252,7 +252,7 @@ export class PlaidExecutionProvider extends ExecutionProvider {
     });
   }
 
-  async getMarketPrice(assetSymbol: string, currency: string): Promise<number> {
+  async getMarketPrice(_assetSymbol: string, _currency: string): Promise<number> {
     throw new Error('Plaid does not provide market prices');
   }
 
@@ -267,10 +267,7 @@ export class PlaidExecutionProvider extends ExecutionProvider {
       errors.push(`Order amount below minimum: $${this.capabilities.minOrderAmount}`);
     }
 
-    if (
-      this.capabilities.maxOrderAmount &&
-      order.amount > this.capabilities.maxOrderAmount
-    ) {
+    if (this.capabilities.maxOrderAmount && order.amount > this.capabilities.maxOrderAmount) {
       errors.push(
         `Order amount exceeds same-day ACH maximum: $${this.capabilities.maxOrderAmount}`
       );
@@ -294,7 +291,7 @@ export class PlaidExecutionProvider extends ExecutionProvider {
       }
 
       // Verify Plaid API is reachable
-      const response = await this.plaidClient.post('/item/get', {
+      await this.plaidClient.post('/item/get', {
         access_token: 'test_token', // This will fail but confirms API is up
       });
 

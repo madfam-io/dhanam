@@ -16,8 +16,8 @@ export function RetirementResults({ results }: RetirementResultsProps) {
 
   const successRate = withdrawalPhase.probabilityOfNotRunningOut;
   const isOnTrack = successRate >= 0.75;
-  const isExcellent = successRate >= 0.90;
-  const isAtRisk = successRate < 0.50;
+  const isExcellent = successRate >= 0.9;
+  const isAtRisk = successRate < 0.5;
 
   const getSuccessColor = () => {
     if (isExcellent) return 'text-green-600';
@@ -26,7 +26,7 @@ export function RetirementResults({ results }: RetirementResultsProps) {
     return 'text-yellow-600';
   };
 
-  const getSuccessVariant = (): 'default' | 'destructive' | 'secondary' => {
+  const _getSuccessVariant = (): 'default' | 'destructive' | 'secondary' => {
     if (isExcellent) return 'default';
     if (isAtRisk) return 'destructive';
     return 'secondary';
@@ -45,7 +45,7 @@ export function RetirementResults({ results }: RetirementResultsProps) {
         <CardContent>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-4xl font-bold" className={getSuccessColor()}>
+              <span className={`text-4xl font-bold ${getSuccessColor()}`}>
                 {(successRate * 100).toFixed(1)}%
               </span>
               {isExcellent && <Badge className="bg-green-600">Excellent</Badge>}
@@ -55,7 +55,8 @@ export function RetirementResults({ results }: RetirementResultsProps) {
             </div>
             <Progress value={successRate * 100} className="h-3" />
             <p className="text-sm text-muted-foreground">
-              Based on {results.simulation.finalValues.length.toLocaleString()} Monte Carlo simulations
+              Based on {results.simulation.finalValues.length.toLocaleString()} Monte Carlo
+              simulations
             </p>
           </div>
         </CardContent>
@@ -72,8 +73,12 @@ export function RetirementResults({ results }: RetirementResultsProps) {
               <strong>${recommendations.increaseContributionBy.toLocaleString()}</strong>.
             </p>
             <p className="text-sm">
-              This would bring your total monthly savings to approximately{' '}
-              ${(recommendations.increaseContributionBy + (results.simulation.config as any).monthlyContribution).toLocaleString()}.
+              This would bring your total monthly savings to approximately $
+              {(
+                recommendations.increaseContributionBy +
+                (results.simulation.config as any).monthlyContribution
+              ).toLocaleString()}
+              .
             </p>
           </AlertDescription>
         </Alert>
@@ -107,13 +112,19 @@ export function RetirementResults({ results }: RetirementResultsProps) {
             <div>
               <p className="text-sm text-muted-foreground">Expected Nest Egg (Median)</p>
               <p className="text-2xl font-bold">
-                ${accumulationPhase.finalBalanceMedian.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                $
+                {accumulationPhase.finalBalanceMedian.toLocaleString(undefined, {
+                  maximumFractionDigits: 0,
+                })}
               </p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Total Contributions</p>
               <p className="text-2xl font-bold">
-                ${accumulationPhase.totalContributions.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                $
+                {accumulationPhase.totalContributions.toLocaleString(undefined, {
+                  maximumFractionDigits: 0,
+                })}
               </p>
             </div>
           </div>
@@ -124,19 +135,28 @@ export function RetirementResults({ results }: RetirementResultsProps) {
               <div>
                 <p className="text-xs text-muted-foreground">Worst 10%</p>
                 <p className="text-lg font-semibold">
-                  ${accumulationPhase.finalBalanceP10.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                  $
+                  {accumulationPhase.finalBalanceP10.toLocaleString(undefined, {
+                    maximumFractionDigits: 0,
+                  })}
                 </p>
               </div>
               <div className="text-center">
                 <p className="text-xs text-muted-foreground">Most Likely</p>
                 <p className="text-lg font-semibold">
-                  ${accumulationPhase.finalBalanceMedian.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                  $
+                  {accumulationPhase.finalBalanceMedian.toLocaleString(undefined, {
+                    maximumFractionDigits: 0,
+                  })}
                 </p>
               </div>
               <div className="text-right">
                 <p className="text-xs text-muted-foreground">Best 10%</p>
                 <p className="text-lg font-semibold">
-                  ${accumulationPhase.finalBalanceP90.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                  $
+                  {accumulationPhase.finalBalanceP90.toLocaleString(undefined, {
+                    maximumFractionDigits: 0,
+                  })}
                 </p>
               </div>
             </div>
@@ -163,19 +183,18 @@ export function RetirementResults({ results }: RetirementResultsProps) {
                 {withdrawalPhase.medianYearsOfSustainability.toFixed(1)} years
               </p>
               {withdrawalPhase.medianYearsOfSustainability > withdrawalPhase.yearsInRetirement && (
-                <p className="text-xs text-green-600 mt-1">
-                  Outlasts life expectancy ✓
-                </p>
+                <p className="text-xs text-green-600 mt-1">Outlasts life expectancy ✓</p>
               )}
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Safe Monthly Withdrawal</p>
               <p className="text-2xl font-bold">
-                ${withdrawalPhase.safeWithdrawalRate.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                $
+                {withdrawalPhase.safeWithdrawalRate.toLocaleString(undefined, {
+                  maximumFractionDigits: 0,
+                })}
               </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                For 75% success rate
-              </p>
+              <p className="text-xs text-muted-foreground mt-1">For 75% success rate</p>
             </div>
           </div>
 
@@ -190,7 +209,11 @@ export function RetirementResults({ results }: RetirementResultsProps) {
               <div className="flex justify-between text-muted-foreground text-sm">
                 <span>Coverage from Portfolio:</span>
                 <span>
-                  {((withdrawalPhase.safeWithdrawalRate / withdrawalPhase.netMonthlyNeed) * 100).toFixed(0)}%
+                  {(
+                    (withdrawalPhase.safeWithdrawalRate / withdrawalPhase.netMonthlyNeed) *
+                    100
+                  ).toFixed(0)}
+                  %
                 </span>
               </div>
             </div>
@@ -205,18 +228,20 @@ export function RetirementResults({ results }: RetirementResultsProps) {
             <DollarSign className="h-5 w-5" />
             Target Retirement Savings
           </CardTitle>
-          <CardDescription>
-            Recommended nest egg at retirement
-          </CardDescription>
+          <CardDescription>Recommended nest egg at retirement</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             <div>
               <p className="text-3xl font-bold">
-                ${recommendations.targetNestEgg.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                $
+                {recommendations.targetNestEgg.toLocaleString(undefined, {
+                  maximumFractionDigits: 0,
+                })}
               </p>
               <p className="text-sm text-muted-foreground mt-1">
-                Provides {(withdrawalPhase.probabilityOfNotRunningOut * 100).toFixed(0)}% confidence of not running out
+                Provides {(withdrawalPhase.probabilityOfNotRunningOut * 100).toFixed(0)}% confidence
+                of not running out
               </p>
             </div>
 
@@ -226,15 +251,17 @@ export function RetirementResults({ results }: RetirementResultsProps) {
                 <li className="flex items-start gap-2">
                   <span className="mt-1">•</span>
                   <span>
-                    Save ${((results.simulation.config as any).monthlyContribution * 12).toLocaleString()} per year
-                    for {accumulationPhase.yearsToRetirement} years
+                    Save $
+                    {((results.simulation.config as any).monthlyContribution * 12).toLocaleString()}{' '}
+                    per year for {accumulationPhase.yearsToRetirement} years
                   </span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="mt-1">•</span>
                   <span>
-                    Maintain {((results.simulation.config as any).expectedReturn * 100).toFixed(1)}% annual return
-                    with {((results.simulation.config as any).volatility * 100).toFixed(0)}% volatility
+                    Maintain {((results.simulation.config as any).expectedReturn * 100).toFixed(1)}%
+                    annual return with{' '}
+                    {((results.simulation.config as any).volatility * 100).toFixed(0)}% volatility
                   </span>
                 </li>
                 <li className="flex items-start gap-2">

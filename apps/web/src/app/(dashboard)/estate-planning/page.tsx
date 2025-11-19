@@ -195,7 +195,8 @@ export default function EstatePlanningPage() {
             <DialogHeader>
               <DialogTitle>Create New Will</DialogTitle>
               <DialogDescription>
-                Create a draft will for your household. You can add beneficiaries and executors before activating it.
+                Create a draft will for your household. You can add beneficiaries and executors
+                before activating it.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
@@ -357,10 +358,7 @@ export default function EstatePlanningPage() {
                   </Button>
                 )}
                 {selectedWill.status === 'active' && (
-                  <Button
-                    variant="destructive"
-                    onClick={() => handleRevokeWill(selectedWill.id)}
-                  >
+                  <Button variant="destructive" onClick={() => handleRevokeWill(selectedWill.id)}>
                     <XCircle className="h-4 w-4 mr-2" />
                     Revoke Will
                   </Button>
@@ -402,9 +400,7 @@ export default function EstatePlanningPage() {
                         className="flex items-center justify-between p-3 border rounded"
                       >
                         <div>
-                          <div className="font-medium">
-                            {beneficiary.beneficiary?.user.name}
-                          </div>
+                          <div className="font-medium">{beneficiary.beneficiary?.user.name}</div>
                           <div className="text-sm text-muted-foreground">
                             {beneficiary.assetType.replace('_', ' ')} - {beneficiary.percentage}%
                           </div>
@@ -440,9 +436,7 @@ export default function EstatePlanningPage() {
                           </div>
                         </div>
                         <div className="flex gap-2">
-                          {executor.isPrimary && (
-                            <Badge variant="default">Primary</Badge>
-                          )}
+                          {executor.isPrimary && <Badge variant="default">Primary</Badge>}
                           <Badge variant="outline" className="capitalize">
                             {executor.executor?.relationship}
                           </Badge>

@@ -1,5 +1,5 @@
-import { IsNumber, IsUUID, IsOptional, Min, Max } from 'class-validator';
 import { Type } from 'class-transformer';
+import { IsNumber, IsUUID, IsOptional, Min, Max } from 'class-validator';
 
 export class CalculateGoalProbabilityDto {
   @IsUUID()
@@ -27,8 +27,8 @@ export class CalculateGoalProbabilityDto {
   monthlyContribution: number;
 
   @IsNumber()
-  @Min(-0.50)
-  @Max(0.50)
+  @Min(-0.5)
+  @Max(0.5)
   @Type(() => Number)
   expectedReturn: number;
 

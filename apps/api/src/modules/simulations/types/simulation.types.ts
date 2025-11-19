@@ -38,10 +38,10 @@ export interface SimulationResult {
   stdDev: number;
 
   // Percentiles (confidence intervals)
-  p10: number;  // 10th percentile (worst 10%)
-  p25: number;  // 25th percentile
-  p75: number;  // 75th percentile
-  p90: number;  // 90th percentile
+  p10: number; // 10th percentile (worst 10%)
+  p25: number; // 25th percentile
+  p75: number; // 75th percentile
+  p90: number; // 90th percentile
 
   // Min and max outcomes
   min: number;
@@ -74,18 +74,18 @@ export interface RetirementSimulationConfig extends MonteCarloConfig {
   lifeExpectancy: number;
 
   // Retirement phase parameters
-  monthlyExpenses?: number;  // Expected monthly expenses in retirement
-  socialSecurityIncome?: number;  // Monthly social security/pension income
-  inflationAdjusted?: boolean;  // Adjust expenses for inflation
+  monthlyExpenses?: number; // Expected monthly expenses in retirement
+  socialSecurityIncome?: number; // Monthly social security/pension income
+  inflationAdjusted?: boolean; // Adjust expenses for inflation
 }
 
 export interface RetirementSimulationResult extends SimulationResult {
   // Retirement-specific metrics
-  probabilityOfNotRunningOut: number;  // Probability of money lasting until life expectancy
-  medianRetirementBalance: number;     // Median balance at retirement age
-  medianFinalBalance: number;          // Median balance at life expectancy
-  yearsOfSustainability: number;       // Median years money will last
-  safeWithdrawalRate: number;          // Safe withdrawal rate (4% rule adjusted)
+  probabilityOfNotRunningOut: number; // Probability of money lasting until life expectancy
+  medianRetirementBalance: number; // Median balance at retirement age
+  medianFinalBalance: number; // Median balance at life expectancy
+  yearsOfSustainability: number; // Median years money will last
+  safeWithdrawalRate: number; // Safe withdrawal rate (4% rule adjusted)
 }
 
 export interface ScenarioConfig {
@@ -96,14 +96,14 @@ export interface ScenarioConfig {
   shocks?: MarketShock[];
 
   // Modified return/volatility
-  returnAdjustment?: number;     // e.g., -0.02 for 2% lower returns
+  returnAdjustment?: number; // e.g., -0.02 for 2% lower returns
   volatilityMultiplier?: number; // e.g., 1.5 for 50% higher volatility
 }
 
 export interface MarketShock {
   type: 'crash' | 'recession' | 'boom' | 'correction';
-  magnitude: number;      // e.g., -0.30 for 30% decline
-  startMonth: number;     // Month when shock occurs
+  magnitude: number; // e.g., -0.30 for 30% decline
+  startMonth: number; // Month when shock occurs
   durationMonths: number; // How long the shock lasts
   recoveryMonths: number; // Months to recover to normal
 }
@@ -135,10 +135,10 @@ export interface GoalProbabilityResult {
   targetAmount: number;
   probabilityOfSuccess: number;
   medianOutcome: number;
-  expectedShortfall: number;  // Expected amount short of goal
+  expectedShortfall: number; // Expected amount short of goal
   confidence90Range: {
     low: number;
     high: number;
   };
-  recommendedMonthlyContribution: number;  // To achieve 90% success rate
+  recommendedMonthlyContribution: number; // To achieve 90% success rate
 }
