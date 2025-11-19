@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 
 import { AuditModule } from '../../core/audit/audit.module';
-import { PrismaModule } from '../../core/database/prisma.module';
+import { PrismaModule } from '../../core/prisma/prisma.module';
 
 import { BillingController } from './billing.controller';
 import { BillingService } from './billing.service';

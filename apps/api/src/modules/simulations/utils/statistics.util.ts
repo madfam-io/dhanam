@@ -6,6 +6,30 @@ import * as jStat from 'jstat';
 
 export class StatisticsUtil {
   /**
+   * Calculate minimum value in an array
+   */
+  static min(values: number[]): number {
+    if (values.length === 0) return 0;
+    return Math.min(...values);
+  }
+
+  /**
+   * Calculate maximum value in an array
+   */
+  static max(values: number[]): number {
+    if (values.length === 0) return 0;
+    return Math.max(...values);
+  }
+
+  /**
+   * Calculate sum of all values in an array
+   */
+  static sum(values: number[]): number {
+    if (values.length === 0) return 0;
+    return values.reduce((acc, val) => acc + val, 0);
+  }
+
+  /**
    * Calculate mean (average) of an array of numbers
    */
   static mean(values: number[]): number {

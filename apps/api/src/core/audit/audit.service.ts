@@ -50,6 +50,13 @@ export class AuditService {
     }
   }
 
+  /**
+   * Alias for logEvent() - provides backward compatibility
+   */
+  async log(data: AuditEventData): Promise<void> {
+    return this.logEvent(data);
+  }
+
   // Convenience methods for common security events
   async logAuthSuccess(userId: string, ipAddress?: string, userAgent?: string): Promise<void> {
     await this.logEvent({

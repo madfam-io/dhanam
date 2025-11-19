@@ -4,7 +4,7 @@ import { UsageMetricType, SubscriptionTier } from '@prisma/client';
 import Stripe from 'stripe';
 
 import { AuditService } from '../../core/audit/audit.service';
-import { PrismaService } from '../../core/database/prisma.service';
+import { PrismaService } from '../../core/prisma/prisma.service';
 
 import { StripeService } from './stripe.service';
 

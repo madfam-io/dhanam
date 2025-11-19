@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 
 import { AuditModule } from '../../core/audit/audit.module';
-import { PrismaModule } from '../../core/database/prisma.module';
+import { PrismaModule } from '../../core/prisma/prisma.module';
 import { GoalsModule } from '../goals/goals.module';
 
 import { MonteCarloEngine } from './engines/monte-carlo.engine';

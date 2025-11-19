@@ -1,6 +1,6 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 
-import { PrismaService } from '../../core/database/prisma.service';
+import { PrismaService } from '../../core/prisma/prisma.service';
 
 import { MonteCarloEngine } from './engines/monte-carlo.engine';
 import {
