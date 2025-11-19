@@ -319,7 +319,7 @@ importers:
         specifier: ^5.90.10
         version: 5.90.10(react@18.2.0)
       axios:
-        specifier: ^1.7.7
+        specifier: '>=1.8.2'
         version: 1.13.2
       expo:
         specifier: ~54.0.24
