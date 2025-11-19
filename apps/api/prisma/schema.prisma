@@ -88,6 +88,25 @@ enum UsageMetricType {
   api_request
 }
 
+enum GoalType {
+  retirement
+  education
+  house_purchase
+  emergency_fund
+  legacy
+  travel
+  business
+  debt_payoff
+  other
+}
+
+enum GoalStatus {
+  active
+  paused
+  achieved
+  abandoned
+}
+
 // Models
 model User {
   id               String        @id @default(uuid())
@@ -235,6 +254,7 @@ model Space {
   accounts         Account[]
   budgets          Budget[]
   transactionRules TransactionRule[]
+  goals            Goal[]
 
   @@map("spaces")
 }
@@ -275,6 +295,7 @@ model Account {
   assetValuations       AssetValuation[]
   esgScores             ESGScore[]
   connection            Connection?
+  goalAllocations       GoalAllocation[]
 
   @@unique([spaceId, provider, providerAccountId])
   @@index([spaceId])
@@ -519,4 +540,47 @@ model UsageMetric {
   @@index([userId, date(sort: Desc)])
   @@index([metricType, date])
   @@map("usage_metrics")
+}
+
+model Goal {
+  id               String        @id @default(uuid())
+  spaceId          String        @map("space_id")
+  name             String
+  description      String?
+  type             GoalType
+  targetAmount     Decimal       @db.Decimal(19, 4)
+  currency         Currency      @default(USD)
+  targetDate       DateTime      @db.Date
+  priority         Int           @default(1)
+  status           GoalStatus    @default(active)
+  notes            String?
+  createdAt        DateTime      @default(now()) @map("created_at")
+  updatedAt        DateTime      @updatedAt @map("updated_at")
+
+  // Relations
+  space            Space         @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  allocations      GoalAllocation[]
+
+  @@index([spaceId, status])
+  @@index([spaceId, createdAt(sort: Desc)])
+  @@map("goals")
+}
+
+model GoalAllocation {
+  id               String        @id @default(uuid())
+  goalId           String        @map("goal_id")
+  accountId        String        @map("account_id")
+  percentage       Decimal       @db.Decimal(5, 2)
+  notes            String?
+  createdAt        DateTime      @default(now()) @map("created_at")
+  updatedAt        DateTime      @updatedAt @map("updated_at")
+
+  // Relations
+  goal             Goal          @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  account          Account       @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@unique([goalId, accountId])
+  @@index([goalId])
+  @@index([accountId])
+  @@map("goal_allocations")
 }
