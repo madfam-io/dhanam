@@ -15,6 +15,7 @@ import { CategoriesModule } from '@modules/categories/categories.module';
 import { EmailModule } from '@modules/email/email.module';
 import { FxRatesModule } from '@modules/fx-rates/fx-rates.module';
 import { GoalsModule } from '@modules/goals/goals.module';
+import { HouseholdsModule } from '@modules/households/households.module';
 import { IntegrationsModule } from '@modules/integrations/integrations.module';
 import { JobsModule } from '@modules/jobs/jobs.module';
 import { OnboardingModule } from '@modules/onboarding/onboarding.module';
@@ -58,6 +59,7 @@ import { validationSchema } from './config/validation';
     AdminModule,
     BillingModule,
     GoalsModule,
+    HouseholdsModule,
     SimulationsModule,
   ],
 })

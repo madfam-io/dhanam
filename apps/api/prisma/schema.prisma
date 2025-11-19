@@ -107,12 +107,34 @@ enum GoalStatus {
   abandoned
 }
 
+enum HouseholdType {
+  family
+  trust
+  estate
+  partnership
+}
+
+enum RelationshipType {
+  spouse
+  partner
+  child
+  parent
+  sibling
+  grandparent
+  grandchild
+  dependent
+  trustee
+  beneficiary
+  other
+}
+
 // Models
 model User {
   id               String        @id @default(uuid())
   email            String        @unique
   passwordHash     String        @map("password_hash")
   name             String
+  dateOfBirth      DateTime?     @map("date_of_birth") @db.Date
   locale           String        @default("es")
   timezone         String        @default("America/Mexico_City")
   totpSecret       String?       @map("totp_secret")
@@ -145,6 +167,7 @@ model User {
   preferences      UserPreferences?
   billingEvents    BillingEvent[]
   usageMetrics     UsageMetric[]
+  householdMembers HouseholdMember[]
 
   @@map("users")
 }
@@ -246,16 +269,19 @@ model Space {
   type             SpaceType
   currency         Currency      @default(MXN)
   timezone         String        @default("America/Mexico_City")
+  householdId      String?       @map("household_id")
   createdAt        DateTime      @default(now()) @map("created_at")
   updatedAt        DateTime      @updatedAt @map("updated_at")
 
   // Relations
+  household        Household?    @relation(fields: [householdId], references: [id], onDelete: SetNull)
   userSpaces       UserSpace[]
   accounts         Account[]
   budgets          Budget[]
   transactionRules TransactionRule[]
   goals            Goal[]
 
+  @@index([householdId])
   @@map("spaces")
 }
 
@@ -545,6 +571,7 @@ model UsageMetric {
 model Goal {
   id               String        @id @default(uuid())
   spaceId          String        @map("space_id")
+  householdId      String?       @map("household_id")
   name             String
   description      String?
   type             GoalType
@@ -559,10 +586,12 @@ model Goal {
 
   // Relations
   space            Space         @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  household        Household?    @relation(fields: [householdId], references: [id], onDelete: SetNull)
   allocations      GoalAllocation[]
 
   @@index([spaceId, status])
   @@index([spaceId, createdAt(sort: Desc)])
+  @@index([householdId])
   @@map("goals")
 }
 
@@ -583,4 +612,43 @@ model GoalAllocation {
   @@index([goalId])
   @@index([accountId])
   @@map("goal_allocations")
+}
+
+model Household {
+  id               String            @id @default(uuid())
+  name             String
+  type             HouseholdType     @default(family)
+  baseCurrency     Currency          @default(USD)
+  description      String?
+  createdAt        DateTime          @default(now()) @map("created_at")
+  updatedAt        DateTime          @updatedAt @map("updated_at")
+
+  // Relations
+  members          HouseholdMember[]
+  spaces           Space[]
+  goals            Goal[]
+
+  @@index([createdAt])
+  @@map("households")
+}
+
+model HouseholdMember {
+  id               String           @id @default(uuid())
+  householdId      String           @map("household_id")
+  userId           String           @map("user_id")
+  relationship     RelationshipType
+  isMinor          Boolean          @default(false) @map("is_minor")
+  accessStartDate  DateTime?        @map("access_start_date") @db.Date
+  notes            String?
+  createdAt        DateTime         @default(now()) @map("created_at")
+  updatedAt        DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  household        Household        @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([householdId, userId])
+  @@index([householdId])
+  @@index([userId])
+  @@map("household_members")
 }
