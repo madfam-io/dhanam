@@ -222,7 +222,10 @@ pnpm test:watch
 - **CI/CD**: Automated testing on every push and PR via GitHub Actions
 - **Coverage Reporting**: Integrated with Codecov for trend tracking
 
-For detailed testing guide, see [TEST_COVERAGE_GUIDE.md](apps/api/TEST_COVERAGE_GUIDE.md)
+For detailed testing documentation, see:
+- [Test Coverage Guide](apps/api/TEST_COVERAGE_GUIDE.md) - Comprehensive testing guide
+- [Test Summary](docs/testing/TEST_SUMMARY.md) - Testing approach overview
+- [Test Results](docs/testing/TEST_RESULTS.md) - Latest test results
 
 ## Deployment
 
@@ -241,6 +244,35 @@ The application is designed to run on AWS ECS/Fargate:
    terraform plan
    terraform apply
    ```
+
+For complete deployment instructions, see [Deployment Guide](docs/DEPLOYMENT.md).
+
+## Documentation
+
+Comprehensive documentation is available in the [`docs/`](docs/) directory:
+
+### Getting Started
+- [Development Guide](docs/DEVELOPMENT.md) - Local development setup
+- [API Documentation](docs/API.md) - Backend API reference
+- [Mobile App Guide](docs/MOBILE.md) - React Native development
+
+### Architecture & Design
+- [Architecture Overview](ARCHITECTURE.md) - High-level system design
+- [Full Architecture Details](docs/architecture/ARCHITECTURE.md) - Complete architecture
+- [Software Specification](docs/architecture/SOFTWARE_SPEC.md) - Technical specs
+- [Infrastructure Guide](docs/INFRASTRUCTURE.md) - Infrastructure setup
+- [API Specification](API_SPECIFICATION.yaml) - OpenAPI spec
+
+### Operations & Deployment
+- [Deployment Guide](docs/DEPLOYMENT.md) - Production deployment
+- [Admin Dashboard](docs/ADMIN_DASHBOARD.md) - Admin features
+- [Sentry Setup](docs/SENTRY_SETUP.md) - Error tracking
+- [CI/CD Setup](docs/guides/CICD_IMPLEMENTATION_SUMMARY.md) - Build pipeline
+
+### Reports & Audits
+- [Documentation Index](docs/README.md) - Complete documentation index
+- [Comprehensive Audit 2025](docs/audits/COMPREHENSIVE_AUDIT_REPORT_2025.md) - Latest audit
+- [Implementation Roadmap](docs/guides/IMPLEMENTATION_ROADMAP.md) - Project roadmap
 
 ## Contributing
 
