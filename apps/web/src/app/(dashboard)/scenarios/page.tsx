@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useSimulations, type MonteCarloConfig, type ScenarioComparisonResult } from '@/hooks/useSimulations';
+import { useAnalytics } from '@/hooks/useAnalytics';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,6 +30,7 @@ const SCENARIOS = [
 
 export default function ScenariosPage() {
   const { compareScenarios, loading, error } = useSimulations();
+  const analytics = useAnalytics();
 
   const [config, setConfig] = useState<MonteCarloConfig>({
     initialBalance: 100000,
@@ -47,6 +49,14 @@ export default function ScenariosPage() {
     const result = await compareScenarios(selectedScenario, config);
     if (result) {
       setComparison(result);
+
+      // Track scenario comparison
+      analytics.trackScenarioComparison(
+        result.scenarioName,
+        result.comparison.medianDifference,
+        result.comparison.medianDifferencePercent,
+        result.comparison.worthStressTesting
+      );
     }
   };
 

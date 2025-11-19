@@ -1,10 +1,12 @@
 'use client';
 
+import { useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, Sparkles, Zap } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useAnalytics } from '@/hooks/useAnalytics';
 
 interface PremiumUpsellProps {
   feature?: string;
@@ -13,8 +15,18 @@ interface PremiumUpsellProps {
 
 export function PremiumUpsell({ feature, context = 'generic' }: PremiumUpsellProps) {
   const router = useRouter();
+  const analytics = useAnalytics();
+
+  // Track when upsell is viewed
+  useEffect(() => {
+    analytics.trackPremiumUpsellViewed(context, feature);
+  }, [context, feature]);
 
   const handleUpgrade = () => {
+    // Track click
+    analytics.trackPremiumUpsellClicked(context, feature);
+    analytics.trackUpgradeInitiated('premium', 9.99);
+
     router.push('/billing/upgrade');
   };
 

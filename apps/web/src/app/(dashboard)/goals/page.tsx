@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useGoals, type Goal, type GoalProgress, type GoalSummary } from '@/hooks/useGoals';
 import { useSimulations } from '@/hooks/useSimulations';
+import { useAnalytics } from '@/hooks/useAnalytics';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -23,6 +24,7 @@ import {
 export default function GoalsPage() {
   const { getGoalsBySpace, getGoalSummary, getGoalProgress, loading, error } = useGoals();
   const { calculateGoalProbability } = useSimulations();
+  const analytics = useAnalytics();
 
   const [goals, setGoals] = useState<Goal[]>([]);
   const [summary, setSummary] = useState<GoalSummary | null>(null);
@@ -54,6 +56,11 @@ export default function GoalsPage() {
 
     const progress = await getGoalProgress(goal.id);
     setGoalProgress(progress);
+
+    // Track goal progress view
+    if (progress) {
+      analytics.trackGoalProgressViewed(goal.id, progress.percentComplete, progress.onTrack);
+    }
   };
 
   const calculateProbability = async () => {
@@ -78,7 +85,18 @@ export default function GoalsPage() {
       volatility: 0.15,
     });
 
-    setProbability(result);
+    if (result) {
+      setProbability(result);
+
+      // Track goal probability calculation
+      analytics.trackGoalProbabilityCalculated(
+        selectedGoal.id,
+        result.probabilityOfSuccess,
+        result.medianOutcome,
+        parseFloat(selectedGoal.targetAmount.toString())
+      );
+    }
+
     setLoadingProbability(false);
   };
 
