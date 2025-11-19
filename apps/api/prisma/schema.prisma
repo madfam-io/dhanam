@@ -107,12 +107,51 @@ enum GoalStatus {
   abandoned
 }
 
+enum HouseholdType {
+  family
+  trust
+  estate
+  partnership
+}
+
+enum RelationshipType {
+  spouse
+  partner
+  child
+  parent
+  sibling
+  grandparent
+  grandchild
+  dependent
+  trustee
+  beneficiary
+  other
+}
+
+enum WillStatus {
+  draft
+  active
+  revoked
+  executed
+}
+
+enum AssetType {
+  bank_account
+  investment_account
+  crypto_account
+  real_estate
+  business_interest
+  personal_property
+  other
+}
+
 // Models
 model User {
   id               String        @id @default(uuid())
   email            String        @unique
   passwordHash     String        @map("password_hash")
   name             String
+  dateOfBirth      DateTime?     @map("date_of_birth") @db.Date
   locale           String        @default("es")
   timezone         String        @default("America/Mexico_City")
   totpSecret       String?       @map("totp_secret")
@@ -145,6 +184,7 @@ model User {
   preferences      UserPreferences?
   billingEvents    BillingEvent[]
   usageMetrics     UsageMetric[]
+  householdMembers HouseholdMember[]
 
   @@map("users")
 }
@@ -246,16 +286,20 @@ model Space {
   type             SpaceType
   currency         Currency      @default(MXN)
   timezone         String        @default("America/Mexico_City")
+  householdId      String?       @map("household_id")
   createdAt        DateTime      @default(now()) @map("created_at")
   updatedAt        DateTime      @updatedAt @map("updated_at")
 
   // Relations
+  household        Household?    @relation(fields: [householdId], references: [id], onDelete: SetNull)
   userSpaces       UserSpace[]
   accounts         Account[]
   budgets          Budget[]
   transactionRules TransactionRule[]
   goals            Goal[]
+  transactionOrders TransactionOrder[]
 
+  @@index([householdId])
   @@map("spaces")
 }
 
@@ -296,6 +340,8 @@ model Account {
   esgScores             ESGScore[]
   connection            Connection?
   goalAllocations       GoalAllocation[]
+  transactionOrders     TransactionOrder[]
+  transferDestinations  TransactionOrder[] @relation("TransferDestination")
 
   @@unique([spaceId, provider, providerAccountId])
   @@index([spaceId])
@@ -545,6 +591,7 @@ model UsageMetric {
 model Goal {
   id               String        @id @default(uuid())
   spaceId          String        @map("space_id")
+  householdId      String?       @map("household_id")
   name             String
   description      String?
   type             GoalType
@@ -559,10 +606,13 @@ model Goal {
 
   // Relations
   space            Space         @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  household        Household?    @relation(fields: [householdId], references: [id], onDelete: SetNull)
   allocations      GoalAllocation[]
+  transactionOrders TransactionOrder[]
 
   @@index([spaceId, status])
   @@index([spaceId, createdAt(sort: Desc)])
+  @@index([householdId])
   @@map("goals")
 }
 
@@ -583,4 +633,355 @@ model GoalAllocation {
   @@index([goalId])
   @@index([accountId])
   @@map("goal_allocations")
+}
+
+model Household {
+  id               String            @id @default(uuid())
+  name             String
+  type             HouseholdType     @default(family)
+  baseCurrency     Currency          @default(USD)
+  description      String?
+  createdAt        DateTime          @default(now()) @map("created_at")
+  updatedAt        DateTime          @updatedAt @map("updated_at")
+
+  // Relations
+  members          HouseholdMember[]
+  spaces           Space[]
+  goals            Goal[]
+  wills            Will[]
+
+  @@index([createdAt])
+  @@map("households")
+}
+
+model HouseholdMember {
+  id               String           @id @default(uuid())
+  householdId      String           @map("household_id")
+  userId           String           @map("user_id")
+  relationship     RelationshipType
+  isMinor          Boolean          @default(false) @map("is_minor")
+  accessStartDate  DateTime?        @map("access_start_date") @db.Date
+  notes            String?
+  createdAt        DateTime         @default(now()) @map("created_at")
+  updatedAt        DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  household        Household        @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  beneficiaryDesignations BeneficiaryDesignation[]
+  willExecutorRoles WillExecutor[]
+
+  @@unique([householdId, userId])
+  @@index([householdId])
+  @@index([userId])
+  @@map("household_members")
+}
+
+model Will {
+  id               String           @id @default(uuid())
+  householdId      String           @map("household_id")
+  name             String           // e.g., "Smith Family Will 2025"
+  status           WillStatus       @default(draft)
+  lastReviewedAt   DateTime?        @map("last_reviewed_at")
+  activatedAt      DateTime?        @map("activated_at")
+  revokedAt        DateTime?        @map("revoked_at")
+  executedAt       DateTime?        @map("executed_at")
+  notes            String?          @db.Text
+  legalDisclaimer  Boolean          @default(false) @map("legal_disclaimer") // User accepted disclaimer
+  createdAt        DateTime         @default(now()) @map("created_at")
+  updatedAt        DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  household        Household        @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  beneficiaries    BeneficiaryDesignation[]
+  executors        WillExecutor[]
+
+  @@index([householdId])
+  @@index([status])
+  @@map("wills")
+}
+
+model BeneficiaryDesignation {
+  id               String           @id @default(uuid())
+  willId           String           @map("will_id")
+  beneficiaryId    String           @map("beneficiary_id") // HouseholdMember ID
+  assetType        AssetType
+  assetId          String?          @map("asset_id") // Optional: specific account ID
+  percentage       Decimal          @db.Decimal(5, 2) // 0.00 to 100.00
+  conditions       Json?            // Optional conditions (age, event, etc.)
+  notes            String?
+  createdAt        DateTime         @default(now()) @map("created_at")
+  updatedAt        DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  will             Will             @relation(fields: [willId], references: [id], onDelete: Cascade)
+  beneficiary      HouseholdMember  @relation(fields: [beneficiaryId], references: [id], onDelete: Cascade)
+
+  @@index([willId])
+  @@index([beneficiaryId])
+  @@map("beneficiary_designations")
+}
+
+model WillExecutor {
+  id               String           @id @default(uuid())
+  willId           String           @map("will_id")
+  executorId       String           @map("executor_id") // HouseholdMember ID
+  isPrimary        Boolean          @default(false) @map("is_primary")
+  order            Int              @default(1) // Execution order if primary fails
+  acceptedAt       DateTime?        @map("accepted_at")
+  notes            String?
+  createdAt        DateTime         @default(now()) @map("created_at")
+  updatedAt        DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  will             Will             @relation(fields: [willId], references: [id], onDelete: Cascade)
+  executor         HouseholdMember  @relation(fields: [executorId], references: [id], onDelete: Cascade)
+
+  @@index([willId])
+  @@index([executorId])
+  @@map("will_executors")
+}
+
+// Transaction Execution Enums
+enum OrderType {
+  buy
+  sell
+  transfer
+  deposit
+  withdraw
+}
+
+enum OrderStatus {
+  pending_verification  // Awaiting OTP/2FA
+  pending_execution     // Verified, queued for execution
+  pending_trigger       // Waiting for price trigger (advanced orders)
+  executing             // Currently being executed
+  completed             // Successfully executed
+  failed                // Execution failed
+  cancelled             // User cancelled
+  rejected              // Rejected by system (limits, validation, etc.)
+  expired               // Order expired
+}
+
+enum AdvancedOrderType {
+  stop_loss       // Sell when price drops below threshold
+  take_profit     // Sell when price reaches target
+  trailing_stop   // Dynamic stop-loss that follows price
+  oco             // One cancels other
+}
+
+enum RecurrencePattern {
+  once
+  daily
+  weekly
+  monthly
+  quarterly
+}
+
+enum OrderPriority {
+  low
+  normal
+  high
+  critical  // Goal-driven auto-execution
+}
+
+enum ExecutionProvider {
+  bitso
+  plaid
+  belvo
+  manual
+}
+
+// Transaction Execution Models
+model TransactionOrder {
+  id                String           @id @default(uuid())
+  spaceId           String           @map("space_id")
+  userId            String           @map("user_id")
+  accountId         String           @map("account_id")
+  idempotencyKey    String           @unique @map("idempotency_key")
+
+  // Order details
+  type              OrderType
+  status            OrderStatus      @default(pending_verification)
+  priority          OrderPriority    @default(normal)
+
+  // Financial details
+  amount            Decimal          @db.Decimal(19, 4)
+  currency          Currency
+  assetSymbol       String?          @map("asset_symbol") // For crypto/stocks
+  targetPrice       Decimal?         @db.Decimal(19, 4) @map("target_price") // Limit orders
+
+  // Transfer details (for transfer orders)
+  toAccountId       String?          @map("to_account_id")
+
+  // Execution settings
+  provider          ExecutionProvider
+  dryRun            Boolean          @default(false) @map("dry_run")
+  maxSlippage       Decimal?         @db.Decimal(5, 2) @map("max_slippage") // Percentage
+
+  // Advanced order types (Phase 3)
+  advancedType      AdvancedOrderType? @map("advanced_type")
+  stopPrice         Decimal?           @db.Decimal(19, 4) @map("stop_price")
+  takeProfitPrice   Decimal?           @db.Decimal(19, 4) @map("take_profit_price")
+  trailingAmount    Decimal?           @db.Decimal(19, 4) @map("trailing_amount")  // Fixed amount
+  trailingPercent   Decimal?           @db.Decimal(5, 2) @map("trailing_percent")  // Percentage
+  linkedOrderId     String?            @map("linked_order_id")  // For OCO orders
+  highestPrice      Decimal?           @db.Decimal(19, 4) @map("highest_price")  // For trailing stop tracking
+  lastPriceCheck    DateTime?          @map("last_price_check")  // Last time price was checked
+
+  // Scheduling & recurrence (Phase 3)
+  scheduledFor      DateTime?          @map("scheduled_for")
+  recurrence        RecurrencePattern? @default(once)
+  recurrenceDay     Int?               @map("recurrence_day")  // Day of week (1-7) or month (1-31)
+  recurrenceEnd     DateTime?          @map("recurrence_end")
+  nextExecutionAt   DateTime?          @map("next_execution_at")
+  executionCount    Int                @default(0) @map("execution_count")
+  maxExecutions     Int?               @map("max_executions")
+
+  // Verification & Security
+  otpVerified       Boolean          @default(false) @map("otp_verified")
+  otpVerifiedAt     DateTime?        @map("otp_verified_at")
+  ipAddress         String?          @map("ip_address")
+  userAgent         String?          @map("user_agent")
+
+  // Goal-driven execution
+  goalId            String?          @map("goal_id")
+  autoExecute       Boolean          @default(false) @map("auto_execute")
+
+  // Execution results
+  executedAmount    Decimal?         @db.Decimal(19, 4) @map("executed_amount")
+  executedPrice     Decimal?         @db.Decimal(19, 4) @map("executed_price")
+  fees              Decimal?         @db.Decimal(19, 4)
+  feeCurrency       Currency?        @map("fee_currency")
+
+  // Provider response
+  providerOrderId   String?          @map("provider_order_id")
+  providerResponse  Json?            @map("provider_response")
+
+  // Metadata
+  notes             String?          @db.Text
+  metadata          Json?
+
+  // Timestamps
+  submittedAt       DateTime         @default(now()) @map("submitted_at")
+  verifiedAt        DateTime?        @map("verified_at")
+  executedAt        DateTime?        @map("executed_at")
+  completedAt       DateTime?        @map("completed_at")
+  cancelledAt       DateTime?        @map("cancelled_at")
+  expiresAt         DateTime?        @map("expires_at")
+
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  space             Space            @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  account           Account          @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  toAccount         Account?         @relation("TransferDestination", fields: [toAccountId], references: [id], onDelete: SetNull)
+  goal              Goal?            @relation(fields: [goalId], references: [id], onDelete: SetNull)
+  executions        OrderExecution[]
+
+  @@index([spaceId, status, createdAt(sort: Desc)])
+  @@index([userId, status])
+  @@index([accountId])
+  @@index([status, priority])
+  @@index([goalId])
+  @@index([idempotencyKey])
+  @@index([status, advancedType, lastPriceCheck])  // For price monitoring
+  @@index([status, scheduledFor])  // For scheduled execution
+  @@index([status, nextExecutionAt])  // For recurring orders
+  @@map("transaction_orders")
+}
+
+model OrderExecution {
+  id                String           @id @default(uuid())
+  orderId           String           @map("order_id")
+
+  // Execution attempt details
+  attemptNumber     Int              @default(1) @map("attempt_number")
+  status            OrderStatus
+
+  // Execution details
+  provider          ExecutionProvider
+  providerOrderId   String?          @map("provider_order_id")
+
+  // Results
+  executedAmount    Decimal?         @db.Decimal(19, 4) @map("executed_amount")
+  executedPrice     Decimal?         @db.Decimal(19, 4) @map("executed_price")
+  fees              Decimal?         @db.Decimal(19, 4)
+  feeCurrency       Currency?        @map("fee_currency")
+
+  // Error tracking
+  errorCode         String?          @map("error_code")
+  errorMessage      String?          @db.Text @map("error_message")
+
+  // Raw provider response
+  providerRequest   Json?            @map("provider_request")
+  providerResponse  Json?            @map("provider_response")
+
+  // Audit trail
+  startedAt         DateTime         @default(now()) @map("started_at")
+  completedAt       DateTime?        @map("completed_at")
+  duration          Int?             // Milliseconds
+
+  createdAt         DateTime         @default(now()) @map("created_at")
+
+  // Relations
+  order             TransactionOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId, attemptNumber])
+  @@index([status, startedAt(sort: Desc)])
+  @@map("order_executions")
+}
+
+model IdempotencyKey {
+  id                String           @id @default(uuid())
+  key               String           @unique
+  userId            String           @map("user_id")
+  spaceId           String           @map("space_id")
+
+  // Request details
+  requestHash       String           @map("request_hash") // Hash of request body
+  orderId           String?          @map("order_id") // Created order ID
+
+  // Response caching
+  responseStatus    Int?             @map("response_status")
+  responseBody      Json?            @map("response_body")
+
+  // Expiration
+  expiresAt         DateTime         @map("expires_at")
+  createdAt         DateTime         @default(now()) @map("created_at")
+
+  @@index([userId, spaceId, createdAt(sort: Desc)])
+  @@index([expiresAt])
+  @@map("idempotency_keys")
+}
+
+model OrderLimit {
+  id                String           @id @default(uuid())
+  userId            String           @map("user_id")
+  spaceId           String?          @map("space_id") // Null = global user limit
+
+  // Limit configuration
+  limitType         String           @map("limit_type") // daily, weekly, monthly, per_transaction
+  orderType         OrderType?       @map("order_type") // Null = all order types
+
+  // Amounts
+  maxAmount         Decimal          @db.Decimal(19, 4) @map("max_amount")
+  currency          Currency
+
+  // Usage tracking
+  usedAmount        Decimal          @default(0) @db.Decimal(19, 4) @map("used_amount")
+  resetAt           DateTime         @map("reset_at")
+
+  // Metadata
+  notes             String?
+  enforced          Boolean          @default(true) // Can be disabled for testing
+
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  @@unique([userId, spaceId, limitType, orderType])
+  @@index([userId, enforced, resetAt])
+  @@index([spaceId])
+  @@map("order_limits")
 }

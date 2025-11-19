@@ -14,6 +14,8 @@ import {
   Leaf,
   Target,
   AlertTriangle,
+  Users,
+  ScrollText,
 } from 'lucide-react';
 
 const navigation = [
@@ -41,6 +43,16 @@ const navigation = [
     name: 'Goals',
     href: '/goals',
     icon: Target,
+  },
+  {
+    name: 'Households',
+    href: '/households',
+    icon: Users,
+  },
+  {
+    name: 'Estate Planning',
+    href: '/estate-planning',
+    icon: ScrollText,
   },
   {
     name: 'Analytics',
