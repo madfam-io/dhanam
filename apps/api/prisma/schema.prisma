@@ -128,6 +128,23 @@ enum RelationshipType {
   other
 }
 
+enum WillStatus {
+  draft
+  active
+  revoked
+  executed
+}
+
+enum AssetType {
+  bank_account
+  investment_account
+  crypto_account
+  real_estate
+  business_interest
+  personal_property
+  other
+}
+
 // Models
 model User {
   id               String        @id @default(uuid())
@@ -627,6 +644,7 @@ model Household {
   members          HouseholdMember[]
   spaces           Space[]
   goals            Goal[]
+  wills            Will[]
 
   @@index([createdAt])
   @@map("households")
@@ -646,9 +664,76 @@ model HouseholdMember {
   // Relations
   household        Household        @relation(fields: [householdId], references: [id], onDelete: Cascade)
   user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  beneficiaryDesignations BeneficiaryDesignation[]
+  willExecutorRoles WillExecutor[]
 
   @@unique([householdId, userId])
   @@index([householdId])
   @@index([userId])
   @@map("household_members")
+}
+
+model Will {
+  id               String           @id @default(uuid())
+  householdId      String           @map("household_id")
+  name             String           // e.g., "Smith Family Will 2025"
+  status           WillStatus       @default(draft)
+  lastReviewedAt   DateTime?        @map("last_reviewed_at")
+  activatedAt      DateTime?        @map("activated_at")
+  revokedAt        DateTime?        @map("revoked_at")
+  executedAt       DateTime?        @map("executed_at")
+  notes            String?          @db.Text
+  legalDisclaimer  Boolean          @default(false) @map("legal_disclaimer") // User accepted disclaimer
+  createdAt        DateTime         @default(now()) @map("created_at")
+  updatedAt        DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  household        Household        @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  beneficiaries    BeneficiaryDesignation[]
+  executors        WillExecutor[]
+
+  @@index([householdId])
+  @@index([status])
+  @@map("wills")
+}
+
+model BeneficiaryDesignation {
+  id               String           @id @default(uuid())
+  willId           String           @map("will_id")
+  beneficiaryId    String           @map("beneficiary_id") // HouseholdMember ID
+  assetType        AssetType
+  assetId          String?          @map("asset_id") // Optional: specific account ID
+  percentage       Decimal          @db.Decimal(5, 2) // 0.00 to 100.00
+  conditions       Json?            // Optional conditions (age, event, etc.)
+  notes            String?
+  createdAt        DateTime         @default(now()) @map("created_at")
+  updatedAt        DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  will             Will             @relation(fields: [willId], references: [id], onDelete: Cascade)
+  beneficiary      HouseholdMember  @relation(fields: [beneficiaryId], references: [id], onDelete: Cascade)
+
+  @@index([willId])
+  @@index([beneficiaryId])
+  @@map("beneficiary_designations")
+}
+
+model WillExecutor {
+  id               String           @id @default(uuid())
+  willId           String           @map("will_id")
+  executorId       String           @map("executor_id") // HouseholdMember ID
+  isPrimary        Boolean          @default(false) @map("is_primary")
+  order            Int              @default(1) // Execution order if primary fails
+  acceptedAt       DateTime?        @map("accepted_at")
+  notes            String?
+  createdAt        DateTime         @default(now()) @map("created_at")
+  updatedAt        DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  will             Will             @relation(fields: [willId], references: [id], onDelete: Cascade)
+  executor         HouseholdMember  @relation(fields: [executorId], references: [id], onDelete: Cascade)
+
+  @@index([willId])
+  @@index([executorId])
+  @@map("will_executors")
 }
