@@ -13,6 +13,10 @@ import { PlaidExecutionProvider } from './providers/plaid-execution.provider';
 import { BelvoExecutionProvider } from './providers/belvo-execution.provider';
 import { ProviderFactoryService } from './providers/provider-factory.service';
 
+// Phase 3 services
+import { PriceMonitoringService } from './services/price-monitoring.service';
+import { OrderSchedulingService } from './services/order-scheduling.service';
+
 @Module({
   imports: [PrismaModule, AuditModule, SpacesModule, BillingModule, CryptoModule],
   controllers: [TransactionExecutionController],
@@ -22,7 +26,9 @@ import { ProviderFactoryService } from './providers/provider-factory.service';
     PlaidExecutionProvider,
     BelvoExecutionProvider,
     ProviderFactoryService,
+    PriceMonitoringService,
+    OrderSchedulingService,
   ],
-  exports: [TransactionExecutionService, ProviderFactoryService],
+  exports: [TransactionExecutionService, ProviderFactoryService, PriceMonitoringService, OrderSchedulingService],
 })
 export class TransactionExecutionModule {}

@@ -754,11 +754,28 @@ enum OrderType {
 enum OrderStatus {
   pending_verification  // Awaiting OTP/2FA
   pending_execution     // Verified, queued for execution
+  pending_trigger       // Waiting for price trigger (advanced orders)
   executing             // Currently being executed
   completed             // Successfully executed
   failed                // Execution failed
   cancelled             // User cancelled
   rejected              // Rejected by system (limits, validation, etc.)
+  expired               // Order expired
+}
+
+enum AdvancedOrderType {
+  stop_loss       // Sell when price drops below threshold
+  take_profit     // Sell when price reaches target
+  trailing_stop   // Dynamic stop-loss that follows price
+  oco             // One cancels other
+}
+
+enum RecurrencePattern {
+  once
+  daily
+  weekly
+  monthly
+  quarterly
 }
 
 enum OrderPriority {
@@ -801,6 +818,25 @@ model TransactionOrder {
   provider          ExecutionProvider
   dryRun            Boolean          @default(false) @map("dry_run")
   maxSlippage       Decimal?         @db.Decimal(5, 2) @map("max_slippage") // Percentage
+
+  // Advanced order types (Phase 3)
+  advancedType      AdvancedOrderType? @map("advanced_type")
+  stopPrice         Decimal?           @db.Decimal(19, 4) @map("stop_price")
+  takeProfitPrice   Decimal?           @db.Decimal(19, 4) @map("take_profit_price")
+  trailingAmount    Decimal?           @db.Decimal(19, 4) @map("trailing_amount")  // Fixed amount
+  trailingPercent   Decimal?           @db.Decimal(5, 2) @map("trailing_percent")  // Percentage
+  linkedOrderId     String?            @map("linked_order_id")  // For OCO orders
+  highestPrice      Decimal?           @db.Decimal(19, 4) @map("highest_price")  // For trailing stop tracking
+  lastPriceCheck    DateTime?          @map("last_price_check")  // Last time price was checked
+
+  // Scheduling & recurrence (Phase 3)
+  scheduledFor      DateTime?          @map("scheduled_for")
+  recurrence        RecurrencePattern? @default(once)
+  recurrenceDay     Int?               @map("recurrence_day")  // Day of week (1-7) or month (1-31)
+  recurrenceEnd     DateTime?          @map("recurrence_end")
+  nextExecutionAt   DateTime?          @map("next_execution_at")
+  executionCount    Int                @default(0) @map("execution_count")
+  maxExecutions     Int?               @map("max_executions")
 
   // Verification & Security
   otpVerified       Boolean          @default(false) @map("otp_verified")
@@ -850,6 +886,9 @@ model TransactionOrder {
   @@index([status, priority])
   @@index([goalId])
   @@index([idempotencyKey])
+  @@index([status, advancedType, lastPriceCheck])  // For price monitoring
+  @@index([status, scheduledFor])  // For scheduled execution
+  @@index([status, nextExecutionAt])  // For recurring orders
   @@map("transaction_orders")
 }
 
