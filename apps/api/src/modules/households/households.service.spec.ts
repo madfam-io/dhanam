@@ -1,10 +1,33 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { HouseholdsService } from './households.service';
-import { PrismaService } from '../../core/database/prisma.service';
+import { PrismaService } from '../../core/prisma/prisma.service';
 import { AuditService } from '../../core/audit/audit.service';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
-import { HouseholdType, RelationshipType, Currency } from '@prisma/client';
 import { CreateHouseholdDto, UpdateHouseholdDto, AddMemberDto } from './dto';
+
+// Using string literals instead of enums since Prisma client may not be generated
+const HouseholdType = {
+  family: 'family' as const,
+  individual: 'individual' as const,
+  trust: 'trust' as const,
+  estate: 'estate' as const,
+};
+
+const RelationshipType = {
+  spouse: 'spouse' as const,
+  child: 'child' as const,
+  parent: 'parent' as const,
+  grandparent: 'grandparent' as const,
+  grandchild: 'grandchild' as const,
+  sibling: 'sibling' as const,
+  other: 'other' as const,
+};
+
+const Currency = {
+  USD: 'USD' as const,
+  MXN: 'MXN' as const,
+  EUR: 'EUR' as const,
+};
 
 describe('HouseholdsService', () => {
   let service: HouseholdsService;

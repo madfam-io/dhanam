@@ -1,5 +1,5 @@
 import { Injectable, Logger, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
-import { PrismaService } from '../../core/database/prisma.service';
+import { PrismaService } from '../../core/prisma/prisma.service';
 import { AuditService } from '../../core/audit/audit.service';
 import { CreateHouseholdDto, UpdateHouseholdDto, AddMemberDto, UpdateMemberDto } from './dto';
 import { Household, HouseholdMember, Prisma } from '@prisma/client';
