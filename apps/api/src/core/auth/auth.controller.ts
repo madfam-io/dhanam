@@ -26,8 +26,8 @@ import { ThrottleAuthGuard } from '@core/security/guards/throttle-auth.guard';
 import { AuthService } from './auth.service';
 import { CurrentUser, AuthenticatedUser } from './decorators/current-user.decorator';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
-import { TotpService } from './totp.service';
 import { GuestAuthService } from './guest-auth.service';
+import { TotpService } from './totp.service';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -109,13 +109,13 @@ export class AuthController {
   async guestLogin(
     @Ip() _ip: string,
     @Headers('user-agent') _userAgent: string
-  ): Promise<{ 
-    tokens: AuthTokens; 
+  ): Promise<{
+    tokens: AuthTokens;
     user: any;
     message: string;
   }> {
     const session = await this.guestAuthService.createGuestSession();
-    
+
     return {
       tokens: {
         accessToken: session.accessToken,

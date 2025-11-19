@@ -1,8 +1,8 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import type { User } from '@prisma/client';
 import * as Sentry from '@sentry/node';
 import { ProfilingIntegration } from '@sentry/profiling-node';
-import type { User } from '@prisma/client';
 
 @Injectable()
 export class SentryService implements OnModuleInit {
@@ -56,7 +56,10 @@ export class SentryService implements OnModuleInit {
           }
 
           // Don't send authentication errors (expected)
-          if (error.message.includes('Unauthorized') || error.message.includes('Invalid credentials')) {
+          if (
+            error.message.includes('Unauthorized') ||
+            error.message.includes('Invalid credentials')
+          ) {
             return null;
           }
         }
@@ -105,7 +108,11 @@ export class SentryService implements OnModuleInit {
   /**
    * Capture a message (for non-error events)
    */
-  captureMessage(message: string, level: Sentry.SeverityLevel = 'info', context?: Record<string, any>) {
+  captureMessage(
+    message: string,
+    level: Sentry.SeverityLevel = 'info',
+    context?: Record<string, any>
+  ) {
     if (!this.isEnabled) return;
 
     Sentry.captureMessage(message, {

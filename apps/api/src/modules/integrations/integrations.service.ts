@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import axios from 'axios';
 import Belvo from 'belvo';
 import { PlaidApi, Configuration, PlaidEnvironments } from 'plaid';
-import axios from 'axios';
 
 export interface IntegrationStatus {
   name: string;

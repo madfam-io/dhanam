@@ -7,19 +7,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { RedisModule } from './redis/redis.module';
 
 @Module({
-  imports: [
-    PrismaModule,
-    RedisModule,
-    CryptoModule,
-    LoggerModule,
-    AnalyticsModule,
-  ],
-  exports: [
-    PrismaModule,
-    RedisModule,
-    CryptoModule,
-    LoggerModule,
-    AnalyticsModule,
-  ],
+  imports: [PrismaModule, RedisModule, CryptoModule, LoggerModule, AnalyticsModule],
+  exports: [PrismaModule, RedisModule, CryptoModule, LoggerModule, AnalyticsModule],
 })
 export class CoreModule {}

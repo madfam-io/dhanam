@@ -143,7 +143,11 @@ export class PlaidService {
   ): Promise<{ transactionCount: number; accountCount: number }> {
     const account = await this.prisma.account.findUnique({
       where: { id: accountId },
-      include: { space: { include: { user: { include: { providerConnections: true } } as any } as any } as any },
+      include: {
+        space: {
+          include: { user: { include: { providerConnections: true } } as any } as any,
+        } as any,
+      },
     });
 
     if (!account || account.provider !== 'plaid') {

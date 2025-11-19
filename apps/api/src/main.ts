@@ -61,7 +61,9 @@ async function bootstrap() {
   // CORS configuration
   const corsOrigins = configService.get('CORS_ORIGINS');
   await app.register(fastifyCors, {
-    origin: corsOrigins ? corsOrigins.split(',') : ['http://localhost:3000', 'http://localhost:19006'],
+    origin: corsOrigins
+      ? corsOrigins.split(',')
+      : ['http://localhost:3000', 'http://localhost:19006'],
     credentials: true,
   });
 

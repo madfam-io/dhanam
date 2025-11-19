@@ -30,7 +30,7 @@ export class KmsService implements OnModuleInit {
     if (this.isProduction) {
       if (!this.keyId) {
         throw new Error(
-          'KMS_KEY_ID must be set in production environment for secure token encryption',
+          'KMS_KEY_ID must be set in production environment for secure token encryption'
         );
       }
 
@@ -39,21 +39,17 @@ export class KmsService implements OnModuleInit {
         const { KMSClient } = await import('@aws-sdk/client-kms');
         this.kmsClient = new KMSClient({ region: this.region });
         // eslint-disable-next-line no-console
-        console.log(
-          `✅ KMS Service initialized with region: ${this.region}, key: ${this.keyId}`,
-        );
+        console.log(`✅ KMS Service initialized with region: ${this.region}, key: ${this.keyId}`);
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
         throw new Error(
           `Failed to initialize AWS KMS: ${errorMessage}. ` +
-            'Ensure @aws-sdk/client-kms is installed.',
+            'Ensure @aws-sdk/client-kms is installed.'
         );
       }
     } else {
       // eslint-disable-next-line no-console
-      console.log(
-        '⚠️  Development mode: Using local encryption instead of AWS KMS',
-      );
+      console.log('⚠️  Development mode: Using local encryption instead of AWS KMS');
     }
   }
 
@@ -81,8 +77,7 @@ export class KmsService implements OnModuleInit {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       throw new Error(
-        `KMS encryption failed: ${errorMessage}. ` +
-          'Ensure IAM role has kms:Encrypt permission.',
+        `KMS encryption failed: ${errorMessage}. ` + 'Ensure IAM role has kms:Encrypt permission.'
       );
     }
   }
@@ -111,7 +106,7 @@ export class KmsService implements OnModuleInit {
       const errorMessage = error instanceof Error ? error.message : String(error);
       throw new Error(
         `KMS decryption failed: ${errorMessage}. ` +
-          'Ensure IAM role has kms:Decrypt permission and key is correct.',
+          'Ensure IAM role has kms:Decrypt permission and key is correct.'
       );
     }
   }

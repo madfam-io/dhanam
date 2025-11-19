@@ -32,10 +32,7 @@ export class PostHogService implements OnModuleDestroy {
     const host = process.env.POSTHOG_HOST || 'https://app.posthog.com';
 
     if (!apiKey) {
-      this.logger.warn(
-        'PostHog API key not configured. Analytics disabled.',
-        'PostHogService'
-      );
+      this.logger.warn('PostHog API key not configured. Analytics disabled.', 'PostHogService');
       this.isEnabled = false;
       return;
     }
@@ -54,11 +51,7 @@ export class PostHogService implements OnModuleDestroy {
   /**
    * Capture a generic analytics event
    */
-  async capture(
-    userId: string,
-    event: string,
-    properties?: Record<string, any>
-  ): Promise<void> {
+  async capture(userId: string, event: string, properties?: Record<string, any>): Promise<void> {
     if (!this.isEnabled) {
       return;
     }
@@ -73,16 +66,9 @@ export class PostHogService implements OnModuleDestroy {
         },
       });
 
-      this.logger.log(
-        `Event captured: ${event} for user: ${userId}`,
-        'PostHogService'
-      );
+      this.logger.log(`Event captured: ${event} for user: ${userId}`, 'PostHogService');
     } catch (error) {
-      this.logger.error(
-        'Failed to capture event',
-        (error as Error).message,
-        'PostHogService'
-      );
+      this.logger.error('Failed to capture event', (error as Error).message, 'PostHogService');
     }
   }
 
@@ -112,11 +98,7 @@ export class PostHogService implements OnModuleDestroy {
 
       this.logger.log(`User identified: ${userId}`, 'PostHogService');
     } catch (error) {
-      this.logger.error(
-        'Failed to identify user',
-        (error as Error).message,
-        'PostHogService'
-      );
+      this.logger.error('Failed to identify user', (error as Error).message, 'PostHogService');
     }
   }
 
@@ -298,16 +280,9 @@ export class PostHogService implements OnModuleDestroy {
         alias,
       });
 
-      this.logger.log(
-        `Alias created: ${alias} for user: ${userId}`,
-        'PostHogService'
-      );
+      this.logger.log(`Alias created: ${alias} for user: ${userId}`, 'PostHogService');
     } catch (error) {
-      this.logger.error(
-        'Failed to create alias',
-        (error as Error).message,
-        'PostHogService'
-      );
+      this.logger.error('Failed to create alias', (error as Error).message, 'PostHogService');
     }
   }
 
@@ -323,11 +298,7 @@ export class PostHogService implements OnModuleDestroy {
       await this.client.flush();
       this.logger.log('PostHog events flushed', 'PostHogService');
     } catch (error) {
-      this.logger.error(
-        'Failed to flush events',
-        (error as Error).message,
-        'PostHogService'
-      );
+      this.logger.error('Failed to flush events', (error as Error).message, 'PostHogService');
     }
   }
 

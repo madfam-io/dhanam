@@ -7,10 +7,7 @@ import axios, { AxiosInstance } from 'axios';
 
 import { CryptoService } from '../../../core/crypto/crypto.service';
 import { PrismaService } from '../../../core/prisma/prisma.service';
-import {
-  BitsoAccountMetadata,
-  BitsoConnectionMetadata,
-} from '../../../types/metadata.types';
+import { BitsoAccountMetadata, BitsoConnectionMetadata } from '../../../types/metadata.types';
 import { isUniqueConstraintError } from '../../../types/prisma-errors.types';
 
 import { ConnectBitsoDto, BitsoWebhookDto } from './dto';
@@ -111,9 +108,7 @@ export class BitsoService {
 
     const apiKey = this.cryptoService.decrypt(JSON.parse(connection.encryptedToken));
     const connectionMetadata = connection.metadata as unknown as BitsoConnectionMetadata;
-    const apiSecret = this.cryptoService.decrypt(
-      JSON.parse(connectionMetadata.encryptedApiSecret)
-    );
+    const apiSecret = this.cryptoService.decrypt(JSON.parse(connectionMetadata.encryptedApiSecret));
     const spaceId = (connection.user as any).spaces[0]?.id;
 
     if (!spaceId) {
@@ -305,7 +300,9 @@ export class BitsoService {
 
         if (existingAccount) {
           // Update existing account
-          const existingMetadata = (existingAccount.metadata as unknown as BitsoAccountMetadata) || ({} as BitsoAccountMetadata);
+          const existingMetadata =
+            (existingAccount.metadata as unknown as BitsoAccountMetadata) ||
+            ({} as BitsoAccountMetadata);
           const updatedAccount = await this.prisma.account.update({
             where: { id: existingAccount.id },
             data: {

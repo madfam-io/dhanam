@@ -50,9 +50,7 @@ export class EnvValidationService implements OnModuleInit {
 
       // Validate JWT_SECRET minimum length
       if (envVar.name === 'JWT_SECRET' && value && value.length < 32) {
-        errors.push(
-          `${envVar.name}: Must be at least 32 characters (currently ${value.length})`,
-        );
+        errors.push(`${envVar.name}: Must be at least 32 characters (currently ${value.length})`);
       }
     }
 
@@ -87,7 +85,7 @@ export class EnvValidationService implements OnModuleInit {
 
     if (!value || value.trim() === '') {
       throw new Error(
-        `Missing required environment variable: ${name}${description ? ` (${description})` : ''}`,
+        `Missing required environment variable: ${name}${description ? ` (${description})` : ''}`
       );
     }
 

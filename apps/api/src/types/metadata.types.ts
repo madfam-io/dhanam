@@ -219,9 +219,7 @@ export interface WebhookEventMetadata {
  * Type guard functions
  */
 
-export function isPlaidAccountMetadata(
-  metadata: unknown
-): metadata is PlaidAccountMetadata {
+export function isPlaidAccountMetadata(metadata: unknown): metadata is PlaidAccountMetadata {
   return (
     typeof metadata === 'object' &&
     metadata !== null &&
@@ -230,9 +228,7 @@ export function isPlaidAccountMetadata(
   );
 }
 
-export function isBitsoAccountMetadata(
-  metadata: unknown
-): metadata is BitsoAccountMetadata {
+export function isBitsoAccountMetadata(metadata: unknown): metadata is BitsoAccountMetadata {
   return (
     typeof metadata === 'object' &&
     metadata !== null &&
@@ -254,9 +250,7 @@ export function isBlockchainAccountMetadata(
   );
 }
 
-export function isBelvoAccountMetadata(
-  metadata: unknown
-): metadata is BelvoAccountMetadata {
+export function isBelvoAccountMetadata(metadata: unknown): metadata is BelvoAccountMetadata {
   return (
     typeof metadata === 'object' &&
     metadata !== null &&

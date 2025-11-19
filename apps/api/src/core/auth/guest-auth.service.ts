@@ -1,15 +1,16 @@
 import { Injectable } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { PrismaService } from '../prisma/prisma.service';
+import { JwtService } from '@nestjs/jwt';
 import { User } from '@prisma/client';
+
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class GuestAuthService {
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
-    private configService: ConfigService,
+    private configService: ConfigService
   ) {}
 
   /**
@@ -43,7 +44,7 @@ export class GuestAuthService {
       {
         secret: this.configService.get('JWT_REFRESH_SECRET'),
         expiresIn: '2h', // 2 hours max for guest
-      },
+      }
     );
 
     // Log guest session creation
@@ -72,7 +73,7 @@ export class GuestAuthService {
    */
   private async getOrCreateGuestUser(): Promise<User> {
     const guestEmail = 'guest@dhanam.demo';
-    
+
     // Check if guest user already exists
     let guestUser = await this.prisma.user.findUnique({
       where: { email: guestEmail },

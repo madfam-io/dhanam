@@ -34,11 +34,7 @@ export class LoggerService implements NestLoggerService {
     const sanitizedTrace = trace ? LogSanitizer.sanitize(trace) : undefined;
 
     if (this.isDevelopment) {
-      console.error(
-        `[${context || 'Application'}]`,
-        sanitizedMessage,
-        sanitizedTrace,
-      );
+      console.error(`[${context || 'Application'}]`, sanitizedMessage, sanitizedTrace);
     } else {
       console.error(
         JSON.stringify({
