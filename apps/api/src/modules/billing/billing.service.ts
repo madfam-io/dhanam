@@ -96,7 +96,7 @@ export class BillingService {
       userId,
       action: 'BILLING_UPGRADE_INITIATED',
       severity: 'medium',
-      metadata: JSON.stringify({ sessionId: session.id }),
+      metadata: { sessionId: session.id },
     });
 
     this.logger.log(`Upgrade initiated for user ${userId}, session: ${session.id}`);
@@ -169,10 +169,10 @@ export class BillingService {
       userId: user.id,
       action: 'SUBSCRIPTION_ACTIVATED',
       severity: 'high',
-      metadata: JSON.stringify({
+      metadata: {
         tier: 'premium',
         subscriptionId: subscription.id,
-      }),
+      },
     });
 
     this.logger.log(`Subscription created for user ${user.id}`);
@@ -246,7 +246,7 @@ export class BillingService {
       userId: user.id,
       action: 'SUBSCRIPTION_CANCELLED',
       severity: 'medium',
-      metadata: JSON.stringify({ subscriptionId: subscription.id }),
+      metadata: { subscriptionId: subscription.id },
     });
 
     this.logger.log(`Subscription cancelled for user ${user.id}`);
@@ -321,10 +321,10 @@ export class BillingService {
       userId: user.id,
       action: 'PAYMENT_FAILED',
       severity: 'high',
-      metadata: JSON.stringify({
+      metadata: {
         amount: invoice.amount_due / 100,
         invoiceId: invoice.id,
-      }),
+      },
     });
 
     this.logger.warn(`Payment failed for user ${user.id}, amount: ${invoice.amount_due / 100}`);

@@ -56,11 +56,11 @@ export class GoalsService {
       resource: 'goal',
       resourceId: goal.id,
       severity: 'low',
-      metadata: JSON.stringify({
+      metadata: {
         goalName: goal.name,
         goalType: goal.type,
         targetAmount: goal.targetAmount.toString(),
-      }),
+      },
     });
 
     this.logger.log(`Goal created: ${goal.id} by user ${userId}`);
@@ -95,7 +95,7 @@ export class GoalsService {
       resource: 'goal',
       resourceId: goalId,
       severity: 'low',
-      metadata: JSON.stringify({ changes: Object.keys(dto) }),
+      metadata: { changes: Object.keys(dto) },
     });
 
     this.logger.log(`Goal updated: ${goalId} by user ${userId}`);
@@ -119,7 +119,7 @@ export class GoalsService {
       resource: 'goal',
       resourceId: goalId,
       severity: 'medium',
-      metadata: JSON.stringify({ goalName: goal.name }),
+      metadata: { goalName: goal.name },
     });
 
     this.logger.log(`Goal deleted: ${goalId} by user ${userId}`);
@@ -257,11 +257,11 @@ export class GoalsService {
       resource: 'goal_allocation',
       resourceId: allocation.id,
       severity: 'low',
-      metadata: JSON.stringify({
+      metadata: {
         goalId,
         accountId: dto.accountId,
         percentage: dto.percentage,
-      }),
+      },
     });
 
     return allocation;
@@ -301,7 +301,7 @@ export class GoalsService {
       resource: 'goal_allocation',
       resourceId: allocation.id,
       severity: 'low',
-      metadata: JSON.stringify({ goalId, accountId }),
+      metadata: { goalId, accountId },
     });
   }
 

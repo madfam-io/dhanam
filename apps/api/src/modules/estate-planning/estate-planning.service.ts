@@ -58,10 +58,10 @@ export class EstatePlanningService {
       resource: 'will',
       resourceId: will.id,
       severity: 'medium',
-      metadata: JSON.stringify({
+      metadata: {
         willName: will.name,
         householdId: will.householdId,
-      }),
+      },
     });
 
     this.logger.log(`Will created: ${will.id} by user ${userId}`);
@@ -224,7 +224,7 @@ export class EstatePlanningService {
       resource: 'will',
       resourceId: willId,
       severity: 'low',
-      metadata: JSON.stringify({ changes: Object.keys(dto) }),
+      metadata: { changes: Object.keys(dto) },
     });
 
     this.logger.log(`Will updated: ${willId} by user ${userId}`);
@@ -252,7 +252,7 @@ export class EstatePlanningService {
       resource: 'will',
       resourceId: willId,
       severity: 'medium',
-      metadata: JSON.stringify({ willName: will.name }),
+      metadata: { willName: will.name },
     });
 
     this.logger.log(`Will deleted: ${willId} by user ${userId}`);
@@ -320,10 +320,10 @@ export class EstatePlanningService {
       resource: 'will',
       resourceId: willId,
       severity: 'high',
-      metadata: JSON.stringify({
+      metadata: {
         willName: will.name,
         householdId: will.householdId,
-      }),
+      },
     });
 
     this.logger.log(`Will activated: ${willId} by user ${userId}`);
@@ -359,7 +359,7 @@ export class EstatePlanningService {
       resource: 'will',
       resourceId: willId,
       severity: 'high',
-      metadata: JSON.stringify({ willName: will.name }),
+      metadata: { willName: will.name },
     });
 
     this.logger.log(`Will revoked: ${willId} by user ${userId}`);
@@ -464,11 +464,11 @@ export class EstatePlanningService {
       resource: 'will',
       resourceId: willId,
       severity: 'medium',
-      metadata: JSON.stringify({
+      metadata: {
         beneficiaryId: dto.beneficiaryId,
         assetType: dto.assetType,
         percentage: dto.percentage,
-      }),
+      },
     });
 
     this.logger.log(`Beneficiary added to will: ${willId} by user ${userId}`);
@@ -532,10 +532,10 @@ export class EstatePlanningService {
       resource: 'will',
       resourceId: willId,
       severity: 'medium',
-      metadata: JSON.stringify({
+      metadata: {
         beneficiaryDesignationId: beneficiaryId,
         changes: Object.keys(dto),
-      }),
+      },
     });
 
     this.logger.log(`Beneficiary updated in will: ${willId} by user ${userId}`);
@@ -574,7 +574,7 @@ export class EstatePlanningService {
       resource: 'will',
       resourceId: willId,
       severity: 'medium',
-      metadata: JSON.stringify({ beneficiaryDesignationId: beneficiaryId }),
+      metadata: { beneficiaryDesignationId: beneficiaryId },
     });
 
     this.logger.log(`Beneficiary removed from will: ${willId} by user ${userId}`);
@@ -631,10 +631,10 @@ export class EstatePlanningService {
       resource: 'will',
       resourceId: willId,
       severity: 'medium',
-      metadata: JSON.stringify({
+      metadata: {
         executorId: dto.executorId,
         isPrimary: dto.isPrimary,
-      }),
+      },
     });
 
     this.logger.log(`Executor added to will: ${willId} by user ${userId}`);
@@ -696,10 +696,10 @@ export class EstatePlanningService {
       resource: 'will',
       resourceId: willId,
       severity: 'medium',
-      metadata: JSON.stringify({
+      metadata: {
         executorId,
         changes: Object.keys(dto),
-      }),
+      },
     });
 
     this.logger.log(`Executor updated in will: ${willId} by user ${userId}`);
@@ -738,7 +738,7 @@ export class EstatePlanningService {
       resource: 'will',
       resourceId: willId,
       severity: 'medium',
-      metadata: JSON.stringify({ executorId }),
+      metadata: { executorId },
     });
 
     this.logger.log(`Executor removed from will: ${willId} by user ${userId}`);

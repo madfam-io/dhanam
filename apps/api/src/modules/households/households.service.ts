@@ -44,10 +44,10 @@ export class HouseholdsService {
       resource: 'household',
       resourceId: household.id,
       severity: 'low',
-      metadata: JSON.stringify({
+      metadata: {
         householdName: household.name,
         householdType: household.type,
-      }),
+      },
     });
 
     this.logger.log(`Household created: ${household.id} by user ${userId}`);
@@ -185,7 +185,7 @@ export class HouseholdsService {
       resource: 'household',
       resourceId: householdId,
       severity: 'low',
-      metadata: JSON.stringify({ changes: Object.keys(dto) }),
+      metadata: { changes: Object.keys(dto) },
     });
 
     this.logger.log(`Household updated: ${householdId} by user ${userId}`);
@@ -229,7 +229,7 @@ export class HouseholdsService {
       resource: 'household',
       resourceId: householdId,
       severity: 'medium',
-      metadata: JSON.stringify({ householdName: household.name }),
+      metadata: { householdName: household.name },
     });
 
     this.logger.log(`Household deleted: ${householdId} by user ${userId}`);
@@ -296,11 +296,11 @@ export class HouseholdsService {
       resource: 'household',
       resourceId: householdId,
       severity: 'medium',
-      metadata: JSON.stringify({
+      metadata: {
         memberId: member.id,
         memberUserId: dto.userId,
         relationship: dto.relationship,
-      }),
+      },
     });
 
     this.logger.log(`Member added to household: ${householdId} by user ${userId}`);
@@ -360,10 +360,10 @@ export class HouseholdsService {
       resource: 'household',
       resourceId: householdId,
       severity: 'low',
-      metadata: JSON.stringify({
+      metadata: {
         memberId,
         changes: Object.keys(dto),
-      }),
+      },
     });
 
     this.logger.log(`Household member updated: ${memberId} by user ${userId}`);
@@ -411,10 +411,10 @@ export class HouseholdsService {
       resource: 'household',
       resourceId: householdId,
       severity: 'medium',
-      metadata: JSON.stringify({
+      metadata: {
         memberId,
         memberUserId: member.userId,
-      }),
+      },
     });
 
     this.logger.log(`Member removed from household: ${householdId} by user ${userId}`);

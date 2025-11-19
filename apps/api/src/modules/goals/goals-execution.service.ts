@@ -188,12 +188,12 @@ export class GoalsExecutionService {
           action: 'goal_auto_rebalance',
           resource: 'goal',
           resourceId: goal.id,
-          metadata: JSON.stringify({
+          metadata: {
             orderId: order.id,
             action: action.action,
             amount: action.amount,
             reason: action.reason,
-          }),
+          },
           severity: 'high',
         });
 

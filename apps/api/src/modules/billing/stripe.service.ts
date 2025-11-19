@@ -16,7 +16,7 @@ export class StripeService {
     }
 
     this.stripe = new Stripe(secretKey, {
-      apiVersion: '2024-11-20.acacia',
+      apiVersion: '2025-11-17.clover',
       typescript: true,
     });
 
@@ -138,7 +138,7 @@ export class StripeService {
    * Get upcoming invoice for customer
    */
   async getUpcomingInvoice(customerId: string): Promise<Stripe.Invoice> {
-    return await this.stripe.invoices.retrieveUpcoming({
+    return await this.stripe.invoices.upcoming({
       customer: customerId,
     });
   }

@@ -153,14 +153,14 @@ export class TransactionExecutionService {
       action: 'order_created',
       resource: 'transaction_order',
       resourceId: order.id,
-      metadata: JSON.stringify({
+      metadata: {
         type: dto.type,
         amount: dto.amount,
         currency: dto.currency,
         provider: dto.provider,
         dryRun: dto.dryRun,
         requiresOtp,
-      }),
+      },
       ipAddress,
       userAgent,
       severity: dto.amount >= this.HIGH_VALUE_THRESHOLD ? 'high' : 'medium',
@@ -205,7 +205,7 @@ export class TransactionExecutionService {
         action: 'order_verification_failed',
         resource: 'transaction_order',
         resourceId: orderId,
-        metadata: JSON.stringify({ reason: 'Invalid OTP code' }),
+        metadata: { reason: 'Invalid OTP code' },
         ipAddress,
         userAgent,
         severity: 'high',
@@ -236,7 +236,7 @@ export class TransactionExecutionService {
       action: 'order_verified',
       resource: 'transaction_order',
       resourceId: orderId,
-      metadata: JSON.stringify({ verificationMethod: 'otp' }),
+      metadata: { verificationMethod: 'otp' },
       ipAddress,
       userAgent,
       severity: 'high',
@@ -350,14 +350,14 @@ export class TransactionExecutionService {
           action: 'order_executed',
           resource: 'transaction_order',
           resourceId: orderId,
-          metadata: JSON.stringify({
+          metadata: {
             type: order.type,
             amount: result.executedAmount,
             price: result.executedPrice,
             fees: result.fees,
             provider: order.provider,
             dryRun: order.dryRun,
-          }),
+          },
           ipAddress,
           userAgent,
           severity: 'high',
@@ -390,10 +390,10 @@ export class TransactionExecutionService {
           action: 'order_execution_failed',
           resource: 'transaction_order',
           resourceId: orderId,
-          metadata: JSON.stringify({
+          metadata: {
             errorCode: result.errorCode,
             errorMessage: result.errorMessage,
-          }),
+          },
           ipAddress,
           userAgent,
           severity: 'high',
@@ -552,7 +552,7 @@ export class TransactionExecutionService {
       action: 'order_cancelled',
       resource: 'transaction_order',
       resourceId: orderId,
-      metadata: JSON.stringify({ reason: 'User requested cancellation' }),
+      metadata: { reason: 'User requested cancellation' },
       ipAddress,
       userAgent,
       severity: 'medium',
@@ -568,14 +568,14 @@ export class TransactionExecutionService {
   async findAll(spaceId: string, userId: string, filter: OrderFilterDto) {
     await this.spacesService.verifyUserAccess(userId, spaceId, 'viewer');
 
-    const where: Prisma.TransactionOrderWhereInput = {
+    const where: any = {
       spaceId,
       ...(filter.accountId && { accountId: filter.accountId }),
       ...(filter.status && { status: filter.status as any }),
       ...(filter.goalId && { goalId: filter.goalId }),
     };
 
-    const orderBy: Prisma.TransactionOrderOrderByWithRelationInput = filter.sortBy
+    const orderBy: any = filter.sortBy
       ? { [filter.sortBy]: filter.sortOrder || 'desc' }
       : { createdAt: 'desc' };
 
@@ -667,7 +667,7 @@ export class TransactionExecutionService {
       action: 'order_updated',
       resource: 'transaction_order',
       resourceId: orderId,
-      metadata: JSON.stringify(dto),
+      metadata: dto,
       ipAddress,
       userAgent,
       severity: 'medium',
