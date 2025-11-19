@@ -16,7 +16,7 @@ function TabBarIcon({ name, color }: TabBarIconProps) {
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
-  const colors = theme[colorScheme ?? 'light'].colors;
+  const colors = theme[colorScheme === 'dark' ? 'dark' : 'light'].colors;
 
   return (
     <Tabs

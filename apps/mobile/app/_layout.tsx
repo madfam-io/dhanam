@@ -49,7 +49,7 @@ export default function RootLayout() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <PaperProvider theme={theme[colorScheme ?? 'light']}>
+      <PaperProvider theme={theme[colorScheme === 'dark' ? 'dark' : 'light']}>
         <SafeAreaProvider>
           <AuthProvider>
             <SpaceProvider>

@@ -1,3 +1,4 @@
+import { Account, Transaction } from '@dhanam/shared';
 import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import React, { useMemo } from 'react';
@@ -70,7 +71,7 @@ export default function DashboardScreen() {
 
   const netWorth = useMemo(() => {
     if (!accounts) return 0;
-    return accounts.reduce((sum: number, account) => sum + (account.balance || 0), 0);
+    return accounts.reduce((sum: number, account: Account) => sum + (account.balance || 0), 0);
   }, [accounts]);
 
   const chartData = useMemo(() => {
@@ -81,12 +82,12 @@ export default function DashboardScreen() {
       };
     }
     return {
-      labels: analytics.balanceHistory.map((item) =>
+      labels: analytics.balanceHistory.map((item: { date: string }) =>
         new Date(item.date).toLocaleDateString('en', { month: 'short' })
       ),
       datasets: [
         {
-          data: analytics.balanceHistory.map((item) => item.balance),
+          data: analytics.balanceHistory.map((item: { balance: number }) => item.balance),
           strokeWidth: 3,
         },
       ],
@@ -225,7 +226,7 @@ export default function DashboardScreen() {
                 View All
               </Button>
             </View>
-            {accounts.slice(0, 3).map((account) => (
+            {accounts.slice(0, 3).map((account: Account) => (
               <AccountCard key={account.id} account={account} />
             ))}
           </View>
@@ -244,7 +245,7 @@ export default function DashboardScreen() {
             </View>
             <Card style={styles.transactionsCard}>
               <Card.Content>
-                {transactions.data.slice(0, 5).map((transaction) => (
+                {transactions.data.slice(0, 5).map((transaction: Transaction) => (
                   <TransactionItem key={transaction.id} transaction={transaction} />
                 ))}
               </Card.Content>

@@ -252,6 +252,7 @@ export default function ESGScreen() {
                   data={barData}
                   width={screenWidth - 80}
                   height={200}
+                  yAxisLabel=""
                   yAxisSuffix=""
                   chartConfig={{
                     backgroundColor: '#ffffff',

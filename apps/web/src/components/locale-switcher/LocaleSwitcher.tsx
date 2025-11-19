@@ -65,7 +65,7 @@ export function LocaleSwitcher() {
     { code: 'en' as const, name: 'English', flag: '🇺🇸' },
   ];
 
-  const currentLocale = locales.find((l) => l.code === locale) ?? locales[0];
+  const currentLocale = locales.find((l) => l.code === locale) || locales[0]!;
 
   return (
     <DropdownMenu>
