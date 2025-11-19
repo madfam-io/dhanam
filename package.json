@@ -48,10 +48,8 @@
       "nodemailer@<7.0.9": ">=7.0.9",
       "cookie": ">=1.0.2",
       "next@<15.0.0": ">=15.5.6",
-      "next": ">=15.5.6"
+      "next": ">=15.5.6",
+      "pino": ">=10.1.0"
     }
-  },
-  "comments": {
-    "fast-redact-cve": "CVE-2025-57319 in fast-redact@3.5.0 has been accepted as a known risk. The CVE is disputed by maintainers, affects only internal undocumented functions, has LOW severity (CVSS 2.9), and no patch is available. See SECURITY.md for full details."
   }
 }

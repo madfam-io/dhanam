@@ -190,45 +190,39 @@ Dhanam Ledger implements multiple layers of security:
 
 This section documents security vulnerabilities that we have consciously accepted after careful risk analysis. Each entry includes the rationale for acceptance and ongoing monitoring strategy.
 
+*No accepted security risks at this time.*
+
+---
+
+## Resolved Security Risks
+
+This section documents security vulnerabilities that have been mitigated or resolved.
+
 ### CVE-2025-57319 (fast-redact Prototype Pollution)
 
-**Status:** Accepted Risk
-**Date Evaluated:** 2025-11-19
-**Package:** `fast-redact@3.5.0`
+**Status:** ✅ Resolved
+**Date Resolved:** 2025-11-19
+**Package:** `fast-redact@3.5.0` (removed)
 **Severity:** LOW (CVSS 2.9)
 **Type:** Prototype Pollution
 
-**Details:**
-- CVE-2025-57319 reports a prototype pollution vulnerability in fast-redact's `nestedRestore` function
-- The vulnerability only affects undocumented internal utility functions, not the public API
-- fast-redact is a transitive dependency used by Pino (our logging library), not directly by our code
+**Original Issue:**
+- CVE-2025-57319 reported a prototype pollution vulnerability in fast-redact's `nestedRestore` function
+- fast-redact was a transitive dependency through Pino 8.x (our logging library)
+- Vulnerability affected undocumented internal utility functions
+- The CVE was disputed by maintainers, but remained in our dependency tree
 
-**Maintainer Response:**
-- The fast-redact maintainers have **disputed this CVE with MITRE**
-- GitHub Issue #75 was closed as "won't fix" with detailed technical explanation
-- Maintainers argue the vulnerability requires misuse of internal, undocumented functions
-- When testing with the documented public API, the exploit fails to produce the claimed result
-- Reference: https://github.com/davidmarkclements/fast-redact/issues/75
+**Resolution:**
+- Upgraded Pino from 8.x to 10.x via pnpm override (`pino: ">=10.1.0"`)
+- Pino 10.x replaced fast-redact with `@pinojs/redact`, completely eliminating the vulnerable package
+- No application code changes required - Pino's public API remains compatible
+- The upgrade also provides improved logging performance and features
 
-**Risk Assessment:**
-- ✅ **Low severity** (CVSS 2.9) - minimal security impact
-- ✅ **Disputed by maintainers** - credibility of CVE is questionable
-- ✅ **No public exploits** - no known exploits in the wild
-- ✅ **Public API is secure** - vulnerability only affects internal functions
-- ✅ **Indirect dependency** - used only through Pino's documented API
-- ✅ **No direct usage** - we don't call fast-redact directly in our codebase
-- ❌ **No patch available** - v3.5.0 is the latest (published 2+ years ago)
-- ❌ **No migration path** - Pino depends on fast-redact, no alternative logging library identified
-
-**Mitigation:**
-- We use fast-redact exclusively through Pino's documented public API
-- No direct usage of internal fast-redact functions in our codebase
-- Regular monitoring of fast-redact repository for any security updates
-- Will reassess if severity increases or if patch becomes available
-
-**Decision:** **ACCEPTED** - Given the disputed nature of the CVE, low severity (2.9), lack of public exploits, and absence of viable alternatives or patches, the risk of continuing to use fast-redact@3.5.0 is acceptable for our use case.
-
-**Review Date:** 2026-05-19 (6 months)
+**Benefits:**
+- ✅ Eliminates CVE-2025-57319 entirely (no longer using fast-redact)
+- ✅ Improves logging performance with newer Pino version
+- ✅ Future-proofs the logging stack with actively maintained dependencies
+- ✅ No breaking changes to application code
 
 ---
 
