@@ -1,6 +1,10 @@
 export type UUID = string;
 
-export type Currency = 'MXN' | 'USD' | 'EUR';
+export enum Currency {
+  MXN = 'MXN',
+  USD = 'USD',
+  EUR = 'EUR',
+}
 
 export type Locale = 'en' | 'es';
 

@@ -501,9 +501,20 @@ export class BelvoService {
       .update(payload, 'utf8')
       .digest('hex');
 
-    return crypto.timingSafeEqual(
-      Buffer.from(signature, 'hex') as any,
-      Buffer.from(expectedSignature, 'hex') as any
-    );
+    // timingSafeEqual requires buffers of equal length
+    // Return false early if signatures have different lengths
+    if (signature.length !== expectedSignature.length) {
+      return false;
+    }
+
+    try {
+      return crypto.timingSafeEqual(
+        Buffer.from(signature, 'hex'),
+        Buffer.from(expectedSignature, 'hex')
+      );
+    } catch (error) {
+      // If conversion to hex buffer fails (invalid hex string), signature is invalid
+      return false;
+    }
   }
 }

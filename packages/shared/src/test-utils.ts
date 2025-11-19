@@ -1,4 +1,5 @@
-import type { Currency, AccountType, Provider, SpaceType } from './types';
+import type { AccountType, Provider, SpaceType } from './types';
+import { Currency } from './types';
 
 export interface MockUser {
   id: string;
@@ -99,7 +100,7 @@ export class TestUtils {
       id: 'test-space-' + Math.random().toString(36).substr(2, 9),
       name: 'Test Space',
       type: 'personal',
-      currency: 'USD' as Currency,
+      currency: Currency.USD,
       timezone: 'UTC',
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -116,7 +117,7 @@ export class TestUtils {
       name: 'Test Account',
       type: 'checking',
       subtype: 'checking',
-      currency: 'USD' as Currency,
+      currency: Currency.USD,
       balance: 1000,
       lastSyncedAt: new Date(),
       isActive: true,
@@ -133,7 +134,7 @@ export class TestUtils {
       accountId: 'test-account-id',
       providerTransactionId: null,
       amount: -50,
-      currency: 'USD' as Currency,
+      currency: Currency.USD,
       description: 'Test Transaction',
       merchant: 'Test Merchant',
       categoryId: null,
@@ -154,7 +155,7 @@ export class TestUtils {
       spaceId: 'test-space-id',
       name: 'Test Budget',
       period: 'monthly',
-      currency: 'USD' as Currency,
+      currency: Currency.USD,
       startDate,
       endDate,
       isActive: true,
@@ -172,7 +173,7 @@ export class TestUtils {
       type: 'expense',
       limit: 500,
       spent: 250,
-      currency: 'USD' as Currency,
+      currency: Currency.USD,
       period: 'monthly',
       isActive: true,
       metadata: {},
@@ -229,7 +230,7 @@ export class TestUtils {
     return { start, end };
   }
 
-  static formatCurrency(amount: number, currency: Currency = 'USD'): string {
+  static formatCurrency(amount: number, currency: Currency = Currency.USD): string {
     const formatter = new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: currency,

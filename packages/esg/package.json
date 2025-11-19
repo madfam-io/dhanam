@@ -8,7 +8,7 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
-    "test": "jest",
+    "test": "jest --passWithNoTests",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist .turbo node_modules"
   },
