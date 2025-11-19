@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { Injectable, LoggerService as NestLoggerService } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 

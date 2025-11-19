@@ -12,6 +12,7 @@ export class CryptoService {
     this.key = createHash('sha256').update(keyString).digest();
 
     if (!process.env.ENCRYPTION_KEY) {
+      // eslint-disable-next-line no-console
       console.warn(
         'ENCRYPTION_KEY not set in environment. Using generated key - data will not persist across restarts!'
       );

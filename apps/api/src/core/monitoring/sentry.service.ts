@@ -14,6 +14,7 @@ export class SentryService implements OnModuleInit {
 
   onModuleInit() {
     if (!this.isEnabled) {
+      // eslint-disable-next-line no-console
       console.log('⚠️  Sentry not configured - error monitoring disabled');
       return;
     }
@@ -86,6 +87,7 @@ export class SentryService implements OnModuleInit {
       },
     });
 
+    // eslint-disable-next-line no-console
     console.log(`✅ Sentry initialized for ${environment} environment`);
   }
 

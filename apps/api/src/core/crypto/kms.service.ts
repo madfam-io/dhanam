@@ -38,6 +38,7 @@ export class KmsService implements OnModuleInit {
       try {
         const { KMSClient } = await import('@aws-sdk/client-kms');
         this.kmsClient = new KMSClient({ region: this.region });
+        // eslint-disable-next-line no-console
         console.log(
           `✅ KMS Service initialized with region: ${this.region}, key: ${this.keyId}`,
         );
@@ -49,6 +50,7 @@ export class KmsService implements OnModuleInit {
         );
       }
     } else {
+      // eslint-disable-next-line no-console
       console.log(
         '⚠️  Development mode: Using local encryption instead of AWS KMS',
       );

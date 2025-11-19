@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { RedisService } from '@core/redis/redis.service';
 
 import { FeatureFlagDto } from '../dto';

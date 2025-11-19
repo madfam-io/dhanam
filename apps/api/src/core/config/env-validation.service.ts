@@ -75,6 +75,7 @@ export class EnvValidationService implements OnModuleInit {
       throw new Error(errorMessage);
     }
 
+    // eslint-disable-next-line no-console
     console.log('✅ Environment validation passed');
   }
 

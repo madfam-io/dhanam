@@ -1,6 +1,10 @@
+// eslint-disable-next-line import/no-named-as-default
 import fastifyCompress from '@fastify/compress';
+// eslint-disable-next-line import/no-named-as-default
 import fastifyCors from '@fastify/cors';
+// eslint-disable-next-line import/no-named-as-default
 import fastifyHelmet from '@fastify/helmet';
+// eslint-disable-next-line import/no-named-as-default
 import fastifyRateLimit from '@fastify/rate-limit';
 import { ValidationPipe, VersioningType } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -66,6 +70,7 @@ async function bootstrap() {
 
   // Rate limiting
   await app.register(fastifyRateLimit, {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     max: configService.get('RATE_LIMIT_MAX') ? parseInt(configService.get('RATE_LIMIT_MAX')!) : 100,
     timeWindow: (configService.get('RATE_LIMIT_WINDOW') as string) || '15 minutes',
   });

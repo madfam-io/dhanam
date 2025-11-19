@@ -27,6 +27,7 @@ export class TotpService {
     });
 
     // Generate QR code
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const qrCodeUrl = await qrcode.toDataURL(secret.otpauth_url!);
 
     // Store temporary secret (not activated until verified)
@@ -37,10 +38,14 @@ export class TotpService {
 
     this.logger.log(`TOTP setup initiated for user: ${userId}`, 'TotpService');
 
+    // speakeasy always generates these values
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const base32Secret = secret.base32!;
+
     return {
       qrCodeUrl,
-      secret: secret.base32!,
-      manualEntryKey: secret.base32!,
+      secret: base32Secret,
+      manualEntryKey: base32Secret,
     };
   }
 
