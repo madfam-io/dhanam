@@ -326,6 +326,7 @@ export class BitsoService {
               accountId: updatedAccount.id,
               date: new Date(),
               value: usdValue,
+              currency: Currency.USD,
             },
           });
 
@@ -361,6 +362,7 @@ export class BitsoService {
               accountId: newAccount.id,
               date: new Date(),
               value: usdValue,
+              currency: Currency.USD,
             },
           });
 

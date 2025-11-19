@@ -174,10 +174,14 @@ jobs:
       - name: Generate Prisma Client
         working-directory: apps/api
         run: pnpm prisma generate
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/dhanam_test
 
       - name: Run database migrations
         working-directory: apps/api
         run: pnpm prisma migrate deploy
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/dhanam_test
 
       - name: Build packages
         run: pnpm build:packages
@@ -246,6 +250,9 @@ jobs:
     name: Security Scan
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions:
+      contents: read
+      security-events: write
 
     steps:
       - name: Checkout code

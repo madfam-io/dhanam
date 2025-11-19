@@ -612,6 +612,7 @@ export class BlockchainService {
             accountId: updatedAccount.id,
             date: new Date(),
             value: updatedAccount.balance,
+            currency: Currency.USD,
           },
         });
 
@@ -666,7 +667,7 @@ export class BlockchainService {
     });
 
     // Audit log
-    const metadata = account.metadata as BlockchainAccountMetadata;
+    const metadata = account.metadata as unknown as BlockchainAccountMetadata;
     await this.auditService.logEvent({
       action: 'wallet_removed',
       resource: 'account',

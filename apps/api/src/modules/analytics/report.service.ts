@@ -16,7 +16,7 @@ export class ReportService {
   async generatePdfReport(spaceId: string, startDate: Date, endDate: Date): Promise<Buffer> {
     return new Promise<Buffer>((resolve, reject) => {
       const doc = new PDFDocument();
-      const buffers: Buffer[] = [];
+      const buffers: Uint8Array[] = [];
 
       doc.on('data', buffers.push.bind(buffers));
       doc.on('end', () => resolve(Buffer.concat(buffers)));
