@@ -24,6 +24,7 @@ import { PreferencesModule } from '@modules/preferences/preferences.module';
 import { ProvidersModule } from '@modules/providers/providers.module';
 import { SimulationsModule } from '@modules/simulations/simulations.module';
 import { SpacesModule } from '@modules/spaces/spaces.module';
+import { TransactionExecutionModule } from '@modules/transaction-execution/transaction-execution.module';
 import { TransactionsModule } from '@modules/transactions/transactions.module';
 import { UsersModule } from '@modules/users/users.module';
 
@@ -63,6 +64,7 @@ import { validationSchema } from './config/validation';
     HouseholdsModule,
     EstatePlanningModule,
     SimulationsModule,
+    TransactionExecutionModule,
   ],
 })
 export class AppModule {}

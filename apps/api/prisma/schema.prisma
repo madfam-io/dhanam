@@ -297,6 +297,7 @@ model Space {
   budgets          Budget[]
   transactionRules TransactionRule[]
   goals            Goal[]
+  transactionOrders TransactionOrder[]
 
   @@index([householdId])
   @@map("spaces")
@@ -339,6 +340,8 @@ model Account {
   esgScores             ESGScore[]
   connection            Connection?
   goalAllocations       GoalAllocation[]
+  transactionOrders     TransactionOrder[]
+  transferDestinations  TransactionOrder[] @relation("TransferDestination")
 
   @@unique([spaceId, provider, providerAccountId])
   @@index([spaceId])
@@ -605,6 +608,7 @@ model Goal {
   space            Space         @relation(fields: [spaceId], references: [id], onDelete: Cascade)
   household        Household?    @relation(fields: [householdId], references: [id], onDelete: SetNull)
   allocations      GoalAllocation[]
+  transactionOrders TransactionOrder[]
 
   @@index([spaceId, status])
   @@index([spaceId, createdAt(sort: Desc)])
@@ -736,4 +740,209 @@ model WillExecutor {
   @@index([willId])
   @@index([executorId])
   @@map("will_executors")
+}
+
+// Transaction Execution Enums
+enum OrderType {
+  buy
+  sell
+  transfer
+  deposit
+  withdraw
+}
+
+enum OrderStatus {
+  pending_verification  // Awaiting OTP/2FA
+  pending_execution     // Verified, queued for execution
+  executing             // Currently being executed
+  completed             // Successfully executed
+  failed                // Execution failed
+  cancelled             // User cancelled
+  rejected              // Rejected by system (limits, validation, etc.)
+}
+
+enum OrderPriority {
+  low
+  normal
+  high
+  critical  // Goal-driven auto-execution
+}
+
+enum ExecutionProvider {
+  bitso
+  plaid
+  belvo
+  manual
+}
+
+// Transaction Execution Models
+model TransactionOrder {
+  id                String           @id @default(uuid())
+  spaceId           String           @map("space_id")
+  userId            String           @map("user_id")
+  accountId         String           @map("account_id")
+  idempotencyKey    String           @unique @map("idempotency_key")
+
+  // Order details
+  type              OrderType
+  status            OrderStatus      @default(pending_verification)
+  priority          OrderPriority    @default(normal)
+
+  // Financial details
+  amount            Decimal          @db.Decimal(19, 4)
+  currency          Currency
+  assetSymbol       String?          @map("asset_symbol") // For crypto/stocks
+  targetPrice       Decimal?         @db.Decimal(19, 4) @map("target_price") // Limit orders
+
+  // Transfer details (for transfer orders)
+  toAccountId       String?          @map("to_account_id")
+
+  // Execution settings
+  provider          ExecutionProvider
+  dryRun            Boolean          @default(false) @map("dry_run")
+  maxSlippage       Decimal?         @db.Decimal(5, 2) @map("max_slippage") // Percentage
+
+  // Verification & Security
+  otpVerified       Boolean          @default(false) @map("otp_verified")
+  otpVerifiedAt     DateTime?        @map("otp_verified_at")
+  ipAddress         String?          @map("ip_address")
+  userAgent         String?          @map("user_agent")
+
+  // Goal-driven execution
+  goalId            String?          @map("goal_id")
+  autoExecute       Boolean          @default(false) @map("auto_execute")
+
+  // Execution results
+  executedAmount    Decimal?         @db.Decimal(19, 4) @map("executed_amount")
+  executedPrice     Decimal?         @db.Decimal(19, 4) @map("executed_price")
+  fees              Decimal?         @db.Decimal(19, 4)
+  feeCurrency       Currency?        @map("fee_currency")
+
+  // Provider response
+  providerOrderId   String?          @map("provider_order_id")
+  providerResponse  Json?            @map("provider_response")
+
+  // Metadata
+  notes             String?          @db.Text
+  metadata          Json?
+
+  // Timestamps
+  submittedAt       DateTime         @default(now()) @map("submitted_at")
+  verifiedAt        DateTime?        @map("verified_at")
+  executedAt        DateTime?        @map("executed_at")
+  completedAt       DateTime?        @map("completed_at")
+  cancelledAt       DateTime?        @map("cancelled_at")
+  expiresAt         DateTime?        @map("expires_at")
+
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  space             Space            @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  account           Account          @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  toAccount         Account?         @relation("TransferDestination", fields: [toAccountId], references: [id], onDelete: SetNull)
+  goal              Goal?            @relation(fields: [goalId], references: [id], onDelete: SetNull)
+  executions        OrderExecution[]
+
+  @@index([spaceId, status, createdAt(sort: Desc)])
+  @@index([userId, status])
+  @@index([accountId])
+  @@index([status, priority])
+  @@index([goalId])
+  @@index([idempotencyKey])
+  @@map("transaction_orders")
+}
+
+model OrderExecution {
+  id                String           @id @default(uuid())
+  orderId           String           @map("order_id")
+
+  // Execution attempt details
+  attemptNumber     Int              @default(1) @map("attempt_number")
+  status            OrderStatus
+
+  // Execution details
+  provider          ExecutionProvider
+  providerOrderId   String?          @map("provider_order_id")
+
+  // Results
+  executedAmount    Decimal?         @db.Decimal(19, 4) @map("executed_amount")
+  executedPrice     Decimal?         @db.Decimal(19, 4) @map("executed_price")
+  fees              Decimal?         @db.Decimal(19, 4)
+  feeCurrency       Currency?        @map("fee_currency")
+
+  // Error tracking
+  errorCode         String?          @map("error_code")
+  errorMessage      String?          @db.Text @map("error_message")
+
+  // Raw provider response
+  providerRequest   Json?            @map("provider_request")
+  providerResponse  Json?            @map("provider_response")
+
+  // Audit trail
+  startedAt         DateTime         @default(now()) @map("started_at")
+  completedAt       DateTime?        @map("completed_at")
+  duration          Int?             // Milliseconds
+
+  createdAt         DateTime         @default(now()) @map("created_at")
+
+  // Relations
+  order             TransactionOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId, attemptNumber])
+  @@index([status, startedAt(sort: Desc)])
+  @@map("order_executions")
+}
+
+model IdempotencyKey {
+  id                String           @id @default(uuid())
+  key               String           @unique
+  userId            String           @map("user_id")
+  spaceId           String           @map("space_id")
+
+  // Request details
+  requestHash       String           @map("request_hash") // Hash of request body
+  orderId           String?          @map("order_id") // Created order ID
+
+  // Response caching
+  responseStatus    Int?             @map("response_status")
+  responseBody      Json?            @map("response_body")
+
+  // Expiration
+  expiresAt         DateTime         @map("expires_at")
+  createdAt         DateTime         @default(now()) @map("created_at")
+
+  @@index([userId, spaceId, createdAt(sort: Desc)])
+  @@index([expiresAt])
+  @@map("idempotency_keys")
+}
+
+model OrderLimit {
+  id                String           @id @default(uuid())
+  userId            String           @map("user_id")
+  spaceId           String?          @map("space_id") // Null = global user limit
+
+  // Limit configuration
+  limitType         String           @map("limit_type") // daily, weekly, monthly, per_transaction
+  orderType         OrderType?       @map("order_type") // Null = all order types
+
+  // Amounts
+  maxAmount         Decimal          @db.Decimal(19, 4) @map("max_amount")
+  currency          Currency
+
+  // Usage tracking
+  usedAmount        Decimal          @default(0) @db.Decimal(19, 4) @map("used_amount")
+  resetAt           DateTime         @map("reset_at")
+
+  // Metadata
+  notes             String?
+  enforced          Boolean          @default(true) // Can be disabled for testing
+
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  @@unique([userId, spaceId, limitType, orderType])
+  @@index([userId, enforced, resetAt])
+  @@index([spaceId])
+  @@map("order_limits")
 }
