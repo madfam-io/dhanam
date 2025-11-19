@@ -13,7 +13,6 @@ import { AuditService } from '../../../core/audit/audit.service';
 import { PrismaService } from '../../../core/prisma/prisma.service';
 import { BlockchainAccountMetadata } from '../../../types/metadata.types';
 import {
-  isPrismaError,
   isUniqueConstraintError,
 } from '../../../types/prisma-errors.types';
 

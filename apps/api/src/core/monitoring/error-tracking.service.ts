@@ -153,7 +153,7 @@ export class ErrorTrackingService {
           metadata: report.metadata,
         },
       });
-    } catch (error) {
+    } catch (_error) {
       // If error_logs table doesn't exist, we'll just log locally
       this.logger.debug('Error logs table not available, using local logging only');
     }

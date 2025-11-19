@@ -180,7 +180,7 @@ export class AccountsService {
   }
 
   private sanitizeAccount(account: any): Account {
-    const { encryptedCredentials, ...sanitized } = account;
+    const { encryptedCredentials: _encryptedCredentials, ...sanitized } = account;
     return {
       ...sanitized,
       balance: parseFloat(account.balance.toString()),

@@ -176,7 +176,7 @@ export class FxRatesController {
           rate,
         },
       };
-    } catch (error) {
+    } catch (_error) {
       return {
         service: 'fx-rates',
         status: 'unhealthy',

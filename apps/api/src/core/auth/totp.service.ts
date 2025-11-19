@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { randomBytes } from 'crypto';
+import { randomBytes, createHash } from 'crypto';
 import * as qrcode from 'qrcode';
 import * as speakeasy from 'speakeasy';
 
@@ -129,7 +129,7 @@ export class TotpService {
   async storeBackupCodes(userId: string, codes: string[]): Promise<void> {
     // Hash backup codes before storing
     const hashedCodes = codes.map((code) =>
-      require('crypto').createHash('sha256').update(code).digest('hex')
+      createHash('sha256').update(code).digest('hex')
     );
 
     await this.prisma.user.update({
@@ -150,7 +150,7 @@ export class TotpService {
       return false;
     }
 
-    const hashedCode = require('crypto').createHash('sha256').update(code).digest('hex');
+    const hashedCode = createHash('sha256').update(code).digest('hex');
     const codeIndex = user.totpBackupCodes.indexOf(hashedCode);
 
     if (codeIndex === -1) {

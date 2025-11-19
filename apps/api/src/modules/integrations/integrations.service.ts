@@ -1,5 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import Belvo from 'belvo';
+import { PlaidApi, Configuration, PlaidEnvironments } from 'plaid';
+import axios from 'axios';
 
 export interface IntegrationStatus {
   name: string;
@@ -129,7 +132,6 @@ export class IntegrationsService {
         throw new Error('Belvo not configured');
       }
 
-      const { default: Belvo } = require('belvo');
       const client = new Belvo(
         this.configService.get('BELVO_SECRET_KEY_ID'),
         this.configService.get('BELVO_SECRET_KEY_PASSWORD'),
@@ -151,7 +153,6 @@ export class IntegrationsService {
         throw new Error('Plaid not configured');
       }
 
-      const { PlaidApi, Configuration, PlaidEnvironments } = require('plaid');
       const configuration = new Configuration({
         basePath: PlaidEnvironments[this.configService.get('PLAID_ENV', 'sandbox')],
         baseOptions: {
@@ -173,7 +174,6 @@ export class IntegrationsService {
   private async checkBitsoHealth(): Promise<{ latency: number }> {
     const start = Date.now();
     try {
-      const axios = require('axios');
       // Public endpoint that doesn't require authentication
       await axios.get('https://api.bitso.com/v3/ticker', { timeout: 5000 });
       return { latency: Date.now() - start };

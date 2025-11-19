@@ -139,7 +139,7 @@ export class PlaidService {
   async fetchTransactionsByDateRange(
     accountId: string,
     startDate: Date,
-    endDate: Date = new Date()
+    _endDate: Date = new Date()
   ): Promise<{ transactionCount: number; accountCount: number }> {
     const account = await this.prisma.account.findUnique({
       where: { id: accountId },
