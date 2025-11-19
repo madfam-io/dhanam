@@ -1,5 +1,5 @@
 import { Injectable, Logger, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
-import { PrismaService } from '../../core/database/prisma.service';
+import { PrismaService } from '../../core/prisma/prisma.service';
 import { AuditService } from '../../core/audit/audit.service';
 import { CreateWillDto, UpdateWillDto, AddBeneficiaryDto, UpdateBeneficiaryDto, AddExecutorDto, UpdateExecutorDto } from './dto';
 import { Will, BeneficiaryDesignation, WillExecutor, AssetType } from '@prisma/client';
