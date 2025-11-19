@@ -1,5 +1,5 @@
 import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
-import { Will, BeneficiaryDesignation, WillExecutor, AssetType } from '@prisma/client';
+import { Will, BeneficiaryDesignation, WillExecutor, AssetType, Prisma } from '@prisma/client';
 
 import { AuditService } from '../../core/audit/audit.service';
 import { PrismaService } from '../../core/prisma/prisma.service';
@@ -72,7 +72,23 @@ export class EstatePlanningService {
   /**
    * Find will by ID (with access check)
    */
-  async findById(willId: string, userId: string): Promise<Will> {
+  async findById(
+    willId: string,
+    userId: string
+  ): Promise<
+    Prisma.WillGetPayload<{
+      include: {
+        beneficiaries: {
+          include: {
+            beneficiary: {
+              include: { user: { select: { id: true; name: true; email: true } } };
+            };
+          };
+        };
+        executors: { include: { executor: { include: { user: true } } } };
+      };
+    }>
+  > {
     const will = await this.prisma.will.findFirst({
       where: {
         id: willId,

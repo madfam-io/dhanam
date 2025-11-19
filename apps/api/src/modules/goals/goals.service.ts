@@ -1,5 +1,5 @@
 import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
-import { Goal, GoalAllocation } from '@prisma/client';
+import { Goal, GoalAllocation, Prisma } from '@prisma/client';
 
 import { AuditService } from '../../core/audit/audit.service';
 import { PrismaService } from '../../core/prisma/prisma.service';
@@ -131,7 +131,25 @@ export class GoalsService {
   async findById(
     goalId: string,
     userId: string
-  ): Promise<Goal & { allocations: GoalAllocation[] }> {
+  ): Promise<
+    Prisma.GoalGetPayload<{
+      include: {
+        allocations: {
+          include: {
+            account: {
+              select: {
+                id: true;
+                name: true;
+                balance: true;
+                currency: true;
+                type: true;
+              };
+            };
+          };
+        };
+      };
+    }>
+  > {
     await this.findByIdWithAccess(goalId, userId);
 
     return this.prisma.goal.findUnique({

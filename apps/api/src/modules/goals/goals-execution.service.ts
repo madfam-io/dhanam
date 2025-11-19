@@ -7,7 +7,7 @@ import { OrderType, OrderPriority } from '../transaction-execution/dto/create-or
 import { ProviderFactoryService } from '../transaction-execution/providers/provider-factory.service';
 import { TransactionExecutionService } from '../transaction-execution/transaction-execution.service';
 
-interface RebalancingAction {
+export interface RebalancingAction {
   goalId: string;
   goalName: string;
   accountId: string;
