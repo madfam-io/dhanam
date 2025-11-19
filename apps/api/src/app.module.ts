@@ -13,6 +13,7 @@ import { BillingModule } from '@modules/billing/billing.module';
 import { BudgetsModule } from '@modules/budgets/budgets.module';
 import { CategoriesModule } from '@modules/categories/categories.module';
 import { EmailModule } from '@modules/email/email.module';
+import { EstatePlanningModule } from '@modules/estate-planning/estate-planning.module';
 import { FxRatesModule } from '@modules/fx-rates/fx-rates.module';
 import { GoalsModule } from '@modules/goals/goals.module';
 import { HouseholdsModule } from '@modules/households/households.module';
@@ -60,6 +61,7 @@ import { validationSchema } from './config/validation';
     BillingModule,
     GoalsModule,
     HouseholdsModule,
+    EstatePlanningModule,
     SimulationsModule,
   ],
 })
