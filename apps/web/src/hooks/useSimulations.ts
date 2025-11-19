@@ -135,10 +135,7 @@ export function useSimulations() {
 
   const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
-  const handleRequest = async <T,>(
-    endpoint: string,
-    config: any
-  ): Promise<T | null> => {
+  const handleRequest = async <T>(endpoint: string, config: any): Promise<T | null> => {
     setLoading(true);
     setError(null);
 
@@ -173,9 +170,7 @@ export function useSimulations() {
     }
   };
 
-  const runSimulation = async (
-    config: MonteCarloConfig
-  ): Promise<SimulationResult | null> => {
+  const runSimulation = async (config: MonteCarloConfig): Promise<SimulationResult | null> => {
     return handleRequest<SimulationResult>('monte-carlo', config);
   };
 
@@ -195,10 +190,7 @@ export function useSimulations() {
     scenarioName: string,
     config: MonteCarloConfig
   ): Promise<ScenarioComparisonResult | null> => {
-    return handleRequest<ScenarioComparisonResult>(
-      `scenarios/${scenarioName}`,
-      config
-    );
+    return handleRequest<ScenarioComparisonResult>(`scenarios/${scenarioName}`, config);
   };
 
   const getRecommendedAllocation = async (
@@ -210,17 +202,14 @@ export function useSimulations() {
     setError(null);
 
     try {
-      const response = await fetch(
-        `${apiBaseUrl}/simulations/recommended-allocation`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ riskTolerance, yearsToRetirement }),
-        }
-      );
+      const response = await fetch(`${apiBaseUrl}/simulations/recommended-allocation`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ riskTolerance, yearsToRetirement }),
+      });
 
       if (!response.ok) {
         const errorData = await response.json();

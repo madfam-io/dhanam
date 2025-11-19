@@ -6,7 +6,16 @@ export interface Goal {
   spaceId: string;
   name: string;
   description?: string;
-  type: 'retirement' | 'education' | 'house_purchase' | 'emergency_fund' | 'legacy' | 'travel' | 'business' | 'debt_payoff' | 'other';
+  type:
+    | 'retirement'
+    | 'education'
+    | 'house_purchase'
+    | 'emergency_fund'
+    | 'legacy'
+    | 'travel'
+    | 'business'
+    | 'debt_payoff'
+    | 'other';
   targetAmount: number;
   currency: string;
   targetDate: string;
@@ -97,7 +106,7 @@ export function useGoals() {
 
   const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
-  const handleRequest = async <T,>(
+  const handleRequest = async <T>(
     method: 'GET' | 'POST' | 'PUT' | 'DELETE',
     endpoint: string,
     data?: any
@@ -173,7 +182,10 @@ export function useGoals() {
     return handleRequest<GoalProgress>('GET', `${goalId}/progress`);
   };
 
-  const addAllocation = async (goalId: string, input: AddAllocationInput): Promise<GoalAllocation | null> => {
+  const addAllocation = async (
+    goalId: string,
+    input: AddAllocationInput
+  ): Promise<GoalAllocation | null> => {
     return handleRequest<GoalAllocation>('POST', `${goalId}/allocations`, input);
   };
 

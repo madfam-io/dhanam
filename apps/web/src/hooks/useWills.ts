@@ -31,7 +31,14 @@ export interface Beneficiary {
   id: string;
   willId: string;
   beneficiaryId: string;
-  assetType: 'bank_account' | 'investment_account' | 'crypto_account' | 'real_estate' | 'business_interest' | 'personal_property' | 'other';
+  assetType:
+    | 'bank_account'
+    | 'investment_account'
+    | 'crypto_account'
+    | 'real_estate'
+    | 'business_interest'
+    | 'personal_property'
+    | 'other';
   assetId?: string;
   percentage: number;
   conditions?: any;
@@ -278,7 +285,10 @@ export function useWills() {
     }
   };
 
-  const addBeneficiary = async (willId: string, input: AddBeneficiaryInput): Promise<Beneficiary> => {
+  const addBeneficiary = async (
+    willId: string,
+    input: AddBeneficiaryInput
+  ): Promise<Beneficiary> => {
     setLoading(true);
     setError(null);
     try {

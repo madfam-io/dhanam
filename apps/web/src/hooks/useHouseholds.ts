@@ -22,7 +22,18 @@ export interface HouseholdMember {
   id: string;
   householdId: string;
   userId: string;
-  relationship: 'spouse' | 'partner' | 'child' | 'parent' | 'sibling' | 'grandparent' | 'grandchild' | 'dependent' | 'trustee' | 'beneficiary' | 'other';
+  relationship:
+    | 'spouse'
+    | 'partner'
+    | 'child'
+    | 'parent'
+    | 'sibling'
+    | 'grandparent'
+    | 'grandchild'
+    | 'dependent'
+    | 'trustee'
+    | 'beneficiary'
+    | 'other';
   isMinor: boolean;
   accessStartDate?: string;
   notes?: string;
@@ -268,7 +279,10 @@ export function useHouseholds() {
   /**
    * Add a member to a household
    */
-  const addMember = async (householdId: string, input: AddMemberInput): Promise<HouseholdMember> => {
+  const addMember = async (
+    householdId: string,
+    input: AddMemberInput
+  ): Promise<HouseholdMember> => {
     setLoading(true);
     setError(null);
     try {

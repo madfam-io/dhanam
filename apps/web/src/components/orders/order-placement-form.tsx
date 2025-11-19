@@ -209,10 +209,7 @@ export function OrderPlacementForm({
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="accountId">Account</Label>
-        <Select
-          value={selectedAccountId}
-          onValueChange={(value) => setValue('accountId', value)}
-        >
+        <Select value={selectedAccountId} onValueChange={(value) => setValue('accountId', value)}>
           <SelectTrigger>
             <SelectValue placeholder="Select account" />
           </SelectTrigger>
@@ -224,9 +221,7 @@ export function OrderPlacementForm({
             ))}
           </SelectContent>
         </Select>
-        {errors.accountId && (
-          <p className="text-sm text-destructive">{errors.accountId.message}</p>
-        )}
+        {errors.accountId && <p className="text-sm text-destructive">{errors.accountId.message}</p>}
       </div>
 
       <div className="space-y-2">

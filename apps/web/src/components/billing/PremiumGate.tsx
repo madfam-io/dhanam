@@ -30,7 +30,11 @@ export function PremiumGate({ children, feature, fallback }: PremiumGateProps) {
   const isPremium = false;
 
   if (!isPremium) {
-    return fallback ? <>{fallback}</> : <PremiumUpsell feature={feature} context="feature_locked" />;
+    return fallback ? (
+      <>{fallback}</>
+    ) : (
+      <PremiumUpsell feature={feature} context="feature_locked" />
+    );
   }
 
   return <>{children}</>;

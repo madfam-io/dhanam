@@ -58,9 +58,7 @@ export function PremiumUpsell({ feature, context = 'generic' }: PremiumUpsellPro
         <div className="flex items-center gap-2">
           <Sparkles className="h-5 w-5 text-primary" />
           <CardTitle>{getTitle()}</CardTitle>
-          <Badge className="ml-auto bg-gradient-to-r from-blue-600 to-purple-600">
-            Premium
-          </Badge>
+          <Badge className="ml-auto bg-gradient-to-r from-blue-600 to-purple-600">Premium</Badge>
         </div>
         <CardDescription>{getDescription()}</CardDescription>
       </CardHeader>

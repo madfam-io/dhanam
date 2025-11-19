@@ -1,13 +1,23 @@
 'use client';
 
 import { useState } from 'react';
-import { useSimulations, type MonteCarloConfig, type ScenarioComparisonResult } from '@/hooks/useSimulations';
+import {
+  useSimulations,
+  type MonteCarloConfig,
+  type ScenarioComparisonResult,
+} from '@/hooks/useSimulations';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, TrendingDown, AlertTriangle, Info } from 'lucide-react';
@@ -61,7 +71,7 @@ export default function ScenariosPage() {
   };
 
   const handleInputChange = (field: keyof MonteCarloConfig, value: number) => {
-    setConfig(prev => ({ ...prev, [field]: value }));
+    setConfig((prev) => ({ ...prev, [field]: value }));
   };
 
   const getSeverityColor = (severity: string) => {
@@ -89,8 +99,8 @@ export default function ScenariosPage() {
         <AlertTitle>How Scenario Analysis Works</AlertTitle>
         <AlertDescription>
           This tool compares your baseline portfolio projection against historical market scenarios.
-          It runs two simulations: one under normal conditions and one with the selected market shock,
-          then shows the impact on your portfolio value.
+          It runs two simulations: one under normal conditions and one with the selected market
+          shock, then shows the impact on your portfolio value.
         </AlertDescription>
       </Alert>
 
@@ -100,9 +110,7 @@ export default function ScenariosPage() {
           <Card>
             <CardHeader>
               <CardTitle>Portfolio Configuration</CardTitle>
-              <CardDescription>
-                Set your baseline portfolio parameters
-              </CardDescription>
+              <CardDescription>Set your baseline portfolio parameters</CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -112,7 +120,9 @@ export default function ScenariosPage() {
                     id="initialBalance"
                     type="number"
                     value={config.initialBalance}
-                    onChange={(e) => handleInputChange('initialBalance', parseFloat(e.target.value))}
+                    onChange={(e) =>
+                      handleInputChange('initialBalance', parseFloat(e.target.value))
+                    }
                     min={0}
                     step={1000}
                   />
@@ -127,7 +137,9 @@ export default function ScenariosPage() {
                     id="monthlyContribution"
                     type="number"
                     value={config.monthlyContribution}
-                    onChange={(e) => handleInputChange('monthlyContribution', parseFloat(e.target.value))}
+                    onChange={(e) =>
+                      handleInputChange('monthlyContribution', parseFloat(e.target.value))
+                    }
                     min={0}
                     step={100}
                   />
@@ -158,7 +170,9 @@ export default function ScenariosPage() {
                     id="expectedReturn"
                     type="number"
                     value={(config.expectedReturn * 100).toFixed(1)}
-                    onChange={(e) => handleInputChange('expectedReturn', parseFloat(e.target.value) / 100)}
+                    onChange={(e) =>
+                      handleInputChange('expectedReturn', parseFloat(e.target.value) / 100)
+                    }
                     min={-20}
                     max={20}
                     step={0.5}
@@ -171,7 +185,9 @@ export default function ScenariosPage() {
                     id="volatility"
                     type="number"
                     value={(config.volatility * 100).toFixed(1)}
-                    onChange={(e) => handleInputChange('volatility', parseFloat(e.target.value) / 100)}
+                    onChange={(e) =>
+                      handleInputChange('volatility', parseFloat(e.target.value) / 100)
+                    }
                     min={0}
                     max={80}
                     step={1}
@@ -189,7 +205,10 @@ export default function ScenariosPage() {
                         <SelectItem key={scenario.value} value={scenario.value}>
                           <div className="flex items-center gap-2">
                             {scenario.label}
-                            <Badge className={getSeverityColor(scenario.severity)} variant="secondary">
+                            <Badge
+                              className={getSeverityColor(scenario.severity)}
+                              variant="secondary"
+                            >
                               {scenario.severity}
                             </Badge>
                           </div>
@@ -241,8 +260,10 @@ export default function ScenariosPage() {
                       <AlertTitle>Significant Impact Detected</AlertTitle>
                       <AlertDescription>
                         This scenario would reduce your median outcome by{' '}
-                        <strong>${Math.abs(comparison.comparison.medianDifference).toLocaleString()}</strong>
-                        {' '}({Math.abs(comparison.comparison.medianDifferencePercent).toFixed(1)}%).
+                        <strong>
+                          ${Math.abs(comparison.comparison.medianDifference).toLocaleString()}
+                        </strong>{' '}
+                        ({Math.abs(comparison.comparison.medianDifferencePercent).toFixed(1)}%).
                       </AlertDescription>
                     </Alert>
                   )}
@@ -255,43 +276,63 @@ export default function ScenariosPage() {
                         <div className="flex justify-between text-sm">
                           <span>Median:</span>
                           <span className="font-semibold">
-                            ${comparison.baseline.median.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                            $
+                            {comparison.baseline.median.toLocaleString(undefined, {
+                              maximumFractionDigits: 0,
+                            })}
                           </span>
                         </div>
                         <div className="flex justify-between text-sm">
                           <span>P10:</span>
                           <span className="font-semibold">
-                            ${comparison.baseline.p10.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                            $
+                            {comparison.baseline.p10.toLocaleString(undefined, {
+                              maximumFractionDigits: 0,
+                            })}
                           </span>
                         </div>
                         <div className="flex justify-between text-sm">
                           <span>P90:</span>
                           <span className="font-semibold">
-                            ${comparison.baseline.p90.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                            $
+                            {comparison.baseline.p90.toLocaleString(undefined, {
+                              maximumFractionDigits: 0,
+                            })}
                           </span>
                         </div>
                       </div>
                     </div>
 
                     <div className="border rounded-lg p-4 bg-red-50 dark:bg-red-950/20">
-                      <p className="text-sm text-muted-foreground mb-2">With {comparison.scenarioName}</p>
+                      <p className="text-sm text-muted-foreground mb-2">
+                        With {comparison.scenarioName}
+                      </p>
                       <div className="space-y-1">
                         <div className="flex justify-between text-sm">
                           <span>Median:</span>
                           <span className="font-semibold text-red-600">
-                            ${comparison.scenario.median.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                            $
+                            {comparison.scenario.median.toLocaleString(undefined, {
+                              maximumFractionDigits: 0,
+                            })}
                           </span>
                         </div>
                         <div className="flex justify-between text-sm">
                           <span>P10:</span>
                           <span className="font-semibold text-red-600">
-                            ${comparison.scenario.p10.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                            $
+                            {comparison.scenario.p10.toLocaleString(undefined, {
+                              maximumFractionDigits: 0,
+                            })}
                           </span>
                         </div>
                         <div className="flex justify-between text-sm">
                           <span>P90:</span>
                           <span className="font-semibold text-red-600">
-                            ${comparison.scenario.p90.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                            $
+                            {comparison.scenario.p90.toLocaleString(undefined, {
+                              maximumFractionDigits: 0,
+                            })}
                           </span>
                         </div>
                       </div>
@@ -305,8 +346,8 @@ export default function ScenariosPage() {
                       <div className="flex justify-between">
                         <span>Median Impact:</span>
                         <span className="font-semibold text-red-600">
-                          ${Math.abs(comparison.comparison.medianDifference).toLocaleString()}
-                          ({comparison.comparison.medianDifferencePercent.toFixed(1)}%)
+                          ${Math.abs(comparison.comparison.medianDifference).toLocaleString()}(
+                          {comparison.comparison.medianDifferencePercent.toFixed(1)}%)
                         </span>
                       </div>
                       <div className="flex justify-between">

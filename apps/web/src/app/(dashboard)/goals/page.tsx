@@ -13,7 +13,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Target,
   TrendingUp,
-  TrendingDown,
   CheckCircle2,
   AlertCircle,
   Plus,
@@ -22,7 +21,13 @@ import {
 } from 'lucide-react';
 
 export default function GoalsPage() {
-  const { getGoalsBySpace, getGoalSummary, getGoalProgress, loading, error } = useGoals();
+  const {
+    getGoalsBySpace,
+    getGoalSummary,
+    getGoalProgress,
+    loading: _loading,
+    error: _error,
+  } = useGoals();
   const { calculateGoalProbability } = useSimulations();
   const analytics = useAnalytics();
 
@@ -71,8 +76,7 @@ export default function GoalsPage() {
     const now = new Date();
     const monthsRemaining = Math.max(
       1,
-      (targetDate.getFullYear() - now.getFullYear()) * 12 +
-      (targetDate.getMonth() - now.getMonth())
+      (targetDate.getFullYear() - now.getFullYear()) * 12 + (targetDate.getMonth() - now.getMonth())
     );
 
     const result = await calculateGoalProbability({
@@ -144,9 +148,7 @@ export default function GoalsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{summary.totalGoals}</div>
-              <p className="text-xs text-muted-foreground">
-                {summary.activeGoals} active
-              </p>
+              <p className="text-xs text-muted-foreground">{summary.activeGoals} active</p>
             </CardContent>
           </Card>
 
@@ -159,9 +161,7 @@ export default function GoalsPage() {
               <div className="text-2xl font-bold">
                 ${summary.totalTargetAmount.toLocaleString(undefined, { maximumFractionDigits: 0 })}
               </div>
-              <p className="text-xs text-muted-foreground">
-                Across all goals
-              </p>
+              <p className="text-xs text-muted-foreground">Across all goals</p>
             </CardContent>
           </Card>
 
@@ -174,9 +174,7 @@ export default function GoalsPage() {
               <div className="text-2xl font-bold">
                 ${summary.totalCurrentValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}
               </div>
-              <p className="text-xs text-muted-foreground">
-                Total saved
-              </p>
+              <p className="text-xs text-muted-foreground">Total saved</p>
             </CardContent>
           </Card>
 
@@ -186,9 +184,7 @@ export default function GoalsPage() {
               <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
-                {summary.overallProgress.toFixed(1)}%
-              </div>
+              <div className="text-2xl font-bold">{summary.overallProgress.toFixed(1)}%</div>
               <Progress value={summary.overallProgress} className="mt-2" />
             </CardContent>
           </Card>
@@ -221,6 +217,14 @@ export default function GoalsPage() {
                   <div
                     key={goal.id}
                     onClick={() => handleGoalClick(goal)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        handleGoalClick(goal);
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
                     className={`p-4 border rounded-lg cursor-pointer hover:border-primary transition-colors ${
                       selectedGoal?.id === goal.id ? 'border-primary bg-primary/5' : ''
                     }`}
@@ -232,15 +236,16 @@ export default function GoalsPage() {
                           {getGoalTypeLabel(goal.type)}
                         </p>
                       </div>
-                      <Badge className={getStatusColor(goal.status)}>
-                        {goal.status}
-                      </Badge>
+                      <Badge className={getStatusColor(goal.status)}>{goal.status}</Badge>
                     </div>
                     <div className="space-y-1">
                       <div className="flex justify-between text-sm">
                         <span>Target:</span>
                         <span className="font-semibold">
-                          ${parseFloat(goal.targetAmount.toString()).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                          $
+                          {parseFloat(goal.targetAmount.toString()).toLocaleString(undefined, {
+                            maximumFractionDigits: 0,
+                          })}
                         </span>
                       </div>
                       <div className="flex justify-between text-sm text-muted-foreground">
@@ -282,7 +287,9 @@ export default function GoalsPage() {
                       <Progress value={goalProgress.percentComplete} className="h-3" />
                       <div className="flex justify-between mt-2 text-sm text-muted-foreground">
                         <span>${goalProgress.currentValue.toLocaleString()}</span>
-                        <span>${parseFloat(selectedGoal.targetAmount.toString()).toLocaleString()}</span>
+                        <span>
+                          ${parseFloat(selectedGoal.targetAmount.toString()).toLocaleString()}
+                        </span>
                       </div>
                     </div>
 
@@ -295,12 +302,14 @@ export default function GoalsPage() {
                       )}
                       <AlertDescription>
                         {goalProgress.onTrack ? (
-                          <p>You're on track to reach this goal!</p>
+                          <p>You&apos;re on track to reach this goal!</p>
                         ) : (
                           <div>
-                            <p className="font-semibold mb-1">You're behind schedule</p>
+                            <p className="font-semibold mb-1">You&apos;re behind schedule</p>
                             <p className="text-sm">
-                              Increase monthly contribution to ${goalProgress.monthlyContributionNeeded.toLocaleString()} to stay on track
+                              Increase monthly contribution to $
+                              {goalProgress.monthlyContributionNeeded.toLocaleString()} to stay on
+                              track
                             </p>
                           </div>
                         )}
@@ -324,7 +333,10 @@ export default function GoalsPage() {
                         <h4 className="text-sm font-semibold mb-3">Account Allocations</h4>
                         <div className="space-y-2">
                           {goalProgress.allocations.map((alloc) => (
-                            <div key={alloc.accountId} className="flex items-center justify-between p-3 border rounded">
+                            <div
+                              key={alloc.accountId}
+                              className="flex items-center justify-between p-3 border rounded"
+                            >
                               <div>
                                 <p className="font-medium">{alloc.accountName}</p>
                                 <p className="text-sm text-muted-foreground">
@@ -333,7 +345,10 @@ export default function GoalsPage() {
                               </div>
                               <div className="text-right">
                                 <p className="font-semibold">
-                                  ${alloc.contributedValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                  $
+                                  {alloc.contributedValue.toLocaleString(undefined, {
+                                    maximumFractionDigits: 0,
+                                  })}
                                 </p>
                               </div>
                             </div>
@@ -376,33 +391,44 @@ export default function GoalsPage() {
                             </>
                           )}
                         </Button>
-                        <p className="text-sm text-muted-foreground mt-2">
-                          Requires Premium tier
-                        </p>
+                        <p className="text-sm text-muted-foreground mt-2">Requires Premium tier</p>
                       </div>
                     ) : (
                       <div className="space-y-6">
                         {/* Success Rate */}
                         <div>
-                          <p className="text-sm text-muted-foreground mb-2">Probability of Success</p>
+                          <p className="text-sm text-muted-foreground mb-2">
+                            Probability of Success
+                          </p>
                           <p className="text-4xl font-bold">
                             {(probability.probabilityOfSuccess * 100).toFixed(1)}%
                           </p>
-                          <Progress value={probability.probabilityOfSuccess * 100} className="mt-2 h-3" />
+                          <Progress
+                            value={probability.probabilityOfSuccess * 100}
+                            className="mt-2 h-3"
+                          />
                         </div>
 
                         {/* Median Outcome */}
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <p className="text-sm text-muted-foreground">Expected Outcome (Median)</p>
+                            <p className="text-sm text-muted-foreground">
+                              Expected Outcome (Median)
+                            </p>
                             <p className="text-2xl font-semibold">
-                              ${probability.medianOutcome.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                              $
+                              {probability.medianOutcome.toLocaleString(undefined, {
+                                maximumFractionDigits: 0,
+                              })}
                             </p>
                           </div>
                           <div>
                             <p className="text-sm text-muted-foreground">Expected Shortfall</p>
                             <p className="text-2xl font-semibold">
-                              ${probability.expectedShortfall.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                              $
+                              {probability.expectedShortfall.toLocaleString(undefined, {
+                                maximumFractionDigits: 0,
+                              })}
                             </p>
                           </div>
                         </div>
@@ -414,28 +440,37 @@ export default function GoalsPage() {
                             <div>
                               <p className="text-xs text-muted-foreground">Worst 10%</p>
                               <p className="text-lg font-semibold">
-                                ${probability.confidence90Range.low.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                $
+                                {probability.confidence90Range.low.toLocaleString(undefined, {
+                                  maximumFractionDigits: 0,
+                                })}
                               </p>
                             </div>
                             <TrendingUp className="h-6 w-6 text-muted-foreground" />
                             <div className="text-right">
                               <p className="text-xs text-muted-foreground">Best 10%</p>
                               <p className="text-lg font-semibold">
-                                ${probability.confidence90Range.high.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                $
+                                {probability.confidence90Range.high.toLocaleString(undefined, {
+                                  maximumFractionDigits: 0,
+                                })}
                               </p>
                             </div>
                           </div>
                         </div>
 
                         {/* Recommendation */}
-                        {probability.recommendedMonthlyContribution > probability.currentMonthlyContribution && (
+                        {probability.recommendedMonthlyContribution >
+                          probability.currentMonthlyContribution && (
                           <Alert>
                             <AlertCircle className="h-4 w-4" />
                             <AlertDescription>
                               <p className="font-semibold mb-1">Increase savings to improve odds</p>
                               <p className="text-sm">
-                                Recommended monthly contribution: ${probability.recommendedMonthlyContribution.toLocaleString()}
-                                (current: ${probability.currentMonthlyContribution.toLocaleString()})
+                                Recommended monthly contribution: $
+                                {probability.recommendedMonthlyContribution.toLocaleString()}
+                                (current: ${probability.currentMonthlyContribution.toLocaleString()}
+                                )
                               </p>
                             </AlertDescription>
                           </Alert>
