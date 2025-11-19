@@ -12,7 +12,6 @@ import {
   DollarSign,
   RefreshCw,
   CheckCircle,
-  XCircle,
 } from 'lucide-react';
 import { GoalProgress, ordersApi } from '../../lib/api/orders';
 
@@ -110,9 +109,7 @@ export function GoalProgressTracker({ spaceId, goalId }: GoalProgressTrackerProp
         <div className="h-4 bg-muted rounded-full overflow-hidden">
           <div
             className={`h-full transition-all duration-500 ${
-              progress.onTrack
-                ? 'bg-green-500 dark:bg-green-600'
-                : 'bg-amber-500 dark:bg-amber-600'
+              progress.onTrack ? 'bg-green-500 dark:bg-green-600' : 'bg-amber-500 dark:bg-amber-600'
             }`}
             style={{ width: `${progressPercentage}%` }}
           />
@@ -183,8 +180,7 @@ export function GoalProgressTracker({ spaceId, goalId }: GoalProgressTrackerProp
 
           <div className="space-y-2">
             {progress.allocations.map((allocation) => {
-              const allocationProgress =
-                (allocation.currentValue / allocation.targetValue) * 100;
+              const allocationProgress = (allocation.currentValue / allocation.targetValue) * 100;
               const drift = Math.abs(allocation.currentValue - allocation.targetValue);
               const driftPercentage = (drift / allocation.targetValue) * 100;
               const isOverAllocated = allocation.currentValue > allocation.targetValue;
@@ -199,9 +195,7 @@ export function GoalProgressTracker({ spaceId, goalId }: GoalProgressTrackerProp
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="font-semibold">
-                        {formatCurrency(allocation.currentValue)}
-                      </p>
+                      <p className="font-semibold">{formatCurrency(allocation.currentValue)}</p>
                       <p className="text-sm text-muted-foreground">
                         of {formatCurrency(allocation.targetValue)}
                       </p>
@@ -215,8 +209,8 @@ export function GoalProgressTracker({ spaceId, goalId }: GoalProgressTrackerProp
                           Math.abs(allocationProgress - 100) < 5
                             ? 'bg-green-500'
                             : isOverAllocated
-                            ? 'bg-red-500'
-                            : 'bg-amber-500'
+                              ? 'bg-red-500'
+                              : 'bg-amber-500'
                         }`}
                         style={{ width: `${Math.min(100, allocationProgress)}%` }}
                       />

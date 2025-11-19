@@ -97,8 +97,7 @@ export default function RetirementPage() {
               <div className="text-center">
                 <p className="text-muted-foreground mb-2">No results yet</p>
                 <p className="text-sm text-muted-foreground">
-                  Fill out the form and click &quot;Calculate Retirement Plan&quot; to see your
-                  results
+                  Fill out the form and click "Calculate Retirement Plan" to see your results
                 </p>
               </div>
             </div>
@@ -120,8 +119,8 @@ export default function RetirementPage() {
           <div>
             <h3 className="font-semibold mb-2">Percentiles</h3>
             <p className="text-sm text-muted-foreground">
-              The 10th percentile shows the &quot;worst 10%&quot; outcome, while 90th shows the
-              &quot;best 10%&quot;. The median (50th percentile) is the most likely outcome.
+              The 10th percentile shows the "worst 10%" outcome, while 90th shows the "best 10%".
+              The median (50th percentile) is the most likely outcome.
             </p>
           </div>
           <div>

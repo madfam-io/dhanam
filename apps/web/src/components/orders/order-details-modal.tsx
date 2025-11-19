@@ -2,22 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@dhanam/ui';
-import {
-  Loader2,
-  X,
-  CheckCircle,
-  XCircle,
-  Clock,
-  AlertCircle,
-  Copy,
-  ExternalLink,
-} from 'lucide-react';
-import {
-  TransactionOrder,
-  OrderExecution,
-  OrderStatus,
-  ordersApi,
-} from '../../lib/api/orders';
+import { Loader2, X, AlertCircle, Copy } from 'lucide-react';
+import { TransactionOrder, OrderExecution, OrderStatus, ordersApi } from '../../lib/api/orders';
 
 interface OrderDetailsModalProps {
   spaceId: string;
@@ -120,10 +106,9 @@ export function OrderDetailsModal({ spaceId, orderId, onClose }: OrderDetailsMod
     );
   }
 
-  const canCancel = [
-    OrderStatus.pending_verification,
-    OrderStatus.pending_execution,
-  ].includes(order.status);
+  const canCancel = [OrderStatus.pending_verification, OrderStatus.pending_execution].includes(
+    order.status
+  );
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -136,10 +121,9 @@ export function OrderDetailsModal({ spaceId, orderId, onClose }: OrderDetailsMod
                 className={`px-2 py-1 text-xs rounded capitalize ${
                   order.status === OrderStatus.completed
                     ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
-                    : order.status === OrderStatus.failed ||
-                      order.status === OrderStatus.rejected
-                    ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
-                    : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+                    : order.status === OrderStatus.failed || order.status === OrderStatus.rejected
+                      ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
+                      : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
                 }`}
               >
                 {order.status.replace('_', ' ')}
@@ -279,15 +263,10 @@ export function OrderDetailsModal({ spaceId, orderId, onClose }: OrderDetailsMod
             <div className="space-y-2">
               <h3 className="font-semibold">Execution History</h3>
               <div className="space-y-2">
-                {executions.map((execution, index) => (
-                  <div
-                    key={execution.id}
-                    className="p-3 border rounded-lg space-y-2"
-                  >
+                {executions.map((execution, _index) => (
+                  <div key={execution.id} className="p-3 border rounded-lg space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">
-                        Attempt #{execution.attempt}
-                      </span>
+                      <span className="text-sm font-medium">Attempt #{execution.attempt}</span>
                       <span
                         className={`text-xs px-2 py-0.5 rounded ${
                           execution.status === 'completed'
@@ -301,9 +280,7 @@ export function OrderDetailsModal({ spaceId, orderId, onClose }: OrderDetailsMod
 
                     <div className="text-xs text-muted-foreground">
                       {formatDate(execution.startedAt)}
-                      {execution.executionTime && (
-                        <span> • {execution.executionTime}ms</span>
-                      )}
+                      {execution.executionTime && <span> • {execution.executionTime}ms</span>}
                     </div>
 
                     {execution.errorMessage && (
@@ -319,11 +296,7 @@ export function OrderDetailsModal({ spaceId, orderId, onClose }: OrderDetailsMod
         {/* Actions */}
         <div className="flex gap-2 mt-6 pt-6 border-t">
           {canCancel && (
-            <Button
-              variant="destructive"
-              onClick={handleCancel}
-              disabled={isCancelling}
-            >
+            <Button variant="destructive" onClick={handleCancel} disabled={isCancelling}>
               {isCancelling ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

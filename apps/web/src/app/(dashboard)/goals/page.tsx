@@ -302,10 +302,10 @@ export default function GoalsPage() {
                       )}
                       <AlertDescription>
                         {goalProgress.onTrack ? (
-                          <p>You&apos;re on track to reach this goal!</p>
+                          <p>You're on track to reach this goal!</p>
                         ) : (
                           <div>
-                            <p className="font-semibold mb-1">You&apos;re behind schedule</p>
+                            <p className="font-semibold mb-1">You're behind schedule</p>
                             <p className="text-sm">
                               Increase monthly contribution to $
                               {goalProgress.monthlyContributionNeeded.toLocaleString()} to stay on

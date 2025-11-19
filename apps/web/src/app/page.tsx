@@ -8,7 +8,6 @@ import { useAnalytics } from '@/hooks/useAnalytics';
 import Link from 'next/link';
 import {
   TrendingUp,
-  PiggyBank,
   Shield,
   Globe,
   BarChart3,
@@ -94,12 +93,7 @@ export default function HomePage() {
               Try Interactive Demo
               <ArrowRight className="h-4 w-4" />
             </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              onClick={handleSignUpClick}
-              className="gap-2"
-            >
+            <Button size="lg" variant="outline" onClick={handleSignUpClick} className="gap-2">
               Start Free Trial
             </Button>
           </div>
@@ -130,7 +124,8 @@ export default function HomePage() {
       <section className="container mx-auto px-6 py-16 bg-muted/30">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-3xl font-bold text-center mb-12">
-            Traditional Apps Tell You Where Your Money Went.<br />
+            Traditional Apps Tell You Where Your Money Went.
+            <br />
             <span className="text-primary">Dhanam Tells You Where It's Going.</span>
           </h2>
 
@@ -142,10 +137,18 @@ export default function HomePage() {
                 <h3 className="font-semibold">Budget Trackers</h3>
               </div>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li className="flex gap-2"><span className="text-red-600">✗</span> Static projections</li>
-                <li className="flex gap-2"><span className="text-red-600">✗</span> No probability</li>
-                <li className="flex gap-2"><span className="text-red-600">✗</span> Can't stress test</li>
-                <li className="flex gap-2"><span className="text-red-600">✗</span> Backward-looking</li>
+                <li className="flex gap-2">
+                  <span className="text-red-600">✗</span> Static projections
+                </li>
+                <li className="flex gap-2">
+                  <span className="text-red-600">✗</span> No probability
+                </li>
+                <li className="flex gap-2">
+                  <span className="text-red-600">✗</span> Can't stress test
+                </li>
+                <li className="flex gap-2">
+                  <span className="text-red-600">✗</span> Backward-looking
+                </li>
               </ul>
             </div>
 
@@ -156,10 +159,22 @@ export default function HomePage() {
                 <h3 className="font-semibold">Dhanam</h3>
               </div>
               <ul className="space-y-2 text-sm">
-                <li className="flex gap-2"><CheckCircle className="h-4 w-4 text-green-600 shrink-0 mt-0.5" /> <span>10,000 Monte Carlo iterations</span></li>
-                <li className="flex gap-2"><CheckCircle className="h-4 w-4 text-green-600 shrink-0 mt-0.5" /> <span>73% success probability</span></li>
-                <li className="flex gap-2"><CheckCircle className="h-4 w-4 text-green-600 shrink-0 mt-0.5" /> <span>12 market scenarios</span></li>
-                <li className="flex gap-2"><CheckCircle className="h-4 w-4 text-green-600 shrink-0 mt-0.5" /> <span>Future-focused</span></li>
+                <li className="flex gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-600 shrink-0 mt-0.5" />{' '}
+                  <span>10,000 Monte Carlo iterations</span>
+                </li>
+                <li className="flex gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-600 shrink-0 mt-0.5" />{' '}
+                  <span>73% success probability</span>
+                </li>
+                <li className="flex gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-600 shrink-0 mt-0.5" />{' '}
+                  <span>12 market scenarios</span>
+                </li>
+                <li className="flex gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-600 shrink-0 mt-0.5" />{' '}
+                  <span>Future-focused</span>
+                </li>
               </ul>
             </div>
           </div>
@@ -169,9 +184,7 @@ export default function HomePage() {
       {/* Features Grid */}
       <section className="container mx-auto px-6 py-16">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold mb-4">
-            Features Financial Advisors Use
-          </h2>
+          <h2 className="text-3xl font-bold mb-4">Features Financial Advisors Use</h2>
           <p className="text-muted-foreground">Now available to everyone for $9.99/month</p>
         </div>
 
@@ -241,9 +254,7 @@ export default function HomePage() {
       {/* Social Proof */}
       <section className="container mx-auto px-6 py-16 bg-muted/30">
         <div className="max-w-4xl mx-auto text-center space-y-8">
-          <h2 className="text-3xl font-bold">
-            Trusted by Mass Affluent & Gig Workers
-          </h2>
+          <h2 className="text-3xl font-bold">Trusted by Mass Affluent & Gig Workers</h2>
 
           <div className="grid md:grid-cols-3 gap-6">
             <div className="flex flex-col items-center">
@@ -270,7 +281,9 @@ export default function HomePage() {
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold mb-4">Simple Pricing</h2>
-            <p className="text-muted-foreground">Start free, upgrade when you need unlimited access</p>
+            <p className="text-muted-foreground">
+              Start free, upgrade when you need unlimited access
+            </p>
           </div>
 
           <div className="grid md:grid-cols-2 gap-6">
@@ -278,9 +291,17 @@ export default function HomePage() {
               <h3 className="text-xl font-bold mb-2">Free</h3>
               <p className="text-3xl font-bold mb-4">$0</p>
               <ul className="space-y-2 text-sm mb-6">
-                <li className="flex gap-2"><CheckCircle className="h-4 w-4 text-green-600 shrink-0 mt-0.5" /> 3 simulations/day</li>
-                <li className="flex gap-2"><CheckCircle className="h-4 w-4 text-green-600 shrink-0 mt-0.5" /> Basic goal tracking</li>
-                <li className="flex gap-2"><CheckCircle className="h-4 w-4 text-green-600 shrink-0 mt-0.5" /> Budget tracking</li>
+                <li className="flex gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-600 shrink-0 mt-0.5" /> 3
+                  simulations/day
+                </li>
+                <li className="flex gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-600 shrink-0 mt-0.5" /> Basic goal
+                  tracking
+                </li>
+                <li className="flex gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-600 shrink-0 mt-0.5" /> Budget tracking
+                </li>
               </ul>
               <Button variant="outline" className="w-full" onClick={handleSignUpClick}>
                 Start Free
@@ -292,14 +313,30 @@ export default function HomePage() {
                 Most Popular
               </div>
               <h3 className="text-xl font-bold mb-2">Premium</h3>
-              <p className="text-3xl font-bold mb-4">$9.99<span className="text-sm font-normal text-muted-foreground">/month</span></p>
+              <p className="text-3xl font-bold mb-4">
+                $9.99<span className="text-sm font-normal text-muted-foreground">/month</span>
+              </p>
               <ul className="space-y-2 text-sm mb-6">
-                <li className="flex gap-2"><CheckCircle className="h-4 w-4 text-green-600 shrink-0 mt-0.5" /> <strong>Unlimited</strong> simulations</li>
-                <li className="flex gap-2"><CheckCircle className="h-4 w-4 text-green-600 shrink-0 mt-0.5" /> Goal probability</li>
-                <li className="flex gap-2"><CheckCircle className="h-4 w-4 text-green-600 shrink-0 mt-0.5" /> 12 scenarios</li>
-                <li className="flex gap-2"><CheckCircle className="h-4 w-4 text-green-600 shrink-0 mt-0.5" /> Priority support</li>
+                <li className="flex gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-600 shrink-0 mt-0.5" />{' '}
+                  <strong>Unlimited</strong> simulations
+                </li>
+                <li className="flex gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-600 shrink-0 mt-0.5" /> Goal
+                  probability
+                </li>
+                <li className="flex gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-600 shrink-0 mt-0.5" /> 12 scenarios
+                </li>
+                <li className="flex gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-600 shrink-0 mt-0.5" /> Priority
+                  support
+                </li>
               </ul>
-              <Button className="w-full bg-gradient-to-r from-blue-600 to-purple-600" onClick={handleSignUpClick}>
+              <Button
+                className="w-full bg-gradient-to-r from-blue-600 to-purple-600"
+                onClick={handleSignUpClick}
+              >
                 Start 30-Day Trial
               </Button>
               <p className="text-xs text-center text-muted-foreground mt-2">Cancel anytime</p>
@@ -326,11 +363,7 @@ export default function HomePage() {
               Try Interactive Demo
               <ArrowRight className="h-4 w-4" />
             </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              onClick={handleSignUpClick}
-            >
+            <Button size="lg" variant="outline" onClick={handleSignUpClick}>
               Start Free Trial
             </Button>
           </div>
@@ -344,7 +377,9 @@ export default function HomePage() {
             <Globe className="h-5 w-5 text-primary" />
             <span className="font-semibold">Dhanam</span>
           </div>
-          <p className="text-sm text-muted-foreground">© 2025 Dhanam. Autonomous Family Office for Everyone.</p>
+          <p className="text-sm text-muted-foreground">
+            © 2025 Dhanam. Autonomous Family Office for Everyone.
+          </p>
           <div className="flex items-center gap-6 mt-4 md:mt-0">
             <Link href="/privacy" className="text-sm text-muted-foreground hover:text-foreground">
               Privacy
