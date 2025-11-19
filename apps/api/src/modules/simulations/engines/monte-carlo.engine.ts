@@ -385,5 +385,110 @@ export class MonteCarloEngine {
         },
       ],
     },
+    STAGFLATION: {
+      name: 'Stagflation (1970s-style)',
+      description: 'Persistent 20% decline over 24 months with slow 36 month recovery',
+      shocks: [
+        {
+          type: 'recession' as const,
+          magnitude: -0.20,
+          startMonth: 12,
+          durationMonths: 24,
+          recoveryMonths: 36,
+        },
+      ],
+    },
+    DOUBLE_DIP_RECESSION: {
+      name: 'Double-Dip Recession',
+      description: 'Two consecutive recessions with brief recovery in between',
+      shocks: [
+        {
+          type: 'recession' as const,
+          magnitude: -0.25,
+          startMonth: 12,
+          durationMonths: 8,
+          recoveryMonths: 12,
+        },
+        {
+          type: 'recession' as const,
+          magnitude: -0.20,
+          startMonth: 36,
+          durationMonths: 6,
+          recoveryMonths: 12,
+        },
+      ],
+    },
+    LOST_DECADE: {
+      name: 'Lost Decade (Japan 1990s-style)',
+      description: 'Prolonged stagnation with 30% decline and minimal recovery',
+      shocks: [
+        {
+          type: 'crash' as const,
+          magnitude: -0.30,
+          startMonth: 6,
+          durationMonths: 18,
+          recoveryMonths: 60,
+        },
+      ],
+    },
+    FLASH_CRASH: {
+      name: 'Flash Crash',
+      description: 'Sudden 25% drop with rapid 2-month recovery',
+      shocks: [
+        {
+          type: 'crash' as const,
+          magnitude: -0.25,
+          startMonth: 24,
+          durationMonths: 1,
+          recoveryMonths: 2,
+        },
+      ],
+    },
+    BOOM_CYCLE: {
+      name: 'Boom Cycle',
+      description: '40% gain over 24 months (bull market)',
+      shocks: [
+        {
+          type: 'boom' as const,
+          magnitude: 0.40,
+          startMonth: 12,
+          durationMonths: 24,
+          recoveryMonths: 0,
+        },
+      ],
+    },
+    TECH_BUBBLE: {
+      name: 'Tech Bubble',
+      description: 'Rapid 60% gain followed by 50% crash',
+      shocks: [
+        {
+          type: 'boom' as const,
+          magnitude: 0.60,
+          startMonth: 6,
+          durationMonths: 18,
+          recoveryMonths: 0,
+        },
+        {
+          type: 'crash' as const,
+          magnitude: -0.50,
+          startMonth: 30,
+          durationMonths: 12,
+          recoveryMonths: 24,
+        },
+      ],
+    },
+    COVID_SHOCK: {
+      name: 'COVID-19 Style Shock',
+      description: '35% crash in 2 months with rapid V-shaped recovery',
+      shocks: [
+        {
+          type: 'crash' as const,
+          magnitude: -0.35,
+          startMonth: 24,
+          durationMonths: 2,
+          recoveryMonths: 6,
+        },
+      ],
+    },
   };
 }

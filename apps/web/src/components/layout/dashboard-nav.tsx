@@ -13,6 +13,7 @@ import {
   FileText,
   Leaf,
   Target,
+  AlertTriangle,
 } from 'lucide-react';
 
 const navigation = [
@@ -37,6 +38,11 @@ const navigation = [
     icon: PiggyBank,
   },
   {
+    name: 'Goals',
+    href: '/goals',
+    icon: Target,
+  },
+  {
     name: 'Analytics',
     href: '/dashboard/analytics',
     icon: TrendingUp,
@@ -50,6 +56,11 @@ const navigation = [
     name: 'Retirement',
     href: '/retirement',
     icon: Target,
+  },
+  {
+    name: 'Scenarios',
+    href: '/scenarios',
+    icon: AlertTriangle,
   },
   {
     name: 'Reports',
