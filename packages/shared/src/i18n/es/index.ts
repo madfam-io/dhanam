@@ -11,3 +11,5 @@ export { spaces } from './spaces';
 export { wealth } from './wealth';
 export { errors } from './errors';
 export { validations } from './validations';
+export { estatePlanning } from './estate-planning';
+export { households } from './households';
