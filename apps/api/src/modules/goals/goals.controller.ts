@@ -12,13 +12,17 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { GoalsService } from './goals.service';
+import { GoalsExecutionService } from './goals-execution.service';
 import { CreateGoalDto, UpdateGoalDto, AddAllocationDto } from './dto';
 import { JwtAuthGuard } from '../../core/auth/guards/jwt-auth.guard';
 
 @Controller('goals')
 @UseGuards(JwtAuthGuard)
 export class GoalsController {
-  constructor(private goalsService: GoalsService) {}
+  constructor(
+    private goalsService: GoalsService,
+    private goalsExecutionService: GoalsExecutionService
+  ) {}
 
   /**
    * Create a new goal
@@ -100,5 +104,29 @@ export class GoalsController {
     @Req() req: any
   ) {
     await this.goalsService.removeAllocation(id, accountId, req.user.id);
+  }
+
+  /**
+   * Get goal progress including rebalancing recommendations
+   */
+  @Get(':id/progress')
+  async getProgress(@Param('id') id: string, @Req() req: any) {
+    return this.goalsExecutionService.calculateGoalProgress(id);
+  }
+
+  /**
+   * Get rebalancing suggestions for a goal
+   */
+  @Get(':id/rebalancing/suggest')
+  async suggestRebalancing(@Param('id') id: string, @Req() req: any) {
+    return this.goalsExecutionService.suggestRebalancing(id, req.user.id);
+  }
+
+  /**
+   * Execute rebalancing for a goal
+   */
+  @Post(':id/rebalancing/execute')
+  async executeRebalancing(@Param('id') id: string, @Req() req: any) {
+    return this.goalsExecutionService.executeGoalRebalancing(id, req.user.id);
   }
 }

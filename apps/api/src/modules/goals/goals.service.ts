@@ -1,5 +1,5 @@
 import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
-import { PrismaService } from '../../core/database/prisma.service';
+import { PrismaService } from '../../core/prisma/prisma.service';
 import { AuditService } from '../../core/audit/audit.service';
 import { CreateGoalDto, UpdateGoalDto, AddAllocationDto } from './dto';
 import { GoalProgress, GoalAllocationProgress, GoalSummary } from './interfaces/goal-progress.interface';
