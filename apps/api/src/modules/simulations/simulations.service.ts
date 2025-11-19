@@ -109,7 +109,7 @@ export class SimulationsService {
    */
   async simulateRetirement(
     config: RetirementSimulationConfig,
-    userId: string
+    _userId: string
   ): Promise<RetirementSimulationResult> {
     this.logger.log(`Simulating retirement: age ${config.currentAge} → ${config.lifeExpectancy}`);
 
@@ -363,11 +363,11 @@ export class SimulationsService {
    */
   private createRetirementTimeSeries(
     accumulationResult: SimulationResult,
-    sampledBalances: number[],
-    withdrawalMonths: number,
-    monthlyWithdrawal: number,
-    annualReturn: number,
-    annualVolatility: number
+    _sampledBalances: number[],
+    _withdrawalMonths: number,
+    _monthlyWithdrawal: number,
+    _annualReturn: number,
+    _annualVolatility: number
   ) {
     // For simplicity, return accumulation time series
     // Full implementation would combine both phases

@@ -11,7 +11,6 @@ import { BelvoExecutionProvider } from './providers/belvo-execution.provider';
 import { BitsoExecutionProvider } from './providers/bitso-execution.provider';
 import { PlaidExecutionProvider } from './providers/plaid-execution.provider';
 import { ProviderFactoryService } from './providers/provider-factory.service';
-
 // Phase 3 services
 import { OrderSchedulingService } from './services/order-scheduling.service';
 import { PriceMonitoringService } from './services/price-monitoring.service';

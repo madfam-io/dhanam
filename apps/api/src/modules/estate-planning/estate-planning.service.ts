@@ -1,10 +1,4 @@
-import {
-  Injectable,
-  Logger,
-  NotFoundException,
-  BadRequestException,
-  ForbiddenException,
-} from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { Will, BeneficiaryDesignation, WillExecutor, AssetType } from '@prisma/client';
 
 import { AuditService } from '../../core/audit/audit.service';

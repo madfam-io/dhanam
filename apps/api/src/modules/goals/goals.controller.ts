@@ -79,7 +79,7 @@ export class GoalsController {
    * Get progress for a goal
    */
   @Get(':id/progress')
-  async getProgress(@Param('id') id: string, @Req() req: any) {
+  async getProgress(@Param('id') id: string, @Req() _req: any) {
     return this.goalsService.calculateProgress(id, req.user.id);
   }
 
@@ -108,7 +108,7 @@ export class GoalsController {
    * Get goal progress including rebalancing recommendations
    */
   @Get(':id/progress')
-  async getProgress(@Param('id') id: string, @Req() req: any) {
+  async getProgress(@Param('id') id: string, @Req() _req: any) {
     return this.goalsExecutionService.calculateGoalProgress(id);
   }
 

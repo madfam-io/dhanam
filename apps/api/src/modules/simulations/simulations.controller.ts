@@ -42,7 +42,7 @@ export class SimulationsController {
   @RequiresPremium()
   @TrackUsage('monte_carlo_simulation')
   @HttpCode(HttpStatus.OK)
-  async runSimulation(@Body() dto: RunSimulationDto, @Req() req: any) {
+  async runSimulation(@Body() dto: RunSimulationDto, @Req() _req: any) {
     return this.simulationsService.runSimulation({
       initialBalance: dto.initialBalance,
       monthlyContribution: dto.monthlyContribution,
@@ -144,7 +144,7 @@ export class SimulationsController {
   async compareScenarios(
     @Param('scenarioName') scenarioName: string,
     @Body() dto: RunSimulationDto,
-    @Req() req: any
+    @Req() _req: any
   ) {
     return this.simulationsService.compareScenarios(
       {

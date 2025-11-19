@@ -34,7 +34,7 @@ export class BillingController {
    */
   @Post('upgrade')
   @UseGuards(JwtAuthGuard)
-  async upgradeToPremium(@Req() req: any, @Body() dto: UpgradeToPremiumDto) {
+  async upgradeToPremium(@Req() req: any, @Body() _dto: UpgradeToPremiumDto) {
     return this.billingService.upgradeToPremium(req.user.id);
   }
 

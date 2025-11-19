@@ -1,4 +1,4 @@
-import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios, { AxiosInstance } from 'axios';
 
@@ -114,7 +114,7 @@ export class PlaidExecutionProvider extends ExecutionProvider {
     );
   }
 
-  async executeBuy(order: ExecutionOrder): Promise<ExecutionResult> {
+  async executeBuy(_order: ExecutionOrder): Promise<ExecutionResult> {
     return {
       success: false,
       errorCode: 'NOT_SUPPORTED',
@@ -122,7 +122,7 @@ export class PlaidExecutionProvider extends ExecutionProvider {
     };
   }
 
-  async executeSell(order: ExecutionOrder): Promise<ExecutionResult> {
+  async executeSell(_order: ExecutionOrder): Promise<ExecutionResult> {
     return {
       success: false,
       errorCode: 'NOT_SUPPORTED',
@@ -252,7 +252,7 @@ export class PlaidExecutionProvider extends ExecutionProvider {
     });
   }
 
-  async getMarketPrice(assetSymbol: string, currency: string): Promise<number> {
+  async getMarketPrice(_assetSymbol: string, _currency: string): Promise<number> {
     throw new Error('Plaid does not provide market prices');
   }
 
@@ -291,7 +291,7 @@ export class PlaidExecutionProvider extends ExecutionProvider {
       }
 
       // Verify Plaid API is reachable
-      const response = await this.plaidClient.post('/item/get', {
+      await this.plaidClient.post('/item/get', {
         access_token: 'test_token', // This will fail but confirms API is up
       });
 

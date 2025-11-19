@@ -3,11 +3,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 
 import { AuditService } from '../../core/audit/audit.service';
 import { PrismaService } from '../../core/prisma/prisma.service';
-import {
-  OrderType,
-  OrderPriority,
-  ExecutionProvider,
-} from '../transaction-execution/dto/create-order.dto';
+import { OrderType, OrderPriority } from '../transaction-execution/dto/create-order.dto';
 import { ProviderFactoryService } from '../transaction-execution/providers/provider-factory.service';
 import { TransactionExecutionService } from '../transaction-execution/transaction-execution.service';
 
@@ -96,7 +92,8 @@ export class GoalsExecutionService {
     }
 
     // Calculate current total value across all allocated accounts
-    const currentTotalValue = goal.allocations.reduce((sum: number, allocation: any) => {
+    // (Used for future rebalancing logic)
+    const _currentTotalValue = goal.allocations.reduce((sum: number, allocation: any) => {
       return sum + Number(allocation.account.balance);
     }, 0);
 

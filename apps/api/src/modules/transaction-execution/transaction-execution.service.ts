@@ -9,17 +9,15 @@ import {
   Logger,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import { addDays, addWeeks, addMonths, isAfter } from 'date-fns';
+import { addDays, isAfter } from 'date-fns';
 
 import { AuditService } from '../../core/audit/audit.service';
 import { PrismaService } from '../../core/prisma/prisma.service';
 import { SpacesService } from '../spaces/spaces.service';
 
 import { CreateOrderDto, VerifyOrderDto, UpdateOrderDto, OrderFilterDto } from './dto';
-
 // Import enums from DTO
-import { OrderType, OrderPriority, ExecutionProvider } from './dto/create-order.dto';
-import { OrderStatus } from './dto/order-filter.dto';
+import { OrderType, OrderPriority } from './dto/create-order.dto';
 import {
   ExecutionOrder,
   OrderType as ProviderOrderType,
@@ -846,7 +844,7 @@ export class TransactionExecutionService {
   /**
    * Helper: Validate account balance for sell/transfer orders
    */
-  private async validateAccountBalance(accountId: string, amount: number, currency: string) {
+  private async validateAccountBalance(accountId: string, amount: number, _currency: string) {
     const account = await this.prisma.account.findUnique({
       where: { id: accountId },
     });

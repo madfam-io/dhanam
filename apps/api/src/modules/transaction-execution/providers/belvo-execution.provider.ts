@@ -137,7 +137,7 @@ export class BelvoExecutionProvider extends ExecutionProvider {
     );
   }
 
-  async executeBuy(order: ExecutionOrder): Promise<ExecutionResult> {
+  async executeBuy(_order: ExecutionOrder): Promise<ExecutionResult> {
     return {
       success: false,
       errorCode: 'NOT_SUPPORTED',
@@ -145,7 +145,7 @@ export class BelvoExecutionProvider extends ExecutionProvider {
     };
   }
 
-  async executeSell(order: ExecutionOrder): Promise<ExecutionResult> {
+  async executeSell(_order: ExecutionOrder): Promise<ExecutionResult> {
     return {
       success: false,
       errorCode: 'NOT_SUPPORTED',
@@ -287,7 +287,7 @@ export class BelvoExecutionProvider extends ExecutionProvider {
     });
   }
 
-  async getMarketPrice(assetSymbol: string, currency: string): Promise<number> {
+  async getMarketPrice(_assetSymbol: string, _currency: string): Promise<number> {
     throw new Error('Belvo does not provide market prices');
   }
 

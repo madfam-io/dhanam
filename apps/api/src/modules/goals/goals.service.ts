@@ -72,7 +72,7 @@ export class GoalsService {
    * Update an existing goal
    */
   async update(goalId: string, dto: UpdateGoalDto, userId: string): Promise<Goal> {
-    const goal = await this.findByIdWithAccess(goalId, userId);
+    await this.findByIdWithAccess(goalId, userId);
 
     const updated = await this.prisma.goal.update({
       where: { id: goalId },
@@ -132,7 +132,7 @@ export class GoalsService {
     goalId: string,
     userId: string
   ): Promise<Goal & { allocations: GoalAllocation[] }> {
-    const goal = await this.findByIdWithAccess(goalId, userId);
+    await this.findByIdWithAccess(goalId, userId);
 
     return this.prisma.goal.findUnique({
       where: { id: goalId },

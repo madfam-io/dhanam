@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { UsageMetricType, SubscriptionTier } from '@prisma/client';
+import { UsageMetricType } from '@prisma/client';
 import Stripe from 'stripe';
 
 import { AuditService } from '../../core/audit/audit.service';
