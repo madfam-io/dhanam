@@ -186,6 +186,52 @@ Dhanam Ledger implements multiple layers of security:
 
 ---
 
+## Accepted Security Risks
+
+This section documents security vulnerabilities that we have consciously accepted after careful risk analysis. Each entry includes the rationale for acceptance and ongoing monitoring strategy.
+
+### CVE-2025-57319 (fast-redact Prototype Pollution)
+
+**Status:** Accepted Risk
+**Date Evaluated:** 2025-11-19
+**Package:** `fast-redact@3.5.0`
+**Severity:** LOW (CVSS 2.9)
+**Type:** Prototype Pollution
+
+**Details:**
+- CVE-2025-57319 reports a prototype pollution vulnerability in fast-redact's `nestedRestore` function
+- The vulnerability only affects undocumented internal utility functions, not the public API
+- fast-redact is a transitive dependency used by Pino (our logging library), not directly by our code
+
+**Maintainer Response:**
+- The fast-redact maintainers have **disputed this CVE with MITRE**
+- GitHub Issue #75 was closed as "won't fix" with detailed technical explanation
+- Maintainers argue the vulnerability requires misuse of internal, undocumented functions
+- When testing with the documented public API, the exploit fails to produce the claimed result
+- Reference: https://github.com/davidmarkclements/fast-redact/issues/75
+
+**Risk Assessment:**
+- ✅ **Low severity** (CVSS 2.9) - minimal security impact
+- ✅ **Disputed by maintainers** - credibility of CVE is questionable
+- ✅ **No public exploits** - no known exploits in the wild
+- ✅ **Public API is secure** - vulnerability only affects internal functions
+- ✅ **Indirect dependency** - used only through Pino's documented API
+- ✅ **No direct usage** - we don't call fast-redact directly in our codebase
+- ❌ **No patch available** - v3.5.0 is the latest (published 2+ years ago)
+- ❌ **No migration path** - Pino depends on fast-redact, no alternative logging library identified
+
+**Mitigation:**
+- We use fast-redact exclusively through Pino's documented public API
+- No direct usage of internal fast-redact functions in our codebase
+- Regular monitoring of fast-redact repository for any security updates
+- Will reassess if severity increases or if patch becomes available
+
+**Decision:** **ACCEPTED** - Given the disputed nature of the CVE, low severity (2.9), lack of public exploits, and absence of viable alternatives or patches, the risk of continuing to use fast-redact@3.5.0 is acceptable for our use case.
+
+**Review Date:** 2026-05-19 (6 months)
+
+---
+
 ## Security Audit History
 
 | Date | Auditor | Scope | Findings | Status |
@@ -253,5 +299,5 @@ This security policy is provided in good faith. We reserve the right to modify t
 
 ---
 
-**Last Updated**: November 15, 2025
-**Policy Version**: 1.0.0
+**Last Updated**: November 19, 2025
+**Policy Version**: 1.1.0
