@@ -13,6 +13,9 @@ export class CategoryResponseDto {
   @ApiProperty()
   budgetedAmount: number;
 
+  @ApiProperty()
+  carryoverAmount: number;
+
   @ApiProperty({ required: false, nullable: true })
   icon: string | null;
 
@@ -54,6 +57,9 @@ export class BudgetResponseDto {
   endDate: string | null;
 
   @ApiProperty()
+  income: number;
+
+  @ApiProperty()
   createdAt: string;
 
   @ApiProperty()
@@ -75,6 +81,9 @@ export class CategorySummaryDto {
 
   @ApiProperty()
   budgetedAmount: number;
+
+  @ApiProperty()
+  carryoverAmount: number;
 
   @ApiProperty({ required: false, nullable: true })
   icon: string | null;
@@ -119,5 +128,26 @@ export class BudgetSummaryDto extends BudgetResponseDto {
     totalSpent: number;
     totalRemaining: number;
     totalPercentUsed: number;
+    totalIncome: number;
+    readyToAssign: number;
+    totalCarryover: number;
   };
+}
+
+export class UpdateIncomeDto {
+  @ApiProperty({ description: 'Income amount for this budget period' })
+  income: number;
+}
+
+export class AllocateFundsDto {
+  @ApiProperty({ description: 'Category ID to allocate funds to' })
+  categoryId: string;
+
+  @ApiProperty({ description: 'Amount to allocate' })
+  amount: number;
+}
+
+export class RolloverBudgetDto {
+  @ApiProperty({ description: 'ID of the new budget to roll over to' })
+  newBudgetId: string;
 }

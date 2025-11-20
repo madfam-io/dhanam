@@ -9,6 +9,9 @@ import {
   BudgetResponseDto,
   BudgetSummaryDto,
   CategorySummaryDto,
+  UpdateIncomeDto,
+  AllocateFundsDto,
+  RolloverBudgetDto,
 } from './dto';
 
 @Injectable()
@@ -103,6 +106,7 @@ export class BudgetsService {
         period: dto.period,
         startDate: dto.startDate,
         endDate,
+        income: 0,
       },
       include: {
         categories: {
@@ -258,14 +262,16 @@ export class BudgetsService {
       const categoryTransactions = transactions.filter((t) => t.categoryId === category.id);
       const spent = categoryTransactions.reduce((sum, t) => sum + Math.abs(t.amount.toNumber()), 0);
       const budgetedAmount = category.budgetedAmount.toNumber();
-      const remaining = budgetedAmount - spent;
-      const percentUsed = budgetedAmount > 0 ? (spent / budgetedAmount) * 100 : 0;
+      const carryoverAmount = category.carryoverAmount.toNumber();
+      const remaining = budgetedAmount + carryoverAmount - spent;
+      const percentUsed = (budgetedAmount + carryoverAmount) > 0 ? (spent / (budgetedAmount + carryoverAmount)) * 100 : 0;
 
       return {
         id: category.id,
         budgetId: category.budgetId,
         name: category.name,
         budgetedAmount,
+        carryoverAmount,
         icon: category.icon,
         color: category.color,
         description: category.description,
@@ -279,13 +285,19 @@ export class BudgetsService {
       };
     });
 
+    const totalIncome = budget.income.toNumber();
     const totalBudgeted = budget.categories.reduce(
       (sum, c) => sum + c.budgetedAmount.toNumber(),
       0
     );
+    const totalCarryover = budget.categories.reduce(
+      (sum, c) => sum + c.carryoverAmount.toNumber(),
+      0
+    );
     const totalSpent = categoryTotals.reduce((sum, c) => sum + c.spent, 0);
-    const totalRemaining = totalBudgeted - totalSpent;
-    const totalPercentUsed = totalBudgeted > 0 ? (totalSpent / totalBudgeted) * 100 : 0;
+    const totalRemaining = totalBudgeted + totalCarryover - totalSpent;
+    const totalPercentUsed = (totalBudgeted + totalCarryover) > 0 ? (totalSpent / (totalBudgeted + totalCarryover)) * 100 : 0;
+    const readyToAssign = totalIncome + totalCarryover - totalBudgeted;
 
     return {
       id: budget.id,
@@ -294,6 +306,7 @@ export class BudgetsService {
       period: budget.period,
       startDate: budget.startDate.toISOString(),
       endDate: budget.endDate?.toISOString() || null,
+      income: totalIncome,
       createdAt: budget.createdAt.toISOString(),
       updatedAt: budget.updatedAt.toISOString(),
       categories: categoryTotals,
@@ -302,6 +315,9 @@ export class BudgetsService {
         totalSpent,
         totalRemaining,
         totalPercentUsed,
+        totalIncome,
+        readyToAssign,
+        totalCarryover,
       },
     };
   }
@@ -329,6 +345,205 @@ export class BudgetsService {
     return date;
   }
 
+  async updateIncome(
+    spaceId: string,
+    userId: string,
+    budgetId: string,
+    dto: UpdateIncomeDto
+  ): Promise<BudgetResponseDto> {
+    await this.spacesService.verifyUserAccess(userId, spaceId, 'member');
+
+    const budget = await this.prisma.budget.findFirst({
+      where: {
+        id: budgetId,
+        spaceId,
+      },
+    });
+
+    if (!budget) {
+      throw new NotFoundException('Budget not found');
+    }
+
+    const updatedBudget = await this.prisma.budget.update({
+      where: { id: budgetId },
+      data: { income: dto.income },
+      include: {
+        categories: {
+          include: {
+            _count: {
+              select: { transactions: true },
+            },
+          },
+        },
+      },
+    });
+
+    return this.transformBudgetToDto(updatedBudget);
+  }
+
+  async allocateFunds(
+    spaceId: string,
+    userId: string,
+    budgetId: string,
+    dto: AllocateFundsDto
+  ): Promise<BudgetResponseDto> {
+    await this.spacesService.verifyUserAccess(userId, spaceId, 'member');
+
+    const budget = await this.prisma.budget.findFirst({
+      where: {
+        id: budgetId,
+        spaceId,
+      },
+      include: {
+        categories: true,
+      },
+    });
+
+    if (!budget) {
+      throw new NotFoundException('Budget not found');
+    }
+
+    const category = budget.categories.find((c) => c.id === dto.categoryId);
+    if (!category) {
+      throw new NotFoundException('Category not found in this budget');
+    }
+
+    // Calculate available funds
+    const totalIncome = budget.income.toNumber();
+    const totalBudgeted = budget.categories.reduce(
+      (sum, c) => sum + c.budgetedAmount.toNumber(),
+      0
+    );
+    const totalCarryover = budget.categories.reduce(
+      (sum, c) => sum + c.carryoverAmount.toNumber(),
+      0
+    );
+    const readyToAssign = totalIncome + totalCarryover - totalBudgeted;
+
+    if (dto.amount > readyToAssign) {
+      throw new ConflictException(
+        `Cannot allocate ${dto.amount}. Only ${readyToAssign} available to assign.`
+      );
+    }
+
+    // Update category budgeted amount
+    await this.prisma.category.update({
+      where: { id: dto.categoryId },
+      data: {
+        budgetedAmount: {
+          increment: dto.amount,
+        },
+      },
+    });
+
+    const updatedBudget = await this.prisma.budget.findFirst({
+      where: { id: budgetId },
+      include: {
+        categories: {
+          include: {
+            _count: {
+              select: { transactions: true },
+            },
+          },
+        },
+      },
+    });
+
+    return this.transformBudgetToDto(updatedBudget!);
+  }
+
+  async rolloverBudget(
+    spaceId: string,
+    userId: string,
+    budgetId: string,
+    dto: RolloverBudgetDto
+  ): Promise<BudgetResponseDto> {
+    await this.spacesService.verifyUserAccess(userId, spaceId, 'member');
+
+    const oldBudget = await this.prisma.budget.findFirst({
+      where: {
+        id: budgetId,
+        spaceId,
+      },
+      include: {
+        categories: true,
+      },
+    });
+
+    if (!oldBudget) {
+      throw new NotFoundException('Source budget not found');
+    }
+
+    const newBudget = await this.prisma.budget.findFirst({
+      where: {
+        id: dto.newBudgetId,
+        spaceId,
+      },
+      include: {
+        categories: true,
+      },
+    });
+
+    if (!newBudget) {
+      throw new NotFoundException('Target budget not found');
+    }
+
+    // Get all transactions for the old budget period
+    const transactions = await this.prisma.transaction.findMany({
+      where: {
+        account: { spaceId },
+        date: {
+          gte: oldBudget.startDate,
+          lte: oldBudget.endDate || undefined,
+        },
+        categoryId: {
+          in: oldBudget.categories.map((c) => c.id),
+        },
+      },
+    });
+
+    // Calculate unspent amounts for each category
+    for (const oldCategory of oldBudget.categories) {
+      const categoryTransactions = transactions.filter((t) => t.categoryId === oldCategory.id);
+      const spent = categoryTransactions.reduce((sum, t) => sum + Math.abs(t.amount.toNumber()), 0);
+      const budgetedAmount = oldCategory.budgetedAmount.toNumber();
+      const carryoverAmount = oldCategory.carryoverAmount.toNumber();
+      const unspent = budgetedAmount + carryoverAmount - spent;
+
+      if (unspent > 0) {
+        // Find matching category in new budget by name
+        const newCategory = newBudget.categories.find((c) => c.name === oldCategory.name);
+
+        if (newCategory) {
+          // Add unspent to carryover in new budget category
+          await this.prisma.category.update({
+            where: { id: newCategory.id },
+            data: {
+              carryoverAmount: {
+                increment: unspent,
+              },
+            },
+          });
+        }
+      }
+    }
+
+    const updatedNewBudget = await this.prisma.budget.findFirst({
+      where: { id: dto.newBudgetId },
+      include: {
+        categories: {
+          include: {
+            _count: {
+              select: { transactions: true },
+            },
+          },
+        },
+      },
+    });
+
+    return this.transformBudgetToDto(updatedNewBudget!);
+  }
+
   private transformBudgetToDto(budget: any): BudgetResponseDto {
     return {
       id: budget.id,
@@ -337,6 +552,7 @@ export class BudgetsService {
       period: budget.period,
       startDate: budget.startDate.toISOString(),
       endDate: budget.endDate?.toISOString() || null,
+      income: budget.income.toNumber(),
       createdAt: budget.createdAt.toISOString(),
       updatedAt: budget.updatedAt.toISOString(),
       categories:
@@ -345,6 +561,7 @@ export class BudgetsService {
           budgetId: category.budgetId,
           name: category.name,
           budgetedAmount: category.budgetedAmount.toNumber(),
+          carryoverAmount: category.carryoverAmount.toNumber(),
           icon: category.icon,
           color: category.color,
           description: category.description,

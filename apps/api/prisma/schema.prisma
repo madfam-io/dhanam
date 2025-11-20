@@ -35,7 +35,10 @@ enum AccountType {
 enum Provider {
   belvo
   plaid
+  mx
+  finicity
   bitso
+  blockchain
   manual
 }
 
@@ -86,6 +89,24 @@ enum UsageMetricType {
   scenario_analysis
   portfolio_rebalance
   api_request
+}
+
+enum ManualAssetType {
+  real_estate
+  vehicle
+  domain
+  private_equity
+  angel_investment
+  collectible
+  art
+  jewelry
+  other
+}
+
+enum AccountOwnership {
+  individual  // Owned by a single household member
+  joint       // Shared by multiple household members
+  trust       // Held in trust
 }
 
 enum GoalType {
@@ -194,6 +215,9 @@ model User {
   usageMetrics     UsageMetric[]
   householdMembers HouseholdMember[]
   simulations      Simulation[]
+  ownedAccounts    Account[]        // For "Yours/Mine/Ours" visibility
+  transactionSplits TransactionSplit[]
+  sharedAccounts   AccountSharingPermission[] @relation("SharedAccounts")
 
   @@map("users")
 }
@@ -308,6 +332,8 @@ model Space {
   goals            Goal[]
   transactionOrders TransactionOrder[]
   simulations      Simulation[]
+  manualAssets     ManualAsset[]
+  connectionAttempts ConnectionAttempt[]
 
   @@index([householdId])
   @@map("spaces")
@@ -337,6 +363,8 @@ model Account {
   subtype               String?
   currency              Currency
   balance               Decimal           @default(0) @db.Decimal(19, 4)
+  ownership             AccountOwnership  @default(individual)
+  ownerId               String?           @map("owner_id") // UserID for individual accounts
   encryptedCredentials  Json?             @map("encrypted_credentials")
   metadata              Json?
   lastSyncedAt          DateTime?         @map("last_synced_at")
@@ -345,6 +373,7 @@ model Account {
 
   // Relations
   space                 Space             @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  owner                 User?             @relation(fields: [ownerId], references: [id], onDelete: SetNull)
   transactions          Transaction[]
   assetValuations       AssetValuation[]
   esgScores             ESGScore[]
@@ -352,9 +381,13 @@ model Account {
   goalAllocations       GoalAllocation[]
   transactionOrders     TransactionOrder[]
   transferDestinations  TransactionOrder[] @relation("TransferDestination")
+  connectionAttempts    ConnectionAttempt[]
+  sharingPermissions    AccountSharingPermission[]
 
   @@unique([spaceId, provider, providerAccountId])
   @@index([spaceId])
+  @@index([spaceId, ownership])
+  @@index([spaceId, ownerId])
   @@index([spaceId, lastSyncedAt(sort: Desc)])
   @@map("accounts")
 }
@@ -385,6 +418,7 @@ model Transaction {
   categoryId            String?       @map("category_id")
   date                  DateTime      @db.Date
   pending               Boolean       @default(false)
+  isSplit               Boolean       @default(false) @map("is_split") // Transaction split between users
   metadata              Json?
   createdAt             DateTime      @default(now()) @map("created_at")
   updatedAt             DateTime      @updatedAt @map("updated_at")
@@ -392,11 +426,13 @@ model Transaction {
   // Relations
   account               Account       @relation(fields: [accountId], references: [id], onDelete: Cascade)
   category              Category?     @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  splits                TransactionSplit[]
 
   @@unique([accountId, providerTransactionId])
   @@index([accountId, date(sort: Desc)])
   @@index([categoryId])
   @@index([pending])
+  @@index([isSplit])
   @@map("transactions")
 }
 
@@ -405,6 +441,7 @@ model Category {
   budgetId         String             @map("budget_id")
   name             String
   budgetedAmount   Decimal            @map("budgeted_amount") @db.Decimal(19, 4)
+  carryoverAmount  Decimal            @default(0) @map("carryover_amount") @db.Decimal(19, 4)
   icon             String?
   color            String?
   description      String?
@@ -447,6 +484,7 @@ model Budget {
   period           BudgetPeriod
   startDate        DateTime          @map("start_date") @db.Date
   endDate          DateTime?         @map("end_date") @db.Date
+  income           Decimal           @default(0) @db.Decimal(19, 4)
   createdAt        DateTime          @default(now()) @map("created_at")
   updatedAt        DateTime          @updatedAt @map("updated_at")
 
@@ -491,6 +529,60 @@ model ESGScore {
 
   @@index([accountId, calculatedAt(sort: Desc)])
   @@map("esg_scores")
+}
+
+model ManualAsset {
+  id                    String                    @id @default(uuid())
+  spaceId               String                    @map("space_id")
+  name                  String
+  type                  ManualAssetType
+  description           String?
+  currentValue          Decimal                   @map("current_value") @db.Decimal(19, 4)
+  currency              Currency
+  acquisitionDate       DateTime?                 @map("acquisition_date") @db.Date
+  acquisitionCost       Decimal?                  @map("acquisition_cost") @db.Decimal(19, 4)
+
+  // Asset-specific metadata stored as JSON
+  // Real Estate: { address, city, state, zip, sqft, propertyType, bedrooms, bathrooms }
+  // Vehicle: { vin, make, model, year, mileage, licensePlate }
+  // Domain: { domain, registrar, expiryDate, registrationDate }
+  // Private Equity: { companyName, investmentDate, ownershipPercentage, shares, shareClass }
+  // Collectible: { category, manufacturer, year, condition, authenticity }
+  metadata              Json?
+
+  // Document tracking (stored in S3/external storage)
+  // Array of { key, url, filename, uploadedAt, fileType, category }
+  documents             Json?
+
+  notes                 String?
+  createdAt             DateTime                  @default(now()) @map("created_at")
+  updatedAt             DateTime                  @updatedAt @map("updated_at")
+
+  // Relations
+  space                 Space                     @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  valuationHistory      ManualAssetValuation[]
+
+  @@index([spaceId])
+  @@index([type])
+  @@map("manual_assets")
+}
+
+model ManualAssetValuation {
+  id                String           @id @default(uuid())
+  assetId           String           @map("asset_id")
+  date              DateTime         @db.Date
+  value             Decimal          @db.Decimal(19, 4)
+  currency          Currency
+  source            String?          // e.g., "Zillow API", "Manual Entry", "Professional Appraisal"
+  notes             String?
+  createdAt         DateTime         @default(now()) @map("created_at")
+
+  // Relations
+  asset             ManualAsset      @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@unique([assetId, date])
+  @@index([assetId, date(sort: Desc)])
+  @@map("manual_asset_valuations")
 }
 
 model AuditLog {
@@ -1021,4 +1113,115 @@ model OrderLimit {
   @@index([userId, enforced, resetAt])
   @@index([spaceId])
   @@map("order_limits")
+}
+// Multi-Provider Redundancy Models
+
+model InstitutionProviderMapping {
+  id                String        @id @default(uuid())
+  institutionId     String        @map("institution_id")        // External institution ID (e.g., "ins_123" from Plaid)
+  institutionName   String        @map("institution_name")
+  primaryProvider   Provider      @map("primary_provider")
+  backupProviders   Json          // Array of backup Provider enums
+  region            String        @default("US")                // US, MX, EU
+  providerMetadata  Json?         @map("provider_metadata")     // Provider-specific config
+  lastHealthCheck   DateTime?     @map("last_health_check")
+  createdAt         DateTime      @default(now()) @map("created_at")
+  updatedAt         DateTime      @updatedAt @map("updated_at")
+
+  @@unique([institutionId, primaryProvider])
+  @@index([institutionName])
+  @@index([region])
+  @@map("institution_provider_mappings")
+}
+
+model ProviderHealthStatus {
+  id                String        @id @default(uuid())
+  provider          Provider
+  region            String        @default("US")
+  status            String        @default("healthy")           // healthy, degraded, down
+  errorRate         Decimal       @default(0) @map("error_rate") @db.Decimal(5, 2)  // Percentage
+  avgResponseTimeMs Int           @default(0) @map("avg_response_time_ms")
+  successfulCalls   Int           @default(0) @map("successful_calls")
+  failedCalls       Int           @default(0) @map("failed_calls")
+  lastSuccessAt     DateTime?     @map("last_success_at")
+  lastFailureAt     DateTime?     @map("last_failure_at")
+  lastError         String?       @map("last_error")
+  circuitBreakerOpen Boolean      @default(false) @map("circuit_breaker_open")
+  windowStartAt     DateTime      @default(now()) @map("window_start_at")  // Rolling window start
+  createdAt         DateTime      @default(now()) @map("created_at")
+  updatedAt         DateTime      @updatedAt @map("updated_at")
+
+  @@unique([provider, region])
+  @@index([status])
+  @@index([circuitBreakerOpen])
+  @@map("provider_health_status")
+}
+
+model ConnectionAttempt {
+  id                String        @id @default(uuid())
+  accountId         String?       @map("account_id")
+  spaceId           String        @map("space_id")
+  provider          Provider
+  institutionId     String?       @map("institution_id")
+  attemptType       String        @map("attempt_type")          // initial, sync, reconnect
+  status            String                                       // success, failure, timeout
+  errorCode         String?       @map("error_code")
+  errorMessage      String?       @map("error_message")
+  responseTimeMs    Int?          @map("response_time_ms")
+  failoverUsed      Boolean       @default(false) @map("failover_used")
+  failoverProvider  Provider?     @map("failover_provider")
+  metadata          Json?
+  attemptedAt       DateTime      @default(now()) @map("attempted_at")
+
+  // Relations
+  account           Account?      @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  space             Space         @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+
+  @@index([accountId, attemptedAt(sort: Desc)])
+  @@index([provider, status, attemptedAt(sort: Desc)])
+  @@index([spaceId, attemptedAt(sort: Desc)])
+  @@map("connection_attempts")
+}
+
+// Transaction Splits (for Yours/Mine/Ours at transaction level)
+model TransactionSplit {
+  id              String      @id @default(uuid())
+  transactionId   String      @map("transaction_id")
+  userId          String      @map("user_id")
+  amount          Decimal     @db.Decimal(19, 4) // Amount allocated to this user
+  percentage      Decimal?    @db.Decimal(5, 2)  // Percentage of total (optional)
+  note            String?     // Optional note for this split
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
+
+  // Relations
+  transaction     Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([transactionId, userId])
+  @@index([userId])
+  @@index([transactionId])
+  @@map("transaction_splits")
+}
+
+// Account Sharing Permissions (for Yours/Mine/Ours flexibility)
+model AccountSharingPermission {
+  id              String      @id @default(uuid())
+  accountId       String      @map("account_id")
+  sharedWithId    String      @map("shared_with_id") // User ID who gets access
+  canView         Boolean     @default(true) @map("can_view")
+  canEdit         Boolean     @default(false) @map("can_edit")
+  canDelete       Boolean     @default(false) @map("can_delete")
+  expiresAt       DateTime?   @map("expires_at") // Optional expiration
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
+
+  // Relations
+  account         Account     @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  sharedWith      User        @relation("SharedAccounts", fields: [sharedWithId], references: [id], onDelete: Cascade)
+
+  @@unique([accountId, sharedWithId])
+  @@index([sharedWithId])
+  @@index([accountId, canView])
+  @@map("account_sharing_permissions")
 }

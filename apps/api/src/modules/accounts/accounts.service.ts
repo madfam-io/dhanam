@@ -1,5 +1,6 @@
 import { Account, SyncAccountResponse, AccountType } from '@dhanam/shared';
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import { AccountOwnership } from '@prisma/client';
 import { v4 as uuidv4 } from 'uuid';
 
 import { LoggerService } from '@core/logger/logger.service';
@@ -8,6 +9,8 @@ import { PrismaService } from '@core/prisma/prisma.service';
 import { ConnectAccountDto } from './dto/connect-account.dto';
 import { CreateAccountDto } from './dto/create-account.dto';
 import { UpdateAccountDto } from './dto/update-account.dto';
+import { UpdateOwnershipDto } from './dto/update-ownership.dto';
+import { ShareAccountDto, UpdateSharingPermissionDto } from './dto/share-account.dto';
 
 @Injectable()
 export class AccountsService {
@@ -177,6 +180,366 @@ export class AccountsService {
       jobId,
       status: 'pending',
     };
+  }
+
+  /**
+   * Update account ownership (Yours/Mine/Ours visibility)
+   */
+  async updateOwnership(
+    spaceId: string,
+    accountId: string,
+    userId: string,
+    dto: UpdateOwnershipDto
+  ): Promise<Account> {
+    const account = await this.prisma.account.findFirst({
+      where: {
+        id: accountId,
+        spaceId,
+      },
+    });
+
+    if (!account) {
+      throw new NotFoundException('Account not found');
+    }
+
+    // Validate ownership rules
+    if (dto.ownership === 'individual' && !dto.ownerId) {
+      throw new BadRequestException('Individual accounts require an ownerId');
+    }
+
+    if (dto.ownership === 'joint' && dto.ownerId) {
+      throw new BadRequestException('Joint accounts should not have an ownerId');
+    }
+
+    const updated = await this.prisma.account.update({
+      where: { id: accountId },
+      data: {
+        ownership: dto.ownership,
+        ownerId: dto.ownership === 'individual' ? dto.ownerId : null,
+      },
+    });
+
+    this.logger.log(
+      `Account ownership updated: ${accountId} to ${dto.ownership}`,
+      'AccountsService'
+    );
+
+    return this.sanitizeAccount(updated);
+  }
+
+  /**
+   * Get accounts filtered by ownership (Yours/Mine/Ours)
+   * - 'yours': Accounts owned by the current user
+   * - 'mine': Accounts owned by other household members
+   * - 'ours': Joint/shared accounts
+   */
+  async getAccountsByOwnership(
+    spaceId: string,
+    userId: string,
+    filter: 'yours' | 'mine' | 'ours'
+  ): Promise<Account[]> {
+    let whereClause: any = { spaceId };
+
+    switch (filter) {
+      case 'yours':
+        // Show accounts owned by current user
+        whereClause.ownership = 'individual';
+        whereClause.ownerId = userId;
+        break;
+
+      case 'mine':
+        // Show accounts owned by others (not current user)
+        whereClause.ownership = 'individual';
+        whereClause.NOT = { ownerId: userId };
+        break;
+
+      case 'ours':
+        // Show joint/shared accounts
+        whereClause.ownership = 'joint';
+        break;
+
+      default:
+        throw new BadRequestException('Invalid ownership filter');
+    }
+
+    const accounts = await this.prisma.account.findMany({
+      where: whereClause,
+      include: {
+        owner: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    return accounts.map(this.sanitizeAccount);
+  }
+
+  /**
+   * Get aggregated net worth by ownership (for Yours/Mine/Ours dashboard)
+   */
+  async getNetWorthByOwnership(
+    spaceId: string,
+    userId: string
+  ): Promise<{
+    yours: number;
+    mine: number;
+    ours: number;
+    total: number;
+  }> {
+    const [yoursAccounts, mineAccounts, oursAccounts] = await Promise.all([
+      this.prisma.account.findMany({
+        where: { spaceId, ownership: 'individual', ownerId: userId },
+        select: { balance: true },
+      }),
+      this.prisma.account.findMany({
+        where: { spaceId, ownership: 'individual', NOT: { ownerId: userId } },
+        select: { balance: true },
+      }),
+      this.prisma.account.findMany({
+        where: { spaceId, ownership: 'joint' },
+        select: { balance: true },
+      }),
+    ]);
+
+    const calculateTotal = (accounts: any[]) =>
+      accounts.reduce((sum, acc) => sum + parseFloat(acc.balance.toString()), 0);
+
+    const yours = calculateTotal(yoursAccounts);
+    const mine = calculateTotal(mineAccounts);
+    const ours = calculateTotal(oursAccounts);
+
+    return {
+      yours,
+      mine,
+      ours,
+      total: yours + mine + ours,
+    };
+  }
+
+  /**
+   * Share an account with another user (for Yours/Mine/Ours flexibility)
+   */
+  async shareAccount(
+    spaceId: string,
+    accountId: string,
+    ownerId: string,
+    dto: ShareAccountDto
+  ) {
+    const account = await this.prisma.account.findFirst({
+      where: {
+        id: accountId,
+        spaceId,
+      },
+    });
+
+    if (!account) {
+      throw new NotFoundException('Account not found');
+    }
+
+    // Verify requester is the owner
+    if (account.ownerId !== ownerId) {
+      throw new ForbiddenException('Only the account owner can share access');
+    }
+
+    // Check if sharing permission already exists
+    const existing = await this.prisma.accountSharingPermission.findUnique({
+      where: {
+        accountId_sharedWithId: {
+          accountId,
+          sharedWithId: dto.sharedWithId,
+        },
+      },
+    });
+
+    if (existing) {
+      throw new BadRequestException('Account already shared with this user');
+    }
+
+    const permission = await this.prisma.accountSharingPermission.create({
+      data: {
+        accountId,
+        sharedWithId: dto.sharedWithId,
+        canView: dto.canView ?? true,
+        canEdit: dto.canEdit ?? false,
+        canDelete: dto.canDelete ?? false,
+        expiresAt: dto.expiresAt ? new Date(dto.expiresAt) : null,
+      },
+      include: {
+        sharedWith: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+    });
+
+    this.logger.log(
+      `Account ${accountId} shared with user ${dto.sharedWithId}`,
+      'AccountsService'
+    );
+
+    return permission;
+  }
+
+  /**
+   * Update sharing permissions
+   */
+  async updateSharingPermission(
+    spaceId: string,
+    accountId: string,
+    permissionId: string,
+    ownerId: string,
+    dto: UpdateSharingPermissionDto
+  ) {
+    const account = await this.prisma.account.findFirst({
+      where: {
+        id: accountId,
+        spaceId,
+      },
+    });
+
+    if (!account) {
+      throw new NotFoundException('Account not found');
+    }
+
+    if (account.ownerId !== ownerId) {
+      throw new ForbiddenException('Only the account owner can update permissions');
+    }
+
+    const permission = await this.prisma.accountSharingPermission.update({
+      where: { id: permissionId },
+      data: {
+        canView: dto.canView,
+        canEdit: dto.canEdit,
+        canDelete: dto.canDelete,
+        expiresAt: dto.expiresAt ? new Date(dto.expiresAt) : undefined,
+      },
+      include: {
+        sharedWith: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+    });
+
+    this.logger.log(`Sharing permission ${permissionId} updated`, 'AccountsService');
+
+    return permission;
+  }
+
+  /**
+   * Revoke sharing permission
+   */
+  async revokeSharingPermission(
+    spaceId: string,
+    accountId: string,
+    permissionId: string,
+    ownerId: string
+  ) {
+    const account = await this.prisma.account.findFirst({
+      where: {
+        id: accountId,
+        spaceId,
+      },
+    });
+
+    if (!account) {
+      throw new NotFoundException('Account not found');
+    }
+
+    if (account.ownerId !== ownerId) {
+      throw new ForbiddenException('Only the account owner can revoke permissions');
+    }
+
+    await this.prisma.accountSharingPermission.delete({
+      where: { id: permissionId },
+    });
+
+    this.logger.log(`Sharing permission ${permissionId} revoked`, 'AccountsService');
+  }
+
+  /**
+   * Get all sharing permissions for an account
+   */
+  async getAccountSharingPermissions(spaceId: string, accountId: string) {
+    const account = await this.prisma.account.findFirst({
+      where: {
+        id: accountId,
+        spaceId,
+      },
+    });
+
+    if (!account) {
+      throw new NotFoundException('Account not found');
+    }
+
+    const permissions = await this.prisma.accountSharingPermission.findMany({
+      where: { accountId },
+      include: {
+        sharedWith: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return permissions;
+  }
+
+  /**
+   * Get all accounts shared with the current user
+   */
+  async getSharedAccounts(spaceId: string, userId: string) {
+    const permissions = await this.prisma.accountSharingPermission.findMany({
+      where: {
+        sharedWithId: userId,
+        account: { spaceId },
+        OR: [
+          { expiresAt: null },
+          { expiresAt: { gt: new Date() } },
+        ],
+      },
+      include: {
+        account: {
+          include: {
+            owner: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return permissions.map((p) => ({
+      ...this.sanitizeAccount(p.account),
+      permission: {
+        id: p.id,
+        canView: p.canView,
+        canEdit: p.canEdit,
+        canDelete: p.canDelete,
+        expiresAt: p.expiresAt,
+      },
+    }));
   }
 
   private sanitizeAccount(account: any): Account {
