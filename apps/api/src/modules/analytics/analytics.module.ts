@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, Global } from '@nestjs/common';
 
 import { PrismaModule } from '../../core/prisma/prisma.module';
 import { SpacesModule } from '../spaces/spaces.module';
@@ -6,11 +6,24 @@ import { SpacesModule } from '../spaces/spaces.module';
 import { AnalyticsController } from './analytics.controller';
 import { AnalyticsService } from './analytics.service';
 import { ReportService } from './report.service';
+import { PostHogService } from './posthog.service';
+import { WealthAnalytics } from './wealth.analytics';
 
+@Global() // Make analytics services available globally without importing
 @Module({
   imports: [PrismaModule, SpacesModule],
   controllers: [AnalyticsController],
-  providers: [AnalyticsService, ReportService],
-  exports: [AnalyticsService, ReportService],
+  providers: [
+    AnalyticsService,
+    ReportService,
+    PostHogService,
+    WealthAnalytics,
+  ],
+  exports: [
+    AnalyticsService,
+    ReportService,
+    PostHogService,
+    WealthAnalytics,
+  ],
 })
 export class AnalyticsModule {}

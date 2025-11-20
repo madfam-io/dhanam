@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { PostHogService } from '../analytics/posthog.service';
 
 interface OnboardingAnalyticsEvent {
   userId: string;
@@ -11,15 +11,8 @@ interface OnboardingAnalyticsEvent {
 @Injectable()
 export class OnboardingAnalytics {
   private readonly logger = new Logger(OnboardingAnalytics.name);
-  private readonly analyticsEnabled: boolean;
 
-  constructor(private readonly configService: ConfigService) {
-    this.analyticsEnabled = this.configService.get('POSTHOG_API_KEY') !== undefined;
-
-    if (!this.analyticsEnabled) {
-      this.logger.warn('PostHog API key not configured, analytics disabled');
-    }
-  }
+  constructor(private readonly posthogService: PostHogService) {}
 
   async trackOnboardingStarted(userId: string, userEmail: string) {
     await this.track({
@@ -200,22 +193,12 @@ export class OnboardingAnalytics {
   }
 
   private async track(event: OnboardingAnalyticsEvent) {
-    if (!this.analyticsEnabled) {
-      this.logger.debug(`Analytics event (disabled): ${event.event}`, event.properties);
-      return;
-    }
-
     try {
-      // In a real implementation, you would send this to PostHog
-      // For now, we'll just log it
-      this.logger.log(`Analytics event: ${event.event}`, {
-        userId: event.userId,
+      await this.posthogService.capture({
+        distinctId: event.userId,
         event: event.event,
         properties: event.properties,
       });
-
-      // Example PostHog integration:
-      // await this.posthog.capture(event.userId, event.event, event.properties);
     } catch (error) {
       this.logger.error('Failed to track analytics event:', error);
     }
