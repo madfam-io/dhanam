@@ -1005,6 +1005,139 @@ async function main() {
     });
   }
 
+  // Goal Collaboration - Maria shares Education Fund with Guest
+  console.log('\n🤝 Creating goal collaboration data...');
+
+  const mariaEducationGoal = await prisma.goal.findFirst({
+    where: {
+      spaceId: mariaSpace.id,
+      name: "Children's Education Fund"
+    }
+  });
+
+  const guestRetirementGoal = await prisma.goal.findFirst({
+    where: {
+      spaceId: guestSpace.id,
+      name: 'Retirement Fund'
+    }
+  });
+
+  if (mariaEducationGoal) {
+    // Mark goal as shared
+    await prisma.goal.update({
+      where: { id: mariaEducationGoal.id },
+      data: {
+        createdBy: mariaUser.id,
+        isShared: true,
+        sharedWithMessage: "Let's track our children's education fund together! Feel free to view progress and suggest adjustments."
+      }
+    });
+
+    // Create share with guest user (accepted)
+    const educationShare = await prisma.goalShare.create({
+      data: {
+        goalId: mariaEducationGoal.id,
+        sharedWith: guestUser.id,
+        role: 'viewer',
+        invitedBy: mariaUser.id,
+        status: 'accepted',
+        message: "Let's track our children's education fund together! Feel free to view progress and suggest adjustments.",
+        acceptedAt: subDays(new Date(), 5),
+        createdAt: subDays(new Date(), 7),
+      }
+    });
+
+    // Create activity history for Maria's shared goal
+    const activities = [
+      {
+        goalId: mariaEducationGoal.id,
+        userId: mariaUser.id,
+        action: 'created',
+        metadata: { initialAmount: 500000, targetDate: '2032-08-31' },
+        createdAt: subDays(new Date(), 120),
+      },
+      {
+        goalId: mariaEducationGoal.id,
+        userId: mariaUser.id,
+        action: 'shared',
+        metadata: { sharedWith: guestUser.email, role: 'viewer' },
+        createdAt: subDays(new Date(), 7),
+      },
+      {
+        goalId: mariaEducationGoal.id,
+        userId: guestUser.id,
+        action: 'share_accepted',
+        metadata: { shareId: educationShare.id },
+        createdAt: subDays(new Date(), 5),
+      },
+      {
+        goalId: mariaEducationGoal.id,
+        userId: mariaUser.id,
+        action: 'contribution_added',
+        metadata: { amount: 6500, account: 'BBVA Savings' },
+        createdAt: subDays(new Date(), 3),
+      },
+      {
+        goalId: mariaEducationGoal.id,
+        userId: mariaUser.id,
+        action: 'probability_improved',
+        metadata: { oldProbability: 89.2, newProbability: 91.5 },
+        createdAt: subDays(new Date(), 1),
+      },
+    ];
+
+    for (const activity of activities) {
+      await prisma.goalActivity.create({ data: activity });
+    }
+
+    console.log(`  ✓ Maria shared Education Fund with Guest (viewer role)`);
+  }
+
+  // Create activities for guest's retirement goal
+  if (guestRetirementGoal) {
+    await prisma.goal.update({
+      where: { id: guestRetirementGoal.id },
+      data: { createdBy: guestUser.id }
+    });
+
+    const retirementActivities = [
+      {
+        goalId: guestRetirementGoal.id,
+        userId: guestUser.id,
+        action: 'created',
+        metadata: { initialAmount: 1000000, targetDate: '2045-12-31' },
+        createdAt: subDays(new Date(), 180),
+      },
+      {
+        goalId: guestRetirementGoal.id,
+        userId: guestUser.id,
+        action: 'updated',
+        metadata: { field: 'monthlyContribution', oldValue: 4000, newValue: 5000 },
+        createdAt: subDays(new Date(), 60),
+      },
+      {
+        goalId: guestRetirementGoal.id,
+        userId: guestUser.id,
+        action: 'milestone_reached',
+        metadata: { milestone: '15% Complete' },
+        createdAt: subDays(new Date(), 30),
+      },
+      {
+        goalId: guestRetirementGoal.id,
+        userId: guestUser.id,
+        action: 'probability_improved',
+        metadata: { oldProbability: 84.3, newProbability: 87.5 },
+        createdAt: subDays(new Date(), 2),
+      },
+    ];
+
+    for (const activity of retirementActivities) {
+      await prisma.goalActivity.create({ data: activity });
+    }
+
+    console.log(`  ✓ Created activity history for Guest's Retirement Fund`);
+  }
+
   // Create categorization rules
   console.log('\n📋 Creating categorization rules...');
   
@@ -1064,10 +1197,12 @@ async function main() {
   console.log('    ✓ 160 realistic transactions over 90 days');
   console.log('    ✓ Monthly budget with 8 categories');
   console.log('    ✓ 3 probabilistic goals with Monte Carlo simulations');
+  console.log('    ✓ 1 shared goal (Maria\'s Education Fund - viewer access)');
   console.log('    ✓ ESG scores for BTC & ETH');
   console.log('    ✓ 31 days of asset valuation history per account');
   console.log('  - 1 Individual user (Maria)');
   console.log('    ✓ 2 probabilistic goals (education, travel)');
+  console.log('    ✓ Education Fund shared with Guest user');
   console.log('  - 1 Small business owner (Carlos)');
   console.log('    ✓ 1 probabilistic goal (business expansion)');
   console.log('  - 1 Enterprise admin (Patricia)');
@@ -1075,13 +1210,15 @@ async function main() {
   console.log('  - 5 Spaces with budgets');
   console.log('  - 19 Connected accounts');
   console.log('  - 6 Probabilistic Goals with confidence intervals');
+  console.log('  - 1 Goal Share (Maria → Guest) with activity feed');
+  console.log('  - 9 Goal Activities across 2 goals');
   console.log('  - 800+ Transactions');
   console.log('  - 589 Asset valuations (31 days × 19 accounts)');
   console.log('  - ESG scores for all crypto holdings');
   console.log('  - Feature flags configured');
   console.log('  - Categorization rules set up');
   console.log('\n🎉 Demo environment ready!');
-  console.log('💡 Guest demo showcases: budgets, cashflow forecast, net worth trends, ESG scores, probabilistic goal planning!');
+  console.log('💡 Guest demo showcases: budgets, cashflow forecast, net worth trends, ESG scores, probabilistic goal planning, goal collaboration!');
 }
 
 main()
