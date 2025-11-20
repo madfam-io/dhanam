@@ -706,6 +706,20 @@ model Goal {
   createdAt        DateTime      @default(now()) @map("created_at")
   updatedAt        DateTime      @updatedAt @map("updated_at")
 
+  // Probabilistic Planning Fields (Monte Carlo Integration)
+  currentProbability    Decimal?      @map("current_probability") @db.Decimal(5, 2)  // 0-100 (e.g., 73.45%)
+  confidenceLow         Decimal?      @map("confidence_low") @db.Decimal(19, 4)      // P10 projected value
+  confidenceHigh        Decimal?      @map("confidence_high") @db.Decimal(19, 4)     // P90 projected value
+  lastSimulationAt      DateTime?     @map("last_simulation_at")
+  probabilityHistory    Json?         @map("probability_history")  // [{date, probability}, ...]
+  currentProgress       Decimal?      @map("current_progress") @db.Decimal(5, 2)     // 0-100 (% of target reached)
+  projectedCompletion   DateTime?     @map("projected_completion") @db.Date           // Median completion date
+
+  // Monte Carlo Configuration (inherited from user's risk profile)
+  expectedReturn        Decimal?      @map("expected_return") @db.Decimal(5, 4)     // Annual return (e.g., 0.07 = 7%)
+  volatility            Decimal?      @map("volatility") @db.Decimal(5, 4)          // Annual volatility (e.g., 0.15 = 15%)
+  monthlyContribution   Decimal?      @map("monthly_contribution") @db.Decimal(19, 4) // Regular contribution amount
+
   // Relations
   space            Space         @relation(fields: [spaceId], references: [id], onDelete: Cascade)
   household        Household?    @relation(fields: [householdId], references: [id], onDelete: SetNull)
@@ -716,6 +730,7 @@ model Goal {
   @@index([spaceId, status])
   @@index([spaceId, createdAt(sort: Desc)])
   @@index([householdId])
+  @@index([currentProbability])
   @@map("goals")
 }
 
