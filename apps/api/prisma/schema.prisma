@@ -88,6 +88,18 @@ enum UsageMetricType {
   api_request
 }
 
+enum ManualAssetType {
+  real_estate
+  vehicle
+  domain
+  private_equity
+  angel_investment
+  collectible
+  art
+  jewelry
+  other
+}
+
 enum GoalType {
   retirement
   education
@@ -308,6 +320,7 @@ model Space {
   goals            Goal[]
   transactionOrders TransactionOrder[]
   simulations      Simulation[]
+  manualAssets     ManualAsset[]
 
   @@index([householdId])
   @@map("spaces")
@@ -493,6 +506,60 @@ model ESGScore {
 
   @@index([accountId, calculatedAt(sort: Desc)])
   @@map("esg_scores")
+}
+
+model ManualAsset {
+  id                    String                    @id @default(uuid())
+  spaceId               String                    @map("space_id")
+  name                  String
+  type                  ManualAssetType
+  description           String?
+  currentValue          Decimal                   @map("current_value") @db.Decimal(19, 4)
+  currency              Currency
+  acquisitionDate       DateTime?                 @map("acquisition_date") @db.Date
+  acquisitionCost       Decimal?                  @map("acquisition_cost") @db.Decimal(19, 4)
+
+  // Asset-specific metadata stored as JSON
+  // Real Estate: { address, city, state, zip, sqft, propertyType, bedrooms, bathrooms }
+  // Vehicle: { vin, make, model, year, mileage, licensePlate }
+  // Domain: { domain, registrar, expiryDate, registrationDate }
+  // Private Equity: { companyName, investmentDate, ownershipPercentage, shares, shareClass }
+  // Collectible: { category, manufacturer, year, condition, authenticity }
+  metadata              Json?
+
+  // Document tracking (stored in S3/external storage)
+  // Array of { key, url, filename, uploadedAt, fileType, category }
+  documents             Json?
+
+  notes                 String?
+  createdAt             DateTime                  @default(now()) @map("created_at")
+  updatedAt             DateTime                  @updatedAt @map("updated_at")
+
+  // Relations
+  space                 Space                     @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  valuationHistory      ManualAssetValuation[]
+
+  @@index([spaceId])
+  @@index([type])
+  @@map("manual_assets")
+}
+
+model ManualAssetValuation {
+  id                String           @id @default(uuid())
+  assetId           String           @map("asset_id")
+  date              DateTime         @db.Date
+  value             Decimal          @db.Decimal(19, 4)
+  currency          Currency
+  source            String?          // e.g., "Zillow API", "Manual Entry", "Professional Appraisal"
+  notes             String?
+  createdAt         DateTime         @default(now()) @map("created_at")
+
+  // Relations
+  asset             ManualAsset      @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@unique([assetId, date])
+  @@index([assetId, date(sort: Desc)])
+  @@map("manual_asset_valuations")
 }
 
 model AuditLog {
