@@ -25,6 +25,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { SyncStatus } from '@/components/sync/sync-status';
+import { HelpTooltip } from '@/components/demo/help-tooltip';
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -128,7 +129,13 @@ export default function DashboardPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Net Worth</CardTitle>
+            <div className="flex items-center gap-2">
+              <CardTitle className="text-sm font-medium">Net Worth</CardTitle>
+              <HelpTooltip
+                title="Net Worth"
+                content="Total value of all your assets (savings, investments, crypto) minus liabilities (credit cards, loans). Updated in real-time as your accounts sync."
+              />
+            </div>
             <Wallet className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -197,7 +204,13 @@ export default function DashboardPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Budget Usage</CardTitle>
+            <div className="flex items-center gap-2">
+              <CardTitle className="text-sm font-medium">Budget Usage</CardTitle>
+              <HelpTooltip
+                title="Budget Usage"
+                content="Track spending against your monthly budget across categories. Dhanam auto-categorizes transactions using smart rules to help you stay on track."
+              />
+            </div>
             <PiggyBank className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -300,7 +313,13 @@ export default function DashboardPage() {
       {cashflowForecast && (
         <Card>
           <CardHeader>
-            <CardTitle>60-Day Cashflow Forecast</CardTitle>
+            <div className="flex items-center gap-2">
+              <CardTitle>60-Day Cashflow Forecast</CardTitle>
+              <HelpTooltip
+                title="Cashflow Forecast"
+                content="AI-powered prediction of your income and expenses for the next 60 days based on historical patterns. Helps you anticipate cash shortages and plan ahead."
+              />
+            </div>
             <CardDescription>Projected income, expenses, and balance trends</CardDescription>
           </CardHeader>
           <CardContent>

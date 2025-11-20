@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { DashboardNav } from '~/components/layout/dashboard-nav';
 import { DashboardHeader } from '~/components/layout/dashboard-header';
+import { DemoModeBanner } from '~/components/demo/demo-mode-banner';
 import { useAuth } from '~/lib/hooks/use-auth';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -23,6 +24,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <div className="min-h-screen bg-background">
       <DashboardHeader />
+      <DemoModeBanner />
       <div className="flex">
         <DashboardNav />
         <main className="flex-1 p-6">

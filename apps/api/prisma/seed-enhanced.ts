@@ -125,7 +125,39 @@ async function main() {
             creditLimit: 50000,
             lastSyncedAt: new Date(),
           },
+          {
+            provider: Provider.manual,
+            providerAccountId: 'guest-crypto',
+            name: 'Demo Crypto Wallet',
+            type: 'crypto',
+            subtype: 'exchange',
+            currency: Currency.MXN,
+            balance: 32000,
+            lastSyncedAt: new Date(),
+          },
         ],
+      },
+      budgets: {
+        create: {
+          name: 'Demo Monthly Budget',
+          period: BudgetPeriod.monthly,
+          amount: 55000,
+          currency: Currency.MXN,
+          startDate: startOfMonth(new Date()),
+          endDate: endOfMonth(new Date()),
+          categories: {
+            create: [
+              { name: 'Rent', budgetAmount: 12000, color: '#FF6B6B', icon: '🏠' },
+              { name: 'Groceries', budgetAmount: 5000, color: '#4ECDC4', icon: '🛒' },
+              { name: 'Transportation', budgetAmount: 2500, color: '#45B7D1', icon: '🚗' },
+              { name: 'Entertainment', budgetAmount: 3000, color: '#96CEB4', icon: '🎬' },
+              { name: 'Savings', budgetAmount: 10000, color: '#FECA57', icon: '💰' },
+              { name: 'Utilities', budgetAmount: 2000, color: '#48C9B0', icon: '💡' },
+              { name: 'Food & Dining', budgetAmount: 4000, color: '#F8B500', icon: '🍽️' },
+              { name: 'Shopping', budgetAmount: 3500, color: '#E056FD', icon: '🛍️' },
+            ],
+          },
+        },
       },
     },
   });
@@ -738,13 +770,29 @@ async function main() {
   console.log('\n📋 Creating categorization rules...');
   
   const rules = [
+    // Guest user rules
+    { keyword: 'oxxo', category: 'Groceries', spaceId: guestSpace.id },
+    { keyword: 'soriana', category: 'Groceries', spaceId: guestSpace.id },
+    { keyword: 'uber', category: 'Transportation', spaceId: guestSpace.id },
+    { keyword: 'pemex', category: 'Transportation', spaceId: guestSpace.id },
+    { keyword: 'netflix', category: 'Entertainment', spaceId: guestSpace.id },
+    { keyword: 'spotify', category: 'Entertainment', spaceId: guestSpace.id },
+    { keyword: 'starbucks', category: 'Food & Dining', spaceId: guestSpace.id },
+    { keyword: 'restaurant', category: 'Food & Dining', spaceId: guestSpace.id },
+    { keyword: 'cfe', category: 'Utilities', spaceId: guestSpace.id },
+    { keyword: 'telmex', category: 'Utilities', spaceId: guestSpace.id },
+    { keyword: 'amazon', category: 'Shopping', spaceId: guestSpace.id },
+    { keyword: 'liverpool', category: 'Shopping', spaceId: guestSpace.id },
+    // Maria's rules
     { keyword: 'oxxo', category: 'Groceries', spaceId: mariaSpace.id },
     { keyword: 'uber', category: 'Transportation', spaceId: mariaSpace.id },
     { keyword: 'netflix', category: 'Entertainment', spaceId: mariaSpace.id },
     { keyword: 'spotify', category: 'Entertainment', spaceId: mariaSpace.id },
     { keyword: 'starbucks', category: 'Food & Dining', spaceId: mariaSpace.id },
+    // Carlos business rules
     { keyword: 'payroll', category: 'Payroll', spaceId: carlosBusiness.id },
     { keyword: 'rent', category: 'Rent', spaceId: carlosBusiness.id },
+    // Enterprise rules
     { keyword: 'aws', category: 'Infrastructure', spaceId: enterpriseSpace.id },
     { keyword: 'google', category: 'Marketing', spaceId: enterpriseSpace.id },
   ];
@@ -772,19 +820,25 @@ async function main() {
   console.log('\n✅ Enhanced seeding completed!');
   console.log('─────────────────────────────────────────');
   console.log('\n📊 Summary:');
-  console.log('  - 1 Guest user (instant demo access)');
+  console.log('  - 1 Guest user (instant demo access) 🎭');
+  console.log('    ✓ 4 accounts (checking, savings, credit, crypto)');
+  console.log('    ✓ 160 realistic transactions over 90 days');
+  console.log('    ✓ Monthly budget with 8 categories');
+  console.log('    ✓ ESG scores for crypto holdings');
+  console.log('    ✓ 30 days of wealth tracking history');
   console.log('  - 1 Individual user (Maria)');
   console.log('  - 1 Small business owner (Carlos)');
   console.log('  - 1 Enterprise admin (Patricia)');
   console.log('  - 1 Platform admin');
   console.log('  - 5 Spaces with budgets');
-  console.log('  - 18 Connected accounts');
-  console.log('  - 750+ Transactions');
-  console.log('  - 30 days of valuation history');
-  console.log('  - ESG scores for crypto accounts');
+  console.log('  - 19 Connected accounts');
+  console.log('  - 800+ Transactions');
+  console.log('  - 30 days of valuation history per space');
+  console.log('  - ESG scores for all crypto accounts');
   console.log('  - Feature flags configured');
   console.log('  - Categorization rules set up');
   console.log('\n🎉 Demo environment ready!');
+  console.log('💡 Guest demo now showcases ALL platform features!');
 }
 
 main()

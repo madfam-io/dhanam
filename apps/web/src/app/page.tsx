@@ -34,8 +34,32 @@ export default function HomePage() {
     }
   }, [isAuthenticated, router]);
 
+  const handleLiveDemoClick = async () => {
+    analytics.track('live_demo_clicked', { source: 'hero_cta' });
+    try {
+      // Import authApi dynamically to avoid circular dependencies
+      const { authApi } = await import('@/lib/api/auth');
+      const { useAuth } = await import('@/lib/hooks/use-auth');
+
+      const response = await authApi.loginAsGuest();
+      useAuth.getState().setAuth(response.user, response.tokens);
+
+      analytics.track('demo_session_started', {
+        userId: response.user.id,
+        expiresAt: new Date(Date.now() + 60 * 60 * 1000) // 1 hour
+      });
+
+      router.push('/dashboard');
+    } catch (error) {
+      console.error('Guest login failed:', error);
+      analytics.track('demo_session_failed', { error: String(error) });
+      // Fallback to calculator demo
+      router.push('/demo');
+    }
+  };
+
   const handleDemoClick = () => {
-    analytics.track('demo_clicked', { source: 'hero_cta' });
+    analytics.track('calculator_demo_clicked', { source: 'hero_cta' });
     router.push('/demo');
   };
 
@@ -87,10 +111,10 @@ export default function HomePage() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
             <Button
               size="lg"
-              onClick={handleDemoClick}
+              onClick={handleLiveDemoClick}
               className="gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
             >
-              Try Interactive Demo
+              Try Live Demo
               <ArrowRight className="h-4 w-4" />
             </Button>
             <Button size="lg" variant="outline" onClick={handleSignUpClick} className="gap-2">
@@ -99,7 +123,7 @@ export default function HomePage() {
           </div>
 
           <p className="text-sm text-muted-foreground">
-            No credit card required • 3 free simulations daily • Upgrade anytime
+            Instant access • No signup required • Explore full features for 1 hour
           </p>
         </div>
 
@@ -357,10 +381,10 @@ export default function HomePage() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button
               size="lg"
-              onClick={handleDemoClick}
+              onClick={handleLiveDemoClick}
               className="gap-2 bg-gradient-to-r from-blue-600 to-purple-600"
             >
-              Try Interactive Demo
+              Try Live Demo
               <ArrowRight className="h-4 w-4" />
             </Button>
             <Button size="lg" variant="outline" onClick={handleSignUpClick}>
