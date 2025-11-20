@@ -185,6 +185,9 @@ importers:
       jstat:
         specifier: ^1.9.6
         version: 1.9.6
+      mx-platform-node:
+        specifier: ^0.21.0
+        version: 0.21.0
       nodemailer:
         specifier: ^7.0.9
         version: 7.0.9
@@ -16417,6 +16420,14 @@ packages:
     resolution: {integrity: sha512-WWdIxpyjEn+FhQJQQv9aQAYlHoNVdzIzUySNV1gHUPDSdZJ3yZn7pAAbQcV7B56Mvu881q9FZV+0Vx2xC44VWA==}
     engines: {node: ^18.17.0 || >=20.5.0}
     dev: true
+
+  /mx-platform-node@0.21.0:
+    resolution: {integrity: sha512-mBkHSZQCNflsL+glmxUqyJoQLA2kWbAuBqVk5khj15iCI6JyajLQ2wJrZ+XPmCJq8tL+7vdch2wQLToNdpFXCQ==}
+    dependencies:
+      axios: 1.13.2
+    transitivePeerDependencies:
+      - debug
+    dev: false
 
   /mz@2.7.0:
     resolution: {integrity: sha512-z81GNO7nnYMEhrGh9LeymoE4+Yr0Wn5McHIZMK5cfQCl+NDX08sCZgUc9/6MHni9IWuFLm1Z3HTCXu2z9fN62Q==}
