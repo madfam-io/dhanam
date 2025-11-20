@@ -77,6 +77,7 @@ export default function DemoPage() {
   useEffect(() => {
     analytics.trackPageView('Demo Page', '/demo');
     analytics.track('demo_started', { profile: selectedProfile });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Update config when profile changes

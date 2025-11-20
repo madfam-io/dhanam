@@ -43,6 +43,7 @@ type OrderFormData = z.infer<typeof orderSchema>;
 interface OrderPlacementFormProps {
   spaceId: string;
   accounts: Account[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onSuccess?: (order: any) => void;
   onCancel?: () => void;
   defaultAccountId?: string;
@@ -117,6 +118,7 @@ export function OrderPlacementForm({
       }
 
       onSuccess?.(order);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       setError(err.message || 'Failed to create order');
       setIsLoading(false);
@@ -136,6 +138,7 @@ export function OrderPlacementForm({
       await ordersApi.executeOrder(spaceId, verifiedOrder.id);
 
       onSuccess?.(verifiedOrder);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       setError(err.message || 'Failed to verify order');
       setIsLoading(false);

@@ -199,7 +199,8 @@ export class FinicityService implements IFinancialProvider {
 
       return {
         linkToken: connectUrl,
-        expiration: new Date(Date.now() + 30 * 60 * 1000), // 30 minutes
+        expiresAt: new Date(Date.now() + 30 * 60 * 1000), // 30 minutes
+        expiration: new Date(Date.now() + 30 * 60 * 1000), // 30 minutes (legacy)
         metadata: {
           finicityCustomerId: customerId,
           provider: 'finicity',
@@ -452,10 +453,15 @@ export class FinicityService implements IFinancialProvider {
       );
 
       return {
+        transactions: [],
+        hasMore: false,
+        addedCount: totalAdded,
+        modifiedCount: totalModified,
+        removedCount: 0,
         added: totalAdded,
         modified: totalModified,
         removed: 0,
-        nextCursor: toDate.toString(),
+        cursor: toDate.toString(),
       };
     } catch (error: any) {
       this.logger.error('Failed to sync Finicity transactions:', error);

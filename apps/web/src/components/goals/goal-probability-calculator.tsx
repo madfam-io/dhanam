@@ -150,7 +150,9 @@ export function GoalProbabilityCalculator({ goal, onSimulate }: GoalProbabilityC
             <CardContent>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className={`text-4xl font-bold ${getProbabilityColor(results.probability)}`}>
+                  <span
+                    className={`text-4xl font-bold ${getProbabilityColor(results.probability)}`}
+                  >
                     {results.probability.toFixed(1)}%
                   </span>
                   {getProbabilityBadge(results.probability)}
@@ -162,7 +164,10 @@ export function GoalProbabilityCalculator({ goal, onSimulate }: GoalProbabilityC
                 <div>
                   <p className="text-sm text-muted-foreground">Expected Value (P50)</p>
                   <p className="text-xl font-bold">
-                    {goal.currency} {Math.round(results.timeline[results.timeline.length - 1]?.median || 0).toLocaleString()}
+                    {goal.currency}{' '}
+                    {Math.round(
+                      results.timeline[results.timeline.length - 1]?.median || 0
+                    ).toLocaleString()}
                   </p>
                 </div>
                 <div>
@@ -200,17 +205,19 @@ export function GoalProbabilityCalculator({ goal, onSimulate }: GoalProbabilityC
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
                 <p className="font-semibold mb-2">Action Needed</p>
-                <p className="text-sm">
-                  To improve your probability of success to 75%, consider:
-                </p>
+                <p className="text-sm">To improve your probability of success to 75%, consider:</p>
                 <ul className="text-sm mt-2 space-y-1">
                   <li>
-                    • Increasing monthly contributions to{' '}
-                    {goal.currency}{' '}
+                    • Increasing monthly contributions to {goal.currency}{' '}
                     {Math.round(results.recommendedMonthlyContribution).toLocaleString()}
                     {goal.monthlyContribution > 0 && (
                       <span className="text-muted-foreground">
-                        {' '}(+{goal.currency}{Math.round(results.recommendedMonthlyContribution - goal.monthlyContribution).toLocaleString()})
+                        {' '}
+                        (+{goal.currency}
+                        {Math.round(
+                          results.recommendedMonthlyContribution - goal.monthlyContribution
+                        ).toLocaleString()}
+                        )
                       </span>
                     )}
                   </li>
@@ -227,14 +234,21 @@ export function GoalProbabilityCalculator({ goal, onSimulate }: GoalProbabilityC
               <AlertDescription>
                 <p className="font-semibold mb-2">On Track!</p>
                 <p className="text-sm">
-                  You have a {results.probability.toFixed(1)}% chance of reaching your goal. Keep up the great work
+                  You have a {results.probability.toFixed(1)}% chance of reaching your goal. Keep up
+                  the great work
                   {goal.monthlyContribution > 0 && (
-                    <> with your monthly contributions of {goal.currency} {goal.monthlyContribution.toLocaleString()}</>
-                  )}.
+                    <>
+                      {' '}
+                      with your monthly contributions of {goal.currency}{' '}
+                      {goal.monthlyContribution.toLocaleString()}
+                    </>
+                  )}
+                  .
                 </p>
                 {results.projectedCompletion && (
                   <p className="text-sm mt-1 text-muted-foreground">
-                    Projected completion: {new Date(results.projectedCompletion).toLocaleDateString()}
+                    Projected completion:{' '}
+                    {new Date(results.projectedCompletion).toLocaleDateString()}
                   </p>
                 )}
               </AlertDescription>

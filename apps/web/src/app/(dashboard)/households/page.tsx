@@ -57,6 +57,7 @@ export default function HouseholdsPage() {
 
   useEffect(() => {
     loadHouseholds();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadHouseholds = async () => {
@@ -161,7 +162,9 @@ export default function HouseholdsPage() {
                 <Label htmlFor="type">Type</Label>
                 <Select
                   value={newHousehold.type}
-                  onValueChange={(value: any) => setNewHousehold({ ...newHousehold, type: value })}
+                  onValueChange={(value: string) =>
+                    setNewHousehold({ ...newHousehold, type: value })
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -178,7 +181,7 @@ export default function HouseholdsPage() {
                 <Label htmlFor="currency">Base Currency</Label>
                 <Select
                   value={newHousehold.baseCurrency}
-                  onValueChange={(value: any) =>
+                  onValueChange={(value: string) =>
                     setNewHousehold({ ...newHousehold, baseCurrency: value })
                   }
                 >

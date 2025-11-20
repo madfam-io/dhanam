@@ -68,12 +68,14 @@ export interface CreateLinkParams {
   region?: string;
   institutionId?: string;
   redirectUri?: string;
+  metadata?: any;
 }
 
 export interface LinkResult {
   linkToken?: string;
   linkUrl?: string;
   expiresAt: Date;
+  expiration?: Date;
   metadata?: any;
 }
 
@@ -82,18 +84,21 @@ export interface ExchangeTokenParams {
   userId: string;
   spaceId: string;
   institutionId?: string;
+  metadata?: any;
 }
 
 export interface ExchangeTokenResult {
   accessToken: string;
   itemId: string;
   institutionId?: string;
+  institutionName?: string;
 }
 
 export interface GetAccountsParams {
   accessToken: string;
   itemId: string;
   spaceId: string;
+  userId?: string;
 }
 
 export interface ProviderAccount {
@@ -103,6 +108,7 @@ export interface ProviderAccount {
   subtype?: string;
   currency: Currency;
   balance: number;
+  mask?: string;
   metadata?: any;
 }
 
@@ -112,6 +118,7 @@ export interface SyncTransactionsParams {
   cursor?: string;
   startDate?: Date;
   endDate?: Date;
+  userId?: string;
 }
 
 export interface SyncTransactionsResult {
@@ -121,6 +128,9 @@ export interface SyncTransactionsResult {
   addedCount: number;
   modifiedCount: number;
   removedCount: number;
+  added?: number;
+  modified?: number;
+  removed?: number;
 }
 
 export interface ProviderTransaction {
@@ -144,6 +154,7 @@ export interface WebhookHandlerResult {
 
 export interface InstitutionInfo {
   id: string;
+  institutionId?: string;
   name: string;
   provider: Provider;
   region: string;

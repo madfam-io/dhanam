@@ -5,10 +5,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Lightbulb, TrendingUp, TrendingDown, RotateCcw } from 'lucide-react';
-import { useGoals, type Goal, type WhatIfScenario, type GoalProbabilityResult } from '@/hooks/useGoals';
+import {
+  useGoals,
+  type Goal,
+  type WhatIfScenario,
+  type GoalProbabilityResult,
+} from '@/hooks/useGoals';
 import { HelpTooltip } from '../demo/help-tooltip';
 
 interface WhatIfScenarioBuilderProps {
@@ -21,7 +25,10 @@ export function WhatIfScenarioBuilder({ goal, currentProbability }: WhatIfScenar
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<GoalProbabilityResult | null>(null);
 
-  const targetAmount = typeof goal.targetAmount === 'number' ? goal.targetAmount : parseFloat(goal.targetAmount.toString());
+  const targetAmount =
+    typeof goal.targetAmount === 'number'
+      ? goal.targetAmount
+      : parseFloat(goal.targetAmount.toString());
 
   // Scenario inputs
   const [scenario, setScenario] = useState<WhatIfScenario>({
@@ -46,10 +53,12 @@ export function WhatIfScenarioBuilder({ goal, currentProbability }: WhatIfScenar
     try {
       // Filter out undefined values
       const cleanScenario: WhatIfScenario = {};
-      if (scenario.monthlyContribution !== undefined) cleanScenario.monthlyContribution = scenario.monthlyContribution;
+      if (scenario.monthlyContribution !== undefined)
+        cleanScenario.monthlyContribution = scenario.monthlyContribution;
       if (scenario.targetAmount !== undefined) cleanScenario.targetAmount = scenario.targetAmount;
       if (scenario.targetDate !== undefined) cleanScenario.targetDate = scenario.targetDate;
-      if (scenario.expectedReturn !== undefined) cleanScenario.expectedReturn = scenario.expectedReturn / 100; // Convert % to decimal
+      if (scenario.expectedReturn !== undefined)
+        cleanScenario.expectedReturn = scenario.expectedReturn / 100; // Convert % to decimal
       if (scenario.volatility !== undefined) cleanScenario.volatility = scenario.volatility / 100; // Convert % to decimal
 
       const scenarioResult = await runWhatIfScenario(goal.id, cleanScenario);
@@ -109,7 +118,9 @@ export function WhatIfScenarioBuilder({ goal, currentProbability }: WhatIfScenar
               </div>
               <div>
                 <span className="text-muted-foreground">Target Date:</span>{' '}
-                <span className="font-medium">{new Date(goal.targetDate).toLocaleDateString()}</span>
+                <span className="font-medium">
+                  {new Date(goal.targetDate).toLocaleDateString()}
+                </span>
               </div>
               {currentProbability && (
                 <div>
@@ -133,7 +144,10 @@ export function WhatIfScenarioBuilder({ goal, currentProbability }: WhatIfScenar
                 placeholder="e.g., 500"
                 value={scenario.monthlyContribution || ''}
                 onChange={(e) =>
-                  setScenario({ ...scenario, monthlyContribution: parseFloat(e.target.value) || undefined })
+                  setScenario({
+                    ...scenario,
+                    monthlyContribution: parseFloat(e.target.value) || undefined,
+                  })
                 }
               />
             </div>
@@ -149,7 +163,10 @@ export function WhatIfScenarioBuilder({ goal, currentProbability }: WhatIfScenar
                 placeholder={`Current: ${formatCurrency(targetAmount)}`}
                 value={scenario.targetAmount || ''}
                 onChange={(e) =>
-                  setScenario({ ...scenario, targetAmount: parseFloat(e.target.value) || undefined })
+                  setScenario({
+                    ...scenario,
+                    targetAmount: parseFloat(e.target.value) || undefined,
+                  })
                 }
               />
             </div>
@@ -163,7 +180,9 @@ export function WhatIfScenarioBuilder({ goal, currentProbability }: WhatIfScenar
                 id="targetDate"
                 type="date"
                 value={scenario.targetDate || ''}
-                onChange={(e) => setScenario({ ...scenario, targetDate: e.target.value || undefined })}
+                onChange={(e) =>
+                  setScenario({ ...scenario, targetDate: e.target.value || undefined })
+                }
               />
             </div>
 
@@ -179,7 +198,10 @@ export function WhatIfScenarioBuilder({ goal, currentProbability }: WhatIfScenar
                 placeholder="e.g., 7.0 (default)"
                 value={scenario.expectedReturn || ''}
                 onChange={(e) =>
-                  setScenario({ ...scenario, expectedReturn: parseFloat(e.target.value) || undefined })
+                  setScenario({
+                    ...scenario,
+                    expectedReturn: parseFloat(e.target.value) || undefined,
+                  })
                 }
               />
             </div>
@@ -227,9 +249,7 @@ export function WhatIfScenarioBuilder({ goal, currentProbability }: WhatIfScenar
         <Card>
           <CardHeader>
             <CardTitle>Scenario Results</CardTitle>
-            <CardDescription>
-              Probability based on your adjusted parameters
-            </CardDescription>
+            <CardDescription>Probability based on your adjusted parameters</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Probability Comparison */}
@@ -301,7 +321,8 @@ export function WhatIfScenarioBuilder({ goal, currentProbability }: WhatIfScenar
                 <AlertDescription>
                   <p className="font-semibold mb-1">Excellent!</p>
                   <p className="text-sm">
-                    This scenario gives you a {result.probability.toFixed(1)}% chance of success. You're in great shape!
+                    This scenario gives you a {result.probability.toFixed(1)}% chance of success.
+                    You're in great shape!
                   </p>
                 </AlertDescription>
               </Alert>

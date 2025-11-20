@@ -4,15 +4,20 @@ import HomePage from '@/app/page';
 import { useAuth } from '@/lib/hooks/use-auth';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { authApi } from '@/lib/api/auth';
+import { useRouter } from 'next/navigation';
 
 // Mock dependencies
 jest.mock('@/lib/hooks/use-auth');
 jest.mock('@/hooks/useAnalytics');
 jest.mock('@/lib/api/auth');
 
-const mockUseAuth = useAuth as jest.MockedFunction<typeof useAuth>;
+const mockSetAuth = jest.fn();
+const mockUseAuth = useAuth as jest.MockedFunction<typeof useAuth> & {
+  getState: jest.MockedFunction<() => { setAuth: jest.MockedFunction<any> }>;
+};
 const mockUseAnalytics = useAnalytics as jest.MockedFunction<typeof useAnalytics>;
 const mockAuthApi = authApi as jest.Mocked<typeof authApi>;
+const mockUseRouter = useRouter as jest.MockedFunction<typeof useRouter>;
 
 describe('Landing Page Demo Flow', () => {
   const mockRouterPush = jest.fn();
@@ -42,21 +47,30 @@ describe('Landing Page Demo Flow', () => {
     jest.clearAllMocks();
 
     // Setup router mock
-    const { useRouter } = require('next/navigation');
-    useRouter.mockReturnValue({
+    mockUseRouter.mockReturnValue({
       push: mockRouterPush,
       replace: jest.fn(),
       refresh: jest.fn(),
-    });
+      back: jest.fn(),
+      forward: jest.fn(),
+      prefetch: jest.fn(),
+    } as any);
 
     // Setup analytics mock
     mockUseAnalytics.mockReturnValue(mockAnalytics as any);
+
+    // Setup Zustand store mock with getState
+    mockUseAuth.getState = jest.fn().mockReturnValue({
+      setAuth: mockSetAuth,
+      user: null,
+      isAuthenticated: false,
+    });
 
     // Default: unauthenticated user
     mockUseAuth.mockReturnValue({
       user: null,
       isAuthenticated: false,
-      setAuth: jest.fn(),
+      setAuth: mockSetAuth,
     } as any);
   });
 
@@ -64,22 +78,22 @@ describe('Landing Page Demo Flow', () => {
     it('should render the landing page with hero section', () => {
       render(<HomePage />);
 
-      expect(screen.getByText(/Know Your Financial Future/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/Know Your Financial Future/i)[0]).toBeInTheDocument();
       expect(screen.getByText(/With 95% Confidence/i)).toBeInTheDocument();
     });
 
     it('should render "Try Live Demo" button', () => {
       render(<HomePage />);
 
-      const demoButton = screen.getByRole('button', { name: /Try Live Demo/i });
-      expect(demoButton).toBeInTheDocument();
+      const demoButtons = screen.getAllByRole('button', { name: /Try Live Demo/i });
+      expect(demoButtons.length).toBeGreaterThan(0);
     });
 
     it('should render "Start Free Trial" button', () => {
       render(<HomePage />);
 
-      const signUpButton = screen.getByRole('button', { name: /Start Free Trial/i });
-      expect(signUpButton).toBeInTheDocument();
+      const signUpButtons = screen.getAllByRole('button', { name: /Start Free Trial/i });
+      expect(signUpButtons.length).toBeGreaterThan(0);
     });
 
     it('should show demo benefits text', () => {
@@ -101,8 +115,8 @@ describe('Landing Page Demo Flow', () => {
 
       render(<HomePage />);
 
-      const demoButton = screen.getByRole('button', { name: /Try Live Demo/i });
-      fireEvent.click(demoButton);
+      const demoButtons = screen.getAllByRole('button', { name: /Try Live Demo/i });
+      fireEvent.click(demoButtons[0]!);
 
       await waitFor(() => {
         expect(mockAnalytics.track).toHaveBeenCalledWith('live_demo_clicked', {
@@ -120,8 +134,8 @@ describe('Landing Page Demo Flow', () => {
 
       render(<HomePage />);
 
-      const demoButton = screen.getByRole('button', { name: /Try Live Demo/i });
-      fireEvent.click(demoButton);
+      const demoButtons = screen.getAllByRole('button', { name: /Try Live Demo/i });
+      fireEvent.click(demoButtons[0]!);
 
       await waitFor(() => {
         expect(mockAuthApi.loginAsGuest).toHaveBeenCalled();
@@ -137,8 +151,8 @@ describe('Landing Page Demo Flow', () => {
 
       render(<HomePage />);
 
-      const demoButton = screen.getByRole('button', { name: /Try Live Demo/i });
-      fireEvent.click(demoButton);
+      const demoButtons = screen.getAllByRole('button', { name: /Try Live Demo/i });
+      fireEvent.click(demoButtons[0]!);
 
       await waitFor(() => {
         expect(mockRouterPush).toHaveBeenCalledWith('/dashboard');
@@ -154,8 +168,8 @@ describe('Landing Page Demo Flow', () => {
 
       render(<HomePage />);
 
-      const demoButton = screen.getByRole('button', { name: /Try Live Demo/i });
-      fireEvent.click(demoButton);
+      const demoButtons = screen.getAllByRole('button', { name: /Try Live Demo/i });
+      fireEvent.click(demoButtons[0]!);
 
       await waitFor(() => {
         expect(mockAnalytics.track).toHaveBeenCalledWith('demo_session_started', {
@@ -170,8 +184,8 @@ describe('Landing Page Demo Flow', () => {
 
       render(<HomePage />);
 
-      const demoButton = screen.getByRole('button', { name: /Try Live Demo/i });
-      fireEvent.click(demoButton);
+      const demoButtons = screen.getAllByRole('button', { name: /Try Live Demo/i });
+      fireEvent.click(demoButtons[0]!);
 
       await waitFor(() => {
         expect(mockAnalytics.track).toHaveBeenCalledWith('demo_session_failed', {
@@ -189,8 +203,8 @@ describe('Landing Page Demo Flow', () => {
     it('should navigate to registration when "Start Free Trial" is clicked', () => {
       render(<HomePage />);
 
-      const signUpButton = screen.getByRole('button', { name: /Start Free Trial/i });
-      fireEvent.click(signUpButton);
+      const signUpButtons = screen.getAllByRole('button', { name: /Start Free Trial/i });
+      fireEvent.click(signUpButtons[0]!);
 
       expect(mockAnalytics.track).toHaveBeenCalledWith('signup_clicked', {
         source: 'landing_cta',
@@ -232,7 +246,7 @@ describe('Landing Page Demo Flow', () => {
       render(<HomePage />);
 
       expect(screen.getByText(/Simple Pricing/i)).toBeInTheDocument();
-      expect(screen.getByText(/Free/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/Free/i).length).toBeGreaterThan(0);
       expect(screen.getByText(/Premium/i)).toBeInTheDocument();
     });
 

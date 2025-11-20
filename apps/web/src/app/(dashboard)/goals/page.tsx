@@ -49,6 +49,7 @@ export default function GoalsPage() {
 
   useEffect(() => {
     loadGoals();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadGoals = async () => {
@@ -296,11 +297,7 @@ export default function GoalsPage() {
                         <CardTitle>{selectedGoal.name}</CardTitle>
                         <CardDescription>{selectedGoal.description}</CardDescription>
                       </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setShareDialogOpen(true)}
-                      >
+                      <Button variant="outline" size="sm" onClick={() => setShareDialogOpen(true)}>
                         <Users className="h-4 w-4 mr-2" />
                         Share
                       </Button>

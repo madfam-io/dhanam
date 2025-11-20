@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { addMonths, differenceInMonths } from 'date-fns';
 
-import { PrismaService } from '@/core/prisma/prisma.service';
+import { PrismaService } from '@core/prisma/prisma.service';
 import { MonteCarloEngine } from '../simulations/engines/monte-carlo.engine';
 import { MonteCarloConfig } from '../simulations/types/simulation.types';
 

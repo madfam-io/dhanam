@@ -27,7 +27,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useGoals, type GoalShare } from '@/hooks/useGoals';
@@ -47,6 +46,7 @@ export function ShareManagementPanel({ goalId, onUpdate }: ShareManagementPanelP
 
   useEffect(() => {
     loadShares();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [goalId]);
 
   const loadShares = async () => {
@@ -65,6 +65,7 @@ export function ShareManagementPanel({ goalId, onUpdate }: ShareManagementPanelP
 
   const handleRoleChange = async (share: GoalShare, newRole: string) => {
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await updateShareRole(share.id, newRole as any);
       await loadShares();
       if (onUpdate) onUpdate();
@@ -88,6 +89,7 @@ export function ShareManagementPanel({ goalId, onUpdate }: ShareManagementPanelP
   };
 
   const getStatusBadge = (status: string) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const variants: Record<string, { variant: any; label: string }> = {
       pending: { variant: 'secondary', label: 'Pending' },
       accepted: { variant: 'default', label: 'Active' },
@@ -246,7 +248,8 @@ export function ShareManagementPanel({ goalId, onUpdate }: ShareManagementPanelP
                           <p className="font-medium">{share.user.name}</p>
                           <p className="text-sm text-muted-foreground">{share.user.email}</p>
                           <p className="text-xs text-muted-foreground">
-                            Invited {formatDistanceToNow(new Date(share.createdAt), { addSuffix: true })}
+                            Invited{' '}
+                            {formatDistanceToNow(new Date(share.createdAt), { addSuffix: true })}
                           </p>
                         </div>
                       </div>
@@ -270,8 +273,8 @@ export function ShareManagementPanel({ goalId, onUpdate }: ShareManagementPanelP
           <AlertDialogHeader>
             <AlertDialogTitle>Revoke Access</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to revoke {selectedShare?.user.name}'s access to this goal?
-              They will no longer be able to view or collaborate on it.
+              Are you sure you want to revoke {selectedShare?.user.name}'s access to this goal? They
+              will no longer be able to view or collaborate on it.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

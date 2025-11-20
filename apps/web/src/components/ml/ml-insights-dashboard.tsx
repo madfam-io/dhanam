@@ -1,9 +1,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Brain, TrendingUp, Users, Zap, Clock, DollarSign } from 'lucide-react';
-
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@dhanam/ui/components/card';
+import { Brain, TrendingUp, Zap, Clock, DollarSign } from 'lucide-react';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@dhanam/ui/components/card';
 import { Progress } from '@dhanam/ui/components/progress';
 import { Skeleton } from '@dhanam/ui/components/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@dhanam/ui/components/tabs';
@@ -45,6 +50,7 @@ export function MlInsightsDashboard({ spaceId, days = 30 }: MlInsightsDashboardP
 
   useEffect(() => {
     fetchInsights();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [spaceId, days]);
 
   const fetchInsights = async () => {
@@ -118,20 +124,21 @@ export function MlInsightsDashboard({ spaceId, days = 30 }: MlInsightsDashboardP
             <p className="text-xs text-muted-foreground">
               Avg confidence: {insights.categorization.averageConfidence}
             </p>
-            <Progress value={parseFloat(insights.categorization.averageConfidence) * 100} className="mt-2" />
+            <Progress
+              value={parseFloat(insights.categorization.averageConfidence) * 100}
+              className="mt-2"
+            />
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Smart Splits</CardTitle>
-            <Users className="h-4 w-4 text-blue-600" />
+            <Zap className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{insights.summary.splitTransactions}</div>
-            <p className="text-xs text-muted-foreground">
-              AI-suggested split allocations
-            </p>
+            <p className="text-xs text-muted-foreground">AI-suggested split allocations</p>
           </CardContent>
         </Card>
 
@@ -142,9 +149,7 @@ export function MlInsightsDashboard({ spaceId, days = 30 }: MlInsightsDashboardP
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{insights.summary.mlSavingsEstimate}</div>
-            <p className="text-xs text-muted-foreground">
-              From automated tasks
-            </p>
+            <p className="text-xs text-muted-foreground">From automated tasks</p>
           </CardContent>
         </Card>
       </div>
@@ -161,15 +166,17 @@ export function MlInsightsDashboard({ spaceId, days = 30 }: MlInsightsDashboardP
             <CardHeader>
               <CardTitle>Transaction Categorization AI</CardTitle>
               <CardDescription>
-                Machine learning automatically categorizes transactions based on merchant, description,
-                and historical patterns
+                Machine learning automatically categorizes transactions based on merchant,
+                description, and historical patterns
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Total Auto-Categorized:</span>
-                  <span className="font-semibold">{insights.categorization.totalAutoCategorized}</span>
+                  <span className="font-semibold">
+                    {insights.categorization.totalAutoCategorized}
+                  </span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Average Confidence:</span>
@@ -214,7 +221,9 @@ export function MlInsightsDashboard({ spaceId, days = 30 }: MlInsightsDashboardP
                       </div>
                       <div className="text-right">
                         <p className="font-semibold">${user.averageAmount}</p>
-                        <p className="text-xs text-muted-foreground">{user.averagePercentage} avg</p>
+                        <p className="text-xs text-muted-foreground">
+                          {user.averagePercentage} avg
+                        </p>
                       </div>
                     </div>
                     <Progress value={parseFloat(user.averagePercentage)} className="h-2" />
@@ -251,7 +260,9 @@ export function MlInsightsDashboard({ spaceId, days = 30 }: MlInsightsDashboardP
           <div className="grid gap-4 md:grid-cols-2">
             <div>
               <p className="text-sm text-muted-foreground mb-1">Time Saved</p>
-              <p className="text-2xl font-bold text-primary">{insights.summary.mlSavingsEstimate}</p>
+              <p className="text-2xl font-bold text-primary">
+                {insights.summary.mlSavingsEstimate}
+              </p>
               <p className="text-xs text-muted-foreground mt-1">
                 Based on 30s/categorization, 2min/split
               </p>
@@ -261,9 +272,7 @@ export function MlInsightsDashboard({ spaceId, days = 30 }: MlInsightsDashboardP
               <p className="text-2xl font-bold">
                 {insights.summary.autoCategorizedTransactions + insights.summary.splitTransactions}
               </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Manual tasks eliminated by AI
-              </p>
+              <p className="text-xs text-muted-foreground mt-1">Manual tasks eliminated by AI</p>
             </div>
           </div>
         </CardContent>

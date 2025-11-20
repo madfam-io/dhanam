@@ -41,9 +41,7 @@ export function EsgHoldingsBreakdown({ analysis }: EsgHoldingsBreakdownProps) {
           <Coins className="h-5 w-5" />
           Holdings ESG Breakdown
         </CardTitle>
-        <CardDescription>
-          Individual ESG scores for each asset in your portfolio
-        </CardDescription>
+        <CardDescription>Individual ESG scores for each asset in your portfolio</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {sortedHoldings.map((holding) => (
@@ -115,17 +113,13 @@ export function EsgHoldingsBreakdown({ analysis }: EsgHoldingsBreakdownProps) {
                 {holding.esgScore.energyIntensity && (
                   <div className="flex items-center gap-1">
                     <Zap className="h-3 w-3" />
-                    <span>
-                      {formatNumber(holding.esgScore.energyIntensity)} kWh/tx
-                    </span>
+                    <span>{formatNumber(holding.esgScore.energyIntensity)} kWh/tx</span>
                   </div>
                 )}
                 {holding.esgScore.carbonFootprint && (
                   <div className="flex items-center gap-1">
                     <Cloud className="h-3 w-3" />
-                    <span>
-                      {formatNumber(holding.esgScore.carbonFootprint)} kg CO₂/tx
-                    </span>
+                    <span>{formatNumber(holding.esgScore.carbonFootprint)} kg CO₂/tx</span>
                   </div>
                 )}
               </div>
@@ -141,9 +135,7 @@ export function EsgHoldingsBreakdown({ analysis }: EsgHoldingsBreakdownProps) {
 
             {/* Description */}
             {holding.esgScore.description && (
-              <p className="text-xs text-muted-foreground italic">
-                {holding.esgScore.description}
-              </p>
+              <p className="text-xs text-muted-foreground italic">{holding.esgScore.description}</p>
             )}
           </div>
         ))}

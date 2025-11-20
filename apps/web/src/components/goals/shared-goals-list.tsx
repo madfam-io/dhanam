@@ -14,11 +14,13 @@ interface SharedGoalsListProps {
 
 export function SharedGoalsList({ onGoalClick }: SharedGoalsListProps) {
   const { getSharedGoals } = useGoals();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [sharedGoals, setSharedGoals] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadSharedGoals();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadSharedGoals = async () => {
@@ -113,7 +115,7 @@ export function SharedGoalsList({ onGoalClick }: SharedGoalsListProps) {
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
-                    onGoalClick && onGoalClick(goal);
+                    if (onGoalClick) onGoalClick(goal);
                   }
                 }}
               >

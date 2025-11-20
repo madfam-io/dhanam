@@ -7,6 +7,7 @@ import { authApi } from '../api/auth';
 interface AuthState {
   user: UserProfile | null;
   tokens: AuthTokens | null;
+  token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
 
@@ -15,6 +16,7 @@ interface AuthState {
   logout: () => Promise<void>;
   refreshTokens: () => Promise<void>;
   refreshUser: () => Promise<void>;
+  getToken: () => Promise<string | null>;
 }
 
 export const useAuth = create<AuthState>()(
@@ -22,17 +24,18 @@ export const useAuth = create<AuthState>()(
     (set, get) => ({
       user: null,
       tokens: null,
+      token: null,
       isAuthenticated: false,
       isLoading: false,
 
       setAuth: (user, tokens) => {
         apiClient.setTokens(tokens);
-        set({ user, tokens, isAuthenticated: true });
+        set({ user, tokens, token: tokens.accessToken, isAuthenticated: true });
       },
 
       clearAuth: () => {
         apiClient.clearTokens();
-        set({ user: null, tokens: null, isAuthenticated: false });
+        set({ user: null, tokens: null, token: null, isAuthenticated: false });
       },
 
       logout: async () => {
@@ -77,12 +80,18 @@ export const useAuth = create<AuthState>()(
           console.error('Failed to refresh user:', error);
         }
       },
+
+      getToken: async () => {
+        const { tokens } = get();
+        return tokens?.accessToken || null;
+      },
     }),
     {
       name: 'auth-storage',
       partialize: (state) => ({
         user: state.user,
         tokens: state.tokens,
+        token: state.token,
         isAuthenticated: state.isAuthenticated,
       }),
       onRehydrateStorage: () => (state) => {

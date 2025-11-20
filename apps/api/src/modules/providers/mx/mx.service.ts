@@ -139,7 +139,7 @@ export class MxService implements IFinancialProvider {
       }
 
       // Step 2: Create Connect Widget URL
-      const widgetRequest: ConnectWidgetRequestBody = {
+      const widgetRequest: any = {
         widget_url: {
           widget_type: 'connect_widget',
           mode: 'verification',
@@ -157,7 +157,8 @@ export class MxService implements IFinancialProvider {
 
       return {
         linkToken: widgetUrl,
-        expiration: new Date(Date.now() + 30 * 60 * 1000), // 30 minutes
+        expiresAt: new Date(Date.now() + 30 * 60 * 1000), // 30 minutes
+        expiration: new Date(Date.now() + 30 * 60 * 1000), // 30 minutes (legacy)
         metadata: {
           mxUserGuid,
           provider: 'mx',
@@ -366,7 +367,7 @@ export class MxService implements IFinancialProvider {
                 currency: account.currency as Currency,
                 date: new Date(mxTxn.transacted_at || mxTxn.posted_at || new Date()),
                 description: mxTxn.description || '',
-                merchant: mxTxn.merchant_name,
+                merchant: (mxTxn as any).merchant_name,
                 metadata: {
                   mxCategory: mxTxn.category,
                   mxType: mxTxn.type,
@@ -385,7 +386,7 @@ export class MxService implements IFinancialProvider {
                 amount: mxTxn.amount || 0,
                 date: new Date(mxTxn.transacted_at || mxTxn.posted_at || new Date()),
                 description: mxTxn.description || '',
-                merchant: mxTxn.merchant_name,
+                merchant: (mxTxn as any).merchant_name,
                 metadata: {
                   mxCategory: mxTxn.category,
                   mxType: mxTxn.type,
@@ -413,10 +414,15 @@ export class MxService implements IFinancialProvider {
       );
 
       return {
+        transactions: [],
+        hasMore: false,
+        addedCount: totalAdded,
+        modifiedCount: totalModified,
+        removedCount: 0,
         added: totalAdded,
         modified: totalModified,
         removed: 0,
-        nextCursor: toDate,
+        cursor: toDate,
       };
     } catch (error: any) {
       this.logger.error('Failed to sync MX transactions:', error);
@@ -492,10 +498,12 @@ export class MxService implements IFinancialProvider {
       const institutions = response.data.institutions || [];
 
       return institutions.map((inst) => ({
+        id: inst.code || '',
         institutionId: inst.code || '',
         name: inst.name || '',
+        provider: Provider.mx,
         logo: inst.medium_logo_url,
-        primaryColor: inst.brand_color,
+        primaryColor: (inst as any).brand_color,
         url: inst.url,
         supportedProducts: ['accounts', 'transactions'],
         region: region || 'US',
@@ -520,10 +528,12 @@ export class MxService implements IFinancialProvider {
       }
 
       return {
+        id: inst.code || '',
         institutionId: inst.code || '',
         name: inst.name || '',
+        provider: Provider.mx,
         logo: inst.medium_logo_url,
-        primaryColor: inst.brand_color,
+        primaryColor: (inst as any).brand_color,
         url: inst.url,
         supportedProducts: ['accounts', 'transactions'],
         region: 'US',

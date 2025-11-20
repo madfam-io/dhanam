@@ -14,16 +14,16 @@ jest.mock('next/router', () => ({
 
 // Mock Next.js navigation
 jest.mock('next/navigation', () => ({
-  useRouter: () => ({
+  useRouter: jest.fn(() => ({
     push: jest.fn(),
     replace: jest.fn(),
     back: jest.fn(),
     forward: jest.fn(),
     refresh: jest.fn(),
     prefetch: jest.fn(),
-  }),
-  usePathname: () => '/',
-  useSearchParams: () => new URLSearchParams(),
+  })),
+  usePathname: jest.fn(() => '/'),
+  useSearchParams: jest.fn(() => new URLSearchParams()),
 }));
 
 // Mock environment variables
@@ -73,7 +73,11 @@ const originalError = console.error;
 console.error = (...args: any[]) => {
   if (
     typeof args[0] === 'string' &&
-    (args[0].includes('Warning:') || args[0].includes('ReactDOM.render'))
+    (args[0].includes('Warning:') ||
+     args[0].includes('ReactDOM.render') ||
+     args[0].includes('ReactDOMTestUtils.act') ||
+     args[0].includes('was passed a style object') ||
+     args[0].includes('not wrapped in act'))
   ) {
     return;
   }

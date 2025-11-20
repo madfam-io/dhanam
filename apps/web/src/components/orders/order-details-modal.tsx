@@ -20,6 +20,7 @@ export function OrderDetailsModal({ spaceId, orderId, onClose }: OrderDetailsMod
 
   useEffect(() => {
     loadOrderDetails();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [spaceId, orderId]);
 
   const loadOrderDetails = async () => {
@@ -34,6 +35,7 @@ export function OrderDetailsModal({ spaceId, orderId, onClose }: OrderDetailsMod
 
       setOrder(orderData);
       setExecutions(executionsData);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       setError(err.message || 'Failed to load order details');
     } finally {
@@ -48,6 +50,7 @@ export function OrderDetailsModal({ spaceId, orderId, onClose }: OrderDetailsMod
     try {
       const cancelled = await ordersApi.cancelOrder(spaceId, orderId);
       setOrder(cancelled);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       setError(err.message || 'Failed to cancel order');
     } finally {

@@ -1,7 +1,7 @@
 import { Injectable, Logger, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { GoalShareRole, GoalShareStatus, GoalActivityAction } from '@prisma/client';
 
-import { PrismaService } from '@/core/prisma/prisma.service';
+import { PrismaService } from '@core/prisma/prisma.service';
 
 export interface ShareGoalInput {
   goalId: string;

@@ -19,6 +19,7 @@ import { useSimulations, type RetirementConfig } from '@/hooks/useSimulations';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface RetirementCalculatorFormProps {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onResults: (results: any) => void;
 }
 
@@ -58,6 +59,7 @@ export function RetirementCalculatorForm({ onResults }: RetirementCalculatorForm
     };
 
     loadAllocation();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [riskTolerance, inputs.currentAge, inputs.retirementAge]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -88,7 +90,11 @@ export function RetirementCalculatorForm({ onResults }: RetirementCalculatorForm
           {/* Risk Tolerance */}
           <div className="space-y-2">
             <Label htmlFor="riskTolerance">Risk Tolerance</Label>
-            <Select value={riskTolerance} onValueChange={(value: any) => setRiskTolerance(value)}>
+            <Select
+              value={riskTolerance}
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              onValueChange={(value: any) => setRiskTolerance(value)}
+            >
               <SelectTrigger id="riskTolerance">
                 <SelectValue />
               </SelectTrigger>

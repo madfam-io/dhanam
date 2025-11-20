@@ -15,7 +15,13 @@ import {
 } from '@dhanam/ui/components/dialog';
 import { Input } from '@dhanam/ui/components/input';
 import { Label } from '@dhanam/ui/components/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@dhanam/ui/components/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@dhanam/ui/components/select';
 import { Separator } from '@dhanam/ui/components/separator';
 
 interface SplitItem {
@@ -72,6 +78,7 @@ export function SplitTransactionDialog({
     setSplits(splits.filter((_, i) => i !== index));
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const updateSplit = (index: number, field: keyof SplitItem, value: any) => {
     const newSplits = [...splits];
     newSplits[index] = { ...newSplits[index], [field]: value };
@@ -106,22 +113,19 @@ export function SplitTransactionDialog({
     setLoading(true);
 
     try {
-      const response = await fetch(
-        `/api/spaces/${spaceId}/transactions/${transactionId}/split`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({
-            splits: splits.map((s) => ({
-              userId: s.userId,
-              amount: s.amount,
-              percentage: s.percentage,
-              note: s.note,
-            })),
-          }),
-        }
-      );
+      const response = await fetch(`/api/spaces/${spaceId}/transactions/${transactionId}/split`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          splits: splits.map((s) => ({
+            userId: s.userId,
+            amount: s.amount,
+            percentage: s.percentage,
+            note: s.note,
+          })),
+        }),
+      });
 
       if (!response.ok) {
         throw new Error('Failed to split transaction');
@@ -197,9 +201,7 @@ export function SplitTransactionDialog({
                         </SelectTrigger>
                         <SelectContent>
                           {householdMembers
-                            .filter(
-                              (m) => !splits.some((s, i) => i !== index && s.userId === m.id)
-                            )
+                            .filter((m) => !splits.some((s, i) => i !== index && s.userId === m.id))
                             .map((member) => (
                               <SelectItem key={member.id} value={member.id}>
                                 {member.name}

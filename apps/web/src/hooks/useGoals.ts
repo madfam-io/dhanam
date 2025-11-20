@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/lib/hooks/use-auth';
 
 export interface Goal {
   id: string;
@@ -112,6 +112,7 @@ export interface GoalShare {
 export interface GoalActivity {
   id: string;
   action: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   metadata?: any;
   createdAt: string;
   user: {
@@ -171,6 +172,7 @@ export function useGoals() {
   const handleRequest = async <T>(
     method: 'GET' | 'POST' | 'PUT' | 'DELETE',
     endpoint: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     data?: any
   ): Promise<T | null> => {
     setLoading(true);
@@ -278,10 +280,7 @@ export function useGoals() {
   };
 
   // Collaboration Methods (Goal Sharing)
-  const shareGoal = async (
-    goalId: string,
-    input: ShareGoalInput
-  ): Promise<GoalShare | null> => {
+  const shareGoal = async (goalId: string, input: ShareGoalInput): Promise<GoalShare | null> => {
     return handleRequest<GoalShare>('POST', `${goalId}/share`, input);
   };
 

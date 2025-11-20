@@ -17,7 +17,7 @@ interface IdentifyEvent {
 export class PostHogService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(PostHogService.name);
   private client: PostHog | null = null;
-  private readonly isEnabled: boolean;
+  private isEnabled: boolean;
 
   constructor(private readonly configService: ConfigService) {
     this.isEnabled = !!this.configService.get('POSTHOG_API_KEY');

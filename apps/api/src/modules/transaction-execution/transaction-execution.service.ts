@@ -17,7 +17,7 @@ import { SpacesService } from '../spaces/spaces.service';
 
 import { CreateOrderDto, VerifyOrderDto, UpdateOrderDto, OrderFilterDto } from './dto';
 // Import enums from DTO
-import { OrderType, OrderPriority } from './dto/create-order.dto';
+import { OrderType, OrderPriority, Currency } from './dto/create-order.dto';
 import {
   ExecutionOrder,
   OrderType as ProviderOrderType,
@@ -342,7 +342,7 @@ export class TransactionExecutionService {
         });
 
         // Update order limits
-        await this.updateOrderLimits(userId, order.spaceId, order.type as any, order.amount);
+        await this.updateOrderLimits(userId, order.spaceId, order.type as any, parseFloat(order.amount.toString()));
 
         // Audit successful execution
         await this.auditService.log({

@@ -115,7 +115,10 @@ export function ShareGoalDialog({ goal, onShared, trigger }: ShareGoalDialogProp
                 placeholder="partner@example.com"
                 value={formData.shareWithEmail}
                 onChange={(e) =>
-                  setFormData({ ...formData, shareWithEmail: e.target.value })
+                  setFormData({
+                    ...formData,
+                    shareWithEmail: e.target.value,
+                  })
                 }
               />
               <p className="text-xs text-muted-foreground">
@@ -128,6 +131,7 @@ export function ShareGoalDialog({ goal, onShared, trigger }: ShareGoalDialogProp
               <Label htmlFor="role">Permission Level</Label>
               <Select
                 value={formData.role}
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 onValueChange={(value: any) => setFormData({ ...formData, role: value })}
               >
                 <SelectTrigger id="role">
@@ -140,9 +144,7 @@ export function ShareGoalDialog({ goal, onShared, trigger }: ShareGoalDialogProp
                   <SelectItem value="manager">Manager</SelectItem>
                 </SelectContent>
               </Select>
-              <p className="text-xs text-muted-foreground">
-                {roleDescriptions[formData.role]}
-              </p>
+              <p className="text-xs text-muted-foreground">{roleDescriptions[formData.role]}</p>
             </div>
 
             {/* Message */}

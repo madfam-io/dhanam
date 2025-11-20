@@ -1,21 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@repo/ui/card';
-import { Button } from '@repo/ui/button';
-import { Input } from '@repo/ui/input';
-import { Label } from '@repo/ui/label';
-import { Textarea } from '@repo/ui/textarea';
-import {
-  Building2,
-  Car,
-  Globe,
-  TrendingUp,
-  Gem,
-  Palette,
-  Coins,
-  Plus,
-} from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Building2, Car, Globe, TrendingUp, Gem, Palette, Coins, Plus } from 'lucide-react';
 
 interface ManualAssetFormProps {
   onSubmit: (asset: ManualAssetData) => Promise<void>;
@@ -31,19 +22,50 @@ export interface ManualAssetData {
   currency: string;
   acquisitionDate?: string;
   acquisitionCost?: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   metadata?: any;
   notes?: string;
 }
 
 const ASSET_TYPES = [
-  { value: 'real_estate', label: 'Real Estate', icon: Building2, color: 'text-blue-600' },
+  {
+    value: 'real_estate',
+    label: 'Real Estate',
+    icon: Building2,
+    color: 'text-blue-600',
+  },
   { value: 'vehicle', label: 'Vehicle', icon: Car, color: 'text-green-600' },
-  { value: 'domain', label: 'Web Domain', icon: Globe, color: 'text-purple-600' },
-  { value: 'private_equity', label: 'Private Equity', icon: TrendingUp, color: 'text-orange-600' },
-  { value: 'angel_investment', label: 'Angel Investment', icon: TrendingUp, color: 'text-red-600' },
-  { value: 'collectible', label: 'Collectible', icon: Gem, color: 'text-pink-600' },
+  {
+    value: 'domain',
+    label: 'Web Domain',
+    icon: Globe,
+    color: 'text-purple-600',
+  },
+  {
+    value: 'private_equity',
+    label: 'Private Equity',
+    icon: TrendingUp,
+    color: 'text-orange-600',
+  },
+  {
+    value: 'angel_investment',
+    label: 'Angel Investment',
+    icon: TrendingUp,
+    color: 'text-red-600',
+  },
+  {
+    value: 'collectible',
+    label: 'Collectible',
+    icon: Gem,
+    color: 'text-pink-600',
+  },
   { value: 'art', label: 'Art', icon: Palette, color: 'text-indigo-600' },
-  { value: 'jewelry', label: 'Jewelry', icon: Coins, color: 'text-yellow-600' },
+  {
+    value: 'jewelry',
+    label: 'Jewelry',
+    icon: Coins,
+    color: 'text-yellow-600',
+  },
   { value: 'other', label: 'Other', icon: Plus, color: 'text-gray-600' },
 ];
 
@@ -455,12 +477,7 @@ export function ManualAssetForm({ onSubmit, onCancel, initialData }: ManualAsset
           )}
 
           {!showMetadata && (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setShowMetadata(true)}
-            >
+            <Button type="button" variant="outline" size="sm" onClick={() => setShowMetadata(true)}>
               Add Asset Details
             </Button>
           )}

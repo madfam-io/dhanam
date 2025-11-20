@@ -18,10 +18,7 @@ export default function EsgPage() {
 
   const loadData = async () => {
     setRefreshing(true);
-    const [analysisData, trendsData] = await Promise.all([
-      getPortfolioAnalysis(),
-      getTrends(),
-    ]);
+    const [analysisData, trendsData] = await Promise.all([getPortfolioAnalysis(), getTrends()]);
 
     if (analysisData) setPortfolioAnalysis(analysisData);
     if (trendsData) setTrends(trendsData);
@@ -30,6 +27,7 @@ export default function EsgPage() {
 
   useEffect(() => {
     loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleRefresh = () => {
@@ -48,12 +46,7 @@ export default function EsgPage() {
             Environmental, Social, and Governance scoring for your crypto portfolio
           </p>
         </div>
-        <Button
-          onClick={handleRefresh}
-          disabled={refreshing}
-          variant="outline"
-          size="lg"
-        >
+        <Button onClick={handleRefresh} disabled={refreshing} variant="outline" size="lg">
           {refreshing ? (
             <>
               <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
@@ -99,8 +92,8 @@ export default function EsgPage() {
             <Leaf className="h-16 w-16 text-muted-foreground mb-4 opacity-50" />
             <h3 className="font-semibold text-lg mb-2">No crypto holdings found</h3>
             <p className="text-muted-foreground text-center mb-4 max-w-md">
-              Connect your crypto accounts to see ESG analysis of your portfolio. The system
-              will automatically analyze your holdings using the Dhanam ESG Framework.
+              Connect your crypto accounts to see ESG analysis of your portfolio. The system will
+              automatically analyze your holdings using the Dhanam ESG Framework.
             </p>
           </CardContent>
         </Card>

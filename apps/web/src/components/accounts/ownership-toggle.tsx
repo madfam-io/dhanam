@@ -4,8 +4,13 @@ import { useState } from 'react';
 import { Users, User, Heart } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
-import { Button } from '@dhanam/ui/components/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@dhanam/ui/components/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@dhanam/ui/components/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@dhanam/ui/components/tabs';
 
 export type OwnershipFilter = 'yours' | 'mine' | 'ours';
@@ -24,7 +29,7 @@ interface OwnershipToggleProps {
 }
 
 export function OwnershipToggle({
-  spaceId,
+  spaceId: _spaceId,
   onFilterChange,
   netWorth,
   currency = 'USD',

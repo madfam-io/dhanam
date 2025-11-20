@@ -25,7 +25,7 @@ interface ReadyToAssignProps {
 }
 
 export function ReadyToAssign({
-  budgetId,
+  budgetId: _budgetId,
   income,
   totalBudgeted,
   totalCarryover,
@@ -162,9 +162,7 @@ export function ReadyToAssign({
           </div>
           <div>
             <Label className="text-xs text-muted-foreground">Carryover</Label>
-            <p className="text-lg font-semibold text-blue-600">
-              {formatCurrency(totalCarryover)}
-            </p>
+            <p className="text-lg font-semibold text-blue-600">{formatCurrency(totalCarryover)}</p>
           </div>
           <div>
             <Label className="text-xs text-muted-foreground">Budgeted</Label>

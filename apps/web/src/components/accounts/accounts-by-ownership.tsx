@@ -3,9 +3,9 @@
 import { useState, useEffect } from 'react';
 import { Wallet, TrendingUp, TrendingDown } from 'lucide-react';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@dhanam/ui/components/card';
-import { Badge } from '@dhanam/ui/components/badge';
-import { Skeleton } from '@dhanam/ui/components/skeleton';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@dhanam/ui';
 
 import { OwnershipToggle, type OwnershipFilter } from './ownership-toggle';
 
@@ -77,12 +77,9 @@ export function AccountsByOwnership({
       setError(null);
 
       try {
-        const response = await fetch(
-          `/api/spaces/${spaceId}/accounts/by-ownership/${filter}`,
-          {
-            credentials: 'include',
-          }
-        );
+        const response = await fetch(`/api/spaces/${spaceId}/accounts/by-ownership/${filter}`, {
+          credentials: 'include',
+        });
 
         if (!response.ok) {
           throw new Error('Failed to fetch accounts');
@@ -193,23 +190,15 @@ export function AccountsByOwnership({
             {accounts.map((account) => (
               <Card key={account.id} className="hover:shadow-md transition-shadow">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium line-clamp-1">
-                    {account.name}
-                  </CardTitle>
+                  <CardTitle className="text-sm font-medium line-clamp-1">{account.name}</CardTitle>
                   {getAccountTypeIcon(account.type)}
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">
-                    {formatCurrency(account.balance)}
-                  </div>
+                  <div className="text-2xl font-bold">{formatCurrency(account.balance)}</div>
                   <div className="flex items-center gap-2 mt-2">
-                    <Badge variant={getAccountTypeBadgeVariant(account.type)}>
-                      {account.type}
-                    </Badge>
+                    <Badge variant={getAccountTypeBadgeVariant(account.type)}>{account.type}</Badge>
                     {account.owner && filter === 'mine' && (
-                      <span className="text-xs text-muted-foreground">
-                        {account.owner.name}
-                      </span>
+                      <span className="text-xs text-muted-foreground">{account.owner.name}</span>
                     )}
                   </div>
                 </CardContent>

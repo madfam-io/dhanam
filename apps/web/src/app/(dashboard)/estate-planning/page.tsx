@@ -45,7 +45,7 @@ export default function EstatePlanningPage() {
   } = useWills();
   const { getHouseholds } = useHouseholds();
 
-  const [households, setHouseholds] = useState<any[]>([]);
+  const [households, setHouseholds] = useState<Array<{ id: string; name: string }>>([]);
   const [selectedHouseholdId, setSelectedHouseholdId] = useState<string | null>(null);
   const [wills, setWills] = useState<Will[]>([]);
   const [selectedWill, setSelectedWill] = useState<Will | null>(null);
@@ -59,12 +59,14 @@ export default function EstatePlanningPage() {
 
   useEffect(() => {
     loadHouseholds();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     if (selectedHouseholdId) {
       loadWills(selectedHouseholdId);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedHouseholdId]);
 
   const loadHouseholds = async () => {

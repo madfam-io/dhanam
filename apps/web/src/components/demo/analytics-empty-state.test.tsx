@@ -17,7 +17,7 @@ describe('AnalyticsEmptyState', () => {
   });
 
   it('should render trending up icon', () => {
-    render(
+    const { container } = render(
       <AnalyticsEmptyState
         title="Test Analytics"
         description="Test description"
@@ -26,7 +26,7 @@ describe('AnalyticsEmptyState', () => {
     );
 
     // Check for the icon container with muted background
-    const iconContainer = screen.getByText('Test Analytics').closest('div')?.querySelector('.bg-muted');
+    const iconContainer = container.querySelector('.bg-muted');
     expect(iconContainer).toBeInTheDocument();
   });
 
@@ -87,17 +87,15 @@ describe('AnalyticsEmptyState', () => {
     );
 
     expect(
-      screen.getByText(/We need at least 30 days of transaction history to generate accurate forecasts/)
+      screen.getByText(
+        /We need at least 30 days of transaction history to generate accurate forecasts/
+      )
     ).toBeInTheDocument();
   });
 
   it('should render info icon in the info box', () => {
     const { container } = render(
-      <AnalyticsEmptyState
-        title="Test"
-        description="Description"
-        isDemoMode={false}
-      />
+      <AnalyticsEmptyState title="Test" description="Description" isDemoMode={false} />
     );
 
     // Check for info icon (lucide-react Info component)
@@ -139,11 +137,7 @@ describe('AnalyticsEmptyState', () => {
 
   it('should render with different titles and descriptions', () => {
     const { rerender } = render(
-      <AnalyticsEmptyState
-        title="First Title"
-        description="First Description"
-        isDemoMode={false}
-      />
+      <AnalyticsEmptyState title="First Title" description="First Description" isDemoMode={false} />
     );
 
     expect(screen.getByText('First Title')).toBeInTheDocument();
@@ -178,11 +172,7 @@ describe('AnalyticsEmptyState', () => {
 
   it('should display consistent spacing and layout', () => {
     const { container } = render(
-      <AnalyticsEmptyState
-        title="Test"
-        description="Description"
-        isDemoMode={false}
-      />
+      <AnalyticsEmptyState title="Test" description="Description" isDemoMode={false} />
     );
 
     // Check for py-8 padding on content container
