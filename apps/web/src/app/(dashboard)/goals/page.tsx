@@ -40,6 +40,7 @@ export default function GoalsPage() {
   const [summary, setSummary] = useState<GoalSummary | null>(null);
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
   const [goalProgress, setGoalProgress] = useState<GoalProgress | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [probability, setProbability] = useState<any | null>(null);
   const [loadingProbability, setLoadingProbability] = useState(false);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);

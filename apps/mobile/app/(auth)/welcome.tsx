@@ -1,10 +1,15 @@
-import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
 import React, { ComponentProps } from 'react';
-import { View, ScrollView } from 'react-native';
-import { Text, Button, Card } from 'react-native-paper';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
+import {
+  Ionicons,
+  router,
+  View,
+  ScrollView,
+  PaperText as Text,
+  Button,
+  Card,
+  SafeAreaView,
+} from '@/lib/react-native-compat';
 import { styles } from '@/styles/auth';
 
 const features: Array<{

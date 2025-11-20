@@ -289,11 +289,11 @@ export class EstatePlanningService {
       throw new BadRequestException('Legal disclaimer must be accepted before activation');
     }
 
-    if (will.beneficiaries.length === 0) {
+    if ((will.beneficiaries as any[]).length === 0) {
       throw new BadRequestException('Will must have at least one beneficiary');
     }
 
-    if (will.executors.length === 0) {
+    if ((will.executors as any[]).length === 0) {
       throw new BadRequestException('Will must have at least one executor');
     }
 

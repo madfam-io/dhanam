@@ -9,6 +9,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
+import type { InputJsonValue } from '@prisma/client/runtime/library';
 import { addDays, isAfter } from 'date-fns';
 
 import { AuditService } from '../../core/audit/audit.service';
@@ -132,7 +133,7 @@ export class TransactionExecutionService {
         goalId: dto.goalId,
         autoExecute: dto.autoExecute || false,
         notes: dto.notes,
-        metadata: dto.metadata as Prisma.JsonObject,
+        metadata: dto.metadata as InputJsonValue,
         ipAddress,
         userAgent,
         expiresAt,
@@ -315,7 +316,7 @@ export class TransactionExecutionService {
             fees: result.fees,
             feeCurrency: result.feeCurrency as any,
             providerOrderId: result.providerOrderId,
-            providerResponse: result.providerResponse as Prisma.JsonObject,
+            providerResponse: result.providerResponse as InputJsonValue,
             executedAt: new Date(),
             completedAt: new Date(),
           },
@@ -335,7 +336,7 @@ export class TransactionExecutionService {
             fees: result.fees,
             feeCurrency: result.feeCurrency as any,
             providerOrderId: result.providerOrderId,
-            providerResponse: result.providerResponse as Prisma.JsonObject,
+            providerResponse: result.providerResponse as InputJsonValue,
             completedAt: new Date(),
             duration: Date.now() - execution.startedAt.getTime(),
           },
@@ -378,7 +379,7 @@ export class TransactionExecutionService {
             status: 'failed' as any,
             errorCode: result.errorCode,
             errorMessage: result.errorMessage,
-            providerResponse: result.providerResponse as Prisma.JsonObject,
+            providerResponse: result.providerResponse as InputJsonValue,
             completedAt: new Date(),
             duration: Date.now() - execution.startedAt.getTime(),
           },
@@ -652,7 +653,7 @@ export class TransactionExecutionService {
         ...(dto.targetPrice !== undefined && { targetPrice: dto.targetPrice }),
         ...(dto.maxSlippage !== undefined && { maxSlippage: dto.maxSlippage }),
         ...(dto.notes !== undefined && { notes: dto.notes }),
-        ...(dto.metadata && { metadata: dto.metadata as Prisma.JsonObject }),
+        ...(dto.metadata && { metadata: dto.metadata as InputJsonValue }),
       },
       include: {
         account: true,
@@ -766,7 +767,7 @@ export class TransactionExecutionService {
         requestHash,
         orderId,
         responseStatus,
-        responseBody: responseBody as Prisma.JsonObject,
+        responseBody: responseBody as InputJsonValue,
         expiresAt: addDays(new Date(), 7), // 7 days expiration
       },
     });

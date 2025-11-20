@@ -1,9 +1,15 @@
-import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
 import React, { useState, ComponentProps } from 'react';
-import { View, StyleSheet } from 'react-native';
-import { Text, Button, Card, Switch } from 'react-native-paper';
 
+import {
+  Ionicons,
+  router,
+  View,
+  StyleSheet,
+  PaperText as Text,
+  Button,
+  Card,
+  PaperSwitch as Switch,
+} from '@/lib/react-native-compat';
 import { ErrorState } from '@/components/ErrorState';
 import { LoadingScreen } from '@/components/LoadingScreen';
 import { useBiometric, getBiometricTypeLabel } from '@/hooks/useBiometric';

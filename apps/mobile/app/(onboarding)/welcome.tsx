@@ -1,17 +1,17 @@
-import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
 import { useState, ComponentProps } from 'react';
+
 import {
+  Ionicons,
+  LinearGradient,
+  useRouter,
   View,
-  Text,
+  RNText as Text,
   ScrollView,
   TouchableOpacity,
-  ActivityIndicator,
+  RNActivityIndicator as ActivityIndicator,
   Dimensions,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-
+  SafeAreaView,
+} from '@/lib/react-native-compat';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { useOnboarding } from '../../src/contexts/OnboardingContext';
 

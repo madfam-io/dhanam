@@ -60,7 +60,7 @@ export class GoalCollaborationService {
     this.logger.log(`User ${userId} sharing goal ${input.goalId} with ${input.shareWithEmail}`);
 
     // Verify user has permission to share this goal
-    const goal = await this.verifyGoalAccess(userId, input.goalId, ['manager', 'editor']);
+    const goal = await this.verifyGoalAccess(userId, input.goalId, [GoalShareRole.manager, GoalShareRole.editor]);
 
     // Find user to share with
     const shareWithUser = await this.prisma.user.findUnique({
@@ -234,7 +234,7 @@ export class GoalCollaborationService {
     }
 
     // Verify user has permission to revoke
-    await this.verifyGoalAccess(userId, share.goalId, ['manager']);
+    await this.verifyGoalAccess(userId, share.goalId, [GoalShareRole.manager]);
 
     await this.prisma.goalShare.update({
       where: { id: shareId },
@@ -260,7 +260,7 @@ export class GoalCollaborationService {
     }
 
     // Verify user has permission to update roles
-    await this.verifyGoalAccess(userId, share.goalId, ['manager']);
+    await this.verifyGoalAccess(userId, share.goalId, [GoalShareRole.manager]);
 
     const updatedShare = await this.prisma.goalShare.update({
       where: { id: input.shareId },
@@ -286,7 +286,7 @@ export class GoalCollaborationService {
    */
   async getGoalShares(userId: string, goalId: string): Promise<GoalShareWithUser[]> {
     // Verify access
-    await this.verifyGoalAccess(userId, goalId, ['viewer', 'contributor', 'editor', 'manager']);
+    await this.verifyGoalAccess(userId, goalId, [GoalShareRole.viewer, GoalShareRole.contributor, GoalShareRole.editor, GoalShareRole.manager]);
 
     const shares = await this.prisma.goalShare.findMany({
       where: { goalId },
@@ -347,7 +347,7 @@ export class GoalCollaborationService {
     limit = 50
   ): Promise<GoalActivityWithUser[]> {
     // Verify access
-    await this.verifyGoalAccess(userId, goalId, ['viewer', 'contributor', 'editor', 'manager']);
+    await this.verifyGoalAccess(userId, goalId, [GoalShareRole.viewer, GoalShareRole.contributor, GoalShareRole.editor, GoalShareRole.manager]);
 
     const activities = await this.prisma.goalActivity.findMany({
       where: { goalId },

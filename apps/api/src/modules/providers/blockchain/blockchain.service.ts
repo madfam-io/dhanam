@@ -1,6 +1,7 @@
 import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Prisma, Account, Currency, AccountType } from '@prisma/client';
+import type { InputJsonValue } from '@prisma/client/runtime/library';
 import axios, { AxiosInstance } from 'axios';
 // import * as crypto from 'crypto'; - not used
 import * as bitcoin from 'bitcoinjs-lib';
@@ -119,7 +120,7 @@ export class BlockchainService {
             lastBlock: balance.lastBlock,
             readOnly: true,
             addedAt: new Date().toISOString(),
-          } as Prisma.JsonObject,
+          } as InputJsonValue,
         },
       });
 
@@ -210,7 +211,7 @@ export class BlockchainService {
               lastBlock: balance.lastBlock,
               readOnly: true,
               addedAt: new Date().toISOString(),
-            } as Prisma.JsonObject,
+            } as InputJsonValue,
           },
         });
 
@@ -556,7 +557,7 @@ export class BlockchainService {
             blockNumber: tx.blockNumber,
             status: tx.status,
             network: metadata.network,
-          } as Prisma.JsonObject,
+          } as InputJsonValue,
         },
       });
     } catch (error) {
@@ -662,7 +663,7 @@ export class BlockchainService {
           ...currentMetadata,
           deletedAt: new Date().toISOString(),
           deletedBy: userId,
-        } as Prisma.JsonObject,
+        } as InputJsonValue,
       },
     });
 

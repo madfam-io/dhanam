@@ -1,9 +1,7 @@
 import { Account } from '@dhanam/shared';
-import { Ionicons } from '@expo/vector-icons';
 import { ComponentProps } from 'react';
-import { View, StyleSheet } from 'react-native';
-import { Card, Text } from 'react-native-paper';
 
+import { Ionicons, View, StyleSheet, Card, PaperText as Text } from '@/lib/react-native-compat';
 import { formatCurrency } from '@/utils/currency';
 
 interface AccountCardProps {

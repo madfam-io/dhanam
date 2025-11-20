@@ -11,6 +11,7 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
+import { GoalShareRole } from '@prisma/client';
 
 import { JwtAuthGuard } from '../../core/auth/guards/jwt-auth.guard';
 
@@ -190,7 +191,7 @@ export class GoalsController {
     @Param('id') goalId: string,
     @Body() body: {
       shareWithEmail: string;
-      role: 'viewer' | 'contributor' | 'editor' | 'manager';
+      role: GoalShareRole;
       message?: string;
     },
     @Req() req: any
@@ -249,7 +250,7 @@ export class GoalsController {
   @Put('shares/:shareId/role')
   async updateShareRole(
     @Param('shareId') shareId: string,
-    @Body() body: { newRole: 'viewer' | 'contributor' | 'editor' | 'manager' },
+    @Body() body: { newRole: GoalShareRole },
     @Req() req: any
   ) {
     return this.goalCollaborationService.updateShareRole(req.user.id, {

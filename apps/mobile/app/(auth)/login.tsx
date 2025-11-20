@@ -1,11 +1,18 @@
-import { Ionicons } from '@expo/vector-icons';
 import * as LocalAuthentication from 'expo-local-authentication';
-import { router } from 'expo-router';
 import React, { useState, useEffect } from 'react';
-import { View, ScrollView, Alert } from 'react-native';
-import { Text, TextInput, Button, Checkbox } from 'react-native-paper';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
+import {
+  Ionicons,
+  router,
+  View,
+  ScrollView,
+  Alert,
+  PaperText as Text,
+  TextInput,
+  Button,
+  Checkbox,
+  SafeAreaView,
+} from '@/lib/react-native-compat';
 import { useAuth } from '@/hooks/useAuth';
 import { styles } from '@/styles/auth';
 import { validateEmail } from '@/utils/validation';
@@ -115,7 +122,7 @@ export default function LoginScreen() {
               mode="outlined"
               label="Email"
               value={formData.email}
-              onChangeText={(text) => setFormData({ ...formData, email: text })}
+              onChangeText={(text: string) => setFormData({ ...formData, email: text })}
               error={!!errors.email}
               keyboardType="email-address"
               autoCapitalize="none"
@@ -135,7 +142,7 @@ export default function LoginScreen() {
               mode="outlined"
               label="Password"
               value={formData.password}
-              onChangeText={(text) => setFormData({ ...formData, password: text })}
+              onChangeText={(text: string) => setFormData({ ...formData, password: text })}
               secureTextEntry={!showPassword}
               error={!!errors.password}
               style={styles.input}
@@ -160,7 +167,7 @@ export default function LoginScreen() {
                 mode="outlined"
                 label="2FA Code"
                 value={formData.totpCode}
-                onChangeText={(text) => setFormData({ ...formData, totpCode: text })}
+                onChangeText={(text: string) => setFormData({ ...formData, totpCode: text })}
                 error={!!errors.totpCode}
                 keyboardType="numeric"
                 maxLength={6}

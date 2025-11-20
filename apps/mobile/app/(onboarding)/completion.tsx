@@ -1,10 +1,16 @@
-import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
 import { useEffect, ComponentProps } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
+import {
+  Ionicons,
+  LinearGradient,
+  useRouter,
+  View,
+  RNText as Text,
+  ScrollView,
+  TouchableOpacity,
+  Dimensions,
+  SafeAreaView,
+} from '@/lib/react-native-compat';
 import { useAuth } from '../../src/contexts/AuthContext';
 
 const { width } = Dimensions.get('window');

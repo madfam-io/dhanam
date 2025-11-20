@@ -4,6 +4,7 @@ import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
 import { Provider, AccountType, Currency, Prisma } from '@prisma/client';
+import type { InputJsonValue } from '@prisma/client/runtime/library';
 import { firstValueFrom } from 'rxjs';
 
 import { PrismaService } from '../../../core/prisma/prisma.service';
@@ -264,7 +265,7 @@ export class FinicityService implements IFinancialProvider {
             finicityCustomerId: customerId,
             institutionId,
             connectedAt: new Date().toISOString(),
-          } as Prisma.JsonObject,
+          } as InputJsonValue,
           user: { connect: { id: params.userId } },
         },
       });
@@ -422,7 +423,7 @@ export class FinicityService implements IFinancialProvider {
                   finicityType: finicityTxn.type,
                   finicityStatus: finicityTxn.status,
                   finicityMemo: finicityTxn.memo,
-                } as Prisma.JsonObject,
+                } as InputJsonValue,
               },
             });
             totalAdded++;
@@ -440,7 +441,7 @@ export class FinicityService implements IFinancialProvider {
                   finicityType: finicityTxn.type,
                   finicityStatus: finicityTxn.status,
                   finicityMemo: finicityTxn.memo,
-                } as Prisma.JsonObject,
+                } as InputJsonValue,
               },
             });
             totalModified++;
@@ -579,8 +580,10 @@ export class FinicityService implements IFinancialProvider {
       }
 
       return {
+        id: inst.id.toString(),
         institutionId: inst.id.toString(),
         name: inst.name || '',
+        provider: Provider.finicity,
         logo: inst.branding?.logo,
         primaryColor: inst.branding?.primaryColor,
         url: inst.urlHomeApp,
@@ -629,30 +632,30 @@ export class FinicityService implements IFinancialProvider {
       .digest('hex');
 
     return crypto.timingSafeEqual(
-      Buffer.from(signature, 'hex'),
-      Buffer.from(expectedSignature, 'hex')
+      new Uint8Array(Buffer.from(signature, 'hex')),
+      new Uint8Array(Buffer.from(expectedSignature, 'hex'))
     );
   }
 
   private mapAccountType(finicityType: string): AccountType {
     const typeMap: Record<string, AccountType> = {
-      checking: 'checking',
-      savings: 'savings',
-      moneyMarket: 'savings',
-      cd: 'savings',
-      creditCard: 'credit',
-      lineOfCredit: 'credit',
-      investment: 'investment',
-      investmentTaxDeferred: 'investment',
-      employeeStockPurchasePlan: 'investment',
-      ira: 'investment',
-      '401k': 'investment',
-      roth: 'investment',
-      mortgage: 'other',
-      loan: 'other',
+      checking: AccountType.checking,
+      savings: AccountType.savings,
+      moneyMarket: AccountType.savings,
+      cd: AccountType.savings,
+      creditCard: AccountType.credit,
+      lineOfCredit: AccountType.credit,
+      investment: AccountType.investment,
+      investmentTaxDeferred: AccountType.investment,
+      employeeStockPurchasePlan: AccountType.investment,
+      ira: AccountType.investment,
+      '401k': AccountType.investment,
+      roth: AccountType.investment,
+      mortgage: AccountType.other,
+      loan: AccountType.other,
     };
 
-    return typeMap[finicityType] || 'other';
+    return typeMap[finicityType] || AccountType.other;
   }
 
   private mapCurrency(currencyCode: string): Currency {

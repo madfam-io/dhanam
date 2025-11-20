@@ -3,6 +3,7 @@ import * as crypto from 'crypto';
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Provider, AccountType, Currency, Prisma } from '@prisma/client';
+import type { InputJsonValue } from '@prisma/client/runtime/library';
 import {
   Configuration,
   MxPlatformApi,
@@ -94,7 +95,7 @@ export class MxService implements IFinancialProvider {
 
     try {
       // Ping MX by listing institutions with limit 1
-      await this.mxClient.listInstitutions({ page: 1, recordsPerPage: 1 });
+      await this.mxClient.listInstitutions({ page: 1, recordsPerPage: 1 } as any);
       const responseTimeMs = Date.now() - startTime;
 
       return {
@@ -212,7 +213,7 @@ export class MxService implements IFinancialProvider {
             institutionCode: member.institution_code,
             institutionName: member.name,
             connectedAt: new Date().toISOString(),
-          } as Prisma.JsonObject,
+          } as InputJsonValue,
           user: { connect: { id: params.userId } },
         },
       });
@@ -328,7 +329,7 @@ export class MxService implements IFinancialProvider {
             toDate,
             page,
             recordsPerPage: 100,
-          }
+          } as any
         );
 
         const mxTransactions = transactionsResponse.data.transactions || [];
@@ -374,7 +375,7 @@ export class MxService implements IFinancialProvider {
                   mxStatus: mxTxn.status,
                   mxMerchantCategoryCode: mxTxn.merchant_category_code,
                   mxOriginalDescription: mxTxn.original_description,
-                } as Prisma.JsonObject,
+                } as InputJsonValue,
               },
             });
             totalAdded++;
@@ -393,7 +394,7 @@ export class MxService implements IFinancialProvider {
                   mxStatus: mxTxn.status,
                   mxMerchantCategoryCode: mxTxn.merchant_category_code,
                   mxOriginalDescription: mxTxn.original_description,
-                } as Prisma.JsonObject,
+                } as InputJsonValue,
               },
             });
             totalModified++;
@@ -422,7 +423,7 @@ export class MxService implements IFinancialProvider {
         added: totalAdded,
         modified: totalModified,
         removed: 0,
-        cursor: toDate,
+        cursor: typeof toDate === 'string' ? toDate : toDate.toISOString(),
       };
     } catch (error: any) {
       this.logger.error('Failed to sync MX transactions:', error);
@@ -493,7 +494,7 @@ export class MxService implements IFinancialProvider {
       const response = await this.mxClient.listInstitutions({
         name: query,
         recordsPerPage: 20,
-      });
+      } as any);
 
       const institutions = response.data.institutions || [];
 
@@ -571,7 +572,7 @@ export class MxService implements IFinancialProvider {
           ...(connection.metadata as object),
           lastWebhookAt: new Date().toISOString(),
           lastStatus: payload.status,
-        } as Prisma.JsonObject,
+        } as InputJsonValue,
       },
     });
   }
@@ -642,23 +643,23 @@ export class MxService implements IFinancialProvider {
       .digest('hex');
 
     return crypto.timingSafeEqual(
-      Buffer.from(signature, 'hex'),
-      Buffer.from(expectedSignature, 'hex')
+      new Uint8Array(Buffer.from(signature, 'hex')),
+      new Uint8Array(Buffer.from(expectedSignature, 'hex'))
     );
   }
 
   private mapAccountType(mxType: string): AccountType {
     const typeMap: Record<string, AccountType> = {
-      CHECKING: 'checking',
-      SAVINGS: 'savings',
-      CREDIT_CARD: 'credit',
-      INVESTMENT: 'investment',
-      LOAN: 'other',
-      LINE_OF_CREDIT: 'credit',
-      MORTGAGE: 'other',
+      CHECKING: AccountType.checking,
+      SAVINGS: AccountType.savings,
+      CREDIT_CARD: AccountType.credit,
+      INVESTMENT: AccountType.investment,
+      LOAN: AccountType.other,
+      LINE_OF_CREDIT: AccountType.credit,
+      MORTGAGE: AccountType.other,
     };
 
-    return typeMap[mxType.toUpperCase()] || 'other';
+    return typeMap[mxType.toUpperCase()] || AccountType.other;
   }
 
   private mapCurrency(currencyCode: string): Currency {

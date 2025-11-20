@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { Transaction, Prisma } from '@prisma/client';
+import type { InputJsonValue } from '@prisma/client/runtime/library';
 
 import { PrismaService } from '../../core/prisma/prisma.service';
 import { SpacesService } from '../spaces/spaces.service';
@@ -119,7 +120,7 @@ export class TransactionsService {
         description: dto.description,
         merchant: dto.merchant,
         categoryId: dto.categoryId,
-        metadata: dto.metadata as Prisma.JsonObject,
+        metadata: dto.metadata as InputJsonValue,
       },
       include: {
         account: true,
@@ -185,7 +186,7 @@ export class TransactionsService {
         ...(dto.description && { description: dto.description }),
         ...(dto.merchant !== undefined && { merchant: dto.merchant }),
         ...(dto.categoryId !== undefined && { categoryId: dto.categoryId }),
-        ...(dto.metadata && { metadata: dto.metadata as Prisma.JsonObject }),
+        ...(dto.metadata && { metadata: dto.metadata as InputJsonValue }),
       },
       include: {
         account: true,

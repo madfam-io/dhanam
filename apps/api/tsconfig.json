@@ -9,6 +9,8 @@
     "noUnusedParameters": false,
     "noUncheckedIndexedAccess": false,
     "noImplicitReturns": false,
+    "jsx": "react",
+    "lib": ["ES2022", "DOM"],
     "paths": {
       "~/*": ["./src/*"],
       "@modules/*": ["./src/modules/*"],

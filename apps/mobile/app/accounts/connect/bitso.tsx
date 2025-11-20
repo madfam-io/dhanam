@@ -1,8 +1,17 @@
-import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { View, ScrollView, StyleSheet } from 'react-native';
-import { Text, Card, Button, TextInput, HelperText } from 'react-native-paper';
+
+import {
+  Ionicons,
+  router,
+  View,
+  ScrollView,
+  StyleSheet,
+  PaperText as Text,
+  Card,
+  Button,
+  TextInput,
+  HelperText,
+} from '@/lib/react-native-compat';
 
 import { ErrorState } from '@/components/ErrorState';
 import { LoadingScreen } from '@/components/LoadingScreen';
@@ -153,7 +162,7 @@ export default function BitsoConnectScreen() {
               <TextInput
                 label="API Key"
                 value={formData.apiKey}
-                onChangeText={(value) => handleInputChange('apiKey', value)}
+                onChangeText={(value: string) => handleInputChange('apiKey', value)}
                 mode="outlined"
                 error={!!fieldErrors.apiKey}
                 autoCapitalize="none"
@@ -170,7 +179,7 @@ export default function BitsoConnectScreen() {
               <TextInput
                 label="API Secret"
                 value={formData.apiSecret}
-                onChangeText={(value) => handleInputChange('apiSecret', value)}
+                onChangeText={(value: string) => handleInputChange('apiSecret', value)}
                 mode="outlined"
                 error={!!fieldErrors.apiSecret}
                 secureTextEntry={!showSecret}

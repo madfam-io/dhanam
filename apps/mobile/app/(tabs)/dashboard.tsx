@@ -1,10 +1,19 @@
 import { Account, Transaction } from '@dhanam/shared';
 import { useQuery } from '@tanstack/react-query';
-import { router } from 'expo-router';
 import React, { useMemo } from 'react';
-import { ScrollView, View, RefreshControl, Dimensions } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
-import { Text, Card, FAB, Button } from 'react-native-paper';
+
+import {
+  router,
+  ScrollView,
+  View,
+  RefreshControl,
+  Dimensions,
+  PaperText as Text,
+  Card,
+  FAB,
+  Button,
+} from '@/lib/react-native-compat';
 
 import { AccountCard } from '@/components/AccountCard';
 import { ErrorState } from '@/components/ErrorState';

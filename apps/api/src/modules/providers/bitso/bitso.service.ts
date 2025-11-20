@@ -3,6 +3,7 @@ import * as crypto from 'crypto';
 import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Prisma, Account, Currency } from '@prisma/client';
+import type { InputJsonValue } from '@prisma/client/runtime/library';
 import axios, { AxiosInstance } from 'axios';
 
 import { CryptoService } from '../../../core/crypto/crypto.service';
@@ -153,7 +154,7 @@ export class BitsoService {
             accountStatus: accountInfo.status,
             dailyLimit: accountInfo.daily_limit,
             monthlyLimit: accountInfo.monthly_limit,
-          } as Prisma.JsonObject,
+          } as InputJsonValue,
           user: { connect: { id: userId } },
         },
       });
@@ -247,7 +248,7 @@ export class BitsoService {
             usdPrice: usdPrice * mxnToUsdRate,
             lastPriceUpdate: new Date().toISOString(),
             clientId,
-          } as Prisma.JsonObject,
+          } as InputJsonValue,
         };
 
         const account = await this.prisma.account.create({ data: accountData });
@@ -316,7 +317,7 @@ export class BitsoService {
                 lockedAmount: parseFloat(balance.locked),
                 usdPrice: usdPrice * mxnToUsdRate,
                 lastPriceUpdate: new Date().toISOString(),
-              } as Prisma.JsonObject,
+              } as InputJsonValue,
             },
           });
 
@@ -351,7 +352,7 @@ export class BitsoService {
               usdPrice: usdPrice * mxnToUsdRate,
               lastPriceUpdate: new Date().toISOString(),
               clientId,
-            } as Prisma.JsonObject,
+            } as InputJsonValue,
           };
 
           const newAccount = await this.prisma.account.create({ data: accountData });
@@ -445,7 +446,7 @@ export class BitsoService {
               currency: trade.fees_currency,
             },
             exchangeRate: parseFloat(trade.price),
-          } as Prisma.JsonObject,
+          } as InputJsonValue,
         },
       });
     } catch (error) {

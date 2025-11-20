@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 
 import { PrismaService } from '@core/prisma/prisma.service';
 
-interface SplitSuggestion {
+export interface SplitSuggestion {
   userId: string;
   userName: string;
   suggestedAmount: number;
@@ -275,7 +275,7 @@ export class SplitPredictionService {
 
       suggestions.push({
         userId,
-        userName: userMap.get(userId) || 'Unknown',
+        userName: (userMap.get(userId) as string) || 'Unknown',
         suggestedAmount: Math.round(amount * 100) / 100,
         suggestedPercentage: Math.round(percentage * 10) / 10,
         confidence,

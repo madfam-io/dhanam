@@ -5,6 +5,7 @@ import 'react';
 
 declare module 'react' {
   // Fix for React 19 JSXElementType
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   type ElementType<P = any> =
     | {
         [K in keyof JSX.IntrinsicElements]: P extends JSX.IntrinsicElements[K] ? K : never;

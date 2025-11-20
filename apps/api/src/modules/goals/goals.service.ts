@@ -152,7 +152,7 @@ export class GoalsService {
   > {
     await this.findByIdWithAccess(goalId, userId);
 
-    return this.prisma.goal.findUnique({
+    const goal = await this.prisma.goal.findUnique({
       where: { id: goalId },
       include: {
         allocations: {
@@ -170,6 +170,12 @@ export class GoalsService {
         },
       },
     });
+
+    if (!goal) {
+      throw new NotFoundException('Goal not found');
+    }
+
+    return goal;
   }
 
   /**
@@ -333,7 +339,7 @@ export class GoalsService {
     let currentValue = 0;
     const allocationProgress: GoalAllocationProgress[] = [];
 
-    for (const allocation of goal.allocations) {
+    for (const allocation of (goal.allocations as any[])) {
       const contributedValue =
         Number(allocation.account.balance) * (Number(allocation.percentage) / 100);
       currentValue += contributedValue;

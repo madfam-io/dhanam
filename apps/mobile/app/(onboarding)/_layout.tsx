@@ -1,8 +1,14 @@
-import { Stack, useRouter, useSegments } from 'expo-router';
 import { useEffect } from 'react';
-import { View, Text, ActivityIndicator } from 'react-native';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import {
+  Stack,
+  useRouter,
+  useSegments,
+  View,
+  RNText as Text,
+  RNActivityIndicator as ActivityIndicator,
+  SafeAreaProvider,
+} from '@/lib/react-native-compat';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { OnboardingProvider } from '../../src/contexts/OnboardingContext';
 

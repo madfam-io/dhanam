@@ -1,7 +1,12 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
-import { ActivityIndicator, Text } from 'react-native-paper';
-import { SafeAreaView } from 'react-native-safe-area-context';
+
+import {
+  View,
+  StyleSheet,
+  PaperActivityIndicator as ActivityIndicator,
+  PaperText as Text,
+  SafeAreaView,
+} from '@/lib/react-native-compat';
 
 interface LoadingScreenProps {
   message?: string;

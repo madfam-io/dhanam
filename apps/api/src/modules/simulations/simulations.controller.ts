@@ -10,6 +10,7 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
+import { UsageMetricType } from '@prisma/client';
 import { JwtAuthGuard } from '../../core/auth/guards/jwt-auth.guard';
 import { SubscriptionGuard } from '../billing/guards/subscription.guard';
 import { UsageLimitGuard } from '../billing/guards/usage-limit.guard';
@@ -34,7 +35,7 @@ export class SimulationsController {
   @Post('monte-carlo')
   @RequiresPremium()
   @UseGuards(SubscriptionGuard, UsageLimitGuard)
-  @TrackUsage('monte_carlo_simulation')
+  @TrackUsage(UsageMetricType.monte_carlo_simulation)
   @MonitorPerformance(15000)
   @HttpCode(HttpStatus.OK)
   async runSimulation(
@@ -47,7 +48,7 @@ export class SimulationsController {
   @Post('retirement')
   @RequiresPremium()
   @UseGuards(SubscriptionGuard, UsageLimitGuard)
-  @TrackUsage('monte_carlo_simulation')
+  @TrackUsage(UsageMetricType.monte_carlo_simulation)
   @MonitorPerformance(20000)
   @HttpCode(HttpStatus.OK)
   async runRetirementSimulation(
@@ -60,7 +61,7 @@ export class SimulationsController {
   @Post('safe-withdrawal-rate')
   @RequiresPremium()
   @UseGuards(SubscriptionGuard, UsageLimitGuard)
-  @TrackUsage('monte_carlo_simulation')
+  @TrackUsage(UsageMetricType.monte_carlo_simulation)
   @MonitorPerformance(15000)
   @HttpCode(HttpStatus.OK)
   async calculateSafeWithdrawalRate(

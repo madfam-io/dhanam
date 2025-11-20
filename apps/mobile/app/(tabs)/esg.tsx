@@ -1,9 +1,19 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import React, { useState } from 'react';
-import { View, ScrollView, RefreshControl, Dimensions, StyleSheet } from 'react-native';
 import { LineChart, BarChart } from 'react-native-chart-kit';
-import { Text, Card, SegmentedButtons, Chip } from 'react-native-paper';
+
+import {
+  Ionicons,
+  View,
+  ScrollView,
+  RefreshControl,
+  Dimensions,
+  StyleSheet,
+  PaperText as Text,
+  Card,
+  SegmentedButtons,
+  Chip,
+} from '@/lib/react-native-compat';
 
 import { ErrorState } from '@/components/ErrorState';
 import { LoadingScreen } from '@/components/LoadingScreen';

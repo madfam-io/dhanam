@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 
 import { PrismaService } from '@core/prisma/prisma.service';
 
-interface CategoryPrediction {
+export interface CategoryPrediction {
   categoryId: string;
   categoryName: string;
   confidence: number;
@@ -174,7 +174,7 @@ export class TransactionCategorizationService {
       {} as Record<string, number>
     );
 
-    const mostCommonCategory = Object.entries(categoryCount).sort((a, b) => b[1] - a[1])[0];
+    const mostCommonCategory = Object.entries(categoryCount).sort((a, b) => (b[1] as number) - (a[1] as number))[0];
 
     if (!mostCommonCategory) {
       return null;
@@ -183,7 +183,7 @@ export class TransactionCategorizationService {
     return {
       merchant,
       categoryId: mostCommonCategory[0],
-      count: mostCommonCategory[1],
+      count: mostCommonCategory[1] as number,
       lastUsed: transactions[0].createdAt,
     };
   }
