@@ -18,7 +18,12 @@ import {
   Plus,
   Calculator,
   Loader2,
+  Users,
 } from 'lucide-react';
+import { ShareGoalDialog } from '@/components/goals/share-goal-dialog';
+import { SharedGoalsList } from '@/components/goals/shared-goals-list';
+import { GoalActivityFeed } from '@/components/goals/goal-activity-feed';
+import { ShareManagementPanel } from '@/components/goals/share-management-panel';
 
 export default function GoalsPage() {
   const {
@@ -37,6 +42,7 @@ export default function GoalsPage() {
   const [goalProgress, setGoalProgress] = useState<GoalProgress | null>(null);
   const [probability, setProbability] = useState<any | null>(null);
   const [loadingProbability, setLoadingProbability] = useState(false);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
 
   // TODO: Get actual spaceId from user context
   const spaceId = 'default-space-id';
@@ -191,6 +197,14 @@ export default function GoalsPage() {
         </div>
       )}
 
+      {/* Shared Goals Section */}
+      <SharedGoalsList
+        onGoalClick={(goal) => {
+          setSelectedGoal(goal);
+          handleGoalClick(goal);
+        }}
+      />
+
       {/* Main Content */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Goals List */}
@@ -264,16 +278,33 @@ export default function GoalsPage() {
         <div className="lg:col-span-2">
           {selectedGoal && goalProgress ? (
             <Tabs defaultValue="progress" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="progress">Progress</TabsTrigger>
                 <TabsTrigger value="probability">Probability</TabsTrigger>
+                <TabsTrigger value="collaboration">
+                  <Users className="h-4 w-4 mr-2" />
+                  Collaboration
+                </TabsTrigger>
+                <TabsTrigger value="activity">Activity</TabsTrigger>
               </TabsList>
 
               <TabsContent value="progress" className="space-y-6">
                 <Card>
                   <CardHeader>
-                    <CardTitle>{selectedGoal.name}</CardTitle>
-                    <CardDescription>{selectedGoal.description}</CardDescription>
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <CardTitle>{selectedGoal.name}</CardTitle>
+                        <CardDescription>{selectedGoal.description}</CardDescription>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShareDialogOpen(true)}
+                      >
+                        <Users className="h-4 w-4 mr-2" />
+                        Share
+                      </Button>
+                    </div>
                   </CardHeader>
                   <CardContent className="space-y-6">
                     {/* Progress Bar */}
@@ -480,6 +511,20 @@ export default function GoalsPage() {
                   </CardContent>
                 </Card>
               </TabsContent>
+
+              <TabsContent value="collaboration" className="space-y-6">
+                <ShareManagementPanel
+                  goal={selectedGoal}
+                  onUpdate={() => {
+                    // Reload goal data to reflect changes
+                    handleGoalClick(selectedGoal);
+                  }}
+                />
+              </TabsContent>
+
+              <TabsContent value="activity" className="space-y-6">
+                <GoalActivityFeed goalId={selectedGoal.id} />
+              </TabsContent>
             </Tabs>
           ) : (
             <div className="flex items-center justify-center h-[600px] border border-dashed rounded-lg">
@@ -494,6 +539,19 @@ export default function GoalsPage() {
           )}
         </div>
       </div>
+
+      {/* Share Goal Dialog */}
+      {selectedGoal && (
+        <ShareGoalDialog
+          goal={selectedGoal}
+          open={shareDialogOpen}
+          onOpenChange={setShareDialogOpen}
+          onShared={() => {
+            // Reload goals to reflect sharing status
+            loadGoals();
+          }}
+        />
+      )}
     </div>
   );
 }
