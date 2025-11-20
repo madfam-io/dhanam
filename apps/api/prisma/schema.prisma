@@ -103,6 +103,12 @@ enum ManualAssetType {
   other
 }
 
+enum AccountOwnership {
+  individual  // Owned by a single household member
+  joint       // Shared by multiple household members
+  trust       // Held in trust
+}
+
 enum GoalType {
   retirement
   education
@@ -209,6 +215,7 @@ model User {
   usageMetrics     UsageMetric[]
   householdMembers HouseholdMember[]
   simulations      Simulation[]
+  ownedAccounts    Account[]        // For "Yours/Mine/Ours" visibility
 
   @@map("users")
 }
@@ -354,6 +361,8 @@ model Account {
   subtype               String?
   currency              Currency
   balance               Decimal           @default(0) @db.Decimal(19, 4)
+  ownership             AccountOwnership  @default(individual)
+  ownerId               String?           @map("owner_id") // UserID for individual accounts
   encryptedCredentials  Json?             @map("encrypted_credentials")
   metadata              Json?
   lastSyncedAt          DateTime?         @map("last_synced_at")
@@ -362,6 +371,7 @@ model Account {
 
   // Relations
   space                 Space             @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  owner                 User?             @relation(fields: [ownerId], references: [id], onDelete: SetNull)
   transactions          Transaction[]
   assetValuations       AssetValuation[]
   esgScores             ESGScore[]
@@ -373,6 +383,8 @@ model Account {
 
   @@unique([spaceId, provider, providerAccountId])
   @@index([spaceId])
+  @@index([spaceId, ownership])
+  @@index([spaceId, ownerId])
   @@index([spaceId, lastSyncedAt(sort: Desc)])
   @@map("accounts")
 }

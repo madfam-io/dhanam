@@ -24,6 +24,7 @@ import { AccountsService } from './accounts.service';
 import { ConnectAccountDto } from './dto/connect-account.dto';
 import { CreateAccountDto } from './dto/create-account.dto';
 import { UpdateAccountDto } from './dto/update-account.dto';
+import { UpdateOwnershipDto } from './dto/update-ownership.dto';
 
 @ApiTags('Accounts')
 @ApiBearerAuth()
@@ -115,5 +116,53 @@ export class AccountsController {
     @Param('accountId') accountId: string
   ): Promise<SyncAccountResponse> {
     return this.accountsService.syncAccount(spaceId, accountId);
+  }
+
+  // Yours/Mine/Ours Visibility Endpoints
+
+  @Patch(':accountId/ownership')
+  @UseGuards(SpaceGuard)
+  @RequireRole('owner', 'admin')
+  @ApiOperation({ summary: 'Update account ownership (Yours/Mine/Ours)' })
+  @ApiResponse({ status: 200, description: 'Ownership updated' })
+  async updateOwnership(
+    @Param('spaceId') spaceId: string,
+    @Param('accountId') accountId: string,
+    @Body() dto: UpdateOwnershipDto,
+    @Req() req: any
+  ): Promise<Account> {
+    const userId = req.user!.id;
+    return this.accountsService.updateOwnership(spaceId, accountId, userId, dto);
+  }
+
+  @Get('by-ownership/:filter')
+  @UseGuards(SpaceGuard)
+  @ApiOperation({
+    summary: 'Get accounts by ownership filter',
+    description: 'Filter: yours (your accounts), mine (partner accounts), ours (joint accounts)',
+  })
+  @ApiResponse({ status: 200, description: 'Filtered accounts' })
+  async getAccountsByOwnership(
+    @Param('spaceId') spaceId: string,
+    @Param('filter') filter: 'yours' | 'mine' | 'ours',
+    @Req() req: any
+  ): Promise<Account[]> {
+    const userId = req.user!.id;
+    return this.accountsService.getAccountsByOwnership(spaceId, userId, filter);
+  }
+
+  @Get('net-worth/by-ownership')
+  @UseGuards(SpaceGuard)
+  @ApiOperation({
+    summary: 'Get net worth aggregated by ownership',
+    description: 'Returns yours, mine, ours, and total net worth',
+  })
+  @ApiResponse({ status: 200, description: 'Net worth by ownership' })
+  async getNetWorthByOwnership(
+    @Param('spaceId') spaceId: string,
+    @Req() req: any
+  ): Promise<{ yours: number; mine: number; ours: number; total: number }> {
+    const userId = req.user!.id;
+    return this.accountsService.getNetWorthByOwnership(spaceId, userId);
   }
 }

@@ -1,5 +1,6 @@
 import { Account, SyncAccountResponse, AccountType } from '@dhanam/shared';
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { AccountOwnership } from '@prisma/client';
 import { v4 as uuidv4 } from 'uuid';
 
 import { LoggerService } from '@core/logger/logger.service';
@@ -8,6 +9,7 @@ import { PrismaService } from '@core/prisma/prisma.service';
 import { ConnectAccountDto } from './dto/connect-account.dto';
 import { CreateAccountDto } from './dto/create-account.dto';
 import { UpdateAccountDto } from './dto/update-account.dto';
+import { UpdateOwnershipDto } from './dto/update-ownership.dto';
 
 @Injectable()
 export class AccountsService {
@@ -176,6 +178,147 @@ export class AccountsService {
     return {
       jobId,
       status: 'pending',
+    };
+  }
+
+  /**
+   * Update account ownership (Yours/Mine/Ours visibility)
+   */
+  async updateOwnership(
+    spaceId: string,
+    accountId: string,
+    userId: string,
+    dto: UpdateOwnershipDto
+  ): Promise<Account> {
+    const account = await this.prisma.account.findFirst({
+      where: {
+        id: accountId,
+        spaceId,
+      },
+    });
+
+    if (!account) {
+      throw new NotFoundException('Account not found');
+    }
+
+    // Validate ownership rules
+    if (dto.ownership === 'individual' && !dto.ownerId) {
+      throw new BadRequestException('Individual accounts require an ownerId');
+    }
+
+    if (dto.ownership === 'joint' && dto.ownerId) {
+      throw new BadRequestException('Joint accounts should not have an ownerId');
+    }
+
+    const updated = await this.prisma.account.update({
+      where: { id: accountId },
+      data: {
+        ownership: dto.ownership,
+        ownerId: dto.ownership === 'individual' ? dto.ownerId : null,
+      },
+    });
+
+    this.logger.log(
+      `Account ownership updated: ${accountId} to ${dto.ownership}`,
+      'AccountsService'
+    );
+
+    return this.sanitizeAccount(updated);
+  }
+
+  /**
+   * Get accounts filtered by ownership (Yours/Mine/Ours)
+   * - 'yours': Accounts owned by the current user
+   * - 'mine': Accounts owned by other household members
+   * - 'ours': Joint/shared accounts
+   */
+  async getAccountsByOwnership(
+    spaceId: string,
+    userId: string,
+    filter: 'yours' | 'mine' | 'ours'
+  ): Promise<Account[]> {
+    let whereClause: any = { spaceId };
+
+    switch (filter) {
+      case 'yours':
+        // Show accounts owned by current user
+        whereClause.ownership = 'individual';
+        whereClause.ownerId = userId;
+        break;
+
+      case 'mine':
+        // Show accounts owned by others (not current user)
+        whereClause.ownership = 'individual';
+        whereClause.NOT = { ownerId: userId };
+        break;
+
+      case 'ours':
+        // Show joint/shared accounts
+        whereClause.ownership = 'joint';
+        break;
+
+      default:
+        throw new BadRequestException('Invalid ownership filter');
+    }
+
+    const accounts = await this.prisma.account.findMany({
+      where: whereClause,
+      include: {
+        owner: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    return accounts.map(this.sanitizeAccount);
+  }
+
+  /**
+   * Get aggregated net worth by ownership (for Yours/Mine/Ours dashboard)
+   */
+  async getNetWorthByOwnership(
+    spaceId: string,
+    userId: string
+  ): Promise<{
+    yours: number;
+    mine: number;
+    ours: number;
+    total: number;
+  }> {
+    const [yoursAccounts, mineAccounts, oursAccounts] = await Promise.all([
+      this.prisma.account.findMany({
+        where: { spaceId, ownership: 'individual', ownerId: userId },
+        select: { balance: true },
+      }),
+      this.prisma.account.findMany({
+        where: { spaceId, ownership: 'individual', NOT: { ownerId: userId } },
+        select: { balance: true },
+      }),
+      this.prisma.account.findMany({
+        where: { spaceId, ownership: 'joint' },
+        select: { balance: true },
+      }),
+    ]);
+
+    const calculateTotal = (accounts: any[]) =>
+      accounts.reduce((sum, acc) => sum + parseFloat(acc.balance.toString()), 0);
+
+    const yours = calculateTotal(yoursAccounts);
+    const mine = calculateTotal(mineAccounts);
+    const ours = calculateTotal(oursAccounts);
+
+    return {
+      yours,
+      mine,
+      ours,
+      total: yours + mine + ours,
     };
   }
 
