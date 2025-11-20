@@ -28,6 +28,8 @@ import { SyncStatus } from '@/components/sync/sync-status';
 import { HelpTooltip } from '@/components/demo/help-tooltip';
 import { AnalyticsEmptyState } from '@/components/demo/analytics-empty-state';
 import { ProbabilisticGoalCard } from '@/components/goals/probabilistic-goal-card';
+import { GoalHealthScore } from '@/components/goals/goal-health-score';
+import { GoalProbabilityTimeline } from '@/components/goals/goal-probability-timeline';
 import { useGoals } from '@/hooks/useGoals';
 
 export default function DashboardPage() {
@@ -247,6 +249,11 @@ export default function DashboardPage() {
             </p>
           </CardContent>
         </Card>
+
+        {/* Goal Health Score - Only show if there are goals with probability data */}
+        {!isLoadingGoals && goals && goals.length > 0 && (
+          <GoalHealthScore goals={goals} />
+        )}
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
@@ -459,6 +466,11 @@ export default function DashboardPage() {
               />
             ))}
           </div>
+
+          {/* Probability Timeline */}
+          {activeGoals.length > 0 && (
+            <GoalProbabilityTimeline goals={activeGoals} />
+          )}
         </div>
       ) : null}
 
