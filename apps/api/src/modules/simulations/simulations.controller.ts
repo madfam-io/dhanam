@@ -1,184 +1,117 @@
 import {
   Controller,
   Post,
+  Get,
+  Delete,
   Body,
-  UseGuards,
-  Req,
   Param,
+  Query,
+  UseGuards,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-
 import { JwtAuthGuard } from '../../core/auth/guards/jwt-auth.guard';
-import { RequiresPremium } from '../billing/decorators/requires-tier.decorator';
-import { TrackUsage } from '../billing/decorators/track-usage.decorator';
 import { SubscriptionGuard } from '../billing/guards/subscription.guard';
 import { UsageLimitGuard } from '../billing/guards/usage-limit.guard';
+import { RequiresPremium } from '../billing/decorators/requires-tier.decorator';
+import { TrackUsage } from '../billing/decorators/track-usage.decorator';
+import { CurrentUser } from '../../core/auth/decorators/current-user.decorator';
+import { MonitorPerformance } from '../../core/decorators/monitor-performance.decorator';
 
-import { RunSimulationDto, CalculateGoalProbabilityDto, SimulateRetirementDto } from './dto';
 import { SimulationsService } from './simulations.service';
+import {
+  RunSimulationDto,
+  RunRetirementSimulationDto,
+  CalculateSafeWithdrawalRateDto,
+  AnalyzeScenarioDto,
+} from './dto';
 
-/**
- * Simulations Controller
- *
- * Handles probabilistic financial simulations using Monte Carlo methods.
- * All endpoints require authentication and most require premium tier.
- */
 @Controller('simulations')
-@UseGuards(JwtAuthGuard, SubscriptionGuard, UsageLimitGuard)
+@UseGuards(JwtAuthGuard)
 export class SimulationsController {
-  constructor(private simulationsService: SimulationsService) {}
+  constructor(private readonly simulationsService: SimulationsService) {}
 
-  /**
-   * Run basic Monte Carlo simulation
-   *
-   * Performs stochastic simulation of portfolio growth over time.
-   * Returns distribution of possible outcomes.
-   *
-   * @requires Premium tier
-   * @tracks monte_carlo_simulation usage
-   */
   @Post('monte-carlo')
   @RequiresPremium()
+  @UseGuards(SubscriptionGuard, UsageLimitGuard)
   @TrackUsage('monte_carlo_simulation')
+  @MonitorPerformance(15000)
   @HttpCode(HttpStatus.OK)
-  async runSimulation(@Body() dto: RunSimulationDto, @Req() _req: any) {
-    return this.simulationsService.runSimulation({
-      initialBalance: dto.initialBalance,
-      monthlyContribution: dto.monthlyContribution,
-      months: dto.months,
-      iterations: dto.iterations ?? 10000,
-      expectedReturn: dto.expectedReturn,
-      volatility: dto.volatility,
+  async runSimulation(
+    @CurrentUser() user: { id: string },
+    @Body() dto: RunSimulationDto
+  ) {
+    return this.simulationsService.runSimulation(user.id, dto);
+  }
+
+  @Post('retirement')
+  @RequiresPremium()
+  @UseGuards(SubscriptionGuard, UsageLimitGuard)
+  @TrackUsage('monte_carlo_simulation')
+  @MonitorPerformance(20000)
+  @HttpCode(HttpStatus.OK)
+  async runRetirementSimulation(
+    @CurrentUser() user: { id: string },
+    @Body() dto: RunRetirementSimulationDto
+  ) {
+    return this.simulationsService.runRetirementSimulation(user.id, dto);
+  }
+
+  @Post('safe-withdrawal-rate')
+  @RequiresPremium()
+  @UseGuards(SubscriptionGuard, UsageLimitGuard)
+  @TrackUsage('monte_carlo_simulation')
+  @MonitorPerformance(15000)
+  @HttpCode(HttpStatus.OK)
+  async calculateSafeWithdrawalRate(
+    @CurrentUser() user: { id: string },
+    @Body() dto: CalculateSafeWithdrawalRateDto
+  ) {
+    return this.simulationsService.calculateSafeWithdrawalRate(user.id, dto);
+  }
+
+  @Post('scenario-analysis')
+  @RequiresPremium()
+  @UseGuards(SubscriptionGuard, UsageLimitGuard)
+  @MonitorPerformance(30000) // Longer timeout for stress testing
+  @HttpCode(HttpStatus.OK)
+  async analyzeScenario(
+    @CurrentUser() user: { id: string },
+    @Body() dto: AnalyzeScenarioDto
+  ) {
+    return this.simulationsService.analyzeScenario(user.id, dto);
+  }
+
+  @Get()
+  async listSimulations(
+    @CurrentUser() user: { id: string },
+    @Query('spaceId') spaceId?: string,
+    @Query('goalId') goalId?: string,
+    @Query('type') type?: string,
+    @Query('limit') limit?: string
+  ) {
+    return this.simulationsService.listSimulations(user.id, {
+      spaceId,
+      goalId,
+      type,
+      limit: limit ? parseInt(limit, 10) : undefined,
     });
   }
 
-  /**
-   * Calculate probability of achieving a financial goal
-   *
-   * Runs Monte Carlo simulation specific to a goal and calculates:
-   * - Probability of success
-   * - Expected shortfall if goal is not met
-   * - Recommended monthly contribution
-   * - Confidence intervals
-   *
-   * @requires Premium tier
-   * @tracks goal_probability usage
-   */
-  @Post('goal-probability')
-  @RequiresPremium()
-  @TrackUsage('goal_probability')
-  @HttpCode(HttpStatus.OK)
-  async calculateGoalProbability(@Body() dto: CalculateGoalProbabilityDto, @Req() req: any) {
-    return this.simulationsService.calculateGoalProbability(
-      {
-        goalId: dto.goalId,
-        currentValue: dto.currentValue,
-        targetAmount: dto.targetAmount,
-        monthsRemaining: dto.monthsRemaining,
-        monthlyContribution: dto.monthlyContribution ?? 0,
-        expectedReturn: dto.expectedReturn,
-        volatility: dto.volatility,
-        iterations: dto.iterations,
-      },
-      req.user.id
-    );
-  }
-
-  /**
-   * Simulate retirement planning
-   *
-   * Two-phase simulation:
-   * 1. Accumulation phase (current age → retirement age)
-   * 2. Withdrawal phase (retirement age → life expectancy)
-   *
-   * Returns probability of not running out of money and safe withdrawal rate.
-   *
-   * @requires Premium tier
-   * @tracks monte_carlo_simulation usage
-   */
-  @Post('retirement')
-  @RequiresPremium()
-  @TrackUsage('monte_carlo_simulation')
-  @HttpCode(HttpStatus.OK)
-  async simulateRetirement(@Body() dto: SimulateRetirementDto, @Req() req: any) {
-    return this.simulationsService.simulateRetirement(
-      {
-        initialBalance: dto.initialBalance,
-        monthlyContribution: dto.monthlyContribution,
-        currentAge: dto.currentAge,
-        retirementAge: dto.retirementAge,
-        lifeExpectancy: dto.lifeExpectancy,
-        monthlyExpenses: dto.monthlyExpenses,
-        socialSecurityIncome: dto.socialSecurityIncome,
-        expectedReturn: dto.expectedReturn,
-        volatility: dto.volatility,
-        iterations: dto.iterations ?? 10000,
-        months: 0, // Will be calculated from ages
-        inflationAdjusted: dto.inflationAdjusted ?? true,
-      },
-      req.user.id
-    );
-  }
-
-  /**
-   * Compare baseline vs. stress scenario
-   *
-   * Runs simulation under normal conditions and compares against
-   * predefined market stress scenarios (2008 crash, bear market, etc.)
-   *
-   * Available scenarios:
-   * - BEAR_MARKET
-   * - GREAT_RECESSION
-   * - DOT_COM_BUST
-   * - MILD_RECESSION
-   * - MARKET_CORRECTION
-   *
-   * @requires Premium tier
-   * @tracks scenario_analysis usage
-   */
-  @Post('scenarios/:scenarioName')
-  @RequiresPremium()
-  @TrackUsage('scenario_analysis')
-  @HttpCode(HttpStatus.OK)
-  async compareScenarios(
-    @Param('scenarioName') scenarioName: string,
-    @Body() dto: RunSimulationDto,
-    @Req() _req: any
+  @Get(':id')
+  async getSimulation(
+    @CurrentUser() user: { id: string },
+    @Param('id') simulationId: string
   ) {
-    return this.simulationsService.compareScenarios(
-      {
-        initialBalance: dto.initialBalance,
-        monthlyContribution: dto.monthlyContribution,
-        months: dto.months,
-        iterations: dto.iterations ?? 10000,
-        expectedReturn: dto.expectedReturn,
-        volatility: dto.volatility,
-      },
-      scenarioName.toUpperCase() as keyof typeof import('./engines/monte-carlo.engine').MonteCarloEngine.SCENARIOS
-    );
+    return this.simulationsService.getSimulation(user.id, simulationId);
   }
 
-  /**
-   * Get recommended portfolio allocation based on risk profile
-   *
-   * Returns expected return and volatility for different risk tolerances.
-   * Does not run simulation - just provides parameters.
-   *
-   * @public Free tier can access this informational endpoint
-   */
-  @Post('recommended-allocation')
-  @HttpCode(HttpStatus.OK)
-  async getRecommendedAllocation(
-    @Body()
-    body: {
-      riskTolerance: 'conservative' | 'moderate' | 'aggressive';
-      yearsToRetirement: number;
-    }
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deleteSimulation(
+    @CurrentUser() user: { id: string },
+    @Param('id') simulationId: string
   ) {
-    return this.simulationsService.getRecommendedAllocation(
-      body.riskTolerance,
-      body.yearsToRetirement
-    );
+    return this.simulationsService.deleteSimulation(user.id, simulationId);
   }
 }

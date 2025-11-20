@@ -128,6 +128,14 @@ enum RelationshipType {
   other
 }
 
+enum SimulationType {
+  monte_carlo
+  retirement
+  goal_probability
+  safe_withdrawal
+  scenario_analysis
+}
+
 enum WillStatus {
   draft
   active
@@ -185,6 +193,7 @@ model User {
   billingEvents    BillingEvent[]
   usageMetrics     UsageMetric[]
   householdMembers HouseholdMember[]
+  simulations      Simulation[]
 
   @@map("users")
 }
@@ -298,6 +307,7 @@ model Space {
   transactionRules TransactionRule[]
   goals            Goal[]
   transactionOrders TransactionOrder[]
+  simulations      Simulation[]
 
   @@index([householdId])
   @@map("spaces")
@@ -609,6 +619,7 @@ model Goal {
   household        Household?    @relation(fields: [householdId], references: [id], onDelete: SetNull)
   allocations      GoalAllocation[]
   transactionOrders TransactionOrder[]
+  simulations      Simulation[]
 
   @@index([spaceId, status])
   @@index([spaceId, createdAt(sort: Desc)])
@@ -633,6 +644,32 @@ model GoalAllocation {
   @@index([goalId])
   @@index([accountId])
   @@map("goal_allocations")
+}
+
+model Simulation {
+  id               String          @id @default(uuid())
+  userId           String          @map("user_id")
+  spaceId          String?         @map("space_id")
+  goalId           String?         @map("goal_id")
+  type             SimulationType
+  config           Json
+  result           Json?
+  status           String          @default("pending") // pending, running, completed, failed
+  errorMessage     String?         @map("error_message")
+  executionTimeMs  Int?            @map("execution_time_ms")
+  createdAt        DateTime        @default(now()) @map("created_at")
+  updatedAt        DateTime        @updatedAt @map("updated_at")
+
+  // Relations
+  user             User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  space            Space?          @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  goal             Goal?           @relation(fields: [goalId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([spaceId])
+  @@index([goalId])
+  @@index([type])
+  @@map("simulations")
 }
 
 model Household {
