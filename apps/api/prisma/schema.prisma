@@ -35,7 +35,10 @@ enum AccountType {
 enum Provider {
   belvo
   plaid
+  mx
+  finicity
   bitso
+  blockchain
   manual
 }
 
@@ -321,6 +324,7 @@ model Space {
   transactionOrders TransactionOrder[]
   simulations      Simulation[]
   manualAssets     ManualAsset[]
+  connectionAttempts ConnectionAttempt[]
 
   @@index([householdId])
   @@map("spaces")
@@ -365,6 +369,7 @@ model Account {
   goalAllocations       GoalAllocation[]
   transactionOrders     TransactionOrder[]
   transferDestinations  TransactionOrder[] @relation("TransferDestination")
+  connectionAttempts    ConnectionAttempt[]
 
   @@unique([spaceId, provider, providerAccountId])
   @@index([spaceId])
@@ -1090,4 +1095,72 @@ model OrderLimit {
   @@index([userId, enforced, resetAt])
   @@index([spaceId])
   @@map("order_limits")
+}
+// Multi-Provider Redundancy Models
+
+model InstitutionProviderMapping {
+  id                String        @id @default(uuid())
+  institutionId     String        @map("institution_id")        // External institution ID (e.g., "ins_123" from Plaid)
+  institutionName   String        @map("institution_name")
+  primaryProvider   Provider      @map("primary_provider")
+  backupProviders   Json          // Array of backup Provider enums
+  region            String        @default("US")                // US, MX, EU
+  providerMetadata  Json?         @map("provider_metadata")     // Provider-specific config
+  lastHealthCheck   DateTime?     @map("last_health_check")
+  createdAt         DateTime      @default(now()) @map("created_at")
+  updatedAt         DateTime      @updatedAt @map("updated_at")
+
+  @@unique([institutionId, primaryProvider])
+  @@index([institutionName])
+  @@index([region])
+  @@map("institution_provider_mappings")
+}
+
+model ProviderHealthStatus {
+  id                String        @id @default(uuid())
+  provider          Provider
+  region            String        @default("US")
+  status            String        @default("healthy")           // healthy, degraded, down
+  errorRate         Decimal       @default(0) @map("error_rate") @db.Decimal(5, 2)  // Percentage
+  avgResponseTimeMs Int           @default(0) @map("avg_response_time_ms")
+  successfulCalls   Int           @default(0) @map("successful_calls")
+  failedCalls       Int           @default(0) @map("failed_calls")
+  lastSuccessAt     DateTime?     @map("last_success_at")
+  lastFailureAt     DateTime?     @map("last_failure_at")
+  lastError         String?       @map("last_error")
+  circuitBreakerOpen Boolean      @default(false) @map("circuit_breaker_open")
+  windowStartAt     DateTime      @default(now()) @map("window_start_at")  // Rolling window start
+  createdAt         DateTime      @default(now()) @map("created_at")
+  updatedAt         DateTime      @updatedAt @map("updated_at")
+
+  @@unique([provider, region])
+  @@index([status])
+  @@index([circuitBreakerOpen])
+  @@map("provider_health_status")
+}
+
+model ConnectionAttempt {
+  id                String        @id @default(uuid())
+  accountId         String?       @map("account_id")
+  spaceId           String        @map("space_id")
+  provider          Provider
+  institutionId     String?       @map("institution_id")
+  attemptType       String        @map("attempt_type")          // initial, sync, reconnect
+  status            String                                       // success, failure, timeout
+  errorCode         String?       @map("error_code")
+  errorMessage      String?       @map("error_message")
+  responseTimeMs    Int?          @map("response_time_ms")
+  failoverUsed      Boolean       @default(false) @map("failover_used")
+  failoverProvider  Provider?     @map("failover_provider")
+  metadata          Json?
+  attemptedAt       DateTime      @default(now()) @map("attempted_at")
+
+  // Relations
+  account           Account?      @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  space             Space         @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+
+  @@index([accountId, attemptedAt(sort: Desc)])
+  @@index([provider, status, attemptedAt(sort: Desc)])
+  @@index([spaceId, attemptedAt(sort: Desc)])
+  @@map("connection_attempts")
 }
