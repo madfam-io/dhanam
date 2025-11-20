@@ -27,10 +27,13 @@ import {
 import { SyncStatus } from '@/components/sync/sync-status';
 import { HelpTooltip } from '@/components/demo/help-tooltip';
 import { AnalyticsEmptyState } from '@/components/demo/analytics-empty-state';
+import { ProbabilisticGoalCard } from '@/components/goals/probabilistic-goal-card';
+import { useGoals } from '@/hooks/useGoals';
 
 export default function DashboardPage() {
   const { user } = useAuth();
   const { currentSpace } = useSpaceStore();
+  const { getGoalsBySpace } = useGoals();
   const isGuestDemo = user?.email === 'guest@dhanam.demo';
 
   const { data: accounts, isLoading: isLoadingAccounts } = useQuery({
@@ -96,6 +99,18 @@ export default function DashboardPage() {
     },
     enabled: !!currentSpace,
   });
+
+  const { data: goals, isLoading: isLoadingGoals } = useQuery({
+    queryKey: ['goals', currentSpace?.id],
+    queryFn: () => {
+      if (!currentSpace) throw new Error('No current space');
+      return getGoalsBySpace(currentSpace.id);
+    },
+    enabled: !!currentSpace,
+  });
+
+  // Filter active goals for display
+  const activeGoals = goals?.filter((g) => g.status === 'active') || [];
 
   if (!currentSpace) {
     return <EmptyState />;
@@ -413,6 +428,38 @@ export default function DashboardPage() {
             </div>
           </CardContent>
         </Card>
+      ) : null}
+
+      {/* Probabilistic Goals */}
+      {isLoadingGoals ? (
+        <div className="flex items-center justify-center py-8">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      ) : activeGoals.length > 0 ? (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-2xl font-bold tracking-tight">Financial Goals</h3>
+              <p className="text-sm text-muted-foreground flex items-center gap-2">
+                Track probability of achieving your goals with Monte Carlo simulations
+                <HelpTooltip content="Each goal shows success probability based on 10,000 Monte Carlo simulations, considering your current savings, monthly contributions, and market volatility." />
+              </p>
+            </div>
+            <Button variant="outline" onClick={() => window.location.href = '/goals'}>
+              View All Goals
+            </Button>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {activeGoals.slice(0, 3).map((goal) => (
+              <ProbabilisticGoalCard
+                key={goal.id}
+                goal={goal}
+                onClick={() => window.location.href = `/goals`}
+                showActions={false}
+              />
+            ))}
+          </div>
+        </div>
       ) : null}
 
       {/* Budget Overview */}
