@@ -17,13 +17,17 @@ import { JwtAuthGuard } from '../../core/auth/guards/jwt-auth.guard';
 import { CreateGoalDto, UpdateGoalDto, AddAllocationDto } from './dto';
 import { GoalsExecutionService } from './goals-execution.service';
 import { GoalsService } from './goals.service';
+import { GoalProbabilityService } from './goal-probability.service';
+import { GoalCollaborationService } from './goal-collaboration.service';
 
 @Controller('goals')
 @UseGuards(JwtAuthGuard)
 export class GoalsController {
   constructor(
     private goalsService: GoalsService,
-    private goalsExecutionService: GoalsExecutionService
+    private goalsExecutionService: GoalsExecutionService,
+    private goalProbabilityService: GoalProbabilityService,
+    private goalCollaborationService: GoalCollaborationService
   ) {}
 
   /**
@@ -126,5 +130,139 @@ export class GoalsController {
   @Post(':id/rebalancing/execute')
   async executeRebalancing(@Param('id') id: string, @Req() req: any) {
     return this.goalsExecutionService.executeGoalRebalancing(id, req.user.id);
+  }
+
+  /**
+   * Get goal probability (Monte Carlo simulation)
+   */
+  @Get(':id/probability')
+  async getProbability(@Param('id') id: string, @Req() req: any) {
+    return this.goalProbabilityService.calculateGoalProbability(req.user.id, id);
+  }
+
+  /**
+   * Update goal probability (recalculate)
+   */
+  @Post(':id/probability/update')
+  async updateProbability(@Param('id') id: string, @Req() req: any) {
+    await this.goalProbabilityService.updateGoalProbability(req.user.id, id);
+    return { message: 'Probability updated successfully' };
+  }
+
+  /**
+   * Run what-if scenario for a goal
+   */
+  @Post(':id/what-if')
+  async runWhatIf(
+    @Param('id') id: string,
+    @Body() scenario: {
+      monthlyContribution?: number;
+      targetAmount?: number;
+      targetDate?: string;
+      expectedReturn?: number;
+      volatility?: number;
+    },
+    @Req() req: any
+  ) {
+    const scenarioData = {
+      ...scenario,
+      targetDate: scenario.targetDate ? new Date(scenario.targetDate) : undefined,
+    };
+    return this.goalProbabilityService.runWhatIfScenario(req.user.id, id, scenarioData);
+  }
+
+  /**
+   * Bulk update probabilities for all goals in a space
+   */
+  @Post('space/:spaceId/probability/update-all')
+  async updateAllProbabilities(@Param('spaceId') spaceId: string, @Req() req: any) {
+    await this.goalProbabilityService.updateAllGoalProbabilities(req.user.id, spaceId);
+    return { message: 'All goal probabilities updated successfully' };
+  }
+
+  // ==================== Collaboration Endpoints ====================
+
+  /**
+   * Share a goal with another user
+   */
+  @Post(':id/share')
+  async shareGoal(
+    @Param('id') goalId: string,
+    @Body() body: {
+      shareWithEmail: string;
+      role: 'viewer' | 'contributor' | 'editor' | 'manager';
+      message?: string;
+    },
+    @Req() req: any
+  ) {
+    return this.goalCollaborationService.shareGoal(req.user.id, {
+      goalId,
+      ...body,
+    });
+  }
+
+  /**
+   * Get all shares for a goal
+   */
+  @Get(':id/shares')
+  async getGoalShares(@Param('id') goalId: string, @Req() req: any) {
+    return this.goalCollaborationService.getGoalShares(req.user.id, goalId);
+  }
+
+  /**
+   * Get all goals shared with me
+   */
+  @Get('shared/me')
+  async getSharedGoals(@Req() req: any) {
+    return this.goalCollaborationService.getSharedGoals(req.user.id);
+  }
+
+  /**
+   * Accept a goal share invitation
+   */
+  @Post('shares/:shareId/accept')
+  async acceptShare(@Param('shareId') shareId: string, @Req() req: any) {
+    return this.goalCollaborationService.acceptShare(req.user.id, shareId);
+  }
+
+  /**
+   * Decline a goal share invitation
+   */
+  @Post('shares/:shareId/decline')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async declineShare(@Param('shareId') shareId: string, @Req() req: any) {
+    await this.goalCollaborationService.declineShare(req.user.id, shareId);
+  }
+
+  /**
+   * Revoke a goal share
+   */
+  @Delete('shares/:shareId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async revokeShare(@Param('shareId') shareId: string, @Req() req: any) {
+    await this.goalCollaborationService.revokeShare(req.user.id, shareId);
+  }
+
+  /**
+   * Update share role
+   */
+  @Put('shares/:shareId/role')
+  async updateShareRole(
+    @Param('shareId') shareId: string,
+    @Body() body: { newRole: 'viewer' | 'contributor' | 'editor' | 'manager' },
+    @Req() req: any
+  ) {
+    return this.goalCollaborationService.updateShareRole(req.user.id, {
+      shareId,
+      newRole: body.newRole,
+    });
+  }
+
+  /**
+   * Get activity feed for a goal
+   */
+  @Get(':id/activities')
+  async getGoalActivities(@Param('id') goalId: string, @Req() req: any) {
+    return this.goalCollaborationService.getGoalActivities(req.user.id, goalId);
   }
 }

@@ -65,6 +65,68 @@ export interface GoalSummary {
   overallProgress: number;
 }
 
+export interface GoalProbabilityResult {
+  goalId: string;
+  probability: number; // 0-100
+  confidenceLow: number; // P10 value
+  confidenceHigh: number; // P90 value
+  currentProgress: number; // 0-100
+  projectedCompletion: string | null;
+  recommendedMonthlyContribution: number;
+  timeline: {
+    month: number;
+    median: number;
+    p10: number;
+    p90: number;
+  }[];
+}
+
+export interface WhatIfScenario {
+  monthlyContribution?: number;
+  targetAmount?: number;
+  targetDate?: string;
+  expectedReturn?: number;
+  volatility?: number;
+}
+
+export interface GoalShare {
+  id: string;
+  goalId: string;
+  role: 'viewer' | 'contributor' | 'editor' | 'manager';
+  status: 'pending' | 'accepted' | 'declined' | 'revoked';
+  message?: string;
+  acceptedAt?: string;
+  createdAt: string;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+  };
+  inviter: {
+    id: string;
+    name: string;
+    email: string;
+  };
+}
+
+export interface GoalActivity {
+  id: string;
+  action: string;
+  metadata?: any;
+  createdAt: string;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+  };
+}
+
+export interface ShareGoalInput {
+  shareWithEmail: string;
+  role: 'viewer' | 'contributor' | 'editor' | 'manager';
+  message?: string;
+}
+
 export interface CreateGoalInput {
   spaceId: string;
   name: string;
@@ -193,6 +255,67 @@ export function useGoals() {
     await handleRequest('DELETE', `${goalId}/allocations/${accountId}`);
   };
 
+  // Probabilistic Planning Methods (Monte Carlo Integration)
+  const getGoalProbability = async (goalId: string): Promise<GoalProbabilityResult | null> => {
+    return handleRequest<GoalProbabilityResult>('GET', `${goalId}/probability`);
+  };
+
+  const updateGoalProbability = async (goalId: string): Promise<{ message: string } | null> => {
+    return handleRequest<{ message: string }>('POST', `${goalId}/probability/update`);
+  };
+
+  const runWhatIfScenario = async (
+    goalId: string,
+    scenario: WhatIfScenario
+  ): Promise<GoalProbabilityResult | null> => {
+    return handleRequest<GoalProbabilityResult>('POST', `${goalId}/what-if`, scenario);
+  };
+
+  const updateAllGoalProbabilities = async (
+    spaceId: string
+  ): Promise<{ message: string } | null> => {
+    return handleRequest<{ message: string }>('POST', `space/${spaceId}/probability/update-all`);
+  };
+
+  // Collaboration Methods (Goal Sharing)
+  const shareGoal = async (
+    goalId: string,
+    input: ShareGoalInput
+  ): Promise<GoalShare | null> => {
+    return handleRequest<GoalShare>('POST', `${goalId}/share`, input);
+  };
+
+  const getGoalShares = async (goalId: string): Promise<GoalShare[] | null> => {
+    return handleRequest<GoalShare[]>('GET', `${goalId}/shares`);
+  };
+
+  const getSharedGoals = async (): Promise<Goal[] | null> => {
+    return handleRequest<Goal[]>('GET', 'shared/me');
+  };
+
+  const acceptShare = async (shareId: string): Promise<GoalShare | null> => {
+    return handleRequest<GoalShare>('POST', `shares/${shareId}/accept`);
+  };
+
+  const declineShare = async (shareId: string): Promise<void> => {
+    await handleRequest('POST', `shares/${shareId}/decline`);
+  };
+
+  const revokeShare = async (shareId: string): Promise<void> => {
+    await handleRequest('DELETE', `shares/${shareId}`);
+  };
+
+  const updateShareRole = async (
+    shareId: string,
+    newRole: 'viewer' | 'contributor' | 'editor' | 'manager'
+  ): Promise<GoalShare | null> => {
+    return handleRequest<GoalShare>('PUT', `shares/${shareId}/role`, { newRole });
+  };
+
+  const getGoalActivities = async (goalId: string): Promise<GoalActivity[] | null> => {
+    return handleRequest<GoalActivity[]>('GET', `${goalId}/activities`);
+  };
+
   return {
     createGoal,
     getGoalsBySpace,
@@ -203,6 +326,20 @@ export function useGoals() {
     getGoalProgress,
     addAllocation,
     removeAllocation,
+    // Probabilistic Planning
+    getGoalProbability,
+    updateGoalProbability,
+    runWhatIfScenario,
+    updateAllGoalProbabilities,
+    // Collaboration
+    shareGoal,
+    getGoalShares,
+    getSharedGoals,
+    acceptShare,
+    declineShare,
+    revokeShare,
+    updateShareRole,
+    getGoalActivities,
     loading,
     error,
   };

@@ -125,7 +125,39 @@ async function main() {
             creditLimit: 50000,
             lastSyncedAt: new Date(),
           },
+          {
+            provider: Provider.manual,
+            providerAccountId: 'guest-crypto',
+            name: 'Demo Crypto Wallet',
+            type: 'crypto',
+            subtype: 'exchange',
+            currency: Currency.MXN,
+            balance: 32000,
+            lastSyncedAt: new Date(),
+          },
         ],
+      },
+      budgets: {
+        create: {
+          name: 'Demo Monthly Budget',
+          period: BudgetPeriod.monthly,
+          amount: 55000,
+          currency: Currency.MXN,
+          startDate: startOfMonth(new Date()),
+          endDate: endOfMonth(new Date()),
+          categories: {
+            create: [
+              { name: 'Rent', budgetAmount: 12000, color: '#FF6B6B', icon: '🏠' },
+              { name: 'Groceries', budgetAmount: 5000, color: '#4ECDC4', icon: '🛒' },
+              { name: 'Transportation', budgetAmount: 2500, color: '#45B7D1', icon: '🚗' },
+              { name: 'Entertainment', budgetAmount: 3000, color: '#96CEB4', icon: '🎬' },
+              { name: 'Savings', budgetAmount: 10000, color: '#FECA57', icon: '💰' },
+              { name: 'Utilities', budgetAmount: 2000, color: '#48C9B0', icon: '💡' },
+              { name: 'Food & Dining', budgetAmount: 4000, color: '#F8B500', icon: '🍽️' },
+              { name: 'Shopping', budgetAmount: 3500, color: '#E056FD', icon: '🛍️' },
+            ],
+          },
+        },
       },
     },
   });
@@ -610,80 +642,49 @@ async function main() {
   });
 
   for (const account of cryptoAccounts) {
-    await prisma.eSGAssetScore.create({
+    await prisma.eSGScore.create({
       data: {
         accountId: account.id,
         assetSymbol: 'BTC',
-        assetName: 'Bitcoin',
         environmentalScore: 35,
         socialScore: 65,
         governanceScore: 70,
-        totalScore: 57,
-        dataQuality: 'high',
-        lastUpdated: new Date(),
-        methodology: 'Dhanam ESG v1.0',
-        factors: {
-          energyUsage: 'high',
-          carbonFootprint: 'significant',
-          renewableEnergy: 'improving',
-          decentralization: 'high',
-          accessibility: 'good',
-          transparency: 'excellent',
-        },
       },
     });
 
-    await prisma.eSGAssetScore.create({
+    await prisma.eSGScore.create({
       data: {
         accountId: account.id,
         assetSymbol: 'ETH',
-        assetName: 'Ethereum',
         environmentalScore: 75,
         socialScore: 80,
         governanceScore: 85,
-        totalScore: 80,
-        dataQuality: 'high',
-        lastUpdated: new Date(),
-        methodology: 'Dhanam ESG v1.0',
-        factors: {
-          energyUsage: 'low',
-          carbonFootprint: 'minimal',
-          renewableEnergy: 'good',
-          decentralization: 'high',
-          accessibility: 'excellent',
-          transparency: 'excellent',
-        },
       },
     });
   }
 
-  // 8. GENERATE VALUATION SNAPSHOTS
-  console.log('\n📊 Generating valuation snapshots...');
-  
+  // 8. GENERATE ASSET VALUATIONS (for net worth trends)
+  console.log('\n📊 Generating asset valuation history...');
+
   for (const { space } of spaces) {
     const accounts = await prisma.account.findMany({ where: { spaceId: space.id } });
-    const totalBalance = accounts.reduce((sum, acc) => sum + acc.balance, 0);
-    
-    // Generate 30 days of daily snapshots
-    for (let i = 30; i >= 0; i--) {
-      const date = subDays(new Date(), i);
-      const variation = (Math.random() - 0.5) * 0.02; // +/- 2% daily variation
-      
-      await prisma.valuationSnapshot.create({
-        data: {
-          spaceId: space.id,
-          date: date,
-          totalValue: totalBalance * (1 + variation),
-          currency: space.currency,
-          breakdown: {
-            checking: accounts.filter(a => a.type === 'checking').reduce((sum, a) => sum + a.balance, 0),
-            savings: accounts.filter(a => a.type === 'savings').reduce((sum, a) => sum + a.balance, 0),
-            credit: accounts.filter(a => a.type === 'credit').reduce((sum, a) => sum + a.balance, 0),
-            investment: accounts.filter(a => a.type === 'investment').reduce((sum, a) => sum + a.balance, 0),
-            crypto: accounts.filter(a => a.type === 'crypto').reduce((sum, a) => sum + a.balance, 0),
+
+    // Generate 30 days of daily valuations for each account
+    for (const account of accounts) {
+      for (let i = 30; i >= 0; i--) {
+        const date = subDays(new Date(), i);
+        const variation = (Math.random() - 0.5) * 0.02; // +/- 2% daily variation
+        const valuatedAmount = account.balance * (1 + variation);
+
+        await prisma.assetValuation.create({
+          data: {
+            accountId: account.id,
+            date: date,
+            value: valuatedAmount,
+            currency: account.currency,
           },
-        },
-      });
+        });
+      }
     }
   }
 
@@ -734,17 +735,436 @@ async function main() {
     });
   }
 
+  // 11. CREATE PROBABILISTIC GOALS WITH MONTE CARLO DATA
+  console.log('\n🎯 Creating probabilistic goals with Monte Carlo simulations...');
+
+  // Guest User Goals (Retirement, Emergency Fund, House Down Payment)
+  const guestCheckingAccount = await prisma.account.findFirst({
+    where: { spaceId: guestSpace.id, type: 'checking' }
+  });
+  const guestSavingsAccount = await prisma.account.findFirst({
+    where: { spaceId: guestSpace.id, type: 'savings' }
+  });
+
+  if (guestCheckingAccount && guestSavingsAccount) {
+    // Goal 1: Retirement - High Probability (On Track)
+    await prisma.goal.create({
+      data: {
+        spaceId: guestSpace.id,
+        name: 'Retirement Fund',
+        description: 'Build retirement nest egg for comfortable retirement at 65',
+        type: 'retirement',
+        targetAmount: 1000000,
+        currency: Currency.MXN,
+        targetDate: new Date('2045-12-31'),
+        priority: 1,
+        status: 'active',
+        monthlyContribution: 5000,
+        expectedReturn: 0.07, // 7% annual return
+        volatility: 0.15, // 15% volatility
+        currentProbability: 87.5,
+        confidenceLow: 850000,
+        confidenceHigh: 1250000,
+        currentProgress: 15.2,
+        projectedCompletion: new Date('2044-06-30'),
+        lastSimulationAt: new Date(),
+        probabilityHistory: [
+          { date: subDays(new Date(), 90).toISOString(), probability: 82.1 },
+          { date: subDays(new Date(), 60).toISOString(), probability: 84.3 },
+          { date: subDays(new Date(), 30).toISOString(), probability: 86.0 },
+          { date: new Date().toISOString(), probability: 87.5 },
+        ],
+        allocations: {
+          create: [
+            {
+              accountId: guestSavingsAccount.id,
+              percentage: 70,
+            },
+            {
+              accountId: guestCheckingAccount.id,
+              percentage: 30,
+            },
+          ],
+        },
+      },
+    });
+
+    // Goal 2: Emergency Fund - Excellent Probability
+    await prisma.goal.create({
+      data: {
+        spaceId: guestSpace.id,
+        name: 'Emergency Fund',
+        description: '6 months of living expenses for financial security',
+        type: 'emergency_fund',
+        targetAmount: 90000,
+        currency: Currency.MXN,
+        targetDate: new Date('2025-12-31'),
+        priority: 1,
+        status: 'active',
+        monthlyContribution: 3000,
+        expectedReturn: 0.03, // 3% annual return (savings account)
+        volatility: 0.02, // 2% volatility (low risk)
+        currentProbability: 95.2,
+        confidenceLow: 88000,
+        confidenceHigh: 98000,
+        currentProgress: 55.6,
+        projectedCompletion: new Date('2025-08-15'),
+        lastSimulationAt: new Date(),
+        probabilityHistory: [
+          { date: subDays(new Date(), 90).toISOString(), probability: 88.5 },
+          { date: subDays(new Date(), 60).toISOString(), probability: 91.2 },
+          { date: subDays(new Date(), 30).toISOString(), probability: 93.4 },
+          { date: new Date().toISOString(), probability: 95.2 },
+        ],
+        allocations: {
+          create: [
+            {
+              accountId: guestSavingsAccount.id,
+              percentage: 100,
+            },
+          ],
+        },
+      },
+    });
+
+    // Goal 3: House Down Payment - Needs Attention (Lower Probability)
+    await prisma.goal.create({
+      data: {
+        spaceId: guestSpace.id,
+        name: 'House Down Payment',
+        description: '20% down payment for first home purchase',
+        type: 'house_purchase',
+        targetAmount: 300000,
+        currency: Currency.MXN,
+        targetDate: new Date('2027-06-30'),
+        priority: 2,
+        status: 'active',
+        monthlyContribution: 4000,
+        expectedReturn: 0.05, // 5% annual return
+        volatility: 0.10, // 10% volatility
+        currentProbability: 58.3,
+        confidenceLow: 220000,
+        confidenceHigh: 340000,
+        currentProgress: 16.7,
+        projectedCompletion: new Date('2028-03-15'), // Behind schedule
+        lastSimulationAt: new Date(),
+        probabilityHistory: [
+          { date: subDays(new Date(), 90).toISOString(), probability: 62.4 },
+          { date: subDays(new Date(), 60).toISOString(), probability: 60.1 },
+          { date: subDays(new Date(), 30).toISOString(), probability: 59.2 },
+          { date: new Date().toISOString(), probability: 58.3 },
+        ],
+        allocations: {
+          create: [
+            {
+              accountId: guestCheckingAccount.id,
+              percentage: 60,
+            },
+            {
+              accountId: guestSavingsAccount.id,
+              percentage: 40,
+            },
+          ],
+        },
+      },
+    });
+  }
+
+  // Maria's Goals (Education, Travel)
+  const mariaCheckingAccount = await prisma.account.findFirst({
+    where: { spaceId: mariaSpace.id, type: 'checking' }
+  });
+  const mariaSavingsAccount = await prisma.account.findFirst({
+    where: { spaceId: mariaSpace.id, type: 'savings' }
+  });
+
+  if (mariaCheckingAccount && mariaSavingsAccount) {
+    // Goal: Children's Education Fund
+    await prisma.goal.create({
+      data: {
+        spaceId: mariaSpace.id,
+        name: "Children's Education Fund",
+        description: 'University education fund for both children',
+        type: 'education',
+        targetAmount: 500000,
+        currency: Currency.MXN,
+        targetDate: new Date('2030-08-31'),
+        priority: 1,
+        status: 'active',
+        monthlyContribution: 6000,
+        expectedReturn: 0.06, // 6% annual return
+        volatility: 0.12, // 12% volatility
+        currentProbability: 73.8,
+        confidenceLow: 420000,
+        confidenceHigh: 580000,
+        currentProgress: 24.0,
+        projectedCompletion: new Date('2030-06-30'),
+        lastSimulationAt: new Date(),
+        probabilityHistory: [
+          { date: subDays(new Date(), 90).toISOString(), probability: 71.2 },
+          { date: subDays(new Date(), 60).toISOString(), probability: 72.5 },
+          { date: subDays(new Date(), 30).toISOString(), probability: 73.1 },
+          { date: new Date().toISOString(), probability: 73.8 },
+        ],
+        allocations: {
+          create: [
+            {
+              accountId: mariaSavingsAccount.id,
+              percentage: 80,
+            },
+            {
+              accountId: mariaCheckingAccount.id,
+              percentage: 20,
+            },
+          ],
+        },
+      },
+    });
+
+    // Goal: Europe Trip
+    await prisma.goal.create({
+      data: {
+        spaceId: mariaSpace.id,
+        name: 'Family Trip to Europe',
+        description: '15-day vacation across Europe for the whole family',
+        type: 'travel',
+        targetAmount: 120000,
+        currency: Currency.MXN,
+        targetDate: new Date('2025-07-15'),
+        priority: 3,
+        status: 'active',
+        monthlyContribution: 5000,
+        expectedReturn: 0.02, // 2% annual return (short-term savings)
+        volatility: 0.01, // 1% volatility (very low risk)
+        currentProbability: 92.4,
+        confidenceLow: 118000,
+        confidenceHigh: 127000,
+        currentProgress: 62.5,
+        projectedCompletion: new Date('2025-06-01'),
+        lastSimulationAt: new Date(),
+        probabilityHistory: [
+          { date: subDays(new Date(), 90).toISOString(), probability: 85.3 },
+          { date: subDays(new Date(), 60).toISOString(), probability: 88.7 },
+          { date: subDays(new Date(), 30).toISOString(), probability: 90.5 },
+          { date: new Date().toISOString(), probability: 92.4 },
+        ],
+        allocations: {
+          create: [
+            {
+              accountId: mariaSavingsAccount.id,
+              percentage: 100,
+            },
+          ],
+        },
+      },
+    });
+  }
+
+  // Carlos Personal Goals (Business Expansion)
+  const carlosInvestmentAccount = await prisma.account.findFirst({
+    where: { spaceId: carlosPersonal.id, type: 'investment' }
+  });
+
+  if (carlosInvestmentAccount) {
+    // Goal: Business Expansion Fund
+    await prisma.goal.create({
+      data: {
+        spaceId: carlosPersonal.id,
+        name: 'Second Restaurant Location',
+        description: 'Capital for opening second Tacos El Patrón location',
+        type: 'business',
+        targetAmount: 1500000,
+        currency: Currency.MXN,
+        targetDate: new Date('2026-03-31'),
+        priority: 1,
+        status: 'active',
+        monthlyContribution: 25000,
+        expectedReturn: 0.08, // 8% annual return
+        volatility: 0.18, // 18% volatility (higher risk)
+        currentProbability: 65.7,
+        confidenceLow: 1100000,
+        confidenceHigh: 1650000,
+        currentProgress: 30.0,
+        projectedCompletion: new Date('2026-05-15'),
+        lastSimulationAt: new Date(),
+        probabilityHistory: [
+          { date: subDays(new Date(), 90).toISOString(), probability: 61.2 },
+          { date: subDays(new Date(), 60).toISOString(), probability: 63.4 },
+          { date: subDays(new Date(), 30).toISOString(), probability: 64.5 },
+          { date: new Date().toISOString(), probability: 65.7 },
+        ],
+        allocations: {
+          create: [
+            {
+              accountId: carlosInvestmentAccount.id,
+              percentage: 100,
+            },
+          ],
+        },
+      },
+    });
+  }
+
+  // Goal Collaboration - Maria shares Education Fund with Guest
+  console.log('\n🤝 Creating goal collaboration data...');
+
+  const mariaEducationGoal = await prisma.goal.findFirst({
+    where: {
+      spaceId: mariaSpace.id,
+      name: "Children's Education Fund"
+    }
+  });
+
+  const guestRetirementGoal = await prisma.goal.findFirst({
+    where: {
+      spaceId: guestSpace.id,
+      name: 'Retirement Fund'
+    }
+  });
+
+  if (mariaEducationGoal) {
+    // Mark goal as shared
+    await prisma.goal.update({
+      where: { id: mariaEducationGoal.id },
+      data: {
+        createdBy: mariaUser.id,
+        isShared: true,
+        sharedWithMessage: "Let's track our children's education fund together! Feel free to view progress and suggest adjustments."
+      }
+    });
+
+    // Create share with guest user (accepted)
+    const educationShare = await prisma.goalShare.create({
+      data: {
+        goalId: mariaEducationGoal.id,
+        sharedWith: guestUser.id,
+        role: 'viewer',
+        invitedBy: mariaUser.id,
+        status: 'accepted',
+        message: "Let's track our children's education fund together! Feel free to view progress and suggest adjustments.",
+        acceptedAt: subDays(new Date(), 5),
+        createdAt: subDays(new Date(), 7),
+      }
+    });
+
+    // Create activity history for Maria's shared goal
+    const activities = [
+      {
+        goalId: mariaEducationGoal.id,
+        userId: mariaUser.id,
+        action: 'created',
+        metadata: { initialAmount: 500000, targetDate: '2032-08-31' },
+        createdAt: subDays(new Date(), 120),
+      },
+      {
+        goalId: mariaEducationGoal.id,
+        userId: mariaUser.id,
+        action: 'shared',
+        metadata: { sharedWith: guestUser.email, role: 'viewer' },
+        createdAt: subDays(new Date(), 7),
+      },
+      {
+        goalId: mariaEducationGoal.id,
+        userId: guestUser.id,
+        action: 'share_accepted',
+        metadata: { shareId: educationShare.id },
+        createdAt: subDays(new Date(), 5),
+      },
+      {
+        goalId: mariaEducationGoal.id,
+        userId: mariaUser.id,
+        action: 'contribution_added',
+        metadata: { amount: 6500, account: 'BBVA Savings' },
+        createdAt: subDays(new Date(), 3),
+      },
+      {
+        goalId: mariaEducationGoal.id,
+        userId: mariaUser.id,
+        action: 'probability_improved',
+        metadata: { oldProbability: 89.2, newProbability: 91.5 },
+        createdAt: subDays(new Date(), 1),
+      },
+    ];
+
+    for (const activity of activities) {
+      await prisma.goalActivity.create({ data: activity });
+    }
+
+    console.log(`  ✓ Maria shared Education Fund with Guest (viewer role)`);
+  }
+
+  // Create activities for guest's retirement goal
+  if (guestRetirementGoal) {
+    await prisma.goal.update({
+      where: { id: guestRetirementGoal.id },
+      data: { createdBy: guestUser.id }
+    });
+
+    const retirementActivities = [
+      {
+        goalId: guestRetirementGoal.id,
+        userId: guestUser.id,
+        action: 'created',
+        metadata: { initialAmount: 1000000, targetDate: '2045-12-31' },
+        createdAt: subDays(new Date(), 180),
+      },
+      {
+        goalId: guestRetirementGoal.id,
+        userId: guestUser.id,
+        action: 'updated',
+        metadata: { field: 'monthlyContribution', oldValue: 4000, newValue: 5000 },
+        createdAt: subDays(new Date(), 60),
+      },
+      {
+        goalId: guestRetirementGoal.id,
+        userId: guestUser.id,
+        action: 'milestone_reached',
+        metadata: { milestone: '15% Complete' },
+        createdAt: subDays(new Date(), 30),
+      },
+      {
+        goalId: guestRetirementGoal.id,
+        userId: guestUser.id,
+        action: 'probability_improved',
+        metadata: { oldProbability: 84.3, newProbability: 87.5 },
+        createdAt: subDays(new Date(), 2),
+      },
+    ];
+
+    for (const activity of retirementActivities) {
+      await prisma.goalActivity.create({ data: activity });
+    }
+
+    console.log(`  ✓ Created activity history for Guest's Retirement Fund`);
+  }
+
   // Create categorization rules
   console.log('\n📋 Creating categorization rules...');
   
   const rules = [
+    // Guest user rules
+    { keyword: 'oxxo', category: 'Groceries', spaceId: guestSpace.id },
+    { keyword: 'soriana', category: 'Groceries', spaceId: guestSpace.id },
+    { keyword: 'uber', category: 'Transportation', spaceId: guestSpace.id },
+    { keyword: 'pemex', category: 'Transportation', spaceId: guestSpace.id },
+    { keyword: 'netflix', category: 'Entertainment', spaceId: guestSpace.id },
+    { keyword: 'spotify', category: 'Entertainment', spaceId: guestSpace.id },
+    { keyword: 'starbucks', category: 'Food & Dining', spaceId: guestSpace.id },
+    { keyword: 'restaurant', category: 'Food & Dining', spaceId: guestSpace.id },
+    { keyword: 'cfe', category: 'Utilities', spaceId: guestSpace.id },
+    { keyword: 'telmex', category: 'Utilities', spaceId: guestSpace.id },
+    { keyword: 'amazon', category: 'Shopping', spaceId: guestSpace.id },
+    { keyword: 'liverpool', category: 'Shopping', spaceId: guestSpace.id },
+    // Maria's rules
     { keyword: 'oxxo', category: 'Groceries', spaceId: mariaSpace.id },
     { keyword: 'uber', category: 'Transportation', spaceId: mariaSpace.id },
     { keyword: 'netflix', category: 'Entertainment', spaceId: mariaSpace.id },
     { keyword: 'spotify', category: 'Entertainment', spaceId: mariaSpace.id },
     { keyword: 'starbucks', category: 'Food & Dining', spaceId: mariaSpace.id },
+    // Carlos business rules
     { keyword: 'payroll', category: 'Payroll', spaceId: carlosBusiness.id },
     { keyword: 'rent', category: 'Rent', spaceId: carlosBusiness.id },
+    // Enterprise rules
     { keyword: 'aws', category: 'Infrastructure', spaceId: enterpriseSpace.id },
     { keyword: 'google', category: 'Marketing', spaceId: enterpriseSpace.id },
   ];
@@ -772,19 +1192,33 @@ async function main() {
   console.log('\n✅ Enhanced seeding completed!');
   console.log('─────────────────────────────────────────');
   console.log('\n📊 Summary:');
-  console.log('  - 1 Guest user (instant demo access)');
+  console.log('  - 1 Guest user (instant demo access) 🎭');
+  console.log('    ✓ 4 accounts (checking, savings, credit, crypto)');
+  console.log('    ✓ 160 realistic transactions over 90 days');
+  console.log('    ✓ Monthly budget with 8 categories');
+  console.log('    ✓ 3 probabilistic goals with Monte Carlo simulations');
+  console.log('    ✓ 1 shared goal (Maria\'s Education Fund - viewer access)');
+  console.log('    ✓ ESG scores for BTC & ETH');
+  console.log('    ✓ 31 days of asset valuation history per account');
   console.log('  - 1 Individual user (Maria)');
+  console.log('    ✓ 2 probabilistic goals (education, travel)');
+  console.log('    ✓ Education Fund shared with Guest user');
   console.log('  - 1 Small business owner (Carlos)');
+  console.log('    ✓ 1 probabilistic goal (business expansion)');
   console.log('  - 1 Enterprise admin (Patricia)');
   console.log('  - 1 Platform admin');
   console.log('  - 5 Spaces with budgets');
-  console.log('  - 18 Connected accounts');
-  console.log('  - 750+ Transactions');
-  console.log('  - 30 days of valuation history');
-  console.log('  - ESG scores for crypto accounts');
+  console.log('  - 19 Connected accounts');
+  console.log('  - 6 Probabilistic Goals with confidence intervals');
+  console.log('  - 1 Goal Share (Maria → Guest) with activity feed');
+  console.log('  - 9 Goal Activities across 2 goals');
+  console.log('  - 800+ Transactions');
+  console.log('  - 589 Asset valuations (31 days × 19 accounts)');
+  console.log('  - ESG scores for all crypto holdings');
   console.log('  - Feature flags configured');
   console.log('  - Categorization rules set up');
   console.log('\n🎉 Demo environment ready!');
+  console.log('💡 Guest demo showcases: budgets, cashflow forecast, net worth trends, ESG scores, probabilistic goal planning, goal collaboration!');
 }
 
 main()

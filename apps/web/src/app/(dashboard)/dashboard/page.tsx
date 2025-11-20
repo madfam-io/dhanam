@@ -25,10 +25,18 @@ import {
   Loader2,
 } from 'lucide-react';
 import { SyncStatus } from '@/components/sync/sync-status';
+import { HelpTooltip } from '@/components/demo/help-tooltip';
+import { AnalyticsEmptyState } from '@/components/demo/analytics-empty-state';
+import { ProbabilisticGoalCard } from '@/components/goals/probabilistic-goal-card';
+import { GoalHealthScore } from '@/components/goals/goal-health-score';
+import { GoalProbabilityTimeline } from '@/components/goals/goal-probability-timeline';
+import { useGoals } from '@/hooks/useGoals';
 
 export default function DashboardPage() {
   const { user } = useAuth();
   const { currentSpace } = useSpaceStore();
+  const { getGoalsBySpace } = useGoals();
+  const isGuestDemo = user?.email === 'guest@dhanam.demo';
 
   const { data: accounts, isLoading: isLoadingAccounts } = useQuery({
     queryKey: ['accounts', currentSpace?.id],
@@ -94,6 +102,18 @@ export default function DashboardPage() {
     enabled: !!currentSpace,
   });
 
+  const { data: goals, isLoading: isLoadingGoals } = useQuery({
+    queryKey: ['goals', currentSpace?.id],
+    queryFn: () => {
+      if (!currentSpace) throw new Error('No current space');
+      return getGoalsBySpace(currentSpace.id);
+    },
+    enabled: !!currentSpace,
+  });
+
+  // Filter active goals for display
+  const activeGoals = goals?.filter((g) => g.status === 'active') || [];
+
   if (!currentSpace) {
     return <EmptyState />;
   }
@@ -128,7 +148,13 @@ export default function DashboardPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Net Worth</CardTitle>
+            <div className="flex items-center gap-2">
+              <CardTitle className="text-sm font-medium">Net Worth</CardTitle>
+              <HelpTooltip
+                title="Net Worth"
+                content="Total value of all your assets (savings, investments, crypto) minus liabilities (credit cards, loans). Updated in real-time as your accounts sync."
+              />
+            </div>
             <Wallet className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -197,7 +223,13 @@ export default function DashboardPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Budget Usage</CardTitle>
+            <div className="flex items-center gap-2">
+              <CardTitle className="text-sm font-medium">Budget Usage</CardTitle>
+              <HelpTooltip
+                title="Budget Usage"
+                content="Track spending against your monthly budget across categories. Dhanam auto-categorizes transactions using smart rules to help you stay on track."
+              />
+            </div>
             <PiggyBank className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -217,6 +249,11 @@ export default function DashboardPage() {
             </p>
           </CardContent>
         </Card>
+
+        {/* Goal Health Score - Only show if there are goals with probability data */}
+        {!isLoadingGoals && goals && goals.length > 0 && (
+          <GoalHealthScore goals={goals} />
+        )}
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
@@ -297,10 +334,16 @@ export default function DashboardPage() {
       </div>
 
       {/* Cashflow Forecast */}
-      {cashflowForecast && (
+      {cashflowForecast ? (
         <Card>
           <CardHeader>
-            <CardTitle>60-Day Cashflow Forecast</CardTitle>
+            <div className="flex items-center gap-2">
+              <CardTitle>60-Day Cashflow Forecast</CardTitle>
+              <HelpTooltip
+                title="Cashflow Forecast"
+                content="AI-powered prediction of your income and expenses for the next 60 days based on historical patterns. Helps you anticipate cash shortages and plan ahead."
+              />
+            </div>
             <CardDescription>Projected income, expenses, and balance trends</CardDescription>
           </CardHeader>
           <CardContent>
@@ -356,10 +399,16 @@ export default function DashboardPage() {
             </div>
           </CardContent>
         </Card>
+      ) : (
+        <AnalyticsEmptyState
+          title="60-Day Cashflow Forecast"
+          description="Projected income, expenses, and balance trends"
+          isDemoMode={isGuestDemo}
+        />
       )}
 
       {/* Portfolio Allocation */}
-      {portfolioAllocation && portfolioAllocation.length > 0 && (
+      {portfolioAllocation && portfolioAllocation.length > 0 ? (
         <Card>
           <CardHeader>
             <CardTitle>Portfolio Allocation</CardTitle>
@@ -386,7 +435,44 @@ export default function DashboardPage() {
             </div>
           </CardContent>
         </Card>
-      )}
+      ) : null}
+
+      {/* Probabilistic Goals */}
+      {isLoadingGoals ? (
+        <div className="flex items-center justify-center py-8">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      ) : activeGoals.length > 0 ? (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-2xl font-bold tracking-tight">Financial Goals</h3>
+              <p className="text-sm text-muted-foreground flex items-center gap-2">
+                Track probability of achieving your goals with Monte Carlo simulations
+                <HelpTooltip content="Each goal shows success probability based on 10,000 Monte Carlo simulations, considering your current savings, monthly contributions, and market volatility." />
+              </p>
+            </div>
+            <Button variant="outline" onClick={() => window.location.href = '/goals'}>
+              View All Goals
+            </Button>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {activeGoals.slice(0, 3).map((goal) => (
+              <ProbabilisticGoalCard
+                key={goal.id}
+                goal={goal}
+                onClick={() => window.location.href = `/goals`}
+                showActions={false}
+              />
+            ))}
+          </div>
+
+          {/* Probability Timeline */}
+          {activeGoals.length > 0 && (
+            <GoalProbabilityTimeline goals={activeGoals} />
+          )}
+        </div>
+      ) : null}
 
       {/* Budget Overview */}
       {currentBudgetSummary && (
