@@ -642,80 +642,49 @@ async function main() {
   });
 
   for (const account of cryptoAccounts) {
-    await prisma.eSGAssetScore.create({
+    await prisma.eSGScore.create({
       data: {
         accountId: account.id,
         assetSymbol: 'BTC',
-        assetName: 'Bitcoin',
         environmentalScore: 35,
         socialScore: 65,
         governanceScore: 70,
-        totalScore: 57,
-        dataQuality: 'high',
-        lastUpdated: new Date(),
-        methodology: 'Dhanam ESG v1.0',
-        factors: {
-          energyUsage: 'high',
-          carbonFootprint: 'significant',
-          renewableEnergy: 'improving',
-          decentralization: 'high',
-          accessibility: 'good',
-          transparency: 'excellent',
-        },
       },
     });
 
-    await prisma.eSGAssetScore.create({
+    await prisma.eSGScore.create({
       data: {
         accountId: account.id,
         assetSymbol: 'ETH',
-        assetName: 'Ethereum',
         environmentalScore: 75,
         socialScore: 80,
         governanceScore: 85,
-        totalScore: 80,
-        dataQuality: 'high',
-        lastUpdated: new Date(),
-        methodology: 'Dhanam ESG v1.0',
-        factors: {
-          energyUsage: 'low',
-          carbonFootprint: 'minimal',
-          renewableEnergy: 'good',
-          decentralization: 'high',
-          accessibility: 'excellent',
-          transparency: 'excellent',
-        },
       },
     });
   }
 
-  // 8. GENERATE VALUATION SNAPSHOTS
-  console.log('\n📊 Generating valuation snapshots...');
-  
+  // 8. GENERATE ASSET VALUATIONS (for net worth trends)
+  console.log('\n📊 Generating asset valuation history...');
+
   for (const { space } of spaces) {
     const accounts = await prisma.account.findMany({ where: { spaceId: space.id } });
-    const totalBalance = accounts.reduce((sum, acc) => sum + acc.balance, 0);
-    
-    // Generate 30 days of daily snapshots
-    for (let i = 30; i >= 0; i--) {
-      const date = subDays(new Date(), i);
-      const variation = (Math.random() - 0.5) * 0.02; // +/- 2% daily variation
-      
-      await prisma.valuationSnapshot.create({
-        data: {
-          spaceId: space.id,
-          date: date,
-          totalValue: totalBalance * (1 + variation),
-          currency: space.currency,
-          breakdown: {
-            checking: accounts.filter(a => a.type === 'checking').reduce((sum, a) => sum + a.balance, 0),
-            savings: accounts.filter(a => a.type === 'savings').reduce((sum, a) => sum + a.balance, 0),
-            credit: accounts.filter(a => a.type === 'credit').reduce((sum, a) => sum + a.balance, 0),
-            investment: accounts.filter(a => a.type === 'investment').reduce((sum, a) => sum + a.balance, 0),
-            crypto: accounts.filter(a => a.type === 'crypto').reduce((sum, a) => sum + a.balance, 0),
+
+    // Generate 30 days of daily valuations for each account
+    for (const account of accounts) {
+      for (let i = 30; i >= 0; i--) {
+        const date = subDays(new Date(), i);
+        const variation = (Math.random() - 0.5) * 0.02; // +/- 2% daily variation
+        const valuatedAmount = account.balance * (1 + variation);
+
+        await prisma.assetValuation.create({
+          data: {
+            accountId: account.id,
+            date: date,
+            value: valuatedAmount,
+            currency: account.currency,
           },
-        },
-      });
+        });
+      }
     }
   }
 
@@ -824,8 +793,8 @@ async function main() {
   console.log('    ✓ 4 accounts (checking, savings, credit, crypto)');
   console.log('    ✓ 160 realistic transactions over 90 days');
   console.log('    ✓ Monthly budget with 8 categories');
-  console.log('    ✓ ESG scores for crypto holdings');
-  console.log('    ✓ 30 days of wealth tracking history');
+  console.log('    ✓ ESG scores for BTC & ETH');
+  console.log('    ✓ 31 days of asset valuation history per account');
   console.log('  - 1 Individual user (Maria)');
   console.log('  - 1 Small business owner (Carlos)');
   console.log('  - 1 Enterprise admin (Patricia)');
@@ -833,12 +802,12 @@ async function main() {
   console.log('  - 5 Spaces with budgets');
   console.log('  - 19 Connected accounts');
   console.log('  - 800+ Transactions');
-  console.log('  - 30 days of valuation history per space');
-  console.log('  - ESG scores for all crypto accounts');
+  console.log('  - 589 Asset valuations (31 days × 19 accounts)');
+  console.log('  - ESG scores for all crypto holdings');
   console.log('  - Feature flags configured');
   console.log('  - Categorization rules set up');
   console.log('\n🎉 Demo environment ready!');
-  console.log('💡 Guest demo now showcases ALL platform features!');
+  console.log('💡 Guest demo showcases: budgets, cashflow forecast, net worth trends, ESG scores!');
 }
 
 main()

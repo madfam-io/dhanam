@@ -26,10 +26,12 @@ import {
 } from 'lucide-react';
 import { SyncStatus } from '@/components/sync/sync-status';
 import { HelpTooltip } from '@/components/demo/help-tooltip';
+import { AnalyticsEmptyState } from '@/components/demo/analytics-empty-state';
 
 export default function DashboardPage() {
   const { user } = useAuth();
   const { currentSpace } = useSpaceStore();
+  const isGuestDemo = user?.email === 'guest@dhanam.demo';
 
   const { data: accounts, isLoading: isLoadingAccounts } = useQuery({
     queryKey: ['accounts', currentSpace?.id],
@@ -310,7 +312,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Cashflow Forecast */}
-      {cashflowForecast && (
+      {cashflowForecast ? (
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
@@ -375,10 +377,16 @@ export default function DashboardPage() {
             </div>
           </CardContent>
         </Card>
+      ) : (
+        <AnalyticsEmptyState
+          title="60-Day Cashflow Forecast"
+          description="Projected income, expenses, and balance trends"
+          isDemoMode={isGuestDemo}
+        />
       )}
 
       {/* Portfolio Allocation */}
-      {portfolioAllocation && portfolioAllocation.length > 0 && (
+      {portfolioAllocation && portfolioAllocation.length > 0 ? (
         <Card>
           <CardHeader>
             <CardTitle>Portfolio Allocation</CardTitle>
@@ -405,7 +413,7 @@ export default function DashboardPage() {
             </div>
           </CardContent>
         </Card>
-      )}
+      ) : null}
 
       {/* Budget Overview */}
       {currentBudgetSummary && (
