@@ -216,6 +216,8 @@ model User {
   householdMembers HouseholdMember[]
   simulations      Simulation[]
   ownedAccounts    Account[]        // For "Yours/Mine/Ours" visibility
+  transactionSplits TransactionSplit[]
+  sharedAccounts   AccountSharingPermission[] @relation("SharedAccounts")
 
   @@map("users")
 }
@@ -380,6 +382,7 @@ model Account {
   transactionOrders     TransactionOrder[]
   transferDestinations  TransactionOrder[] @relation("TransferDestination")
   connectionAttempts    ConnectionAttempt[]
+  sharingPermissions    AccountSharingPermission[]
 
   @@unique([spaceId, provider, providerAccountId])
   @@index([spaceId])
@@ -415,6 +418,7 @@ model Transaction {
   categoryId            String?       @map("category_id")
   date                  DateTime      @db.Date
   pending               Boolean       @default(false)
+  isSplit               Boolean       @default(false) @map("is_split") // Transaction split between users
   metadata              Json?
   createdAt             DateTime      @default(now()) @map("created_at")
   updatedAt             DateTime      @updatedAt @map("updated_at")
@@ -422,11 +426,13 @@ model Transaction {
   // Relations
   account               Account       @relation(fields: [accountId], references: [id], onDelete: Cascade)
   category              Category?     @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  splits                TransactionSplit[]
 
   @@unique([accountId, providerTransactionId])
   @@index([accountId, date(sort: Desc)])
   @@index([categoryId])
   @@index([pending])
+  @@index([isSplit])
   @@map("transactions")
 }
 
@@ -1175,4 +1181,47 @@ model ConnectionAttempt {
   @@index([provider, status, attemptedAt(sort: Desc)])
   @@index([spaceId, attemptedAt(sort: Desc)])
   @@map("connection_attempts")
+}
+
+// Transaction Splits (for Yours/Mine/Ours at transaction level)
+model TransactionSplit {
+  id              String      @id @default(uuid())
+  transactionId   String      @map("transaction_id")
+  userId          String      @map("user_id")
+  amount          Decimal     @db.Decimal(19, 4) // Amount allocated to this user
+  percentage      Decimal?    @db.Decimal(5, 2)  // Percentage of total (optional)
+  note            String?     // Optional note for this split
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
+
+  // Relations
+  transaction     Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([transactionId, userId])
+  @@index([userId])
+  @@index([transactionId])
+  @@map("transaction_splits")
+}
+
+// Account Sharing Permissions (for Yours/Mine/Ours flexibility)
+model AccountSharingPermission {
+  id              String      @id @default(uuid())
+  accountId       String      @map("account_id")
+  sharedWithId    String      @map("shared_with_id") // User ID who gets access
+  canView         Boolean     @default(true) @map("can_view")
+  canEdit         Boolean     @default(false) @map("can_edit")
+  canDelete       Boolean     @default(false) @map("can_delete")
+  expiresAt       DateTime?   @map("expires_at") // Optional expiration
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
+
+  // Relations
+  account         Account     @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  sharedWith      User        @relation("SharedAccounts", fields: [sharedWithId], references: [id], onDelete: Cascade)
+
+  @@unique([accountId, sharedWithId])
+  @@index([sharedWithId])
+  @@index([accountId, canView])
+  @@map("account_sharing_permissions")
 }
