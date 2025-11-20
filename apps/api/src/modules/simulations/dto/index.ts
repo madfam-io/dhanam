@@ -149,3 +149,5 @@ export class CalculateSafeWithdrawalRateDto {
   @Max(0.2)
   inflationRate?: number;
 }
+
+export * from './analyze-scenario.dto';

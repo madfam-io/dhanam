@@ -23,6 +23,7 @@ import {
   RunSimulationDto,
   RunRetirementSimulationDto,
   CalculateSafeWithdrawalRateDto,
+  AnalyzeScenarioDto,
 } from './dto';
 
 @Controller('simulations')
@@ -67,6 +68,18 @@ export class SimulationsController {
     @Body() dto: CalculateSafeWithdrawalRateDto
   ) {
     return this.simulationsService.calculateSafeWithdrawalRate(user.id, dto);
+  }
+
+  @Post('scenario-analysis')
+  @RequiresPremium()
+  @UseGuards(SubscriptionGuard, UsageLimitGuard)
+  @MonitorPerformance(30000) // Longer timeout for stress testing
+  @HttpCode(HttpStatus.OK)
+  async analyzeScenario(
+    @CurrentUser() user: { id: string },
+    @Body() dto: AnalyzeScenarioDto
+  ) {
+    return this.simulationsService.analyzeScenario(user.id, dto);
   }
 
   @Get()

@@ -1,9 +1,15 @@
 import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { PrismaService } from '../../core/prisma/prisma.service';
 import { BillingService } from '../billing/billing.service';
-import { monteCarloEngine, type SimulationConfig, type RetirementSimulationConfig } from '@dhanam/simulations';
+import {
+  monteCarloEngine,
+  scenarioAnalysisEngine,
+  type SimulationConfig,
+  type RetirementSimulationConfig,
+  ScenarioType
+} from '@dhanam/simulations';
 
-import { RunSimulationDto, RunRetirementSimulationDto, CalculateSafeWithdrawalRateDto } from './dto';
+import { RunSimulationDto, RunRetirementSimulationDto, CalculateSafeWithdrawalRateDto, AnalyzeScenarioDto, ScenarioTypeDto } from './dto';
 
 @Injectable()
 export class SimulationsService {
@@ -220,6 +226,84 @@ export class SimulationsService {
       });
 
       this.logger.error(`Safe withdrawal calculation ${simulation.id} failed:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Analyze scenario stress test
+   */
+  async analyzeScenario(userId: string, dto: AnalyzeScenarioDto) {
+    this.logger.log(`Running scenario analysis (${dto.scenarioType}) for user ${userId}`);
+
+    const simulation = await this.prisma.simulation.create({
+      data: {
+        userId,
+        type: 'scenario_analysis',
+        config: dto as any,
+        status: 'running',
+      },
+    });
+
+    try {
+      const startTime = Date.now();
+
+      // Map DTO enum to package enum
+      const scenarioTypeMap: Record<ScenarioTypeDto, ScenarioType> = {
+        [ScenarioTypeDto.JOB_LOSS]: ScenarioType.JOB_LOSS,
+        [ScenarioTypeDto.MARKET_CRASH]: ScenarioType.MARKET_CRASH,
+        [ScenarioTypeDto.RECESSION]: ScenarioType.RECESSION,
+        [ScenarioTypeDto.MEDICAL_EMERGENCY]: ScenarioType.MEDICAL_EMERGENCY,
+        [ScenarioTypeDto.INFLATION_SPIKE]: ScenarioType.INFLATION_SPIKE,
+        [ScenarioTypeDto.DISABILITY]: ScenarioType.DISABILITY,
+        [ScenarioTypeDto.MARKET_CORRECTION]: ScenarioType.MARKET_CORRECTION,
+      };
+
+      const baselineConfig: SimulationConfig = {
+        initialBalance: dto.initialBalance,
+        monthlyContribution: dto.monthlyContribution,
+        years: dto.years,
+        iterations: dto.iterations || 10000,
+        expectedReturn: dto.expectedReturn,
+        returnVolatility: dto.returnVolatility,
+        inflationRate: dto.inflationRate,
+      };
+
+      const scenarioType = scenarioTypeMap[dto.scenarioType];
+      const result = scenarioAnalysisEngine.analyzeScenario(baselineConfig, scenarioType);
+
+      const executionTimeMs = Date.now() - startTime;
+
+      // Update simulation with result
+      await this.prisma.simulation.update({
+        where: { id: simulation.id },
+        data: {
+          result: result as any,
+          status: 'completed',
+          executionTimeMs,
+        },
+      });
+
+      // Track usage (scenario analysis counts as 2 simulations - baseline + stressed)
+      await this.billing.recordUsage(userId, 'monte_carlo_simulation');
+      await this.billing.recordUsage(userId, 'monte_carlo_simulation');
+
+      this.logger.log(`Scenario analysis ${simulation.id} completed in ${executionTimeMs}ms`);
+
+      return {
+        simulationId: simulation.id,
+        ...result,
+      };
+    } catch (error) {
+      await this.prisma.simulation.update({
+        where: { id: simulation.id },
+        data: {
+          status: 'failed',
+          errorMessage: error.message,
+        },
+      });
+
+      this.logger.error(`Scenario analysis ${simulation.id} failed:`, error);
       throw error;
     }
   }

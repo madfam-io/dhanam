@@ -97,15 +97,21 @@ export interface RetirementSimulationResult {
 }
 
 export interface ScenarioComparisonResult {
+  scenario: {
+    type: string;
+    name: string;
+    description: string;
+    severity: 'mild' | 'moderate' | 'severe';
+  };
   baseline: SimulationResult;
-  scenario: SimulationResult;
-  scenarioName: string;
-  scenarioDescription: string;
+  stressed: SimulationResult;
   comparison: {
     medianDifference: number;
     medianDifferencePercent: number;
     p10Difference: number;
-    recoveryMonths: number;
+    p10DifferencePercent: number;
+    recoveryYears: number | null;
+    impactSeverity: 'minimal' | 'moderate' | 'significant' | 'critical';
     worthStressTesting: boolean;
   };
 }
@@ -308,11 +314,53 @@ export function useSimulations() {
     }
   };
 
-  const compareScenarios = async (
-    scenarioName: string,
-    config: MonteCarloConfig
+  const analyzeScenario = async (
+    scenarioType: string,
+    config: {
+      initialBalance: number;
+      monthlyContribution: number;
+      years: number;
+      expectedReturn: number;
+      returnVolatility: number;
+      iterations?: number;
+      inflationRate?: number;
+    }
   ): Promise<ScenarioComparisonResult | null> => {
-    return handleRequest<ScenarioComparisonResult>(`scenarios/${scenarioName}`, config);
+    setLoading(true);
+    setError(null);
+
+    try {
+      const token = await getToken();
+      const response = await fetch(`${apiBaseUrl}/simulations/scenario-analysis`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          scenarioType,
+          ...config,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        setError(errorData);
+        return null;
+      }
+
+      const data = await response.json();
+      return data as ScenarioComparisonResult;
+    } catch (err) {
+      setError({
+        statusCode: 500,
+        message: err instanceof Error ? err.message : 'Unknown error occurred',
+        error: 'Internal Server Error',
+      });
+      return null;
+    } finally {
+      setLoading(false);
+    }
   };
 
   const getRecommendedAllocation = async (
@@ -357,7 +405,7 @@ export function useSimulations() {
     runSimulation,
     calculateGoalProbability,
     simulateRetirement,
-    compareScenarios,
+    analyzeScenario,
     getRecommendedAllocation,
     loading,
     error,
