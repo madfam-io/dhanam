@@ -2,6 +2,7 @@ import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { Provider } from '@prisma/client';
 
 import { PrismaService } from '../../../core/prisma/prisma.service';
+import { ProviderSelectionService } from '../../ml/provider-selection.service';
 
 import { CircuitBreakerService } from './circuit-breaker.service';
 import {
@@ -29,7 +30,8 @@ export class ProviderOrchestratorService {
 
   constructor(
     private prisma: PrismaService,
-    private circuitBreaker: CircuitBreakerService
+    private circuitBreaker: CircuitBreakerService,
+    private providerSelection: ProviderSelectionService
   ) {}
 
   /**
@@ -88,7 +90,7 @@ export class ProviderOrchestratorService {
   }
 
   /**
-   * Execute provider operation with automatic failover
+   * Execute provider operation with automatic failover and ML-based selection
    */
   async executeWithFailover<T>(
     operation: 'createLink' | 'exchangeToken' | 'getAccounts' | 'syncTransactions',
@@ -97,6 +99,20 @@ export class ProviderOrchestratorService {
     region: string = 'US'
   ): Promise<ProviderAttemptResult<T>> {
     const startTime = Date.now();
+
+    // Use ML to select optimal provider if no preference specified
+    if (!preferredProvider && params.institutionId) {
+      try {
+        preferredProvider = await this.providerSelection.selectOptimalProvider(
+          params.institutionId,
+          region,
+          params.userId
+        );
+        this.logger.log(`ML selected optimal provider: ${preferredProvider}`);
+      } catch (error) {
+        this.logger.warn(`ML selection failed, using defaults: ${error}`);
+      }
+    }
 
     // Determine which providers to try
     let providersToTry: Provider[];
