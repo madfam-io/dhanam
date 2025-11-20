@@ -8,6 +8,7 @@ import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Target, TrendingUp, AlertTriangle } from 'lucide-react';
 import { SimulationChart } from '@/components/simulations/SimulationChart';
+import { useGoals, type GoalProbabilityResult } from '@/hooks/useGoals';
 
 interface GoalProbabilityCalculatorProps {
   goal: {
@@ -20,12 +21,13 @@ interface GoalProbabilityCalculatorProps {
     monthlyContribution: number;
     currency: string;
   };
-  onSimulate?: (results: any) => void;
+  onSimulate?: (results: GoalProbabilityResult) => void;
 }
 
 export function GoalProbabilityCalculator({ goal, onSimulate }: GoalProbabilityCalculatorProps) {
+  const { getGoalProbability } = useGoals();
   const [loading, setLoading] = useState(false);
-  const [results, setResults] = useState<any>(null);
+  const [results, setResults] = useState<GoalProbabilityResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const targetDate = new Date(goal.targetDate);
@@ -39,37 +41,16 @@ export function GoalProbabilityCalculator({ goal, onSimulate }: GoalProbabilityC
     setError(null);
 
     try {
-      // Simulate goal probability
-      // This is a simplified calculation - in production you'd call the API
-      const currentProgress = (goal.currentValue / goal.targetAmount) * 100;
-      const monthlyGrowth = goal.monthlyContribution / goal.currentValue || 0.05;
-      const projectedValue =
-        goal.currentValue * Math.pow(1 + monthlyGrowth, monthsRemaining / 12);
+      // Call the real Monte Carlo API
+      const result = await getGoalProbability(goal.id);
 
-      const probabilityOfSuccess = Math.min(
-        100,
-        Math.max(0, (projectedValue / goal.targetAmount) * 100)
-      );
+      if (!result) {
+        throw new Error('Failed to calculate probability - no result returned');
+      }
 
-      const simulationResults = {
-        probabilityOfSuccess: probabilityOfSuccess / 100,
-        currentProgress: currentProgress / 100,
-        projectedValue,
-        shortfall: Math.max(0, goal.targetAmount - projectedValue),
-        onTrack: probabilityOfSuccess >= 75,
-        monthsRemaining,
-        timeSeries: Array.from({ length: Math.ceil(monthsRemaining) }, (_, i) => ({
-          month: i,
-          median: goal.currentValue * Math.pow(1 + monthlyGrowth, i / 12),
-          mean: goal.currentValue * Math.pow(1 + monthlyGrowth, i / 12),
-          p10: goal.currentValue * Math.pow(1 + monthlyGrowth * 0.7, i / 12),
-          p90: goal.currentValue * Math.pow(1 + monthlyGrowth * 1.3, i / 12),
-        })),
-      };
-
-      setResults(simulationResults);
+      setResults(result);
       if (onSimulate) {
-        onSimulate(simulationResults);
+        onSimulate(result);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to calculate probability');
@@ -79,16 +60,18 @@ export function GoalProbabilityCalculator({ goal, onSimulate }: GoalProbabilityC
   };
 
   const getProbabilityColor = (probability: number) => {
-    if (probability >= 0.9) return 'text-green-600';
-    if (probability >= 0.75) return 'text-blue-600';
-    if (probability >= 0.5) return 'text-yellow-600';
+    // Probability is 0-100
+    if (probability >= 90) return 'text-green-600';
+    if (probability >= 75) return 'text-blue-600';
+    if (probability >= 50) return 'text-yellow-600';
     return 'text-red-600';
   };
 
   const getProbabilityBadge = (probability: number) => {
-    if (probability >= 0.9) return <Badge className="bg-green-600">Excellent</Badge>;
-    if (probability >= 0.75) return <Badge className="bg-blue-600">On Track</Badge>;
-    if (probability >= 0.5) return <Badge variant="secondary">Needs Attention</Badge>;
+    // Probability is 0-100
+    if (probability >= 90) return <Badge className="bg-green-600">Excellent</Badge>;
+    if (probability >= 75) return <Badge className="bg-blue-600">On Track</Badge>;
+    if (probability >= 50) return <Badge variant="secondary">Needs Attention</Badge>;
     return <Badge variant="destructive">At Risk</Badge>;
   };
 
@@ -167,50 +150,69 @@ export function GoalProbabilityCalculator({ goal, onSimulate }: GoalProbabilityC
             <CardContent>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className={`text-4xl font-bold ${getProbabilityColor(results.probabilityOfSuccess)}`}>
-                    {(results.probabilityOfSuccess * 100).toFixed(1)}%
+                  <span className={`text-4xl font-bold ${getProbabilityColor(results.probability)}`}>
+                    {results.probability.toFixed(1)}%
                   </span>
-                  {getProbabilityBadge(results.probabilityOfSuccess)}
+                  {getProbabilityBadge(results.probability)}
                 </div>
-                <Progress value={results.probabilityOfSuccess * 100} className="h-3" />
+                <Progress value={results.probability} className="h-3" />
               </div>
 
               <div className="mt-6 grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-muted-foreground">Projected Value</p>
+                  <p className="text-sm text-muted-foreground">Expected Value (P50)</p>
                   <p className="text-xl font-bold">
-                    {goal.currency} {Math.round(results.projectedValue).toLocaleString()}
+                    {goal.currency} {Math.round(results.timeline[results.timeline.length - 1]?.median || 0).toLocaleString()}
                   </p>
-                  {results.shortfall > 0 && (
-                    <p className="text-xs text-red-600 mt-1">
-                      Shortfall: {goal.currency} {Math.round(results.shortfall).toLocaleString()}
-                    </p>
-                  )}
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Current Progress</p>
-                  <p className="text-xl font-bold">{(results.currentProgress * 100).toFixed(1)}%</p>
+                  <p className="text-xl font-bold">{results.currentProgress.toFixed(1)}%</p>
                   <p className="text-xs text-muted-foreground mt-1">
                     of {goal.currency} {goal.targetAmount.toLocaleString()}
                   </p>
                 </div>
               </div>
+
+              <div className="mt-4 pt-4 border-t">
+                <p className="text-sm font-semibold mb-2">90% Confidence Range</p>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <p className="text-xs text-muted-foreground">P10 (Pessimistic)</p>
+                    <p className="text-lg font-semibold">
+                      {goal.currency} {Math.round(results.confidenceLow).toLocaleString()}
+                    </p>
+                  </div>
+                  <TrendingUp className="h-6 w-6 text-muted-foreground" />
+                  <div className="text-right">
+                    <p className="text-xs text-muted-foreground">P90 (Optimistic)</p>
+                    <p className="text-lg font-semibold">
+                      {goal.currency} {Math.round(results.confidenceHigh).toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+              </div>
             </CardContent>
           </Card>
 
-          {!results.onTrack && (
+          {results.probability < 75 && (
             <Alert>
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
                 <p className="font-semibold mb-2">Action Needed</p>
                 <p className="text-sm">
-                  To improve your probability of success, consider:
+                  To improve your probability of success to 75%, consider:
                 </p>
                 <ul className="text-sm mt-2 space-y-1">
                   <li>
-                    • Increasing monthly contributions by{' '}
+                    • Increasing monthly contributions to{' '}
                     {goal.currency}{' '}
-                    {Math.round((results.shortfall / monthsRemaining) * 1.2).toLocaleString()}
+                    {Math.round(results.recommendedMonthlyContribution).toLocaleString()}
+                    {goal.monthlyContribution > 0 && (
+                      <span className="text-muted-foreground">
+                        {' '}(+{goal.currency}{Math.round(results.recommendedMonthlyContribution - goal.monthlyContribution).toLocaleString()})
+                      </span>
+                    )}
                   </li>
                   <li>• Extending your target date to allow more time for growth</li>
                   <li>• Adjusting your target amount if possible</li>
@@ -219,15 +221,22 @@ export function GoalProbabilityCalculator({ goal, onSimulate }: GoalProbabilityC
             </Alert>
           )}
 
-          {results.onTrack && (
+          {results.probability >= 75 && (
             <Alert>
               <TrendingUp className="h-4 w-4" />
               <AlertDescription>
                 <p className="font-semibold mb-2">On Track!</p>
                 <p className="text-sm">
-                  You're on pace to reach your goal. Keep up the great work with your monthly
-                  contributions of {goal.currency} {goal.monthlyContribution.toLocaleString()}.
+                  You have a {results.probability.toFixed(1)}% chance of reaching your goal. Keep up the great work
+                  {goal.monthlyContribution > 0 && (
+                    <> with your monthly contributions of {goal.currency} {goal.monthlyContribution.toLocaleString()}</>
+                  )}.
                 </p>
+                {results.projectedCompletion && (
+                  <p className="text-sm mt-1 text-muted-foreground">
+                    Projected completion: {new Date(results.projectedCompletion).toLocaleDateString()}
+                  </p>
+                )}
               </AlertDescription>
             </Alert>
           )}

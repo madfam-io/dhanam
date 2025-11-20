@@ -65,6 +65,30 @@ export interface GoalSummary {
   overallProgress: number;
 }
 
+export interface GoalProbabilityResult {
+  goalId: string;
+  probability: number; // 0-100
+  confidenceLow: number; // P10 value
+  confidenceHigh: number; // P90 value
+  currentProgress: number; // 0-100
+  projectedCompletion: string | null;
+  recommendedMonthlyContribution: number;
+  timeline: {
+    month: number;
+    median: number;
+    p10: number;
+    p90: number;
+  }[];
+}
+
+export interface WhatIfScenario {
+  monthlyContribution?: number;
+  targetAmount?: number;
+  targetDate?: string;
+  expectedReturn?: number;
+  volatility?: number;
+}
+
 export interface CreateGoalInput {
   spaceId: string;
   name: string;
@@ -193,6 +217,28 @@ export function useGoals() {
     await handleRequest('DELETE', `${goalId}/allocations/${accountId}`);
   };
 
+  // Probabilistic Planning Methods (Monte Carlo Integration)
+  const getGoalProbability = async (goalId: string): Promise<GoalProbabilityResult | null> => {
+    return handleRequest<GoalProbabilityResult>('GET', `${goalId}/probability`);
+  };
+
+  const updateGoalProbability = async (goalId: string): Promise<{ message: string } | null> => {
+    return handleRequest<{ message: string }>('POST', `${goalId}/probability/update`);
+  };
+
+  const runWhatIfScenario = async (
+    goalId: string,
+    scenario: WhatIfScenario
+  ): Promise<GoalProbabilityResult | null> => {
+    return handleRequest<GoalProbabilityResult>('POST', `${goalId}/what-if`, scenario);
+  };
+
+  const updateAllGoalProbabilities = async (
+    spaceId: string
+  ): Promise<{ message: string } | null> => {
+    return handleRequest<{ message: string }>('POST', `space/${spaceId}/probability/update-all`);
+  };
+
   return {
     createGoal,
     getGoalsBySpace,
@@ -203,6 +249,11 @@ export function useGoals() {
     getGoalProgress,
     addAllocation,
     removeAllocation,
+    // Probabilistic Planning
+    getGoalProbability,
+    updateGoalProbability,
+    runWhatIfScenario,
+    updateAllGoalProbabilities,
     loading,
     error,
   };
