@@ -9,11 +9,12 @@ import { GoalsExecutionService } from './goals-execution.service';
 import { GoalsController } from './goals.controller';
 import { GoalsService } from './goals.service';
 import { GoalProbabilityService } from './goal-probability.service';
+import { GoalCollaborationService } from './goal-collaboration.service';
 
 @Module({
   imports: [PrismaModule, AuditModule, TransactionExecutionModule, SimulationsModule],
   controllers: [GoalsController],
-  providers: [GoalsService, GoalsExecutionService, GoalProbabilityService],
-  exports: [GoalsService, GoalsExecutionService, GoalProbabilityService],
+  providers: [GoalsService, GoalsExecutionService, GoalProbabilityService, GoalCollaborationService],
+  exports: [GoalsService, GoalsExecutionService, GoalProbabilityService, GoalCollaborationService],
 })
 export class GoalsModule {}
