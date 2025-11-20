@@ -405,6 +405,7 @@ model Category {
   budgetId         String             @map("budget_id")
   name             String
   budgetedAmount   Decimal            @map("budgeted_amount") @db.Decimal(19, 4)
+  carryoverAmount  Decimal            @default(0) @map("carryover_amount") @db.Decimal(19, 4)
   icon             String?
   color            String?
   description      String?
@@ -447,6 +448,7 @@ model Budget {
   period           BudgetPeriod
   startDate        DateTime          @map("start_date") @db.Date
   endDate          DateTime?         @map("end_date") @db.Date
+  income           Decimal           @default(0) @db.Decimal(19, 4)
   createdAt        DateTime          @default(now()) @map("created_at")
   updatedAt        DateTime          @updatedAt @map("updated_at")
 

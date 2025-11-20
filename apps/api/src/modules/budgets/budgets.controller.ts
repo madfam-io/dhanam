@@ -5,7 +5,15 @@ import { Request } from 'express';
 import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
 
 import { BudgetsService } from './budgets.service';
-import { CreateBudgetDto, UpdateBudgetDto, BudgetResponseDto, BudgetSummaryDto } from './dto';
+import {
+  CreateBudgetDto,
+  UpdateBudgetDto,
+  BudgetResponseDto,
+  BudgetSummaryDto,
+  UpdateIncomeDto,
+  AllocateFundsDto,
+  RolloverBudgetDto,
+} from './dto';
 
 @ApiTags('budgets')
 @Controller('spaces/:spaceId/budgets')
@@ -66,5 +74,41 @@ export class BudgetsController {
   @ApiOperation({ summary: 'Delete a budget' })
   remove(@Param('spaceId') spaceId: string, @Param('id') id: string, @Req() req: Request) {
     return this.budgetsService.remove(spaceId, req.user!.id, id);
+  }
+
+  @Patch(':id/income')
+  @ApiOperation({ summary: 'Update budget income for zero-based allocation' })
+  @ApiOkResponse({ type: BudgetResponseDto })
+  updateIncome(
+    @Param('spaceId') spaceId: string,
+    @Param('id') id: string,
+    @Body() updateIncomeDto: UpdateIncomeDto,
+    @Req() req: Request
+  ) {
+    return this.budgetsService.updateIncome(spaceId, req.user!.id, id, updateIncomeDto);
+  }
+
+  @Post(':id/allocate')
+  @ApiOperation({ summary: 'Allocate funds to a category (zero-based budgeting)' })
+  @ApiOkResponse({ type: BudgetResponseDto })
+  allocateFunds(
+    @Param('spaceId') spaceId: string,
+    @Param('id') id: string,
+    @Body() allocateFundsDto: AllocateFundsDto,
+    @Req() req: Request
+  ) {
+    return this.budgetsService.allocateFunds(spaceId, req.user!.id, id, allocateFundsDto);
+  }
+
+  @Post(':id/rollover')
+  @ApiOperation({ summary: 'Rollover unspent funds to next budget period' })
+  @ApiOkResponse({ type: BudgetResponseDto })
+  rolloverBudget(
+    @Param('spaceId') spaceId: string,
+    @Param('id') id: string,
+    @Body() rolloverBudgetDto: RolloverBudgetDto,
+    @Req() req: Request
+  ) {
+    return this.budgetsService.rolloverBudget(spaceId, req.user!.id, id, rolloverBudgetDto);
   }
 }
