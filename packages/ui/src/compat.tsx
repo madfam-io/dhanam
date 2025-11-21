@@ -103,3 +103,7 @@ export { DialogPortal, DialogOverlay, DialogClose } from './components/dialog';
 
 // Re-export AlertDialog sub-components
 export { AlertDialogPortal, AlertDialogOverlay } from './components/alert-dialog';
+
+// Direct exports for Slider and Tooltip (React 19 compatible)
+export { Slider } from './components/slider';
+export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from './components/tooltip';

@@ -146,15 +146,20 @@ export default function DemoPage() {
     );
 
     const mockResult: SimulationResult = {
+      finalValues: [],
       median: futureValue,
       p10: futureValue * 0.7,
       p25: futureValue * 0.85,
       p75: futureValue * 1.15,
       p90: futureValue * 1.3,
       mean: futureValue * 1.02,
+      stdDev: futureValue * 0.2,
+      min: futureValue * 0.5,
+      max: futureValue * 2,
       timeSeries,
-      iterations: 10000,
+      computedAt: new Date(),
       metadata: {
+        iterations: 10000,
         successProbability,
         yearsToRetirement,
         nestEgg: futureValue,
@@ -435,27 +440,27 @@ export default function DemoPage() {
                   <CardContent className="space-y-6">
                     <div className="text-center space-y-2">
                       <div className="text-5xl font-bold text-blue-600">
-                        {result.metadata?.successProbability.toFixed(1)}%
+                        {(result.metadata?.successProbability as number)?.toFixed(1)}%
                       </div>
                       <p className="text-muted-foreground">
                         Probability of not running out of money in retirement
                       </p>
                     </div>
 
-                    <Progress value={result.metadata?.successProbability} className="h-3" />
+                    <Progress value={(result.metadata?.successProbability as number) || 0} className="h-3" />
 
-                    {(result.metadata?.successProbability || 0) >= 75 ? (
+                    {((result.metadata?.successProbability as number) || 0) >= 75 ? (
                       <Alert className="bg-green-50 border-green-200 dark:bg-green-950/20">
                         <CheckCircle2 className="h-4 w-4 text-green-600" />
                         <AlertTitle className="text-green-900 dark:text-green-100">
                           Strong Retirement Plan
                         </AlertTitle>
                         <AlertDescription className="text-green-800 dark:text-green-200">
-                          You have a {result.metadata?.successProbability.toFixed(1)}% chance of a
+                          You have a {(result.metadata?.successProbability as number)?.toFixed(1)}% chance of a
                           secure retirement based on these assumptions.
                         </AlertDescription>
                       </Alert>
-                    ) : (result.metadata?.successProbability || 0) >= 50 ? (
+                    ) : ((result.metadata?.successProbability as number) || 0) >= 50 ? (
                       <Alert className="bg-yellow-50 border-yellow-200 dark:bg-yellow-950/20">
                         <AlertTitle className="text-yellow-900 dark:text-yellow-100">
                           Moderate Retirement Plan
@@ -663,7 +668,7 @@ function generateMockTimeSeries(
   monthlyReturn: number,
   monthlyVolatility: number,
   months: number
-): Array<{ month: number; median: number; p10: number; p90: number }> {
+): Array<{ month: number; median: number; mean: number; p10: number; p90: number }> {
   const timeSeries = [];
 
   for (let month = 0; month <= months; month++) {
@@ -680,6 +685,7 @@ function generateMockTimeSeries(
     timeSeries.push({
       month,
       median: expectedValue,
+      mean: expectedValue * 1.02,
       p10: Math.max(0, expectedValue - variance * 1.28), // 1.28 is z-score for 10th percentile
       p90: expectedValue + variance * 1.28,
     });

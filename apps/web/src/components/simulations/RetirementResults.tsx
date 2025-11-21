@@ -27,12 +27,6 @@ export function RetirementResults({ results }: RetirementResultsProps) {
     return 'text-yellow-600';
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const _getSuccessVariant = (): 'default' | 'destructive' | 'secondary' => {
-    if (isExcellent) return 'default';
-    if (isAtRisk) return 'destructive';
-    return 'secondary';
-  };
 
   return (
     <div className="space-y-6">
@@ -78,8 +72,7 @@ export function RetirementResults({ results }: RetirementResultsProps) {
               This would bring your total monthly savings to approximately $
               {(
                 recommendations.increaseContributionBy +
-                // @ts-expect-error - Legacy config type
-                (results.simulation.config as any).monthlyContribution
+                ((results.simulation.config as any)?.monthlyContribution || 0)
               ).toLocaleString()}
               .
             </p>

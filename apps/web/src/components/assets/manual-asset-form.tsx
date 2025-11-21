@@ -407,7 +407,7 @@ export function ManualAssetForm({ onSubmit, onCancel, initialData }: ManualAsset
               <select
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                 value={formData.currency}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, currency: e.target.value })}
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFormData({ ...formData, currency: e.target.value })}
               >
                 <option value="USD">USD</option>
                 <option value="EUR">EUR</option>

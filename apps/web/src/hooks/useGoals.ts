@@ -81,6 +81,11 @@ export interface GoalProbabilityResult {
     p10: number;
     p90: number;
   }[];
+  timeSeries?: Array<{ month: number; median: number; p10: number; p90: number }>;
+  simulation?: {
+    timeSeries: Array<{ month: number; median: number; p10: number; p90: number }>;
+    [key: string]: unknown;
+  };
 }
 
 export interface WhatIfScenario {

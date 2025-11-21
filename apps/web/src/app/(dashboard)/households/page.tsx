@@ -163,7 +163,7 @@ export default function HouseholdsPage() {
                 <Select
                   value={newHousehold.type}
                   onValueChange={(value: string) =>
-                    setNewHousehold({ ...newHousehold, type: value })
+                    setNewHousehold({ ...newHousehold, type: value as 'family' | 'trust' | 'estate' | 'partnership' })
                   }
                 >
                   <SelectTrigger>

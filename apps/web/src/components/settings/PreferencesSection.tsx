@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@dhan
 import { Separator } from '@dhanam/ui';
 import { Badge } from '@dhanam/ui';
 import { usePreferences } from '@/contexts/PreferencesContext';
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   Bell,
   Shield,
@@ -18,6 +19,16 @@ import {
   AlertCircle,
   CheckCircle,
 } from 'lucide-react';
+
+// React 19 compatibility wrappers
+const BellIcon = Bell as any;
+const ShieldIcon = Shield as any;
+const PaletteIcon = Palette as any;
+const DollarSignIcon = DollarSign as any;
+const LeafIcon = Leaf as any;
+const DatabaseIcon = Database as any;
+const AlertCircleIcon = AlertCircle as any;
+const CheckCircleIcon = CheckCircle as any;
 
 export function PreferencesSection() {
   const {
@@ -79,14 +90,14 @@ export function PreferencesSection() {
       {/* Status Messages */}
       {error && (
         <div className="flex items-center gap-2 p-4 text-red-600 bg-red-50 rounded-lg">
-          <AlertCircle className="h-5 w-5" />
+          <AlertCircleIcon className="h-5 w-5" />
           <span>Error: {error}</span>
         </div>
       )}
 
       {successMessage && (
         <div className="flex items-center gap-2 p-4 text-green-600 bg-green-50 rounded-lg">
-          <CheckCircle className="h-5 w-5" />
+          <CheckCircleIcon className="h-5 w-5" />
           <span>{successMessage}</span>
         </div>
       )}
@@ -95,7 +106,7 @@ export function PreferencesSection() {
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
-            <Bell className="h-5 w-5" />
+            <BellIcon className="h-5 w-5" />
             <CardTitle>Notificaciones</CardTitle>
           </div>
           <CardDescription>Configura cómo y cuándo quieres recibir notificaciones</CardDescription>
@@ -181,7 +192,7 @@ export function PreferencesSection() {
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
-            <Shield className="h-5 w-5" />
+            <ShieldIcon className="h-5 w-5" />
             <CardTitle>Privacidad</CardTitle>
           </div>
           <CardDescription>Controla cómo se usan tus datos y tu privacidad</CardDescription>
@@ -237,7 +248,7 @@ export function PreferencesSection() {
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
-            <Palette className="h-5 w-5" />
+            <PaletteIcon className="h-5 w-5" />
             <CardTitle>Apariencia</CardTitle>
           </div>
           <CardDescription>Personaliza la apariencia de tu dashboard</CardDescription>
@@ -317,7 +328,7 @@ export function PreferencesSection() {
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
-            <DollarSign className="h-5 w-5" />
+            <DollarSignIcon className="h-5 w-5" />
             <CardTitle>Preferencias Financieras</CardTitle>
           </div>
           <CardDescription>
@@ -400,7 +411,7 @@ export function PreferencesSection() {
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
-            <Leaf className="h-5 w-5" />
+            <LeafIcon className="h-5 w-5" />
             <CardTitle>Preferencias ESG</CardTitle>
           </div>
           <CardDescription>
@@ -458,7 +469,7 @@ export function PreferencesSection() {
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
-            <Database className="h-5 w-5" />
+            <DatabaseIcon className="h-5 w-5" />
             <CardTitle>Respaldo de Datos</CardTitle>
           </div>
           <CardDescription>Configurar respaldos automáticos de tus datos</CardDescription>

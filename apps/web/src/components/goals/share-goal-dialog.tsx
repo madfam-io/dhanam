@@ -29,11 +29,17 @@ interface ShareGoalDialogProps {
   goal: Goal;
   onShared?: () => void;
   trigger?: React.ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export function ShareGoalDialog({ goal, onShared, trigger }: ShareGoalDialogProps) {
+export function ShareGoalDialog({ goal, onShared, trigger, open: controlledOpen, onOpenChange }: ShareGoalDialogProps) {
   const { shareGoal } = useGoals();
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+
+  // Use controlled state if provided, otherwise use internal state
+  const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
+  const setOpen = onOpenChange || setInternalOpen;
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);

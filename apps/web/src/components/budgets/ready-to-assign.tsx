@@ -185,7 +185,7 @@ export function ReadyToAssign({
               <select
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
                 value={selectedCategory}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSelectedCategory(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedCategory(e.target.value)}
               >
                 <option value="">Select category...</option>
                 {categories.map((cat) => (

@@ -9,7 +9,7 @@ interface GoalProbabilityTimelineProps {
 }
 
 interface ProbabilityHistoryEntry {
-  date: string;
+  month: number;
   probability: number;
 }
 
@@ -35,8 +35,8 @@ export function GoalProbabilityTimeline({ goals }: GoalProbabilityTimelineProps)
       return { trend: 'stable', change: 0 };
     }
 
-    const oldest = history[0].probability;
-    const newest = history[history.length - 1].probability;
+    const oldest = history[0]?.probability ?? 0;
+    const newest = history[history.length - 1]?.probability ?? 0;
     const change = newest - oldest;
 
     if (Math.abs(change) < 1) return { trend: 'stable', change: 0 };

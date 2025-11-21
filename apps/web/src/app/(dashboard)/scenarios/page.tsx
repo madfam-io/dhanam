@@ -56,13 +56,22 @@ export default function ScenariosPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const result = await compareScenarios(selectedScenario, config);
+    // Transform MonteCarloConfig to the format expected by analyzeScenario
+    const scenarioConfig = {
+      initialBalance: config.initialBalance,
+      monthlyContribution: config.monthlyContribution,
+      years: Math.round(config.months / 12),
+      expectedReturn: config.expectedReturn,
+      returnVolatility: config.volatility,
+      iterations: config.iterations,
+    };
+    const result = await compareScenarios(selectedScenario, scenarioConfig);
     if (result) {
       setComparison(result);
 
       // Track scenario comparison
       analytics.trackScenarioComparison(
-        result.scenarioName,
+        result.scenarioName ?? selectedScenario,
         result.comparison.medianDifference,
         result.comparison.medianDifferencePercent,
         result.comparison.worthStressTesting
@@ -312,7 +321,7 @@ export default function ScenariosPage() {
                           <span>Median:</span>
                           <span className="font-semibold text-red-600">
                             $
-                            {comparison.scenario.median.toLocaleString(undefined, {
+                            {(comparison.scenario.median ?? 0).toLocaleString(undefined, {
                               maximumFractionDigits: 0,
                             })}
                           </span>
@@ -321,7 +330,7 @@ export default function ScenariosPage() {
                           <span>P10:</span>
                           <span className="font-semibold text-red-600">
                             $
-                            {comparison.scenario.p10.toLocaleString(undefined, {
+                            {(comparison.scenario.p10 ?? 0).toLocaleString(undefined, {
                               maximumFractionDigits: 0,
                             })}
                           </span>
@@ -330,7 +339,7 @@ export default function ScenariosPage() {
                           <span>P90:</span>
                           <span className="font-semibold text-red-600">
                             $
-                            {comparison.scenario.p90.toLocaleString(undefined, {
+                            {(comparison.scenario.p90 ?? 0).toLocaleString(undefined, {
                               maximumFractionDigits: 0,
                             })}
                           </span>
@@ -359,7 +368,7 @@ export default function ScenariosPage() {
                       <div className="flex justify-between">
                         <span>Crisis Duration:</span>
                         <span className="font-semibold">
-                          {comparison.comparison.recoveryMonths} months
+                          {comparison.comparison.recoveryMonths ?? 0} months
                         </span>
                       </div>
                     </div>
@@ -375,7 +384,7 @@ export default function ScenariosPage() {
               />
 
               <SimulationChart
-                timeSeries={comparison.scenario.timeSeries}
+                timeSeries={comparison.scenario.timeSeries ?? []}
                 title={`${comparison.scenarioName} Projection`}
                 description={comparison.scenarioDescription}
               />

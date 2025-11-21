@@ -512,7 +512,7 @@ export default function GoalsPage() {
 
               <TabsContent value="collaboration" className="space-y-6">
                 <ShareManagementPanel
-                  goal={selectedGoal}
+                  goalId={selectedGoal.id}
                   onUpdate={() => {
                     // Reload goal data to reflect changes
                     handleGoalClick(selectedGoal);

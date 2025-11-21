@@ -73,7 +73,7 @@ export default function EstatePlanningPage() {
     try {
       const data = await getHouseholds();
       setHouseholds(data);
-      if (data.length > 0 && !selectedHouseholdId) {
+      if (data.length > 0 && !selectedHouseholdId && data[0]) {
         setSelectedHouseholdId(data[0].id);
       }
     } catch (err) {
