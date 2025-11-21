@@ -8,7 +8,7 @@ import {
   ConflictException,
   Logger,
 } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Prisma as _Prisma } from '@prisma/client';
 import type { InputJsonValue } from '@prisma/client/runtime/library';
 import { addDays, isAfter } from 'date-fns';
 
@@ -18,7 +18,7 @@ import { SpacesService } from '../spaces/spaces.service';
 
 import { CreateOrderDto, VerifyOrderDto, UpdateOrderDto, OrderFilterDto } from './dto';
 // Import enums from DTO
-import { OrderType, OrderPriority, Currency } from './dto/create-order.dto';
+import { OrderType, OrderPriority, Currency as _Currency } from './dto/create-order.dto';
 import {
   ExecutionOrder,
   OrderType as ProviderOrderType,
@@ -343,7 +343,12 @@ export class TransactionExecutionService {
         });
 
         // Update order limits
-        await this.updateOrderLimits(userId, order.spaceId, order.type as any, parseFloat(order.amount.toString()));
+        await this.updateOrderLimits(
+          userId,
+          order.spaceId,
+          order.type as any,
+          parseFloat(order.amount.toString())
+        );
 
         // Audit successful execution
         await this.auditService.log({

@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { addMonths, differenceInMonths } from 'date-fns';
 
 import { PrismaService } from '@core/prisma/prisma.service';
+
 import { MonteCarloEngine } from '../simulations/engines/monte-carlo.engine';
 import { MonteCarloConfig } from '../simulations/types/simulation.types';
 
@@ -41,10 +42,7 @@ export class GoalProbabilityService {
   /**
    * Calculate probability of achieving a goal using Monte Carlo simulation
    */
-  async calculateGoalProbability(
-    userId: string,
-    goalId: string
-  ): Promise<GoalProbabilityResult> {
+  async calculateGoalProbability(userId: string, goalId: string): Promise<GoalProbabilityResult> {
     this.logger.log(`Calculating probability for goal ${goalId}`);
 
     // Get goal with related data
@@ -138,7 +136,7 @@ export class GoalProbabilityService {
 
     // If probability is low (<50%), calculate recommended contribution
     let recommendedContribution = config.monthlyContribution;
-    if (successRate < 0.50) {
+    if (successRate < 0.5) {
       try {
         recommendedContribution = this.monteCarloEngine.findRequiredContribution(
           config,
@@ -165,10 +163,7 @@ export class GoalProbabilityService {
   /**
    * Update goal with latest probability calculation
    */
-  async updateGoalProbability(
-    userId: string,
-    goalId: string
-  ): Promise<void> {
+  async updateGoalProbability(userId: string, goalId: string): Promise<void> {
     const result = await this.calculateGoalProbability(userId, goalId);
 
     // Get existing probability history
@@ -177,7 +172,7 @@ export class GoalProbabilityService {
       select: { probabilityHistory: true },
     });
 
-    let probabilityHistory = goal?.probabilityHistory as any[] || [];
+    let probabilityHistory = (goal?.probabilityHistory as any[]) || [];
 
     // Add current probability to history
     probabilityHistory.push({
@@ -188,9 +183,7 @@ export class GoalProbabilityService {
     // Keep only last 90 days of history
     const ninetyDaysAgo = new Date();
     ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
-    probabilityHistory = probabilityHistory.filter(
-      (entry) => new Date(entry.date) > ninetyDaysAgo
-    );
+    probabilityHistory = probabilityHistory.filter((entry) => new Date(entry.date) > ninetyDaysAgo);
 
     // Update goal with new probability data
     await this.prisma.goal.update({
@@ -252,9 +245,10 @@ export class GoalProbabilityService {
     // Apply scenario modifications
     const targetDate = scenario.targetDate || goal.targetDate;
     const targetAmount = scenario.targetAmount || goal.targetAmount.toNumber();
-    const monthlyContribution = scenario.monthlyContribution !== undefined
-      ? scenario.monthlyContribution
-      : (goal.monthlyContribution?.toNumber() || 0);
+    const monthlyContribution =
+      scenario.monthlyContribution !== undefined
+        ? scenario.monthlyContribution
+        : goal.monthlyContribution?.toNumber() || 0;
 
     const monthsUntilTarget = differenceInMonths(new Date(targetDate), new Date());
 
@@ -268,12 +262,14 @@ export class GoalProbabilityService {
       monthlyContribution,
       months: monthsUntilTarget,
       iterations: 10000,
-      expectedReturn: scenario.expectedReturn !== undefined
-        ? scenario.expectedReturn
-        : (goal.expectedReturn?.toNumber() || 0.07),
-      volatility: scenario.volatility !== undefined
-        ? scenario.volatility
-        : (goal.volatility?.toNumber() || 0.15),
+      expectedReturn:
+        scenario.expectedReturn !== undefined
+          ? scenario.expectedReturn
+          : goal.expectedReturn?.toNumber() || 0.07,
+      volatility:
+        scenario.volatility !== undefined
+          ? scenario.volatility
+          : goal.volatility?.toNumber() || 0.15,
     };
 
     // Run simulation
@@ -320,10 +316,7 @@ export class GoalProbabilityService {
   /**
    * Bulk update probabilities for all active goals in a space
    */
-  async updateAllGoalProbabilities(
-    userId: string,
-    spaceId: string
-  ): Promise<void> {
+  async updateAllGoalProbabilities(userId: string, spaceId: string): Promise<void> {
     this.logger.log(`Updating all goal probabilities for space ${spaceId}`);
 
     const goals = await this.prisma.goal.findMany({

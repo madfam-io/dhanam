@@ -89,6 +89,7 @@ export function TransactionItem({ transaction, onPress }: TransactionItemProps) 
           </Chip>
         </View>
       }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       left={(_props: any) => (
         <View
           style={[
@@ -103,6 +104,7 @@ export function TransactionItem({ transaction, onPress }: TransactionItemProps) 
           />
         </View>
       )}
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       right={(_props: any) => (
         <View style={styles.amount}>
           <Text

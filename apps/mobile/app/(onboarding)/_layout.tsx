@@ -9,6 +9,7 @@ import {
   RNActivityIndicator as ActivityIndicator,
   SafeAreaProvider,
 } from '@/lib/react-native-compat';
+
 import { useAuth } from '../../src/contexts/AuthContext';
 import { OnboardingProvider } from '../../src/contexts/OnboardingContext';
 

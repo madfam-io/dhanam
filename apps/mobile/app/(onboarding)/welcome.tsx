@@ -12,6 +12,7 @@ import {
   Dimensions,
   SafeAreaView,
 } from '@/lib/react-native-compat';
+
 import { useAuth } from '../../src/contexts/AuthContext';
 import { useOnboarding } from '../../src/contexts/OnboardingContext';
 

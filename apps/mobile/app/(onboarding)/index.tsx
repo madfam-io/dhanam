@@ -6,6 +6,7 @@ import {
   RNText as Text,
   RNActivityIndicator as ActivityIndicator,
 } from '@/lib/react-native-compat';
+
 import { useOnboarding } from '../../src/contexts/OnboardingContext';
 
 export default function OnboardingIndex() {

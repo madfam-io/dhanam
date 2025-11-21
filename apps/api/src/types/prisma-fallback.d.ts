@@ -1261,7 +1261,9 @@ declare module '@prisma/client' {
     };
 
     export type WillGetPayload<T extends { include?: any; select?: any }> = Will & {
-      beneficiaries?: T['include'] extends { beneficiaries: true } ? BeneficiaryDesignation[] : never;
+      beneficiaries?: T['include'] extends { beneficiaries: true }
+        ? BeneficiaryDesignation[]
+        : never;
       executors?: T['include'] extends { executors: true } ? WillExecutor[] : never;
     };
   }
@@ -1317,6 +1319,7 @@ declare module '@prisma/client' {
 
     $connect(): Promise<void>;
     $disconnect(): Promise<void>;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
     $on(eventType: string, callback: Function): void;
     $transaction(fn: any): Promise<any>;
     $queryRaw(query: TemplateStringsArray | string, ...values: any[]): Promise<any>;
@@ -1332,7 +1335,10 @@ declare module '@prisma/client' {
     meta?: Record<string, any>;
     clientVersion: string;
 
-    constructor(message: string, options: { code: string; clientVersion: string; meta?: Record<string, any> });
+    constructor(
+      message: string,
+      options: { code: string; clientVersion: string; meta?: Record<string, any> }
+    );
   }
 
   export class PrismaClientUnknownRequestError extends Error {
@@ -1361,13 +1367,7 @@ declare module '@prisma/client' {
 
 // Re-export runtime types
 declare module '@prisma/client/runtime/library' {
-  export type InputJsonValue =
-    | null
-    | string
-    | number
-    | boolean
-    | InputJsonObject
-    | InputJsonArray;
+  export type InputJsonValue = null | string | number | boolean | InputJsonObject | InputJsonArray;
 
   export type InputJsonObject = {
     readonly [Key in string]?: InputJsonValue;
@@ -1391,7 +1391,10 @@ declare module '@prisma/client/runtime/library' {
     meta?: Record<string, any>;
     clientVersion: string;
 
-    constructor(message: string, options: { code: string; clientVersion: string; meta?: Record<string, any> });
+    constructor(
+      message: string,
+      options: { code: string; clientVersion: string; meta?: Record<string, any> }
+    );
   }
 
   export class PrismaClientUnknownRequestError extends Error {

@@ -2,7 +2,7 @@ import * as crypto from 'crypto';
 
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Account, Transaction, Prisma, Currency, AccountType } from '@prisma/client';
+import { Account, Transaction, Prisma as _Prisma, Currency, AccountType } from '@prisma/client';
 import type { InputJsonValue } from '@prisma/client/runtime/library';
 
 import { AuditService } from '@core/audit/audit.service';

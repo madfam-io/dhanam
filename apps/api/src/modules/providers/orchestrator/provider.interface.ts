@@ -1,4 +1,10 @@
-import { Provider, Account, Transaction, Currency, AccountType } from '@prisma/client';
+import {
+  Provider,
+  Account as _Account,
+  Transaction as _Transaction,
+  Currency,
+  AccountType,
+} from '@prisma/client';
 
 /**
  * Base provider interface that all financial data providers must implement
@@ -184,10 +190,10 @@ export interface ProviderError {
 }
 
 export interface CircuitBreakerConfig {
-  failureThreshold: number;      // Number of failures before opening circuit
-  successThreshold: number;       // Number of successes before closing circuit
-  timeout: number;                // Timeout in milliseconds before attempting again
-  monitoringWindow: number;       // Time window for counting failures (milliseconds)
+  failureThreshold: number; // Number of failures before opening circuit
+  successThreshold: number; // Number of successes before closing circuit
+  timeout: number; // Timeout in milliseconds before attempting again
+  monitoringWindow: number; // Time window for counting failures (milliseconds)
 }
 
 export interface CircuitBreakerState {

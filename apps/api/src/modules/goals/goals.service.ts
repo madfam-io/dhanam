@@ -339,7 +339,7 @@ export class GoalsService {
     let currentValue = 0;
     const allocationProgress: GoalAllocationProgress[] = [];
 
-    for (const allocation of (goal.allocations as any[])) {
+    for (const allocation of goal.allocations as any[]) {
       const contributedValue =
         Number(allocation.account.balance) * (Number(allocation.percentage) / 100);
       currentValue += contributedValue;

@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+
 import { PostHogService } from '../analytics/posthog.service';
 
 @Injectable()
@@ -56,7 +57,11 @@ export class ProvidersAnalytics {
   /**
    * Track when a user initiates a provider connection
    */
-  async trackConnectionInitiated(userId: string, provider: string, institution?: string): Promise<void> {
+  async trackConnectionInitiated(
+    userId: string,
+    provider: string,
+    institution?: string
+  ): Promise<void> {
     try {
       await this.posthogService.capture({
         distinctId: userId,
@@ -126,7 +131,11 @@ export class ProvidersAnalytics {
   /**
    * Track when a provider connection is disconnected
    */
-  async trackConnectionDisconnected(userId: string, provider: string, reason?: string): Promise<void> {
+  async trackConnectionDisconnected(
+    userId: string,
+    provider: string,
+    reason?: string
+  ): Promise<void> {
     try {
       await this.posthogService.capture({
         distinctId: userId,
@@ -162,7 +171,11 @@ export class ProvidersAnalytics {
   /**
    * Track provider webhook received
    */
-  async trackWebhookReceived(provider: string, eventType: string, processed: boolean): Promise<void> {
+  async trackWebhookReceived(
+    provider: string,
+    eventType: string,
+    processed: boolean
+  ): Promise<void> {
     try {
       await this.posthogService.capture({
         distinctId: 'system',

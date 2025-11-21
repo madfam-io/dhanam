@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 
-import { PrismaModule } from '../../../core/prisma/prisma.module';
 import { CryptoModule } from '../../../core/crypto/crypto.module';
+import { PrismaModule } from '../../../core/prisma/prisma.module';
 
 import { MxService } from './mx.service';
 

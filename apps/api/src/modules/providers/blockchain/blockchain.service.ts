@@ -1,6 +1,6 @@
 import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Prisma, Account, Currency, AccountType } from '@prisma/client';
+import { Prisma as _Prisma, Account, Currency, AccountType } from '@prisma/client';
 import type { InputJsonValue } from '@prisma/client/runtime/library';
 import axios, { AxiosInstance } from 'axios';
 // import * as crypto from 'crypto'; - not used

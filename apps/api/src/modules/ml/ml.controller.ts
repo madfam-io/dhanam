@@ -1,13 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Param,
-  Query,
-  UseGuards,
-  Req,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Query, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 
 import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
@@ -15,8 +6,8 @@ import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
 import { SpaceGuard } from '../spaces/guards/space.guard';
 
 import { ProviderSelectionService } from './provider-selection.service';
-import { TransactionCategorizationService } from './transaction-categorization.service';
 import { SplitPredictionService } from './split-prediction.service';
+import { TransactionCategorizationService } from './transaction-categorization.service';
 
 @ApiTags('ML & AI')
 @ApiBearerAuth()
@@ -34,7 +25,10 @@ export class MlController {
   @Get('ml/provider-insights')
   @ApiOperation({ summary: 'Get provider selection insights' })
   @ApiResponse({ status: 200, description: 'Provider performance metrics' })
-  async getProviderInsights(@Query('region') region: string = 'US', @Query('days') days: number = 30) {
+  async getProviderInsights(
+    @Query('region') region: string = 'US',
+    @Query('days') days: number = 30
+  ) {
     return this.providerSelection.getProviderInsights(region, days);
   }
 

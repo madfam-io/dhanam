@@ -1,6 +1,11 @@
 import { Account, SyncAccountResponse, AccountType } from '@dhanam/shared';
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
-import { AccountOwnership } from '@prisma/client';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ForbiddenException,
+} from '@nestjs/common';
+import { AccountOwnership as _AccountOwnership } from '@prisma/client';
 import { v4 as uuidv4 } from 'uuid';
 
 import { LoggerService } from '@core/logger/logger.service';
@@ -8,9 +13,9 @@ import { PrismaService } from '@core/prisma/prisma.service';
 
 import { ConnectAccountDto } from './dto/connect-account.dto';
 import { CreateAccountDto } from './dto/create-account.dto';
+import { ShareAccountDto, UpdateSharingPermissionDto } from './dto/share-account.dto';
 import { UpdateAccountDto } from './dto/update-account.dto';
 import { UpdateOwnershipDto } from './dto/update-ownership.dto';
-import { ShareAccountDto, UpdateSharingPermissionDto } from './dto/share-account.dto';
 
 @Injectable()
 export class AccountsService {
@@ -238,7 +243,7 @@ export class AccountsService {
     userId: string,
     filter: 'yours' | 'mine' | 'ours'
   ): Promise<Account[]> {
-    let whereClause: any = { spaceId };
+    const whereClause: any = { spaceId };
 
     switch (filter) {
       case 'yours':
@@ -326,12 +331,7 @@ export class AccountsService {
   /**
    * Share an account with another user (for Yours/Mine/Ours flexibility)
    */
-  async shareAccount(
-    spaceId: string,
-    accountId: string,
-    ownerId: string,
-    dto: ShareAccountDto
-  ) {
+  async shareAccount(spaceId: string, accountId: string, ownerId: string, dto: ShareAccountDto) {
     const account = await this.prisma.account.findFirst({
       where: {
         id: accountId,
@@ -382,10 +382,7 @@ export class AccountsService {
       },
     });
 
-    this.logger.log(
-      `Account ${accountId} shared with user ${dto.sharedWithId}`,
-      'AccountsService'
-    );
+    this.logger.log(`Account ${accountId} shared with user ${dto.sharedWithId}`, 'AccountsService');
 
     return permission;
   }
@@ -510,10 +507,7 @@ export class AccountsService {
       where: {
         sharedWithId: userId,
         account: { spaceId },
-        OR: [
-          { expiresAt: null },
-          { expiresAt: { gt: new Date() } },
-        ],
+        OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
       },
       include: {
         account: {

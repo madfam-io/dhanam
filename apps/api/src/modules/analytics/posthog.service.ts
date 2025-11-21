@@ -31,17 +31,16 @@ export class PostHogService implements OnModuleInit, OnModuleDestroy {
     }
 
     try {
-      this.client = new PostHog(
-        this.configService.get('POSTHOG_API_KEY')!,
-        {
-          host: this.configService.get('POSTHOG_HOST') || 'https://us.i.posthog.com',
-          flushAt: 20, // Flush every 20 events
-          flushInterval: 10000, // Or every 10 seconds
-        }
-      );
+      this.client = new PostHog(this.configService.get('POSTHOG_API_KEY')!, {
+        host: this.configService.get('POSTHOG_HOST') || 'https://us.i.posthog.com',
+        flushAt: 20, // Flush every 20 events
+        flushInterval: 10000, // Or every 10 seconds
+      });
 
       this.logger.log('✅ PostHog analytics initialized');
-      this.logger.log(`PostHog Host: ${this.configService.get('POSTHOG_HOST') || 'https://us.i.posthog.com'}`);
+      this.logger.log(
+        `PostHog Host: ${this.configService.get('POSTHOG_HOST') || 'https://us.i.posthog.com'}`
+      );
     } catch (error) {
       this.logger.error('Failed to initialize PostHog:', error);
       this.isEnabled = false;
@@ -133,7 +132,12 @@ export class PostHogService implements OnModuleInit, OnModuleDestroy {
   /**
    * Group a user into a group (e.g., company, team)
    */
-  async group(userId: string, groupType: string, groupKey: string, groupProperties?: Record<string, any>): Promise<void> {
+  async group(
+    userId: string,
+    groupType: string,
+    groupKey: string,
+    groupProperties?: Record<string, any>
+  ): Promise<void> {
     if (!this.isEnabled || !this.client) {
       return;
     }

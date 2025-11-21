@@ -35,7 +35,9 @@ export default function TabLayout() {
         name="dashboard"
         options={{
           title: 'Dashboard',
-          tabBarIcon: ({ color }: { color: string }) => <TabBarIcon name="analytics" color={color} />,
+          tabBarIcon: ({ color }: { color: string }) => (
+            <TabBarIcon name="analytics" color={color} />
+          ),
         }}
       />
       <Tabs.Screen
@@ -56,7 +58,9 @@ export default function TabLayout() {
         name="budgets"
         options={{
           title: 'Budgets',
-          tabBarIcon: ({ color }: { color: string }) => <TabBarIcon name="pie-chart" color={color} />,
+          tabBarIcon: ({ color }: { color: string }) => (
+            <TabBarIcon name="pie-chart" color={color} />
+          ),
         }}
       />
       <Tabs.Screen

@@ -6,13 +6,14 @@
  * JSX type errors (TS2786).
  */
 
-import React from 'react';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+import { Ionicons as ExpoIonicons } from '@expo/vector-icons';
+import { LinearGradient as ExpoLinearGradient } from 'expo-linear-gradient';
+import { Stack as ExpoStack, Tabs as ExpoTabs, Redirect as ExpoRedirect } from 'expo-router';
+import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import * as RN from 'react-native';
 import * as RNPaper from 'react-native-paper';
-import { Stack as ExpoStack, Tabs as ExpoTabs, Redirect as ExpoRedirect } from 'expo-router';
-import { LinearGradient as ExpoLinearGradient } from 'expo-linear-gradient';
-import { Ionicons as ExpoIonicons } from '@expo/vector-icons';
-import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import {
   SafeAreaView as RNSafeAreaView,
   SafeAreaProvider as RNSafeAreaProvider,

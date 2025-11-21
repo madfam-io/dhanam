@@ -2,18 +2,12 @@ import * as crypto from 'crypto';
 
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Provider, AccountType, Currency, Prisma } from '@prisma/client';
+import { Provider, AccountType, Currency, Prisma as _Prisma } from '@prisma/client';
 import type { InputJsonValue } from '@prisma/client/runtime/library';
-import {
-  Configuration,
-  MxPlatformApi,
-  ConnectWidgetRequestBody,
-  MemberCreateRequestBody,
-} from 'mx-platform-node';
+import { Configuration, MxPlatformApi } from 'mx-platform-node';
 
-import { PrismaService } from '../../../core/prisma/prisma.service';
 import { CryptoService } from '../../../core/crypto/crypto.service';
-
+import { PrismaService } from '../../../core/prisma/prisma.service';
 import {
   IFinancialProvider,
   ProviderHealthCheck,
@@ -308,8 +302,7 @@ export class MxService implements IFinancialProvider {
       const memberGuid = params.accessToken;
 
       // Calculate date range (default 90 days)
-      const toDate =
-        params.endDate || new Date().toISOString().split('T')[0];
+      const toDate = params.endDate || new Date().toISOString().split('T')[0];
       const fromDate =
         params.startDate ||
         new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
@@ -549,7 +542,7 @@ export class MxService implements IFinancialProvider {
 
   private async handleMemberUpdate(payload: any) {
     const memberGuid = payload.member_guid;
-    const userGuid = payload.user_guid;
+    const _userGuid = payload.user_guid;
 
     // Find connection
     const connection = await this.prisma.providerConnection.findFirst({

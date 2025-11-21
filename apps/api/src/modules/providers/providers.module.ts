@@ -1,18 +1,17 @@
 import { Module, OnModuleInit } from '@nestjs/common';
 
 import { BelvoModule } from './belvo/belvo.module';
+import { BelvoService } from './belvo/belvo.service';
 import { BitsoModule } from './bitso/bitso.module';
 import { BlockchainModule } from './blockchain/blockchain.module';
 import { FinicityModule } from './finicity/finicity.module';
-import { MxModule } from './mx/mx.module';
-import { OrchestratorModule } from './orchestrator/orchestrator.module';
-import { PlaidModule } from './plaid/plaid.module';
-
-import { BelvoService } from './belvo/belvo.service';
-import { MxService } from './mx/mx.service';
 import { FinicityService } from './finicity/finicity.service';
-import { PlaidService } from './plaid/plaid.service';
+import { MxModule } from './mx/mx.module';
+import { MxService } from './mx/mx.service';
+import { OrchestratorModule } from './orchestrator/orchestrator.module';
 import { ProviderOrchestratorService } from './orchestrator/provider-orchestrator.service';
+import { PlaidModule } from './plaid/plaid.module';
+import { PlaidService } from './plaid/plaid.service';
 
 @Module({
   imports: [

@@ -11,6 +11,7 @@ import {
   Dimensions,
   SafeAreaView,
 } from '@/lib/react-native-compat';
+
 import { useAuth } from '../../src/contexts/AuthContext';
 
 const { width } = Dimensions.get('window');

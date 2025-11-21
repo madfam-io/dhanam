@@ -1,5 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsNumber, IsOptional, IsEnum, IsDateString, IsObject } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsEnum,
+  IsDateString,
+  IsObject,
+} from 'class-validator';
 
 export class CreateManualAssetDto {
   @ApiProperty({ description: 'Asset name' })

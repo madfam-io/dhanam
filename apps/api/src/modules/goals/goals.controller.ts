@@ -16,10 +16,10 @@ import { GoalShareRole } from '@prisma/client';
 import { JwtAuthGuard } from '../../core/auth/guards/jwt-auth.guard';
 
 import { CreateGoalDto, UpdateGoalDto, AddAllocationDto } from './dto';
+import { GoalCollaborationService } from './goal-collaboration.service';
+import { GoalProbabilityService } from './goal-probability.service';
 import { GoalsExecutionService } from './goals-execution.service';
 import { GoalsService } from './goals.service';
-import { GoalProbabilityService } from './goal-probability.service';
-import { GoalCollaborationService } from './goal-collaboration.service';
 
 @Controller('goals')
 @UseGuards(JwtAuthGuard)
@@ -156,7 +156,8 @@ export class GoalsController {
   @Post(':id/what-if')
   async runWhatIf(
     @Param('id') id: string,
-    @Body() scenario: {
+    @Body()
+    scenario: {
       monthlyContribution?: number;
       targetAmount?: number;
       targetDate?: string;
@@ -189,7 +190,8 @@ export class GoalsController {
   @Post(':id/share')
   async shareGoal(
     @Param('id') goalId: string,
-    @Body() body: {
+    @Body()
+    body: {
       shareWithEmail: string;
       role: GoalShareRole;
       message?: string;

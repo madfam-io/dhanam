@@ -58,8 +58,10 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     loadInitialData();
   }, []);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const Provider = AdminContext.Provider as any;
   return (
-    <AdminContext.Provider
+    <Provider
       value={{
         systemStats,
         featureFlags,
@@ -70,7 +72,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       }}
     >
       {children}
-    </AdminContext.Provider>
+    </Provider>
   );
 }
 

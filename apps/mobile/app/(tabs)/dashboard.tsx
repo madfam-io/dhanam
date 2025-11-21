@@ -3,6 +3,12 @@ import { useQuery } from '@tanstack/react-query';
 import React, { useMemo } from 'react';
 import { LineChart } from 'react-native-chart-kit';
 
+import { AccountCard } from '@/components/AccountCard';
+import { ErrorState } from '@/components/ErrorState';
+import { LoadingScreen } from '@/components/LoadingScreen';
+import { TransactionItem } from '@/components/TransactionItem';
+import { useAuth } from '@/hooks/useAuth';
+import { useSpaces } from '@/hooks/useSpaces';
 import {
   router,
   ScrollView,
@@ -14,13 +20,6 @@ import {
   FAB,
   Button,
 } from '@/lib/react-native-compat';
-
-import { AccountCard } from '@/components/AccountCard';
-import { ErrorState } from '@/components/ErrorState';
-import { LoadingScreen } from '@/components/LoadingScreen';
-import { TransactionItem } from '@/components/TransactionItem';
-import { useAuth } from '@/hooks/useAuth';
-import { useSpaces } from '@/hooks/useSpaces';
 import { apiClient } from '@/services/api';
 import { styles } from '@/styles/dashboard';
 import { theme } from '@/theme';

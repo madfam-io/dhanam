@@ -1,6 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 import { ComponentProps } from 'react';
 
+import { ErrorState } from '@/components/ErrorState';
+import { LoadingScreen } from '@/components/LoadingScreen';
+import { useSpaces } from '@/hooks/useSpaces';
 import {
   Ionicons,
   router,
@@ -15,10 +18,6 @@ import {
   Button,
   Chip,
 } from '@/lib/react-native-compat';
-
-import { ErrorState } from '@/components/ErrorState';
-import { LoadingScreen } from '@/components/LoadingScreen';
-import { useSpaces } from '@/hooks/useSpaces';
 import { apiClient } from '@/services/api';
 import { formatCurrency } from '@/utils/currency';
 

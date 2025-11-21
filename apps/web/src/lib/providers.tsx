@@ -27,7 +27,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
         <I18nProvider>
           <PostHogProvider>
             <AuthProvider>
-              <PreferencesProvider>{children}</PreferencesProvider>
+              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+              <PreferencesProvider>{children as any}</PreferencesProvider>
             </AuthProvider>
           </PostHogProvider>
         </I18nProvider>

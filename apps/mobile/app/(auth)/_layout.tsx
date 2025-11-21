@@ -1,5 +1,5 @@
-import { theme } from '@/theme';
 import { Stack, useColorScheme } from '@/lib/react-native-compat';
+import { theme } from '@/theme';
 
 export default function AuthLayout() {
   const colorScheme = useColorScheme();

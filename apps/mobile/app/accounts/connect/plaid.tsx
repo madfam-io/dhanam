@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 
+import { ErrorState } from '@/components/ErrorState';
+import { LoadingScreen } from '@/components/LoadingScreen';
+import { useSpaces } from '@/hooks/useSpaces';
 import {
   Ionicons,
   router,
@@ -10,10 +13,6 @@ import {
   Card,
   Button,
 } from '@/lib/react-native-compat';
-
-import { ErrorState } from '@/components/ErrorState';
-import { LoadingScreen } from '@/components/LoadingScreen';
-import { useSpaces } from '@/hooks/useSpaces';
 import { apiClient } from '@/services/api';
 
 export default function PlaidConnectScreen() {

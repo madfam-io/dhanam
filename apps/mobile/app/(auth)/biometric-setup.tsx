@@ -1,5 +1,8 @@
 import React, { useState, ComponentProps } from 'react';
 
+import { ErrorState } from '@/components/ErrorState';
+import { LoadingScreen } from '@/components/LoadingScreen';
+import { useBiometric, getBiometricTypeLabel } from '@/hooks/useBiometric';
 import {
   Ionicons,
   router,
@@ -10,9 +13,6 @@ import {
   Card,
   PaperSwitch as Switch,
 } from '@/lib/react-native-compat';
-import { ErrorState } from '@/components/ErrorState';
-import { LoadingScreen } from '@/components/LoadingScreen';
-import { useBiometric, getBiometricTypeLabel } from '@/hooks/useBiometric';
 
 export default function BiometricSetupScreen() {
   const {

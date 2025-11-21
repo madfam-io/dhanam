@@ -1,4 +1,4 @@
-import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Provider } from '@prisma/client';
 
 import { PrismaService } from '../../../core/prisma/prisma.service';
@@ -10,13 +10,9 @@ import {
   ProviderAttemptResult,
   ProviderError,
   CreateLinkParams,
-  LinkResult,
   ExchangeTokenParams,
-  ExchangeTokenResult,
   GetAccountsParams,
-  ProviderAccount,
   SyncTransactionsParams,
-  SyncTransactionsResult,
 } from './provider.interface';
 
 /**
@@ -45,10 +41,7 @@ export class ProviderOrchestratorService {
   /**
    * Get available providers for an institution
    */
-  async getAvailableProviders(
-    institutionId: string,
-    region: string = 'US'
-  ): Promise<Provider[]> {
+  async getAvailableProviders(institutionId: string, region: string = 'US'): Promise<Provider[]> {
     const mapping = await this.prisma.institutionProviderMapping.findFirst({
       where: {
         institutionId,
@@ -130,7 +123,8 @@ export class ProviderOrchestratorService {
         providersToTry.push(...backups);
       }
     } else {
-      providersToTry = region === 'MX' ? [Provider.belvo, Provider.mx] : [Provider.plaid, Provider.mx];
+      providersToTry =
+        region === 'MX' ? [Provider.belvo, Provider.mx] : [Provider.plaid, Provider.mx];
     }
 
     let lastError: ProviderError | undefined;
@@ -254,10 +248,7 @@ export class ProviderOrchestratorService {
   /**
    * Get backup providers for a primary provider
    */
-  private async getBackupProviders(
-    primaryProvider: Provider,
-    region: string
-  ): Promise<Provider[]> {
+  private async getBackupProviders(primaryProvider: Provider, region: string): Promise<Provider[]> {
     const backups: Provider[] = [];
 
     // Default backup strategy
@@ -304,10 +295,7 @@ export class ProviderOrchestratorService {
     } else if (errorMessage.includes('timeout') || errorMessage.includes('network')) {
       type = 'network';
       retryable = true;
-    } else if (
-      errorMessage.includes('unavailable') ||
-      errorMessage.includes('maintenance')
-    ) {
+    } else if (errorMessage.includes('unavailable') || errorMessage.includes('maintenance')) {
       type = 'provider_down';
       retryable = true;
     } else if (errorMessage.includes('validation') || errorMessage.includes('invalid')) {

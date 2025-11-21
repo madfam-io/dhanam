@@ -1,6 +1,7 @@
 import * as LocalAuthentication from 'expo-local-authentication';
 import React, { useState, useEffect } from 'react';
 
+import { useAuth } from '@/hooks/useAuth';
 import {
   Ionicons,
   router,
@@ -13,7 +14,6 @@ import {
   Checkbox,
   SafeAreaView,
 } from '@/lib/react-native-compat';
-import { useAuth } from '@/hooks/useAuth';
 import { styles } from '@/styles/auth';
 import { validateEmail } from '@/utils/validation';
 

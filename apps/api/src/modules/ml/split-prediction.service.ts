@@ -224,8 +224,7 @@ export class SplitPredictionService {
     }
 
     // Get the most common category
-    const categoryId =
-      transactions.find((t) => t.categoryId)?.categoryId || 'uncategorized';
+    const categoryId = transactions.find((t) => t.categoryId)?.categoryId || 'uncategorized';
 
     return {
       merchant,
@@ -320,10 +319,7 @@ export class SplitPredictionService {
 
     return users.map((user, index) => {
       // Fix rounding errors by giving the remainder to the first person
-      const amount =
-        index === 0
-          ? absoluteAmount - amountPerPerson * (count - 1)
-          : amountPerPerson;
+      const amount = index === 0 ? absoluteAmount - amountPerPerson * (count - 1) : amountPerPerson;
 
       return {
         userId: user.id,
@@ -363,8 +359,7 @@ export class SplitPredictionService {
     });
 
     // Group by user
-    const byUser: Record<string, { total: number; avgAmount: number; avgPercentage: number }> =
-      {};
+    const byUser: Record<string, { total: number; avgAmount: number; avgPercentage: number }> = {};
 
     for (const split of splits) {
       if (!byUser[split.userId]) {

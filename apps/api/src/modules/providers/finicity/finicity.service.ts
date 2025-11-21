@@ -1,15 +1,14 @@
 import * as crypto from 'crypto';
 
+import { HttpService } from '@nestjs/axios';
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { HttpService } from '@nestjs/axios';
-import { Provider, AccountType, Currency, Prisma } from '@prisma/client';
+import { Provider, AccountType, Currency, Prisma as _Prisma } from '@prisma/client';
 import type { InputJsonValue } from '@prisma/client/runtime/library';
 import { firstValueFrom } from 'rxjs';
 
-import { PrismaService } from '../../../core/prisma/prisma.service';
 import { CryptoService } from '../../../core/crypto/crypto.service';
-
+import { PrismaService } from '../../../core/prisma/prisma.service';
 import {
   IFinancialProvider,
   ProviderHealthCheck,
@@ -232,7 +231,7 @@ export class FinicityService implements IFinancialProvider {
           headers: {
             'Finicity-App-Key': this.appKey,
             'Finicity-App-Token': token,
-            'Accept': 'application/json',
+            Accept: 'application/json',
           },
         })
       );
@@ -297,7 +296,7 @@ export class FinicityService implements IFinancialProvider {
           headers: {
             'Finicity-App-Key': this.appKey,
             'Finicity-App-Token': token,
-            'Accept': 'application/json',
+            Accept: 'application/json',
           },
         })
       );
@@ -353,7 +352,7 @@ export class FinicityService implements IFinancialProvider {
           headers: {
             'Finicity-App-Key': this.appKey,
             'Finicity-App-Token': token,
-            'Accept': 'application/json',
+            Accept: 'application/json',
           },
         })
       );
@@ -373,7 +372,7 @@ export class FinicityService implements IFinancialProvider {
               headers: {
                 'Finicity-App-Key': this.appKey,
                 'Finicity-App-Token': token,
-                'Accept': 'application/json',
+                Accept: 'application/json',
               },
               params: {
                 fromDate,
@@ -528,7 +527,7 @@ export class FinicityService implements IFinancialProvider {
           headers: {
             'Finicity-App-Key': this.appKey,
             'Finicity-App-Token': token,
-            'Accept': 'application/json',
+            Accept: 'application/json',
           },
           params: {
             search: query,
@@ -568,7 +567,7 @@ export class FinicityService implements IFinancialProvider {
           headers: {
             'Finicity-App-Key': this.appKey,
             'Finicity-App-Token': token,
-            'Accept': 'application/json',
+            Accept: 'application/json',
           },
         })
       );
