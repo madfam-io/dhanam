@@ -88,10 +88,7 @@ export function ProbabilisticGoalCard({
     });
   };
 
-  const targetAmount =
-    typeof goal.targetAmount === 'number'
-      ? goal.targetAmount
-      : parseFloat(goal.targetAmount.toString());
+  const targetAmount = goal.targetAmount;
 
   return (
     <Card
@@ -99,7 +96,7 @@ export function ProbabilisticGoalCard({
       onClick={onClick}
       role={onClick ? 'button' : undefined}
       tabIndex={onClick ? 0 : undefined}
-      onKeyDown={(e) => {
+      onKeyDown={(e: React.KeyboardEvent) => {
         if (onClick && (e.key === 'Enter' || e.key === ' ')) {
           e.preventDefault();
           onClick();
@@ -225,7 +222,7 @@ export function ProbabilisticGoalCard({
             <p className="text-sm text-muted-foreground mb-3">No probability data available</p>
             <Button
               size="sm"
-              onClick={(e) => {
+              onClick={(e: React.MouseEvent) => {
                 e.stopPropagation();
                 loadProbability();
               }}

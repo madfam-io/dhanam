@@ -97,7 +97,7 @@ export function ShareManagementPanel({ goalId, onUpdate }: ShareManagementPanelP
       revoked: { variant: 'outline', label: 'Revoked' },
     };
 
-    const config = variants[status] || variants.pending;
+    const config = variants[status] || variants.pending || { variant: 'secondary', label: 'Unknown' };
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 

@@ -1,12 +1,16 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense as SuspenseBase, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { onboardingApi } from '@/lib/api/onboarding';
 import { Button } from '@dhanam/ui';
 import { Card, CardContent } from '@dhanam/ui';
 import { Alert, AlertDescription } from '@dhanam/ui';
 import { CheckCircleIcon, XCircleIcon, MailIcon, LoaderIcon, HomeIcon } from 'lucide-react';
+
+// React 19 compatibility
+const Suspense = SuspenseBase as any;
 
 function EmailVerificationContent() {
   const router = useRouter();

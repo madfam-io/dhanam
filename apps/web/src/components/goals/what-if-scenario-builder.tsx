@@ -25,10 +25,7 @@ export function WhatIfScenarioBuilder({ goal, currentProbability }: WhatIfScenar
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<GoalProbabilityResult | null>(null);
 
-  const targetAmount =
-    typeof goal.targetAmount === 'number'
-      ? goal.targetAmount
-      : parseFloat(goal.targetAmount.toString());
+  const targetAmount = goal.targetAmount;
 
   // Scenario inputs
   const [scenario, setScenario] = useState<WhatIfScenario>({

@@ -82,7 +82,7 @@ export function RetirementCalculatorForm({ onResults }: RetirementCalculatorForm
       <CardHeader>
         <CardTitle>Retirement Planning Calculator</CardTitle>
         <CardDescription>
-          Monte Carlo simulation with {inputs.iterations.toLocaleString()} iterations
+          Monte Carlo simulation with {(inputs.iterations || 10000).toLocaleString()} iterations
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -168,7 +168,7 @@ export function RetirementCalculatorForm({ onResults }: RetirementCalculatorForm
                 max={80}
                 step={1}
                 value={[inputs.currentAge]}
-                onValueChange={(value: string) => handleInputChange('currentAge', value[0])}
+                onValueChange={(value: number[]) => handleInputChange('currentAge', value[0] ?? inputs.currentAge)}
               />
             </div>
 
@@ -180,7 +180,7 @@ export function RetirementCalculatorForm({ onResults }: RetirementCalculatorForm
                 max={80}
                 step={1}
                 value={[inputs.retirementAge]}
-                onValueChange={(value: string) => handleInputChange('retirementAge', value[0])}
+                onValueChange={(value: number[]) => handleInputChange('retirementAge', value[0] ?? inputs.retirementAge)}
               />
               <p className="text-sm text-muted-foreground">
                 {yearsToRetirement} years until retirement
@@ -195,7 +195,7 @@ export function RetirementCalculatorForm({ onResults }: RetirementCalculatorForm
                 max={100}
                 step={1}
                 value={[inputs.lifeExpectancy]}
-                onValueChange={(value: string) => handleInputChange('lifeExpectancy', value[0])}
+                onValueChange={(value: number[]) => handleInputChange('lifeExpectancy', value[0] ?? inputs.lifeExpectancy)}
               />
               <p className="text-sm text-muted-foreground">
                 {yearsInRetirement} years in retirement
@@ -317,7 +317,7 @@ export function RetirementCalculatorForm({ onResults }: RetirementCalculatorForm
             {loading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Running {inputs.iterations.toLocaleString()} simulations...
+                Running {(inputs.iterations || 10000).toLocaleString()} simulations...
               </>
             ) : (
               'Calculate Retirement Plan'
