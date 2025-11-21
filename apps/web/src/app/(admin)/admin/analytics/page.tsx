@@ -16,7 +16,7 @@ import {
   Clock,
 } from 'lucide-react';
 
-export default function AnalyticsPage() {
+export default function AnalyticsPage(): JSX.Element {
   const [funnel, setFunnel] = useState<OnboardingFunnel | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -199,7 +199,7 @@ export default function AnalyticsPage() {
   );
 }
 
-function AnalyticsSkeleton() {
+function AnalyticsSkeleton(): JSX.Element {
   return (
     <div className="space-y-6">
       <div>
