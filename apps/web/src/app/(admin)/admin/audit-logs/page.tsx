@@ -32,7 +32,7 @@ const resourceTypes = [
   { value: 'rule', label: 'Rule' },
 ];
 
-export default function AuditLogsPage() {
+export default function AuditLogsPage(): JSX.Element {
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
@@ -275,7 +275,7 @@ export default function AuditLogsPage() {
   );
 }
 
-function AuditLogSkeleton() {
+function AuditLogSkeleton(): JSX.Element {
   return (
     <>
       {[...Array(10)].map((_, i) => (
