@@ -32,6 +32,7 @@ export default function HomePage() {
     } else {
       analytics.trackPageView('Landing Page', '/');
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, router]);
 
   const handleLiveDemoClick = async () => {
@@ -46,7 +47,7 @@ export default function HomePage() {
 
       analytics.track('demo_session_started', {
         userId: response.user.id,
-        expiresAt: new Date(Date.now() + 60 * 60 * 1000) // 1 hour
+        expiresAt: new Date(Date.now() + 60 * 60 * 1000), // 1 hour
       });
 
       router.push('/dashboard');
@@ -56,11 +57,6 @@ export default function HomePage() {
       // Fallback to calculator demo
       router.push('/demo');
     }
-  };
-
-  const handleDemoClick = () => {
-    analytics.track('calculator_demo_clicked', { source: 'hero_cta' });
-    router.push('/demo');
   };
 
   const handleSignUpClick = () => {

@@ -4,7 +4,6 @@ import { Request } from 'express';
 
 import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
 
-import { ManualAssetsService } from './manual-assets.service';
 import {
   CreateManualAssetDto,
   UpdateManualAssetDto,
@@ -13,6 +12,7 @@ import {
   AddValuationDto,
   ManualAssetValuationDto,
 } from './dto';
+import { ManualAssetsService } from './manual-assets.service';
 
 @ApiTags('manual-assets')
 @Controller('spaces/:spaceId/manual-assets')
@@ -38,11 +38,7 @@ export class ManualAssetsController {
   @Get(':id')
   @ApiOperation({ summary: 'Get a manual asset by id' })
   @ApiOkResponse({ type: ManualAssetResponseDto })
-  findOne(
-    @Param('spaceId') spaceId: string,
-    @Param('id') id: string,
-    @Req() req: Request
-  ) {
+  findOne(@Param('spaceId') spaceId: string, @Param('id') id: string, @Req() req: Request) {
     return this.manualAssetsService.findOne(spaceId, req.user!.id, id);
   }
 

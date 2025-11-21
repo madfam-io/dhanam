@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/lib/hooks/use-auth';
 
 export interface Will {
   id: string;
@@ -41,6 +41,7 @@ export interface Beneficiary {
     | 'other';
   assetId?: string;
   percentage: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   conditions?: any;
   notes?: string;
   createdAt: string;
@@ -100,6 +101,7 @@ export interface AddBeneficiaryInput {
   assetType: Beneficiary['assetType'];
   assetId?: string;
   percentage: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   conditions?: any;
   notes?: string;
 }
@@ -108,6 +110,7 @@ export interface UpdateBeneficiaryInput {
   assetType?: Beneficiary['assetType'];
   assetId?: string;
   percentage?: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   conditions?: any;
   notes?: string;
 }

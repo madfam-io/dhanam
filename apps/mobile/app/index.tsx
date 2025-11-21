@@ -1,7 +1,6 @@
-import { Redirect } from 'expo-router';
-
 import { LoadingScreen } from '@/components/LoadingScreen';
 import { useAuth } from '@/hooks/useAuth';
+import { Redirect } from '@/lib/react-native-compat';
 
 export default function Index() {
   const { user, isLoading } = useAuth();

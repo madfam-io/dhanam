@@ -108,7 +108,7 @@ export class ProviderSelectionService {
     provider: Provider,
     institutionId: string,
     region: string,
-    userId?: string
+    _userId?: string
   ): Promise<ProviderMetrics> {
     // Get health status
     const healthStatus = await this.prisma.providerHealthStatus.findUnique({
@@ -136,7 +136,8 @@ export class ProviderSelectionService {
 
     // Calculate success rate from recent attempts
     const successCount = recentAttempts.filter((a) => a.status === 'success').length;
-    const successRate = recentAttempts.length > 0 ? (successCount / recentAttempts.length) * 100 : 85; // Default 85% if no data
+    const successRate =
+      recentAttempts.length > 0 ? (successCount / recentAttempts.length) * 100 : 85; // Default 85% if no data
 
     // Calculate average response time
     const responseTimes = recentAttempts
@@ -199,10 +200,7 @@ export class ProviderSelectionService {
   /**
    * Get available providers for an institution
    */
-  private async getAvailableProviders(
-    institutionId: string,
-    region: string
-  ): Promise<Provider[]> {
+  private async getAvailableProviders(institutionId: string, region: string): Promise<Provider[]> {
     const mapping = await this.prisma.institutionProviderMapping.findFirst({
       where: {
         institutionId,
@@ -248,7 +246,7 @@ export class ProviderSelectionService {
   /**
    * Get provider selection insights for analytics dashboard
    */
-  async getProviderInsights(region: string = 'US', days: number = 30) {
+  async getProviderInsights(_region: string = 'US', days: number = 30) {
     const sinceDate = new Date();
     sinceDate.setDate(sinceDate.getDate() - days);
 
@@ -293,15 +291,20 @@ export class ProviderSelectionService {
     );
 
     // Calculate averages and rates
-    const insights = Object.entries(byProvider).map(([provider, stats]) => ({
-      provider,
-      totalAttempts: stats.total,
-      successRate: ((stats.successful / stats.total) * 100).toFixed(2) + '%',
-      failureRate: ((stats.failed / stats.total) * 100).toFixed(2) + '%',
-      avgResponseTime: Math.round(stats.totalResponseTime / stats.total) + 'ms',
-      failoverRate: ((stats.failoverCount / stats.total) * 100).toFixed(2) + '%',
-      estimatedMonthlyCost: (stats.total * this.getProviderCost(provider as Provider)).toFixed(4),
-    }));
+    const insights = Object.entries(byProvider).map(([provider, stats]) => {
+      const typedStats = stats as any;
+      return {
+        provider,
+        totalAttempts: typedStats.total,
+        successRate: ((typedStats.successful / typedStats.total) * 100).toFixed(2) + '%',
+        failureRate: ((typedStats.failed / typedStats.total) * 100).toFixed(2) + '%',
+        avgResponseTime: Math.round(typedStats.totalResponseTime / typedStats.total) + 'ms',
+        failoverRate: ((typedStats.failoverCount / typedStats.total) * 100).toFixed(2) + '%',
+        estimatedMonthlyCost: (
+          typedStats.total * this.getProviderCost(provider as Provider)
+        ).toFixed(4),
+      };
+    });
 
     return insights;
   }

@@ -27,6 +27,7 @@ export function GoalProgressTracker({ spaceId, goalId }: GoalProgressTrackerProp
 
   useEffect(() => {
     loadProgress();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [spaceId, goalId]);
 
   const loadProgress = async () => {
@@ -36,6 +37,7 @@ export function GoalProgressTracker({ spaceId, goalId }: GoalProgressTrackerProp
     try {
       const data = await ordersApi.getGoalProgress(spaceId, goalId);
       setProgress(data);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       setError(err.message || 'Failed to load goal progress');
     } finally {

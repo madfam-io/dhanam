@@ -10,6 +10,7 @@ import posthog from 'posthog-js';
 
 export interface AnalyticsEvent {
   event: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   properties?: Record<string, any>;
 }
 
@@ -30,6 +31,7 @@ export function useAnalytics() {
     }
   }, []);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const track = (event: string, properties?: Record<string, any>) => {
     if (typeof window !== 'undefined' && posthog.__loaded) {
       posthog.capture(event, properties);
@@ -101,7 +103,14 @@ export function useAnalytics() {
     track('goal_created', { goal_id, type, target_amount, months_to_target });
   };
 
-  const trackGoalUpdated = (goal_id: string, field: string, old_value: any, new_value: any) => {
+  const trackGoalUpdated = (
+    goal_id: string,
+    field: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    old_value: any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    new_value: any
+  ) => {
     track('goal_updated', { goal_id, field, old_value, new_value });
   };
 
@@ -240,6 +249,7 @@ export function useAnalytics() {
   // USER IDENTIFICATION
   // ============================================================================
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const identifyUser = (userId: string, properties?: Record<string, any>) => {
     if (typeof window !== 'undefined' && posthog.__loaded) {
       posthog.identify(userId, properties);

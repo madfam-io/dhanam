@@ -1,7 +1,6 @@
-import { Ionicons } from '@expo/vector-icons';
 import { ComponentProps } from 'react';
-import { View, StyleSheet } from 'react-native';
-import { Text, Button } from 'react-native-paper';
+
+import { Ionicons, View, StyleSheet, PaperText as Text, Button } from '@/lib/react-native-compat';
 
 interface ErrorStateProps {
   title: string;

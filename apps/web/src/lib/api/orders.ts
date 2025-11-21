@@ -189,7 +189,10 @@ export const ordersApi = {
   },
 
   getOrders: async (spaceId: string, filters?: OrderFilterDto): Promise<OrderListResponse> => {
-    return apiClient.get<OrderListResponse>(`/spaces/${spaceId}/orders`, filters);
+    return apiClient.get<OrderListResponse>(
+      `/spaces/${spaceId}/orders`,
+      filters as Record<string, unknown>
+    );
   },
 
   getOrder: async (spaceId: string, orderId: string): Promise<TransactionOrder> => {

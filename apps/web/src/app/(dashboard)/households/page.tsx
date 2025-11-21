@@ -57,6 +57,7 @@ export default function HouseholdsPage() {
 
   useEffect(() => {
     loadHouseholds();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadHouseholds = async () => {
@@ -153,7 +154,7 @@ export default function HouseholdsPage() {
                 <Input
                   id="name"
                   value={newHousehold.name}
-                  onChange={(e) => setNewHousehold({ ...newHousehold, name: e.target.value })}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewHousehold({ ...newHousehold, name: e.target.value })}
                   placeholder="Smith Family"
                 />
               </div>
@@ -161,7 +162,9 @@ export default function HouseholdsPage() {
                 <Label htmlFor="type">Type</Label>
                 <Select
                   value={newHousehold.type}
-                  onValueChange={(value: any) => setNewHousehold({ ...newHousehold, type: value })}
+                  onValueChange={(value: string) =>
+                    setNewHousehold({ ...newHousehold, type: value as 'family' | 'trust' | 'estate' | 'partnership' })
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -178,7 +181,7 @@ export default function HouseholdsPage() {
                 <Label htmlFor="currency">Base Currency</Label>
                 <Select
                   value={newHousehold.baseCurrency}
-                  onValueChange={(value: any) =>
+                  onValueChange={(value: string) =>
                     setNewHousehold({ ...newHousehold, baseCurrency: value })
                   }
                 >
@@ -197,7 +200,7 @@ export default function HouseholdsPage() {
                 <Input
                   id="description"
                   value={newHousehold.description}
-                  onChange={(e) =>
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                     setNewHousehold({ ...newHousehold, description: e.target.value })
                   }
                   placeholder="Main family household"

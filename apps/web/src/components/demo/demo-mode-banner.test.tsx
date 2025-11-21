@@ -3,16 +3,15 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { DemoModeBanner } from './demo-mode-banner';
 import { useAuth } from '@/lib/hooks/use-auth';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { useRouter } from 'next/navigation';
 
 // Mock dependencies
 jest.mock('@/lib/hooks/use-auth');
 jest.mock('@/hooks/useAnalytics');
-jest.mock('next/navigation', () => ({
-  useRouter: jest.fn(),
-}));
 
 const mockUseAuth = useAuth as jest.MockedFunction<typeof useAuth>;
 const mockUseAnalytics = useAnalytics as jest.MockedFunction<typeof useAnalytics>;
+const mockUseRouter = useRouter as jest.MockedFunction<typeof useRouter>;
 const mockRouterPush = jest.fn();
 
 describe('DemoModeBanner', () => {
@@ -27,12 +26,14 @@ describe('DemoModeBanner', () => {
     mockUseAnalytics.mockReturnValue(mockAnalytics as any);
 
     // Mock useRouter
-    const { useRouter } = require('next/navigation');
-    useRouter.mockReturnValue({
+    mockUseRouter.mockReturnValue({
       push: mockRouterPush,
       replace: jest.fn(),
       refresh: jest.fn(),
-    });
+      back: jest.fn(),
+      forward: jest.fn(),
+      prefetch: jest.fn(),
+    } as any);
 
     // Clear localStorage
     localStorage.clear();

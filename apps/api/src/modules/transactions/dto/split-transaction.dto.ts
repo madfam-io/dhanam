@@ -1,5 +1,14 @@
-import { IsUUID, IsNumber, IsOptional, IsString, Min, Max, ValidateNested, ArrayMinSize } from 'class-validator';
 import { Type } from 'class-transformer';
+import {
+  IsUUID,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Min,
+  Max,
+  ValidateNested,
+  ArrayMinSize,
+} from 'class-validator';
 
 export class TransactionSplitItemDto {
   @IsUUID()

@@ -11,6 +11,7 @@ import Link from 'next/link';
 
 export function EsgSummaryWidget() {
   const { getPortfolioAnalysis, loading } = useEsg();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [analysis, setAnalysis] = useState<any>(null);
 
   useEffect(() => {
@@ -19,6 +20,7 @@ export function EsgSummaryWidget() {
       if (data) setAnalysis(data);
     };
     loadAnalysis();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const getGradeColor = (grade: string) => {
@@ -52,16 +54,12 @@ export function EsgSummaryWidget() {
             <Leaf className="h-5 w-5 text-green-600" />
             ESG Score
           </CardTitle>
-          <CardDescription>
-            Environmental, Social, and Governance rating
-          </CardDescription>
+          <CardDescription>Environmental, Social, and Governance rating</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="text-center py-4">
             <Leaf className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
-            <p className="text-sm text-muted-foreground mb-4">
-              No crypto holdings found
-            </p>
+            <p className="text-sm text-muted-foreground mb-4">No crypto holdings found</p>
             <Link href="/esg">
               <Button variant="outline" size="sm">
                 Learn More
@@ -83,21 +81,15 @@ export function EsgSummaryWidget() {
               <Leaf className="h-5 w-5 text-green-600" />
               ESG Score
             </CardTitle>
-            <CardDescription>
-              Portfolio sustainability rating
-            </CardDescription>
+            <CardDescription>Portfolio sustainability rating</CardDescription>
           </div>
-          <Badge className={`${getGradeColor(analysis.grade)} text-white`}>
-            {analysis.grade}
-          </Badge>
+          <Badge className={`${getGradeColor(analysis.grade)} text-white`}>{analysis.grade}</Badge>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Overall Score */}
         <div className="text-center">
-          <div className="text-4xl font-bold text-green-600">
-            {analysis.overallScore}
-          </div>
+          <div className="text-4xl font-bold text-green-600">{analysis.overallScore}</div>
           <p className="text-xs text-muted-foreground">Overall Score</p>
         </div>
 
@@ -110,7 +102,11 @@ export function EsgSummaryWidget() {
             </div>
             <span className="font-semibold">{analysis.breakdown.environmental}</span>
           </div>
-          <Progress value={analysis.breakdown.environmental} className="h-1" indicatorClassName="bg-green-600" />
+          <Progress
+            value={analysis.breakdown.environmental}
+            className="h-1"
+            indicatorClassName="bg-green-600"
+          />
 
           <div className="flex items-center justify-between text-sm">
             <div className="flex items-center gap-2">
@@ -119,7 +115,11 @@ export function EsgSummaryWidget() {
             </div>
             <span className="font-semibold">{analysis.breakdown.social}</span>
           </div>
-          <Progress value={analysis.breakdown.social} className="h-1" indicatorClassName="bg-blue-600" />
+          <Progress
+            value={analysis.breakdown.social}
+            className="h-1"
+            indicatorClassName="bg-blue-600"
+          />
 
           <div className="flex items-center justify-between text-sm">
             <div className="flex items-center gap-2">
@@ -128,7 +128,11 @@ export function EsgSummaryWidget() {
             </div>
             <span className="font-semibold">{analysis.breakdown.governance}</span>
           </div>
-          <Progress value={analysis.breakdown.governance} className="h-1" indicatorClassName="bg-purple-600" />
+          <Progress
+            value={analysis.breakdown.governance}
+            className="h-1"
+            indicatorClassName="bg-purple-600"
+          />
         </div>
 
         {/* View Details Link */}

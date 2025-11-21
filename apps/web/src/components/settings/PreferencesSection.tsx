@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@dhan
 import { Separator } from '@dhanam/ui';
 import { Badge } from '@dhanam/ui';
 import { usePreferences } from '@/contexts/PreferencesContext';
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   Bell,
   Shield,
@@ -18,6 +19,16 @@ import {
   AlertCircle,
   CheckCircle,
 } from 'lucide-react';
+
+// React 19 compatibility wrappers
+const BellIcon = Bell as any;
+const ShieldIcon = Shield as any;
+const PaletteIcon = Palette as any;
+const DollarSignIcon = DollarSign as any;
+const LeafIcon = Leaf as any;
+const DatabaseIcon = Database as any;
+const AlertCircleIcon = AlertCircle as any;
+const CheckCircleIcon = CheckCircle as any;
 
 export function PreferencesSection() {
   const {
@@ -79,14 +90,14 @@ export function PreferencesSection() {
       {/* Status Messages */}
       {error && (
         <div className="flex items-center gap-2 p-4 text-red-600 bg-red-50 rounded-lg">
-          <AlertCircle className="h-5 w-5" />
+          <AlertCircleIcon className="h-5 w-5" />
           <span>Error: {error}</span>
         </div>
       )}
 
       {successMessage && (
         <div className="flex items-center gap-2 p-4 text-green-600 bg-green-50 rounded-lg">
-          <CheckCircle className="h-5 w-5" />
+          <CheckCircleIcon className="h-5 w-5" />
           <span>{successMessage}</span>
         </div>
       )}
@@ -95,7 +106,7 @@ export function PreferencesSection() {
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
-            <Bell className="h-5 w-5" />
+            <BellIcon className="h-5 w-5" />
             <CardTitle>Notificaciones</CardTitle>
           </div>
           <CardDescription>Configura cómo y cuándo quieres recibir notificaciones</CardDescription>
@@ -111,7 +122,7 @@ export function PreferencesSection() {
               </div>
               <Switch
                 checked={preferences.emailNotifications}
-                onCheckedChange={(checked) => handleSingleUpdate('emailNotifications', checked)}
+                onCheckedChange={(checked: boolean) => handleSingleUpdate('emailNotifications', checked)}
                 disabled={isSaving}
               />
             </div>
@@ -127,7 +138,7 @@ export function PreferencesSection() {
               </div>
               <Switch
                 checked={preferences.transactionAlerts}
-                onCheckedChange={(checked) => handleSingleUpdate('transactionAlerts', checked)}
+                onCheckedChange={(checked: boolean) => handleSingleUpdate('transactionAlerts', checked)}
                 disabled={isSaving}
               />
             </div>
@@ -141,7 +152,7 @@ export function PreferencesSection() {
               </div>
               <Switch
                 checked={preferences.budgetAlerts}
-                onCheckedChange={(checked) => handleSingleUpdate('budgetAlerts', checked)}
+                onCheckedChange={(checked: boolean) => handleSingleUpdate('budgetAlerts', checked)}
                 disabled={isSaving}
               />
             </div>
@@ -155,7 +166,7 @@ export function PreferencesSection() {
               </div>
               <Switch
                 checked={preferences.weeklyReports}
-                onCheckedChange={(checked) => handleSingleUpdate('weeklyReports', checked)}
+                onCheckedChange={(checked: boolean) => handleSingleUpdate('weeklyReports', checked)}
                 disabled={isSaving}
               />
             </div>
@@ -169,7 +180,7 @@ export function PreferencesSection() {
               </div>
               <Switch
                 checked={preferences.monthlyReports}
-                onCheckedChange={(checked) => handleSingleUpdate('monthlyReports', checked)}
+                onCheckedChange={(checked: boolean) => handleSingleUpdate('monthlyReports', checked)}
                 disabled={isSaving}
               />
             </div>
@@ -181,7 +192,7 @@ export function PreferencesSection() {
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
-            <Shield className="h-5 w-5" />
+            <ShieldIcon className="h-5 w-5" />
             <CardTitle>Privacidad</CardTitle>
           </div>
           <CardDescription>Controla cómo se usan tus datos y tu privacidad</CardDescription>
@@ -196,7 +207,7 @@ export function PreferencesSection() {
             </div>
             <Switch
               checked={preferences.dataSharing}
-              onCheckedChange={(checked) => handleSingleUpdate('dataSharing', checked)}
+              onCheckedChange={(checked: boolean) => handleSingleUpdate('dataSharing', checked)}
               disabled={isSaving}
             />
           </div>
@@ -212,7 +223,7 @@ export function PreferencesSection() {
             </div>
             <Switch
               checked={preferences.analyticsTracking}
-              onCheckedChange={(checked) => handleSingleUpdate('analyticsTracking', checked)}
+              onCheckedChange={(checked: boolean) => handleSingleUpdate('analyticsTracking', checked)}
               disabled={isSaving}
             />
           </div>
@@ -226,7 +237,7 @@ export function PreferencesSection() {
             </div>
             <Switch
               checked={preferences.personalizedAds}
-              onCheckedChange={(checked) => handleSingleUpdate('personalizedAds', checked)}
+              onCheckedChange={(checked: boolean) => handleSingleUpdate('personalizedAds', checked)}
               disabled={isSaving}
             />
           </div>
@@ -237,7 +248,7 @@ export function PreferencesSection() {
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
-            <Palette className="h-5 w-5" />
+            <PaletteIcon className="h-5 w-5" />
             <CardTitle>Apariencia</CardTitle>
           </div>
           <CardDescription>Personaliza la apariencia de tu dashboard</CardDescription>
@@ -248,7 +259,7 @@ export function PreferencesSection() {
               <h4 className="font-medium">Tema</h4>
               <Select
                 value={preferences.themeMode}
-                onValueChange={(value) => handleSingleUpdate('themeMode', value)}
+                onValueChange={(value: string) => handleSingleUpdate('themeMode', value)}
                 disabled={isSaving}
               >
                 <SelectTrigger>
@@ -266,7 +277,7 @@ export function PreferencesSection() {
               <h4 className="font-medium">Layout del dashboard</h4>
               <Select
                 value={preferences.dashboardLayout}
-                onValueChange={(value) => handleSingleUpdate('dashboardLayout', value)}
+                onValueChange={(value: string) => handleSingleUpdate('dashboardLayout', value)}
                 disabled={isSaving}
               >
                 <SelectTrigger>
@@ -292,7 +303,7 @@ export function PreferencesSection() {
             </div>
             <Switch
               checked={preferences.compactView}
-              onCheckedChange={(checked) => handleSingleUpdate('compactView', checked)}
+              onCheckedChange={(checked: boolean) => handleSingleUpdate('compactView', checked)}
               disabled={isSaving}
             />
           </div>
@@ -306,7 +317,7 @@ export function PreferencesSection() {
             </div>
             <Switch
               checked={preferences.showBalances}
-              onCheckedChange={(checked) => handleSingleUpdate('showBalances', checked)}
+              onCheckedChange={(checked: boolean) => handleSingleUpdate('showBalances', checked)}
               disabled={isSaving}
             />
           </div>
@@ -317,7 +328,7 @@ export function PreferencesSection() {
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
-            <DollarSign className="h-5 w-5" />
+            <DollarSignIcon className="h-5 w-5" />
             <CardTitle>Preferencias Financieras</CardTitle>
           </div>
           <CardDescription>
@@ -330,7 +341,7 @@ export function PreferencesSection() {
               <h4 className="font-medium">Moneda por defecto</h4>
               <Select
                 value={preferences.defaultCurrency}
-                onValueChange={(value) => handleSingleUpdate('defaultCurrency', value)}
+                onValueChange={(value: string) => handleSingleUpdate('defaultCurrency', value)}
                 disabled={isSaving}
               >
                 <SelectTrigger>
@@ -348,7 +359,7 @@ export function PreferencesSection() {
               <h4 className="font-medium">Formato de exportación</h4>
               <Select
                 value={preferences.exportFormat}
-                onValueChange={(value) => handleSingleUpdate('exportFormat', value)}
+                onValueChange={(value: string) => handleSingleUpdate('exportFormat', value)}
                 disabled={isSaving}
               >
                 <SelectTrigger>
@@ -375,7 +386,7 @@ export function PreferencesSection() {
             </div>
             <Switch
               checked={preferences.autoCategorizeTxns}
-              onCheckedChange={(checked) => handleSingleUpdate('autoCategorizeTxns', checked)}
+              onCheckedChange={(checked: boolean) => handleSingleUpdate('autoCategorizeTxns', checked)}
               disabled={isSaving}
             />
           </div>
@@ -389,7 +400,7 @@ export function PreferencesSection() {
             </div>
             <Switch
               checked={preferences.hideSensitiveData}
-              onCheckedChange={(checked) => handleSingleUpdate('hideSensitiveData', checked)}
+              onCheckedChange={(checked: boolean) => handleSingleUpdate('hideSensitiveData', checked)}
               disabled={isSaving}
             />
           </div>
@@ -400,7 +411,7 @@ export function PreferencesSection() {
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
-            <Leaf className="h-5 w-5" />
+            <LeafIcon className="h-5 w-5" />
             <CardTitle>Preferencias ESG</CardTitle>
           </div>
           <CardDescription>
@@ -417,7 +428,7 @@ export function PreferencesSection() {
             </div>
             <Switch
               checked={preferences.esgScoreVisibility}
-              onCheckedChange={(checked) => handleSingleUpdate('esgScoreVisibility', checked)}
+              onCheckedChange={(checked: boolean) => handleSingleUpdate('esgScoreVisibility', checked)}
               disabled={isSaving}
             />
           </div>
@@ -433,7 +444,7 @@ export function PreferencesSection() {
             </div>
             <Switch
               checked={preferences.sustainabilityAlerts}
-              onCheckedChange={(checked) => handleSingleUpdate('sustainabilityAlerts', checked)}
+              onCheckedChange={(checked: boolean) => handleSingleUpdate('sustainabilityAlerts', checked)}
               disabled={isSaving}
             />
           </div>
@@ -447,7 +458,7 @@ export function PreferencesSection() {
             </div>
             <Switch
               checked={preferences.impactReporting}
-              onCheckedChange={(checked) => handleSingleUpdate('impactReporting', checked)}
+              onCheckedChange={(checked: boolean) => handleSingleUpdate('impactReporting', checked)}
               disabled={isSaving}
             />
           </div>
@@ -458,7 +469,7 @@ export function PreferencesSection() {
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
-            <Database className="h-5 w-5" />
+            <DatabaseIcon className="h-5 w-5" />
             <CardTitle>Respaldo de Datos</CardTitle>
           </div>
           <CardDescription>Configurar respaldos automáticos de tus datos</CardDescription>
@@ -473,7 +484,7 @@ export function PreferencesSection() {
             </div>
             <Switch
               checked={preferences.autoBackup}
-              onCheckedChange={(checked) => handleSingleUpdate('autoBackup', checked)}
+              onCheckedChange={(checked: boolean) => handleSingleUpdate('autoBackup', checked)}
               disabled={isSaving}
             />
           </div>
@@ -483,7 +494,7 @@ export function PreferencesSection() {
               <h4 className="font-medium">Frecuencia de respaldo</h4>
               <Select
                 value={preferences.backupFrequency || 'weekly'}
-                onValueChange={(value) => handleSingleUpdate('backupFrequency', value)}
+                onValueChange={(value: string) => handleSingleUpdate('backupFrequency', value)}
                 disabled={isSaving}
               >
                 <SelectTrigger>

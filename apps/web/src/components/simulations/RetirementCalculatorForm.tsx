@@ -19,6 +19,7 @@ import { useSimulations, type RetirementConfig } from '@/hooks/useSimulations';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface RetirementCalculatorFormProps {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onResults: (results: any) => void;
 }
 
@@ -58,6 +59,7 @@ export function RetirementCalculatorForm({ onResults }: RetirementCalculatorForm
     };
 
     loadAllocation();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [riskTolerance, inputs.currentAge, inputs.retirementAge]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -80,7 +82,7 @@ export function RetirementCalculatorForm({ onResults }: RetirementCalculatorForm
       <CardHeader>
         <CardTitle>Retirement Planning Calculator</CardTitle>
         <CardDescription>
-          Monte Carlo simulation with {inputs.iterations.toLocaleString()} iterations
+          Monte Carlo simulation with {(inputs.iterations || 10000).toLocaleString()} iterations
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -88,7 +90,11 @@ export function RetirementCalculatorForm({ onResults }: RetirementCalculatorForm
           {/* Risk Tolerance */}
           <div className="space-y-2">
             <Label htmlFor="riskTolerance">Risk Tolerance</Label>
-            <Select value={riskTolerance} onValueChange={(value: any) => setRiskTolerance(value)}>
+            <Select
+              value={riskTolerance}
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              onValueChange={(value: any) => setRiskTolerance(value)}
+            >
               <SelectTrigger id="riskTolerance">
                 <SelectValue />
               </SelectTrigger>
@@ -122,7 +128,7 @@ export function RetirementCalculatorForm({ onResults }: RetirementCalculatorForm
                 id="initialBalance"
                 type="number"
                 value={inputs.initialBalance}
-                onChange={(e) => handleInputChange('initialBalance', parseFloat(e.target.value))}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange('initialBalance', parseFloat(e.target.value))}
                 min={0}
                 step={1000}
               />
@@ -137,7 +143,7 @@ export function RetirementCalculatorForm({ onResults }: RetirementCalculatorForm
                 id="monthlyContribution"
                 type="number"
                 value={inputs.monthlyContribution}
-                onChange={(e) =>
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   handleInputChange('monthlyContribution', parseFloat(e.target.value))
                 }
                 min={0}
@@ -162,7 +168,7 @@ export function RetirementCalculatorForm({ onResults }: RetirementCalculatorForm
                 max={80}
                 step={1}
                 value={[inputs.currentAge]}
-                onValueChange={(value) => handleInputChange('currentAge', value[0])}
+                onValueChange={(value: number[]) => handleInputChange('currentAge', value[0] ?? inputs.currentAge)}
               />
             </div>
 
@@ -174,7 +180,7 @@ export function RetirementCalculatorForm({ onResults }: RetirementCalculatorForm
                 max={80}
                 step={1}
                 value={[inputs.retirementAge]}
-                onValueChange={(value) => handleInputChange('retirementAge', value[0])}
+                onValueChange={(value: number[]) => handleInputChange('retirementAge', value[0] ?? inputs.retirementAge)}
               />
               <p className="text-sm text-muted-foreground">
                 {yearsToRetirement} years until retirement
@@ -189,7 +195,7 @@ export function RetirementCalculatorForm({ onResults }: RetirementCalculatorForm
                 max={100}
                 step={1}
                 value={[inputs.lifeExpectancy]}
-                onValueChange={(value) => handleInputChange('lifeExpectancy', value[0])}
+                onValueChange={(value: number[]) => handleInputChange('lifeExpectancy', value[0] ?? inputs.lifeExpectancy)}
               />
               <p className="text-sm text-muted-foreground">
                 {yearsInRetirement} years in retirement
@@ -207,7 +213,7 @@ export function RetirementCalculatorForm({ onResults }: RetirementCalculatorForm
                 id="monthlyExpenses"
                 type="number"
                 value={inputs.monthlyExpenses || 0}
-                onChange={(e) => handleInputChange('monthlyExpenses', parseFloat(e.target.value))}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange('monthlyExpenses', parseFloat(e.target.value))}
                 min={0}
                 step={100}
               />
@@ -223,7 +229,7 @@ export function RetirementCalculatorForm({ onResults }: RetirementCalculatorForm
                 id="socialSecurityIncome"
                 type="number"
                 value={inputs.socialSecurityIncome || 0}
-                onChange={(e) =>
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   handleInputChange('socialSecurityIncome', parseFloat(e.target.value))
                 }
                 min={0}
@@ -249,7 +255,7 @@ export function RetirementCalculatorForm({ onResults }: RetirementCalculatorForm
                   id="expectedReturn"
                   type="number"
                   value={(inputs.expectedReturn * 100).toFixed(1)}
-                  onChange={(e) =>
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                     handleInputChange('expectedReturn', parseFloat(e.target.value) / 100)
                   }
                   min={-20}
@@ -267,7 +273,7 @@ export function RetirementCalculatorForm({ onResults }: RetirementCalculatorForm
                   id="volatility"
                   type="number"
                   value={(inputs.volatility * 100).toFixed(1)}
-                  onChange={(e) =>
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                     handleInputChange('volatility', parseFloat(e.target.value) / 100)
                   }
                   min={0}
@@ -311,7 +317,7 @@ export function RetirementCalculatorForm({ onResults }: RetirementCalculatorForm
             {loading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Running {inputs.iterations.toLocaleString()} simulations...
+                Running {(inputs.iterations || 10000).toLocaleString()} simulations...
               </>
             ) : (
               'Calculate Retirement Plan'

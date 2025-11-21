@@ -30,8 +30,8 @@ export function DemoModeBanner() {
         localStorage.setItem('demo_session_start', now.toString());
       }
 
-      const start = parseInt(sessionStart || now.toString());
-      const endTime = start + (60 * 60 * 1000); // 1 hour
+      const start = parseInt(sessionStart || now.toString(), 10);
+      const endTime = start + 60 * 60 * 1000; // 1 hour
       const remaining = endTime - now;
 
       if (remaining <= 0) {

@@ -38,6 +38,7 @@ export function SimulationChart({ timeSeries, title, description }: SimulationCh
     return `$${value.toLocaleString()}`;
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;

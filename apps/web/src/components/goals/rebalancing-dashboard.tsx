@@ -27,6 +27,7 @@ export function RebalancingDashboard({ spaceId, goalId, goalName }: RebalancingD
 
   useEffect(() => {
     loadSuggestions();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [spaceId, goalId]);
 
   const loadSuggestions = async () => {
@@ -37,6 +38,7 @@ export function RebalancingDashboard({ spaceId, goalId, goalName }: RebalancingD
     try {
       const data = await ordersApi.suggestRebalancing(spaceId, goalId);
       setSuggestion(data);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       setError(err.message || 'Failed to load rebalancing suggestions');
     } finally {
@@ -53,6 +55,7 @@ export function RebalancingDashboard({ spaceId, goalId, goalName }: RebalancingD
       const result = await ordersApi.executeRebalancing(spaceId, goalId);
       setSuccess(result.message);
       await loadSuggestions(); // Reload to show updated state
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       setError(err.message || 'Failed to execute rebalancing');
     } finally {

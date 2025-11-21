@@ -2,7 +2,8 @@ import * as crypto from 'crypto';
 
 import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Prisma, Account, Currency, AccountType } from '@prisma/client';
+import { Prisma as _Prisma, Account, Currency, AccountType } from '@prisma/client';
+import type { InputJsonValue } from '@prisma/client/runtime/library';
 import {
   PlaidApi,
   Configuration,
@@ -203,7 +204,7 @@ export class PlaidService {
             itemId: item_id,
             externalId: dto.externalId,
             connectedAt: new Date().toISOString(),
-          } as Prisma.JsonObject,
+          } as InputJsonValue,
           user: { connect: { id: userId } },
         },
       });
@@ -258,7 +259,7 @@ export class PlaidService {
             iso_currency_code: plaidAccount.balances.iso_currency_code,
             unofficial_currency_code: plaidAccount.balances.unofficial_currency_code,
           },
-        } as Prisma.JsonObject,
+        } as InputJsonValue,
       };
 
       const account = await this.prisma.account.create({ data: accountData });
@@ -360,7 +361,7 @@ export class PlaidService {
             authorizedDate: plaidTransaction.authorized_date,
             location: plaidTransaction.location,
             paymentMeta: plaidTransaction.payment_meta,
-          } as Prisma.JsonObject,
+          } as InputJsonValue,
         },
       });
     } catch (error) {
@@ -390,7 +391,7 @@ export class PlaidService {
             authorizedDate: plaidTransaction.authorized_date,
             location: plaidTransaction.location,
             paymentMeta: plaidTransaction.payment_meta,
-          } as Prisma.JsonObject,
+          } as InputJsonValue,
         },
       });
     } catch (error) {
@@ -521,7 +522,7 @@ export class PlaidService {
               iso_currency_code: plaidAccount.balances.iso_currency_code,
               unofficial_currency_code: plaidAccount.balances.unofficial_currency_code,
             },
-          } as Prisma.JsonObject,
+          } as InputJsonValue,
         },
       });
     }
@@ -644,13 +645,13 @@ export class PlaidService {
   private mapAccountType(plaidType: string): AccountType {
     switch (plaidType.toLowerCase()) {
       case 'depository':
-        return 'checking'; // Default for depository
+        return AccountType.checking; // Default for depository
       case 'credit':
-        return 'credit';
+        return AccountType.credit;
       case 'investment':
-        return 'investment';
+        return AccountType.investment;
       default:
-        return 'other';
+        return AccountType.other;
     }
   }
 

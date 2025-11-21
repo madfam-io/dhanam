@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import { Plus, Trash2, UserPlus } from 'lucide-react';
 
-import { Button } from '@dhanam/ui/components/button';
 import {
+  Button,
   Dialog,
   DialogContent,
   DialogDescription,
@@ -12,11 +12,15 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@dhanam/ui/components/dialog';
-import { Input } from '@dhanam/ui/components/input';
-import { Label } from '@dhanam/ui/components/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@dhanam/ui/components/select';
-import { Separator } from '@dhanam/ui/components/separator';
+  Input,
+  Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Separator,
+} from '@dhanam/ui';
 
 interface SplitItem {
   userId: string;
@@ -45,6 +49,10 @@ export function SplitTransactionDialog({
   const [splits, setSplits] = useState<SplitItem[]>([]);
   const [loading, setLoading] = useState(false);
 
+  // Type compatibility fix for React 19
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const ButtonCompat = Button as any;
+
   const totalSplit = splits.reduce((sum, split) => sum + split.amount, 0);
   const remaining = Math.abs(transactionAmount) - totalSplit;
 
@@ -72,13 +80,17 @@ export function SplitTransactionDialog({
     setSplits(splits.filter((_, i) => i !== index));
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const updateSplit = (index: number, field: keyof SplitItem, value: any) => {
     const newSplits = [...splits];
-    newSplits[index] = { ...newSplits[index], [field]: value };
+    newSplits[index] = { ...newSplits[index], [field]: value } as SplitItem;
 
     // Update percentage when amount changes
     if (field === 'amount' && transactionAmount !== 0) {
-      newSplits[index].percentage = (value / Math.abs(transactionAmount)) * 100;
+      const item = newSplits[index];
+      if (item) {
+        item.percentage = (value / Math.abs(transactionAmount)) * 100;
+      }
     }
 
     setSplits(newSplits);
@@ -106,22 +118,19 @@ export function SplitTransactionDialog({
     setLoading(true);
 
     try {
-      const response = await fetch(
-        `/api/spaces/${spaceId}/transactions/${transactionId}/split`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({
-            splits: splits.map((s) => ({
-              userId: s.userId,
-              amount: s.amount,
-              percentage: s.percentage,
-              note: s.note,
-            })),
-          }),
-        }
-      );
+      const response = await fetch(`/api/spaces/${spaceId}/transactions/${transactionId}/split`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          splits: splits.map((s) => ({
+            userId: s.userId,
+            amount: s.amount,
+            percentage: s.percentage,
+            note: s.note,
+          })),
+        }),
+      });
 
       if (!response.ok) {
         throw new Error('Failed to split transaction');
@@ -149,10 +158,10 @@ export function SplitTransactionDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
+        <ButtonCompat variant="outline" size="sm">
           <UserPlus className="mr-2 h-4 w-4" />
           Split
-        </Button>
+        </ButtonCompat>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
@@ -190,16 +199,14 @@ export function SplitTransactionDialog({
                       <Label htmlFor={`user-${index}`}>Person</Label>
                       <Select
                         value={split.userId}
-                        onValueChange={(value) => selectUser(index, value)}
+                        onValueChange={(value: string) => selectUser(index, value)}
                       >
                         <SelectTrigger id={`user-${index}`}>
                           <SelectValue placeholder="Select person" />
                         </SelectTrigger>
                         <SelectContent>
                           {householdMembers
-                            .filter(
-                              (m) => !splits.some((s, i) => i !== index && s.userId === m.id)
-                            )
+                            .filter((m) => !splits.some((s, i) => i !== index && s.userId === m.id))
                             .map((member) => (
                               <SelectItem key={member.id} value={member.id}>
                                 {member.name}
@@ -216,7 +223,7 @@ export function SplitTransactionDialog({
                         step="0.01"
                         min="0"
                         value={split.amount}
-                        onChange={(e) =>
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                           updateSplit(index, 'amount', parseFloat(e.target.value) || 0)
                         }
                       />
@@ -238,36 +245,38 @@ export function SplitTransactionDialog({
                   <Input
                     placeholder="Note (optional)"
                     value={split.note || ''}
-                    onChange={(e) => updateSplit(index, 'note', e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      updateSplit(index, 'note', e.target.value)
+                    }
                   />
                 </div>
-                <Button
+                <ButtonCompat
                   variant="ghost"
                   size="icon"
                   onClick={() => removeSplit(index)}
                   className="mt-6"
                 >
                   <Trash2 className="h-4 w-4" />
-                </Button>
+                </ButtonCompat>
               </div>
             ))}
           </div>
 
           {splits.length < householdMembers.length && (
-            <Button variant="outline" onClick={addSplit} className="w-full">
+            <ButtonCompat variant="outline" onClick={addSplit} className="w-full">
               <Plus className="mr-2 h-4 w-4" />
               Add Person
-            </Button>
+            </ButtonCompat>
           )}
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)}>
+          <ButtonCompat variant="outline" onClick={() => setOpen(false)}>
             Cancel
-          </Button>
-          <Button onClick={handleSubmit} disabled={loading || Math.abs(remaining) > 0.01}>
+          </ButtonCompat>
+          <ButtonCompat onClick={handleSubmit} disabled={loading || Math.abs(remaining) > 0.01}>
             {loading ? 'Splitting...' : 'Split Transaction'}
-          </Button>
+          </ButtonCompat>
         </DialogFooter>
       </DialogContent>
     </Dialog>

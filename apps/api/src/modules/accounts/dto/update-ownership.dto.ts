@@ -1,5 +1,5 @@
-import { IsEnum, IsOptional, IsUUID } from 'class-validator';
 import { AccountOwnership } from '@prisma/client';
+import { IsEnum, IsOptional, IsUUID } from 'class-validator';
 
 export class UpdateOwnershipDto {
   @IsEnum(AccountOwnership)

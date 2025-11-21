@@ -44,7 +44,7 @@ export function AnalyticsEmptyState({ title, description, isDemoMode }: Analytic
             <p className="text-xs text-left text-blue-900 dark:text-blue-100">
               {isDemoMode
                 ? "This demo uses sample data. After signing up, you'll see real insights from your connected accounts."
-                : "We need at least 30 days of transaction history to generate accurate forecasts."}
+                : 'We need at least 30 days of transaction history to generate accurate forecasts.'}
             </p>
           </div>
         </div>

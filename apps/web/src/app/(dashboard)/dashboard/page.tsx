@@ -33,6 +33,7 @@ import { GoalProbabilityTimeline } from '@/components/goals/goal-probability-tim
 import { useGoals } from '@/hooks/useGoals';
 
 export default function DashboardPage() {
+  const router = useRouter();
   const { user } = useAuth();
   const { currentSpace } = useSpaceStore();
   const { getGoalsBySpace } = useGoals();
@@ -251,9 +252,7 @@ export default function DashboardPage() {
         </Card>
 
         {/* Goal Health Score - Only show if there are goals with probability data */}
-        {!isLoadingGoals && goals && goals.length > 0 && (
-          <GoalHealthScore goals={goals} />
-        )}
+        {!isLoadingGoals && goals && goals.length > 0 && <GoalHealthScore goals={goals} />}
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
@@ -452,7 +451,7 @@ export default function DashboardPage() {
                 <HelpTooltip content="Each goal shows success probability based on 10,000 Monte Carlo simulations, considering your current savings, monthly contributions, and market volatility." />
               </p>
             </div>
-            <Button variant="outline" onClick={() => window.location.href = '/goals'}>
+            <Button variant="outline" onClick={() => router.push('/goals')}>
               View All Goals
             </Button>
           </div>
@@ -461,16 +460,14 @@ export default function DashboardPage() {
               <ProbabilisticGoalCard
                 key={goal.id}
                 goal={goal}
-                onClick={() => window.location.href = `/goals`}
+                onClick={() => router.push('/goals')}
                 showActions={false}
               />
             ))}
           </div>
 
           {/* Probability Timeline */}
-          {activeGoals.length > 0 && (
-            <GoalProbabilityTimeline goals={activeGoals} />
-          )}
+          {activeGoals.length > 0 && <GoalProbabilityTimeline goals={activeGoals} />}
         </div>
       ) : null}
 

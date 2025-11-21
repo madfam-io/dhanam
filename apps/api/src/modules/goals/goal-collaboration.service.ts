@@ -1,7 +1,13 @@
-import { Injectable, Logger, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  ForbiddenException,
+  BadRequestException,
+} from '@nestjs/common';
 import { GoalShareRole, GoalShareStatus, GoalActivityAction } from '@prisma/client';
 
-import { PrismaService } from '@/core/prisma/prisma.service';
+import { PrismaService } from '@core/prisma/prisma.service';
 
 export interface ShareGoalInput {
   goalId: string;
@@ -60,7 +66,10 @@ export class GoalCollaborationService {
     this.logger.log(`User ${userId} sharing goal ${input.goalId} with ${input.shareWithEmail}`);
 
     // Verify user has permission to share this goal
-    const goal = await this.verifyGoalAccess(userId, input.goalId, ['manager', 'editor']);
+    const _goal = await this.verifyGoalAccess(userId, input.goalId, [
+      GoalShareRole.manager,
+      GoalShareRole.editor,
+    ]);
 
     // Find user to share with
     const shareWithUser = await this.prisma.user.findUnique({
@@ -171,12 +180,7 @@ export class GoalCollaborationService {
     });
 
     // Create activity
-    await this.createActivity(
-      share.goalId,
-      userId,
-      GoalActivityAction.share_accepted,
-      { shareId }
-    );
+    await this.createActivity(share.goalId, userId, GoalActivityAction.share_accepted, { shareId });
 
     this.logger.log(`User ${userId} accepted share ${shareId} for goal ${share.goalId}`);
     return updatedShare;
@@ -210,12 +214,7 @@ export class GoalCollaborationService {
     });
 
     // Create activity
-    await this.createActivity(
-      share.goalId,
-      userId,
-      GoalActivityAction.share_declined,
-      { shareId }
-    );
+    await this.createActivity(share.goalId, userId, GoalActivityAction.share_declined, { shareId });
 
     this.logger.log(`User ${userId} declined share ${shareId} for goal ${share.goalId}`);
   }
@@ -234,7 +233,7 @@ export class GoalCollaborationService {
     }
 
     // Verify user has permission to revoke
-    await this.verifyGoalAccess(userId, share.goalId, ['manager']);
+    await this.verifyGoalAccess(userId, share.goalId, [GoalShareRole.manager]);
 
     await this.prisma.goalShare.update({
       where: { id: shareId },
@@ -260,7 +259,7 @@ export class GoalCollaborationService {
     }
 
     // Verify user has permission to update roles
-    await this.verifyGoalAccess(userId, share.goalId, ['manager']);
+    await this.verifyGoalAccess(userId, share.goalId, [GoalShareRole.manager]);
 
     const updatedShare = await this.prisma.goalShare.update({
       where: { id: input.shareId },
@@ -286,7 +285,12 @@ export class GoalCollaborationService {
    */
   async getGoalShares(userId: string, goalId: string): Promise<GoalShareWithUser[]> {
     // Verify access
-    await this.verifyGoalAccess(userId, goalId, ['viewer', 'contributor', 'editor', 'manager']);
+    await this.verifyGoalAccess(userId, goalId, [
+      GoalShareRole.viewer,
+      GoalShareRole.contributor,
+      GoalShareRole.editor,
+      GoalShareRole.manager,
+    ]);
 
     const shares = await this.prisma.goalShare.findMany({
       where: { goalId },
@@ -347,7 +351,12 @@ export class GoalCollaborationService {
     limit = 50
   ): Promise<GoalActivityWithUser[]> {
     // Verify access
-    await this.verifyGoalAccess(userId, goalId, ['viewer', 'contributor', 'editor', 'manager']);
+    await this.verifyGoalAccess(userId, goalId, [
+      GoalShareRole.viewer,
+      GoalShareRole.contributor,
+      GoalShareRole.editor,
+      GoalShareRole.manager,
+    ]);
 
     const activities = await this.prisma.goalActivity.findMany({
       where: { goalId },
@@ -385,11 +394,7 @@ export class GoalCollaborationService {
   /**
    * Verify user has access to a goal with specific roles
    */
-  private async verifyGoalAccess(
-    userId: string,
-    goalId: string,
-    requiredRoles: GoalShareRole[]
-  ) {
+  private async verifyGoalAccess(userId: string, goalId: string, requiredRoles: GoalShareRole[]) {
     const goal = await this.prisma.goal.findFirst({
       where: {
         id: goalId,
@@ -439,7 +444,10 @@ export class GoalCollaborationService {
   /**
    * Check if user can perform action on goal
    */
-  async canUserAccessGoal(userId: string, goalId: string): Promise<{
+  async canUserAccessGoal(
+    userId: string,
+    goalId: string
+  ): Promise<{
     canAccess: boolean;
     role?: GoalShareRole;
     isOwner: boolean;

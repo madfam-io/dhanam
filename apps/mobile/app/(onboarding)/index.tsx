@@ -1,6 +1,11 @@
-import { useRouter } from 'expo-router';
 import { useEffect } from 'react';
-import { View, Text, ActivityIndicator } from 'react-native';
+
+import {
+  useRouter,
+  View,
+  RNText as Text,
+  RNActivityIndicator as ActivityIndicator,
+} from '@/lib/react-native-compat';
 
 import { useOnboarding } from '../../src/contexts/OnboardingContext';
 

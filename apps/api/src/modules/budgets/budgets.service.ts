@@ -264,7 +264,10 @@ export class BudgetsService {
       const budgetedAmount = category.budgetedAmount.toNumber();
       const carryoverAmount = category.carryoverAmount.toNumber();
       const remaining = budgetedAmount + carryoverAmount - spent;
-      const percentUsed = (budgetedAmount + carryoverAmount) > 0 ? (spent / (budgetedAmount + carryoverAmount)) * 100 : 0;
+      const percentUsed =
+        budgetedAmount + carryoverAmount > 0
+          ? (spent / (budgetedAmount + carryoverAmount)) * 100
+          : 0;
 
       return {
         id: category.id,
@@ -296,7 +299,10 @@ export class BudgetsService {
     );
     const totalSpent = categoryTotals.reduce((sum, c) => sum + c.spent, 0);
     const totalRemaining = totalBudgeted + totalCarryover - totalSpent;
-    const totalPercentUsed = (totalBudgeted + totalCarryover) > 0 ? (totalSpent / (totalBudgeted + totalCarryover)) * 100 : 0;
+    const totalPercentUsed =
+      totalBudgeted + totalCarryover > 0
+        ? (totalSpent / (totalBudgeted + totalCarryover)) * 100
+        : 0;
     const readyToAssign = totalIncome + totalCarryover - totalBudgeted;
 
     return {

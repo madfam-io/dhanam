@@ -1,8 +1,6 @@
-import { Ionicons } from '@expo/vector-icons';
-import { Tabs } from 'expo-router';
 import React from 'react';
-import { useColorScheme } from 'react-native';
 
+import { Ionicons, Tabs, useColorScheme } from '@/lib/react-native-compat';
 import { theme } from '@/theme';
 
 type TabBarIconProps = {
@@ -37,35 +35,39 @@ export default function TabLayout() {
         name="dashboard"
         options={{
           title: 'Dashboard',
-          tabBarIcon: ({ color }) => <TabBarIcon name="analytics" color={color} />,
+          tabBarIcon: ({ color }: { color: string }) => (
+            <TabBarIcon name="analytics" color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="accounts"
         options={{
           title: 'Accounts',
-          tabBarIcon: ({ color }) => <TabBarIcon name="card" color={color} />,
+          tabBarIcon: ({ color }: { color: string }) => <TabBarIcon name="card" color={color} />,
         }}
       />
       <Tabs.Screen
         name="transactions"
         options={{
           title: 'Transactions',
-          tabBarIcon: ({ color }) => <TabBarIcon name="list" color={color} />,
+          tabBarIcon: ({ color }: { color: string }) => <TabBarIcon name="list" color={color} />,
         }}
       />
       <Tabs.Screen
         name="budgets"
         options={{
           title: 'Budgets',
-          tabBarIcon: ({ color }) => <TabBarIcon name="pie-chart" color={color} />,
+          tabBarIcon: ({ color }: { color: string }) => (
+            <TabBarIcon name="pie-chart" color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="esg"
         options={{
           title: 'ESG',
-          tabBarIcon: ({ color }) => <TabBarIcon name="leaf" color={color} />,
+          tabBarIcon: ({ color }: { color: string }) => <TabBarIcon name="leaf" color={color} />,
         }}
       />
     </Tabs>

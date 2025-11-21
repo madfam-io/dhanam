@@ -81,7 +81,9 @@ export function EsgPortfolioSummary({ analysis }: EsgPortfolioSummaryProps) {
               </div>
               {getTrendIcon(analysis.breakdown.environmental)}
             </div>
-            <div className={`text-3xl font-bold ${getScoreColor(analysis.breakdown.environmental)}`}>
+            <div
+              className={`text-3xl font-bold ${getScoreColor(analysis.breakdown.environmental)}`}
+            >
               {analysis.breakdown.environmental}
             </div>
             <Progress

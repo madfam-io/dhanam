@@ -1,15 +1,23 @@
-import { Injectable, NotFoundException, Logger } from '@nestjs/common';
-import { PrismaService } from '../../core/prisma/prisma.service';
-import { BillingService } from '../billing/billing.service';
 import {
   monteCarloEngine,
   scenarioAnalysisEngine,
   type SimulationConfig,
   type RetirementSimulationConfig,
-  ScenarioType
+  ScenarioType,
 } from '@dhanam/simulations';
+import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { UsageMetricType } from '@prisma/client';
 
-import { RunSimulationDto, RunRetirementSimulationDto, CalculateSafeWithdrawalRateDto, AnalyzeScenarioDto, ScenarioTypeDto } from './dto';
+import { PrismaService } from '../../core/prisma/prisma.service';
+import { BillingService } from '../billing/billing.service';
+
+import {
+  RunSimulationDto,
+  RunRetirementSimulationDto,
+  CalculateSafeWithdrawalRateDto,
+  AnalyzeScenarioDto,
+  ScenarioTypeDto,
+} from './dto';
 
 @Injectable()
 export class SimulationsService {
@@ -63,7 +71,7 @@ export class SimulationsService {
       });
 
       // Track usage
-      await this.billing.recordUsage(userId, 'monte_carlo_simulation');
+      await this.billing.recordUsage(userId, UsageMetricType.monte_carlo_simulation);
 
       this.logger.log(`Simulation ${simulation.id} completed in ${result.executionTimeMs}ms`);
 
@@ -134,7 +142,7 @@ export class SimulationsService {
       });
 
       // Track usage
-      await this.billing.recordUsage(userId, 'monte_carlo_simulation');
+      await this.billing.recordUsage(userId, UsageMetricType.monte_carlo_simulation);
 
       this.logger.log(`Retirement simulation ${simulation.id} completed in ${executionTimeMs}ms`);
 
@@ -208,9 +216,11 @@ export class SimulationsService {
       });
 
       // Track usage
-      await this.billing.recordUsage(userId, 'monte_carlo_simulation');
+      await this.billing.recordUsage(userId, UsageMetricType.monte_carlo_simulation);
 
-      this.logger.log(`Safe withdrawal calculation ${simulation.id} completed in ${executionTimeMs}ms`);
+      this.logger.log(
+        `Safe withdrawal calculation ${simulation.id} completed in ${executionTimeMs}ms`
+      );
 
       return {
         simulationId: simulation.id,
@@ -285,8 +295,8 @@ export class SimulationsService {
       });
 
       // Track usage (scenario analysis counts as 2 simulations - baseline + stressed)
-      await this.billing.recordUsage(userId, 'monte_carlo_simulation');
-      await this.billing.recordUsage(userId, 'monte_carlo_simulation');
+      await this.billing.recordUsage(userId, UsageMetricType.monte_carlo_simulation);
+      await this.billing.recordUsage(userId, UsageMetricType.monte_carlo_simulation);
 
       this.logger.log(`Scenario analysis ${simulation.id} completed in ${executionTimeMs}ms`);
 
@@ -345,12 +355,15 @@ export class SimulationsService {
   /**
    * List user's simulations
    */
-  async listSimulations(userId: string, options?: {
-    spaceId?: string;
-    goalId?: string;
-    type?: string;
-    limit?: number;
-  }) {
+  async listSimulations(
+    userId: string,
+    options?: {
+      spaceId?: string;
+      goalId?: string;
+      type?: string;
+      limit?: number;
+    }
+  ) {
     const where: any = { userId };
 
     if (options?.spaceId) {

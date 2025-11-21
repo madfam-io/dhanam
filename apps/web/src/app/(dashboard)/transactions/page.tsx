@@ -315,7 +315,7 @@ export default function TransactionsPage() {
 
       <Dialog
         open={!!selectedTransaction}
-        onOpenChange={(open) => !open && setSelectedTransaction(null)}
+        onOpenChange={(open: boolean) => !open && setSelectedTransaction(null)}
       >
         <DialogContent>
           {selectedTransaction && (

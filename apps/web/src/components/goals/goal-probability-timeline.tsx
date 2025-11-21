@@ -9,7 +9,7 @@ interface GoalProbabilityTimelineProps {
 }
 
 interface ProbabilityHistoryEntry {
-  date: string;
+  month: number;
   probability: number;
 }
 
@@ -24,6 +24,7 @@ export function GoalProbabilityTimeline({ goals }: GoalProbabilityTimelineProps)
   }
 
   // Calculate overall trend across all goals
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const calculateTrend = (goal: any) => {
     if (!goal.probabilityHistory || !Array.isArray(goal.probabilityHistory)) {
       return { trend: 'stable', change: 0 };
@@ -34,8 +35,8 @@ export function GoalProbabilityTimeline({ goals }: GoalProbabilityTimelineProps)
       return { trend: 'stable', change: 0 };
     }
 
-    const oldest = history[0].probability;
-    const newest = history[history.length - 1].probability;
+    const oldest = history[0]?.probability ?? 0;
+    const newest = history[history.length - 1]?.probability ?? 0;
     const change = newest - oldest;
 
     if (Math.abs(change) < 1) return { trend: 'stable', change: 0 };
@@ -83,12 +84,14 @@ export function GoalProbabilityTimeline({ goals }: GoalProbabilityTimelineProps)
           {goalsWithProbability.map((goal) => {
             const { trend, change } = calculateTrend(goal);
             const history = (goal.probabilityHistory || []) as ProbabilityHistoryEntry[];
-            const currentProb = typeof goal.currentProbability === 'number'
-              ? goal.currentProbability
-              : 0;
+            const currentProb =
+              typeof goal.currentProbability === 'number' ? goal.currentProbability : 0;
 
             return (
-              <div key={goal.id} className="flex items-center justify-between p-4 border rounded-lg">
+              <div
+                key={goal.id}
+                className="flex items-center justify-between p-4 border rounded-lg"
+              >
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <h4 className="font-medium">{goal.name}</h4>

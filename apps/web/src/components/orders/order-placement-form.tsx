@@ -43,6 +43,7 @@ type OrderFormData = z.infer<typeof orderSchema>;
 interface OrderPlacementFormProps {
   spaceId: string;
   accounts: Account[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onSuccess?: (order: any) => void;
   onCancel?: () => void;
   defaultAccountId?: string;
@@ -117,6 +118,7 @@ export function OrderPlacementForm({
       }
 
       onSuccess?.(order);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       setError(err.message || 'Failed to create order');
       setIsLoading(false);
@@ -136,6 +138,7 @@ export function OrderPlacementForm({
       await ordersApi.executeOrder(spaceId, verifiedOrder.id);
 
       onSuccess?.(verifiedOrder);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       setError(err.message || 'Failed to verify order');
       setIsLoading(false);
@@ -160,7 +163,7 @@ export function OrderPlacementForm({
             placeholder="123456"
             maxLength={6}
             value={otpCode}
-            onChange={(e) => setOtpCode(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setOtpCode(e.target.value)}
             disabled={isLoading}
           />
         </div>
@@ -209,7 +212,7 @@ export function OrderPlacementForm({
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="accountId">Account</Label>
-        <Select value={selectedAccountId} onValueChange={(value) => setValue('accountId', value)}>
+        <Select value={selectedAccountId} onValueChange={(value: string) => setValue('accountId', value)}>
           <SelectTrigger>
             <SelectValue placeholder="Select account" />
           </SelectTrigger>
@@ -226,7 +229,7 @@ export function OrderPlacementForm({
 
       <div className="space-y-2">
         <Label htmlFor="type">Order Type</Label>
-        <Select value={orderType} onValueChange={(value) => setValue('type', value as OrderType)}>
+        <Select value={orderType} onValueChange={(value: string) => setValue('type', value as OrderType)}>
           <SelectTrigger>
             <SelectValue placeholder="Select order type" />
           </SelectTrigger>
@@ -297,7 +300,7 @@ export function OrderPlacementForm({
           <Label htmlFor="toAccountId">Destination Account</Label>
           <Select
             value={watch('toAccountId') || ''}
-            onValueChange={(value) => setValue('toAccountId', value)}
+            onValueChange={(value: string) => setValue('toAccountId', value)}
           >
             <SelectTrigger>
               <SelectValue placeholder="Select destination account" />
@@ -322,7 +325,7 @@ export function OrderPlacementForm({
         <Label htmlFor="priority">Priority</Label>
         <Select
           value={watch('priority') || OrderPriority.normal}
-          onValueChange={(value) => setValue('priority', value as OrderPriority)}
+          onValueChange={(value: string) => setValue('priority', value as OrderPriority)}
         >
           <SelectTrigger>
             <SelectValue />

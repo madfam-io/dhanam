@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 
 import { PrismaService } from '@core/prisma/prisma.service';
 
-interface SplitSuggestion {
+export interface SplitSuggestion {
   userId: string;
   userName: string;
   suggestedAmount: number;
@@ -224,8 +224,7 @@ export class SplitPredictionService {
     }
 
     // Get the most common category
-    const categoryId =
-      transactions.find((t) => t.categoryId)?.categoryId || 'uncategorized';
+    const categoryId = transactions.find((t) => t.categoryId)?.categoryId || 'uncategorized';
 
     return {
       merchant,
@@ -275,7 +274,7 @@ export class SplitPredictionService {
 
       suggestions.push({
         userId,
-        userName: userMap.get(userId) || 'Unknown',
+        userName: (userMap.get(userId) as string) || 'Unknown',
         suggestedAmount: Math.round(amount * 100) / 100,
         suggestedPercentage: Math.round(percentage * 10) / 10,
         confidence,
@@ -320,10 +319,7 @@ export class SplitPredictionService {
 
     return users.map((user, index) => {
       // Fix rounding errors by giving the remainder to the first person
-      const amount =
-        index === 0
-          ? absoluteAmount - amountPerPerson * (count - 1)
-          : amountPerPerson;
+      const amount = index === 0 ? absoluteAmount - amountPerPerson * (count - 1) : amountPerPerson;
 
       return {
         userId: user.id,
@@ -363,8 +359,7 @@ export class SplitPredictionService {
     });
 
     // Group by user
-    const byUser: Record<string, { total: number; avgAmount: number; avgPercentage: number }> =
-      {};
+    const byUser: Record<string, { total: number; avgAmount: number; avgPercentage: number }> = {};
 
     for (const split of splits) {
       if (!byUser[split.userId]) {

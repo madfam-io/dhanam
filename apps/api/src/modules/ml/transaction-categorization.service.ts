@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 
 import { PrismaService } from '@core/prisma/prisma.service';
 
-interface CategoryPrediction {
+export interface CategoryPrediction {
   categoryId: string;
   categoryName: string;
   confidence: number;
@@ -174,7 +174,9 @@ export class TransactionCategorizationService {
       {} as Record<string, number>
     );
 
-    const mostCommonCategory = Object.entries(categoryCount).sort((a, b) => b[1] - a[1])[0];
+    const mostCommonCategory = Object.entries(categoryCount).sort(
+      (a, b) => (b[1] as number) - (a[1] as number)
+    )[0];
 
     if (!mostCommonCategory) {
       return null;
@@ -183,7 +185,7 @@ export class TransactionCategorizationService {
     return {
       merchant,
       categoryId: mostCommonCategory[0],
-      count: mostCommonCategory[1],
+      count: mostCommonCategory[1] as number,
       lastUsed: transactions[0].createdAt,
     };
   }
@@ -218,9 +220,7 @@ export class TransactionCategorizationService {
       const txnMerchantLower = txn.merchant.toLowerCase();
 
       // Check if one contains the other
-      return (
-        txnMerchantLower.includes(merchantLower) || merchantLower.includes(txnMerchantLower)
-      );
+      return txnMerchantLower.includes(merchantLower) || merchantLower.includes(txnMerchantLower);
     });
 
     if (similar.length === 0) {
@@ -327,7 +327,9 @@ export class TransactionCategorizationService {
     const scored = categories
       .filter((c) => c.transactions.length >= 5) // Need at least 5 transactions
       .map((category) => {
-        const amounts = category.transactions.map((txn) => Math.abs(parseFloat(txn.amount.toString())));
+        const amounts = category.transactions.map((txn) =>
+          Math.abs(parseFloat(txn.amount.toString()))
+        );
         const avgAmount = amounts.reduce((sum, a) => sum + a, 0) / amounts.length;
         const stdDev = Math.sqrt(
           amounts.reduce((sum, a) => sum + Math.pow(a - avgAmount, 2), 0) / amounts.length
@@ -434,8 +436,7 @@ export class TransactionCategorizationService {
     // For now, we assume all auto-categorizations are correct
     const totalAuto = transactions.length;
     const avgConfidence =
-      transactions.reduce((sum, txn: any) => sum + (txn.metadata.mlConfidence || 0), 0) /
-      totalAuto;
+      transactions.reduce((sum, txn: any) => sum + (txn.metadata.mlConfidence || 0), 0) / totalAuto;
 
     return {
       totalAutoCategorized: totalAuto,

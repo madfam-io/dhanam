@@ -74,6 +74,7 @@ export function OrderList({ spaceId, filters, onOrderClick }: OrderListProps) {
 
   useEffect(() => {
     loadOrders();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [spaceId, filters, page]);
 
   const loadOrders = async () => {
@@ -89,6 +90,7 @@ export function OrderList({ spaceId, filters, onOrderClick }: OrderListProps) {
 
       setOrders(response.orders);
       setTotal(response.total);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       setError(err.message || 'Failed to load orders');
     } finally {

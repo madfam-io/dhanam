@@ -176,7 +176,7 @@ export function BelvoConnect({ open, onOpenChange, spaceId, onSuccess }: BelvoCo
                 id="username"
                 placeholder="Your online banking username"
                 value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setUsername(e.target.value)}
                 className="w-full"
               />
             </div>
@@ -190,7 +190,7 @@ export function BelvoConnect({ open, onOpenChange, spaceId, onSuccess }: BelvoCo
                 type="password"
                 placeholder="Your online banking password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
                 className="w-full"
               />
             </div>

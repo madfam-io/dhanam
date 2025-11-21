@@ -631,11 +631,11 @@ export class AdminService {
 
   private async getDatabaseConnections(): Promise<number> {
     try {
-      const result = await this.prisma.$queryRaw<any[]>`
+      const result = (await this.prisma.$queryRaw`
         SELECT count(*) as connection_count
         FROM pg_stat_activity
         WHERE datname = current_database()
-      `;
+      `) as any[];
       return parseInt(result[0]?.connection_count || '0');
     } catch (error) {
       this.logger.error(

@@ -86,7 +86,8 @@ export function useEsg() {
       const data = await esgApi.getPortfolioAnalysis();
       return data;
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch portfolio ESG analysis';
+      const errorMessage =
+        err instanceof Error ? err.message : 'Failed to fetch portfolio ESG analysis';
       setError(errorMessage);
       return null;
     } finally {

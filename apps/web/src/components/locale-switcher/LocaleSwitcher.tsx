@@ -65,6 +65,7 @@ export function LocaleSwitcher() {
     { code: 'en' as const, name: 'English', flag: '🇺🇸' },
   ];
 
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const currentLocale = locales.find((l) => l.code === locale) || locales[0]!;
 
   return (

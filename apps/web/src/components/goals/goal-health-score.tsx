@@ -69,10 +69,29 @@ export function GoalHealthScore({ goals }: GoalHealthScoreProps) {
 
   // Determine overall health status
   const getHealthStatus = () => {
-    if (healthPercentage >= 75) return { label: 'Excellent', color: 'text-green-600', icon: CheckCircle2 };
-    if (healthPercentage >= 50) return { label: 'Good', color: 'text-blue-600', icon: CheckCircle2 };
-    if (healthPercentage >= 25) return { label: 'Fair', color: 'text-yellow-600', icon: AlertCircle };
-    return { label: 'Needs Work', color: 'text-red-600', icon: XCircle };
+    if (healthPercentage >= 75)
+      return {
+        label: 'Excellent',
+        color: 'text-green-600',
+        icon: CheckCircle2,
+      };
+    if (healthPercentage >= 50)
+      return {
+        label: 'Good',
+        color: 'text-blue-600',
+        icon: CheckCircle2,
+      };
+    if (healthPercentage >= 25)
+      return {
+        label: 'Fair',
+        color: 'text-yellow-600',
+        icon: AlertCircle,
+      };
+    return {
+      label: 'Needs Work',
+      color: 'text-red-600',
+      icon: XCircle,
+    };
   };
 
   const healthStatus = getHealthStatus();
@@ -92,16 +111,16 @@ export function GoalHealthScore({ goals }: GoalHealthScoreProps) {
           {/* Overall Health */}
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-3xl font-bold">{healthyGoals}/{totalGoals}</p>
+              <p className="text-3xl font-bold">
+                {healthyGoals}/{totalGoals}
+              </p>
               <p className="text-sm text-muted-foreground">goals on track</p>
             </div>
             <div className="flex items-center gap-2">
               <HealthIcon className={`h-8 w-8 ${healthStatus.color}`} />
               <div className="text-right">
                 <p className={`text-xl font-bold ${healthStatus.color}`}>{healthStatus.label}</p>
-                <p className="text-sm text-muted-foreground">
-                  {healthPercentage.toFixed(0)}%
-                </p>
+                <p className="text-sm text-muted-foreground">{healthPercentage.toFixed(0)}%</p>
               </div>
             </div>
           </div>
@@ -168,7 +187,9 @@ export function GoalHealthScore({ goals }: GoalHealthScoreProps) {
           {atRiskGoals.length > 0 && (
             <div className="pt-2 border-t">
               <p className="text-xs text-red-600 font-medium">
-                ⚠️ {atRiskGoals.length} goal{atRiskGoals.length > 1 ? 's' : ''} need{atRiskGoals.length === 1 ? 's' : ''} immediate attention
+                ⚠️ {atRiskGoals.length} goal
+                {atRiskGoals.length > 1 ? 's' : ''} need
+                {atRiskGoals.length === 1 ? 's' : ''} immediate attention
               </p>
             </div>
           )}

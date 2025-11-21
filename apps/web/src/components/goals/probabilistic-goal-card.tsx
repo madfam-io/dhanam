@@ -15,7 +15,11 @@ interface ProbabilisticGoalCardProps {
   showActions?: boolean;
 }
 
-export function ProbabilisticGoalCard({ goal, onClick, showActions = true }: ProbabilisticGoalCardProps) {
+export function ProbabilisticGoalCard({
+  goal,
+  onClick,
+  showActions = true,
+}: ProbabilisticGoalCardProps) {
   const { getGoalProbability, updateGoalProbability } = useGoals();
   const [probability, setProbability] = useState<GoalProbabilityResult | null>(null);
   const [loading, setLoading] = useState(false);
@@ -23,6 +27,7 @@ export function ProbabilisticGoalCard({ goal, onClick, showActions = true }: Pro
 
   useEffect(() => {
     loadProbability();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [goal.id]);
 
   const loadProbability = async () => {
@@ -83,7 +88,7 @@ export function ProbabilisticGoalCard({ goal, onClick, showActions = true }: Pro
     });
   };
 
-  const targetAmount = typeof goal.targetAmount === 'number' ? goal.targetAmount : parseFloat(goal.targetAmount.toString());
+  const targetAmount = goal.targetAmount;
 
   return (
     <Card
@@ -91,7 +96,7 @@ export function ProbabilisticGoalCard({ goal, onClick, showActions = true }: Pro
       onClick={onClick}
       role={onClick ? 'button' : undefined}
       tabIndex={onClick ? 0 : undefined}
-      onKeyDown={(e) => {
+      onKeyDown={(e: React.KeyboardEvent) => {
         if (onClick && (e.key === 'Enter' || e.key === ' ')) {
           e.preventDefault();
           onClick();
@@ -105,7 +110,9 @@ export function ProbabilisticGoalCard({ goal, onClick, showActions = true }: Pro
               <Target className="h-4 w-4" />
               {goal.name}
             </CardTitle>
-            <CardDescription className="mt-1">{goal.description || goal.type.replace('_', ' ')}</CardDescription>
+            <CardDescription className="mt-1">
+              {goal.description || goal.type.replace('_', ' ')}
+            </CardDescription>
           </div>
           {goal.status && (
             <Badge variant={goal.status === 'active' ? 'default' : 'secondary'} className="ml-2">
@@ -182,7 +189,9 @@ export function ProbabilisticGoalCard({ goal, onClick, showActions = true }: Pro
                 <TrendingDown className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
                 <div className="flex-1">
                   <p className="text-xs font-medium text-amber-800 dark:text-amber-200">
-                    Increase monthly contribution to {formatCurrency(probability.recommendedMonthlyContribution)} to reach 75% probability
+                    Increase monthly contribution to{' '}
+                    {formatCurrency(probability.recommendedMonthlyContribution)} to reach 75%
+                    probability
                   </p>
                 </div>
               </div>
@@ -211,7 +220,13 @@ export function ProbabilisticGoalCard({ goal, onClick, showActions = true }: Pro
         ) : (
           <div className="text-center py-4">
             <p className="text-sm text-muted-foreground mb-3">No probability data available</p>
-            <Button size="sm" onClick={(e) => { e.stopPropagation(); loadProbability(); }}>
+            <Button
+              size="sm"
+              onClick={(e: React.MouseEvent) => {
+                e.stopPropagation();
+                loadProbability();
+              }}
+            >
               Calculate Probability
             </Button>
           </div>

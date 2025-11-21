@@ -1,9 +1,14 @@
 import { Transaction } from '@dhanam/shared';
-import { Ionicons } from '@expo/vector-icons';
 import { ComponentProps } from 'react';
-import { View, StyleSheet } from 'react-native';
-import { List, Text, Chip } from 'react-native-paper';
 
+import {
+  Ionicons,
+  View,
+  StyleSheet,
+  List,
+  PaperText as Text,
+  Chip,
+} from '@/lib/react-native-compat';
 import { formatCurrency } from '@/utils/currency';
 
 interface TransactionItemProps {
@@ -84,7 +89,8 @@ export function TransactionItem({ transaction, onPress }: TransactionItemProps) 
           </Chip>
         </View>
       }
-      left={(_props) => (
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      left={(_props: any) => (
         <View
           style={[
             styles.iconContainer,
@@ -98,7 +104,8 @@ export function TransactionItem({ transaction, onPress }: TransactionItemProps) 
           />
         </View>
       )}
-      right={(_props) => (
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      right={(_props: any) => (
         <View style={styles.amount}>
           <Text
             variant="titleMedium"

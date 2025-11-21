@@ -62,11 +62,13 @@ function PostHogPageView() {
 }
 
 export function PostHogProvider({ children }: { children: React.ReactNode }) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const SuspenseCompat = Suspense as any;
   return (
     <>
-      <Suspense fallback={null}>
+      <SuspenseCompat fallback={null}>
         <PostHogPageView />
-      </Suspense>
+      </SuspenseCompat>
       {children}
     </>
   );

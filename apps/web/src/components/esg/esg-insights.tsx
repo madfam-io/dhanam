@@ -3,14 +3,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import {
-  Lightbulb,
-  TrendingUp,
-  TrendingDown,
-  AlertCircle,
-  CheckCircle2,
-  Info,
-} from 'lucide-react';
+import { Lightbulb, TrendingUp, TrendingDown, AlertCircle, CheckCircle2, Info } from 'lucide-react';
 import type { PortfolioEsgAnalysis, EsgTrends } from '@/hooks/useEsg';
 
 interface EsgInsightsProps {
@@ -48,9 +41,7 @@ export function EsgInsights({ analysis, trends }: EsgInsightsProps) {
             <Lightbulb className="h-5 w-5 text-yellow-600" />
             Portfolio Insights
           </CardTitle>
-          <CardDescription>
-            Personalized recommendations based on your holdings
-          </CardDescription>
+          <CardDescription>Personalized recommendations based on your holdings</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           {analysis.insights && analysis.insights.length > 0 ? (
@@ -77,9 +68,7 @@ export function EsgInsights({ analysis, trends }: EsgInsightsProps) {
               <TrendingUp className="h-5 w-5 text-blue-600" />
               ESG Market Trends
             </CardTitle>
-            <CardDescription>
-              Current trends in cryptocurrency ESG performance
-            </CardDescription>
+            <CardDescription>Current trends in cryptocurrency ESG performance</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Improving Assets */}
@@ -122,7 +111,10 @@ export function EsgInsights({ analysis, trends }: EsgInsightsProps) {
                 <div className="text-sm font-semibold">Market Insights</div>
                 <div className="space-y-2">
                   {trends.marketInsights.map((insight, index) => (
-                    <div key={index} className="flex items-start gap-2 text-sm text-muted-foreground">
+                    <div
+                      key={index}
+                      className="flex items-start gap-2 text-sm text-muted-foreground"
+                    >
                       <div className="h-1.5 w-1.5 rounded-full bg-blue-600 mt-1.5" />
                       <span>{insight}</span>
                     </div>
@@ -142,9 +134,7 @@ export function EsgInsights({ analysis, trends }: EsgInsightsProps) {
               <CheckCircle2 className="h-5 w-5 text-green-600" />
               ESG Recommendations
             </CardTitle>
-            <CardDescription>
-              Assets with strong ESG profiles worth considering
-            </CardDescription>
+            <CardDescription>Assets with strong ESG profiles worth considering</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             {trends.recommendations.map((recommendation, index) => (

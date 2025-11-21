@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/lib/hooks/use-auth';
 
 export interface MonteCarloConfig {
   initialBalance: number;
@@ -56,6 +56,14 @@ export interface SimulationResult {
   max: number;
   timeSeries: MonthlySnapshot[];
   computedAt: Date;
+  metadata?: {
+    iterations: number;
+    monteCarloPaths?: number;
+    [key: string]: unknown;
+  };
+  config?: {
+    [key: string]: unknown;
+  };
 }
 
 export interface GoalProbabilityResult {
@@ -71,6 +79,7 @@ export interface GoalProbabilityResult {
   targetAmount: number;
   monthsRemaining: number;
   simulation: SimulationResult;
+  timeSeries?: Array<{ month: number; probability: number }>;
 }
 
 export interface RetirementSimulationResult {
@@ -102,7 +111,13 @@ export interface ScenarioComparisonResult {
     name: string;
     description: string;
     severity: 'mild' | 'moderate' | 'severe';
+    median?: number;
+    p10?: number;
+    p90?: number;
+    timeSeries?: MonthlySnapshot[];
   };
+  scenarioName?: string;
+  scenarioDescription?: string;
   baseline: SimulationResult;
   stressed: SimulationResult;
   comparison: {
@@ -111,6 +126,7 @@ export interface ScenarioComparisonResult {
     p10Difference: number;
     p10DifferencePercent: number;
     recoveryYears: number | null;
+    recoveryMonths?: number;
     impactSeverity: 'minimal' | 'moderate' | 'significant' | 'critical';
     worthStressTesting: boolean;
   };
@@ -141,6 +157,7 @@ export function useSimulations() {
 
   const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleRequest = async <T>(endpoint: string, config: any): Promise<T | null> => {
     setLoading(true);
     setError(null);
@@ -250,17 +267,21 @@ export function useSimulations() {
       }
 
       // Calculate safe withdrawal rate
-      const balanceAtRetirement = backendResult.balanceAtRetirement?.median ||
-                                  backendResult.yearlyProjections[yearsToRetirement]?.median || 0;
-      const safeWithdrawalRate = balanceAtRetirement * 0.04 / 12; // 4% rule monthly
+      const balanceAtRetirement =
+        backendResult.balanceAtRetirement?.median ||
+        backendResult.yearlyProjections[yearsToRetirement]?.median ||
+        0;
+      const safeWithdrawalRate = (balanceAtRetirement * 0.04) / 12; // 4% rule monthly
 
       // Calculate total contributions
       const totalContributions = config.monthlyContribution * monthsToRetirement;
 
       // Calculate median years of sustainability
       const finalBalance = backendResult.balanceAtLifeExpectancy?.median || 0;
-      const medianYearsOfSustainability = finalBalance > 0 ? yearsInRetirement :
-        (yearsInRetirement * (backendResult.successProbability || 0.5));
+      const medianYearsOfSustainability =
+        finalBalance > 0
+          ? yearsInRetirement
+          : yearsInRetirement * (backendResult.successProbability || 0.5);
 
       const result: RetirementSimulationResult = {
         accumulationPhase: {
@@ -278,10 +299,14 @@ export function useSimulations() {
           netMonthlyNeed: (config.monthlyExpenses || 0) - (config.socialSecurityIncome || 0),
         },
         recommendations: {
-          increaseContributionBy: backendResult.successProbability < 0.75 ?
-            Math.ceil((balanceAtRetirement * 0.25) / monthsToRetirement / 100) * 100 : undefined,
-          canRetireEarlierBy: backendResult.successProbability > 0.95 ?
-            Math.floor(yearsToRetirement * 0.1) : undefined,
+          increaseContributionBy:
+            backendResult.successProbability < 0.75
+              ? Math.ceil((balanceAtRetirement * 0.25) / monthsToRetirement / 100) * 100
+              : undefined,
+          canRetireEarlierBy:
+            backendResult.successProbability > 0.95
+              ? Math.floor(yearsToRetirement * 0.1)
+              : undefined,
           targetNestEgg: balanceAtRetirement,
         },
         simulation: {
@@ -297,7 +322,6 @@ export function useSimulations() {
           max: finalBalance * 2,
           timeSeries,
           computedAt: new Date(),
-          config: apiConfig,
         },
       };
 
@@ -406,6 +430,7 @@ export function useSimulations() {
     calculateGoalProbability,
     simulateRetirement,
     analyzeScenario,
+    compareScenarios: analyzeScenario, // Alias for backwards compatibility
     getRecommendedAllocation,
     loading,
     error,

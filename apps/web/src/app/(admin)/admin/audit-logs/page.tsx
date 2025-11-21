@@ -104,11 +104,11 @@ export default function AuditLogsPage() {
               type="text"
               placeholder="User ID"
               value={filters.userId}
-              onChange={(e) => setFilters({ ...filters, userId: e.target.value })}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFilters({ ...filters, userId: e.target.value })}
             />
             <Select
               value={filters.action}
-              onValueChange={(value) => setFilters({ ...filters, action: value })}
+              onValueChange={(value: string) => setFilters({ ...filters, action: value })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Action" />
@@ -123,7 +123,7 @@ export default function AuditLogsPage() {
             </Select>
             <Select
               value={filters.resource}
-              onValueChange={(value) => setFilters({ ...filters, resource: value })}
+              onValueChange={(value: string) => setFilters({ ...filters, resource: value })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Resource" />
@@ -140,13 +140,13 @@ export default function AuditLogsPage() {
               <Input
                 type="date"
                 value={filters.startDate}
-                onChange={(e) => setFilters({ ...filters, startDate: e.target.value })}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFilters({ ...filters, startDate: e.target.value })}
                 className="flex-1"
               />
               <Input
                 type="date"
                 value={filters.endDate}
-                onChange={(e) => setFilters({ ...filters, endDate: e.target.value })}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFilters({ ...filters, endDate: e.target.value })}
                 className="flex-1"
               />
             </div>

@@ -1,15 +1,17 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
-import { useColorScheme } from 'react-native';
-import { Provider as PaperProvider } from 'react-native-paper';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { AuthProvider } from '@/contexts/AuthContext';
 import { SpaceProvider } from '@/contexts/SpaceContext';
+import {
+  Stack,
+  StatusBar,
+  useColorScheme,
+  PaperProvider,
+  SafeAreaProvider,
+} from '@/lib/react-native-compat';
 import { theme } from '@/theme';
 
 const queryClient = new QueryClient({

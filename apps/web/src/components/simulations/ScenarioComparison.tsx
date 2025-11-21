@@ -13,17 +13,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Loader2, AlertTriangle, TrendingDown, TrendingUp } from 'lucide-react';
-import {
-  AreaChart,
-  Area,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  CartesianGrid,
-} from 'recharts';
 import { useSimulations, type ScenarioComparisonResult } from '@/hooks/useSimulations';
 
 interface ScenarioComparisonProps {
@@ -39,13 +28,41 @@ interface ScenarioComparisonProps {
 }
 
 const SCENARIO_OPTIONS = [
-  { value: 'job_loss', label: 'Job Loss (6 months)', severity: 'severe' },
-  { value: 'market_crash', label: 'Market Crash (-30%)', severity: 'severe' },
-  { value: 'recession', label: 'Economic Recession', severity: 'moderate' },
-  { value: 'medical_emergency', label: 'Medical Emergency ($50k)', severity: 'moderate' },
-  { value: 'inflation_spike', label: 'High Inflation (5 years)', severity: 'moderate' },
-  { value: 'disability', label: 'Long-term Disability', severity: 'severe' },
-  { value: 'market_correction', label: 'Market Correction (-10%)', severity: 'mild' },
+  {
+    value: 'job_loss',
+    label: 'Job Loss (6 months)',
+    severity: 'severe',
+  },
+  {
+    value: 'market_crash',
+    label: 'Market Crash (-30%)',
+    severity: 'severe',
+  },
+  {
+    value: 'recession',
+    label: 'Economic Recession',
+    severity: 'moderate',
+  },
+  {
+    value: 'medical_emergency',
+    label: 'Medical Emergency ($50k)',
+    severity: 'moderate',
+  },
+  {
+    value: 'inflation_spike',
+    label: 'High Inflation (5 years)',
+    severity: 'moderate',
+  },
+  {
+    value: 'disability',
+    label: 'Long-term Disability',
+    severity: 'severe',
+  },
+  {
+    value: 'market_correction',
+    label: 'Market Correction (-10%)',
+    severity: 'mild',
+  },
 ];
 
 export function ScenarioComparison({ baselineConfig }: ScenarioComparisonProps) {
@@ -158,13 +175,21 @@ export function ScenarioComparison({ baselineConfig }: ScenarioComparisonProps) 
               <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <p className="text-sm text-muted-foreground">Impact Severity</p>
-                  <Badge className={`${getSeverityColor(result.comparison.impactSeverity)} px-4 py-2 text-lg`}>
+                  <Badge
+                    className={`${getSeverityColor(result.comparison.impactSeverity)} px-4 py-2 text-lg`}
+                  >
                     {result.comparison.impactSeverity.toUpperCase()}
                   </Badge>
                 </div>
                 <div className="space-y-2">
                   <p className="text-sm text-muted-foreground">Worth Stress Testing?</p>
-                  <Badge className={result.comparison.worthStressTesting ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}>
+                  <Badge
+                    className={
+                      result.comparison.worthStressTesting
+                        ? 'bg-red-100 text-red-800'
+                        : 'bg-green-100 text-green-800'
+                    }
+                  >
                     {result.comparison.worthStressTesting ? 'YES' : 'NO'}
                   </Badge>
                 </div>

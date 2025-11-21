@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 
-import { PrismaService } from '@core/prisma/prisma.service';
 import { LoggerService } from '@core/logger/logger.service';
+import { PrismaService } from '@core/prisma/prisma.service';
 
 import { SplitTransactionDto, UpdateSplitDto } from './dto/split-transaction.dto';
 
@@ -186,7 +186,7 @@ export class TransactionSplitsService {
   /**
    * Remove split (convert back to regular transaction)
    */
-  async removeSplit(spaceId: string, transactionId: string, userId: string) {
+  async removeSplit(spaceId: string, transactionId: string, _userId: string) {
     const transaction = await this.prisma.transaction.findFirst({
       where: {
         id: transactionId,

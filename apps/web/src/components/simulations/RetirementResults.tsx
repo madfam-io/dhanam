@@ -1,4 +1,5 @@
 'use client';
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -26,11 +27,6 @@ export function RetirementResults({ results }: RetirementResultsProps) {
     return 'text-yellow-600';
   };
 
-  const _getSuccessVariant = (): 'default' | 'destructive' | 'secondary' => {
-    if (isExcellent) return 'default';
-    if (isAtRisk) return 'destructive';
-    return 'secondary';
-  };
 
   return (
     <div className="space-y-6">
@@ -76,7 +72,7 @@ export function RetirementResults({ results }: RetirementResultsProps) {
               This would bring your total monthly savings to approximately $
               {(
                 recommendations.increaseContributionBy +
-                (results.simulation.config as any).monthlyContribution
+                ((results.simulation.config as any)?.monthlyContribution || 0)
               ).toLocaleString()}
               .
             </p>
@@ -259,15 +255,18 @@ export function RetirementResults({ results }: RetirementResultsProps) {
                 <li className="flex items-start gap-2">
                   <span className="mt-1">•</span>
                   <span>
+                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                     Maintain {((results.simulation.config as any).expectedReturn * 100).toFixed(1)}%
                     annual return with{' '}
+                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                     {((results.simulation.config as any).volatility * 100).toFixed(0)}% volatility
                   </span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="mt-1">•</span>
                   <span>
-                    Withdraw ${withdrawalPhase.netMonthlyNeed.toLocaleString()}/month in retirement
+                    Withdraw ${withdrawalPhase.netMonthlyNeed.toLocaleString()}
+                    /month in retirement
                   </span>
                 </li>
               </ul>

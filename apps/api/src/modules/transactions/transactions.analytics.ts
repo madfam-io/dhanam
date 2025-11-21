@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+
 import { PostHogService } from '../analytics/posthog.service';
 
 @Injectable()

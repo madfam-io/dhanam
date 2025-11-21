@@ -124,7 +124,7 @@ export default function FeatureFlagsPage() {
                           <Switch
                             id={`${flag.key}-enabled`}
                             checked={editValues.enabled}
-                            onCheckedChange={(checked) =>
+                            onCheckedChange={(checked: boolean) =>
                               setEditValues({ ...editValues, enabled: checked })
                             }
                           />
@@ -142,7 +142,7 @@ export default function FeatureFlagsPage() {
                           min="0"
                           max="100"
                           value={editValues.rolloutPercentage || 100}
-                          onChange={(e) =>
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                             setEditValues({
                               ...editValues,
                               rolloutPercentage: parseInt(e.target.value),
@@ -161,7 +161,7 @@ export default function FeatureFlagsPage() {
                         id={`${flag.key}-users`}
                         type="text"
                         value={editValues.targetedUsers?.join(', ') || ''}
-                        onChange={(e) =>
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                           setEditValues({
                             ...editValues,
                             targetedUsers: e.target.value

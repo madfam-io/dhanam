@@ -2,17 +2,12 @@ import * as crypto from 'crypto';
 
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Provider, AccountType, Currency, Prisma } from '@prisma/client';
-import {
-  Configuration,
-  MxPlatformApi,
-  ConnectWidgetRequestBody,
-  MemberCreateRequestBody,
-} from 'mx-platform-node';
+import { Provider, AccountType, Currency, Prisma as _Prisma } from '@prisma/client';
+import type { InputJsonValue } from '@prisma/client/runtime/library';
+import { Configuration, MxPlatformApi } from 'mx-platform-node';
 
-import { PrismaService } from '../../../core/prisma/prisma.service';
 import { CryptoService } from '../../../core/crypto/crypto.service';
-
+import { PrismaService } from '../../../core/prisma/prisma.service';
 import {
   IFinancialProvider,
   ProviderHealthCheck,
@@ -94,7 +89,7 @@ export class MxService implements IFinancialProvider {
 
     try {
       // Ping MX by listing institutions with limit 1
-      await this.mxClient.listInstitutions({ page: 1, recordsPerPage: 1 });
+      await this.mxClient.listInstitutions({ page: 1, recordsPerPage: 1 } as any);
       const responseTimeMs = Date.now() - startTime;
 
       return {
@@ -139,7 +134,7 @@ export class MxService implements IFinancialProvider {
       }
 
       // Step 2: Create Connect Widget URL
-      const widgetRequest: ConnectWidgetRequestBody = {
+      const widgetRequest: any = {
         widget_url: {
           widget_type: 'connect_widget',
           mode: 'verification',
@@ -157,7 +152,8 @@ export class MxService implements IFinancialProvider {
 
       return {
         linkToken: widgetUrl,
-        expiration: new Date(Date.now() + 30 * 60 * 1000), // 30 minutes
+        expiresAt: new Date(Date.now() + 30 * 60 * 1000), // 30 minutes
+        expiration: new Date(Date.now() + 30 * 60 * 1000), // 30 minutes (legacy)
         metadata: {
           mxUserGuid,
           provider: 'mx',
@@ -211,7 +207,7 @@ export class MxService implements IFinancialProvider {
             institutionCode: member.institution_code,
             institutionName: member.name,
             connectedAt: new Date().toISOString(),
-          } as Prisma.JsonObject,
+          } as InputJsonValue,
           user: { connect: { id: params.userId } },
         },
       });
@@ -306,8 +302,7 @@ export class MxService implements IFinancialProvider {
       const memberGuid = params.accessToken;
 
       // Calculate date range (default 90 days)
-      const toDate =
-        params.endDate || new Date().toISOString().split('T')[0];
+      const toDate = params.endDate || new Date().toISOString().split('T')[0];
       const fromDate =
         params.startDate ||
         new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
@@ -327,7 +322,7 @@ export class MxService implements IFinancialProvider {
             toDate,
             page,
             recordsPerPage: 100,
-          }
+          } as any
         );
 
         const mxTransactions = transactionsResponse.data.transactions || [];
@@ -366,14 +361,14 @@ export class MxService implements IFinancialProvider {
                 currency: account.currency as Currency,
                 date: new Date(mxTxn.transacted_at || mxTxn.posted_at || new Date()),
                 description: mxTxn.description || '',
-                merchant: mxTxn.merchant_name,
+                merchant: (mxTxn as any).merchant_name,
                 metadata: {
                   mxCategory: mxTxn.category,
                   mxType: mxTxn.type,
                   mxStatus: mxTxn.status,
                   mxMerchantCategoryCode: mxTxn.merchant_category_code,
                   mxOriginalDescription: mxTxn.original_description,
-                } as Prisma.JsonObject,
+                } as InputJsonValue,
               },
             });
             totalAdded++;
@@ -385,14 +380,14 @@ export class MxService implements IFinancialProvider {
                 amount: mxTxn.amount || 0,
                 date: new Date(mxTxn.transacted_at || mxTxn.posted_at || new Date()),
                 description: mxTxn.description || '',
-                merchant: mxTxn.merchant_name,
+                merchant: (mxTxn as any).merchant_name,
                 metadata: {
                   mxCategory: mxTxn.category,
                   mxType: mxTxn.type,
                   mxStatus: mxTxn.status,
                   mxMerchantCategoryCode: mxTxn.merchant_category_code,
                   mxOriginalDescription: mxTxn.original_description,
-                } as Prisma.JsonObject,
+                } as InputJsonValue,
               },
             });
             totalModified++;
@@ -413,10 +408,15 @@ export class MxService implements IFinancialProvider {
       );
 
       return {
+        transactions: [],
+        hasMore: false,
+        addedCount: totalAdded,
+        modifiedCount: totalModified,
+        removedCount: 0,
         added: totalAdded,
         modified: totalModified,
         removed: 0,
-        nextCursor: toDate,
+        cursor: typeof toDate === 'string' ? toDate : toDate.toISOString(),
       };
     } catch (error: any) {
       this.logger.error('Failed to sync MX transactions:', error);
@@ -487,15 +487,17 @@ export class MxService implements IFinancialProvider {
       const response = await this.mxClient.listInstitutions({
         name: query,
         recordsPerPage: 20,
-      });
+      } as any);
 
       const institutions = response.data.institutions || [];
 
       return institutions.map((inst) => ({
+        id: inst.code || '',
         institutionId: inst.code || '',
         name: inst.name || '',
+        provider: Provider.mx,
         logo: inst.medium_logo_url,
-        primaryColor: inst.brand_color,
+        primaryColor: (inst as any).brand_color,
         url: inst.url,
         supportedProducts: ['accounts', 'transactions'],
         region: region || 'US',
@@ -520,10 +522,12 @@ export class MxService implements IFinancialProvider {
       }
 
       return {
+        id: inst.code || '',
         institutionId: inst.code || '',
         name: inst.name || '',
+        provider: Provider.mx,
         logo: inst.medium_logo_url,
-        primaryColor: inst.brand_color,
+        primaryColor: (inst as any).brand_color,
         url: inst.url,
         supportedProducts: ['accounts', 'transactions'],
         region: 'US',
@@ -538,7 +542,7 @@ export class MxService implements IFinancialProvider {
 
   private async handleMemberUpdate(payload: any) {
     const memberGuid = payload.member_guid;
-    const userGuid = payload.user_guid;
+    const _userGuid = payload.user_guid;
 
     // Find connection
     const connection = await this.prisma.providerConnection.findFirst({
@@ -561,7 +565,7 @@ export class MxService implements IFinancialProvider {
           ...(connection.metadata as object),
           lastWebhookAt: new Date().toISOString(),
           lastStatus: payload.status,
-        } as Prisma.JsonObject,
+        } as InputJsonValue,
       },
     });
   }
@@ -632,23 +636,23 @@ export class MxService implements IFinancialProvider {
       .digest('hex');
 
     return crypto.timingSafeEqual(
-      Buffer.from(signature, 'hex'),
-      Buffer.from(expectedSignature, 'hex')
+      new Uint8Array(Buffer.from(signature, 'hex')),
+      new Uint8Array(Buffer.from(expectedSignature, 'hex'))
     );
   }
 
   private mapAccountType(mxType: string): AccountType {
     const typeMap: Record<string, AccountType> = {
-      CHECKING: 'checking',
-      SAVINGS: 'savings',
-      CREDIT_CARD: 'credit',
-      INVESTMENT: 'investment',
-      LOAN: 'other',
-      LINE_OF_CREDIT: 'credit',
-      MORTGAGE: 'other',
+      CHECKING: AccountType.checking,
+      SAVINGS: AccountType.savings,
+      CREDIT_CARD: AccountType.credit,
+      INVESTMENT: AccountType.investment,
+      LOAN: AccountType.other,
+      LINE_OF_CREDIT: AccountType.credit,
+      MORTGAGE: AccountType.other,
     };
 
-    return typeMap[mxType.toUpperCase()] || 'other';
+    return typeMap[mxType.toUpperCase()] || AccountType.other;
   }
 
   private mapCurrency(currencyCode: string): Currency {

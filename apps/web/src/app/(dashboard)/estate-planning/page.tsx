@@ -45,7 +45,7 @@ export default function EstatePlanningPage() {
   } = useWills();
   const { getHouseholds } = useHouseholds();
 
-  const [households, setHouseholds] = useState<any[]>([]);
+  const [households, setHouseholds] = useState<Array<{ id: string; name: string }>>([]);
   const [selectedHouseholdId, setSelectedHouseholdId] = useState<string | null>(null);
   const [wills, setWills] = useState<Will[]>([]);
   const [selectedWill, setSelectedWill] = useState<Will | null>(null);
@@ -59,19 +59,21 @@ export default function EstatePlanningPage() {
 
   useEffect(() => {
     loadHouseholds();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     if (selectedHouseholdId) {
       loadWills(selectedHouseholdId);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedHouseholdId]);
 
   const loadHouseholds = async () => {
     try {
       const data = await getHouseholds();
       setHouseholds(data);
-      if (data.length > 0 && !selectedHouseholdId) {
+      if (data.length > 0 && !selectedHouseholdId && data[0]) {
         setSelectedHouseholdId(data[0].id);
       }
     } catch (err) {
@@ -205,7 +207,7 @@ export default function EstatePlanningPage() {
                 <Input
                   id="name"
                   value={newWill.name}
-                  onChange={(e) => setNewWill({ ...newWill, name: e.target.value })}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewWill({ ...newWill, name: e.target.value })}
                   placeholder="e.g., Smith Family Will 2025"
                 />
               </div>
@@ -214,7 +216,7 @@ export default function EstatePlanningPage() {
                 <Textarea
                   id="notes"
                   value={newWill.notes}
-                  onChange={(e) => setNewWill({ ...newWill, notes: e.target.value })}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewWill({ ...newWill, notes: e.target.value })}
                   placeholder="Additional notes or instructions"
                   rows={3}
                 />
@@ -223,7 +225,7 @@ export default function EstatePlanningPage() {
                 <Checkbox
                   id="disclaimer"
                   checked={newWill.legalDisclaimer}
-                  onCheckedChange={(checked) =>
+                  onCheckedChange={(checked: boolean) =>
                     setNewWill({ ...newWill, legalDisclaimer: checked as boolean })
                   }
                 />

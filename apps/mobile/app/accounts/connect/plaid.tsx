@@ -1,12 +1,18 @@
-import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { View, ScrollView, StyleSheet } from 'react-native';
-import { Text, Card, Button } from 'react-native-paper';
 
 import { ErrorState } from '@/components/ErrorState';
 import { LoadingScreen } from '@/components/LoadingScreen';
 import { useSpaces } from '@/hooks/useSpaces';
+import {
+  Ionicons,
+  router,
+  View,
+  ScrollView,
+  StyleSheet,
+  PaperText as Text,
+  Card,
+  Button,
+} from '@/lib/react-native-compat';
 import { apiClient } from '@/services/api';
 
 export default function PlaidConnectScreen() {

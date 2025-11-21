@@ -36,8 +36,10 @@ export const initPostHog = (): void => {
         maskAllInputs: true, // Mask input fields for privacy
         maskTextSelector: '.private', // Mask elements with 'private' class
       },
-      loaded: (posthog) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      loaded: (posthog: any) => {
         if (process.env.NODE_ENV === 'development') {
+          // eslint-disable-next-line no-console
           console.log('✅ PostHog initialized');
           posthog.debug(); // Enable debug mode in development
         }
@@ -58,6 +60,7 @@ export const getPostHog = () => posthog;
 /**
  * Identify a user in PostHog
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const identifyUser = (userId: string, properties?: Record<string, any>): void => {
   if (typeof window === 'undefined' || !posthogInitialized) {
     return;
@@ -73,6 +76,7 @@ export const identifyUser = (userId: string, properties?: Record<string, any>): 
 /**
  * Track a custom event
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const trackEvent = (eventName: string, properties?: Record<string, any>): void => {
   if (typeof window === 'undefined' || !posthogInitialized) {
     return;
@@ -103,6 +107,7 @@ export const resetPostHog = (): void => {
 /**
  * Set user properties
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const setUserProperties = (properties: Record<string, any>): void => {
   if (typeof window === 'undefined' || !posthogInitialized) {
     return;

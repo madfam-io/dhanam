@@ -10,21 +10,23 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
+import { UsageMetricType } from '@prisma/client';
+
+import { CurrentUser } from '../../core/auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../../core/auth/guards/jwt-auth.guard';
-import { SubscriptionGuard } from '../billing/guards/subscription.guard';
-import { UsageLimitGuard } from '../billing/guards/usage-limit.guard';
+import { MonitorPerformance } from '../../core/decorators/monitor-performance.decorator';
 import { RequiresPremium } from '../billing/decorators/requires-tier.decorator';
 import { TrackUsage } from '../billing/decorators/track-usage.decorator';
-import { CurrentUser } from '../../core/auth/decorators/current-user.decorator';
-import { MonitorPerformance } from '../../core/decorators/monitor-performance.decorator';
+import { SubscriptionGuard } from '../billing/guards/subscription.guard';
+import { UsageLimitGuard } from '../billing/guards/usage-limit.guard';
 
-import { SimulationsService } from './simulations.service';
 import {
   RunSimulationDto,
   RunRetirementSimulationDto,
   CalculateSafeWithdrawalRateDto,
   AnalyzeScenarioDto,
 } from './dto';
+import { SimulationsService } from './simulations.service';
 
 @Controller('simulations')
 @UseGuards(JwtAuthGuard)
@@ -34,20 +36,17 @@ export class SimulationsController {
   @Post('monte-carlo')
   @RequiresPremium()
   @UseGuards(SubscriptionGuard, UsageLimitGuard)
-  @TrackUsage('monte_carlo_simulation')
+  @TrackUsage(UsageMetricType.monte_carlo_simulation)
   @MonitorPerformance(15000)
   @HttpCode(HttpStatus.OK)
-  async runSimulation(
-    @CurrentUser() user: { id: string },
-    @Body() dto: RunSimulationDto
-  ) {
+  async runSimulation(@CurrentUser() user: { id: string }, @Body() dto: RunSimulationDto) {
     return this.simulationsService.runSimulation(user.id, dto);
   }
 
   @Post('retirement')
   @RequiresPremium()
   @UseGuards(SubscriptionGuard, UsageLimitGuard)
-  @TrackUsage('monte_carlo_simulation')
+  @TrackUsage(UsageMetricType.monte_carlo_simulation)
   @MonitorPerformance(20000)
   @HttpCode(HttpStatus.OK)
   async runRetirementSimulation(
@@ -60,7 +59,7 @@ export class SimulationsController {
   @Post('safe-withdrawal-rate')
   @RequiresPremium()
   @UseGuards(SubscriptionGuard, UsageLimitGuard)
-  @TrackUsage('monte_carlo_simulation')
+  @TrackUsage(UsageMetricType.monte_carlo_simulation)
   @MonitorPerformance(15000)
   @HttpCode(HttpStatus.OK)
   async calculateSafeWithdrawalRate(
@@ -75,10 +74,7 @@ export class SimulationsController {
   @UseGuards(SubscriptionGuard, UsageLimitGuard)
   @MonitorPerformance(30000) // Longer timeout for stress testing
   @HttpCode(HttpStatus.OK)
-  async analyzeScenario(
-    @CurrentUser() user: { id: string },
-    @Body() dto: AnalyzeScenarioDto
-  ) {
+  async analyzeScenario(@CurrentUser() user: { id: string }, @Body() dto: AnalyzeScenarioDto) {
     return this.simulationsService.analyzeScenario(user.id, dto);
   }
 
@@ -99,19 +95,13 @@ export class SimulationsController {
   }
 
   @Get(':id')
-  async getSimulation(
-    @CurrentUser() user: { id: string },
-    @Param('id') simulationId: string
-  ) {
+  async getSimulation(@CurrentUser() user: { id: string }, @Param('id') simulationId: string) {
     return this.simulationsService.getSimulation(user.id, simulationId);
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async deleteSimulation(
-    @CurrentUser() user: { id: string },
-    @Param('id') simulationId: string
-  ) {
+  async deleteSimulation(@CurrentUser() user: { id: string }, @Param('id') simulationId: string) {
     return this.simulationsService.deleteSimulation(user.id, simulationId);
   }
 }

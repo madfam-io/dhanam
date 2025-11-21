@@ -1,13 +1,23 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
-import { router } from 'expo-router';
 import { ComponentProps } from 'react';
-import { View, ScrollView, RefreshControl, StyleSheet } from 'react-native';
-import { Text, Card, ProgressBar, FAB, Button, Chip } from 'react-native-paper';
 
 import { ErrorState } from '@/components/ErrorState';
 import { LoadingScreen } from '@/components/LoadingScreen';
 import { useSpaces } from '@/hooks/useSpaces';
+import {
+  Ionicons,
+  router,
+  View,
+  ScrollView,
+  RefreshControl,
+  StyleSheet,
+  PaperText as Text,
+  Card,
+  ProgressBar,
+  FAB,
+  Button,
+  Chip,
+} from '@/lib/react-native-compat';
 import { apiClient } from '@/services/api';
 import { formatCurrency } from '@/utils/currency';
 

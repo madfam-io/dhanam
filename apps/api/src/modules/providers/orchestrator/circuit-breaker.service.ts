@@ -15,10 +15,10 @@ export class CircuitBreakerService {
   private readonly logger = new Logger(CircuitBreakerService.name);
 
   private readonly defaultConfig: CircuitBreakerConfig = {
-    failureThreshold: 5,        // Open after 5 failures
-    successThreshold: 2,         // Close after 2 successes
-    timeout: 60000,              // Try again after 60 seconds
-    monitoringWindow: 300000,    // 5 minute rolling window
+    failureThreshold: 5, // Open after 5 failures
+    successThreshold: 2, // Close after 2 successes
+    timeout: 60000, // Try again after 60 seconds
+    monitoringWindow: 300000, // 5 minute rolling window
   };
 
   constructor(private prisma: PrismaService) {}
@@ -42,8 +42,7 @@ export class CircuitBreakerService {
 
     // If circuit breaker is explicitly open, check if timeout has passed
     if (health.circuitBreakerOpen) {
-      const timeoutPassed =
-        Date.now() - health.updatedAt.getTime() > this.defaultConfig.timeout;
+      const timeoutPassed = Date.now() - health.updatedAt.getTime() > this.defaultConfig.timeout;
 
       if (timeoutPassed) {
         // Move to half-open state
@@ -63,11 +62,7 @@ export class CircuitBreakerService {
   /**
    * Record a successful provider call
    */
-  async recordSuccess(
-    provider: Provider,
-    region: string,
-    responseTimeMs: number
-  ): Promise<void> {
+  async recordSuccess(provider: Provider, region: string, responseTimeMs: number): Promise<void> {
     const now = new Date();
 
     await this.prisma.providerHealthStatus.upsert({
@@ -174,9 +169,7 @@ export class CircuitBreakerService {
     const totalCalls = health.successfulCalls + health.failedCalls + 1; // +1 for current failure
     const failureRate = totalCalls > 0 ? ((health.failedCalls + 1) / totalCalls) * 100 : 0;
 
-    return (
-      health.failedCalls + 1 >= this.defaultConfig.failureThreshold && failureRate > 50
-    );
+    return health.failedCalls + 1 >= this.defaultConfig.failureThreshold && failureRate > 50;
   }
 
   /**
@@ -247,8 +240,7 @@ export class CircuitBreakerService {
 
     let state: 'closed' | 'open' | 'half-open' = 'closed';
     if (health.circuitBreakerOpen) {
-      const timeoutPassed =
-        Date.now() - health.updatedAt.getTime() > this.defaultConfig.timeout;
+      const timeoutPassed = Date.now() - health.updatedAt.getTime() > this.defaultConfig.timeout;
       state = timeoutPassed ? 'half-open' : 'open';
     }
 

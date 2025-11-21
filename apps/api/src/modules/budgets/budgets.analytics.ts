@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+
 import { PostHogService } from '../analytics/posthog.service';
 
 export enum AlertType {
@@ -46,11 +47,7 @@ export class BudgetsAnalytics {
   /**
    * Track when a budget is updated
    */
-  async trackBudgetUpdated(
-    userId: string,
-    budgetId: string,
-    changes: string[]
-  ): Promise<void> {
+  async trackBudgetUpdated(userId: string, budgetId: string, changes: string[]): Promise<void> {
     try {
       await this.posthogService.capture({
         distinctId: userId,
@@ -193,7 +190,11 @@ export class BudgetsAnalytics {
   /**
    * Track when a category is created
    */
-  async trackCategoryCreated(userId: string, categoryName: string, budgetedAmount?: number): Promise<void> {
+  async trackCategoryCreated(
+    userId: string,
+    categoryName: string,
+    budgetedAmount?: number
+  ): Promise<void> {
     try {
       await this.posthogService.capture({
         distinctId: userId,

@@ -29,11 +29,17 @@ interface ShareGoalDialogProps {
   goal: Goal;
   onShared?: () => void;
   trigger?: React.ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export function ShareGoalDialog({ goal, onShared, trigger }: ShareGoalDialogProps) {
+export function ShareGoalDialog({ goal, onShared, trigger, open: controlledOpen, onOpenChange }: ShareGoalDialogProps) {
   const { shareGoal } = useGoals();
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+
+  // Use controlled state if provided, otherwise use internal state
+  const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
+  const setOpen = onOpenChange || setInternalOpen;
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -114,8 +120,11 @@ export function ShareGoalDialog({ goal, onShared, trigger }: ShareGoalDialogProp
                 type="email"
                 placeholder="partner@example.com"
                 value={formData.shareWithEmail}
-                onChange={(e) =>
-                  setFormData({ ...formData, shareWithEmail: e.target.value })
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setFormData({
+                    ...formData,
+                    shareWithEmail: e.target.value,
+                  })
                 }
               />
               <p className="text-xs text-muted-foreground">
@@ -128,6 +137,7 @@ export function ShareGoalDialog({ goal, onShared, trigger }: ShareGoalDialogProp
               <Label htmlFor="role">Permission Level</Label>
               <Select
                 value={formData.role}
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 onValueChange={(value: any) => setFormData({ ...formData, role: value })}
               >
                 <SelectTrigger id="role">
@@ -140,9 +150,7 @@ export function ShareGoalDialog({ goal, onShared, trigger }: ShareGoalDialogProp
                   <SelectItem value="manager">Manager</SelectItem>
                 </SelectContent>
               </Select>
-              <p className="text-xs text-muted-foreground">
-                {roleDescriptions[formData.role]}
-              </p>
+              <p className="text-xs text-muted-foreground">{roleDescriptions[formData.role]}</p>
             </div>
 
             {/* Message */}
@@ -152,7 +160,7 @@ export function ShareGoalDialog({ goal, onShared, trigger }: ShareGoalDialogProp
                 id="message"
                 placeholder="Let's work together on our retirement savings!"
                 value={formData.message}
-                onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, message: e.target.value })}
                 rows={3}
               />
             </div>

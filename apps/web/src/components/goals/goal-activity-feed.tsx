@@ -8,7 +8,6 @@ import {
   TrendingUp,
   TrendingDown,
   Share2,
-  UserPlus,
   UserMinus,
   Target,
   Calendar,
@@ -31,6 +30,7 @@ export function GoalActivityFeed({ goalId }: GoalActivityFeedProps) {
 
   useEffect(() => {
     loadActivities();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [goalId]);
 
   const loadActivities = async () => {
@@ -77,7 +77,11 @@ export function GoalActivityFeed({ goalId }: GoalActivityFeedProps) {
   };
 
   const getActivityColor = (action: string) => {
-    if (action.includes('probability_improved') || action.includes('milestone') || action === 'achieved') {
+    if (
+      action.includes('probability_improved') ||
+      action.includes('milestone') ||
+      action === 'achieved'
+    ) {
       return 'text-green-600 dark:text-green-400';
     }
     if (action.includes('probability_declined') || action.includes('declined')) {
@@ -186,12 +190,12 @@ export function GoalActivityFeed({ goalId }: GoalActivityFeedProps) {
                       <div className={getActivityColor(activity.action)}>
                         {getActivityIcon(activity.action)}
                       </div>
-                      <p className="text-sm">
-                        {formatActivityMessage(activity)}
-                      </p>
+                      <p className="text-sm">{formatActivityMessage(activity)}</p>
                     </div>
                     <span className="text-xs text-muted-foreground whitespace-nowrap">
-                      {formatDistanceToNow(new Date(activity.createdAt), { addSuffix: true })}
+                      {formatDistanceToNow(new Date(activity.createdAt), {
+                        addSuffix: true,
+                      })}
                     </span>
                   </div>
 

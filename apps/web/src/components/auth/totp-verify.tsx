@@ -105,7 +105,7 @@ export function TotpVerify({ open, onOpenChange, onSuccess, tempTokens }: TotpVe
               type="text"
               placeholder={useBackupCode ? 'ABC12345' : '000000'}
               value={totpCode}
-              onChange={(e) => handleCodeChange(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleCodeChange(e.target.value)}
               className={`text-center font-mono text-lg tracking-widest ${
                 useBackupCode ? '' : 'tracking-widest'
               }`}

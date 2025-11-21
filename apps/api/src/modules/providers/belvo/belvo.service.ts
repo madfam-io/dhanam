@@ -2,7 +2,8 @@ import * as crypto from 'crypto';
 
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Account, Transaction, Prisma, Currency, AccountType } from '@prisma/client';
+import { Account, Transaction, Prisma as _Prisma, Currency, AccountType } from '@prisma/client';
+import type { InputJsonValue } from '@prisma/client/runtime/library';
 
 import { AuditService } from '@core/audit/audit.service';
 import { CryptoService } from '@core/crypto/crypto.service';
@@ -70,7 +71,7 @@ export class BelvoService {
           metadata: {
             institution: dto.institution,
             createdAt: new Date().toISOString(),
-          } as Prisma.JsonObject,
+          } as InputJsonValue,
           user: { connect: { id: userId } },
         },
       });
@@ -140,7 +141,7 @@ export class BelvoService {
                 ...(existingAccount.metadata as object),
                 institution: belvoAccount.institution.name,
                 number: belvoAccount.number,
-              } as Prisma.JsonObject,
+              } as InputJsonValue,
             },
           });
           accounts.push(updated);
@@ -161,7 +162,7 @@ export class BelvoService {
                 linkId,
                 institution: belvoAccount.institution.name,
                 number: belvoAccount.number,
-              } as Prisma.JsonObject,
+              } as InputJsonValue,
             },
           });
           accounts.push(created);
@@ -291,7 +292,7 @@ export class BelvoService {
                   type: belvoTx.type,
                   status: belvoTx.status,
                   mcc: belvoTx.mcc,
-                } as Prisma.JsonObject,
+                } as InputJsonValue,
               },
             });
             transactionCount++;
@@ -371,7 +372,7 @@ export class BelvoService {
                 type: belvoTx.type,
                 status: belvoTx.status,
                 mcc: belvoTx.mcc,
-              } as Prisma.JsonObject,
+              } as InputJsonValue,
             },
           });
           transactions.push(created);
@@ -467,13 +468,13 @@ export class BelvoService {
 
   private mapBelvoAccountType(category: string): AccountType {
     const mapping: Record<string, AccountType> = {
-      CHECKING_ACCOUNT: 'checking',
-      CREDIT_CARD: 'credit',
-      LOAN_ACCOUNT: 'other',
-      SAVINGS_ACCOUNT: 'savings',
-      INVESTMENT_ACCOUNT: 'investment',
+      CHECKING_ACCOUNT: AccountType.checking,
+      CREDIT_CARD: AccountType.credit,
+      LOAN_ACCOUNT: AccountType.other,
+      SAVINGS_ACCOUNT: AccountType.savings,
+      INVESTMENT_ACCOUNT: AccountType.investment,
     };
-    return mapping[category] || 'other';
+    return mapping[category] || AccountType.other;
   }
 
   private mapCurrency(currency: string): Currency {

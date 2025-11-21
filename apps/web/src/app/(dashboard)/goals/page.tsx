@@ -40,6 +40,7 @@ export default function GoalsPage() {
   const [summary, setSummary] = useState<GoalSummary | null>(null);
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
   const [goalProgress, setGoalProgress] = useState<GoalProgress | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [probability, setProbability] = useState<any | null>(null);
   const [loadingProbability, setLoadingProbability] = useState(false);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
@@ -49,6 +50,7 @@ export default function GoalsPage() {
 
   useEffect(() => {
     loadGoals();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadGoals = async () => {
@@ -296,11 +298,7 @@ export default function GoalsPage() {
                         <CardTitle>{selectedGoal.name}</CardTitle>
                         <CardDescription>{selectedGoal.description}</CardDescription>
                       </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setShareDialogOpen(true)}
-                      >
+                      <Button variant="outline" size="sm" onClick={() => setShareDialogOpen(true)}>
                         <Users className="h-4 w-4 mr-2" />
                         Share
                       </Button>
@@ -514,7 +512,7 @@ export default function GoalsPage() {
 
               <TabsContent value="collaboration" className="space-y-6">
                 <ShareManagementPanel
-                  goal={selectedGoal}
+                  goalId={selectedGoal.id}
                   onUpdate={() => {
                     // Reload goal data to reflect changes
                     handleGoalClick(selectedGoal);
