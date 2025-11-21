@@ -1,11 +1,18 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@repo/ui/card';
-import { Button } from '@repo/ui/button';
-import { Input } from '@repo/ui/input';
-import { Label } from '@repo/ui/label';
-import { Alert, AlertDescription } from '@repo/ui/alert';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  Button,
+  Input,
+  Label,
+  Alert,
+  AlertDescription,
+} from '@dhanam/ui';
 import { DollarSign, AlertTriangle, CheckCircle2 } from 'lucide-react';
 
 interface ReadyToAssignProps {
@@ -136,7 +143,7 @@ export function ReadyToAssign({
               <Input
                 type="number"
                 value={newIncome}
-                onChange={(e) => setNewIncome(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewIncome(e.target.value)}
                 placeholder="Enter income amount"
                 className="flex-1"
               />
@@ -178,7 +185,7 @@ export function ReadyToAssign({
               <select
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
                 value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSelectedCategory(e.target.value)}
               >
                 <option value="">Select category...</option>
                 {categories.map((cat) => (
@@ -191,7 +198,7 @@ export function ReadyToAssign({
                 type="number"
                 placeholder="Amount"
                 value={allocationAmount}
-                onChange={(e) => setAllocationAmount(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAllocationAmount(e.target.value)}
                 className="w-32"
                 max={readyToAssign}
               />

@@ -192,7 +192,7 @@ export function ShareManagementPanel({ goalId, onUpdate }: ShareManagementPanelP
                         {/* Role Selector */}
                         <Select
                           value={share.role}
-                          onValueChange={(value) => handleRoleChange(share, value)}
+                          onValueChange={(value: string) => handleRoleChange(share, value)}
                         >
                           <SelectTrigger className="w-[130px]">
                             <SelectValue />

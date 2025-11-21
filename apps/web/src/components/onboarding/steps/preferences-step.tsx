@@ -122,7 +122,7 @@ export function PreferencesStep() {
               </Label>
               <Select
                 value={watchedValues.locale}
-                onValueChange={(value) => setValue('locale', value)}
+                onValueChange={(value: string) => setValue('locale', value)}
               >
                 <SelectTrigger className="mt-1">
                   <SelectValue />
@@ -147,7 +147,7 @@ export function PreferencesStep() {
               </Label>
               <Select
                 value={watchedValues.timezone}
-                onValueChange={(value) => setValue('timezone', value)}
+                onValueChange={(value: string) => setValue('timezone', value)}
               >
                 <SelectTrigger className="mt-1">
                   <SelectValue />
@@ -179,7 +179,7 @@ export function PreferencesStep() {
               </Label>
               <Select
                 value={watchedValues.currency}
-                onValueChange={(value) => setValue('currency', value)}
+                onValueChange={(value: string) => setValue('currency', value)}
               >
                 <SelectTrigger className="mt-1">
                   <SelectValue />
@@ -217,7 +217,7 @@ export function PreferencesStep() {
               </div>
               <Switch
                 checked={watchedValues.emailNotifications}
-                onCheckedChange={(checked) => setValue('emailNotifications', checked)}
+                onCheckedChange={(checked: boolean) => setValue('emailNotifications', checked)}
               />
             </div>
 
@@ -230,7 +230,7 @@ export function PreferencesStep() {
               </div>
               <Switch
                 checked={watchedValues.transactionAlerts}
-                onCheckedChange={(checked) => setValue('transactionAlerts', checked)}
+                onCheckedChange={(checked: boolean) => setValue('transactionAlerts', checked)}
               />
             </div>
 
@@ -243,7 +243,7 @@ export function PreferencesStep() {
               </div>
               <Switch
                 checked={watchedValues.budgetAlerts}
-                onCheckedChange={(checked) => setValue('budgetAlerts', checked)}
+                onCheckedChange={(checked: boolean) => setValue('budgetAlerts', checked)}
               />
             </div>
 
@@ -256,7 +256,7 @@ export function PreferencesStep() {
               </div>
               <Switch
                 checked={watchedValues.weeklyReports}
-                onCheckedChange={(checked) => setValue('weeklyReports', checked)}
+                onCheckedChange={(checked: boolean) => setValue('weeklyReports', checked)}
               />
             </div>
 
@@ -269,7 +269,7 @@ export function PreferencesStep() {
               </div>
               <Switch
                 checked={watchedValues.monthlyReports}
-                onCheckedChange={(checked) => setValue('monthlyReports', checked)}
+                onCheckedChange={(checked: boolean) => setValue('monthlyReports', checked)}
               />
             </div>
           </CardContent>

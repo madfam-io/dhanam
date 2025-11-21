@@ -8,10 +8,13 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@dhanam/ui/components/card';
-import { Progress } from '@dhanam/ui/components/progress';
-import { Skeleton } from '@dhanam/ui/components/skeleton';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@dhanam/ui/components/tabs';
+  Progress,
+  Skeleton,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@dhanam/ui';
 
 interface MlInsights {
   period: string;

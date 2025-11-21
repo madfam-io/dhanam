@@ -10,8 +10,11 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@dhanam/ui/components/card';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@dhanam/ui/components/tabs';
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+} from '@dhanam/ui';
 
 export type OwnershipFilter = 'yours' | 'mine' | 'ours';
 

@@ -111,7 +111,7 @@ export function PreferencesSection() {
               </div>
               <Switch
                 checked={preferences.emailNotifications}
-                onCheckedChange={(checked) => handleSingleUpdate('emailNotifications', checked)}
+                onCheckedChange={(checked: boolean) => handleSingleUpdate('emailNotifications', checked)}
                 disabled={isSaving}
               />
             </div>
@@ -127,7 +127,7 @@ export function PreferencesSection() {
               </div>
               <Switch
                 checked={preferences.transactionAlerts}
-                onCheckedChange={(checked) => handleSingleUpdate('transactionAlerts', checked)}
+                onCheckedChange={(checked: boolean) => handleSingleUpdate('transactionAlerts', checked)}
                 disabled={isSaving}
               />
             </div>
@@ -141,7 +141,7 @@ export function PreferencesSection() {
               </div>
               <Switch
                 checked={preferences.budgetAlerts}
-                onCheckedChange={(checked) => handleSingleUpdate('budgetAlerts', checked)}
+                onCheckedChange={(checked: boolean) => handleSingleUpdate('budgetAlerts', checked)}
                 disabled={isSaving}
               />
             </div>
@@ -155,7 +155,7 @@ export function PreferencesSection() {
               </div>
               <Switch
                 checked={preferences.weeklyReports}
-                onCheckedChange={(checked) => handleSingleUpdate('weeklyReports', checked)}
+                onCheckedChange={(checked: boolean) => handleSingleUpdate('weeklyReports', checked)}
                 disabled={isSaving}
               />
             </div>
@@ -169,7 +169,7 @@ export function PreferencesSection() {
               </div>
               <Switch
                 checked={preferences.monthlyReports}
-                onCheckedChange={(checked) => handleSingleUpdate('monthlyReports', checked)}
+                onCheckedChange={(checked: boolean) => handleSingleUpdate('monthlyReports', checked)}
                 disabled={isSaving}
               />
             </div>
@@ -196,7 +196,7 @@ export function PreferencesSection() {
             </div>
             <Switch
               checked={preferences.dataSharing}
-              onCheckedChange={(checked) => handleSingleUpdate('dataSharing', checked)}
+              onCheckedChange={(checked: boolean) => handleSingleUpdate('dataSharing', checked)}
               disabled={isSaving}
             />
           </div>
@@ -212,7 +212,7 @@ export function PreferencesSection() {
             </div>
             <Switch
               checked={preferences.analyticsTracking}
-              onCheckedChange={(checked) => handleSingleUpdate('analyticsTracking', checked)}
+              onCheckedChange={(checked: boolean) => handleSingleUpdate('analyticsTracking', checked)}
               disabled={isSaving}
             />
           </div>
@@ -226,7 +226,7 @@ export function PreferencesSection() {
             </div>
             <Switch
               checked={preferences.personalizedAds}
-              onCheckedChange={(checked) => handleSingleUpdate('personalizedAds', checked)}
+              onCheckedChange={(checked: boolean) => handleSingleUpdate('personalizedAds', checked)}
               disabled={isSaving}
             />
           </div>
@@ -248,7 +248,7 @@ export function PreferencesSection() {
               <h4 className="font-medium">Tema</h4>
               <Select
                 value={preferences.themeMode}
-                onValueChange={(value) => handleSingleUpdate('themeMode', value)}
+                onValueChange={(value: string) => handleSingleUpdate('themeMode', value)}
                 disabled={isSaving}
               >
                 <SelectTrigger>
@@ -266,7 +266,7 @@ export function PreferencesSection() {
               <h4 className="font-medium">Layout del dashboard</h4>
               <Select
                 value={preferences.dashboardLayout}
-                onValueChange={(value) => handleSingleUpdate('dashboardLayout', value)}
+                onValueChange={(value: string) => handleSingleUpdate('dashboardLayout', value)}
                 disabled={isSaving}
               >
                 <SelectTrigger>
@@ -292,7 +292,7 @@ export function PreferencesSection() {
             </div>
             <Switch
               checked={preferences.compactView}
-              onCheckedChange={(checked) => handleSingleUpdate('compactView', checked)}
+              onCheckedChange={(checked: boolean) => handleSingleUpdate('compactView', checked)}
               disabled={isSaving}
             />
           </div>
@@ -306,7 +306,7 @@ export function PreferencesSection() {
             </div>
             <Switch
               checked={preferences.showBalances}
-              onCheckedChange={(checked) => handleSingleUpdate('showBalances', checked)}
+              onCheckedChange={(checked: boolean) => handleSingleUpdate('showBalances', checked)}
               disabled={isSaving}
             />
           </div>
@@ -330,7 +330,7 @@ export function PreferencesSection() {
               <h4 className="font-medium">Moneda por defecto</h4>
               <Select
                 value={preferences.defaultCurrency}
-                onValueChange={(value) => handleSingleUpdate('defaultCurrency', value)}
+                onValueChange={(value: string) => handleSingleUpdate('defaultCurrency', value)}
                 disabled={isSaving}
               >
                 <SelectTrigger>
@@ -348,7 +348,7 @@ export function PreferencesSection() {
               <h4 className="font-medium">Formato de exportación</h4>
               <Select
                 value={preferences.exportFormat}
-                onValueChange={(value) => handleSingleUpdate('exportFormat', value)}
+                onValueChange={(value: string) => handleSingleUpdate('exportFormat', value)}
                 disabled={isSaving}
               >
                 <SelectTrigger>
@@ -375,7 +375,7 @@ export function PreferencesSection() {
             </div>
             <Switch
               checked={preferences.autoCategorizeTxns}
-              onCheckedChange={(checked) => handleSingleUpdate('autoCategorizeTxns', checked)}
+              onCheckedChange={(checked: boolean) => handleSingleUpdate('autoCategorizeTxns', checked)}
               disabled={isSaving}
             />
           </div>
@@ -389,7 +389,7 @@ export function PreferencesSection() {
             </div>
             <Switch
               checked={preferences.hideSensitiveData}
-              onCheckedChange={(checked) => handleSingleUpdate('hideSensitiveData', checked)}
+              onCheckedChange={(checked: boolean) => handleSingleUpdate('hideSensitiveData', checked)}
               disabled={isSaving}
             />
           </div>
@@ -417,7 +417,7 @@ export function PreferencesSection() {
             </div>
             <Switch
               checked={preferences.esgScoreVisibility}
-              onCheckedChange={(checked) => handleSingleUpdate('esgScoreVisibility', checked)}
+              onCheckedChange={(checked: boolean) => handleSingleUpdate('esgScoreVisibility', checked)}
               disabled={isSaving}
             />
           </div>
@@ -433,7 +433,7 @@ export function PreferencesSection() {
             </div>
             <Switch
               checked={preferences.sustainabilityAlerts}
-              onCheckedChange={(checked) => handleSingleUpdate('sustainabilityAlerts', checked)}
+              onCheckedChange={(checked: boolean) => handleSingleUpdate('sustainabilityAlerts', checked)}
               disabled={isSaving}
             />
           </div>
@@ -447,7 +447,7 @@ export function PreferencesSection() {
             </div>
             <Switch
               checked={preferences.impactReporting}
-              onCheckedChange={(checked) => handleSingleUpdate('impactReporting', checked)}
+              onCheckedChange={(checked: boolean) => handleSingleUpdate('impactReporting', checked)}
               disabled={isSaving}
             />
           </div>
@@ -473,7 +473,7 @@ export function PreferencesSection() {
             </div>
             <Switch
               checked={preferences.autoBackup}
-              onCheckedChange={(checked) => handleSingleUpdate('autoBackup', checked)}
+              onCheckedChange={(checked: boolean) => handleSingleUpdate('autoBackup', checked)}
               disabled={isSaving}
             />
           </div>
@@ -483,7 +483,7 @@ export function PreferencesSection() {
               <h4 className="font-medium">Frecuencia de respaldo</h4>
               <Select
                 value={preferences.backupFrequency || 'weekly'}
-                onValueChange={(value) => handleSingleUpdate('backupFrequency', value)}
+                onValueChange={(value: string) => handleSingleUpdate('backupFrequency', value)}
                 disabled={isSaving}
               >
                 <SelectTrigger>

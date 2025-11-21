@@ -70,7 +70,7 @@ export default function UsersPage() {
               type="text"
               placeholder="Search by email or name..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
               className="w-full"
             />
           </div>

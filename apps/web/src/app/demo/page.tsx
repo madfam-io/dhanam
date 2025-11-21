@@ -281,7 +281,7 @@ export default function DemoPage() {
                     id="age"
                     type="number"
                     value={config.age}
-                    onChange={(e) => handleInputChange('age', parseInt(e.target.value))}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange('age', parseInt(e.target.value))}
                     min={18}
                     max={80}
                   />
@@ -293,7 +293,7 @@ export default function DemoPage() {
                     id="retirementAge"
                     type="number"
                     value={config.retirementAge}
-                    onChange={(e) => handleInputChange('retirementAge', parseInt(e.target.value))}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange('retirementAge', parseInt(e.target.value))}
                     min={config.age + 1}
                     max={85}
                   />
@@ -308,7 +308,7 @@ export default function DemoPage() {
                     id="currentSavings"
                     type="number"
                     value={config.currentSavings}
-                    onChange={(e) =>
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                       handleInputChange('currentSavings', parseFloat(e.target.value))
                     }
                     min={0}
@@ -325,7 +325,7 @@ export default function DemoPage() {
                     id="monthlyContribution"
                     type="number"
                     value={config.monthlyContribution}
-                    onChange={(e) =>
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                       handleInputChange('monthlyContribution', parseFloat(e.target.value))
                     }
                     min={0}
@@ -342,7 +342,7 @@ export default function DemoPage() {
                     id="retirementExpenses"
                     type="number"
                     value={config.retirementExpenses}
-                    onChange={(e) =>
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                       handleInputChange('retirementExpenses', parseFloat(e.target.value))
                     }
                     min={0}
@@ -361,7 +361,7 @@ export default function DemoPage() {
                     id="expectedReturn"
                     type="number"
                     value={(config.expectedReturn * 100).toFixed(1)}
-                    onChange={(e) =>
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                       handleInputChange('expectedReturn', parseFloat(e.target.value) / 100)
                     }
                     min={0}
@@ -376,7 +376,7 @@ export default function DemoPage() {
                     id="volatility"
                     type="number"
                     value={(config.volatility * 100).toFixed(1)}
-                    onChange={(e) =>
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                       handleInputChange('volatility', parseFloat(e.target.value) / 100)
                     }
                     min={0}

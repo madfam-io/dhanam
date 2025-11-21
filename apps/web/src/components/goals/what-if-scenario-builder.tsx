@@ -143,7 +143,7 @@ export function WhatIfScenarioBuilder({ goal, currentProbability }: WhatIfScenar
                 type="number"
                 placeholder="e.g., 500"
                 value={scenario.monthlyContribution || ''}
-                onChange={(e) =>
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   setScenario({
                     ...scenario,
                     monthlyContribution: parseFloat(e.target.value) || undefined,
@@ -162,7 +162,7 @@ export function WhatIfScenarioBuilder({ goal, currentProbability }: WhatIfScenar
                 type="number"
                 placeholder={`Current: ${formatCurrency(targetAmount)}`}
                 value={scenario.targetAmount || ''}
-                onChange={(e) =>
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   setScenario({
                     ...scenario,
                     targetAmount: parseFloat(e.target.value) || undefined,
@@ -180,7 +180,7 @@ export function WhatIfScenarioBuilder({ goal, currentProbability }: WhatIfScenar
                 id="targetDate"
                 type="date"
                 value={scenario.targetDate || ''}
-                onChange={(e) =>
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   setScenario({ ...scenario, targetDate: e.target.value || undefined })
                 }
               />
@@ -197,7 +197,7 @@ export function WhatIfScenarioBuilder({ goal, currentProbability }: WhatIfScenar
                 step="0.1"
                 placeholder="e.g., 7.0 (default)"
                 value={scenario.expectedReturn || ''}
-                onChange={(e) =>
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   setScenario({
                     ...scenario,
                     expectedReturn: parseFloat(e.target.value) || undefined,
@@ -217,7 +217,7 @@ export function WhatIfScenarioBuilder({ goal, currentProbability }: WhatIfScenar
                 step="0.1"
                 placeholder="e.g., 15.0 (default)"
                 value={scenario.volatility || ''}
-                onChange={(e) =>
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   setScenario({ ...scenario, volatility: parseFloat(e.target.value) || undefined })
                 }
               />

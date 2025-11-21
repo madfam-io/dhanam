@@ -56,6 +56,14 @@ export interface SimulationResult {
   max: number;
   timeSeries: MonthlySnapshot[];
   computedAt: Date;
+  metadata?: {
+    iterations: number;
+    monteCarloPaths?: number;
+    [key: string]: unknown;
+  };
+  config?: {
+    [key: string]: unknown;
+  };
 }
 
 export interface GoalProbabilityResult {
@@ -71,6 +79,7 @@ export interface GoalProbabilityResult {
   targetAmount: number;
   monthsRemaining: number;
   simulation: SimulationResult;
+  timeSeries?: Array<{ month: number; probability: number }>;
 }
 
 export interface RetirementSimulationResult {
@@ -102,7 +111,13 @@ export interface ScenarioComparisonResult {
     name: string;
     description: string;
     severity: 'mild' | 'moderate' | 'severe';
+    median?: number;
+    p10?: number;
+    p90?: number;
+    timeSeries?: MonthlySnapshot[];
   };
+  scenarioName?: string;
+  scenarioDescription?: string;
   baseline: SimulationResult;
   stressed: SimulationResult;
   comparison: {
@@ -111,6 +126,7 @@ export interface ScenarioComparisonResult {
     p10Difference: number;
     p10DifferencePercent: number;
     recoveryYears: number | null;
+    recoveryMonths?: number;
     impactSeverity: 'minimal' | 'moderate' | 'significant' | 'critical';
     worthStressTesting: boolean;
   };
@@ -414,6 +430,7 @@ export function useSimulations() {
     calculateGoalProbability,
     simulateRetirement,
     analyzeScenario,
+    compareScenarios: analyzeScenario, // Alias for backwards compatibility
     getRecommendedAllocation,
     loading,
     error,

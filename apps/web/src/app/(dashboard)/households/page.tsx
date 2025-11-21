@@ -154,7 +154,7 @@ export default function HouseholdsPage() {
                 <Input
                   id="name"
                   value={newHousehold.name}
-                  onChange={(e) => setNewHousehold({ ...newHousehold, name: e.target.value })}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewHousehold({ ...newHousehold, name: e.target.value })}
                   placeholder="Smith Family"
                 />
               </div>
@@ -200,7 +200,7 @@ export default function HouseholdsPage() {
                 <Input
                   id="description"
                   value={newHousehold.description}
-                  onChange={(e) =>
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                     setNewHousehold({ ...newHousehold, description: e.target.value })
                   }
                   placeholder="Main family household"

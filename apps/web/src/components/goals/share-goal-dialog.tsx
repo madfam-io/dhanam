@@ -114,7 +114,7 @@ export function ShareGoalDialog({ goal, onShared, trigger }: ShareGoalDialogProp
                 type="email"
                 placeholder="partner@example.com"
                 value={formData.shareWithEmail}
-                onChange={(e) =>
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   setFormData({
                     ...formData,
                     shareWithEmail: e.target.value,
@@ -154,7 +154,7 @@ export function ShareGoalDialog({ goal, onShared, trigger }: ShareGoalDialogProp
                 id="message"
                 placeholder="Let's work together on our retirement savings!"
                 value={formData.message}
-                onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, message: e.target.value })}
                 rows={3}
               />
             </div>

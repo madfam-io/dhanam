@@ -120,7 +120,7 @@ export default function ScenariosPage() {
                     id="initialBalance"
                     type="number"
                     value={config.initialBalance}
-                    onChange={(e) =>
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                       handleInputChange('initialBalance', parseFloat(e.target.value))
                     }
                     min={0}
@@ -137,7 +137,7 @@ export default function ScenariosPage() {
                     id="monthlyContribution"
                     type="number"
                     value={config.monthlyContribution}
-                    onChange={(e) =>
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                       handleInputChange('monthlyContribution', parseFloat(e.target.value))
                     }
                     min={0}
@@ -154,7 +154,7 @@ export default function ScenariosPage() {
                     id="months"
                     type="number"
                     value={config.months}
-                    onChange={(e) => handleInputChange('months', parseInt(e.target.value))}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange('months', parseInt(e.target.value))}
                     min={12}
                     max={600}
                     step={12}
@@ -170,7 +170,7 @@ export default function ScenariosPage() {
                     id="expectedReturn"
                     type="number"
                     value={(config.expectedReturn * 100).toFixed(1)}
-                    onChange={(e) =>
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                       handleInputChange('expectedReturn', parseFloat(e.target.value) / 100)
                     }
                     min={-20}
@@ -185,7 +185,7 @@ export default function ScenariosPage() {
                     id="volatility"
                     type="number"
                     value={(config.volatility * 100).toFixed(1)}
-                    onChange={(e) =>
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                       handleInputChange('volatility', parseFloat(e.target.value) / 100)
                     }
                     min={0}

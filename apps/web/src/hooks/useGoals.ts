@@ -25,6 +25,8 @@ export interface Goal {
   createdAt: string;
   updatedAt: string;
   allocations?: GoalAllocation[];
+  currentProbability?: number;
+  probabilityHistory?: Array<{ month: number; probability: number }>;
 }
 
 export interface GoalAllocation {
