@@ -1,0 +1,94 @@
+# =============================================================================
+# DHANAM - Production Docker Compose
+# =============================================================================
+# Financial wellness platform production deployment
+# Uses shared infrastructure from madfam-infrastructure
+# =============================================================================
+
+name: dhanam-production
+
+services:
+  # NestJS API
+  api:
+    image: ${DOCKER_REGISTRY:-ghcr.io/madfam-io}/dhanam-api:${IMAGE_TAG:-latest}
+    container_name: dhanam-api
+    ports:
+      - '${DHANAM_API_PORT:-8300}:4000'
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      DATABASE_URL: ${DHANAM_DATABASE_URL}
+      REDIS_URL: ${DHANAM_REDIS_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      JANUA_JWT_SECRET: ${JANUA_JWT_SECRET}
+      JANUA_API_URL: ${JANUA_API_URL:-http://janua-api:8001}
+      JANUA_ENABLED: "true"
+      # Financial integrations
+      BELVO_SECRET_ID: ${BELVO_SECRET_ID}
+      BELVO_SECRET_PASSWORD: ${BELVO_SECRET_PASSWORD}
+      BELVO_ENV: ${BELVO_ENV:-production}
+      PLAID_CLIENT_ID: ${PLAID_CLIENT_ID}
+      PLAID_SECRET: ${PLAID_SECRET}
+      PLAID_ENV: ${PLAID_ENV:-production}
+      BITSO_API_KEY: ${BITSO_API_KEY}
+      BITSO_API_SECRET: ${BITSO_API_SECRET}
+      # Email
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_FROM: ${SMTP_FROM}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - madfam-shared-network
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # Next.js Web Frontend
+  web:
+    image: ${DOCKER_REGISTRY:-ghcr.io/madfam-io}/dhanam-web:${IMAGE_TAG:-latest}
+    container_name: dhanam-web
+    ports:
+      - '${DHANAM_WEB_PORT:-3050}:3000'
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8300/api/v1}
+      NEXTAUTH_URL: ${NEXTAUTH_URL}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - madfam-shared-network
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+networks:
+  madfam-shared-network:
+    external: true

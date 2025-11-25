@@ -1,51 +1,107 @@
-version: '3.8'
+# =============================================================================
+# DHANAM - Docker Compose Configuration
+# =============================================================================
+# Personal Finance Management Platform
+# Integrates with MADFAM shared infrastructure and Janua Auth
+# =============================================================================
+
+name: dhanam
 
 services:
-  postgres:
-    image: postgres:16-alpine
-    container_name: dhanam-postgres
+  # NestJS API Backend
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: dhanam-api
+    ports:
+      - '8500:3000'
+    volumes:
+      - ./apps/api:/app/apps/api
+      - ./packages:/app/packages
+      - /app/node_modules
     environment:
-      POSTGRES_USER: dhanam
-      POSTGRES_PASSWORD: dhanam_dev_password
-      POSTGRES_DB: dhanam_dev
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - NODE_ENV=development
+      # Shared PostgreSQL
+      - DATABASE_URL=postgresql://madfam:madfam_dev_password@madfam-postgres-shared:5432/dhanam_db
+      # Shared Redis
+      - REDIS_URL=redis://:redis_dev_password@madfam-redis-shared:6379/3
+      # Janua Auth Integration
+      - JANUA_ENABLED=true
+      - JANUA_JWT_SECRET=dev-shared-janua-secret-32chars!!
+      - JANUA_API_URL=http://janua-api:8001
+      - JANUA_VERIFY_SSL=false
+      # Email (MailHog)
+      - SMTP_HOST=dhanam-mailhog
+      - SMTP_PORT=1025
+      - SMTP_SECURE=false
+      # AWS LocalStack
+      - AWS_ENDPOINT=http://dhanam-localstack:4566
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_REGION=us-east-1
+      # App Config
+      - LOG_LEVEL=debug
+      - CORS_ORIGINS=http://localhost:3030,http://localhost:8500
+    networks:
+      - madfam-shared-network
+    depends_on:
+      - mailhog
+      - localstack
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U dhanam"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      test: ['CMD', 'curl', '-f', 'http://localhost:3000/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
-  redis:
-    image: redis:7-alpine
-    container_name: dhanam-redis
-    command: redis-server --appendonly yes
+  # React Web Frontend
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    container_name: dhanam-web
     ports:
-      - "6379:6379"
+      - '3030:3000'
     volumes:
-      - redis_data:/data
+      - ./apps/web:/app/apps/web
+      - ./packages:/app/packages
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - VITE_API_BASE_URL=http://localhost:8500
+      # Janua Auth (frontend)
+      - VITE_JANUA_ENABLED=true
+      - VITE_JANUA_URL=http://localhost:8001
+    networks:
+      - madfam-shared-network
+    depends_on:
+      - api
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      test: ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://localhost:3000']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
 
+  # MailHog for email testing (Dhanam-specific)
   mailhog:
     image: mailhog/mailhog:latest
     container_name: dhanam-mailhog
     ports:
-      - "1025:1025" # SMTP server
-      - "8025:8025" # Web UI
+      - '1025:1025' # SMTP server
+      - '8025:8025' # Web UI
     environment:
       MH_STORAGE: memory
+    networks:
+      - madfam-shared-network
 
+  # LocalStack for AWS services simulation (Dhanam-specific)
   localstack:
     image: localstack/localstack:latest
     container_name: dhanam-localstack
     ports:
-      - "4566:4566" # LocalStack Gateway
+      - '4566:4566' # LocalStack Gateway
     environment:
       - SERVICES=s3,kms,secretsmanager
       - DEBUG=0
@@ -56,16 +112,26 @@ services:
     volumes:
       - localstack_data:/tmp/localstack
       - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - madfam-shared-network
 
 volumes:
-  postgres_data:
-    driver: local
-  redis_data:
-    driver: local
   localstack_data:
     driver: local
 
+# =============================================================================
+# SHARED INFRASTRUCTURE NOTE:
+# =============================================================================
+# This configuration uses the shared PostgreSQL and Redis from:
+#   ~/labspace/solarpunk-foundry/ops/local/docker-compose.shared.yml
+#
+# Database: madfam-postgres-shared:5432/dhanam_db
+# Redis: madfam-redis-shared:6379/3
+#
+# Start shared infrastructure first:
+#   cd ~/labspace/solarpunk-foundry/ops/bin && ./madfam.sh start
+# =============================================================================
+
 networks:
-  default:
-    name: dhanam-network
-    driver: bridge
+  madfam-shared-network:
+    external: true
