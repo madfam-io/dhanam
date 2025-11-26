@@ -17,7 +17,9 @@ import { JwtAuthGuard } from '../../core/auth/guards/jwt-auth.guard';
 
 import { BillingService } from './billing.service';
 import { UpgradeToPremiumDto } from './dto';
+import { JanuaWebhookPayloadDto, JanuaWebhookEventType } from './dto/janua-webhook.dto';
 import { StripeService } from './stripe.service';
+import { JanuaBillingService } from './janua-billing.service';
 
 @Controller('billing')
 export class BillingController {
@@ -26,6 +28,7 @@ export class BillingController {
   constructor(
     private billingService: BillingService,
     private stripeService: StripeService,
+    private januaBillingService: JanuaBillingService,
     private config: ConfigService
   ) {}
 
@@ -148,5 +151,74 @@ export class BillingController {
     }
 
     return { received: true };
+  }
+
+  /**
+   * Janua webhook handler
+   * Receives billing events from Janua's centralized billing system
+   * Supports: Conekta (MX), Polar (International), Stripe (fallback)
+   */
+  @Post('webhook/janua')
+  @HttpCode(HttpStatus.OK)
+  async handleJanuaWebhook(
+    @Req() req: RawBodyRequest<Request>,
+    @Headers('x-janua-signature') signature: string,
+    @Body() payload: JanuaWebhookPayloadDto
+  ) {
+    // Verify webhook signature
+    const rawBody = req.rawBody?.toString() || JSON.stringify(payload);
+
+    if (!this.januaBillingService.verifyWebhookSignature(rawBody, signature || '')) {
+      this.logger.error('Janua webhook signature verification failed');
+      return { received: false, error: 'Invalid signature' };
+    }
+
+    this.logger.log(
+      `Received Janua webhook: ${payload.type} from provider ${payload.data.provider}`
+    );
+
+    try {
+      switch (payload.type) {
+        case JanuaWebhookEventType.SUBSCRIPTION_CREATED:
+          await this.billingService.handleJanuaSubscriptionCreated(payload);
+          break;
+
+        case JanuaWebhookEventType.SUBSCRIPTION_UPDATED:
+          await this.billingService.handleJanuaSubscriptionUpdated(payload);
+          break;
+
+        case JanuaWebhookEventType.SUBSCRIPTION_CANCELLED:
+          await this.billingService.handleJanuaSubscriptionCancelled(payload);
+          break;
+
+        case JanuaWebhookEventType.SUBSCRIPTION_PAUSED:
+          await this.billingService.handleJanuaSubscriptionPaused(payload);
+          break;
+
+        case JanuaWebhookEventType.SUBSCRIPTION_RESUMED:
+          await this.billingService.handleJanuaSubscriptionResumed(payload);
+          break;
+
+        case JanuaWebhookEventType.PAYMENT_SUCCEEDED:
+          await this.billingService.handleJanuaPaymentSucceeded(payload);
+          break;
+
+        case JanuaWebhookEventType.PAYMENT_FAILED:
+          await this.billingService.handleJanuaPaymentFailed(payload);
+          break;
+
+        case JanuaWebhookEventType.PAYMENT_REFUNDED:
+          await this.billingService.handleJanuaPaymentRefunded(payload);
+          break;
+
+        default:
+          this.logger.log(`Unhandled Janua event type: ${payload.type}`);
+      }
+    } catch (error) {
+      this.logger.error(`Error processing Janua webhook: ${error.message}`, error.stack);
+      return { received: false, error: error.message };
+    }
+
+    return { received: true, event: payload.type };
   }
 }

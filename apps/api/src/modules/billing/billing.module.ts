@@ -6,6 +6,7 @@ import { PrismaModule } from '../../core/prisma/prisma.module';
 
 import { BillingController } from './billing.controller';
 import { BillingService } from './billing.service';
+import { JanuaBillingService } from './janua-billing.service';
 import { SubscriptionGuard } from './guards/subscription.guard';
 import { UsageLimitGuard } from './guards/usage-limit.guard';
 import { UsageTrackingInterceptor } from './interceptors/usage-tracking.interceptor';
@@ -16,6 +17,7 @@ import { StripeService } from './stripe.service';
   controllers: [BillingController],
   providers: [
     BillingService,
+    JanuaBillingService,
     StripeService,
     SubscriptionGuard,
     UsageLimitGuard,
@@ -23,6 +25,7 @@ import { StripeService } from './stripe.service';
   ],
   exports: [
     BillingService,
+    JanuaBillingService,
     StripeService,
     SubscriptionGuard,
     UsageLimitGuard,

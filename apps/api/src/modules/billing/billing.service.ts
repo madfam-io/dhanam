@@ -6,6 +6,7 @@ import Stripe from 'stripe';
 import { AuditService } from '../../core/audit/audit.service';
 import { PrismaService } from '../../core/prisma/prisma.service';
 
+import { JanuaBillingService } from './janua-billing.service';
 import { StripeService } from './stripe.service';
 
 @Injectable()
@@ -35,17 +36,29 @@ export class BillingService {
   constructor(
     private prisma: PrismaService,
     private stripe: StripeService,
+    private januaBilling: JanuaBillingService,
     private audit: AuditService,
     private config: ConfigService
   ) {}
 
   /**
    * Initiate upgrade to premium subscription
+   * Uses Janua multi-provider billing when available, falls back to direct Stripe
    */
-  async upgradeToPremium(userId: string): Promise<{ checkoutUrl: string }> {
+  async upgradeToPremium(
+    userId: string,
+    countryCode: string = 'US'
+  ): Promise<{ checkoutUrl: string; provider: string }> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true, email: true, name: true, stripeCustomerId: true },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        stripeCustomerId: true,
+        januaCustomerId: true,
+        billingProvider: true,
+      },
     });
 
     if (!user) {
@@ -62,7 +75,77 @@ export class BillingService {
       throw new Error('User is already on premium tier');
     }
 
-    // Create or retrieve Stripe customer
+    const webUrl = this.config.get<string>('WEB_URL', 'http://localhost:3000');
+
+    // Try Janua multi-provider billing first
+    if (this.januaBilling.isEnabled()) {
+      return this.upgradeToPremiumViaJanua(user, countryCode, webUrl);
+    }
+
+    // Fallback to direct Stripe
+    return this.upgradeToPremiumViaStripe(user, webUrl);
+  }
+
+  /**
+   * Upgrade via Janua (multi-provider: Conekta for MX, Polar for international)
+   */
+  private async upgradeToPremiumViaJanua(
+    user: { id: string; email: string; name: string; januaCustomerId?: string },
+    countryCode: string,
+    webUrl: string
+  ): Promise<{ checkoutUrl: string; provider: string }> {
+    let customerId = user.januaCustomerId;
+    let provider = this.januaBilling.getProviderForCountry(countryCode);
+
+    if (!customerId) {
+      const result = await this.januaBilling.createCustomer({
+        email: user.email,
+        name: user.name,
+        countryCode,
+        metadata: { userId: user.id },
+      });
+
+      customerId = result.customerId;
+      provider = result.provider;
+
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: {
+          januaCustomerId: customerId,
+          billingProvider: provider,
+        },
+      });
+    }
+
+    const result = await this.januaBilling.createCheckoutSession({
+      customerId,
+      customerEmail: user.email,
+      priceId: 'premium',
+      countryCode,
+      successUrl: `${webUrl}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancelUrl: `${webUrl}/billing/cancel`,
+      metadata: { userId: user.id },
+    });
+
+    await this.audit.log({
+      userId: user.id,
+      action: 'BILLING_UPGRADE_INITIATED',
+      severity: 'medium',
+      metadata: { sessionId: result.sessionId, provider: result.provider },
+    });
+
+    this.logger.log(`Upgrade initiated via Janua (${result.provider}) for user ${user.id}`);
+
+    return { checkoutUrl: result.checkoutUrl, provider: result.provider };
+  }
+
+  /**
+   * Upgrade via direct Stripe (fallback)
+   */
+  private async upgradeToPremiumViaStripe(
+    user: { id: string; email: string; name: string; stripeCustomerId?: string },
+    webUrl: string
+  ): Promise<{ checkoutUrl: string; provider: string }> {
     let customerId = user.stripeCustomerId;
 
     if (!customerId) {
@@ -75,33 +158,31 @@ export class BillingService {
       customerId = customer.id;
 
       await this.prisma.user.update({
-        where: { id: userId },
+        where: { id: user.id },
         data: { stripeCustomerId: customerId },
       });
     }
 
-    // Create checkout session
     const priceId = this.config.get<string>('STRIPE_PREMIUM_PRICE_ID');
-    const webUrl = this.config.get<string>('WEB_URL', 'http://localhost:3000');
 
     const session = await this.stripe.createCheckoutSession({
       customerId,
       priceId,
       successUrl: `${webUrl}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
       cancelUrl: `${webUrl}/billing/cancel`,
-      metadata: { userId },
+      metadata: { userId: user.id },
     });
 
     await this.audit.log({
-      userId,
+      userId: user.id,
       action: 'BILLING_UPGRADE_INITIATED',
       severity: 'medium',
-      metadata: { sessionId: session.id },
+      metadata: { sessionId: session.id, provider: 'stripe' },
     });
 
-    this.logger.log(`Upgrade initiated for user ${userId}, session: ${session.id}`);
+    this.logger.log(`Upgrade initiated via Stripe for user ${user.id}, session: ${session.id}`);
 
-    return { checkoutUrl: session.url };
+    return { checkoutUrl: session.url, provider: 'stripe' };
   }
 
   /**
@@ -458,5 +539,252 @@ export class BillingService {
       orderBy: { createdAt: 'desc' },
       take: limit,
     });
+  }
+
+  // ==========================================
+  // Janua Webhook Handlers
+  // ==========================================
+
+  /**
+   * Handle Janua subscription created event
+   */
+  async handleJanuaSubscriptionCreated(payload: any): Promise<void> {
+    const { customer_id, subscription_id, plan_id, provider } = payload.data;
+
+    const user = await this.prisma.user.findFirst({
+      where: { januaCustomerId: customer_id },
+    });
+
+    if (!user) {
+      this.logger.warn(`User not found for Janua customer: ${customer_id}`);
+      return;
+    }
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        subscriptionTier: 'premium',
+        subscriptionStartedAt: new Date(),
+        billingProvider: provider,
+      },
+    });
+
+    await this.prisma.billingEvent.create({
+      data: {
+        userId: user.id,
+        eventType: 'subscription_created',
+        status: 'succeeded',
+        provider: provider,
+        providerEventId: payload.id,
+        amount: 0,
+        currency: payload.data.currency || 'USD',
+        metadata: { subscription_id, plan_id },
+      },
+    });
+
+    this.logger.log(`Janua subscription created for user ${user.id} via ${provider}`);
+  }
+
+  /**
+   * Handle Janua subscription updated event
+   */
+  async handleJanuaSubscriptionUpdated(payload: any): Promise<void> {
+    const { customer_id, plan_id, status, provider } = payload.data;
+
+    const user = await this.prisma.user.findFirst({
+      where: { januaCustomerId: customer_id },
+    });
+
+    if (!user) {
+      this.logger.warn(`User not found for Janua customer: ${customer_id}`);
+      return;
+    }
+
+    const tier = status === 'active' ? 'premium' : 'free';
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { subscriptionTier: tier },
+    });
+
+    this.logger.log(`Janua subscription updated for user ${user.id}: ${status}`);
+  }
+
+  /**
+   * Handle Janua subscription cancelled event
+   */
+  async handleJanuaSubscriptionCancelled(payload: any): Promise<void> {
+    const { customer_id, provider } = payload.data;
+
+    const user = await this.prisma.user.findFirst({
+      where: { januaCustomerId: customer_id },
+    });
+
+    if (!user) {
+      this.logger.warn(`User not found for Janua customer: ${customer_id}`);
+      return;
+    }
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        subscriptionTier: 'free',
+        subscriptionExpiresAt: new Date(),
+      },
+    });
+
+    await this.prisma.billingEvent.create({
+      data: {
+        userId: user.id,
+        eventType: 'subscription_cancelled',
+        status: 'succeeded',
+        provider: provider,
+        providerEventId: payload.id,
+        amount: 0,
+        currency: payload.data.currency || 'USD',
+        metadata: {},
+      },
+    });
+
+    this.logger.log(`Janua subscription cancelled for user ${user.id}`);
+  }
+
+  /**
+   * Handle Janua subscription paused event
+   */
+  async handleJanuaSubscriptionPaused(payload: any): Promise<void> {
+    const { customer_id } = payload.data;
+
+    const user = await this.prisma.user.findFirst({
+      where: { januaCustomerId: customer_id },
+    });
+
+    if (!user) {
+      return;
+    }
+
+    // Keep premium tier but mark as paused in metadata
+    this.logger.log(`Janua subscription paused for user ${user.id}`);
+  }
+
+  /**
+   * Handle Janua subscription resumed event
+   */
+  async handleJanuaSubscriptionResumed(payload: any): Promise<void> {
+    const { customer_id } = payload.data;
+
+    const user = await this.prisma.user.findFirst({
+      where: { januaCustomerId: customer_id },
+    });
+
+    if (!user) {
+      return;
+    }
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { subscriptionTier: 'premium' },
+    });
+
+    this.logger.log(`Janua subscription resumed for user ${user.id}`);
+  }
+
+  /**
+   * Handle Janua payment succeeded event
+   */
+  async handleJanuaPaymentSucceeded(payload: any): Promise<void> {
+    const { customer_id, amount, currency, provider } = payload.data;
+
+    const user = await this.prisma.user.findFirst({
+      where: { januaCustomerId: customer_id },
+    });
+
+    if (!user) {
+      this.logger.warn(`User not found for Janua customer: ${customer_id}`);
+      return;
+    }
+
+    await this.prisma.billingEvent.create({
+      data: {
+        userId: user.id,
+        eventType: 'payment_succeeded',
+        status: 'succeeded',
+        provider: provider,
+        providerEventId: payload.id,
+        amount: amount || 0,
+        currency: currency || 'USD',
+        metadata: {},
+      },
+    });
+
+    // Ensure subscription is active
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { subscriptionTier: 'premium' },
+    });
+
+    this.logger.log(`Janua payment succeeded for user ${user.id}: ${currency} ${amount}`);
+  }
+
+  /**
+   * Handle Janua payment failed event
+   */
+  async handleJanuaPaymentFailed(payload: any): Promise<void> {
+    const { customer_id, amount, currency, provider } = payload.data;
+
+    const user = await this.prisma.user.findFirst({
+      where: { januaCustomerId: customer_id },
+    });
+
+    if (!user) {
+      this.logger.warn(`User not found for Janua customer: ${customer_id}`);
+      return;
+    }
+
+    await this.prisma.billingEvent.create({
+      data: {
+        userId: user.id,
+        eventType: 'payment_failed',
+        status: 'failed',
+        provider: provider,
+        providerEventId: payload.id,
+        amount: amount || 0,
+        currency: currency || 'USD',
+        metadata: {},
+      },
+    });
+
+    this.logger.warn(`Janua payment failed for user ${user.id}`);
+    // Note: Don't immediately downgrade - Janua/provider will retry
+  }
+
+  /**
+   * Handle Janua payment refunded event
+   */
+  async handleJanuaPaymentRefunded(payload: any): Promise<void> {
+    const { customer_id, amount, currency, provider } = payload.data;
+
+    const user = await this.prisma.user.findFirst({
+      where: { januaCustomerId: customer_id },
+    });
+
+    if (!user) {
+      return;
+    }
+
+    await this.prisma.billingEvent.create({
+      data: {
+        userId: user.id,
+        eventType: 'refund_issued',
+        status: 'succeeded',
+        provider: provider,
+        providerEventId: payload.id,
+        amount: amount || 0,
+        currency: currency || 'USD',
+        metadata: {},
+      },
+    });
+
+    this.logger.log(`Janua refund processed for user ${user.id}: ${currency} ${amount}`);
   }
 }

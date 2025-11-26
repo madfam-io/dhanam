@@ -1,6 +1,7 @@
 import { BullModule } from '@nestjs/bull';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { HttpModule } from '@nestjs/axios';
 
 import { PrismaModule } from '@core/prisma/prisma.module';
 import { AnalyticsModule } from '@modules/analytics/analytics.module';
@@ -8,6 +9,7 @@ import { AnalyticsModule } from '@modules/analytics/analytics.module';
 import { EmailController } from './email.controller';
 import { EmailProcessor } from './email.processor';
 import { EmailService } from './email.service';
+import { JanuaEmailService } from './janua-email.service';
 import { MonthlyReportTask } from './tasks/monthly-report.task';
 import { WeeklySummaryTask } from './tasks/weekly-summary.task';
 
@@ -16,6 +18,10 @@ import { WeeklySummaryTask } from './tasks/weekly-summary.task';
     ConfigModule,
     PrismaModule,
     AnalyticsModule,
+    HttpModule.register({
+      timeout: 30000,
+      maxRedirects: 3,
+    }),
     BullModule.registerQueue({
       name: 'email',
       defaultJobOptions: {
@@ -30,7 +36,13 @@ import { WeeklySummaryTask } from './tasks/weekly-summary.task';
     }),
   ],
   controllers: [EmailController],
-  providers: [EmailService, EmailProcessor, WeeklySummaryTask, MonthlyReportTask],
-  exports: [EmailService],
+  providers: [
+    EmailService,
+    JanuaEmailService,
+    EmailProcessor,
+    WeeklySummaryTask,
+    MonthlyReportTask,
+  ],
+  exports: [EmailService, JanuaEmailService],
 })
 export class EmailModule {}
