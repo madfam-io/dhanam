@@ -1,56 +1,85 @@
-version: '3.8'
+# ============================================
+# DHANAM LOCAL DEVELOPMENT (MADFAM SHARED INFRA)
+# ============================================
+# Connects to madfam-shared-network for:
+# - PostgreSQL: madfam-postgres-shared:5432/dhanam_db
+# - Redis: madfam-redis-shared:6379
+# - MinIO: madfam-minio-shared:9000
+# - MailHog: madfam-mailhog:1025
+#
+# Start shared infra first:
+#   cd ~/labspace/solarpunk-foundry/ops/local
+#   docker compose -f docker-compose.shared.yml up -d
+# ============================================
 
-# Development-specific overrides and additional services
+name: dhanam-dev
+
 services:
-  postgres:
-    ports:
-      - "5432:5432"
+  # ==========================================
+  # Dhanam API (NestJS)
+  # ==========================================
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile.dev
+    container_name: dhanam-api-dev
     environment:
-      POSTGRES_USER: dhanam
-      POSTGRES_PASSWORD: dhanam_dev_password
-      POSTGRES_DB: dhanam_dev
-      # Enable query logging for development
-      POSTGRES_INITDB_ARGS: "-c log_statement=all"
-
-  pgadmin:
-    image: dpage/pgadmin4:latest
-    container_name: dhanam-pgadmin
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@dhanam.local
-      PGADMIN_DEFAULT_PASSWORD: admin
-      PGADMIN_CONFIG_SERVER_MODE: 'False'
+      NODE_ENV: development
+      PORT: 3000
+      # Database - Shared PostgreSQL
+      DATABASE_URL: postgresql://madfam:madfam_dev_password@madfam-postgres-shared:5432/dhanam_db?schema=public
+      # Redis - Shared
+      REDIS_URL: redis://:redis_dev_password@madfam-redis-shared:6379/3
+      # MinIO/S3 - Shared
+      S3_ENDPOINT: http://madfam-minio-shared:9000
+      S3_ACCESS_KEY: minioadmin
+      S3_SECRET_KEY: minioadmin
+      S3_BUCKET: dhanam-uploads
+      # Janua Auth
+      JANUA_URL: http://janua-api:4000
+      JANUA_API_KEY: ${JANUA_API_KEY:-dev-api-key}
+      JWT_SECRET: ${JWT_SECRET:-dev-shared-janua-secret-32chars!!}
+      # Email - MailHog
+      SMTP_HOST: madfam-mailhog
+      SMTP_PORT: 1025
+      SMTP_SECURE: 'false'
     ports:
-      - "5050:80"
-    depends_on:
-      - postgres
+      - '3030:3000'
     volumes:
-      - pgadmin_data:/var/lib/pgadmin
+      - ./apps/api:/app/apps/api
+      - ./packages:/app/packages
+      - /app/node_modules
+      - /app/apps/api/node_modules
+    networks:
+      - madfam-shared-network
+    restart: unless-stopped
 
-  redis-commander:
-    image: rediscommander/redis-commander:latest
-    container_name: dhanam-redis-commander
+  # ==========================================
+  # Dhanam Web (Next.js)
+  # ==========================================
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile.dev
+    container_name: dhanam-web-dev
     environment:
-      REDIS_HOSTS: local:redis:6379
+      NODE_ENV: development
+      NEXT_PUBLIC_API_URL: http://localhost:3030
+      NEXT_PUBLIC_JANUA_URL: http://localhost:4000
     ports:
-      - "8081:8081"
-    depends_on:
-      - redis
+      - '3031:3000'
+    volumes:
+      - ./apps/web:/app/apps/web
+      - ./packages:/app/packages
+      - /app/node_modules
+      - /app/apps/web/node_modules
+    networks:
+      - madfam-shared-network
+    restart: unless-stopped
 
-  # Mock provider services for development
-  mock-belvo:
-    image: stoplight/prism:latest
-    container_name: dhanam-mock-belvo
-    command: mock -h 0.0.0.0 -p 4010 https://raw.githubusercontent.com/belvo-finance/belvo-openapi/main/openapi.yml
-    ports:
-      - "4010:4010"
-
-  mock-plaid:
-    image: stoplight/prism:latest
-    container_name: dhanam-mock-plaid
-    command: mock -h 0.0.0.0 -p 4011 https://raw.githubusercontent.com/plaid/plaid-openapi/master/2020-09-14.yml
-    ports:
-      - "4011:4011"
-
-volumes:
-  pgadmin_data:
-    driver: local
+# ==========================================
+# Networks - Use External Shared Network
+# ==========================================
+networks:
+  madfam-shared-network:
+    external: true

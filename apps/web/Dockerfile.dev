@@ -1,0 +1,38 @@
+# =============================================================================
+# DHANAM WEB - Development Dockerfile
+# =============================================================================
+# Hot-reload enabled Next.js development server
+# Part of MADFAM ecosystem - connects to Dhanam API and Janua Auth
+# =============================================================================
+
+FROM node:20-alpine
+
+# Install dependencies for native modules
+RUN apk add --no-cache libc6-compat curl
+
+# Install pnpm
+RUN corepack enable && corepack prepare pnpm@8.6.7 --activate
+
+WORKDIR /app
+
+# Copy workspace configuration
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+
+# Copy all package.json files for workspace resolution
+COPY apps/web/package.json ./apps/web/
+COPY packages/shared/package.json ./packages/shared/
+COPY packages/config/package.json ./packages/config/
+COPY packages/ui/package.json ./packages/ui/
+
+# Install all dependencies
+RUN pnpm install
+
+# Copy source code
+COPY . .
+
+WORKDIR /app/apps/web
+
+EXPOSE 3000
+
+# Development command with hot reload
+CMD ["pnpm", "dev"]
