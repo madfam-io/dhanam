@@ -15,7 +15,6 @@
   },
   "dependencies": {
     "@janua/react-sdk": "^0.1.0",
-    "@madfam/analytics": "^0.1.0",
     "@madfam/ui": "^0.1.0",
     "@coforma/client": "^0.1.0",
     "@dhanam/shared": "workspace:*",
