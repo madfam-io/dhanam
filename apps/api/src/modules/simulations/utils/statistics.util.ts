@@ -91,6 +91,12 @@ export class StatisticsUtil {
     if (x.length !== y.length || x.length < 2) {
       throw new Error('Arrays must have the same length and at least 2 elements');
     }
+    // Handle constant arrays (std dev = 0) which would return NaN
+    const stdX = this.stdDev(x);
+    const stdY = this.stdDev(y);
+    if (stdX === 0 || stdY === 0) {
+      return 0; // Correlation undefined for constant arrays, return 0
+    }
     return jStat.corrcoeff(x, y);
   }
 
@@ -296,5 +302,84 @@ export class StatisticsUtil {
 
     const product = values.reduce((acc, val) => acc * val, 1);
     return Math.pow(product, 1 / values.length);
+  }
+
+  /**
+   * Calculate maximum drawdown from a series of values
+   * @param values Array of portfolio values over time
+   * @returns Maximum drawdown as a negative decimal (e.g., -0.25 for 25% drawdown)
+   */
+  static maxDrawdown(values: number[]): number {
+    if (values.length < 2) return 0;
+
+    let maxDrawdown = 0;
+    let peak = values[0];
+
+    for (let i = 1; i < values.length; i++) {
+      if (values[i] > peak) {
+        peak = values[i];
+      }
+      const drawdown = (values[i] - peak) / peak;
+      if (drawdown < maxDrawdown) {
+        maxDrawdown = drawdown;
+      }
+    }
+
+    return maxDrawdown;
+  }
+
+  /**
+   * Calculate skewness of a dataset
+   * @param values Array of numbers
+   * @returns Skewness value (0 = symmetric, >0 = right skewed, <0 = left skewed)
+   */
+  static skewness(values: number[]): number {
+    if (values.length < 3) return 0;
+    const n = values.length;
+    const mean = this.mean(values);
+    const stdDev = this.stdDev(values);
+    if (stdDev === 0) return 0;
+
+    const sum = values.reduce((acc, val) => acc + Math.pow((val - mean) / stdDev, 3), 0);
+    return (n / ((n - 1) * (n - 2))) * sum;
+  }
+
+  /**
+   * Calculate kurtosis of a dataset
+   * @param values Array of numbers
+   * @returns Excess kurtosis (0 = normal, >0 = heavy tails, <0 = light tails)
+   */
+  static kurtosis(values: number[]): number {
+    if (values.length < 4) return 0;
+    const n = values.length;
+    const mean = this.mean(values);
+    const stdDev = this.stdDev(values);
+    if (stdDev === 0) return 0;
+
+    const sum = values.reduce((acc, val) => acc + Math.pow((val - mean) / stdDev, 4), 0);
+    const rawKurtosis = ((n * (n + 1)) / ((n - 1) * (n - 2) * (n - 3))) * sum;
+    const correction = (3 * Math.pow(n - 1, 2)) / ((n - 2) * (n - 3));
+    return rawKurtosis - correction;
+  }
+
+  /**
+   * Generate random number from uniform distribution [0, 1)
+   */
+  static randomUniform(): number {
+    return Math.random();
+  }
+
+  /**
+   * Calculate annuity payment (PMT)
+   * @param presentValue Loan amount
+   * @param rate Interest rate per period
+   * @param periods Number of periods
+   * @returns Payment amount per period
+   */
+  static annuityPayment(presentValue: number, rate: number, periods: number): number {
+    if (rate === 0) return presentValue / periods;
+    return (
+      (presentValue * (rate * Math.pow(1 + rate, periods))) / (Math.pow(1 + rate, periods) - 1)
+    );
   }
 }

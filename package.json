@@ -4,7 +4,7 @@
   "private": true,
   "description": "Comprehensive budget and wealth tracking for LATAM",
   "author": "Dhanam Team",
-  "license": "MIT",
+  "license": "AGPL-3.0-only",
   "engines": {
     "node": ">=20.0.0",
     "pnpm": ">=8.0.0"
