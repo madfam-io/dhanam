@@ -562,15 +562,20 @@ export class BitsoService {
       return false;
     }
 
-    const expectedSignature = crypto
-      .createHmac('sha256', this.webhookSecret)
-      .update(payload, 'utf8')
-      .digest('hex');
+    try {
+      const expectedSignature = crypto
+        .createHmac('sha256', this.webhookSecret)
+        .update(payload, 'utf8')
+        .digest('hex');
 
-    return crypto.timingSafeEqual(
-      Buffer.from(signature, 'hex') as any,
-      Buffer.from(expectedSignature, 'hex') as any
-    );
+      return crypto.timingSafeEqual(
+        Buffer.from(signature, 'hex') as any,
+        Buffer.from(expectedSignature, 'hex') as any
+      );
+    } catch {
+      // Catch RangeError from invalid hex strings or length mismatches
+      return false;
+    }
   }
 
   async getPortfolioSummary(userId: string): Promise<{
