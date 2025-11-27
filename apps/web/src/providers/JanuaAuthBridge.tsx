@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useCallback } from 'react';
-import { JanuaProvider, useJanua } from '@janua/react-sdk';
+// TODO: Replace with '@janua/react-sdk' once published to npm.madfam.io
+import { JanuaProvider, useJanua } from '~/lib/janua-sdk-stub';
 import { useAuth } from '~/lib/hooks/use-auth';
 import type { UserProfile, AuthTokens, Locale } from '@dhanam/shared';
 

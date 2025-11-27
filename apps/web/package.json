@@ -14,8 +14,6 @@
     "clean": "rm -rf .next .turbo node_modules"
   },
   "dependencies": {
-    "@janua/react-sdk": "^0.1.0",
-    "@coforma/client": "^0.1.0",
     "@dhanam/shared": "workspace:*",
     "@dhanam/ui": "workspace:*",
     "@hookform/resolvers": "^3.3.4",
