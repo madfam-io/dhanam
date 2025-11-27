@@ -46,36 +46,49 @@
    cd dhanam
    ```
 
-2. **Install dependencies**
+2. **Configure NPM Registry**
+   
+   Dhanam uses MADFAM's private npm registry for internal packages. Create or update your `.npmrc`:
+   ```bash
+   # Add to your project's .npmrc or ~/.npmrc
+   @madfam:registry=https://npm.madfam.io
+   @dhanam:registry=https://npm.madfam.io
+   @janua:registry=https://npm.madfam.io
+   //npm.madfam.io/:_authToken=${NPM_MADFAM_TOKEN}
+   ```
+   
+   Set the `NPM_MADFAM_TOKEN` environment variable with your registry token.
+
+3. **Install dependencies**
    ```bash
    pnpm install
    ```
 
-3. **Start infrastructure**
+4. **Start infrastructure**
    ```bash
    pnpm dev:infra
    ```
    This starts PostgreSQL, Redis, and Mailhog in Docker containers.
 
-4. **Set up environment variables**
+5. **Set up environment variables**
    ```bash
    # Copy example env files
    cp apps/api/.env.example apps/api/.env
    cp apps/web/.env.example apps/web/.env
    ```
 
-5. **Run database migrations**
+6. **Run database migrations**
    ```bash
    pnpm db:push
    ```
 
-6. **Seed the database (optional)**
+7. **Seed the database (optional)**
    ```bash
    pnpm db:seed
    ```
    This creates a demo user (demo@dhanam.app / demo123) with sample data.
 
-7. **Start development servers**
+8. **Start development servers**
    ```bash
    pnpm dev
    ```

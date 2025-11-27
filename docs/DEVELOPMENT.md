@@ -16,6 +16,22 @@ Before you begin, ensure you have the following installed:
 - **PostgreSQL client** (for database access)
 - **Redis CLI** (for cache inspection)
 
+### NPM Registry Configuration
+
+Dhanam uses MADFAM's private npm registry (`npm.madfam.io`) for internal packages. Configure your `.npmrc` before running `pnpm install`:
+
+```bash
+# Add to your project's .npmrc or ~/.npmrc
+@madfam:registry=https://npm.madfam.io
+@dhanam:registry=https://npm.madfam.io
+@janua:registry=https://npm.madfam.io
+//npm.madfam.io/:_authToken=${NPM_MADFAM_TOKEN}
+```
+
+**Get your token:** Contact the MADFAM team or generate one from the registry admin panel.
+
+**For CI/CD:** Add `NPM_MADFAM_TOKEN` as a secret in your GitHub Actions or CI platform.
+
 ## Quick Start
 
 ```bash
