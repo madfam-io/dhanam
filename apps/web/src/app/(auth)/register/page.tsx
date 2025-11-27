@@ -6,10 +6,11 @@ import { useRouter } from 'next/navigation';
 import { useMutation } from '@tanstack/react-query';
 import { RegisterForm } from '~/components/forms/register-form';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@dhanam/ui';
-import { Alert, AlertDescription } from '@dhanam/ui';
+import { Alert, AlertDescription, Button, Separator } from '@dhanam/ui';
 import { useAuth } from '~/lib/hooks/use-auth';
 import { authApi } from '~/lib/api/auth';
 import { ApiError } from '~/lib/api/client';
+import { oauthProviders, loginWithOAuth, isJanuaOAuthEnabled } from '~/lib/janua-oauth';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -31,6 +32,8 @@ export default function RegisterPage() {
     },
   });
 
+  const showOAuth = isJanuaOAuthEnabled();
+
   return (
     <Card>
       <CardHeader>
@@ -43,6 +46,40 @@ export default function RegisterPage() {
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
+
+        {/* OAuth Providers */}
+        {showOAuth && (
+          <>
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              {oauthProviders.slice(0, 4).map((provider) => (
+                <Button
+                  key={provider.id}
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => {
+                    setError(null);
+                    loginWithOAuth(provider.id, '/onboarding');
+                  }}
+                >
+                  <span className="mr-2">{provider.icon}</span>
+                  {provider.name}
+                </Button>
+              ))}
+            </div>
+
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center">
+                <Separator className="w-full" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">
+                  Or register with email
+                </span>
+              </div>
+            </div>
+          </>
+        )}
+
         <RegisterForm
           onSubmit={(data) => {
             setError(null);

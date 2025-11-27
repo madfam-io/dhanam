@@ -12,6 +12,7 @@ import { authApi } from '~/lib/api/auth';
 import { ApiError } from '~/lib/api/client';
 import { useTranslation } from '@dhanam/shared';
 import { LocaleSwitcher } from '~/components/locale-switcher';
+import { oauthProviders, loginWithOAuth, isJanuaOAuthEnabled } from '~/lib/janua-oauth';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -53,6 +54,8 @@ export default function LoginPage() {
     },
   });
 
+  const showOAuth = isJanuaOAuthEnabled();
+
   return (
     <div className="flex flex-col space-y-4">
       <div className="flex justify-end">
@@ -69,6 +72,40 @@ export default function LoginPage() {
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
+
+          {/* OAuth Providers */}
+          {showOAuth && (
+            <>
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                {oauthProviders.slice(0, 4).map((provider) => (
+                  <Button
+                    key={provider.id}
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => {
+                      setError(null);
+                      loginWithOAuth(provider.id);
+                    }}
+                  >
+                    <span className="mr-2">{provider.icon}</span>
+                    {provider.name}
+                  </Button>
+                ))}
+              </div>
+
+              <div className="relative my-6">
+                <div className="absolute inset-0 flex items-center">
+                  <Separator className="w-full" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-muted-foreground">
+                    {t('orContinueWith') || 'Or continue with email'}
+                  </span>
+                </div>
+              </div>
+            </>
+          )}
+
           <LoginForm
             onSubmit={(data) => {
               setError(null);
