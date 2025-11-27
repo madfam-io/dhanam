@@ -5,8 +5,31 @@
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    },
+    "./tokens": {
+      "types": "./src/tokens/index.ts",
+      "import": "./dist/tokens/index.mjs",
+      "require": "./dist/tokens/index.js"
+    },
+    "./tokens/golden-ratio": {
+      "types": "./src/tokens/golden-ratio.ts",
+      "import": "./dist/tokens/golden-ratio.mjs",
+      "require": "./dist/tokens/golden-ratio.js"
+    },
+    "./tokens/tailwind-preset": {
+      "types": "./src/tokens/tailwind-preset.ts",
+      "import": "./dist/tokens/tailwind-preset.mjs",
+      "require": "./dist/tokens/tailwind-preset.js"
+    }
+  },
   "files": [
-    "dist/**"
+    "dist/**",
+    "src/**"
   ],
   "scripts": {
     "build": "tsup",
@@ -35,7 +58,13 @@
   },
   "peerDependencies": {
     "react": "^18.2.0 || ^19.0.0",
-    "react-dom": "^18.2.0 || ^19.0.0"
+    "react-dom": "^18.2.0 || ^19.0.0",
+    "tailwindcss": "^3.4.0"
+  },
+  "peerDependenciesMeta": {
+    "tailwindcss": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@dhanam/config": "workspace:*",
@@ -43,6 +72,7 @@
     "@types/react-dom": "^19.0.0",
     "react": "18.3.1",
     "react-dom": "18.3.1",
+    "tailwindcss": "^3.4.1",
     "tsup": "^8.5.1",
     "typescript": "^5.9.3"
   }
