@@ -94,9 +94,9 @@
    ```
 
    This starts:
-   - API server at http://localhost:4000
-   - Web dashboard at http://localhost:3000
-   - API documentation at http://localhost:4000/docs
+   - API server at http://localhost:4010
+   - Web dashboard at http://localhost:3040
+   - API documentation at http://localhost:4010/docs
 
 ## Project Structure
 
@@ -205,7 +205,7 @@ export function LoginForm() {
 ## API Documentation
 
 When running in development, Swagger documentation is available at:
-http://localhost:4000/docs
+http://localhost:4010/docs
 
 ## Testing
 
