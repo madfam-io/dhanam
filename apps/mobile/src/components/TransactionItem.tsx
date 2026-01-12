@@ -10,6 +10,7 @@ import {
   Chip,
 } from '@/lib/react-native-compat';
 import { formatCurrency } from '@/utils/currency';
+import { getTransactionColor, surfaceColors } from '@/tokens/colors';
 
 interface TransactionItemProps {
   transaction: Transaction;
@@ -45,19 +46,6 @@ export function TransactionItem({ transaction, onPress }: TransactionItemProps) 
         return 'medical';
       default:
         return 'cash';
-    }
-  };
-
-  const getTransactionColor = (type: string) => {
-    switch (type) {
-      case 'income':
-        return '#4CAF50';
-      case 'expense':
-        return '#F44336';
-      case 'transfer':
-        return '#2196F3';
-      default:
-        return '#757575';
     }
   };
 
@@ -129,7 +117,7 @@ export function TransactionItem({ transaction, onPress }: TransactionItemProps) 
 
 const styles = StyleSheet.create({
   item: {
-    backgroundColor: 'white',
+    backgroundColor: surfaceColors.light.surface,
     paddingVertical: 8,
   },
   description: {
@@ -138,7 +126,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   date: {
-    color: '#757575',
+    color: surfaceColors.light.textSecondary,
     marginRight: 8,
   },
   category: {

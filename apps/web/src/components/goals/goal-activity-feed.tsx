@@ -61,16 +61,16 @@ export function GoalActivityFeed({ goalId }: GoalActivityFeedProps) {
       case 'contribution_added':
         return <DollarSign className="h-4 w-4" />;
       case 'probability_improved':
-        return <TrendingUp className="h-4 w-4 text-green-600" />;
+        return <TrendingUp className="h-4 w-4 text-success" />;
       case 'probability_declined':
-        return <TrendingDown className="h-4 w-4 text-red-600" />;
+        return <TrendingDown className="h-4 w-4 text-destructive" />;
       case 'milestone_reached':
-        return <CheckCircle2 className="h-4 w-4 text-green-600" />;
+        return <CheckCircle2 className="h-4 w-4 text-success" />;
       case 'target_date_extended':
       case 'target_amount_adjusted':
         return <Calendar className="h-4 w-4" />;
       case 'achieved':
-        return <CheckCircle2 className="h-4 w-4 text-green-600" />;
+        return <CheckCircle2 className="h-4 w-4 text-success" />;
       default:
         return <Target className="h-4 w-4" />;
     }
@@ -82,13 +82,13 @@ export function GoalActivityFeed({ goalId }: GoalActivityFeedProps) {
       action.includes('milestone') ||
       action === 'achieved'
     ) {
-      return 'text-green-600 dark:text-green-400';
+      return 'text-success';
     }
     if (action.includes('probability_declined') || action.includes('declined')) {
-      return 'text-red-600 dark:text-red-400';
+      return 'text-destructive';
     }
     if (action.includes('shared') || action.includes('accepted')) {
-      return 'text-blue-600 dark:text-blue-400';
+      return 'text-info';
     }
     return 'text-muted-foreground';
   };

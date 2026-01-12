@@ -72,24 +72,24 @@ export function GoalHealthScore({ goals }: GoalHealthScoreProps) {
     if (healthPercentage >= 75)
       return {
         label: 'Excellent',
-        color: 'text-green-600',
+        color: 'text-goal-excellent',
         icon: CheckCircle2,
       };
     if (healthPercentage >= 50)
       return {
         label: 'Good',
-        color: 'text-blue-600',
+        color: 'text-goal-on-track',
         icon: CheckCircle2,
       };
     if (healthPercentage >= 25)
       return {
         label: 'Fair',
-        color: 'text-yellow-600',
+        color: 'text-goal-attention',
         icon: AlertCircle,
       };
     return {
       label: 'Needs Work',
-      color: 'text-red-600',
+      color: 'text-goal-at-risk',
       icon: XCircle,
     };
   };
@@ -142,7 +142,7 @@ export function GoalHealthScore({ goals }: GoalHealthScoreProps) {
             {excellentGoals.length > 0 && (
               <div className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-green-600" />
+                  <div className="w-3 h-3 rounded-full bg-goal-excellent" />
                   <span className="text-muted-foreground">Excellent (≥90%)</span>
                 </div>
                 <span className="font-medium">{excellentGoals.length}</span>
@@ -153,7 +153,7 @@ export function GoalHealthScore({ goals }: GoalHealthScoreProps) {
             {onTrackGoals.length > 0 && (
               <div className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-blue-600" />
+                  <div className="w-3 h-3 rounded-full bg-goal-on-track" />
                   <span className="text-muted-foreground">On Track (75-89%)</span>
                 </div>
                 <span className="font-medium">{onTrackGoals.length}</span>
@@ -164,7 +164,7 @@ export function GoalHealthScore({ goals }: GoalHealthScoreProps) {
             {needsAttentionGoals.length > 0 && (
               <div className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-yellow-600" />
+                  <div className="w-3 h-3 rounded-full bg-goal-attention" />
                   <span className="text-muted-foreground">Needs Attention (50-74%)</span>
                 </div>
                 <span className="font-medium">{needsAttentionGoals.length}</span>
@@ -175,7 +175,7 @@ export function GoalHealthScore({ goals }: GoalHealthScoreProps) {
             {atRiskGoals.length > 0 && (
               <div className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-red-600" />
+                  <div className="w-3 h-3 rounded-full bg-goal-at-risk" />
                   <span className="text-muted-foreground">At Risk (&lt;50%)</span>
                 </div>
                 <span className="font-medium">{atRiskGoals.length}</span>
@@ -186,8 +186,8 @@ export function GoalHealthScore({ goals }: GoalHealthScoreProps) {
           {/* Action Items */}
           {atRiskGoals.length > 0 && (
             <div className="pt-2 border-t">
-              <p className="text-xs text-red-600 font-medium">
-                ⚠️ {atRiskGoals.length} goal
+              <p className="text-xs text-destructive font-medium">
+                {atRiskGoals.length} goal
                 {atRiskGoals.length > 1 ? 's' : ''} need
                 {atRiskGoals.length === 1 ? 's' : ''} immediate attention
               </p>

@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 
-interface EsgScore {
+export interface EsgScore {
   symbol: string;
   assetType: 'crypto' | 'equity' | 'etf';
   environmentalScore: number;
@@ -57,7 +57,7 @@ interface EsgTrends {
   lastUpdated: string;
 }
 
-interface EsgMethodology {
+export interface EsgMethodology {
   framework: string;
   description: string;
   scoring: {

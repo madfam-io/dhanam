@@ -84,12 +84,12 @@ export function GoalProgressTracker({ spaceId, goalId }: GoalProgressTrackerProp
           <h3 className="text-2xl font-bold">{progress.goalName}</h3>
           <div className="flex items-center gap-2 mt-2">
             {progress.onTrack ? (
-              <div className="flex items-center gap-1.5 text-green-600 dark:text-green-400">
+              <div className="flex items-center gap-1.5 text-success">
                 <CheckCircle className="h-4 w-4" />
                 <span className="text-sm font-medium">On Track</span>
               </div>
             ) : (
-              <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
+              <div className="flex items-center gap-1.5 text-warning">
                 <AlertCircle className="h-4 w-4" />
                 <span className="text-sm font-medium">Needs Attention</span>
               </div>
@@ -111,7 +111,7 @@ export function GoalProgressTracker({ spaceId, goalId }: GoalProgressTrackerProp
         <div className="h-4 bg-muted rounded-full overflow-hidden">
           <div
             className={`h-full transition-all duration-500 ${
-              progress.onTrack ? 'bg-green-500 dark:bg-green-600' : 'bg-amber-500 dark:bg-amber-600'
+              progress.onTrack ? 'bg-success' : 'bg-warning'
             }`}
             style={{ width: `${progressPercentage}%` }}
           />
@@ -161,13 +161,13 @@ export function GoalProgressTracker({ spaceId, goalId }: GoalProgressTrackerProp
 
       {/* Shortfall Warning */}
       {shortfall > 0 && !progress.onTrack && (
-        <div className="flex items-center gap-2 p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
-          <AlertCircle className="h-5 w-5 text-amber-600" />
+        <div className="flex items-center gap-2 p-4 bg-warning/10 rounded-lg">
+          <AlertCircle className="h-5 w-5 text-warning" />
           <div>
-            <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+            <p className="text-sm font-medium text-warning">
               You need {formatCurrency(shortfall)} more to reach your goal
             </p>
-            <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
+            <p className="text-xs text-warning/80 mt-1">
               Consider increasing your monthly contributions to{' '}
               {formatCurrency(progress.requiredMonthlyContribution)}
             </p>
@@ -209,10 +209,10 @@ export function GoalProgressTracker({ spaceId, goalId }: GoalProgressTrackerProp
                       <div
                         className={`h-full transition-all ${
                           Math.abs(allocationProgress - 100) < 5
-                            ? 'bg-green-500'
+                            ? 'bg-success'
                             : isOverAllocated
-                              ? 'bg-red-500'
-                              : 'bg-amber-500'
+                              ? 'bg-destructive'
+                              : 'bg-warning'
                         }`}
                         style={{ width: `${Math.min(100, allocationProgress)}%` }}
                       />
@@ -221,15 +221,15 @@ export function GoalProgressTracker({ spaceId, goalId }: GoalProgressTrackerProp
                     {driftPercentage > 5 && (
                       <div className="flex items-center gap-1.5 text-xs">
                         {isOverAllocated ? (
-                          <TrendingUp className="h-3 w-3 text-red-600" />
+                          <TrendingUp className="h-3 w-3 text-destructive" />
                         ) : (
-                          <TrendingDown className="h-3 w-3 text-amber-600" />
+                          <TrendingDown className="h-3 w-3 text-warning" />
                         )}
                         <span
                           className={
                             isOverAllocated
-                              ? 'text-red-600 dark:text-red-400'
-                              : 'text-amber-600 dark:text-amber-400'
+                              ? 'text-destructive'
+                              : 'text-warning'
                           }
                         >
                           {isOverAllocated ? 'Over' : 'Under'} by {formatCurrency(drift)} (
@@ -247,9 +247,9 @@ export function GoalProgressTracker({ spaceId, goalId }: GoalProgressTrackerProp
 
       {/* Success State */}
       {progress.progress >= 100 && (
-        <div className="flex flex-col items-center justify-center p-8 bg-green-50 dark:bg-green-900/20 rounded-lg">
-          <CheckCircle className="h-16 w-16 text-green-600 dark:text-green-400 mb-4" />
-          <h4 className="text-xl font-bold mb-2">Goal Achieved! 🎉</h4>
+        <div className="flex flex-col items-center justify-center p-8 bg-success/10 rounded-lg">
+          <CheckCircle className="h-16 w-16 text-success mb-4" />
+          <h4 className="text-xl font-bold mb-2">Goal Achieved!</h4>
           <p className="text-sm text-muted-foreground text-center max-w-md">
             Congratulations! You've reached your target of {formatCurrency(progress.targetValue)}.
           </p>

@@ -113,7 +113,7 @@ export function TotpSetup({ open, onOpenChange, onSuccess }: TotpSetupProps) {
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Shield className="h-5 w-5 text-green-600" />
+            <Shield className="h-5 w-5 text-success" />
             Setup Two-Factor Authentication
           </DialogTitle>
           <DialogDescription>Add an extra layer of security to your account</DialogDescription>

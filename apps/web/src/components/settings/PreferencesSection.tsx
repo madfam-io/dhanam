@@ -89,14 +89,14 @@ export function PreferencesSection() {
     <div className="space-y-6">
       {/* Status Messages */}
       {error && (
-        <div className="flex items-center gap-2 p-4 text-red-600 bg-red-50 rounded-lg">
+        <div className="flex items-center gap-2 p-4 text-destructive bg-destructive/10 rounded-lg">
           <AlertCircleIcon className="h-5 w-5" />
           <span>Error: {error}</span>
         </div>
       )}
 
       {successMessage && (
-        <div className="flex items-center gap-2 p-4 text-green-600 bg-green-50 rounded-lg">
+        <div className="flex items-center gap-2 p-4 text-success bg-success/10 rounded-lg">
           <CheckCircleIcon className="h-5 w-5" />
           <span>{successMessage}</span>
         </div>
@@ -514,7 +514,7 @@ export function PreferencesSection() {
       {/* Reset Section */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-red-600">Restablecer Preferencias</CardTitle>
+          <CardTitle className="text-destructive">Restablecer Preferencias</CardTitle>
           <CardDescription>
             Restablecer todas las preferencias a sus valores por defecto. Esta acción no se puede
             deshacer.

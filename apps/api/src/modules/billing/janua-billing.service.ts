@@ -1,6 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
+export type BillingProvider = 'conekta' | 'polar' | 'stripe';
+
 /**
  * Janua Billing Service
  *
@@ -59,7 +61,7 @@ export class JanuaBillingService {
     name?: string;
     countryCode: string;
     metadata?: Record<string, string>;
-  }): Promise<{ customerId: string; provider: string }> {
+  }): Promise<{ customerId: string; provider: BillingProvider }> {
     if (!this.isEnabled()) {
       throw new Error('Janua billing not enabled');
     }
@@ -110,7 +112,7 @@ export class JanuaBillingService {
     successUrl: string;
     cancelUrl: string;
     metadata?: Record<string, string>;
-  }): Promise<{ checkoutUrl: string; sessionId: string; provider: string }> {
+  }): Promise<{ checkoutUrl: string; sessionId: string; provider: BillingProvider }> {
     if (!this.isEnabled()) {
       throw new Error('Janua billing not enabled');
     }

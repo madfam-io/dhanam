@@ -44,15 +44,15 @@ export function GoalProbabilityTimeline({ goals }: GoalProbabilityTimelineProps)
   };
 
   const getTrendIcon = (trend: string) => {
-    if (trend === 'improving') return <TrendingUp className="h-4 w-4 text-green-600" />;
-    if (trend === 'declining') return <TrendingDown className="h-4 w-4 text-red-600" />;
-    return <Minus className="h-4 w-4 text-gray-600" />;
+    if (trend === 'improving') return <TrendingUp className="h-4 w-4 text-success" />;
+    if (trend === 'declining') return <TrendingDown className="h-4 w-4 text-destructive" />;
+    return <Minus className="h-4 w-4 text-muted-foreground" />;
   };
 
   const getTrendColor = (trend: string) => {
-    if (trend === 'improving') return 'text-green-600';
-    if (trend === 'declining') return 'text-red-600';
-    return 'text-gray-600';
+    if (trend === 'improving') return 'text-success';
+    if (trend === 'declining') return 'text-destructive';
+    return 'text-muted-foreground';
   };
 
   const formatPercentageChange = (change: number) => {
@@ -131,10 +131,10 @@ export function GoalProbabilityTimeline({ goals }: GoalProbabilityTimelineProps)
                         strokeWidth="2"
                         className={
                           trend === 'improving'
-                            ? 'text-green-600'
+                            ? 'text-success'
                             : trend === 'declining'
-                              ? 'text-red-600'
-                              : 'text-gray-600'
+                              ? 'text-destructive'
+                              : 'text-muted-foreground'
                         }
                       />
 
@@ -151,10 +151,10 @@ export function GoalProbabilityTimeline({ goals }: GoalProbabilityTimelineProps)
                             fill="currentColor"
                             className={
                               trend === 'improving'
-                                ? 'text-green-600'
+                                ? 'text-success'
                                 : trend === 'declining'
-                                  ? 'text-red-600'
-                                  : 'text-gray-600'
+                                  ? 'text-destructive'
+                                  : 'text-muted-foreground'
                             }
                           />
                         );
@@ -172,19 +172,19 @@ export function GoalProbabilityTimeline({ goals }: GoalProbabilityTimelineProps)
           <div className="grid grid-cols-3 gap-4 text-center">
             <div>
               <p className="text-sm text-muted-foreground">Improving</p>
-              <p className="text-2xl font-bold text-green-600">
+              <p className="text-2xl font-bold text-success">
                 {goalsWithProbability.filter((g) => calculateTrend(g).trend === 'improving').length}
               </p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Stable</p>
-              <p className="text-2xl font-bold text-gray-600">
+              <p className="text-2xl font-bold text-muted-foreground">
                 {goalsWithProbability.filter((g) => calculateTrend(g).trend === 'stable').length}
               </p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Declining</p>
-              <p className="text-2xl font-bold text-red-600">
+              <p className="text-2xl font-bold text-destructive">
                 {goalsWithProbability.filter((g) => calculateTrend(g).trend === 'declining').length}
               </p>
             </div>

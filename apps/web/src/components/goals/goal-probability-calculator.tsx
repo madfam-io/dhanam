@@ -61,16 +61,16 @@ export function GoalProbabilityCalculator({ goal, onSimulate }: GoalProbabilityC
 
   const getProbabilityColor = (probability: number) => {
     // Probability is 0-100
-    if (probability >= 90) return 'text-green-600';
-    if (probability >= 75) return 'text-blue-600';
-    if (probability >= 50) return 'text-yellow-600';
-    return 'text-red-600';
+    if (probability >= 90) return 'text-goal-excellent';
+    if (probability >= 75) return 'text-goal-on-track';
+    if (probability >= 50) return 'text-goal-attention';
+    return 'text-goal-at-risk';
   };
 
   const getProbabilityBadge = (probability: number) => {
     // Probability is 0-100
-    if (probability >= 90) return <Badge className="bg-green-600">Excellent</Badge>;
-    if (probability >= 75) return <Badge className="bg-blue-600">On Track</Badge>;
+    if (probability >= 90) return <Badge className="bg-goal-excellent">Excellent</Badge>;
+    if (probability >= 75) return <Badge className="bg-goal-on-track">On Track</Badge>;
     if (probability >= 50) return <Badge variant="secondary">Needs Attention</Badge>;
     return <Badge variant="destructive">At Risk</Badge>;
   };

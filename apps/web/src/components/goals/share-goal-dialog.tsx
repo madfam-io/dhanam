@@ -104,7 +104,7 @@ export function ShareGoalDialog({ goal, onShared, trigger, open: controlledOpen,
 
         {success ? (
           <div className="flex flex-col items-center justify-center py-8">
-            <CheckCircle className="h-12 w-12 text-green-600 mb-4" />
+            <CheckCircle className="h-12 w-12 text-success mb-4" />
             <p className="text-lg font-semibold">Goal shared successfully!</p>
             <p className="text-sm text-muted-foreground">
               An invitation has been sent to {formData.shareWithEmail}
@@ -160,7 +160,7 @@ export function ShareGoalDialog({ goal, onShared, trigger, open: controlledOpen,
                 id="message"
                 placeholder="Let's work together on our retirement savings!"
                 value={formData.message}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, message: e.target.value })}
+                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFormData({ ...formData, message: e.target.value })}
                 rows={3}
               />
             </div>

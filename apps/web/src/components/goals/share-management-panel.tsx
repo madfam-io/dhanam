@@ -103,10 +103,10 @@ export function ShareManagementPanel({ goalId, onUpdate }: ShareManagementPanelP
 
   const getRoleBadge = (role: string) => {
     const colors: Record<string, string> = {
-      viewer: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300',
-      contributor: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
-      editor: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300',
-      manager: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
+      viewer: 'bg-muted text-muted-foreground',
+      contributor: 'bg-info/10 text-info',
+      editor: 'bg-accent text-accent-foreground',
+      manager: 'bg-success/10 text-success',
     };
 
     return (
@@ -214,7 +214,7 @@ export function ShareManagementPanel({ goalId, onUpdate }: ShareManagementPanelP
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem
-                              className="text-red-600"
+                              className="text-destructive"
                               onClick={() => {
                                 setSelectedShare(share);
                                 setRevokeDialogOpen(true);
@@ -279,7 +279,7 @@ export function ShareManagementPanel({ goalId, onUpdate }: ShareManagementPanelP
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleRevoke} className="bg-red-600 hover:bg-red-700">
+            <AlertDialogAction onClick={handleRevoke} className="bg-destructive hover:bg-destructive/90">
               Revoke Access
             </AlertDialogAction>
           </AlertDialogFooter>

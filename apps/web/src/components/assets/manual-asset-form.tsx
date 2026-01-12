@@ -463,7 +463,7 @@ export function ManualAssetForm({ onSubmit, onCancel, initialData }: ManualAsset
             <Textarea
               placeholder="Brief description of the asset..."
               value={formData.description}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, description: e.target.value })}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFormData({ ...formData, description: e.target.value })}
               rows={3}
             />
           </div>
@@ -488,7 +488,7 @@ export function ManualAssetForm({ onSubmit, onCancel, initialData }: ManualAsset
             <Textarea
               placeholder="Additional notes, appraisal info, etc..."
               value={formData.notes}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, notes: e.target.value })}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFormData({ ...formData, notes: e.target.value })}
               rows={2}
             />
           </div>

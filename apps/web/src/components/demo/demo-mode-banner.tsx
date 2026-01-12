@@ -98,7 +98,7 @@ export function DemoModeBanner() {
               size="sm"
               variant="secondary"
               onClick={handleSignUp}
-              className="bg-white text-blue-600 hover:bg-gray-100 font-semibold whitespace-nowrap"
+              className="bg-white text-primary hover:bg-gray-100 font-semibold whitespace-nowrap"
             >
               {timeLeft === 'expired' ? 'Sign Up to Continue' : 'Sign Up Free'}
             </Button>

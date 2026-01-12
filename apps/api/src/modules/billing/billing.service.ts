@@ -6,7 +6,7 @@ import Stripe from 'stripe';
 import { AuditService } from '../../core/audit/audit.service';
 import { PrismaService } from '../../core/prisma/prisma.service';
 
-import { JanuaBillingService } from './janua-billing.service';
+import { BillingProvider, JanuaBillingService } from './janua-billing.service';
 import { StripeService } from './stripe.service';
 
 @Injectable()
@@ -93,9 +93,9 @@ export class BillingService {
     user: { id: string; email: string; name: string; januaCustomerId?: string },
     countryCode: string,
     webUrl: string
-  ): Promise<{ checkoutUrl: string; provider: string }> {
+  ): Promise<{ checkoutUrl: string; provider: BillingProvider }> {
     let customerId = user.januaCustomerId;
-    let provider = this.januaBilling.getProviderForCountry(countryCode);
+    let provider: BillingProvider = this.januaBilling.getProviderForCountry(countryCode);
 
     if (!customerId) {
       const result = await this.januaBilling.createCustomer({
@@ -145,7 +145,7 @@ export class BillingService {
   private async upgradeToPremiumViaStripe(
     user: { id: string; email: string; name: string; stripeCustomerId?: string },
     webUrl: string
-  ): Promise<{ checkoutUrl: string; provider: string }> {
+  ): Promise<{ checkoutUrl: string; provider: BillingProvider }> {
     let customerId = user.stripeCustomerId;
 
     if (!customerId) {

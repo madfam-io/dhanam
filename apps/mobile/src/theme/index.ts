@@ -1,46 +1,68 @@
 import { MD3LightTheme, MD3DarkTheme } from 'react-native-paper';
+import { semanticColors, surfaceColors } from '../tokens/colors';
+
+/**
+ * DHANAM Mobile Theme
+ *
+ * Theme configuration using design tokens for consistent styling.
+ * All colors reference the centralized token system.
+ */
 
 const lightColors = {
   ...MD3LightTheme.colors,
-  primary: '#4CAF50',
+  // Primary brand color (solarpunk green)
+  primary: semanticColors.success,
   primaryContainer: '#E8F5E8',
-  secondary: '#2196F3',
+  // Secondary accent
+  secondary: semanticColors.info,
   secondaryContainer: '#E3F2FD',
-  tertiary: '#FF9800',
+  // Tertiary accent
+  tertiary: semanticColors.warning,
   tertiaryContainer: '#FFF3E0',
-  surface: '#FFFFFF',
-  surfaceVariant: '#F5F5F5',
-  background: '#FAFAFA',
-  error: '#F44336',
+  // Surface colors from token system
+  surface: surfaceColors.light.surface,
+  surfaceVariant: surfaceColors.light.surfaceVariant,
+  background: surfaceColors.light.background,
+  // Error state
+  error: semanticColors.error,
   errorContainer: '#FFEBEE',
+  // On-colors for contrast
   onPrimary: '#FFFFFF',
   onSecondary: '#FFFFFF',
-  onSurface: '#212121',
-  onBackground: '#212121',
-  outline: '#E0E0E0',
-  success: '#4CAF50',
-  warning: '#FF9800',
-  info: '#2196F3',
+  onSurface: surfaceColors.light.textPrimary,
+  onBackground: surfaceColors.light.textPrimary,
+  outline: surfaceColors.light.border,
+  // Semantic status colors (extended)
+  success: semanticColors.success,
+  warning: semanticColors.warning,
+  info: semanticColors.info,
 };
 
 const darkColors = {
   ...MD3DarkTheme.colors,
+  // Primary brand color (lighter for dark mode)
   primary: '#66BB6A',
   primaryContainer: '#2E7D32',
+  // Secondary accent
   secondary: '#42A5F5',
   secondaryContainer: '#1976D2',
+  // Tertiary accent
   tertiary: '#FFB74D',
   tertiaryContainer: '#F57C00',
-  surface: '#1E1E1E',
-  surfaceVariant: '#2E2E2E',
-  background: '#121212',
+  // Surface colors from token system
+  surface: surfaceColors.dark.surface,
+  surfaceVariant: surfaceColors.dark.surfaceVariant,
+  background: surfaceColors.dark.background,
+  // Error state
   error: '#EF5350',
   errorContainer: '#B71C1C',
+  // On-colors for contrast
   onPrimary: '#FFFFFF',
   onSecondary: '#FFFFFF',
-  onSurface: '#FFFFFF',
-  onBackground: '#FFFFFF',
-  outline: '#424242',
+  onSurface: surfaceColors.dark.textPrimary,
+  onBackground: surfaceColors.dark.textPrimary,
+  outline: surfaceColors.dark.border,
+  // Semantic status colors (extended)
   success: '#66BB6A',
   warning: '#FFB74D',
   info: '#42A5F5',

@@ -57,10 +57,10 @@ export function SharedGoalsList({ onGoalClick }: SharedGoalsListProps) {
 
   const getRoleBadge = (role: string) => {
     const colors: Record<string, string> = {
-      viewer: 'bg-gray-100 text-gray-800',
-      contributor: 'bg-blue-100 text-blue-800',
-      editor: 'bg-purple-100 text-purple-800',
-      manager: 'bg-green-100 text-green-800',
+      viewer: 'bg-muted text-muted-foreground',
+      contributor: 'bg-info/10 text-info',
+      editor: 'bg-accent text-accent-foreground',
+      manager: 'bg-success/10 text-success',
     };
 
     return (

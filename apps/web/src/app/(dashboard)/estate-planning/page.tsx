@@ -216,7 +216,7 @@ export default function EstatePlanningPage() {
                 <Textarea
                   id="notes"
                   value={newWill.notes}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewWill({ ...newWill, notes: e.target.value })}
+                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setNewWill({ ...newWill, notes: e.target.value })}
                   placeholder="Additional notes or instructions"
                   rows={3}
                 />

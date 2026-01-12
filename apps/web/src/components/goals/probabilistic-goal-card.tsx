@@ -58,10 +58,10 @@ export function ProbabilisticGoalCard({
   };
 
   const getProbabilityColor = (prob: number) => {
-    if (prob >= 90) return 'bg-green-600';
-    if (prob >= 75) return 'bg-blue-600';
-    if (prob >= 50) return 'bg-yellow-600';
-    return 'bg-red-600';
+    if (prob >= 90) return 'bg-goal-excellent';
+    if (prob >= 75) return 'bg-goal-on-track';
+    if (prob >= 50) return 'bg-goal-attention';
+    return 'bg-goal-at-risk';
   };
 
   const getProbabilityLabel = (prob: number) => {

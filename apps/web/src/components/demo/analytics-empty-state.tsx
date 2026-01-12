@@ -39,9 +39,9 @@ export function AnalyticsEmptyState({ title, description, isDemoMode }: Analytic
             </>
           )}
 
-          <div className="mt-4 flex items-start gap-2 bg-blue-50 dark:bg-blue-950/30 rounded-lg p-3 max-w-md">
-            <Info className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
-            <p className="text-xs text-left text-blue-900 dark:text-blue-100">
+          <div className="mt-4 flex items-start gap-2 bg-info/10 rounded-lg p-3 max-w-md">
+            <Info className="h-4 w-4 text-info mt-0.5 flex-shrink-0" />
+            <p className="text-xs text-left text-info-foreground">
               {isDemoMode
                 ? "This demo uses sample data. After signing up, you'll see real insights from your connected accounts."
                 : 'We need at least 30 days of transaction history to generate accurate forecasts.'}

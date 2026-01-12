@@ -2,8 +2,23 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * DHANAM DESIGN TOKEN SYSTEM
+ *
+ * Semantic color tokens for consistent UI across the application.
+ * Use these tokens instead of hardcoded Tailwind color utilities.
+ *
+ * Usage Examples:
+ * - text-success instead of text-green-600
+ * - bg-success/10 instead of bg-green-100
+ * - text-destructive instead of text-red-600
+ * - text-info instead of text-blue-600
+ * - text-warning instead of text-yellow-600
+ */
+
 @layer base {
   :root {
+    /* Core UI Colors */
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
@@ -24,9 +39,35 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 222.2 84% 4.9%;
     --radius: 0.5rem;
+
+    /* Semantic Status Colors */
+    --success: 142.1 76.2% 36.3%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 0%;
+    --info: 217.2 91.2% 59.8%;
+    --info-foreground: 0 0% 100%;
+
+    /* Extended Status Colors (for backgrounds with opacity) */
+    --success-bg: 142.1 76.2% 96%;
+    --warning-bg: 38 92% 95%;
+    --info-bg: 217.2 91.2% 96%;
+    --destructive-bg: 0 84.2% 97%;
+
+    /* Financial Context Colors */
+    --income: 142.1 76.2% 36.3%;
+    --expense: 0 84.2% 60.2%;
+    --transfer: 217.2 91.2% 59.8%;
+
+    /* Goal Health Colors (for probability indicators) */
+    --goal-excellent: 142.1 76.2% 36.3%;
+    --goal-on-track: 217.2 91.2% 59.8%;
+    --goal-attention: 38 92% 50%;
+    --goal-at-risk: 0 84.2% 60.2%;
   }
 
   .dark {
+    /* Core UI Colors */
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
     --card: 222.2 84% 4.9%;
@@ -46,6 +87,31 @@
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
+
+    /* Semantic Status Colors (Dark Mode) */
+    --success: 142.1 70.6% 45.3%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 60%;
+    --warning-foreground: 0 0% 0%;
+    --info: 217.2 91.2% 65%;
+    --info-foreground: 0 0% 100%;
+
+    /* Extended Status Colors (Dark Mode) */
+    --success-bg: 142.1 70.6% 15%;
+    --warning-bg: 38 92% 15%;
+    --info-bg: 217.2 91.2% 15%;
+    --destructive-bg: 0 62.8% 15%;
+
+    /* Financial Context Colors (Dark Mode) */
+    --income: 142.1 70.6% 45.3%;
+    --expense: 0 62.8% 50%;
+    --transfer: 217.2 91.2% 65%;
+
+    /* Goal Health Colors (Dark Mode) */
+    --goal-excellent: 142.1 70.6% 45.3%;
+    --goal-on-track: 217.2 91.2% 65%;
+    --goal-attention: 38 92% 60%;
+    --goal-at-risk: 0 62.8% 50%;
   }
 }
 

@@ -3,6 +3,7 @@ import { ComponentProps } from 'react';
 
 import { Ionicons, View, StyleSheet, Card, PaperText as Text } from '@/lib/react-native-compat';
 import { formatCurrency } from '@/utils/currency';
+import { getAccountColor, surfaceColors } from '@/tokens/colors';
 
 interface AccountCardProps {
   account: Account;
@@ -23,23 +24,6 @@ export function AccountCard({ account, onPress }: AccountCardProps) {
         return 'logo-bitcoin';
       default:
         return 'cash';
-    }
-  };
-
-  const getAccountColor = (type: string) => {
-    switch (type.toLowerCase()) {
-      case 'checking':
-        return '#4CAF50';
-      case 'savings':
-        return '#2196F3';
-      case 'credit':
-        return '#FF9800';
-      case 'investment':
-        return '#9C27B0';
-      case 'crypto':
-        return '#FFC107';
-      default:
-        return '#757575';
     }
   };
 
@@ -106,7 +90,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   institution: {
-    color: '#757575',
+    color: surfaceColors.light.textSecondary,
     marginTop: 2,
   },
   footer: {
@@ -119,7 +103,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
   type: {
-    color: '#757575',
+    color: surfaceColors.light.textSecondary,
     textTransform: 'capitalize',
   },
 });

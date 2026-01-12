@@ -109,9 +109,9 @@ export function RebalancingDashboard({ spaceId, goalId, goalName }: RebalancingD
 
       {/* Success Message */}
       {success && (
-        <div className="flex items-center gap-2 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-          <CheckCircle className="h-5 w-5 text-green-600" />
-          <p className="text-sm text-green-800 dark:text-green-200">{success}</p>
+        <div className="flex items-center gap-2 p-4 bg-success/10 rounded-lg">
+          <CheckCircle className="h-5 w-5 text-success" />
+          <p className="text-sm text-success">{success}</p>
         </div>
       )}
 
@@ -130,23 +130,23 @@ export function RebalancingDashboard({ spaceId, goalId, goalName }: RebalancingD
           <p className="text-2xl font-bold">{suggestion.summary.totalActions}</p>
         </div>
 
-        <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+        <div className="p-4 bg-success/10 rounded-lg">
           <p className="text-sm text-muted-foreground">Buy Actions</p>
-          <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+          <p className="text-2xl font-bold text-success">
             {suggestion.summary.buyActions}
           </p>
         </div>
 
-        <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
+        <div className="p-4 bg-destructive/10 rounded-lg">
           <p className="text-sm text-muted-foreground">Sell Actions</p>
-          <p className="text-2xl font-bold text-red-600 dark:text-red-400">
+          <p className="text-2xl font-bold text-destructive">
             {suggestion.summary.sellActions}
           </p>
         </div>
 
-        <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+        <div className="p-4 bg-info/10 rounded-lg">
           <p className="text-sm text-muted-foreground">Estimated Value</p>
-          <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+          <p className="text-2xl font-bold text-info">
             {formatCurrency(suggestion.summary.estimatedValue)}
           </p>
         </div>
@@ -163,8 +163,8 @@ export function RebalancingDashboard({ spaceId, goalId, goalName }: RebalancingD
                 <div
                   className={`p-2 rounded-lg ${
                     action.action === 'buy'
-                      ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
-                      : 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
+                      ? 'bg-success/10 text-success'
+                      : 'bg-destructive/10 text-destructive'
                   }`}
                 >
                   {action.action === 'buy' ? (
@@ -219,7 +219,7 @@ export function RebalancingDashboard({ spaceId, goalId, goalName }: RebalancingD
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center p-12 bg-muted/50 rounded-lg">
-          <CheckCircle className="h-12 w-12 text-green-600 dark:text-green-400 mb-4" />
+          <CheckCircle className="h-12 w-12 text-success mb-4" />
           <h4 className="text-lg font-semibold mb-2">Portfolio is Balanced</h4>
           <p className="text-sm text-muted-foreground text-center max-w-md">
             Your portfolio is currently within the target allocation ranges. No rebalancing actions

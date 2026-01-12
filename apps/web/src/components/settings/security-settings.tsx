@@ -156,9 +156,9 @@ export function SecuritySettings() {
             </div>
           ) : (
             <div className="space-y-3">
-              <Alert className="border-yellow-200 bg-yellow-50">
-                <AlertTriangle className="h-4 w-4 text-yellow-600" />
-                <AlertDescription className="text-yellow-800">
+              <Alert className="border-warning/30 bg-warning/10">
+                <AlertTriangle className="h-4 w-4 text-warning" />
+                <AlertDescription className="text-warning-foreground">
                   Your account is not protected by two-factor authentication. We strongly recommend
                   enabling it for enhanced security.
                 </AlertDescription>

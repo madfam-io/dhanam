@@ -260,13 +260,13 @@ export function WhatIfScenarioBuilder({ goal, currentProbability }: WhatIfScenar
                   <p className="text-sm text-muted-foreground mb-1">Change from Current</p>
                   <div className="flex items-center gap-2">
                     {probabilityChange.isPositive ? (
-                      <TrendingUp className="h-5 w-5 text-green-600" />
+                      <TrendingUp className="h-5 w-5 text-success" />
                     ) : (
-                      <TrendingDown className="h-5 w-5 text-red-600" />
+                      <TrendingDown className="h-5 w-5 text-destructive" />
                     )}
                     <span
                       className={`text-2xl font-bold ${
-                        probabilityChange.isPositive ? 'text-green-600' : 'text-red-600'
+                        probabilityChange.isPositive ? 'text-success' : 'text-destructive'
                       }`}
                     >
                       {probabilityChange.isPositive ? '+' : '-'}
@@ -291,8 +291,8 @@ export function WhatIfScenarioBuilder({ goal, currentProbability }: WhatIfScenar
 
             {/* Projected Completion */}
             {result.projectedCompletion && (
-              <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
+              <div className="p-3 bg-info/10 rounded-lg">
+                <p className="text-sm font-medium text-info">
                   Projected Completion: {new Date(result.projectedCompletion).toLocaleDateString()}
                 </p>
               </div>

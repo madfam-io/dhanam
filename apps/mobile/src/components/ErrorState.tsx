@@ -1,6 +1,7 @@
 import { ComponentProps } from 'react';
 
 import { Ionicons, View, StyleSheet, PaperText as Text, Button } from '@/lib/react-native-compat';
+import { surfaceColors } from '@/tokens/colors';
 
 interface ErrorStateProps {
   title: string;
@@ -19,7 +20,7 @@ export function ErrorState({
 }: ErrorStateProps) {
   return (
     <View style={styles.container}>
-      <Ionicons name={icon} size={80} color="#E0E0E0" style={styles.icon} />
+      <Ionicons name={icon} size={80} color={surfaceColors.light.border} style={styles.icon} />
       <Text variant="headlineSmall" style={styles.title}>
         {title}
       </Text>
@@ -46,19 +47,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 40,
-    backgroundColor: '#FAFAFA',
+    backgroundColor: surfaceColors.light.background,
   },
   icon: {
     marginBottom: 24,
   },
   title: {
     textAlign: 'center',
-    color: '#212121',
+    color: surfaceColors.light.textPrimary,
     marginBottom: 8,
   },
   message: {
     textAlign: 'center',
-    color: '#757575',
+    color: surfaceColors.light.textSecondary,
     marginBottom: 32,
     lineHeight: 24,
   },

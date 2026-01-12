@@ -1,7 +1,7 @@
 /**
- * MADFAM Design Tokens
+ * DHANAM Design Tokens
  *
- * Golden ratio-based design tokens for consistent, harmonious UI.
+ * Golden ratio-based design tokens and semantic colors for consistent, harmonious UI.
  */
 
 // Golden ratio primitives and calculations
@@ -22,3 +22,12 @@ export {
 
 // Tailwind preset
 export { madfamPreset, default as tailwindPreset } from './tailwind-preset';
+
+// Semantic color tokens
+export {
+  semanticColorTokens,
+  tailwindSemanticColors,
+  semanticColorCSSVariables,
+  semanticColorCSSVariablesDark,
+  default as semanticColors,
+} from './semantic-colors';

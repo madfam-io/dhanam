@@ -46,6 +46,28 @@ const config: Config = {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
         },
+        // Semantic status colors
+        success: {
+          DEFAULT: 'hsl(var(--success))',
+          foreground: 'hsl(var(--success-foreground))',
+        },
+        warning: {
+          DEFAULT: 'hsl(var(--warning))',
+          foreground: 'hsl(var(--warning-foreground))',
+        },
+        info: {
+          DEFAULT: 'hsl(var(--info))',
+          foreground: 'hsl(var(--info-foreground))',
+        },
+        // Financial context colors
+        income: 'hsl(var(--income))',
+        expense: 'hsl(var(--expense))',
+        transfer: 'hsl(var(--transfer))',
+        // Goal health colors
+        'goal-excellent': 'hsl(var(--goal-excellent))',
+        'goal-on-track': 'hsl(var(--goal-on-track))',
+        'goal-attention': 'hsl(var(--goal-attention))',
+        'goal-at-risk': 'hsl(var(--goal-at-risk))',
       },
       borderRadius: {
         lg: 'var(--radius)',

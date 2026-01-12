@@ -47,7 +47,8 @@ async function bootstrap() {
   });
 
   // Security headers
-  await app.register(fastifyHelmet, {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await app.register(fastifyHelmet as any, {
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
@@ -60,7 +61,8 @@ async function bootstrap() {
 
   // CORS configuration
   const corsOrigins = configService.get('CORS_ORIGINS');
-  await app.register(fastifyCors, {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await app.register(fastifyCors as any, {
     origin: corsOrigins
       ? corsOrigins.split(',')
       : ['http://localhost:3000', 'http://localhost:19006'],
@@ -68,10 +70,12 @@ async function bootstrap() {
   });
 
   // Compression
-  await app.register(fastifyCompress, { encodings: ['gzip', 'deflate'] });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await app.register(fastifyCompress as any, { encodings: ['gzip', 'deflate'] });
 
   // Rate limiting
-  await app.register(fastifyRateLimit, {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await app.register(fastifyRateLimit as any, {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     max: configService.get('RATE_LIMIT_MAX') ? parseInt(configService.get('RATE_LIMIT_MAX')!) : 100,
     timeWindow: (configService.get('RATE_LIMIT_WINDOW') as string) || '15 minutes',

@@ -159,7 +159,9 @@ export function BudgetAnalytics({ spaceId, budgetId, currency }: BudgetAnalytics
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis
                     dataKey="name"
-                    tick={{ fontSize: 12, angle: -45, textAnchor: 'end' }}
+                    tick={{ fontSize: 12 }}
+                    angle={-45}
+                    textAnchor="end"
                     height={80}
                   />
                   <YAxis tick={{ fontSize: 12 }} />
