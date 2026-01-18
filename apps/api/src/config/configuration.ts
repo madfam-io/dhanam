@@ -1,6 +1,13 @@
+/**
+ * =============================================================================
+ * Dhanam API Configuration
+ * =============================================================================
+ * Supports both standalone mode and Galaxy ecosystem integration (Janua SSO).
+ * =============================================================================
+ */
 export const configuration = () => ({
   node_env: process.env.NODE_ENV || 'development',
-  port: parseInt(process.env.PORT || '4000', 10),
+  port: parseInt(process.env.PORT || '4300', 10), // MADFAM port block: 4300-4399
 
   database: {
     url: process.env.DATABASE_URL,
@@ -10,6 +17,22 @@ export const configuration = () => ({
     url: process.env.REDIS_URL,
   },
 
+  // ==========================================================================
+  // Janua OIDC Configuration (Galaxy Ecosystem)
+  // ==========================================================================
+  janua: {
+    enabled: process.env.JANUA_ENABLED === 'true',
+    issuer: process.env.JANUA_ISSUER || 'https://auth.madfam.io',
+    jwksUri:
+      process.env.JANUA_JWKS_URI ||
+      'https://auth.madfam.io/.well-known/jwks.json',
+    audience: process.env.JANUA_AUDIENCE || 'janua.dev',
+    // Optional: Client credentials for backend-to-Janua API calls
+    clientId: process.env.JANUA_CLIENT_ID,
+    clientSecret: process.env.JANUA_CLIENT_SECRET,
+  },
+
+  // Legacy local JWT (for standalone mode)
   jwt: {
     secret: process.env.JWT_SECRET,
     accessExpiry: process.env.JWT_ACCESS_EXPIRY || '15m',

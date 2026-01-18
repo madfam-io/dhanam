@@ -1,0 +1,117 @@
+# =============================================================================
+# Dhanam Cloudflare Tunnel Routes
+# =============================================================================
+# Add these entries to the unified cloudflared ConfigMap in the cloudflare-tunnel
+# namespace of the Enclii cluster.
+#
+# Location: cloudflared-unified.yaml (or equivalent)
+# Section: config.yaml → ingress
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# ROUTES TO ADD TO CLOUDFLARED CONFIGMAP
+# -----------------------------------------------------------------------------
+# Add the following entries to the ingress section of your cloudflared config:
+#
+#   # =========================================================================
+#   # Dhanam - Personal Finance & Wealth Management
+#   # =========================================================================
+#   - hostname: app.dhanam.io
+#     service: http://dhanam-web.dhanam.svc.cluster.local:80
+#     originRequest:
+#       noTLSVerify: true
+#
+#   - hostname: api.dhanam.io
+#     service: http://dhanam-api.dhanam.svc.cluster.local:80
+#     originRequest:
+#       noTLSVerify: true
+#
+# -----------------------------------------------------------------------------
+
+---
+# =============================================================================
+# Cloudflare DNS Records (via Cloudflare Dashboard or Terraform)
+# =============================================================================
+# Create CNAME records pointing to your tunnel:
+#
+# | Type  | Name | Content                           | Proxy |
+# |-------|------|-----------------------------------|-------|
+# | CNAME | app  | <tunnel-id>.cfargotunnel.com     | Yes   |
+# | CNAME | api  | <tunnel-id>.cfargotunnel.com     | Yes   |
+#
+# Domain: dhanam.io
+# =============================================================================
+
+---
+# =============================================================================
+# Alternative: Standalone Ingress for Non-Cloudflare Deployments
+# =============================================================================
+# If deploying outside the Cloudflare tunnel infrastructure, use this Ingress:
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: dhanam-ingress
+  namespace: dhanam
+  labels:
+    app: dhanam
+    component: ingress
+  annotations:
+    # Uncomment for nginx ingress controller
+    # kubernetes.io/ingress.class: nginx
+    # nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    # nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    #
+    # Uncomment for cert-manager TLS
+    # cert-manager.io/cluster-issuer: letsencrypt-prod
+    description: "Dhanam Ingress - Use only if NOT using Cloudflare Tunnel"
+spec:
+  # Uncomment if using TLS with cert-manager
+  # tls:
+  #   - hosts:
+  #       - app.dhanam.io
+  #       - api.dhanam.io
+  #     secretName: dhanam-tls
+  rules:
+    # Web Frontend
+    - host: app.dhanam.io
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: dhanam-web
+                port:
+                  number: 80
+
+    # API Backend
+    - host: api.dhanam.io
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: dhanam-api
+                port:
+                  number: 80
+
+---
+# =============================================================================
+# Cloudflare Access Policy (Optional - For Admin Routes)
+# =============================================================================
+# If using Cloudflare Access for additional protection on admin endpoints:
+#
+# 1. Create an Access Application in Cloudflare Dashboard:
+#    - Name: Dhanam Admin
+#    - Domain: api.dhanam.io/admin/*
+#    - Session Duration: 24h
+#
+# 2. Create Access Policy:
+#    - Allow: Emails ending in @madfam.io
+#    - Or: Specific email addresses
+#    - Or: Identity provider groups
+#
+# 3. The API already validates Janua tokens, so this is defense-in-depth
+# =============================================================================

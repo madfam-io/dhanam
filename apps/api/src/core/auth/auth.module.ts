@@ -12,13 +12,36 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { GuestAuthService } from './guest-auth.service';
 import { SessionService } from './session.service';
+import { JanuaStrategy } from './strategies/janua.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
 import { TotpService } from './totp.service';
 
+/**
+ * =============================================================================
+ * Authentication Module (Galaxy Ecosystem Integration)
+ * =============================================================================
+ * Supports two authentication modes:
+ *
+ * 1. JANUA MODE (Production - Recommended)
+ *    - Uses Janua OIDC for authentication (auth.madfam.io)
+ *    - RS256 JWT validation via JWKS endpoint
+ *    - Enables "One Membership, All Services" across Galaxy ecosystem
+ *    - Set JANUA_ENABLED=true in environment
+ *
+ * 2. LEGACY MODE (Development/Standalone)
+ *    - Uses local JWT with symmetric key (JWT_SECRET)
+ *    - Local user registration and login
+ *    - Set JANUA_ENABLED=false in environment
+ * =============================================================================
+ */
 @Module({
   imports: [
-    PassportModule.register({ defaultStrategy: 'jwt' }),
+    // Default strategy is 'janua' when JANUA_ENABLED=true, else 'jwt'
+    PassportModule.register({
+      defaultStrategy: process.env.JANUA_ENABLED === 'true' ? 'janua' : 'jwt',
+    }),
+    // JwtModule still needed for legacy mode and internal token operations
     JwtModule.register({
       secret: process.env.JWT_SECRET,
       signOptions: {
@@ -39,6 +62,8 @@ import { TotpService } from './totp.service';
     TotpService,
     SessionService,
     GuestAuthService,
+    // Register both strategies - guard will select based on config
+    JanuaStrategy,
     JwtStrategy,
     LocalStrategy,
   ],

@@ -1,0 +1,209 @@
+# =============================================================================
+# Dhanam Web Deployment (Next.js)
+# =============================================================================
+# Frontend dashboard for personal finance and wealth management
+# MADFAM Port Block: 3300-3399 (Dhanam uses 3300 for Web)
+# =============================================================================
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dhanam-web
+  namespace: dhanam
+  labels:
+    app: dhanam-web
+    component: frontend
+    part-of: galaxy-ecosystem
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: dhanam-web
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: dhanam-web
+        component: frontend
+    spec:
+      serviceAccountName: dhanam-web
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        fsGroup: 1001
+
+      containers:
+        - name: web
+          image: ghcr.io/madfam-org/dhanam-web:latest
+          imagePullPolicy: Always
+
+          ports:
+            - name: http
+              containerPort: 3300
+              protocol: TCP
+
+          env:
+            # =================================================================
+            # Application Configuration
+            # =================================================================
+            - name: NODE_ENV
+              value: "production"
+            - name: PORT
+              value: "3300"
+
+            # =================================================================
+            # API Configuration
+            # =================================================================
+            - name: NEXT_PUBLIC_API_URL
+              value: "https://api.dhanam.io"
+
+            # =================================================================
+            # Janua OIDC (Galaxy Ecosystem Authentication)
+            # =================================================================
+            - name: NEXT_PUBLIC_OIDC_ISSUER
+              value: "https://auth.madfam.io"
+            - name: NEXT_PUBLIC_OIDC_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: dhanam-secrets
+                  key: OIDC_CLIENT_ID
+            - name: NEXTAUTH_URL
+              value: "https://app.dhanam.io"
+            - name: NEXTAUTH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: dhanam-secrets
+                  key: NEXTAUTH_SECRET
+
+            # =================================================================
+            # Billing Frontend Configuration
+            # =================================================================
+            - name: NEXT_PUBLIC_STRIPE_MX_PUBLISHABLE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: dhanam-billing-secrets
+                  key: STRIPE_MX_PUBLISHABLE_KEY
+            - name: NEXT_PUBLIC_PADDLE_CLIENT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: dhanam-billing-secrets
+                  key: PADDLE_CLIENT_TOKEN
+            - name: NEXT_PUBLIC_PADDLE_ENVIRONMENT
+              value: "live"
+
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "128Mi"
+            limits:
+              cpu: "200m"
+              memory: "256Mi"
+
+          # Health checks
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 3300
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 3300
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          # Security
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: next-cache
+              mountPath: /app/.next/cache
+
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: next-cache
+          emptyDir: {}
+
+      # Pod scheduling
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: dhanam-web
+                topologyKey: kubernetes.io/hostname
+
+---
+# =============================================================================
+# Service
+# =============================================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: dhanam-web
+  namespace: dhanam
+  labels:
+    app: dhanam-web
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 80
+      targetPort: 3300
+      protocol: TCP
+  selector:
+    app: dhanam-web
+
+---
+# =============================================================================
+# ServiceAccount
+# =============================================================================
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: dhanam-web
+  namespace: dhanam
+
+---
+# =============================================================================
+# Horizontal Pod Autoscaler
+# =============================================================================
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: dhanam-web
+  namespace: dhanam
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: dhanam-web
+  minReplicas: 2
+  maxReplicas: 5
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70

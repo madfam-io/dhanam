@@ -1,0 +1,16 @@
+# =============================================================================
+# Dhanam Namespace
+# =============================================================================
+# Part of the Galaxy ecosystem alongside Janua (auth) and Enclii (platform)
+# =============================================================================
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: dhanam
+  labels:
+    app.kubernetes.io/name: dhanam
+    app.kubernetes.io/part-of: galaxy-ecosystem
+    app.kubernetes.io/managed-by: kubectl
+  annotations:
+    description: "Dhanam - Personal Finance & Wealth Management"

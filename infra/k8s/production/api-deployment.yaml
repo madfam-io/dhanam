@@ -1,0 +1,258 @@
+# =============================================================================
+# Dhanam API Deployment (NestJS)
+# =============================================================================
+# Backend API for personal finance and wealth management
+# MADFAM Port Block: 4300-4399 (Dhanam uses 4300 for API)
+# =============================================================================
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dhanam-api
+  namespace: dhanam
+  labels:
+    app: dhanam-api
+    component: backend
+    part-of: galaxy-ecosystem
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: dhanam-api
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: dhanam-api
+        component: backend
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "4300"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: dhanam-api
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        fsGroup: 1001
+
+      containers:
+        - name: api
+          image: ghcr.io/madfam-org/dhanam-api:latest
+          imagePullPolicy: Always
+
+          ports:
+            - name: http
+              containerPort: 4300
+              protocol: TCP
+
+          env:
+            # =================================================================
+            # Application Configuration
+            # =================================================================
+            - name: NODE_ENV
+              value: "production"
+            - name: PORT
+              value: "4300"
+
+            # =================================================================
+            # Janua OIDC (Galaxy Ecosystem Authentication)
+            # =================================================================
+            - name: JANUA_ENABLED
+              value: "true"
+            - name: JANUA_ISSUER
+              value: "https://auth.madfam.io"
+            - name: JANUA_JWKS_URI
+              value: "https://auth.madfam.io/.well-known/jwks.json"
+            - name: JANUA_AUDIENCE
+              value: "janua.dev"
+
+            # =================================================================
+            # Database (Shared PostgreSQL)
+            # =================================================================
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: dhanam-secrets
+                  key: DATABASE_URL
+
+            # =================================================================
+            # Redis (Shared Redis)
+            # =================================================================
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: dhanam-secrets
+                  key: REDIS_URL
+
+            # =================================================================
+            # Billing - Stripe MX (Mexican Market)
+            # =================================================================
+            - name: STRIPE_MX_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: dhanam-billing-secrets
+                  key: STRIPE_MX_SECRET_KEY
+            - name: STRIPE_MX_WEBHOOK_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: dhanam-billing-secrets
+                  key: STRIPE_MX_WEBHOOK_SECRET
+
+            # =================================================================
+            # Billing - Paddle (Global Market)
+            # =================================================================
+            - name: PADDLE_VENDOR_ID
+              valueFrom:
+                secretKeyRef:
+                  name: dhanam-billing-secrets
+                  key: PADDLE_VENDOR_ID
+            - name: PADDLE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: dhanam-billing-secrets
+                  key: PADDLE_API_KEY
+            - name: PADDLE_CLIENT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: dhanam-billing-secrets
+                  key: PADDLE_CLIENT_TOKEN
+            - name: PADDLE_WEBHOOK_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: dhanam-billing-secrets
+                  key: PADDLE_WEBHOOK_SECRET
+            - name: PADDLE_ENVIRONMENT
+              value: "live"
+
+            # =================================================================
+            # External Integrations
+            # =================================================================
+            - name: ENCRYPTION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: dhanam-secrets
+                  key: ENCRYPTION_KEY
+
+            # CORS
+            - name: CORS_ORIGINS
+              value: "https://app.dhanam.io,https://dhanam.io"
+
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+
+          # Health checks
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 4300
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 4300
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          # Security
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+
+      volumes:
+        - name: tmp
+          emptyDir: {}
+
+      # Pod scheduling
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: dhanam-api
+                topologyKey: kubernetes.io/hostname
+
+---
+# =============================================================================
+# Service
+# =============================================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: dhanam-api
+  namespace: dhanam
+  labels:
+    app: dhanam-api
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 80
+      targetPort: 4300
+      protocol: TCP
+  selector:
+    app: dhanam-api
+
+---
+# =============================================================================
+# ServiceAccount
+# =============================================================================
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: dhanam-api
+  namespace: dhanam
+
+---
+# =============================================================================
+# Horizontal Pod Autoscaler
+# =============================================================================
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: dhanam-api
+  namespace: dhanam
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: dhanam-api
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
