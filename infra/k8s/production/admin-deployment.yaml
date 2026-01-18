@@ -1,0 +1,99 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dhanam-admin
+  namespace: dhanam
+  labels:
+    app: dhanam-admin
+    component: admin
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: dhanam-admin
+  template:
+    metadata:
+      labels:
+        app: dhanam-admin
+        component: admin
+    spec:
+      serviceAccountName: dhanam-admin
+      containers:
+        - name: admin
+          image: ghcr.io/madfam-org/dhanam-admin:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3400
+              protocol: TCP
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: NEXT_PUBLIC_API_URL
+              value: "https://api.dhan.am"
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 3400
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 3400
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+      imagePullSecrets:
+        - name: ghcr-secret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dhanam-admin
+  namespace: dhanam
+  labels:
+    app: dhanam-admin
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 3400
+      protocol: TCP
+  selector:
+    app: dhanam-admin
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: dhanam-admin
+  namespace: dhanam
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: dhanam-admin
+  namespace: dhanam
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: dhanam-admin
+  minReplicas: 2
+  maxReplicas: 5
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
