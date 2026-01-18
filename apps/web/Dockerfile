@@ -35,7 +35,7 @@ RUN pnpm install --frozen-lockfile
 # =============================================================================
 FROM base AS builder
 
-COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app ./
 COPY . .
 
 # Build arguments for Next.js
