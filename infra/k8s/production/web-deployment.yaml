@@ -59,7 +59,9 @@ spec:
             # API Configuration
             # =================================================================
             - name: NEXT_PUBLIC_API_URL
-              value: "https://api.dhanam.io"
+              value: "https://api.dhan.am"
+            - name: NEXT_PUBLIC_BASE_URL
+              value: "https://app.dhan.am"
 
             # =================================================================
             # Janua OIDC (Galaxy Ecosystem Authentication)
@@ -67,12 +69,14 @@ spec:
             - name: NEXT_PUBLIC_OIDC_ISSUER
               value: "https://auth.madfam.io"
             - name: NEXT_PUBLIC_OIDC_CLIENT_ID
+              value: "jnc_uE2zp9ume_Fd6jMl1elL6wqjiECM711t"
+            - name: OIDC_CLIENT_SECRET
               valueFrom:
                 secretKeyRef:
                   name: dhanam-secrets
-                  key: OIDC_CLIENT_ID
+                  key: OIDC_CLIENT_SECRET
             - name: NEXTAUTH_URL
-              value: "https://app.dhanam.io"
+              value: "https://app.dhan.am"
             - name: NEXTAUTH_SECRET
               valueFrom:
                 secretKeyRef:

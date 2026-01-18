@@ -16,12 +16,12 @@
 #   # =========================================================================
 #   # Dhanam - Personal Finance & Wealth Management
 #   # =========================================================================
-#   - hostname: app.dhanam.io
+#   - hostname: app.dhan.am
 #     service: http://dhanam-web.dhanam.svc.cluster.local:80
 #     originRequest:
 #       noTLSVerify: true
 #
-#   - hostname: api.dhanam.io
+#   - hostname: api.dhan.am
 #     service: http://dhanam-api.dhanam.svc.cluster.local:80
 #     originRequest:
 #       noTLSVerify: true
@@ -39,7 +39,7 @@
 # | CNAME | app  | <tunnel-id>.cfargotunnel.com     | Yes   |
 # | CNAME | api  | <tunnel-id>.cfargotunnel.com     | Yes   |
 #
-# Domain: dhanam.io
+# Domain: dhan.am
 # =============================================================================
 
 ---
@@ -69,12 +69,12 @@ spec:
   # Uncomment if using TLS with cert-manager
   # tls:
   #   - hosts:
-  #       - app.dhanam.io
-  #       - api.dhanam.io
+  #       - app.dhan.am
+  #       - api.dhan.am
   #     secretName: dhanam-tls
   rules:
     # Web Frontend
-    - host: app.dhanam.io
+    - host: app.dhan.am
       http:
         paths:
           - path: /
@@ -86,7 +86,7 @@ spec:
                   number: 80
 
     # API Backend
-    - host: api.dhanam.io
+    - host: api.dhan.am
       http:
         paths:
           - path: /
@@ -105,7 +105,7 @@ spec:
 #
 # 1. Create an Access Application in Cloudflare Dashboard:
 #    - Name: Dhanam Admin
-#    - Domain: api.dhanam.io/admin/*
+#    - Domain: api.dhan.am/admin/*
 #    - Session Duration: 24h
 #
 # 2. Create Access Policy:

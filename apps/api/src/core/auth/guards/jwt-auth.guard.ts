@@ -30,13 +30,13 @@ export class JwtAuthGuard extends AuthGuard(
     return super.canActivate(context);
   }
 
-  handleRequest(err: any, user: any, info: any) {
+  handleRequest(err: any, user: any, info: any, context: ExecutionContext) {
     // Log authentication failures for debugging
     if (err || !user) {
       this.logger.warn(
         `Authentication failed: ${err?.message || info?.message || 'Unknown error'}`
       );
     }
-    return super.handleRequest(err, user, info);
+    return super.handleRequest(err, user, info, context);
   }
 }

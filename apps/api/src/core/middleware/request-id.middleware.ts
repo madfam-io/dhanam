@@ -12,8 +12,8 @@ export class RequestIdMiddleware implements NestMiddleware {
     // Add to request headers
     req.headers['x-request-id'] = requestId;
 
-    // Add to response headers
-    res.header('x-request-id', requestId);
+    // Add to response headers (use raw property for Fastify compatibility with @fastify/middie)
+    (res.raw || res as any).setHeader?.('x-request-id', requestId) || (res as any).header?.('x-request-id', requestId);
 
     next();
   }

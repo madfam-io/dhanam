@@ -73,7 +73,7 @@ export class QueueService implements OnModuleInit, OnModuleDestroy {
   constructor(private readonly configService: ConfigService) {
     const redisUrl = this.configService.get('REDIS_URL', 'redis://localhost:6379');
     this.redis = new Redis(redisUrl, {
-      maxRetriesPerRequest: 3,
+      maxRetriesPerRequest: null,  // Required by BullMQ for blocking operations
       lazyConnect: true,
     });
   }

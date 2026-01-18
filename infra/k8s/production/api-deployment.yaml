@@ -140,7 +140,7 @@ spec:
 
             # CORS
             - name: CORS_ORIGINS
-              value: "https://app.dhanam.io,https://dhanam.io"
+              value: "https://app.dhan.am,https://dhan.am"
 
           resources:
             requests:

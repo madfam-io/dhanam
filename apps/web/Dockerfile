@@ -48,6 +48,9 @@ ENV NEXT_PUBLIC_JANUA_URL=$NEXT_PUBLIC_JANUA_URL
 WORKDIR /app/apps/web
 RUN pnpm build
 
+# Debug: Show standalone structure (remove after confirming it works)
+RUN ls -la .next/standalone/ && ls -la .next/standalone/apps/web/ 2>/dev/null || true
+
 # =============================================================================
 # Production Stage
 # =============================================================================
@@ -62,10 +65,11 @@ RUN adduser --system --uid 1001 nextjs
 
 WORKDIR /app
 
-# Copy built application
+# Copy built application (monorepo standalone structure)
+# In monorepo, standalone includes the full path structure
 COPY --from=builder /app/apps/web/public ./public
-COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/standalone/ ./
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/.next/static
 
 USER nextjs
 
@@ -74,4 +78,5 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-CMD ["node", "server.js"]
+# In monorepo standalone, server.js is at apps/web/server.js
+CMD ["node", "apps/web/server.js"]

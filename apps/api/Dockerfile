@@ -7,8 +7,8 @@
 
 FROM node:20-alpine AS base
 
-# Install dependencies for native modules
-RUN apk add --no-cache libc6-compat openssl
+# Install dependencies for native modules (including Python for node-gyp)
+RUN apk add --no-cache libc6-compat openssl python3 make g++
 
 # Install pnpm
 RUN corepack enable && corepack prepare pnpm@8.6.7 --activate
@@ -28,7 +28,7 @@ COPY packages/config/package.json ./packages/config/
 COPY packages/esg/package.json ./packages/esg/
 COPY packages/simulations/package.json ./packages/simulations/
 
-# Install dependencies
+# Install ALL dependencies (including devDependencies for build)
 RUN pnpm install --frozen-lockfile
 
 # =============================================================================
@@ -36,12 +36,19 @@ RUN pnpm install --frozen-lockfile
 # =============================================================================
 FROM base AS builder
 
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/apps/api/node_modules ./apps/api/node_modules
+COPY --from=deps /app ./
 COPY . .
 
-# Generate Prisma client
+# Build workspace packages that API depends on
+WORKDIR /app
+RUN pnpm --filter @dhanam/shared build || true
+RUN pnpm --filter @dhanam/config build || true
+RUN pnpm --filter @dhanam/esg build || true
+RUN pnpm --filter @dhanam/simulations build || true
+
+# Generate Prisma client (requires DATABASE_URL for validation in newer Prisma)
 WORKDIR /app/apps/api
+ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
 RUN npx prisma generate
 
 # Build the application
@@ -50,7 +57,10 @@ RUN pnpm build
 # =============================================================================
 # Production Stage
 # =============================================================================
-FROM base AS runner
+FROM node:20-alpine AS runner
+
+# Install openssl for Prisma runtime
+RUN apk add --no-cache openssl
 
 ENV NODE_ENV=production
 
@@ -60,18 +70,28 @@ RUN adduser --system --uid 1001 nestjs
 
 WORKDIR /app
 
-# Copy built application
-COPY --from=builder --chown=nestjs:nodejs /app/apps/api/dist ./dist
-COPY --from=builder --chown=nestjs:nodejs /app/apps/api/node_modules ./node_modules
-COPY --from=builder --chown=nestjs:nodejs /app/apps/api/prisma ./prisma
-COPY --from=builder --chown=nestjs:nodejs /app/apps/api/package.json ./
+# Copy the entire workspace node_modules structure (pnpm symlinks require this)
+# The API's node_modules has symlinks to ../../node_modules/.pnpm/*
+COPY --from=builder --chown=nestjs:nodejs /app/node_modules ./node_modules
+COPY --from=builder --chown=nestjs:nodejs /app/apps/api/node_modules ./apps/api/node_modules
+
+# Copy workspace packages (API depends on @dhanam/shared, @dhanam/config, etc.)
+COPY --from=builder --chown=nestjs:nodejs /app/packages ./packages
+
+# Copy built application to apps/api (matching the expected path structure)
+COPY --from=builder --chown=nestjs:nodejs /app/apps/api/dist ./apps/api/dist
+COPY --from=builder --chown=nestjs:nodejs /app/apps/api/prisma ./apps/api/prisma
+COPY --from=builder --chown=nestjs:nodejs /app/apps/api/package.json ./apps/api/package.json
 
 USER nestjs
 
-EXPOSE 3000
+# Set working directory to where the API expects to run
+WORKDIR /app/apps/api
 
-# Health check
+EXPOSE 4000
+
+# Health check (port and path set via env in K8s)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1
+  CMD wget --no-verbose --tries=1 --spider http://localhost:${PORT:-4000}/v1/monitoring/health || exit 1
 
 CMD ["node", "dist/main.js"]
