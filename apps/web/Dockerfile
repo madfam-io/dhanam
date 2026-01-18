@@ -38,6 +38,12 @@ FROM base AS builder
 COPY --from=deps /app ./
 COPY . .
 
+# Build workspace packages that web depends on
+WORKDIR /app
+RUN pnpm --filter @dhanam/shared build || true
+RUN pnpm --filter @dhanam/config build || true
+RUN pnpm --filter @dhanam/ui build || true
+
 # Build arguments for Next.js
 ARG NEXT_PUBLIC_API_URL
 ARG NEXT_PUBLIC_JANUA_URL
