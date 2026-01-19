@@ -36,7 +36,7 @@
 
 **Infrastructure**: 2-Node Hetzner Cluster via [Enclii PaaS](https://github.com/madfam-org/enclii)
 - Production workloads on "The Sanctuary" (AX41-NVMe)
-- CI/CD builds on "The Forge" (VPS CX41)
+- CI/CD builds on "The Forge" (CPX11)
 - Zero-trust ingress via Cloudflare Tunnel
 
 ## Tech Stack
