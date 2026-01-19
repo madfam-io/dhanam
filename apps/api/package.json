@@ -89,7 +89,7 @@
     "passport-local": "^1.0.0",
     "pdfkit": "^0.17.2",
     "plaid": "^38.0.0",
-    "posthog-node": "^5.11.2",
+    "posthog-node": "^5.22.0",
     "qrcode": "^1.5.4",
     "rxjs": "^7.8.2",
     "speakeasy": "^2.0.0",
