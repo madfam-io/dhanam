@@ -18,8 +18,26 @@
 - 💎 **Wealth Management** - Net worth tracking and asset allocation
 - 🌱 **ESG Scoring** - Environmental, Social, and Governance metrics for crypto
 - 📱 **Multi-Platform** - Web dashboard and mobile app
-- 🔒 **Security First** - JWT auth, 2FA, and encrypted data storage
+- 🔒 **Security First** - Janua SSO (OIDC/PKCE), 2FA, and encrypted data storage
 - 🌎 **LATAM Focused** - Spanish/English support with MXN/USD currencies
+
+## Production Status
+
+| Service | Domain | Status |
+|---------|--------|--------|
+| Web Dashboard | `dhanam.com` | ✅ Running on Enclii |
+| API Backend | Internal | ✅ Running on Enclii |
+| Admin Panel | `admin.dhanam.com` | ✅ Running on Enclii |
+
+**Authentication**: Janua SSO with OAuth 2.0/OIDC (PKCE flow enforced)
+- Client ID: `dhanam-ledger`
+- Issuer: `https://auth.madfam.io`
+- Social logins: GitHub, Google via Janua
+
+**Infrastructure**: 2-Node Hetzner Cluster via [Enclii PaaS](https://github.com/madfam-org/enclii)
+- Production workloads on "The Sanctuary" (AX41-NVMe)
+- CI/CD builds on "The Forge" (VPS CX41)
+- Zero-trust ingress via Cloudflare Tunnel
 
 ## Tech Stack
 
