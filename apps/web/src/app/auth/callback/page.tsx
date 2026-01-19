@@ -7,7 +7,6 @@ import {
   getStoredCodeVerifier,
   clearStoredCodeVerifier,
 } from '~/lib/janua-oauth';
-import { useAuth } from '~/lib/hooks/use-auth';
 
 /**
  * Janua SSO Callback Page
@@ -18,7 +17,6 @@ import { useAuth } from '~/lib/hooks/use-auth';
 export default function AuthCallbackPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { setAuth } = useAuth();
   const [status, setStatus] = useState<'processing' | 'success' | 'error'>('processing');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -67,34 +65,40 @@ export default function AuthCallbackPage() {
         // Clear the code verifier from session storage
         clearStoredCodeVerifier();
 
-        // Extract tokens
-        const { access_token, refresh_token, user } = tokenData as {
+        // Extract tokens from Janua OAuth response
+        const { access_token, refresh_token } = tokenData as {
           access_token: string;
           refresh_token?: string;
-          user?: { id: string; email: string; name?: string };
+          id_token?: string;
         };
 
         if (!access_token) {
           throw new Error('No access token received');
         }
 
-        // If we have user data and tokens, set auth state
-        if (user) {
-          setAuth(user, {
-            accessToken: access_token,
-            refreshToken: refresh_token || '',
-          });
-        } else {
-          // Store tokens in cookies for the auth hook to pick up
-          document.cookie = `access_token=${access_token}; path=/; max-age=${15 * 60}; SameSite=Lax${
-            process.env.NODE_ENV === 'production' ? '; Secure' : ''
-          }`;
-          if (refresh_token) {
-            document.cookie = `refresh_token=${refresh_token}; path=/; max-age=${30 * 24 * 60 * 60}; SameSite=Lax${
-              process.env.NODE_ENV === 'production' ? '; Secure' : ''
-            }`;
-          }
+        // Store tokens in localStorage for the auth system to use
+        // The Zustand auth store will pick these up and fetch the full user profile
+        localStorage.setItem('janua_access_token', access_token);
+        if (refresh_token) {
+          localStorage.setItem('janua_refresh_token', refresh_token);
         }
+
+        // Also store in the auth-storage key that Zustand persists to
+        // This ensures immediate auth state on redirect
+        const authStorage = {
+          state: {
+            tokens: {
+              accessToken: access_token,
+              refreshToken: refresh_token || '',
+            },
+            token: access_token,
+            isAuthenticated: true,
+            // User will be fetched on dashboard load via refreshUser
+            user: null,
+          },
+          version: 0,
+        };
+        localStorage.setItem('auth-storage', JSON.stringify(authStorage));
 
         setStatus('success');
 
@@ -115,7 +119,7 @@ export default function AuthCallbackPage() {
     }
 
     handleCallback();
-  }, [searchParams, router, setAuth]);
+  }, [searchParams, router]);
 
   return (
     <div className="flex min-h-screen items-center justify-center">
