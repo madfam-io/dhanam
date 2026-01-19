@@ -132,4 +132,4 @@ Each app requires environment configuration:
 - Web: API URL, PostHog key, default locale
 - Mobile: Same as web for Expo public variables
 
-The application targets 99.9% availability with RTO 4h and daily backups.
+The application targets 99.9% availability with RTO 4h and daily backups.# Build trigger 1768794242
