@@ -133,3 +133,4 @@ Each app requires environment configuration:
 - Mobile: Same as web for Expo public variables
 
 The application targets 99.9% availability with RTO 4h and daily backups.# Build trigger 1768794242
+# Build retry 1768794847
