@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   exchangeCodeForTokens,
@@ -9,12 +9,24 @@ import {
 } from '~/lib/janua-oauth';
 
 /**
- * Janua SSO Callback Page
- *
- * Handles the OAuth callback from Janua, exchanges the authorization code
- * for tokens using PKCE, and redirects to the dashboard.
+ * Loading fallback for the callback page
  */
-export default function AuthCallbackPage() {
+function CallbackLoading() {
+  return (
+    <div className="flex min-h-screen items-center justify-center">
+      <div className="text-center">
+        <div className="mb-4 h-12 w-12 mx-auto animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        <h2 className="text-xl font-semibold">Completing sign in...</h2>
+        <p className="text-muted-foreground mt-2">Please wait while we verify your credentials.</p>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Callback content that uses useSearchParams
+ */
+function CallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [status, setStatus] = useState<'processing' | 'success' | 'error'>('processing');
@@ -158,5 +170,21 @@ export default function AuthCallbackPage() {
         )}
       </div>
     </div>
+  );
+}
+
+/**
+ * Janua SSO Callback Page
+ *
+ * Handles the OAuth callback from Janua, exchanges the authorization code
+ * for tokens using PKCE, and redirects to the dashboard.
+ *
+ * Wrapped in Suspense to handle useSearchParams during static generation.
+ */
+export default function AuthCallbackPage() {
+  return (
+    <Suspense fallback={<CallbackLoading />}>
+      <CallbackContent />
+    </Suspense>
   );
 }
