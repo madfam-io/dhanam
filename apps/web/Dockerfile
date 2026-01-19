@@ -44,11 +44,19 @@ RUN pnpm --filter @dhanam/shared build || true
 RUN pnpm --filter @dhanam/config build || true
 RUN pnpm --filter @dhanam/ui build || true
 
-# Build arguments for Next.js
+# Build arguments for Next.js (OSS-compliant: no hardcoded URLs)
+# These are injected at build-time by the CI/CD system (Enclii/Kaniko)
 ARG NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_BASE_URL
+ARG NEXT_PUBLIC_OIDC_ISSUER
+ARG NEXT_PUBLIC_OIDC_CLIENT_ID
 ARG NEXT_PUBLIC_JANUA_URL
 
+# Persist build-args as ENV for Next.js build process
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_BASE_URL=$NEXT_PUBLIC_BASE_URL
+ENV NEXT_PUBLIC_OIDC_ISSUER=$NEXT_PUBLIC_OIDC_ISSUER
+ENV NEXT_PUBLIC_OIDC_CLIENT_ID=$NEXT_PUBLIC_OIDC_CLIENT_ID
 ENV NEXT_PUBLIC_JANUA_URL=$NEXT_PUBLIC_JANUA_URL
 
 WORKDIR /app/apps/web
