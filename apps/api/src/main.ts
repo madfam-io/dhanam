@@ -79,6 +79,17 @@ async function bootstrap() {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     max: configService.get('RATE_LIMIT_MAX') ? parseInt(configService.get('RATE_LIMIT_MAX')!) : 100,
     timeWindow: (configService.get('RATE_LIMIT_WINDOW') as string) || '15 minutes',
+    allowList: (req) => {
+      // Exclude health probes and metrics from rate limiting
+      const path = req.url?.split('?')[0] || '';
+      return [
+        '/v1/monitoring/health',
+        '/v1/monitoring/ready',
+        '/metrics',
+        '/health',
+        '/ready',
+      ].includes(path);
+    },
   });
 
   // Global middleware and filters
