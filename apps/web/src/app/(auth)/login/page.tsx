@@ -12,7 +12,7 @@ import { authApi } from '~/lib/api/auth';
 import { ApiError } from '~/lib/api/client';
 import { useTranslation } from '@dhanam/shared';
 import { LocaleSwitcher } from '~/components/locale-switcher';
-import { oauthProviders, loginWithOAuth, isJanuaOAuthEnabled } from '~/lib/janua-oauth';
+import { oauthProviders, loginWithOAuth, loginWithJanuaSSO, isJanuaOAuthEnabled } from '~/lib/janua-oauth';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -73,9 +73,34 @@ export default function LoginPage() {
             </Alert>
           )}
 
-          {/* OAuth Providers */}
+          {/* Janua SSO - Primary Login Method */}
           {showOAuth && (
             <>
+              <Button
+                variant="default"
+                className="w-full mb-4"
+                size="lg"
+                onClick={() => {
+                  setError(null);
+                  loginWithJanuaSSO('/dashboard');
+                }}
+              >
+                <span className="mr-2">🔐</span>
+                {t('signInWithJanua') || 'Sign in with Janua SSO'}
+              </Button>
+
+              <div className="relative my-6">
+                <div className="absolute inset-0 flex items-center">
+                  <Separator className="w-full" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-muted-foreground">
+                    {t('orContinueWith') || 'Or continue with'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Social OAuth Providers */}
               <div className="grid grid-cols-2 gap-3 mb-4">
                 {oauthProviders.slice(0, 4).map((provider) => (
                   <Button
@@ -99,7 +124,7 @@ export default function LoginPage() {
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
                   <span className="bg-background px-2 text-muted-foreground">
-                    {t('orContinueWith') || 'Or continue with email'}
+                    {t('orContinueWithEmail') || 'Or continue with email'}
                   </span>
                 </div>
               </div>
