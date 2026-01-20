@@ -28,15 +28,17 @@ export default function HomePage() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      router.push('/dashboard');
+      const appUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://app.dhan.am';
+      window.location.href = `${appUrl}/dashboard`;
     } else {
       analytics.trackPageView('Landing Page', '/');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated]);
 
   const handleLiveDemoClick = async () => {
     analytics.track('live_demo_clicked', { source: 'hero_cta' });
+    const appUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://app.dhan.am';
     try {
       // Import authApi dynamically to avoid circular dependencies
       const { authApi } = await import('@/lib/api/auth');
@@ -50,18 +52,19 @@ export default function HomePage() {
         expiresAt: new Date(Date.now() + 60 * 60 * 1000), // 1 hour
       });
 
-      router.push('/dashboard');
+      window.location.href = `${appUrl}/dashboard`;
     } catch (error) {
       console.error('Guest login failed:', error);
       analytics.track('demo_session_failed', { error: String(error) });
       // Fallback to calculator demo
-      router.push('/demo');
+      window.location.href = `${appUrl}/demo`;
     }
   };
 
   const handleSignUpClick = () => {
     analytics.track('signup_clicked', { source: 'landing_cta' });
-    router.push('/register');
+    const appUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://app.dhan.am';
+    window.location.href = `${appUrl}/register`;
   };
 
   return (
@@ -74,12 +77,12 @@ export default function HomePage() {
             <h1 className="text-2xl font-bold">Dhanam</h1>
           </div>
           <div className="flex items-center gap-4">
-            <Link href="/login">
+            <a href={`${process.env.NEXT_PUBLIC_BASE_URL || 'https://app.dhan.am'}/login`}>
               <Button variant="ghost">Sign In</Button>
-            </Link>
-            <Link href="/register">
+            </a>
+            <a href={`${process.env.NEXT_PUBLIC_BASE_URL || 'https://app.dhan.am'}/register`}>
               <Button>Get Started</Button>
-            </Link>
+            </a>
           </div>
         </div>
       </nav>
