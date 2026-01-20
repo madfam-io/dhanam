@@ -53,6 +53,7 @@ describe('PlaidService - Webhook Contract Tests', () => {
             account: {
               findFirst: jest.fn(),
               create: jest.fn(),
+              updateMany: jest.fn(),
             },
             transaction: {
               findFirst: jest.fn(),
@@ -109,7 +110,8 @@ describe('PlaidService - Webhook Contract Tests', () => {
         item_id: 'item-123',
         environment: 'sandbox',
       };
-      const invalidSignature = 'invalid-signature-abc123';
+      // Use a valid hex string of same length as expected signature (64 chars for SHA256)
+      const invalidSignature = 'a'.repeat(64);
 
       // Act & Assert
       await expect(service.handleWebhook(webhookDto, invalidSignature)).rejects.toThrow(
@@ -365,12 +367,14 @@ describe('PlaidService - Webhook Contract Tests', () => {
 
       prisma.providerConnection.findFirst.mockResolvedValue(mockConnection as any);
       const loggerSpy = jest.spyOn((service as any).logger, 'log');
+      // Mock handleAccountWebhook to prevent calling null plaidClient
+      jest.spyOn(service as any, 'handleAccountWebhook').mockResolvedValue(undefined);
 
       // Act
       await service.handleWebhook(webhookDto, validSignature);
 
       // Assert
-      expect(loggerSpy).toHaveBeenCalledWith('Account webhook received for item item-123');
+      expect(loggerSpy).toHaveBeenCalledWith('Received Plaid webhook: ACCOUNTS:DEFAULT_UPDATE_ACCOUNTS for item item-123');
     });
   });
 

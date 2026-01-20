@@ -83,6 +83,7 @@ describe('OnboardingService', () => {
 
   const mockAuditService = {
     log: jest.fn(),
+    logEvent: jest.fn().mockResolvedValue(undefined),
   };
 
   const mockAnalytics = {
@@ -239,10 +240,10 @@ describe('OnboardingService', () => {
           updatedAt: expect.any(Date),
         },
       });
-      expect(mockAuditService.log).toHaveBeenCalledWith({
+      expect(mockAuditService.logEvent).toHaveBeenCalledWith({
         action: 'onboarding_step_updated',
-        entityType: 'user',
-        entityId: mockUserId,
+        resource: 'user',
+        resourceId: mockUserId,
         userId: mockUserId,
         metadata: {
           step: 'preferences',
@@ -327,10 +328,10 @@ describe('OnboardingService', () => {
         },
       });
       expect(mockEmailService.sendOnboardingComplete).toHaveBeenCalled();
-      expect(mockAuditService.log).toHaveBeenCalledWith({
+      expect(mockAuditService.logEvent).toHaveBeenCalledWith({
         action: 'onboarding_completed',
-        entityType: 'user',
-        entityId: mockUserId,
+        resource: 'user',
+        resourceId: mockUserId,
         userId: mockUserId,
         metadata: expect.objectContaining({
           skipOptional: true,
@@ -442,7 +443,7 @@ describe('OnboardingService', () => {
         verificationToken: mockToken,
         verificationUrl: `https://app.example.com/verify-email?token=${mockToken}`,
       });
-      expect(mockAuditService.log).toHaveBeenCalled();
+      expect(mockAuditService.logEvent).toHaveBeenCalled();
       expect(mockAnalytics.trackEmailVerificationSent).toHaveBeenCalled();
     });
 
@@ -495,7 +496,7 @@ describe('OnboardingService', () => {
           updatedAt: expect.any(Date),
         },
       });
-      expect(mockAuditService.log).toHaveBeenCalled();
+      expect(mockAuditService.logEvent).toHaveBeenCalled();
       expect(mockAnalytics.trackEmailVerificationCompleted).toHaveBeenCalled();
     });
 
@@ -572,15 +573,20 @@ describe('OnboardingService', () => {
 
   describe('skipOnboardingStep', () => {
     it('should skip optional step successfully', async () => {
-      mockPrismaService.user.findUnique.mockResolvedValue(mockUser);
-      mockPrismaService.user.update.mockResolvedValue(mockUser);
+      // connect_accounts depends on space_setup, so mock user with userSpaces
+      const userWithSpace = {
+        ...mockUser,
+        userSpaces: [{ space: { id: 'space-1', accounts: [], budgets: [] } }],
+      };
+      mockPrismaService.user.findUnique.mockResolvedValue(userWithSpace);
+      mockPrismaService.user.update.mockResolvedValue(userWithSpace);
 
       const result = await service.skipOnboardingStep(mockUserId, 'connect_accounts' as OnboardingStep);
 
-      expect(mockAuditService.log).toHaveBeenCalledWith({
+      expect(mockAuditService.logEvent).toHaveBeenCalledWith({
         action: 'onboarding_step_skipped',
-        entityType: 'user',
-        entityId: mockUserId,
+        resource: 'user',
+        resourceId: mockUserId,
         userId: mockUserId,
         metadata: { step: 'connect_accounts' },
       });
@@ -639,10 +645,10 @@ describe('OnboardingService', () => {
           updatedAt: expect.any(Date),
         },
       });
-      expect(mockAuditService.log).toHaveBeenCalledWith({
+      expect(mockAuditService.logEvent).toHaveBeenCalledWith({
         action: 'onboarding_reset',
-        entityType: 'user',
-        entityId: mockUserId,
+        resource: 'user',
+        resourceId: mockUserId,
         userId: mockUserId,
       });
       expect(result.completed).toBe(false);
@@ -662,8 +668,8 @@ describe('OnboardingService', () => {
     it('should handle missing user spaces gracefully', async () => {
       mockPrismaService.user.findUnique.mockResolvedValue({
         ...mockUser,
-        userSpaces: undefined,
-        providerConnections: undefined,
+        userSpaces: [],
+        providerConnections: [],
       });
 
       const result = await service.getOnboardingStatus(mockUserId);
@@ -673,16 +679,17 @@ describe('OnboardingService', () => {
     });
 
     it('should handle concurrent updates correctly', async () => {
-      // Simulate two concurrent updates
-      const update1 = service.updateOnboardingStep(mockUserId, {
-        step: 'preferences' as OnboardingStep,
-      });
-      const update2 = service.updateOnboardingStep(mockUserId, {
-        step: 'space_setup' as OnboardingStep,
-      });
-
+      // Set up mock before calls - use steps without dependencies
       mockPrismaService.user.findUnique.mockResolvedValue(mockUser);
       mockPrismaService.user.update.mockResolvedValue(mockUser);
+
+      // Simulate two concurrent updates using steps without dependencies
+      const update1 = service.updateOnboardingStep(mockUserId, {
+        step: 'welcome' as OnboardingStep,
+      });
+      const update2 = service.updateOnboardingStep(mockUserId, {
+        step: 'preferences' as OnboardingStep,
+      });
 
       await Promise.all([update1, update2]);
 

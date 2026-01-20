@@ -148,7 +148,7 @@ describe('BillingService', () => {
         metadata: { userId: 'user-123' },
       });
       expect(audit.log).toHaveBeenCalled();
-      expect(result).toEqual({ checkoutUrl: 'https://checkout.stripe.com/pay/cs_test123' });
+      expect(result).toEqual({ checkoutUrl: 'https://checkout.stripe.com/pay/cs_test123', provider: 'stripe' });
     });
 
     it('should use existing Stripe customer ID if available', async () => {

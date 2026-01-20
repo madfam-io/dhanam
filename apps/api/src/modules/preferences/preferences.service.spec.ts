@@ -64,6 +64,7 @@ describe('PreferencesService', () => {
 
   const mockAuditService = {
     log: jest.fn(),
+    logEvent: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -192,10 +193,10 @@ describe('PreferencesService', () => {
 
       await service.updateUserPreferences(mockUserId, { emailNotifications: false });
 
-      expect(mockAuditService.log).toHaveBeenCalledWith({
+      expect(mockAuditService.logEvent).toHaveBeenCalledWith({
         action: 'preferences_updated',
-        entityType: 'user',
-        entityId: mockUserId,
+        resource: 'user',
+        resourceId: mockUserId,
         userId: mockUserId,
         metadata: {
           changes: {
@@ -207,19 +208,21 @@ describe('PreferencesService', () => {
     });
 
     it('should create preferences if they do not exist', async () => {
-      mockPrismaService.userPreferences.findUnique
-        .mockResolvedValueOnce(null) // For ensurePreferencesExist
-        .mockResolvedValueOnce(null); // Check after creation attempt
-      
       mockPrismaService.user.findUnique.mockResolvedValue({
         id: mockUserId,
         locale: 'en',
         timezone: 'UTC',
       });
-      
+
       mockPrismaService.userPreferences.create.mockResolvedValue(mockUserPreferences);
+
+      // Mock sequence:
+      // 1. ensurePreferencesExist calls findUnique → null (triggers creation)
+      // 2. updateUserPreferences calls findUnique for previousPreferences → mockUserPreferences (after creation)
       mockPrismaService.userPreferences.findUnique
-        .mockResolvedValueOnce(mockUserPreferences); // After creation
+        .mockResolvedValueOnce(null) // For ensurePreferencesExist
+        .mockResolvedValueOnce(mockUserPreferences); // For previousPreferences (after creation)
+
       mockPrismaService.userPreferences.update.mockResolvedValue({
         ...mockUserPreferences,
         ...updateDto,
@@ -239,7 +242,7 @@ describe('PreferencesService', () => {
 
       await service.updateUserPreferences(mockUserId, { emailNotifications: true });
 
-      expect(mockAuditService.log).not.toHaveBeenCalled();
+      expect(mockAuditService.logEvent).not.toHaveBeenCalled();
     });
   });
 
@@ -303,10 +306,10 @@ describe('PreferencesService', () => {
 
       await service.bulkUpdatePreferences(mockUserId, bulkUpdateDto);
 
-      expect(mockAuditService.log).toHaveBeenCalledWith({
+      expect(mockAuditService.logEvent).toHaveBeenCalledWith({
         action: 'preferences_bulk_updated',
-        entityType: 'user',
-        entityId: mockUserId,
+        resource: 'user',
+        resourceId: mockUserId,
         userId: mockUserId,
         metadata: {
           categories: ['notifications', 'display', 'financial'],
@@ -360,10 +363,10 @@ describe('PreferencesService', () => {
         where: { userId: mockUserId },
       });
       expect(mockPrismaService.userPreferences.create).toHaveBeenCalled();
-      expect(mockAuditService.log).toHaveBeenCalledWith({
+      expect(mockAuditService.logEvent).toHaveBeenCalledWith({
         action: 'preferences_reset',
-        entityType: 'user',
-        entityId: mockUserId,
+        resource: 'user',
+        resourceId: mockUserId,
         userId: mockUserId,
       });
     });
@@ -464,7 +467,7 @@ describe('PreferencesService', () => {
 
       await service.updateUserPreferences(mockUserId, { backupFrequency: 'weekly' });
 
-      expect(mockAuditService.log).toHaveBeenCalledWith(
+      expect(mockAuditService.logEvent).toHaveBeenCalledWith(
         expect.objectContaining({
           metadata: expect.objectContaining({
             changes: {

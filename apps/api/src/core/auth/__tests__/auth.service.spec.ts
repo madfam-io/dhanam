@@ -516,12 +516,13 @@ describe('AuthService', () => {
 
       const result = await service.validateUser(email, password);
 
-      expect(result).toEqual({
-        id: mockUser.id,
-        email: mockUser.email,
-        totpSecret: null,
-        isActive: true,
-      });
+      // Service returns user object without passwordHash
+      expect(result).toBeDefined();
+      expect(result!.id).toBe(mockUser.id);
+      expect(result!.email).toBe(mockUser.email);
+      expect(result!.totpSecret).toBeNull();
+      expect(result!.isActive).toBe(true);
+      expect((result as any).passwordHash).toBeUndefined();
       expect(result.passwordHash).toBeUndefined();
     });
 

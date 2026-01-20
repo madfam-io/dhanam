@@ -6,19 +6,27 @@ import { PrismaService } from '@core/prisma/prisma.service';
 import { CryptoService } from '@core/crypto/crypto.service';
 import { mockDeep, DeepMockProxy } from 'jest-mock-extended';
 
-// Mock axios
+// Create mock client with interceptors that axios.create() will return
+const mockAxiosClient = {
+  get: jest.fn(),
+  post: jest.fn(),
+  interceptors: {
+    request: {
+      use: jest.fn(),
+    },
+    response: {
+      use: jest.fn(),
+    },
+  },
+};
+
+// Mock axios module
 jest.mock('axios', () => ({
+  __esModule: true,
   default: {
-    create: jest.fn(() => ({
-      get: jest.fn(),
-      post: jest.fn(),
-      interceptors: {
-        request: {
-          use: jest.fn(),
-        },
-      },
-    })),
+    create: jest.fn(() => mockAxiosClient),
     get: jest.fn(),
+    isAxiosError: jest.fn(() => false),
   },
 }));
 
@@ -27,6 +35,22 @@ describe('BitsoService', () => {
   let prisma: DeepMockProxy<PrismaService>;
   let cryptoService: DeepMockProxy<CryptoService>;
   let configService: DeepMockProxy<ConfigService>;
+
+  // Config mock must be created before module compilation
+  const mockConfigService = {
+    get: jest.fn((key: string) => {
+      switch (key) {
+        case 'BITSO_API_KEY':
+          return 'test-api-key';
+        case 'BITSO_API_SECRET':
+          return 'test-api-secret';
+        case 'BITSO_WEBHOOK_SECRET':
+          return 'webhook-secret';
+        default:
+          return '';
+      }
+    }),
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -42,7 +66,7 @@ describe('BitsoService', () => {
         },
         {
           provide: ConfigService,
-          useValue: mockDeep<ConfigService>(),
+          useValue: mockConfigService,
         },
       ],
     }).compile();
@@ -52,19 +76,9 @@ describe('BitsoService', () => {
     cryptoService = module.get(CryptoService);
     configService = module.get(ConfigService);
 
-    // Mock config values
-    configService.get.mockImplementation((key: string) => {
-      switch (key) {
-        case 'BITSO_API_KEY':
-          return 'test-api-key';
-        case 'BITSO_API_SECRET':
-          return 'test-api-secret';
-        case 'BITSO_WEBHOOK_SECRET':
-          return 'webhook-secret';
-        default:
-          return '';
-      }
-    });
+    // Reset axios mocks
+    mockAxiosClient.get.mockReset();
+    mockAxiosClient.post.mockReset();
   });
 
   it('should be defined', () => {
@@ -114,16 +128,13 @@ describe('BitsoService', () => {
         },
       ];
 
-      // Mock axios responses
+      // Mock axios responses using the module-level mockAxiosClient
       const axios = require('axios');
-      const mockClient = {
-        get: jest.fn()
-          .mockResolvedValueOnce({ data: { payload: mockAccountInfo } }) // account_status
-          .mockResolvedValueOnce({ data: { payload: { balances: mockBalances } } }) // balance
-          .mockResolvedValueOnce({ data: { payload: [] } }), // user_trades
-      };
+      mockAxiosClient.get
+        .mockResolvedValueOnce({ data: { payload: mockAccountInfo } }) // account_status
+        .mockResolvedValueOnce({ data: { payload: { balances: mockBalances } } }) // balance
+        .mockResolvedValueOnce({ data: { payload: [] } }); // user_trades
 
-      axios.default.create.mockReturnValue(mockClient);
       axios.default.get.mockResolvedValue({ data: { payload: mockTickers } });
 
       cryptoService.encrypt.mockReturnValue('encrypted-data');
@@ -220,7 +231,8 @@ describe('BitsoService', () => {
 
     it('should reject invalid webhook signature', () => {
       const payload = '{"test":"data"}';
-      const invalidSignature = 'invalid-signature';
+      // Use a 64-char hex string (same length as SHA256 output) but wrong value
+      const invalidSignature = 'a'.repeat(64);
 
       const result = (service as any).verifyWebhookSignature(payload, invalidSignature);
       expect(result).toBe(false);

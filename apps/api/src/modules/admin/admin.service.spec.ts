@@ -57,6 +57,7 @@ describe('AdminService', () => {
   };
 
   const mockLoggerService = {
+    log: jest.fn(),
     info: jest.fn(),
     warn: jest.fn(),
     error: jest.fn(),
@@ -124,7 +125,7 @@ describe('AdminService', () => {
         totalPages: 1,
       });
       expect(result.data[0]).toHaveProperty('spaceCount', 2);
-      expect(result.data[0]).not.toHaveProperty('_count');
+      expect(result.data[0]._count).toBeUndefined();
     });
 
     it('should filter users by search term', async () => {
@@ -191,7 +192,7 @@ describe('AdminService', () => {
       expect(result.id).toBe('user1');
       expect(result.spaces).toHaveLength(1);
       expect(result.connections).toHaveLength(1);
-      expect(mockAuditService.log).toHaveBeenCalledWith(
+      expect(mockAuditService.logEvent).toHaveBeenCalledWith(
         expect.objectContaining({
           action: 'admin.view_user_details',
           resourceId: 'user1',
@@ -296,7 +297,7 @@ describe('AdminService', () => {
 
       expect(result.enabled).toBe(true);
       expect(mockRedisService.hset).toHaveBeenCalled();
-      expect(mockAuditService.log).toHaveBeenCalledWith(
+      expect(mockAuditService.logEvent).toHaveBeenCalledWith(
         expect.objectContaining({
           action: 'admin.update_feature_flag',
           resourceId: 'esg_scoring',

@@ -1,15 +1,18 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { QueueService } from './queue.service';
-import { mockDeep } from 'jest-mock-extended';
+import { mockDeep, DeepMockProxy } from 'jest-mock-extended';
+
+// Create mock queue for testing
+const createMockQueue = (name: string) => ({
+  name,
+  add: jest.fn().mockResolvedValue({ id: 'job-id', data: {} }),
+  close: jest.fn().mockResolvedValue(undefined),
+});
 
 // Mock BullMQ
 jest.mock('bullmq', () => ({
-  Queue: jest.fn().mockImplementation((name: string) => ({
-    name,
-    add: jest.fn().mockResolvedValue({ id: 'job-id', data: {} }),
-    close: jest.fn().mockResolvedValue(undefined),
-  })),
+  Queue: jest.fn().mockImplementation((name: string) => createMockQueue(name)),
   Worker: jest.fn().mockImplementation((name: string) => ({
     name,
     close: jest.fn().mockResolvedValue(undefined),
@@ -20,6 +23,16 @@ jest.mock('bullmq', () => ({
     close: jest.fn().mockResolvedValue(undefined),
   })),
 }));
+
+// Mock ioredis
+jest.mock('ioredis', () => {
+  return {
+    Redis: jest.fn().mockImplementation(() => ({
+      connect: jest.fn().mockResolvedValue(undefined),
+      disconnect: jest.fn().mockResolvedValue(undefined),
+    })),
+  };
+});
 
 describe('QueueService', () => {
   let service: QueueService;
@@ -38,9 +51,16 @@ describe('QueueService', () => {
 
     service = module.get<QueueService>(QueueService);
     configService = module.get(ConfigService);
-    
+
     // Mock Redis URL
     configService.get.mockReturnValue('redis://localhost:6379');
+
+    // Manually initialize the queues for testing (simulating onModuleInit)
+    const queues = (service as any).queues as Map<string, any>;
+    queues.set('sync-transactions', createMockQueue('sync-transactions'));
+    queues.set('categorize-transactions', createMockQueue('categorize-transactions'));
+    queues.set('esg-updates', createMockQueue('esg-updates'));
+    queues.set('valuation-snapshots', createMockQueue('valuation-snapshots'));
   });
 
   it('should be defined', () => {

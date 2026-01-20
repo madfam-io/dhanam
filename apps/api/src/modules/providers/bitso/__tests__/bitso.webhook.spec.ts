@@ -425,7 +425,8 @@ describe('BitsoService - Webhook Contract Tests', () => {
       await service.handleWebhook(webhookDto, validSignature);
 
       // Assert
-      expect(loggerSpy).toHaveBeenCalledWith('Unhandled Bitso webhook type: orders');
+      // Service logs order webhook receipt, not "unhandled"
+      expect(loggerSpy).toHaveBeenCalledWith('Order webhook received for order-123');
     });
   });
 
@@ -592,7 +593,7 @@ describe('BitsoService - Webhook Contract Tests', () => {
       // Act & Assert
       await expect(service.handleWebhook(webhookDto, validSignature)).rejects.toThrow('Sync failed');
       expect(loggerSpy).toHaveBeenCalledWith(
-        'Failed to handle Bitso webhook:',
+        'Failed to handle webhook for transaction txn-123:',
         expect.any(Error)
       );
     });

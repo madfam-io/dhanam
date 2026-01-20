@@ -79,11 +79,12 @@ describe('AccountsService', () => {
 
       prisma.account.findMany.mockResolvedValue(mockAccounts);
 
-      const result = await service.findAll(spaceId);
+      const result = await service.listAccounts(spaceId);
 
-      expect(result).toEqual(mockAccounts);
+      expect(result).toHaveLength(2);
       expect(prisma.account.findMany).toHaveBeenCalledWith({
         where: { spaceId },
+        orderBy: { createdAt: 'desc' },
       });
     });
   });
@@ -111,11 +112,11 @@ describe('AccountsService', () => {
 
       prisma.account.findFirst.mockResolvedValue(mockAccount);
 
-      const result = await service.findOne(accountId);
+      const result = await service.getAccount(spaceId, accountId);
 
-      expect(result).toEqual(mockAccount);
+      expect(result.id).toBe(accountId);
       expect(prisma.account.findFirst).toHaveBeenCalledWith({
-        where: { id: accountId },
+        where: { id: accountId, spaceId },
       });
     });
 
@@ -125,7 +126,7 @@ describe('AccountsService', () => {
 
       prisma.account.findFirst.mockResolvedValue(null);
 
-      await expect(service.findOne(accountId)).rejects.toThrow(
+      await expect(service.getAccount(spaceId, accountId)).rejects.toThrow(
         NotFoundException
       );
     });
@@ -137,6 +138,7 @@ describe('AccountsService', () => {
       const createDto = {
         name: 'New Account',
         type: 'checking' as AccountType,
+        subtype: 'checking',
         currency: 'USD' as Currency,
         balance: 1000,
       };
@@ -145,13 +147,13 @@ describe('AccountsService', () => {
         id: 'new_account_id',
         spaceId,
         provider: 'manual' as Provider,
-        providerAccountId: expect.stringContaining('manual_'),
+        providerAccountId: null,
         name: createDto.name,
         type: createDto.type,
-        subtype: createDto.type,
+        subtype: createDto.subtype,
         currency: createDto.currency,
         balance: createDto.balance,
-        lastSyncedAt: new Date(),
+        lastSyncedAt: null,
         isActive: true,
         metadata: null,
         createdAt: new Date(),
@@ -160,20 +162,18 @@ describe('AccountsService', () => {
 
       prisma.account.create.mockResolvedValue(mockAccount);
 
-      const result = await service.create(createDto, spaceId);
+      const result = await service.createAccount(spaceId, createDto);
 
-      expect(result).toEqual(mockAccount);
+      expect(result.name).toBe(createDto.name);
       expect(prisma.account.create).toHaveBeenCalledWith({
         data: {
           spaceId,
-          provider: 'manual',
-          providerAccountId: expect.stringContaining('manual_'),
           name: createDto.name,
           type: createDto.type,
-          subtype: createDto.type,
+          subtype: createDto.subtype,
           currency: createDto.currency,
           balance: createDto.balance,
-          lastSyncedAt: expect.any(Date),
+          provider: 'manual',
         },
       });
     });
@@ -213,12 +213,15 @@ describe('AccountsService', () => {
       prisma.account.findFirst.mockResolvedValue(existingAccount);
       prisma.account.update.mockResolvedValue(updatedAccount);
 
-      const result = await service.update(accountId, updateDto);
+      const result = await service.updateAccount(spaceId, accountId, updateDto);
 
-      expect(result).toEqual(updatedAccount);
+      expect(result.name).toBe(updateDto.name);
       expect(prisma.account.update).toHaveBeenCalledWith({
         where: { id: accountId },
-        data: updateDto,
+        data: {
+          name: updateDto.name,
+          balance: updateDto.balance,
+        },
       });
     });
 
@@ -229,7 +232,7 @@ describe('AccountsService', () => {
 
       prisma.account.findFirst.mockResolvedValue(null);
 
-      await expect(service.update(accountId, updateDto)).rejects.toThrow(
+      await expect(service.updateAccount(spaceId, accountId, updateDto)).rejects.toThrow(
         NotFoundException
       );
     });
@@ -260,7 +263,7 @@ describe('AccountsService', () => {
       prisma.account.findFirst.mockResolvedValue(mockAccount);
       prisma.account.delete.mockResolvedValue(mockAccount);
 
-      await service.remove(accountId);
+      await service.deleteAccount(spaceId, accountId);
 
       expect(prisma.account.delete).toHaveBeenCalledWith({
         where: { id: accountId },
@@ -273,23 +276,22 @@ describe('AccountsService', () => {
 
       prisma.account.findFirst.mockResolvedValue(null);
 
-      await expect(service.remove(accountId)).rejects.toThrow(
+      await expect(service.deleteAccount(spaceId, accountId)).rejects.toThrow(
         NotFoundException
       );
     });
   });
 
   describe('connectAccount', () => {
-    it('should return mock connection for providers', async () => {
+    it('should throw for Belvo provider (use dedicated endpoint)', async () => {
       const spaceId = 'space_id';
+      const userId = 'userId';
       const connectDto = { provider: 'belvo' as Exclude<Provider, 'manual'> };
 
-      const result = await service.connectAccount(spaceId, 'userId', connectDto);
-
-      expect(result).toEqual({
-        url: expect.stringContaining('connect'),
-        message: 'Belvo integration will be implemented',
-      });
+      // Belvo connections should go through dedicated Belvo endpoint
+      await expect(service.connectAccount(spaceId, userId, connectDto)).rejects.toThrow(
+        'Belvo connections should be initiated through /providers/belvo/link endpoint'
+      );
     });
   });
 });

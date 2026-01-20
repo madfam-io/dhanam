@@ -5,6 +5,12 @@ import { PrismaService } from '../../core/prisma/prisma.service';
 import { SpacesService } from '../spaces/spaces.service';
 import { CreateCategoryDto, UpdateCategoryDto } from './dto';
 
+// Helper to create Decimal-like mock
+const createDecimal = (value: number) => ({
+  toNumber: () => value,
+  toString: () => value.toString(),
+});
+
 describe('CategoriesService', () => {
   let service: CategoriesService;
   let prisma: jest.Mocked<PrismaService>;
@@ -36,7 +42,7 @@ describe('CategoriesService', () => {
     id: 'category-123',
     budgetId: 'budget-123',
     name: 'Groceries',
-    budgetedAmount: 500,
+    budgetedAmount: createDecimal(500),
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -53,6 +59,9 @@ describe('CategoriesService', () => {
       },
       budget: {
         findFirst: jest.fn(),
+      },
+      transaction: {
+        updateMany: jest.fn().mockResolvedValue({ count: 0 }),
       },
     };
 
@@ -200,8 +209,11 @@ describe('CategoriesService', () => {
       prisma.budget.findFirst.mockResolvedValue(mockBudget as any);
       prisma.category.create.mockResolvedValue({
         ...mockCategory,
-        ...createDto,
+        name: createDto.name,
+        budgetedAmount: createDecimal(createDto.budgetedAmount),
         id: 'new-category-123',
+        budget: mockBudget,
+        _count: { transactions: 0 },
       } as any);
 
       const result = await service.create(
@@ -214,7 +226,15 @@ describe('CategoriesService', () => {
         where: { id: createDto.budgetId, spaceId: mockSpace.id },
       });
       expect(prisma.category.create).toHaveBeenCalledWith({
-        data: createDto,
+        data: expect.objectContaining({
+          budgetId: createDto.budgetId,
+          name: createDto.name,
+          budgetedAmount: createDto.budgetedAmount,
+        }),
+        include: {
+          budget: true,
+          _count: { select: { transactions: true } },
+        },
       });
       expect(result.name).toBe('Entertainment');
     });
@@ -248,10 +268,14 @@ describe('CategoriesService', () => {
       prisma.category.findFirst.mockResolvedValue({
         ...mockCategory,
         budget: mockBudget,
+        _count: { transactions: 5 },
       } as any);
       prisma.category.update.mockResolvedValue({
         ...mockCategory,
-        ...updateDto,
+        name: updateDto.name,
+        budgetedAmount: createDecimal(updateDto.budgetedAmount!),
+        budget: mockBudget,
+        _count: { transactions: 5 },
       } as any);
 
       const result = await service.update(
@@ -263,7 +287,14 @@ describe('CategoriesService', () => {
 
       expect(prisma.category.update).toHaveBeenCalledWith({
         where: { id: mockCategory.id },
-        data: updateDto,
+        data: expect.objectContaining({
+          name: updateDto.name,
+          budgetedAmount: updateDto.budgetedAmount,
+        }),
+        include: {
+          budget: true,
+          _count: { select: { transactions: true } },
+        },
       });
       expect(result.name).toBe('Updated Groceries');
       expect(result.budgetedAmount).toBe(600);
@@ -281,10 +312,13 @@ describe('CategoriesService', () => {
       prisma.category.findFirst.mockResolvedValue({
         ...mockCategory,
         budget: mockBudget,
+        _count: { transactions: 5 },
       } as any);
       prisma.category.update.mockResolvedValue({
         ...mockCategory,
-        budgetedAmount: 700,
+        budgetedAmount: createDecimal(700),
+        budget: mockBudget,
+        _count: { transactions: 5 },
       } as any);
 
       const partialDto = { budgetedAmount: 700 };
@@ -304,11 +338,17 @@ describe('CategoriesService', () => {
       prisma.category.findFirst.mockResolvedValue({
         ...mockCategory,
         budget: mockBudget,
+        _count: { transactions: 2 },
       } as any);
+      (prisma as any).transaction.updateMany.mockResolvedValue({ count: 2 });
       prisma.category.delete.mockResolvedValue(mockCategory as any);
 
-      await service.delete(mockSpace.id, mockUser.id, mockCategory.id);
+      await service.remove(mockSpace.id, mockUser.id, mockCategory.id);
 
+      expect((prisma as any).transaction.updateMany).toHaveBeenCalledWith({
+        where: { categoryId: mockCategory.id },
+        data: { categoryId: null },
+      });
       expect(prisma.category.delete).toHaveBeenCalledWith({
         where: { id: mockCategory.id },
       });
@@ -318,7 +358,7 @@ describe('CategoriesService', () => {
       prisma.category.findFirst.mockResolvedValue(null);
 
       await expect(
-        service.delete(mockSpace.id, mockUser.id, 'wrong-id')
+        service.remove(mockSpace.id, mockUser.id, 'wrong-id')
       ).rejects.toThrow(NotFoundException);
     });
 
@@ -328,7 +368,7 @@ describe('CategoriesService', () => {
       );
 
       await expect(
-        service.delete(mockSpace.id, mockUser.id, mockCategory.id)
+        service.remove(mockSpace.id, mockUser.id, mockCategory.id)
       ).rejects.toThrow(ForbiddenException);
     });
   });
@@ -337,7 +377,7 @@ describe('CategoriesService', () => {
     it('should handle decimal amounts correctly', async () => {
       const categoryWithDecimal = {
         ...mockCategory,
-        budgetedAmount: 123.45,
+        budgetedAmount: createDecimal(123.45),
         budget: mockBudget,
         _count: { transactions: 0 },
       };

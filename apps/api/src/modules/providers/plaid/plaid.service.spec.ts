@@ -32,32 +32,9 @@ describe('PlaidService', () => {
   let cryptoService: DeepMockProxy<CryptoService>;
   let configService: DeepMockProxy<ConfigService>;
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        PlaidService,
-        {
-          provide: PrismaService,
-          useValue: mockDeep<PrismaService>(),
-        },
-        {
-          provide: CryptoService,
-          useValue: mockDeep<CryptoService>(),
-        },
-        {
-          provide: ConfigService,
-          useValue: mockDeep<ConfigService>(),
-        },
-      ],
-    }).compile();
-
-    service = module.get<PlaidService>(PlaidService);
-    prisma = module.get(PrismaService);
-    cryptoService = module.get(CryptoService);
-    configService = module.get(ConfigService);
-
-    // Mock config values
-    configService.get.mockImplementation((key: string) => {
+  // Config mock must be created before module compilation
+  const mockConfigService = {
+    get: jest.fn((key: string) => {
       switch (key) {
         case 'PLAID_CLIENT_ID':
           return 'test-client-id';
@@ -72,7 +49,32 @@ describe('PlaidService', () => {
         default:
           return undefined;
       }
-    });
+    }),
+  };
+
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        PlaidService,
+        {
+          provide: PrismaService,
+          useValue: mockDeep<PrismaService>(),
+        },
+        {
+          provide: CryptoService,
+          useValue: mockDeep<CryptoService>(),
+        },
+        {
+          provide: ConfigService,
+          useValue: mockConfigService,
+        },
+      ],
+    }).compile();
+
+    service = module.get<PlaidService>(PlaidService);
+    prisma = module.get(PrismaService);
+    cryptoService = module.get(CryptoService);
+    configService = module.get(ConfigService);
   });
 
   it('should be defined', () => {
@@ -169,7 +171,8 @@ describe('PlaidService', () => {
 
     it('should reject invalid webhook signature', () => {
       const payload = '{"test":"data"}';
-      const invalidSignature = 'invalid-signature';
+      // Use a valid hex string of same length as SHA256 signature (64 chars) but wrong value
+      const invalidSignature = 'a'.repeat(64);
 
       const result = (service as any).verifyWebhookSignature(payload, invalidSignature);
       expect(result).toBe(false);

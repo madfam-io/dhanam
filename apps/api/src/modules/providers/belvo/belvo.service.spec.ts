@@ -30,6 +30,22 @@ describe('BelvoService', () => {
   let auditService: DeepMockProxy<AuditService>;
   let configService: DeepMockProxy<ConfigService>;
 
+  // Config mock that returns Belvo credentials
+  const mockConfigServiceWithCredentials = {
+    get: jest.fn((key: string) => {
+      switch (key) {
+        case 'BELVO_SECRET_KEY_ID':
+          return 'test-key-id';
+        case 'BELVO_SECRET_KEY_PASSWORD':
+          return 'test-key-password';
+        case 'BELVO_ENV':
+          return 'sandbox';
+        default:
+          return undefined;
+      }
+    }),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -48,7 +64,7 @@ describe('BelvoService', () => {
         },
         {
           provide: ConfigService,
-          useValue: mockDeep<ConfigService>(),
+          useValue: mockConfigServiceWithCredentials,
         },
       ],
     }).compile();
@@ -59,19 +75,19 @@ describe('BelvoService', () => {
     auditService = module.get(AuditService);
     configService = module.get(ConfigService);
 
-    // Mock config values
-    configService.get.mockImplementation((key: string) => {
-      switch (key) {
-        case 'BELVO_SECRET_KEY_ID':
-          return 'test-key-id';
-        case 'BELVO_SECRET_KEY_PASSWORD':
-          return 'test-key-password';
-        case 'BELVO_ENV':
-          return 'sandbox';
-        default:
-          return undefined;
-      }
-    });
+    // Manually set the belvoClient on the service instance since the mock may not initialize it
+    (service as any).belvoClient = {
+      links: {
+        register: jest.fn(),
+        delete: jest.fn(),
+      },
+      accounts: {
+        retrieve: jest.fn(),
+      },
+      transactions: {
+        retrieve: jest.fn().mockResolvedValue([]),
+      },
+    };
   });
 
   it('should be defined', () => {
@@ -123,9 +139,23 @@ describe('BelvoService', () => {
     });
 
     it('should handle original signature', async () => {
+      const mockConnection = {
+        id: 'conn1',
+        userId: 'user1',
+        user: {
+          userSpaces: [{
+            space: { id: 'space1' }
+          }]
+        }
+      };
+
+      prisma.providerConnection.findFirst.mockResolvedValue(mockConnection as any);
+
       const result = await service.syncTransactions('space1', 'user1', 'link1');
-      
-      expect(Array.isArray(result)).toBe(true);
+
+      // The service now returns an object with transactionCount, accountCount, nextCursor
+      expect(result).toHaveProperty('transactionCount');
+      expect(result).toHaveProperty('accountCount');
     });
   });
 

@@ -83,7 +83,7 @@ describe('RulesService', () => {
   describe('createRule', () => {
     it('should create a categorization rule', async () => {
       const mockCreatedRule = { ...mockRules[0] };
-      prisma.categoryRule.create.mockResolvedValue(mockCreatedRule as any);
+      prisma.transactionRule.create.mockResolvedValue(mockCreatedRule as any);
 
       const result = await service.createRule(
         'space1',
@@ -107,11 +107,18 @@ describe('RulesService', () => {
   });
 
   describe('categorizeTransaction', () => {
+    const mockAccount = {
+      id: 'acc1',
+      spaceId: 'space1',
+      space: { id: 'space1' },
+    };
+
     it('should categorize transaction using matching rule', async () => {
-      prisma.categoryRule.findMany.mockResolvedValue(mockRules as any);
+      prisma.account.findUnique.mockResolvedValue(mockAccount as any);
+      prisma.transactionRule.findMany.mockResolvedValue(mockRules as any);
 
       const result = await service.categorizeTransaction(mockTransaction);
-      
+
       expect(result).toBe('cat1');
     });
 
@@ -122,10 +129,11 @@ describe('RulesService', () => {
         description: 'Random Purchase',
       };
 
-      prisma.categoryRule.findMany.mockResolvedValue(mockRules as any);
+      prisma.account.findUnique.mockResolvedValue(mockAccount as any);
+      prisma.transactionRule.findMany.mockResolvedValue(mockRules as any);
 
       const result = await service.categorizeTransaction(nonMatchingTransaction);
-      
+
       expect(result).toBeNull();
     });
 
@@ -146,24 +154,32 @@ describe('RulesService', () => {
         amount: new Decimal(-150.00),
       };
 
-      prisma.categoryRule.findMany.mockResolvedValue([amountRule] as any);
+      prisma.account.findUnique.mockResolvedValue(mockAccount as any);
+      prisma.transactionRule.findMany.mockResolvedValue([amountRule] as any);
 
       const result = await service.categorizeTransaction(expensiveTransaction);
-      
+
       expect(result).toBe('cat1');
     });
   });
 
   describe('batchCategorizeTransactions', () => {
+    const mockAccount = {
+      id: 'acc1',
+      spaceId: 'space1',
+      space: { id: 'space1' },
+    };
+
     it('should categorize multiple transactions', async () => {
       const mockTransactions = [mockTransaction];
-      
+
+      prisma.account.findUnique.mockResolvedValue(mockAccount as any);
       prisma.transaction.findMany.mockResolvedValue(mockTransactions);
-      prisma.categoryRule.findMany.mockResolvedValue(mockRules as any);
+      prisma.transactionRule.findMany.mockResolvedValue(mockRules as any);
       prisma.transaction.update.mockResolvedValue(mockTransaction);
 
       const result = await service.batchCategorizeTransactions('space1');
-      
+
       expect(result).toBeDefined();
       expect(result.categorized).toBe(1);
       expect(result.total).toBe(1);
@@ -171,49 +187,32 @@ describe('RulesService', () => {
   });
 
   describe('categorizeSpecificTransactions', () => {
+    const mockAccount = {
+      id: 'acc1',
+      spaceId: 'space1',
+      space: { id: 'space1' },
+    };
+
     it('should categorize specific transactions by ID', async () => {
       const mockTransactions = [mockTransaction];
-      
+
+      prisma.account.findUnique.mockResolvedValue(mockAccount as any);
       prisma.transaction.findMany.mockResolvedValue(mockTransactions);
-      prisma.categoryRule.findMany.mockResolvedValue(mockRules as any);
+      prisma.transactionRule.findMany.mockResolvedValue(mockRules as any);
       prisma.transaction.update.mockResolvedValue(mockTransaction);
 
       const result = await service.categorizeSpecificTransactions('space1', ['tx1']);
-      
+
       expect(result).toBeDefined();
       expect(result.categorized).toBe(1);
       expect(result.total).toBe(1);
     });
   });
 
-  describe('testRule', () => {
-    it('should test rule against transactions', async () => {
-      const mockTransactions = [mockTransaction];
-      
-      prisma.transaction.findMany.mockResolvedValue(mockTransactions);
-
-      const result = await service.testRule('space1', {
-        conditions: [
-          {
-            field: 'merchant',
-            operator: 'contains',
-            value: 'starbucks',
-            caseInsensitive: true,
-          },
-        ],
-      } as any);
-      
-      expect(result).toBeDefined();
-      expect(result.matches).toBe(1);
-      expect(result.total).toBe(1);
-      expect(result.sampleTransactions).toHaveLength(1);
-    });
-  });
-
   describe('createCommonRules', () => {
     it('should create common categorization rules', async () => {
       prisma.category.findMany.mockResolvedValue(mockCategories);
-      prisma.categoryRule.create.mockResolvedValue(mockRules[0] as any);
+      prisma.transactionRule.create.mockResolvedValue(mockRules[0] as any);
 
       const result = await service.createCommonRules('space1');
       

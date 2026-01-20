@@ -269,9 +269,10 @@ describe('TransactionSplitsService', () => {
         splitDto
       );
 
-      expect(prisma.transactionSplit.deleteMany).toHaveBeenCalledBefore(
-        prisma.$transaction as jest.Mock
-      );
+      // Verify deleteMany was called before $transaction by checking invocation order
+      const deleteManyCallOrder = (prisma.transactionSplit.deleteMany as jest.Mock).mock.invocationCallOrder[0];
+      const transactionCallOrder = (prisma.$transaction as jest.Mock).mock.invocationCallOrder[0];
+      expect(deleteManyCallOrder).toBeLessThan(transactionCallOrder);
     });
   });
 
