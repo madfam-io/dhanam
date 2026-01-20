@@ -24,7 +24,22 @@ export default function HomePage() {
   const { isAuthenticated } = useAuth();
   const analytics = useAnalytics();
 
+  // Redirect app.dhan.am visitors to login - landing page is only for www/apex domain
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const hostname = window.location.hostname;
+      // If we're on the app subdomain, redirect to login (not the landing page)
+      if (hostname === 'app.dhan.am') {
+        if (isAuthenticated) {
+          window.location.href = '/dashboard';
+        } else {
+          window.location.href = '/login';
+        }
+        return;
+      }
+    }
+
+    // For landing page domains (dhan.am, www.dhan.am), show normal behavior
     if (isAuthenticated) {
       const appUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://app.dhan.am';
       window.location.href = `${appUrl}/dashboard`;
