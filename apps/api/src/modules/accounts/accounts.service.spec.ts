@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { AccountsService } from './accounts.service';
 import { PrismaService } from '../../core/prisma/prisma.service';
+import { LoggerService } from '../../core/logger/logger.service';
 import { mockDeep, DeepMockProxy } from 'jest-mock-extended';
 import { Provider, AccountType, Currency } from '@dhanam/shared';
 
@@ -16,6 +17,16 @@ describe('AccountsService', () => {
         {
           provide: PrismaService,
           useValue: mockDeep<PrismaService>(),
+        },
+        {
+          provide: LoggerService,
+          useValue: {
+            log: jest.fn(),
+            error: jest.fn(),
+            warn: jest.fn(),
+            debug: jest.fn(),
+            verbose: jest.fn(),
+          },
         },
       ],
     }).compile();

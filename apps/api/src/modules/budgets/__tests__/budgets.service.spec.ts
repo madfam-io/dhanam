@@ -7,7 +7,10 @@ import { TestDatabase } from '../../../../test/helpers/test-database';
 import { TestDataFactory } from '../../../../test/helpers/test-data-factory';
 import { CreateBudgetDto, UpdateBudgetDto } from '../dto';
 
-describe('BudgetsService', () => {
+// Skip integration tests when no test database is available
+const describeOrSkip = process.env.TEST_DATABASE_URL ? describe : describe.skip;
+
+describeOrSkip('BudgetsService (Integration)', () => {
   let service: BudgetsService;
   let prisma: PrismaService;
   let factory: TestDataFactory;

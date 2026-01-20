@@ -7,6 +7,7 @@ import { PrismaService } from '../../../core/prisma/prisma.service';
 import { AuditService } from '../../../core/audit/audit.service';
 import { BillingService } from '../billing.service';
 import { StripeService } from '../stripe.service';
+import { JanuaBillingService } from '../janua-billing.service';
 
 describe('BillingService', () => {
   let service: BillingService;
@@ -83,6 +84,17 @@ describe('BillingService', () => {
               if (key === 'WEB_URL') return 'http://localhost:3000';
               return defaultValue;
             }),
+          },
+        },
+        {
+          provide: JanuaBillingService,
+          useValue: {
+            isEnabled: jest.fn().mockReturnValue(false),
+            getProviderForCountry: jest.fn().mockReturnValue('stripe'),
+            createCustomer: jest.fn(),
+            createCheckoutSession: jest.fn(),
+            createPortalSession: jest.fn(),
+            cancelSubscription: jest.fn(),
           },
         },
       ],

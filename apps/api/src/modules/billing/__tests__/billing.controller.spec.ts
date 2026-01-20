@@ -5,6 +5,7 @@ import Stripe from 'stripe';
 import { BillingController } from '../billing.controller';
 import { BillingService } from '../billing.service';
 import { StripeService } from '../stripe.service';
+import { JanuaBillingService } from '../janua-billing.service';
 
 describe('BillingController', () => {
   let controller: BillingController;
@@ -51,6 +52,17 @@ describe('BillingController', () => {
               if (key === 'STRIPE_WEBHOOK_SECRET') return 'whsec_test_secret';
               return null;
             }),
+          },
+        },
+        {
+          provide: JanuaBillingService,
+          useValue: {
+            isEnabled: jest.fn().mockReturnValue(false),
+            getProviderForCountry: jest.fn().mockReturnValue('stripe'),
+            createCustomer: jest.fn(),
+            createCheckoutSession: jest.fn(),
+            createPortalSession: jest.fn(),
+            cancelSubscription: jest.fn(),
           },
         },
       ],
