@@ -72,7 +72,7 @@ export class JanuaBillingService {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.januaApiKey}`,
+        Authorization: `Bearer ${this.januaApiKey}`,
       },
       body: JSON.stringify({
         email: params.email,
@@ -123,7 +123,7 @@ export class JanuaBillingService {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.januaApiKey}`,
+        Authorization: `Bearer ${this.januaApiKey}`,
       },
       body: JSON.stringify({
         customer_id: params.customerId,
@@ -174,7 +174,7 @@ export class JanuaBillingService {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.januaApiKey}`,
+        Authorization: `Bearer ${this.januaApiKey}`,
       },
       body: JSON.stringify({
         customer_id: params.customerId,
@@ -205,17 +205,20 @@ export class JanuaBillingService {
       throw new Error('Janua billing not enabled');
     }
 
-    const response = await fetch(`${this.januaApiUrl}/api/billing/subscriptions/${params.subscriptionId}/cancel`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.januaApiKey}`,
-      },
-      body: JSON.stringify({
-        provider: params.provider,
-        immediate: params.immediate ?? false,
-      }),
-    });
+    const response = await fetch(
+      `${this.januaApiUrl}/api/billing/subscriptions/${params.subscriptionId}/cancel`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${this.januaApiKey}`,
+        },
+        body: JSON.stringify({
+          provider: params.provider,
+          immediate: params.immediate ?? false,
+        }),
+      }
+    );
 
     if (!response.ok) {
       const error = await response.text();
@@ -229,14 +232,16 @@ export class JanuaBillingService {
   /**
    * Get available plans with localized pricing
    */
-  async getPlans(countryCode: string): Promise<Array<{
-    id: string;
-    name: string;
-    price: number;
-    currency: string;
-    interval: string;
-    features: string[];
-  }>> {
+  async getPlans(countryCode: string): Promise<
+    Array<{
+      id: string;
+      name: string;
+      price: number;
+      currency: string;
+      interval: string;
+      features: string[];
+    }>
+  > {
     const isMexico = countryCode === 'MX';
 
     // Dhanam plans
@@ -286,15 +291,13 @@ export class JanuaBillingService {
     }
 
     // Janua uses HMAC-SHA256 for webhook signatures
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const crypto = require('crypto');
     const expectedSignature = crypto
       .createHmac('sha256', webhookSecret)
       .update(payload)
       .digest('hex');
 
-    return crypto.timingSafeEqual(
-      Buffer.from(signature),
-      Buffer.from(expectedSignature)
-    );
+    return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSignature));
   }
 }

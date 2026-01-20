@@ -14,25 +14,24 @@
  * - Global tax compliance via Paddle MoR
  * =============================================================================
  */
+import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { HttpModule } from '@nestjs/axios';
 
 import { AuditModule } from '../../core/audit/audit.module';
 import { PrismaModule } from '../../core/prisma/prisma.module';
 
 import { BillingController } from './billing.controller';
 import { BillingService } from './billing.service';
-import { JanuaBillingService } from './janua-billing.service';
 import { SubscriptionGuard } from './guards/subscription.guard';
 import { UsageLimitGuard } from './guards/usage-limit.guard';
 import { UsageTrackingInterceptor } from './interceptors/usage-tracking.interceptor';
-import { StripeService } from './stripe.service';
-
+import { JanuaBillingService } from './janua-billing.service';
 // Hybrid Router Services (Stripe MX + Paddle)
+import { PaddleService } from './services/paddle.service';
 import { PaymentRouterService } from './services/payment-router.service';
 import { StripeMxService } from './services/stripe-mx.service';
-import { PaddleService } from './services/paddle.service';
+import { StripeService } from './stripe.service';
 
 @Module({
   imports: [

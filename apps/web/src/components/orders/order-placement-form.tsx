@@ -212,7 +212,10 @@ export function OrderPlacementForm({
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="accountId">Account</Label>
-        <Select value={selectedAccountId} onValueChange={(value: string) => setValue('accountId', value)}>
+        <Select
+          value={selectedAccountId}
+          onValueChange={(value: string) => setValue('accountId', value)}
+        >
           <SelectTrigger>
             <SelectValue placeholder="Select account" />
           </SelectTrigger>
@@ -229,7 +232,10 @@ export function OrderPlacementForm({
 
       <div className="space-y-2">
         <Label htmlFor="type">Order Type</Label>
-        <Select value={orderType} onValueChange={(value: string) => setValue('type', value as OrderType)}>
+        <Select
+          value={orderType}
+          onValueChange={(value: string) => setValue('type', value as OrderType)}
+        >
           <SelectTrigger>
             <SelectValue placeholder="Select order type" />
           </SelectTrigger>

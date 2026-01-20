@@ -12,7 +12,12 @@ import { authApi } from '~/lib/api/auth';
 import { ApiError } from '~/lib/api/client';
 import { useTranslation } from '@dhanam/shared';
 import { LocaleSwitcher } from '~/components/locale-switcher';
-import { oauthProviders, loginWithOAuth, loginWithJanuaSSO, isJanuaOAuthEnabled } from '~/lib/janua-oauth';
+import {
+  oauthProviders,
+  loginWithOAuth,
+  loginWithJanuaSSO,
+  isJanuaOAuthEnabled,
+} from '~/lib/janua-oauth';
 
 export default function LoginPage() {
   const router = useRouter();

@@ -23,11 +23,12 @@
  * =============================================================================
  */
 
+import * as crypto from 'crypto';
+
+import { HttpService } from '@nestjs/axios';
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
-import * as crypto from 'crypto';
 
 export interface PaddleCheckoutParams {
   customerId?: string;
@@ -74,23 +75,16 @@ export class PaddleService {
     this.apiKey = this.config.get<string>('PADDLE_API_KEY', '');
     this.clientToken = this.config.get<string>('PADDLE_CLIENT_TOKEN', '');
     this.webhookSecret = this.config.get<string>('PADDLE_WEBHOOK_SECRET', '');
-    this.environment = this.config.get<'sandbox' | 'live'>(
-      'PADDLE_ENVIRONMENT',
-      'sandbox'
-    );
+    this.environment = this.config.get<'sandbox' | 'live'>('PADDLE_ENVIRONMENT', 'sandbox');
 
     // Paddle Billing API (v2)
     this.apiUrl =
-      this.environment === 'live'
-        ? 'https://api.paddle.com'
-        : 'https://sandbox-api.paddle.com';
+      this.environment === 'live' ? 'https://api.paddle.com' : 'https://sandbox-api.paddle.com';
 
     if (!this.apiKey) {
       this.logger.warn('PADDLE_API_KEY not configured - Paddle integration disabled');
     } else {
-      this.logger.log(
-        `Paddle service initialized (${this.environment} environment)`
-      );
+      this.logger.log(`Paddle service initialized (${this.environment} environment)`);
     }
   }
 
@@ -135,9 +129,7 @@ export class PaddleService {
           {
             email: params.email,
             name: params.name,
-            locale: params.countryCode
-              ? this.getLocaleForCountry(params.countryCode)
-              : 'en',
+            locale: params.countryCode ? this.getLocaleForCountry(params.countryCode) : 'en',
             custom_data: {
               ...params.metadata,
               source: 'dhanam',
@@ -262,10 +254,7 @@ export class PaddleService {
   /**
    * Cancel a subscription
    */
-  async cancelSubscription(
-    subscriptionId: string,
-    immediate: boolean = false
-  ): Promise<void> {
+  async cancelSubscription(subscriptionId: string, immediate: boolean = false): Promise<void> {
     if (!this.isConfigured()) {
       throw new Error('Paddle not configured');
     }
@@ -285,9 +274,7 @@ export class PaddleService {
         )
       );
     } catch (error) {
-      this.logger.error(
-        `Failed to cancel Paddle subscription: ${error.message}`
-      );
+      this.logger.error(`Failed to cancel Paddle subscription: ${error.message}`);
       throw error;
     }
   }
@@ -362,10 +349,7 @@ export class PaddleService {
         .update(signedPayload)
         .digest('hex');
 
-      return crypto.timingSafeEqual(
-        Buffer.from(providedSignature),
-        Buffer.from(expectedSignature)
-      );
+      return crypto.timingSafeEqual(Buffer.from(providedSignature), Buffer.from(expectedSignature));
     } catch (error) {
       this.logger.error(`Webhook verification failed: ${error.message}`);
       return false;

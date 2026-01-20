@@ -140,15 +140,27 @@ function CallbackContent() {
           <>
             <div className="mb-4 h-12 w-12 mx-auto animate-spin rounded-full border-4 border-primary border-t-transparent" />
             <h2 className="text-xl font-semibold">Completing sign in...</h2>
-            <p className="text-muted-foreground mt-2">Please wait while we verify your credentials.</p>
+            <p className="text-muted-foreground mt-2">
+              Please wait while we verify your credentials.
+            </p>
           </>
         )}
 
         {status === 'success' && (
           <>
             <div className="mb-4 h-12 w-12 mx-auto rounded-full bg-green-100 flex items-center justify-center">
-              <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              <svg
+                className="h-6 w-6 text-green-600"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
               </svg>
             </div>
             <h2 className="text-xl font-semibold text-green-600">Sign in successful!</h2>
@@ -159,8 +171,18 @@ function CallbackContent() {
         {status === 'error' && (
           <>
             <div className="mb-4 h-12 w-12 mx-auto rounded-full bg-red-100 flex items-center justify-center">
-              <svg className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <svg
+                className="h-6 w-6 text-red-600"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </div>
             <h2 className="text-xl font-semibold text-red-600">Sign in failed</h2>

@@ -45,16 +45,14 @@ export async function GET(
     const response = await fetch(`${callbackUrl}?${tokenParams.toString()}`, {
       method: 'GET',
       headers: {
-        'Accept': 'application/json',
+        Accept: 'application/json',
       },
     });
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       console.error('Token exchange failed:', errorData);
-      return NextResponse.redirect(
-        new URL('/login?error=Authentication%20failed', request.url)
-      );
+      return NextResponse.redirect(new URL('/login?error=Authentication%20failed', request.url));
     }
 
     const data = await response.json();
@@ -107,8 +105,6 @@ export async function GET(
     return redirectResponse;
   } catch (error) {
     console.error('OAuth callback error:', error);
-    return NextResponse.redirect(
-      new URL('/login?error=Authentication%20error', request.url)
-    );
+    return NextResponse.redirect(new URL('/login?error=Authentication%20error', request.url));
   }
 }

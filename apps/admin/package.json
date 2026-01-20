@@ -6,7 +6,7 @@
     "dev": "next dev -p 3400",
     "build": "next build",
     "start": "next start -p 3400",
-    "lint": "next lint",
+    "lint": "eslint ./src ./app --ext .ts,.tsx --no-error-on-unmatched-pattern",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

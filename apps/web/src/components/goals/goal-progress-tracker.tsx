@@ -225,13 +225,7 @@ export function GoalProgressTracker({ spaceId, goalId }: GoalProgressTrackerProp
                         ) : (
                           <TrendingDown className="h-3 w-3 text-warning" />
                         )}
-                        <span
-                          className={
-                            isOverAllocated
-                              ? 'text-destructive'
-                              : 'text-warning'
-                          }
-                        >
+                        <span className={isOverAllocated ? 'text-destructive' : 'text-warning'}>
                           {isOverAllocated ? 'Over' : 'Under'} by {formatCurrency(drift)} (
                           {formatPercentage(driftPercentage)})
                         </span>

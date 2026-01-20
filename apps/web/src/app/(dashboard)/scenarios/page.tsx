@@ -163,7 +163,9 @@ export default function ScenariosPage() {
                     id="months"
                     type="number"
                     value={config.months}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange('months', parseInt(e.target.value))}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      handleInputChange('months', parseInt(e.target.value))
+                    }
                     min={12}
                     max={600}
                     step={12}

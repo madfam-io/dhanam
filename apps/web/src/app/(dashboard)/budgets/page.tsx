@@ -237,7 +237,10 @@ export default function BudgetsPage() {
         </div>
       )}
 
-      <Dialog open={!!selectedBudget} onOpenChange={(open: boolean) => !open && setSelectedBudget(null)}>
+      <Dialog
+        open={!!selectedBudget}
+        onOpenChange={(open: boolean) => !open && setSelectedBudget(null)}
+      >
         <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
           {selectedBudget && budgetSummary && (
             <>

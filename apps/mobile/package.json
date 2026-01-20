@@ -15,7 +15,7 @@
     "submit:android": "eas submit --platform android",
     "submit:ios": "eas submit --platform ios",
     "preview": "expo install --fix && expo start --dev-client",
-    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
+    "lint": "eslint ./src --ext .js,.jsx,.ts,.tsx --fix",
     "typecheck": "tsc --noEmit",
     "test": "jest",
     "test:watch": "jest --watch",

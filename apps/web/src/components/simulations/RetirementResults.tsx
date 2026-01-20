@@ -27,7 +27,6 @@ export function RetirementResults({ results }: RetirementResultsProps) {
     return 'text-yellow-600';
   };
 
-
   return (
     <div className="space-y-6">
       {/* Overall Success Rate */}

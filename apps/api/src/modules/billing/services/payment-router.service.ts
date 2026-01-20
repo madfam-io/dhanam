@@ -42,8 +42,8 @@ import { ConfigService } from '@nestjs/config';
 
 import { PrismaService } from '@core/prisma/prisma.service';
 
-import { StripeMxService } from './stripe-mx.service';
 import { PaddleService } from './paddle.service';
+import { StripeMxService } from './stripe-mx.service';
 
 export type PaymentProvider = 'stripe_mx' | 'paddle';
 
@@ -305,10 +305,7 @@ export class PaymentRouterService {
   /**
    * Cancel subscription via the appropriate provider
    */
-  async cancelSubscription(
-    userId: string,
-    immediate: boolean = false
-  ): Promise<void> {
+  async cancelSubscription(userId: string, immediate: boolean = false): Promise<void> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: {
@@ -406,16 +403,8 @@ export class PaymentRouterService {
         currency: isMexico ? 'MXN' : 'USD',
         interval: 'year',
         features: isMexico
-          ? [
-              'Todo lo de Premium mensual',
-              '2 meses gratis',
-              'Acceso anticipado a nuevas funciones',
-            ]
-          : [
-              'Everything in Premium monthly',
-              '2 months free',
-              'Early access to new features',
-            ],
+          ? ['Todo lo de Premium mensual', '2 meses gratis', 'Acceso anticipado a nuevas funciones']
+          : ['Everything in Premium monthly', '2 months free', 'Early access to new features'],
         provider,
       },
     ];

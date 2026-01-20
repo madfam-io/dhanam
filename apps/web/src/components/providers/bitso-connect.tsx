@@ -235,7 +235,9 @@ export function BitsoConnect({ open, onOpenChange, spaceId, onSuccess }: BitsoCo
                     id="apiKey"
                     type={showSecrets.apiKey ? 'text' : 'password'}
                     value={formData.apiKey}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, apiKey: e.target.value })}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      setFormData({ ...formData, apiKey: e.target.value })
+                    }
                     placeholder="Your Bitso API Key"
                     required
                   />
@@ -262,7 +264,9 @@ export function BitsoConnect({ open, onOpenChange, spaceId, onSuccess }: BitsoCo
                     id="apiSecret"
                     type={showSecrets.apiSecret ? 'text' : 'password'}
                     value={formData.apiSecret}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, apiSecret: e.target.value })}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      setFormData({ ...formData, apiSecret: e.target.value })
+                    }
                     placeholder="Your Bitso API Secret"
                     required
                   />
@@ -289,7 +293,9 @@ export function BitsoConnect({ open, onOpenChange, spaceId, onSuccess }: BitsoCo
                   type="checkbox"
                   id="autoSync"
                   checked={formData.autoSync}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, autoSync: e.target.checked })}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setFormData({ ...formData, autoSync: e.target.checked })
+                  }
                   className="rounded"
                 />
                 <Label htmlFor="autoSync" className="text-sm">

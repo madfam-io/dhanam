@@ -33,7 +33,13 @@ interface ShareGoalDialogProps {
   onOpenChange?: (open: boolean) => void;
 }
 
-export function ShareGoalDialog({ goal, onShared, trigger, open: controlledOpen, onOpenChange }: ShareGoalDialogProps) {
+export function ShareGoalDialog({
+  goal,
+  onShared,
+  trigger,
+  open: controlledOpen,
+  onOpenChange,
+}: ShareGoalDialogProps) {
   const { shareGoal } = useGoals();
   const [internalOpen, setInternalOpen] = useState(false);
 
@@ -160,7 +166,9 @@ export function ShareGoalDialog({ goal, onShared, trigger, open: controlledOpen,
                 id="message"
                 placeholder="Let's work together on our retirement savings!"
                 value={formData.message}
-                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFormData({ ...formData, message: e.target.value })}
+                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                  setFormData({ ...formData, message: e.target.value })
+                }
                 rows={3}
               />
             </div>

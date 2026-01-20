@@ -286,7 +286,9 @@ export default function DemoPage() {
                     id="age"
                     type="number"
                     value={config.age}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange('age', parseInt(e.target.value))}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      handleInputChange('age', parseInt(e.target.value))
+                    }
                     min={18}
                     max={80}
                   />
@@ -298,7 +300,9 @@ export default function DemoPage() {
                     id="retirementAge"
                     type="number"
                     value={config.retirementAge}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange('retirementAge', parseInt(e.target.value))}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      handleInputChange('retirementAge', parseInt(e.target.value))
+                    }
                     min={config.age + 1}
                     max={85}
                   />
@@ -447,7 +451,10 @@ export default function DemoPage() {
                       </p>
                     </div>
 
-                    <Progress value={(result.metadata?.successProbability as number) || 0} className="h-3" />
+                    <Progress
+                      value={(result.metadata?.successProbability as number) || 0}
+                      className="h-3"
+                    />
 
                     {((result.metadata?.successProbability as number) || 0) >= 75 ? (
                       <Alert className="bg-green-50 border-green-200 dark:bg-green-950/20">
@@ -456,8 +463,8 @@ export default function DemoPage() {
                           Strong Retirement Plan
                         </AlertTitle>
                         <AlertDescription className="text-green-800 dark:text-green-200">
-                          You have a {(result.metadata?.successProbability as number)?.toFixed(1)}% chance of a
-                          secure retirement based on these assumptions.
+                          You have a {(result.metadata?.successProbability as number)?.toFixed(1)}%
+                          chance of a secure retirement based on these assumptions.
                         </AlertDescription>
                       </Alert>
                     ) : ((result.metadata?.successProbability as number) || 0) >= 50 ? (

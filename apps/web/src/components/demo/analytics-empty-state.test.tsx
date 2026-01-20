@@ -99,7 +99,7 @@ describe('AnalyticsEmptyState', () => {
     );
 
     // Check for info icon (lucide-react Info component)
-    const infoBoxes = container.querySelectorAll('.text-blue-600');
+    const infoBoxes = container.querySelectorAll('.text-info');
     expect(infoBoxes.length).toBeGreaterThan(0);
   });
 

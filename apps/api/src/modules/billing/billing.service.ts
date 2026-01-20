@@ -589,7 +589,7 @@ export class BillingService {
    * Handle Janua subscription updated event
    */
   async handleJanuaSubscriptionUpdated(payload: any): Promise<void> {
-    const { customer_id, plan_id, status, provider } = payload.data;
+    const { customer_id, plan_id: _plan_id, status, provider: _provider } = payload.data;
 
     const user = await this.prisma.user.findFirst({
       where: { januaCustomerId: customer_id },

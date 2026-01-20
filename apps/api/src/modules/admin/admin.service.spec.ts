@@ -64,6 +64,7 @@ describe('AdminService', () => {
 
   const mockAuditService = {
     log: jest.fn(),
+    logEvent: jest.fn(),
   };
 
   beforeEach(async () => {

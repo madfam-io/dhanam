@@ -5,7 +5,8 @@
  */
 
 const JANUA_API_URL = process.env.NEXT_PUBLIC_JANUA_API_URL || 'http://localhost:8000';
-const APP_URL = process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+const APP_URL =
+  process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 const OIDC_CLIENT_ID = process.env.NEXT_PUBLIC_OIDC_CLIENT_ID || 'dhanam-web';
 
 /**
@@ -19,7 +20,7 @@ export const oauthProviders = [
   { id: 'discord', name: 'Discord', icon: '🟣', color: '#5865F2' },
 ] as const;
 
-export type OAuthProviderId = typeof oauthProviders[number]['id'];
+export type OAuthProviderId = (typeof oauthProviders)[number]['id'];
 
 // ============================================================================
 // PKCE Helpers for Secure OAuth 2.0 Flow

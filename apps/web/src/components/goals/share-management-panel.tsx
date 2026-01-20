@@ -97,7 +97,8 @@ export function ShareManagementPanel({ goalId, onUpdate }: ShareManagementPanelP
       revoked: { variant: 'outline', label: 'Revoked' },
     };
 
-    const config = variants[status] || variants.pending || { variant: 'secondary', label: 'Unknown' };
+    const config = variants[status] ||
+      variants.pending || { variant: 'secondary', label: 'Unknown' };
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
@@ -279,7 +280,10 @@ export function ShareManagementPanel({ goalId, onUpdate }: ShareManagementPanelP
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleRevoke} className="bg-destructive hover:bg-destructive/90">
+            <AlertDialogAction
+              onClick={handleRevoke}
+              className="bg-destructive hover:bg-destructive/90"
+            >
               Revoke Access
             </AlertDialogAction>
           </AlertDialogFooter>

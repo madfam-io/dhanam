@@ -23,9 +23,7 @@ export const configuration = () => ({
   janua: {
     enabled: process.env.JANUA_ENABLED === 'true',
     issuer: process.env.JANUA_ISSUER || 'https://auth.madfam.io',
-    jwksUri:
-      process.env.JANUA_JWKS_URI ||
-      'https://auth.madfam.io/.well-known/jwks.json',
+    jwksUri: process.env.JANUA_JWKS_URI || 'https://auth.madfam.io/.well-known/jwks.json',
     audience: process.env.JANUA_AUDIENCE || 'janua.dev',
     // Optional: Client credentials for backend-to-Janua API calls
     clientId: process.env.JANUA_CLIENT_ID,

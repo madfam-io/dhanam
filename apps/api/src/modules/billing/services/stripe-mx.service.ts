@@ -48,9 +48,7 @@ export class StripeMxService {
     this.webhookSecret = this.config.get<string>('STRIPE_MX_WEBHOOK_SECRET', '');
 
     if (!secretKey) {
-      this.logger.warn(
-        'STRIPE_MX_SECRET_KEY not configured - Stripe MX integration disabled'
-      );
+      this.logger.warn('STRIPE_MX_SECRET_KEY not configured - Stripe MX integration disabled');
       return;
     }
 
@@ -100,9 +98,7 @@ export class StripeMxService {
   /**
    * Create a checkout session with Mexican payment methods
    */
-  async createCheckoutSession(
-    params: StripeMxCheckoutParams
-  ): Promise<Stripe.Checkout.Session> {
+  async createCheckoutSession(params: StripeMxCheckoutParams): Promise<Stripe.Checkout.Session> {
     if (!this.stripe) {
       throw new Error('Stripe MX not configured');
     }
@@ -201,10 +197,7 @@ export class StripeMxService {
   /**
    * Verify webhook signature
    */
-  verifyWebhookSignature(
-    payload: string | Buffer,
-    signature: string
-  ): Stripe.Event {
+  verifyWebhookSignature(payload: string | Buffer, signature: string): Stripe.Event {
     if (!this.stripe) {
       throw new Error('Stripe MX not configured');
     }
@@ -213,11 +206,7 @@ export class StripeMxService {
       throw new Error('STRIPE_MX_WEBHOOK_SECRET not configured');
     }
 
-    return this.stripe.webhooks.constructEvent(
-      payload,
-      signature,
-      this.webhookSecret
-    );
+    return this.stripe.webhooks.constructEvent(payload, signature, this.webhookSecret);
   }
 
   /**

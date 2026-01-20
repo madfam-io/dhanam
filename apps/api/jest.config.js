@@ -8,7 +8,12 @@ module.exports = {
   coverageDirectory: './coverage',
   testMatch: [
     '<rootDir>/src/**/*.spec.ts',
-    '<rootDir>/test/**/*.e2e-spec.ts',
+    // E2E tests excluded by default - require real infrastructure
+    // Run with: pnpm test:e2e
+  ],
+  testPathIgnorePatterns: [
+    '/node_modules/',
+    '<rootDir>/test/e2e/',
   ],
   collectCoverageFrom: [
     'src/**/*.ts',

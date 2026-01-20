@@ -11,11 +11,11 @@
  * - Better deliverability through shared domain reputation
  */
 
+import { HttpService } from '@nestjs/axios';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { HttpService } from '@nestjs/axios';
-import { firstValueFrom } from 'rxjs';
 import { AxiosError } from 'axios';
+import { firstValueFrom } from 'rxjs';
 
 // ============================================================================
 // Types
@@ -160,7 +160,7 @@ export class JanuaEmailService implements OnModuleInit {
       this.isAvailable = response.data?.status === 'healthy';
       this.logger.log(`Janua email service: ${this.isAvailable ? 'available' : 'unavailable'}`);
       return this.isAvailable;
-    } catch (error) {
+    } catch (_error) {
       this.logger.warn('Janua email service health check failed, will use fallback');
       this.isAvailable = false;
       return false;
@@ -330,7 +330,7 @@ export class JanuaEmailService implements OnModuleInit {
       );
 
       return response.data;
-    } catch (error) {
+    } catch (_error) {
       this.logger.error('Failed to list email templates from Janua');
       return [];
     }

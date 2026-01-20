@@ -207,7 +207,9 @@ export default function EstatePlanningPage() {
                 <Input
                   id="name"
                   value={newWill.name}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewWill({ ...newWill, name: e.target.value })}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setNewWill({ ...newWill, name: e.target.value })
+                  }
                   placeholder="e.g., Smith Family Will 2025"
                 />
               </div>
@@ -216,7 +218,9 @@ export default function EstatePlanningPage() {
                 <Textarea
                   id="notes"
                   value={newWill.notes}
-                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setNewWill({ ...newWill, notes: e.target.value })}
+                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                    setNewWill({ ...newWill, notes: e.target.value })
+                  }
                   placeholder="Additional notes or instructions"
                   rows={3}
                 />

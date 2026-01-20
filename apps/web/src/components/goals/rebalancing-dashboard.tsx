@@ -132,16 +132,12 @@ export function RebalancingDashboard({ spaceId, goalId, goalName }: RebalancingD
 
         <div className="p-4 bg-success/10 rounded-lg">
           <p className="text-sm text-muted-foreground">Buy Actions</p>
-          <p className="text-2xl font-bold text-success">
-            {suggestion.summary.buyActions}
-          </p>
+          <p className="text-2xl font-bold text-success">{suggestion.summary.buyActions}</p>
         </div>
 
         <div className="p-4 bg-destructive/10 rounded-lg">
           <p className="text-sm text-muted-foreground">Sell Actions</p>
-          <p className="text-2xl font-bold text-destructive">
-            {suggestion.summary.sellActions}
-          </p>
+          <p className="text-2xl font-bold text-destructive">{suggestion.summary.sellActions}</p>
         </div>
 
         <div className="p-4 bg-info/10 rounded-lg">

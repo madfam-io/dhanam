@@ -383,7 +383,9 @@ export function ManualAssetForm({ onSubmit, onCancel, initialData }: ManualAsset
                 required
                 placeholder="e.g., Downtown Condo, Model S, Acme Inc."
                 value={formData.name}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, name: e.target.value })}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
               />
             </div>
             <div>
@@ -407,7 +409,9 @@ export function ManualAssetForm({ onSubmit, onCancel, initialData }: ManualAsset
               <select
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                 value={formData.currency}
-                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFormData({ ...formData, currency: e.target.value })}
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                  setFormData({ ...formData, currency: e.target.value })
+                }
               >
                 <option value="USD">USD</option>
                 <option value="EUR">EUR</option>
@@ -419,7 +423,9 @@ export function ManualAssetForm({ onSubmit, onCancel, initialData }: ManualAsset
               <Input
                 type="date"
                 value={formData.acquisitionDate}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, acquisitionDate: e.target.value })}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setFormData({ ...formData, acquisitionDate: e.target.value })
+                }
               />
             </div>
             <div>
@@ -463,7 +469,9 @@ export function ManualAssetForm({ onSubmit, onCancel, initialData }: ManualAsset
             <Textarea
               placeholder="Brief description of the asset..."
               value={formData.description}
-              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFormData({ ...formData, description: e.target.value })}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                setFormData({ ...formData, description: e.target.value })
+              }
               rows={3}
             />
           </div>
@@ -488,7 +496,9 @@ export function ManualAssetForm({ onSubmit, onCancel, initialData }: ManualAsset
             <Textarea
               placeholder="Additional notes, appraisal info, etc..."
               value={formData.notes}
-              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFormData({ ...formData, notes: e.target.value })}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                setFormData({ ...formData, notes: e.target.value })
+              }
               rows={2}
             />
           </div>

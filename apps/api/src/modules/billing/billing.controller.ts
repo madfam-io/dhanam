@@ -18,8 +18,8 @@ import { JwtAuthGuard } from '../../core/auth/guards/jwt-auth.guard';
 import { BillingService } from './billing.service';
 import { UpgradeToPremiumDto } from './dto';
 import { JanuaWebhookPayloadDto, JanuaWebhookEventType } from './dto/janua-webhook.dto';
-import { StripeService } from './stripe.service';
 import { JanuaBillingService } from './janua-billing.service';
+import { StripeService } from './stripe.service';
 
 @Controller('billing')
 export class BillingController {

@@ -460,7 +460,7 @@ describe('MonteCarloEngine', () => {
       });
 
       expect(modifiedConfig.expectedReturn).toBe(0.07);
-      expect(modifiedConfig.volatility).toBe(0.225);
+      expect(modifiedConfig.volatility).toBeCloseTo(0.225, 10);
     });
 
     it('should apply scenario with both adjustments', () => {
@@ -480,8 +480,8 @@ describe('MonteCarloEngine', () => {
         volatilityMultiplier: 2.0,
       });
 
-      expect(modifiedConfig.expectedReturn).toBe(0.04);
-      expect(modifiedConfig.volatility).toBe(0.30);
+      expect(modifiedConfig.expectedReturn).toBeCloseTo(0.04, 10);
+      expect(modifiedConfig.volatility).toBeCloseTo(0.30, 10);
     });
   });
 

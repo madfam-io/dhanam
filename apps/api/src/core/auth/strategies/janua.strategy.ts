@@ -16,8 +16,8 @@
 
 import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
-import { ExtractJwt, Strategy } from 'passport-jwt';
 import { passportJwtSecret } from 'jwks-rsa';
+import { ExtractJwt, Strategy } from 'passport-jwt';
 
 import { PrismaService } from '@core/prisma/prisma.service';
 
@@ -68,9 +68,7 @@ export class JanuaStrategy extends PassportStrategy(Strategy, 'janua') {
 
   constructor(private prisma: PrismaService) {
     // Get OIDC configuration from environment
-    const jwksUri =
-      process.env.JANUA_JWKS_URI ||
-      'https://auth.madfam.io/.well-known/jwks.json';
+    const jwksUri = process.env.JANUA_JWKS_URI || 'https://auth.madfam.io/.well-known/jwks.json';
     const issuer = process.env.JANUA_ISSUER || 'https://auth.madfam.io';
     const audience = process.env.JANUA_AUDIENCE || 'janua.dev';
 

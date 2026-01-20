@@ -256,9 +256,9 @@ export function GoalProbabilityCalculator({ goal, onSimulate }: GoalProbabilityC
           )}
 
           <SimulationChart
-            timeSeries={(results.timeSeries || results.simulation?.timeSeries || []).map(ts => ({
+            timeSeries={(results.timeSeries || results.simulation?.timeSeries || []).map((ts) => ({
               ...ts,
-              mean: ts.median * 1.01 // Approximate mean as slightly above median
+              mean: ts.median * 1.01, // Approximate mean as slightly above median
             }))}
             title="Goal Progress Projection"
             description="Projected growth with 10th-90th percentile confidence range"

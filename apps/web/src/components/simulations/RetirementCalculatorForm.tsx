@@ -128,7 +128,9 @@ export function RetirementCalculatorForm({ onResults }: RetirementCalculatorForm
                 id="initialBalance"
                 type="number"
                 value={inputs.initialBalance}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange('initialBalance', parseFloat(e.target.value))}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  handleInputChange('initialBalance', parseFloat(e.target.value))
+                }
                 min={0}
                 step={1000}
               />
@@ -168,7 +170,9 @@ export function RetirementCalculatorForm({ onResults }: RetirementCalculatorForm
                 max={80}
                 step={1}
                 value={[inputs.currentAge]}
-                onValueChange={(value: number[]) => handleInputChange('currentAge', value[0] ?? inputs.currentAge)}
+                onValueChange={(value: number[]) =>
+                  handleInputChange('currentAge', value[0] ?? inputs.currentAge)
+                }
               />
             </div>
 
@@ -180,7 +184,9 @@ export function RetirementCalculatorForm({ onResults }: RetirementCalculatorForm
                 max={80}
                 step={1}
                 value={[inputs.retirementAge]}
-                onValueChange={(value: number[]) => handleInputChange('retirementAge', value[0] ?? inputs.retirementAge)}
+                onValueChange={(value: number[]) =>
+                  handleInputChange('retirementAge', value[0] ?? inputs.retirementAge)
+                }
               />
               <p className="text-sm text-muted-foreground">
                 {yearsToRetirement} years until retirement
@@ -195,7 +201,9 @@ export function RetirementCalculatorForm({ onResults }: RetirementCalculatorForm
                 max={100}
                 step={1}
                 value={[inputs.lifeExpectancy]}
-                onValueChange={(value: number[]) => handleInputChange('lifeExpectancy', value[0] ?? inputs.lifeExpectancy)}
+                onValueChange={(value: number[]) =>
+                  handleInputChange('lifeExpectancy', value[0] ?? inputs.lifeExpectancy)
+                }
               />
               <p className="text-sm text-muted-foreground">
                 {yearsInRetirement} years in retirement
@@ -213,7 +221,9 @@ export function RetirementCalculatorForm({ onResults }: RetirementCalculatorForm
                 id="monthlyExpenses"
                 type="number"
                 value={inputs.monthlyExpenses || 0}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange('monthlyExpenses', parseFloat(e.target.value))}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  handleInputChange('monthlyExpenses', parseFloat(e.target.value))
+                }
                 min={0}
                 step={100}
               />

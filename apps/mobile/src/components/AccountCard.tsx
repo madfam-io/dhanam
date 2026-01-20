@@ -2,8 +2,8 @@ import { Account } from '@dhanam/shared';
 import { ComponentProps } from 'react';
 
 import { Ionicons, View, StyleSheet, Card, PaperText as Text } from '@/lib/react-native-compat';
-import { formatCurrency } from '@/utils/currency';
 import { getAccountColor, surfaceColors } from '@/tokens/colors';
+import { formatCurrency } from '@/utils/currency';
 
 interface AccountCardProps {
   account: Account;

@@ -9,8 +9,8 @@ import {
   PaperText as Text,
   Chip,
 } from '@/lib/react-native-compat';
-import { formatCurrency } from '@/utils/currency';
 import { getTransactionColor, surfaceColors } from '@/tokens/colors';
+import { formatCurrency } from '@/utils/currency';
 
 interface TransactionItemProps {
   transaction: Transaction;

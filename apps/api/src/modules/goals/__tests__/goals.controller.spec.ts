@@ -29,6 +29,8 @@ jest.mock('@prisma/client', () => ({
 import { GoalsController } from '../goals.controller';
 import { GoalsService } from '../goals.service';
 import { GoalsExecutionService } from '../goals-execution.service';
+import { GoalProbabilityService } from '../goal-probability.service';
+import { GoalCollaborationService } from '../goal-collaboration.service';
 
 // Define DTO types inline to avoid import issues with decorators
 type CreateGoalDto = {
@@ -126,6 +128,24 @@ describe('GoalsController', () => {
             calculateGoalProgress: jest.fn(),
             suggestRebalancing: jest.fn(),
             executeGoalRebalancing: jest.fn(),
+          },
+        },
+        {
+          provide: GoalProbabilityService,
+          useValue: {
+            calculateSuccessProbability: jest.fn(),
+            runMonteCarloSimulation: jest.fn(),
+            analyzeScenarios: jest.fn(),
+          },
+        },
+        {
+          provide: GoalCollaborationService,
+          useValue: {
+            createInvitation: jest.fn(),
+            acceptInvitation: jest.fn(),
+            revokeAccess: jest.fn(),
+            getCollaborators: jest.fn(),
+            updatePermissions: jest.fn(),
           },
         },
       ],

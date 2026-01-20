@@ -1,7 +1,7 @@
+import { HttpModule } from '@nestjs/axios';
 import { BullModule } from '@nestjs/bull';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { HttpModule } from '@nestjs/axios';
 
 import { PrismaModule } from '@core/prisma/prisma.module';
 import { AnalyticsModule } from '@modules/analytics/analytics.module';

@@ -186,7 +186,9 @@ export function TotpSetup({ open, onOpenChange, onSuccess }: TotpSetupProps) {
                   type="text"
                   placeholder="000000"
                   value={totpCode}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTotpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setTotpCode(e.target.value.replace(/\D/g, '').slice(0, 6))
+                  }
                   className="text-center font-mono text-lg tracking-widest mt-1"
                   maxLength={6}
                 />

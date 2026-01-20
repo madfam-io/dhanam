@@ -122,7 +122,9 @@ export function PreferencesSection() {
               </div>
               <Switch
                 checked={preferences.emailNotifications}
-                onCheckedChange={(checked: boolean) => handleSingleUpdate('emailNotifications', checked)}
+                onCheckedChange={(checked: boolean) =>
+                  handleSingleUpdate('emailNotifications', checked)
+                }
                 disabled={isSaving}
               />
             </div>
@@ -138,7 +140,9 @@ export function PreferencesSection() {
               </div>
               <Switch
                 checked={preferences.transactionAlerts}
-                onCheckedChange={(checked: boolean) => handleSingleUpdate('transactionAlerts', checked)}
+                onCheckedChange={(checked: boolean) =>
+                  handleSingleUpdate('transactionAlerts', checked)
+                }
                 disabled={isSaving}
               />
             </div>
@@ -180,7 +184,9 @@ export function PreferencesSection() {
               </div>
               <Switch
                 checked={preferences.monthlyReports}
-                onCheckedChange={(checked: boolean) => handleSingleUpdate('monthlyReports', checked)}
+                onCheckedChange={(checked: boolean) =>
+                  handleSingleUpdate('monthlyReports', checked)
+                }
                 disabled={isSaving}
               />
             </div>
@@ -223,7 +229,9 @@ export function PreferencesSection() {
             </div>
             <Switch
               checked={preferences.analyticsTracking}
-              onCheckedChange={(checked: boolean) => handleSingleUpdate('analyticsTracking', checked)}
+              onCheckedChange={(checked: boolean) =>
+                handleSingleUpdate('analyticsTracking', checked)
+              }
               disabled={isSaving}
             />
           </div>
@@ -386,7 +394,9 @@ export function PreferencesSection() {
             </div>
             <Switch
               checked={preferences.autoCategorizeTxns}
-              onCheckedChange={(checked: boolean) => handleSingleUpdate('autoCategorizeTxns', checked)}
+              onCheckedChange={(checked: boolean) =>
+                handleSingleUpdate('autoCategorizeTxns', checked)
+              }
               disabled={isSaving}
             />
           </div>
@@ -400,7 +410,9 @@ export function PreferencesSection() {
             </div>
             <Switch
               checked={preferences.hideSensitiveData}
-              onCheckedChange={(checked: boolean) => handleSingleUpdate('hideSensitiveData', checked)}
+              onCheckedChange={(checked: boolean) =>
+                handleSingleUpdate('hideSensitiveData', checked)
+              }
               disabled={isSaving}
             />
           </div>
@@ -428,7 +440,9 @@ export function PreferencesSection() {
             </div>
             <Switch
               checked={preferences.esgScoreVisibility}
-              onCheckedChange={(checked: boolean) => handleSingleUpdate('esgScoreVisibility', checked)}
+              onCheckedChange={(checked: boolean) =>
+                handleSingleUpdate('esgScoreVisibility', checked)
+              }
               disabled={isSaving}
             />
           </div>
@@ -444,7 +458,9 @@ export function PreferencesSection() {
             </div>
             <Switch
               checked={preferences.sustainabilityAlerts}
-              onCheckedChange={(checked: boolean) => handleSingleUpdate('sustainabilityAlerts', checked)}
+              onCheckedChange={(checked: boolean) =>
+                handleSingleUpdate('sustainabilityAlerts', checked)
+              }
               disabled={isSaving}
             />
           </div>

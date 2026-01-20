@@ -104,7 +104,9 @@ export default function AuditLogsPage(): JSX.Element {
               type="text"
               placeholder="User ID"
               value={filters.userId}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFilters({ ...filters, userId: e.target.value })}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setFilters({ ...filters, userId: e.target.value })
+              }
             />
             <Select
               value={filters.action}
@@ -140,13 +142,17 @@ export default function AuditLogsPage(): JSX.Element {
               <Input
                 type="date"
                 value={filters.startDate}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFilters({ ...filters, startDate: e.target.value })}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setFilters({ ...filters, startDate: e.target.value })
+                }
                 className="flex-1"
               />
               <Input
                 type="date"
                 value={filters.endDate}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFilters({ ...filters, endDate: e.target.value })}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setFilters({ ...filters, endDate: e.target.value })
+                }
                 className="flex-1"
               />
             </div>

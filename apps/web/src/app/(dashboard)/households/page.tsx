@@ -154,7 +154,9 @@ export default function HouseholdsPage() {
                 <Input
                   id="name"
                   value={newHousehold.name}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewHousehold({ ...newHousehold, name: e.target.value })}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setNewHousehold({ ...newHousehold, name: e.target.value })
+                  }
                   placeholder="Smith Family"
                 />
               </div>
@@ -163,7 +165,10 @@ export default function HouseholdsPage() {
                 <Select
                   value={newHousehold.type}
                   onValueChange={(value: string) =>
-                    setNewHousehold({ ...newHousehold, type: value as 'family' | 'trust' | 'estate' | 'partnership' })
+                    setNewHousehold({
+                      ...newHousehold,
+                      type: value as 'family' | 'trust' | 'estate' | 'partnership',
+                    })
                   }
                 >
                   <SelectTrigger>
