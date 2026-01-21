@@ -44,7 +44,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   // Fetch user profile if we have tokens but no user data
   // This happens after SSO login where only tokens are stored
   useEffect(() => {
+    console.log('[DashboardLayout] refreshUser effect check:', {
+      hasMounted,
+      _hasHydrated,
+      isAuthenticated,
+      hasUser: !!user,
+      userFetchAttempted,
+    });
     if (hasMounted && _hasHydrated && isAuthenticated && !user && !userFetchAttempted) {
+      console.log('[DashboardLayout] Calling refreshUser...');
       setUserFetchAttempted(true);
       refreshUser().catch((error) => {
         console.error('Failed to fetch user profile:', error);
