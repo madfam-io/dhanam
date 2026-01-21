@@ -10,6 +10,7 @@ interface AuthState {
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  _hasHydrated: boolean;
 
   setAuth: (user: UserProfile, tokens: AuthTokens) => void;
   clearAuth: () => void;
@@ -17,6 +18,7 @@ interface AuthState {
   refreshTokens: () => Promise<void>;
   refreshUser: () => Promise<void>;
   getToken: () => Promise<string | null>;
+  setHasHydrated: (state: boolean) => void;
 }
 
 export const useAuth = create<AuthState>()(
@@ -27,6 +29,11 @@ export const useAuth = create<AuthState>()(
       token: null,
       isAuthenticated: false,
       isLoading: false,
+      _hasHydrated: false,
+
+      setHasHydrated: (state) => {
+        set({ _hasHydrated: state });
+      },
 
       setAuth: (user, tokens) => {
         apiClient.setTokens(tokens);
@@ -98,6 +105,8 @@ export const useAuth = create<AuthState>()(
         if (state?.tokens) {
           apiClient.setTokens(state.tokens);
         }
+        // Mark hydration as complete
+        useAuth.getState().setHasHydrated(true);
       },
     }
   )

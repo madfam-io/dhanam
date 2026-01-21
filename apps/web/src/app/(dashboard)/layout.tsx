@@ -29,7 +29,7 @@ function DashboardSkeleton() {
 }
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, _hasHydrated } = useAuth();
   const router = useRouter();
   // Track if client has hydrated - prevents SSR/client mismatch
   const [hasMounted, setHasMounted] = useState(false);
@@ -39,16 +39,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     setHasMounted(true);
   }, []);
 
-  // Redirect unauthenticated users after mount
+  // Redirect unauthenticated users after Zustand hydration is complete
   useEffect(() => {
-    if (hasMounted && !isAuthenticated) {
+    if (hasMounted && _hasHydrated && !isAuthenticated) {
       router.push('/login');
     }
-  }, [hasMounted, isAuthenticated, router]);
+  }, [hasMounted, _hasHydrated, isAuthenticated, router]);
 
   // Show skeleton during SSR and initial hydration
   // This ensures server and client render the same content initially
   if (!hasMounted) {
+    return <DashboardSkeleton />;
+  }
+
+  // Wait for Zustand to hydrate from localStorage before deciding
+  if (!_hasHydrated) {
     return <DashboardSkeleton />;
   }
 
