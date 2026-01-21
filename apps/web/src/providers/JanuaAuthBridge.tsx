@@ -28,10 +28,20 @@ const januaConfig: JanuaConfig = {
  * local auth state management, enabling SSO while preserving existing auth hooks.
  */
 function JanuaAuthSync({ children }: { children: React.ReactNode }) {
-  const { user: januaUser, isAuthenticated: januaAuthenticated } = useJanua();
+  const {
+    user: januaUser,
+    isAuthenticated: januaAuthenticated,
+    isLoading: januaLoading,
+  } = useJanua();
   const { setAuth, clearAuth, isAuthenticated: dhanamAuthenticated } = useAuth();
 
   const syncAuthState = useCallback(() => {
+    // Don't make any auth decisions while Janua is still loading
+    // This prevents race conditions where we'd clear auth before Janua validates the token
+    if (januaLoading) {
+      return;
+    }
+
     if (januaAuthenticated && januaUser) {
       // Map Janua locale to Dhanam Locale ('en' | 'es')
       const mapLocale = (januaLocale?: string): Locale => {
@@ -72,10 +82,12 @@ function JanuaAuthSync({ children }: { children: React.ReactNode }) {
 
       setAuth(dhanamUser, tokens);
     } else if (!januaAuthenticated && dhanamAuthenticated) {
-      // Janua logged out - clear Dhanam auth
+      // Janua finished loading and says not authenticated, but Dhanam thinks we are
+      // This means either: Janua logged out, or token was invalid
+      // Clear Dhanam auth to stay in sync
       clearAuth();
     }
-  }, [januaAuthenticated, januaUser, dhanamAuthenticated, setAuth, clearAuth]);
+  }, [januaLoading, januaAuthenticated, januaUser, dhanamAuthenticated, setAuth, clearAuth]);
 
   useEffect(() => {
     syncAuthState();

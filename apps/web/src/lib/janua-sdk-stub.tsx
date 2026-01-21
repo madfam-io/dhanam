@@ -63,8 +63,10 @@ export function JanuaProvider({ config, children }: { config: JanuaConfig; child
         const storedUser = localStorage.getItem(STORAGE_KEYS.user);
         const accessToken = localStorage.getItem(STORAGE_KEYS.accessToken);
 
-        if (storedUser && accessToken) {
-          // Validate token with Janua
+        // If we have an access token, validate it and fetch/update user
+        // This handles both cases: cached user exists OR SSO callback just stored token
+        if (accessToken) {
+          // Validate token with Janua and get fresh user data
           const response = await fetch(`${baseURL}/api/v1/auth/me`, {
             headers: {
               Authorization: `Bearer ${accessToken}`,
@@ -73,17 +75,32 @@ export function JanuaProvider({ config, children }: { config: JanuaConfig; child
 
           if (response.ok) {
             const data = await response.json();
-            setUser(data.user || JSON.parse(storedUser));
+            const userData = data.user || data;
+            // Update user state and cache
+            setUser(userData);
+            localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(userData));
           } else {
             // Token invalid, clear storage
             localStorage.removeItem(STORAGE_KEYS.accessToken);
             localStorage.removeItem(STORAGE_KEYS.refreshToken);
             localStorage.removeItem(STORAGE_KEYS.user);
           }
+        } else if (storedUser) {
+          // No access token but have cached user - clear stale cache
+          localStorage.removeItem(STORAGE_KEYS.user);
         }
       } catch (error) {
         if (config.debug) {
           console.warn('[JanuaSDK] Session check failed:', error);
+        }
+        // On network error, use cached user if available (offline support)
+        const storedUser = localStorage.getItem(STORAGE_KEYS.user);
+        if (storedUser) {
+          try {
+            setUser(JSON.parse(storedUser));
+          } catch {
+            localStorage.removeItem(STORAGE_KEYS.user);
+          }
         }
       } finally {
         setIsLoading(false);
