@@ -1,5 +1,6 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Controller, Get, UseGuards, HttpStatus, Res } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { FastifyReply } from 'fastify';
 
 import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
 
@@ -16,20 +17,47 @@ export class MonitoringController {
 
   @Get('health')
   @ApiOperation({ summary: 'Get system health status' })
-  @ApiResponse({ status: 200, description: 'Health status retrieved successfully' })
-  async getHealth() {
-    return this.healthService.getHealthStatus();
+  @ApiResponse({ status: 200, description: 'System is healthy' })
+  @ApiResponse({ status: 503, description: 'System is unhealthy' })
+  async getHealth(@Res() reply: FastifyReply) {
+    const status = await this.healthService.getHealthStatus();
+    const httpStatus =
+      status.status === 'unhealthy' ? HttpStatus.SERVICE_UNAVAILABLE : HttpStatus.OK;
+    return reply.status(httpStatus).send(status);
   }
 
+  @Get('health/ready')
+  @ApiOperation({
+    summary: 'Readiness probe for Kubernetes - returns 503 if not ready for traffic',
+  })
+  @ApiResponse({ status: 200, description: 'Service is ready for traffic' })
+  @ApiResponse({ status: 503, description: 'Service is not ready for traffic' })
+  async getReady(@Res() reply: FastifyReply) {
+    const status = await this.healthService.getReadinessStatus();
+    const httpStatus = status.ready ? HttpStatus.OK : HttpStatus.SERVICE_UNAVAILABLE;
+    return reply.status(httpStatus).send(status);
+  }
+
+  @Get('health/live')
+  @ApiOperation({ summary: 'Liveness probe for Kubernetes - returns 200 if process is alive' })
+  @ApiResponse({ status: 200, description: 'Process is alive' })
+  async getLive() {
+    return this.healthService.getLivenessStatus();
+  }
+
+  // Keep legacy endpoints for backwards compatibility
   @Get('health/readiness')
-  @ApiOperation({ summary: 'Get system readiness status for load balancer' })
+  @ApiOperation({ summary: 'Get system readiness status (legacy - use /health/ready)' })
   @ApiResponse({ status: 200, description: 'Readiness status retrieved successfully' })
-  async getReadiness() {
-    return this.healthService.getReadinessStatus();
+  @ApiResponse({ status: 503, description: 'Service is not ready' })
+  async getReadiness(@Res() reply: FastifyReply) {
+    const status = await this.healthService.getReadinessStatus();
+    const httpStatus = status.ready ? HttpStatus.OK : HttpStatus.SERVICE_UNAVAILABLE;
+    return reply.status(httpStatus).send(status);
   }
 
   @Get('health/liveness')
-  @ApiOperation({ summary: 'Get system liveness status for load balancer' })
+  @ApiOperation({ summary: 'Get system liveness status (legacy - use /health/live)' })
   @ApiResponse({ status: 200, description: 'Liveness status retrieved successfully' })
   async getLiveness() {
     return this.healthService.getLivenessStatus();

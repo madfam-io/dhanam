@@ -274,6 +274,116 @@ jobs:
           ls -la apps/api/dist
           ls -la packages/*/dist
 
+  e2e-tests:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # Only run E2E on main branch to avoid long PR times
+    if: github.ref == 'refs/heads/main'
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: dhanam_e2e
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9
+          run_install: false
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Configure npm registry
+        run: |
+          echo "@madfam:registry=https://npm.madfam.io" >> ~/.npmrc
+          echo "@dhanam:registry=https://npm.madfam.io" >> ~/.npmrc
+          echo "@janua:registry=https://npm.madfam.io" >> ~/.npmrc
+          echo "//npm.madfam.io/:_authToken=${{ secrets.NPM_MADFAM_TOKEN }}" >> ~/.npmrc
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Setup E2E test environment
+        run: |
+          cp apps/api/.env.example apps/api/.env
+          echo "DATABASE_URL=postgresql://test:test@localhost:5432/dhanam_e2e" >> apps/api/.env
+          echo "REDIS_URL=redis://localhost:6379" >> apps/api/.env
+          echo "JWT_SECRET=e2e_test_jwt_secret_for_ci_testing_only" >> apps/api/.env
+          echo "JWT_REFRESH_SECRET=e2e_test_jwt_refresh_secret_for_ci" >> apps/api/.env
+          echo "ENCRYPTION_KEY=e2e_test_encryption_key_32chars" >> apps/api/.env
+
+      - name: Generate Prisma Client
+        working-directory: apps/api
+        run: pnpm prisma generate
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/dhanam_e2e
+
+      - name: Run database migrations
+        working-directory: apps/api
+        run: pnpm prisma migrate deploy
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/dhanam_e2e
+
+      - name: Build packages
+        run: pnpm build:packages
+
+      - name: Run E2E tests
+        working-directory: apps/api
+        run: pnpm test:e2e
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/dhanam_e2e
+          REDIS_URL: redis://localhost:6379
+          NODE_ENV: test
+
+      - name: Upload E2E test results
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: e2e-test-results
+          path: apps/api/test-results/
+          retention-days: 7
+
   security:
     name: Security Scan
     runs-on: ubuntu-latest

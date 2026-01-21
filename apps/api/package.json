@@ -17,6 +17,8 @@
     "test:e2e:onboarding": "jest --config ./test/jest-e2e.json onboarding-flow",
     "test:e2e:preferences": "jest --config ./test/jest-e2e.json preferences-management",
     "test:e2e:run": "./test/e2e/run-e2e.sh",
+    "test:smoke": "jest --config ./test/smoke/jest-smoke.json",
+    "test:smoke:remote": "SMOKE_TEST_URL=${SMOKE_TEST_URL:-https://api.dhan.am} jest --config ./test/smoke/jest-smoke.json --testPathPattern=remote",
     "typecheck": "tsc --noEmit",
     "db:generate": "prisma generate",
     "db:migrate:dev": "prisma migrate dev",

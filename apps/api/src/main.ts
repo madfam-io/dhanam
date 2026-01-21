@@ -6,7 +6,7 @@ import fastifyCors from '@fastify/cors';
 import fastifyHelmet from '@fastify/helmet';
 // eslint-disable-next-line import/no-named-as-default
 import fastifyRateLimit from '@fastify/rate-limit';
-import { ValidationPipe, VersioningType } from '@nestjs/common';
+import { ValidationPipe, VersioningType, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
@@ -15,18 +15,22 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { GlobalExceptionFilter } from '@core/filters/global-exception.filter';
 import { LoggingInterceptor } from '@core/interceptors/logging.interceptor';
 import { RequestIdMiddleware } from '@core/middleware/request-id.middleware';
+import { HealthService } from '@core/monitoring/health.service';
+import { SentryService } from '@core/monitoring/sentry.service';
+import { QueueService } from '@modules/jobs/queue.service';
 
 import { AppModule } from './app.module';
+
+const logger = new Logger('Bootstrap');
 
 async function bootstrap() {
   // Setup global error handlers for unhandled rejections and exceptions
   process.on('unhandledRejection', (reason, promise) => {
-    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-    // In production, you might want to log to an error tracking service (e.g., Sentry)
+    logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
   });
 
   process.on('uncaughtException', (error) => {
-    console.error('Uncaught Exception:', error);
+    logger.error('Uncaught Exception:', error);
     // Gracefully shut down the application
     process.exit(1);
   });
@@ -122,8 +126,54 @@ async function bootstrap() {
     SwaggerModule.setup('docs', app, document);
   }
 
+  // Enable shutdown hooks for graceful termination
+  app.enableShutdownHooks();
+
+  // Setup graceful shutdown handler
+  const healthService = app.get(HealthService);
+  const queueService = app.get(QueueService);
+  const sentryService = app.get(SentryService);
+
+  const gracefulShutdown = async (signal: string) => {
+    logger.log(`Received ${signal}, starting graceful shutdown...`);
+
+    // Mark service as shutting down (health probes will return not ready)
+    healthService.setShuttingDown(true);
+    logger.log('Health service marked as shutting down');
+
+    // Wait a brief moment for load balancer to stop sending traffic
+    await new Promise((resolve) => setTimeout(resolve, 5000));
+    logger.log('Grace period complete, draining queues...');
+
+    // Drain queues with timeout
+    try {
+      await queueService.drainQueues(30000); // 30 second timeout
+      logger.log('Queue drain complete');
+    } catch (error) {
+      logger.warn('Queue drain timed out or failed:', error);
+    }
+
+    // Flush Sentry events
+    try {
+      await sentryService.flush(2000);
+      logger.log('Sentry events flushed');
+    } catch (error) {
+      logger.warn('Sentry flush failed:', error);
+    }
+
+    // Close the application
+    logger.log('Closing application...');
+    await app.close();
+    logger.log('Application closed, exiting');
+    process.exit(0);
+  };
+
+  process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+  process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
   const port = configService.get('PORT') || 4000;
   await app.listen(port, '0.0.0.0');
+  logger.log(`Application started on port ${port}`);
 }
 
 bootstrap();

@@ -39,12 +39,18 @@ spec:
     healthCheck: /api/health
     readinessProbe:
       path: /api/health
-      initialDelaySeconds: 15
+      initialDelaySeconds: 10
       periodSeconds: 5
+      timeoutSeconds: 5
+      successThreshold: 1
+      failureThreshold: 3
     livenessProbe:
       path: /api/health
       initialDelaySeconds: 30
       periodSeconds: 10
+      timeoutSeconds: 5
+      successThreshold: 1
+      failureThreshold: 3
 
   env:
     - name: PORT
@@ -101,6 +107,15 @@ spec:
         secretKeyRef:
           name: dhanam-secrets
           key: openai-api-key
+
+    # Error Monitoring
+    - name: SENTRY_DSN
+      valueFrom:
+        secretKeyRef:
+          name: dhanam-secrets
+          key: sentry-dsn
+    - name: SENTRY_RELEASE
+      value: dhanam-web@latest
 
   domains:
     # Production domain (primary)

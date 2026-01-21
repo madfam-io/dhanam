@@ -135,23 +135,61 @@ jobs:
             POD=$(kubectl get pods -n $NAMESPACE -l app=$DEPLOYMENT -o jsonpath='{.items[0].metadata.name}')
             kubectl exec -n $NAMESPACE $POD -- wget -qO- http://localhost:3000/api/health || echo "Health check via exec not available"
 
-      - name: Verify external access
+      - name: Wait for deployment stabilization
         run: |
-          echo "Waiting for deployment to be accessible..."
-          sleep 10
+          echo "Waiting 30s for deployment to stabilize..."
+          sleep 30
 
-          # Check health endpoint
-          for i in {1..6}; do
-            if curl -sf https://app.dhan.am/api/health; then
-              echo ""
-              echo "✅ Health check passed!"
+      - name: Verify deployment health
+        id: health_check
+        run: |
+          echo "Verifying deployment health..."
+          MAX_ATTEMPTS=10
+          DELAY=10
+
+          for i in $(seq 1 $MAX_ATTEMPTS); do
+            echo "Health check attempt $i/$MAX_ATTEMPTS..."
+
+            # Check health endpoint
+            RESPONSE=$(curl -sf -w "\n%{http_code}" https://app.dhan.am/api/health 2>/dev/null || echo "000")
+            HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+            BODY=$(echo "$RESPONSE" | head -n-1)
+
+            if [ "$HTTP_CODE" = "200" ]; then
+              echo "✅ Health check passed (HTTP $HTTP_CODE)"
+              echo "Response: $BODY"
+              echo "health_status=passed" >> $GITHUB_OUTPUT
               exit 0
+            elif [ "$HTTP_CODE" = "503" ]; then
+              echo "⚠️ Service degraded (HTTP $HTTP_CODE)"
+              echo "Response: $BODY"
+            else
+              echo "❌ Health check failed (HTTP $HTTP_CODE)"
             fi
-            echo "Attempt $i/6 - waiting..."
-            sleep 10
+
+            if [ $i -lt $MAX_ATTEMPTS ]; then
+              echo "Waiting ${DELAY}s before next attempt..."
+              sleep $DELAY
+            fi
           done
 
-          echo "⚠️ Health check did not pass after 60s, but deployment may still be rolling out"
+          echo "health_status=failed" >> $GITHUB_OUTPUT
+          echo "❌ Health check failed after $MAX_ATTEMPTS attempts"
+          exit 1
+
+      - name: Trigger rollback on failure
+        if: failure() && steps.health_check.outputs.health_status == 'failed'
+        run: |
+          echo "::error::Deployment health check failed - consider rollback"
+          echo "## ⚠️ Deployment Health Check Failed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "The deployment did not pass health checks after stabilization." >> $GITHUB_STEP_SUMMARY
+          echo "**Action Required**: Review logs and consider rolling back to previous version." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "To rollback manually:" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "kubectl rollout undo deployment/dhanam-web -n dhanam" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
 
       - name: Generate summary
         if: always()
@@ -161,6 +199,12 @@ jobs:
           echo "**Image**: \`${{ needs.build.outputs.image_full }}\`" >> $GITHUB_STEP_SUMMARY
           echo "**Commit**: \`${{ needs.build.outputs.image_tag }}\`" >> $GITHUB_STEP_SUMMARY
           echo "**URL**: https://app.dhan.am" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.health_check.outputs.health_status }}" = "passed" ]; then
+            echo "**Status**: ✅ Healthy" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "**Status**: ⚠️ Health check issues detected" >> $GITHUB_STEP_SUMMARY
+          fi
 
   fallback-kubeconfig:
     name: Deploy via Kubeconfig (Fallback)

@@ -69,6 +69,7 @@ export class QueueService implements OnModuleInit, OnModuleDestroy {
   private queues = new Map<string, Queue>();
   private workers = new Map<string, Worker>();
   private queueEvents = new Map<string, QueueEvents>();
+  private isShuttingDown = false;
 
   constructor(private readonly configService: ConfigService) {
     const redisUrl = this.configService.get('REDIS_URL', 'redis://localhost:6379');
@@ -327,5 +328,98 @@ export class QueueService implements OnModuleInit, OnModuleDestroy {
     this.logger.log(`Worker registered for queue ${queueName}`);
 
     return worker;
+  }
+
+  /**
+   * Check if the service is accepting new jobs
+   */
+  isAcceptingJobs(): boolean {
+    return !this.isShuttingDown;
+  }
+
+  /**
+   * Gracefully drain all queues during shutdown
+   * Stops accepting new jobs and waits for active jobs to complete
+   * @param timeoutMs - Maximum time to wait for jobs to complete (default: 30s)
+   */
+  async drainQueues(timeoutMs = 30000): Promise<void> {
+    this.isShuttingDown = true;
+    this.logger.log('Starting queue drain process...');
+
+    // Pause all queues to stop accepting new jobs
+    for (const [queueName, queue] of this.queues) {
+      try {
+        await queue.pause();
+        this.logger.log(`Queue ${queueName} paused`);
+      } catch (error) {
+        this.logger.warn(`Failed to pause queue ${queueName}:`, error);
+      }
+    }
+
+    // Wait for active jobs to complete with timeout
+    const startTime = Date.now();
+    const checkInterval = 1000; // Check every second
+
+    while (Date.now() - startTime < timeoutMs) {
+      let totalActive = 0;
+
+      for (const [queueName, queue] of this.queues) {
+        try {
+          const active = await queue.getActive();
+          totalActive += active.length;
+          if (active.length > 0) {
+            this.logger.debug(`Queue ${queueName}: ${active.length} active jobs`);
+          }
+        } catch (error) {
+          this.logger.warn(`Failed to get active jobs for ${queueName}:`, error);
+        }
+      }
+
+      if (totalActive === 0) {
+        this.logger.log('All active jobs completed');
+        break;
+      }
+
+      this.logger.log(`Waiting for ${totalActive} active jobs to complete...`);
+      await new Promise((resolve) => setTimeout(resolve, checkInterval));
+    }
+
+    // Check if we timed out
+    const elapsed = Date.now() - startTime;
+    if (elapsed >= timeoutMs) {
+      this.logger.warn(`Queue drain timed out after ${timeoutMs}ms`);
+
+      // Log remaining jobs for visibility
+      for (const [queueName, queue] of this.queues) {
+        try {
+          const active = await queue.getActive();
+          if (active.length > 0) {
+            this.logger.warn(
+              `Queue ${queueName} still has ${active.length} active jobs that will be interrupted`
+            );
+          }
+        } catch {
+          // Ignore errors during final check
+        }
+      }
+    }
+
+    this.logger.log(`Queue drain completed in ${elapsed}ms`);
+  }
+
+  /**
+   * Get the count of active jobs across all queues
+   */
+  async getActiveJobCount(): Promise<number> {
+    let totalActive = 0;
+    for (const queue of this.queues.values()) {
+      try {
+        const active = await queue.getActive();
+        totalActive += active.length;
+      } catch {
+        // Ignore errors
+      }
+    }
+    return totalActive;
   }
 }

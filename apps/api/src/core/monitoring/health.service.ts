@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Redis from 'ioredis';
 
@@ -14,6 +14,7 @@ export interface HealthStatus {
     redis: HealthCheck;
     queues: HealthCheck;
     external: HealthCheck;
+    providers: ProviderHealthCheck;
   };
   version: string;
   environment: string;
@@ -26,9 +27,27 @@ export interface HealthCheck {
   details?: any;
 }
 
+export interface ProviderHealthCheck {
+  status: 'up' | 'down' | 'degraded';
+  responseTime?: number;
+  details: {
+    belvo: ProviderStatus;
+    plaid: ProviderStatus;
+    bitso: ProviderStatus;
+  };
+}
+
+export interface ProviderStatus {
+  status: 'up' | 'down' | 'unconfigured';
+  responseTime?: number;
+  error?: string;
+}
+
 @Injectable()
 export class HealthService {
+  private readonly logger = new Logger(HealthService.name);
   private readonly startTime = Date.now();
+  private isShuttingDown = false;
 
   constructor(
     private readonly prisma: PrismaService,
@@ -36,25 +55,45 @@ export class HealthService {
     private readonly queueService: QueueService
   ) {}
 
+  /**
+   * Mark the service as shutting down (called during graceful shutdown)
+   */
+  setShuttingDown(value: boolean): void {
+    this.isShuttingDown = value;
+  }
+
   async getHealthStatus(): Promise<HealthStatus> {
-    const checks = await Promise.allSettled([
-      this.checkDatabase(),
-      this.checkRedis(),
-      this.checkQueues(),
-      this.checkExternalServices(),
-    ]);
+    const [dbResult, redisResult, queuesResult, externalResult, providersResult] =
+      await Promise.allSettled([
+        this.checkDatabase(),
+        this.checkRedis(),
+        this.checkQueues(),
+        this.checkExternalServices(),
+        this.checkAllProviders(),
+      ]);
 
-    const mappedChecks = checks.map((result) =>
-      result.status === 'fulfilled' ? result.value : this.createFailedCheck(result.reason)
-    );
+    // Map core checks
+    const database: HealthCheck =
+      dbResult.status === 'fulfilled' ? dbResult.value : this.createFailedCheck(dbResult.reason);
+    const redis: HealthCheck =
+      redisResult.status === 'fulfilled'
+        ? redisResult.value
+        : this.createFailedCheck(redisResult.reason);
+    const queues: HealthCheck =
+      queuesResult.status === 'fulfilled'
+        ? queuesResult.value
+        : this.createFailedCheck(queuesResult.reason);
+    const external: HealthCheck =
+      externalResult.status === 'fulfilled'
+        ? externalResult.value
+        : this.createFailedCheck(externalResult.reason);
+    const providers: ProviderHealthCheck =
+      providersResult.status === 'fulfilled'
+        ? providersResult.value
+        : this.createFailedProviderCheck('Provider check failed');
 
-    // Ensure we have all 4 checks
-    const database = mappedChecks[0] || this.createFailedCheck('Database check failed');
-    const redis = mappedChecks[1] || this.createFailedCheck('Redis check failed');
-    const queues = mappedChecks[2] || this.createFailedCheck('Queue check failed');
-    const external = mappedChecks[3] || this.createFailedCheck('External check failed');
-
-    const overallStatus = this.determineOverallStatus(mappedChecks);
+    const coreChecks: HealthCheck[] = [database, redis, queues, external];
+    const overallStatus = this.determineOverallStatus(coreChecks);
 
     return {
       status: overallStatus,
@@ -65,28 +104,43 @@ export class HealthService {
         redis,
         queues,
         external,
+        providers,
       },
       version: process.env.npm_package_version || '0.1.0',
       environment: this.configService.get('NODE_ENV', 'development'),
     };
   }
 
-  async getReadinessStatus(): Promise<{ ready: boolean; checks: any }> {
+  async getReadinessStatus(): Promise<{ ready: boolean; reason?: string; checks: any }> {
+    // If shutting down, return not ready immediately
+    if (this.isShuttingDown) {
+      return {
+        ready: false,
+        reason: 'Service is shutting down',
+        checks: {},
+      };
+    }
+
     const health = await this.getHealthStatus();
     const criticalServices = [health.checks.database, health.checks.redis];
 
     const ready = criticalServices.every((check) => check.status === 'up');
+    const failedServices = criticalServices
+      .filter((check) => check.status !== 'up')
+      .map((check) => check.error || 'Unknown error');
 
     return {
       ready,
+      reason: ready ? undefined : `Critical services unavailable: ${failedServices.join(', ')}`,
       checks: health.checks,
     };
   }
 
-  async getLivenessStatus(): Promise<{ alive: boolean; uptime: number }> {
+  async getLivenessStatus(): Promise<{ alive: boolean; uptime: number; shuttingDown: boolean }> {
     return {
-      alive: true,
+      alive: !this.isShuttingDown,
       uptime: Date.now() - this.startTime,
+      shuttingDown: this.isShuttingDown,
     };
   }
 
@@ -235,5 +289,214 @@ export class HealthService {
       status: 'down',
       error: error instanceof Error ? error.message : 'Health check failed',
     };
+  }
+
+  private createFailedProviderCheck(error: string): ProviderHealthCheck {
+    return {
+      status: 'down',
+      details: {
+        belvo: { status: 'down', error },
+        plaid: { status: 'down', error },
+        bitso: { status: 'down', error },
+      },
+    };
+  }
+
+  /**
+   * Check all financial data provider connectivity
+   */
+  async checkAllProviders(): Promise<ProviderHealthCheck> {
+    const start = Date.now();
+
+    const [belvo, plaid, bitso] = await Promise.all([
+      this.checkBelvoConnectivity(),
+      this.checkPlaidConnectivity(),
+      this.checkBitsoConnectivity(),
+    ]);
+
+    // Determine overall provider status
+    const statuses = [belvo.status, plaid.status, bitso.status];
+    const configuredProviders = statuses.filter((s) => s !== 'unconfigured');
+    const upProviders = configuredProviders.filter((s) => s === 'up');
+
+    let overallStatus: 'up' | 'down' | 'degraded';
+    if (configuredProviders.length === 0) {
+      // No providers configured is acceptable
+      overallStatus = 'up';
+    } else if (upProviders.length === configuredProviders.length) {
+      overallStatus = 'up';
+    } else if (upProviders.length > 0) {
+      overallStatus = 'degraded';
+    } else {
+      overallStatus = 'down';
+    }
+
+    return {
+      status: overallStatus,
+      responseTime: Date.now() - start,
+      details: { belvo, plaid, bitso },
+    };
+  }
+
+  /**
+   * Check Belvo API connectivity
+   */
+  async checkBelvoConnectivity(): Promise<ProviderStatus> {
+    const secretKeyId = this.configService.get<string>('BELVO_SECRET_KEY_ID');
+    const secretKeyPassword = this.configService.get<string>('BELVO_SECRET_KEY_PASSWORD');
+
+    if (!secretKeyId || !secretKeyPassword) {
+      return { status: 'unconfigured' };
+    }
+
+    const start = Date.now();
+
+    try {
+      // Check Belvo API health endpoint (sandbox/production)
+      const env = this.configService.get<string>('BELVO_ENV', 'sandbox');
+      const baseUrl = env === 'production' ? 'https://api.belvo.com' : 'https://sandbox.belvo.com';
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+      const response = await fetch(`${baseUrl}/api/`, {
+        signal: controller.signal,
+        method: 'GET',
+        headers: {
+          Authorization:
+            'Basic ' + Buffer.from(`${secretKeyId}:${secretKeyPassword}`).toString('base64'),
+        },
+      });
+
+      clearTimeout(timeoutId);
+
+      if (response.ok || response.status === 401) {
+        // 401 means API is reachable but credentials may be wrong - still counts as reachable
+        return {
+          status: response.ok ? 'up' : 'up', // API is reachable
+          responseTime: Date.now() - start,
+        };
+      }
+
+      return {
+        status: 'down',
+        responseTime: Date.now() - start,
+        error: `HTTP ${response.status}`,
+      };
+    } catch (error) {
+      this.logger.warn('Belvo connectivity check failed', error);
+      return {
+        status: 'down',
+        responseTime: Date.now() - start,
+        error: error instanceof Error ? error.message : 'Connection failed',
+      };
+    }
+  }
+
+  /**
+   * Check Plaid API connectivity
+   */
+  async checkPlaidConnectivity(): Promise<ProviderStatus> {
+    const clientId = this.configService.get<string>('PLAID_CLIENT_ID');
+    const secret = this.configService.get<string>('PLAID_SECRET');
+
+    if (!clientId || !secret) {
+      return { status: 'unconfigured' };
+    }
+
+    const start = Date.now();
+
+    try {
+      // Check Plaid API health by calling categories endpoint (doesn't require auth)
+      const env = this.configService.get<string>('PLAID_ENV', 'sandbox');
+      const baseUrl =
+        env === 'production'
+          ? 'https://production.plaid.com'
+          : env === 'development'
+            ? 'https://development.plaid.com'
+            : 'https://sandbox.plaid.com';
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+      const response = await fetch(`${baseUrl}/categories/get`, {
+        signal: controller.signal,
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({}),
+      });
+
+      clearTimeout(timeoutId);
+
+      // Plaid returns 400 for invalid request but that means API is reachable
+      if (response.ok || response.status === 400) {
+        return {
+          status: 'up',
+          responseTime: Date.now() - start,
+        };
+      }
+
+      return {
+        status: 'down',
+        responseTime: Date.now() - start,
+        error: `HTTP ${response.status}`,
+      };
+    } catch (error) {
+      this.logger.warn('Plaid connectivity check failed', error);
+      return {
+        status: 'down',
+        responseTime: Date.now() - start,
+        error: error instanceof Error ? error.message : 'Connection failed',
+      };
+    }
+  }
+
+  /**
+   * Check Bitso API connectivity
+   */
+  async checkBitsoConnectivity(): Promise<ProviderStatus> {
+    const apiKey = this.configService.get<string>('BITSO_API_KEY');
+    const apiSecret = this.configService.get<string>('BITSO_API_SECRET');
+
+    if (!apiKey || !apiSecret) {
+      return { status: 'unconfigured' };
+    }
+
+    const start = Date.now();
+
+    try {
+      // Check Bitso public API (ticker endpoint doesn't require auth)
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+      const response = await fetch('https://api.bitso.com/v3/ticker?book=btc_mxn', {
+        signal: controller.signal,
+        method: 'GET',
+      });
+
+      clearTimeout(timeoutId);
+
+      if (response.ok) {
+        return {
+          status: 'up',
+          responseTime: Date.now() - start,
+        };
+      }
+
+      return {
+        status: 'down',
+        responseTime: Date.now() - start,
+        error: `HTTP ${response.status}`,
+      };
+    } catch (error) {
+      this.logger.warn('Bitso connectivity check failed', error);
+      return {
+        status: 'down',
+        responseTime: Date.now() - start,
+        error: error instanceof Error ? error.message : 'Connection failed',
+      };
+    }
   }
 }
