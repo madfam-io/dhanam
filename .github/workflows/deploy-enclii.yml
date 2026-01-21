@@ -1,13 +1,20 @@
 name: Deploy via Enclii (SSH)
 
+# NOTE: This workflow is DISABLED for auto-deploy.
+# Enclii handles production deployments automatically via .enclii.yml
+# Use this workflow only for manual deployments when needed.
+#
+# To deploy: Simply push to main. Enclii auto-deploys.
+
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'apps/web/**'
-      - 'packages/**'
-      - 'pnpm-lock.yaml'
-      - '.enclii.yml'
+  # Disabled: Enclii handles auto-deploy
+  # push:
+  #   branches: [main]
+  #   paths:
+  #     - 'apps/web/**'
+  #     - 'packages/**'
+  #     - 'pnpm-lock.yaml'
+  #     - '.enclii.yml'
   workflow_dispatch:
     inputs:
       image_tag:
