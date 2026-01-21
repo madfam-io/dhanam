@@ -11,7 +11,7 @@ import { useContext } from 'react';
 import { I18nContext } from '../contexts/I18nContext';
 import type { TranslationNamespace } from '../i18n';
 
-export function useTranslation(_namespace?: TranslationNamespace) {
+export function useTranslation(namespace?: TranslationNamespace) {
   const context = useContext(I18nContext);
 
   if (!context) {
@@ -22,19 +22,25 @@ export function useTranslation(_namespace?: TranslationNamespace) {
 
   /**
    * Translate a key
-   * @param key - Translation key in dot notation (e.g., "common.save")
+   * @param key - Translation key in dot notation (e.g., "save" or "common.save")
    * @param params - Optional parameters for interpolation
+   *
+   * If a namespace was provided to useTranslation, keys without dots will be
+   * prefixed with the namespace (e.g., "loginTitle" becomes "auth.loginTitle").
+   * Keys with dots are used as-is for full path access.
    */
   const t = (key: string, params?: Record<string, string | number>): string => {
-    const keys = key.split('.');
+    // If namespace provided and key doesn't contain a dot, prepend namespace
+    const fullKey = namespace && !key.includes('.') ? `${namespace}.${key}` : key;
+    const keys = fullKey.split('.');
     let value: any = translations[locale];
 
     // Navigate through the nested object
     for (const k of keys) {
       value = value?.[k];
       if (value === undefined) {
-        console.warn(`Translation key not found: ${key} for locale: ${locale}`);
-        return key;
+        console.warn(`Translation key not found: ${fullKey} for locale: ${locale}`);
+        return key; // Return original key (without namespace) for display
       }
     }
 
