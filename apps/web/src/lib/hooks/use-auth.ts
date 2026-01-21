@@ -1,8 +1,9 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { AuthTokens, UserProfile } from '@dhanam/shared';
+import { AuthTokens, UserProfile, Locale } from '@dhanam/shared';
 import { apiClient } from '../api/client';
 import { authApi } from '../api/auth';
+import { getJanuaApiUrl } from '../janua-oauth';
 
 interface AuthState {
   user: UserProfile | null;
@@ -74,15 +75,42 @@ export const useAuth = create<AuthState>()(
       },
 
       refreshUser: async () => {
-        const { tokens } = get();
+        const { tokens, setAuth } = get();
         if (!tokens?.accessToken) {
           return;
         }
 
         try {
-          // This would typically be an API call to get the current user
-          // For now, we'll just refresh the tokens which includes user data
-          await get().refreshTokens();
+          // Fetch user profile from Janua's /auth/me endpoint
+          const response = await fetch(`${getJanuaApiUrl()}/api/v1/auth/me`, {
+            headers: {
+              Authorization: `Bearer ${tokens.accessToken}`,
+            },
+          });
+
+          if (!response.ok) {
+            throw new Error('Failed to fetch user profile from Janua');
+          }
+
+          const data = await response.json();
+          const januaUser = data.user || data;
+
+          // Map Janua user to Dhanam UserProfile format
+          const userProfile: UserProfile = {
+            id: januaUser.id,
+            email: januaUser.email,
+            name: januaUser.name || januaUser.display_name || januaUser.email.split('@')[0],
+            locale: (januaUser.locale as Locale) || 'en',
+            timezone: januaUser.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
+            totpEnabled: januaUser.mfa_enabled || false,
+            emailVerified: januaUser.email_verified || false,
+            onboardingCompleted: true, // SSO users are considered onboarded
+            createdAt: januaUser.created_at || new Date().toISOString(),
+            updatedAt: januaUser.updated_at || new Date().toISOString(),
+            spaces: [], // Spaces will be loaded separately
+          };
+
+          setAuth(userProfile, tokens);
         } catch (error) {
           console.error('Failed to refresh user:', error);
         }

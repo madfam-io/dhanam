@@ -29,15 +29,28 @@ function DashboardSkeleton() {
 }
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, _hasHydrated } = useAuth();
+  const { isAuthenticated, _hasHydrated, user, refreshUser } = useAuth();
   const router = useRouter();
   // Track if client has hydrated - prevents SSR/client mismatch
   const [hasMounted, setHasMounted] = useState(false);
+  // Track if we've attempted to fetch user profile
+  const [userFetchAttempted, setUserFetchAttempted] = useState(false);
 
   // Mark as mounted after initial render (client-side only)
   useEffect(() => {
     setHasMounted(true);
   }, []);
+
+  // Fetch user profile if we have tokens but no user data
+  // This happens after SSO login where only tokens are stored
+  useEffect(() => {
+    if (hasMounted && _hasHydrated && isAuthenticated && !user && !userFetchAttempted) {
+      setUserFetchAttempted(true);
+      refreshUser().catch((error) => {
+        console.error('Failed to fetch user profile:', error);
+      });
+    }
+  }, [hasMounted, _hasHydrated, isAuthenticated, user, userFetchAttempted, refreshUser]);
 
   // Redirect unauthenticated users after Zustand hydration is complete
   useEffect(() => {
