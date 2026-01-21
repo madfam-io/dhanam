@@ -59,7 +59,7 @@ spec:
             # API Configuration
             # =================================================================
             - name: NEXT_PUBLIC_API_URL
-              value: "https://api.dhan.am"
+              value: "https://api.dhan.am/v1"
             - name: NEXT_PUBLIC_BASE_URL
               value: "https://app.dhan.am"
 
