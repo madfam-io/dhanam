@@ -113,21 +113,24 @@ export class ApiClient {
   async post<T>(path: string, body?: unknown): Promise<T> {
     return this.request<T>(path, {
       method: 'POST',
-      body: body ? JSON.stringify(body) : undefined,
+      // Always send a body for POST to avoid Fastify "empty body" errors
+      body: JSON.stringify(body ?? {}),
     });
   }
 
   async patch<T>(path: string, body?: unknown): Promise<T> {
     return this.request<T>(path, {
       method: 'PATCH',
-      body: body ? JSON.stringify(body) : undefined,
+      // Always send a body for PATCH to avoid Fastify "empty body" errors
+      body: JSON.stringify(body ?? {}),
     });
   }
 
   async put<T>(path: string, body?: unknown): Promise<T> {
     return this.request<T>(path, {
       method: 'PUT',
-      body: body ? JSON.stringify(body) : undefined,
+      // Always send a body for PUT to avoid Fastify "empty body" errors
+      body: JSON.stringify(body ?? {}),
     });
   }
 
