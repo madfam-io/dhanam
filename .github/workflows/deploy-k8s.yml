@@ -30,6 +30,8 @@ jobs:
     permissions:
       contents: read
       packages: write
+      attestations: write
+      id-token: write
 
     outputs:
       image_tag: ${{ steps.meta.outputs.tags }}
@@ -89,6 +91,18 @@ jobs:
     environment: production
 
     steps:
+      - name: Validate SSH secrets
+        run: |
+          if [ -z "${{ secrets.K8S_SSH_HOST }}" ]; then
+            echo "::error::K8S_SSH_HOST secret is not configured"
+            echo "Please configure the following secrets in GitHub repository settings:"
+            echo "  - K8S_SSH_HOST: SSH host for K8s cluster"
+            echo "  - K8S_SSH_USER: SSH username"
+            echo "  - K8S_SSH_KEY: SSH private key"
+            echo "  - K8S_SSH_PORT: SSH port (optional, default 22)"
+            exit 1
+          fi
+
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.2.2
         with:

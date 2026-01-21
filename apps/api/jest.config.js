@@ -60,6 +60,7 @@ module.exports = {
     '!src/core/monitoring/sentry.service.ts', // Sentry SDK
     '!src/core/monitoring/metrics.service.ts', // Metrics infrastructure
     '!src/core/monitoring/health.service.ts', // Health checks
+    '!src/core/monitoring/deployment-monitor.service.ts', // Deployment monitoring
     '!src/core/config/env-validation.service.ts', // Env validation
     '!src/modules/jobs/queue.service.ts', // BullMQ queue
     // Auth guards that are thin wrappers
