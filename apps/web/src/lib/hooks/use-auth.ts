@@ -134,12 +134,29 @@ export const useAuth = create<AuthState>()(
         isAuthenticated: state.isAuthenticated,
       }),
       onRehydrateStorage: () => (state) => {
-        if (state?.tokens) {
-          apiClient.setTokens(state.tokens);
+        try {
+          if (state?.tokens) {
+            apiClient.setTokens(state.tokens);
+          }
+        } catch (error) {
+          console.error('[useAuth] Error during rehydration token setup:', error);
+        } finally {
+          // ALWAYS mark hydration complete, even if token setup fails
+          useAuth.getState().setHasHydrated(true);
         }
-        // Mark hydration as complete
-        useAuth.getState().setHasHydrated(true);
       },
     }
   )
 );
+
+// Safety net: Force hydration complete after timeout
+// This guarantees skeleton cannot persist indefinitely regardless of edge cases
+if (typeof window !== 'undefined') {
+  setTimeout(() => {
+    const state = useAuth.getState();
+    if (!state._hasHydrated) {
+      console.warn('[useAuth] Hydration timeout - forcing completion');
+      state.setHasHydrated(true);
+    }
+  }, 2000);
+}

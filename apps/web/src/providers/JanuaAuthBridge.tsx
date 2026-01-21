@@ -33,12 +33,18 @@ function JanuaAuthSync({ children }: { children: React.ReactNode }) {
     isAuthenticated: januaAuthenticated,
     isLoading: januaLoading,
   } = useJanua();
-  const { setAuth, clearAuth, isAuthenticated: dhanamAuthenticated } = useAuth();
+  const { setAuth, clearAuth, isAuthenticated: dhanamAuthenticated, _hasHydrated } = useAuth();
 
   const syncAuthState = useCallback(() => {
     // Don't make any auth decisions while Janua is still loading
     // This prevents race conditions where we'd clear auth before Janua validates the token
     if (januaLoading) {
+      return;
+    }
+
+    // CRITICAL: Wait for Zustand hydration before modifying auth state
+    // This prevents clearAuth() from interfering with the hydration process
+    if (!_hasHydrated) {
       return;
     }
 
@@ -87,7 +93,15 @@ function JanuaAuthSync({ children }: { children: React.ReactNode }) {
       // Clear Dhanam auth to stay in sync
       clearAuth();
     }
-  }, [januaLoading, januaAuthenticated, januaUser, dhanamAuthenticated, setAuth, clearAuth]);
+  }, [
+    januaLoading,
+    januaAuthenticated,
+    januaUser,
+    dhanamAuthenticated,
+    setAuth,
+    clearAuth,
+    _hasHydrated,
+  ]);
 
   useEffect(() => {
     syncAuthState();
