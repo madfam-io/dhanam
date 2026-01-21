@@ -2,6 +2,38 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+---
+
+## ⚠️ CRITICAL: MADFAM Ecosystem Dependencies
+
+**READ THIS FIRST before any auth, deployment, or infrastructure work.**
+
+### Authentication & Authorization: JANUA
+
+Dhanam uses **Janua** (MADFAM's own SSO platform) for ALL authentication.
+
+- **OIDC Issuer**: `https://auth.madfam.io`
+- **Janua API**: `https://api.janua.dev`
+- **DO NOT** implement custom auth, use third-party providers (Auth0, Clerk, etc.), or bypass Janua.
+
+### Deployment & DevOps: ENCLII
+
+Dhanam uses **Enclii** (MADFAM's own deployment platform) for ALL production deployments.
+
+- **Config file**: `.enclii.yml` (project root)
+- **Auto-deploy**: Enabled on `main` branch
+- **Flow**: Push to main → Enclii detects → Builds → Deploys to bare metal K8s
+
+**DO NOT** use GitHub Actions workflows (`deploy-*.yml`) for production deployments. They are NOT the primary deployment mechanism.
+
+**To deploy**: Simply push to main. Enclii handles everything automatically.
+
+### Production URLs
+- Web: `https://app.dhan.am`
+- API: `https://api.dhan.am`
+
+---
+
 ## Project Overview
 
 This is the Dhanam Ledger project - a comprehensive budget and wealth tracking application that unifies personal and business financial management with ESG crypto insights. It targets LATAM-first users with multilingual support (English/Spanish).

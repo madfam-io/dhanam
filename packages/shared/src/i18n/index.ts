@@ -5,14 +5,13 @@
  */
 
 import * as es from './es';
-import { common as enCommon } from './en/common';
+import * as en from './en';
 
 // Export translation objects
 export const translations = {
   en: {
-    common: enCommon,
-    // Note: Other English modules should mirror Spanish structure
-    // For now, using minimal common translations for English
+    common: en.common,
+    auth: en.auth,
   },
   es: {
     common: es.common,

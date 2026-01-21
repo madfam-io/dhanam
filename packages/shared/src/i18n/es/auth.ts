@@ -18,6 +18,11 @@ export const auth = {
   noAccount: '¿No tienes una cuenta?',
   signUp: 'Regístrate',
 
+  // SSO / OAuth
+  signInWithJanua: 'Iniciar sesión con Janua SSO',
+  orContinueWith: 'O continuar con',
+  orContinueWithEmail: 'O continuar con correo electrónico',
+
   // Signup
   signup: 'Registrarse',
   signupTitle: 'Crea tu cuenta',
