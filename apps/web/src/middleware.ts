@@ -1,8 +1,14 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-// Paths that don&apos;t require authentication
-const publicPaths = ['/login', '/register', '/forgot-password', '/reset-password'];
+// Paths that don't require authentication
+const publicPaths = [
+  '/login',
+  '/register',
+  '/forgot-password',
+  '/reset-password',
+  '/auth/callback',  // OAuth callback from Janua SSO
+];
 
 export function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
