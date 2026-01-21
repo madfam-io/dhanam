@@ -1,8 +1,15 @@
 name: Deploy to AWS
 
+# NOTE: This workflow is DISABLED for auto-deploy.
+# Enclii handles production deployments automatically via .enclii.yml
+# This AWS workflow is legacy and should only be used for manual deployments.
+#
+# To deploy: Simply push to main. Enclii auto-deploys.
+
 on:
-  push:
-    branches: [main]
+  # Disabled: Enclii handles auto-deploy
+  # push:
+  #   branches: [main]
   workflow_dispatch:
     inputs:
       environment:
