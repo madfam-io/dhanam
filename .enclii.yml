@@ -21,7 +21,7 @@ spec:
       NEXT_PUBLIC_JANUA_API_URL: https://api.janua.dev
     source:
       git:
-        repository: https://github.com/madfam-io/dhanam
+        repository: https://github.com/madfam-org/dhanam
         branch: main
         autoDeploy: true
 
