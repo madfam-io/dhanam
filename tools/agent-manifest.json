@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "name": "dhanam",
+  "version": "1.0.0",
+  "description": "Dhanam - MADFAM Personal Finance App",
+  "lastUpdated": "2026-01-21",
+
+  "domains": {
+    "production": {
+      "api": "https://api.dhan.am",
+      "app": "https://app.dhan.am",
+      "admin": "https://admin.dhan.am",
+      "landing": "https://dhan.am"
+    }
+  },
+
+  "ports": {
+    "api": 8500,
+    "web": 3300,
+    "admin": 3301
+  },
+
+  "kubernetes": {
+    "namespace": "dhanam",
+    "deployments": ["dhanam-api", "dhanam-web", "dhanam-admin"],
+    "secrets": ["dhanam-secrets", "dhanam-billing-secrets", "ghcr-credentials"],
+    "manifests": {
+      "api": "infra/k8s/production/api-deployment.yaml",
+      "web": "infra/k8s/production/web-deployment.yaml",
+      "admin": "infra/k8s/production/admin-deployment.yaml"
+    }
+  },
+
+  "entryPoints": {
+    "api": {
+      "path": "apps/api/src/main.ts",
+      "framework": "NestJS/Fastify",
+      "healthCheck": "/health"
+    },
+    "web": {
+      "path": "apps/web/src/app/page.tsx",
+      "framework": "Next.js",
+      "healthCheck": "/api/health"
+    },
+    "admin": {
+      "path": "apps/admin/src/app/page.tsx",
+      "framework": "Next.js",
+      "healthCheck": "/api/health"
+    }
+  },
+
+  "criticalConfiguration": {
+    "ssoButton": {
+      "path": "apps/web/src/lib/janua-oauth.ts",
+      "lines": "168-170",
+      "description": "SSO button visibility controlled by NEXT_PUBLIC_JANUA_API_URL"
+    },
+    "oidcConfig": {
+      "issuer": "https://auth.madfam.io",
+      "clientId": "jnc_uE2zp9ume_Fd6jMl1elL6wqjiECM711t",
+      "januaApiUrl": "https://api.janua.dev"
+    },
+    "imagePullSecrets": {
+      "secretName": "ghcr-credentials",
+      "description": "Required for pulling images from ghcr.io/madfam-org"
+    }
+  },
+
+  "buildCommands": {
+    "api": "pnpm --filter api build",
+    "web": "pnpm --filter web build",
+    "admin": "pnpm --filter admin build",
+    "all": "turbo build"
+  },
+
+  "testCommands": {
+    "unit": "pnpm test",
+    "e2e": "pnpm test:e2e",
+    "lint": "pnpm lint"
+  },
+
+  "dependencies": {
+    "ecosystem": [
+      {
+        "name": "janua",
+        "purpose": "Authentication (OIDC SSO)",
+        "config": {
+          "NEXT_PUBLIC_OIDC_ISSUER": "https://auth.madfam.io",
+          "NEXT_PUBLIC_OIDC_CLIENT_ID": "jnc_uE2zp9ume_Fd6jMl1elL6wqjiECM711t",
+          "NEXT_PUBLIC_JANUA_API_URL": "https://api.janua.dev"
+        }
+      },
+      {
+        "name": "enclii",
+        "purpose": "Deployment Platform",
+        "config": ".enclii.yml"
+      }
+    ],
+    "external": ["PostgreSQL", "Redis", "Stripe", "Paddle", "Belvo", "Plaid"]
+  },
+
+  "dependents": []
+}
