@@ -30,6 +30,8 @@ jobs:
     permissions:
       contents: read
       packages: write
+      attestations: write
+      id-token: write
 
     outputs:
       image_tag: ${{ steps.meta.outputs.tags }}
@@ -47,7 +49,7 @@ jobs:
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ secrets.GHCR_PAT || secrets.GITHUB_TOKEN }}
 
       - name: Extract metadata for Docker
         id: meta
@@ -110,7 +112,7 @@ jobs:
             --namespace=dhanam \
             --docker-server=ghcr.io \
             --docker-username=${{ github.actor }} \
-            --docker-password=${{ secrets.GITHUB_TOKEN }} \
+            --docker-password=${{ secrets.GHCR_PAT || secrets.GITHUB_TOKEN }} \
             --docker-email=ci@dhanam.dev
 
       - name: Deploy to K8s
