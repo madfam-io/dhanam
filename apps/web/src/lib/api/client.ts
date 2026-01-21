@@ -19,7 +19,8 @@ export class ApiClient {
   private onTokenRefresh?: (tokens: AuthTokens) => void;
 
   constructor(config: { baseUrl?: string; onTokenRefresh?: (tokens: AuthTokens) => void }) {
-    this.baseUrl = config.baseUrl || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/v1';
+    // Use production URL as fallback (localhost is only for explicit local development)
+    this.baseUrl = config.baseUrl || process.env.NEXT_PUBLIC_API_URL || 'https://api.dhan.am/v1';
     this.onTokenRefresh = config.onTokenRefresh;
   }
 

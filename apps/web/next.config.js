@@ -4,9 +4,17 @@ const nextConfig = {
   reactStrictMode: true,
   transpilePackages: ['@dhanam/shared', '@dhanam/ui'],
 
+  // Runtime config for values that should be read from environment at runtime
+  // Note: publicRuntimeConfig requires getInitialProps to be called
+  publicRuntimeConfig: {
+    apiUrl: process.env.NEXT_PUBLIC_API_URL || 'https://api.dhan.am/v1',
+    baseUrl: process.env.NEXT_PUBLIC_BASE_URL || 'https://app.dhan.am',
+  },
+
   env: {
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/v1',
-    NEXT_PUBLIC_BASE_URL: process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000',
+    // Use production URLs as defaults (these are baked at build time)
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'https://api.dhan.am/v1',
+    NEXT_PUBLIC_BASE_URL: process.env.NEXT_PUBLIC_BASE_URL || 'https://app.dhan.am',
     NEXT_PUBLIC_OIDC_ISSUER: process.env.NEXT_PUBLIC_OIDC_ISSUER,
     NEXT_PUBLIC_OIDC_CLIENT_ID: process.env.NEXT_PUBLIC_OIDC_CLIENT_ID,
     NEXT_PUBLIC_JANUA_API_URL: process.env.NEXT_PUBLIC_JANUA_API_URL,
