@@ -1,0 +1,192 @@
+name: Deploy via Enclii (SSH)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/web/**'
+      - 'packages/**'
+      - 'pnpm-lock.yaml'
+      - '.enclii.yml'
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'Image tag to deploy (default: latest commit SHA)'
+        required: false
+        type: string
+      force_rebuild:
+        description: 'Force rebuild even if image exists'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: madfam-org/dhanam-web
+
+concurrency:
+  group: deploy-enclii-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build and Push to GHCR
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    outputs:
+      image_tag: ${{ steps.vars.outputs.sha_short }}
+      image_full: ${{ steps.vars.outputs.image_full }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set variables
+        id: vars
+        run: |
+          SHA_SHORT=$(git rev-parse --short HEAD)
+          echo "sha_short=$SHA_SHORT" >> $GITHUB_OUTPUT
+          echo "image_full=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:$SHA_SHORT" >> $GITHUB_OUTPUT
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./apps/web/Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.sha_short }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            NEXT_PUBLIC_API_URL=https://api.dhan.am/v1
+            NEXT_PUBLIC_BASE_URL=https://app.dhan.am
+            NEXT_PUBLIC_OIDC_ISSUER=https://auth.madfam.io
+            NEXT_PUBLIC_OIDC_CLIENT_ID=jnc_uE2zp9ume_Fd6jMl1elL6wqjiECM711t
+            NEXT_PUBLIC_JANUA_API_URL=https://api.janua.dev
+
+  deploy:
+    name: Deploy to Enclii K8s
+    runs-on: ubuntu-latest
+    needs: build
+    environment: production
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.ENCLII_SSH_HOST }}
+          username: ${{ secrets.ENCLII_SSH_USER }}
+          key: ${{ secrets.ENCLII_SSH_KEY }}
+          port: ${{ secrets.ENCLII_SSH_PORT || 22 }}
+          script: |
+            set -e
+
+            # Configuration
+            NAMESPACE="dhanam"
+            DEPLOYMENT="dhanam-web"
+            CONTAINER="web"
+            IMAGE="${{ needs.build.outputs.image_full }}"
+
+            echo "=== Deploying Dhanam Web ==="
+            echo "Image: $IMAGE"
+            echo ""
+
+            # Ensure GHCR credentials are current
+            kubectl delete secret ghcr-credentials -n $NAMESPACE --ignore-not-found
+            kubectl create secret docker-registry ghcr-credentials \
+              --namespace=$NAMESPACE \
+              --docker-server=ghcr.io \
+              --docker-username=${{ github.actor }} \
+              --docker-password=${{ secrets.GHCR_PAT }} \
+              --docker-email=ci@dhanam.dev
+
+            # Update deployment
+            kubectl set image deployment/$DEPLOYMENT $CONTAINER=$IMAGE -n $NAMESPACE
+
+            # Wait for rollout
+            kubectl rollout status deployment/$DEPLOYMENT -n $NAMESPACE --timeout=300s
+
+            # Verify
+            echo ""
+            echo "=== Deployment Status ==="
+            kubectl get pods -n $NAMESPACE -l app=$DEPLOYMENT -o wide
+
+            echo ""
+            echo "=== Health Check ==="
+            sleep 5
+            POD=$(kubectl get pods -n $NAMESPACE -l app=$DEPLOYMENT -o jsonpath='{.items[0].metadata.name}')
+            kubectl exec -n $NAMESPACE $POD -- wget -qO- http://localhost:3000/api/health || echo "Health check via exec not available"
+
+      - name: Verify external access
+        run: |
+          echo "Waiting for deployment to be accessible..."
+          sleep 10
+
+          # Check health endpoint
+          for i in {1..6}; do
+            if curl -sf https://app.dhan.am/api/health; then
+              echo ""
+              echo "✅ Health check passed!"
+              exit 0
+            fi
+            echo "Attempt $i/6 - waiting..."
+            sleep 10
+          done
+
+          echo "⚠️ Health check did not pass after 60s, but deployment may still be rolling out"
+
+      - name: Generate summary
+        if: always()
+        run: |
+          echo "## Enclii Deployment Summary 🚀" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Image**: \`${{ needs.build.outputs.image_full }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit**: \`${{ needs.build.outputs.image_tag }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**URL**: https://app.dhan.am" >> $GITHUB_STEP_SUMMARY
+
+  fallback-kubeconfig:
+    name: Deploy via Kubeconfig (Fallback)
+    runs-on: ubuntu-latest
+    needs: build
+    if: failure() && needs.build.result == 'success'
+    environment: production
+
+    steps:
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v4
+
+      - name: Configure kubeconfig
+        run: |
+          mkdir -p ~/.kube
+          if [ -n "${{ secrets.KUBECONFIG_PRODUCTION }}" ]; then
+            echo "${{ secrets.KUBECONFIG_PRODUCTION }}" | base64 -d > ~/.kube/config
+            chmod 600 ~/.kube/config
+          else
+            echo "::error::KUBECONFIG_PRODUCTION secret is not set"
+            exit 1
+          fi
+
+      - name: Deploy
+        run: |
+          kubectl set image deployment/dhanam-web \
+            web=${{ needs.build.outputs.image_full }} \
+            -n dhanam
+          kubectl rollout status deployment/dhanam-web -n dhanam --timeout=300s

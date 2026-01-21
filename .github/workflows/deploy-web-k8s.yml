@@ -117,9 +117,9 @@ jobs:
 
       - name: Deploy to K8s
         run: |
-          # Update image
+          # Update image (container name is "web" in the deployment spec)
           kubectl set image deployment/dhanam-web \
-            dhanam-web=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ needs.build-and-push.outputs.image_digest }} \
+            web=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ needs.build-and-push.outputs.image_digest }} \
             -n dhanam
 
           # Wait for rollout

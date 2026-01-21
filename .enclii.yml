@@ -103,6 +103,12 @@ spec:
           key: openai-api-key
 
   domains:
+    # Production domain (primary)
+    - domain: app.dhan.am
+      tls: true
+      tlsIssuer: cloudflare
+      primary: true
+    # Internal MADFAM domain (secondary)
     - domain: dhanam.madfam.io
       tls: true
       tlsIssuer: cloudflare

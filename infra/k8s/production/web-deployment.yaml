@@ -2,7 +2,7 @@
 # Dhanam Web Deployment (Next.js)
 # =============================================================================
 # Frontend dashboard for personal finance and wealth management
-# MADFAM Port Block: 3300-3399 (Dhanam uses 3300 for Web)
+# Uses port 3000 to match Dockerfile and Enclii configuration
 # =============================================================================
 
 apiVersion: apps/v1
@@ -46,7 +46,7 @@ spec:
 
           ports:
             - name: http
-              containerPort: 3300
+              containerPort: 3000
               protocol: TCP
 
           env:
@@ -56,7 +56,7 @@ spec:
             - name: NODE_ENV
               value: "production"
             - name: PORT
-              value: "3300"
+              value: "3000"
 
             # =================================================================
             # API Configuration
@@ -117,7 +117,7 @@ spec:
           readinessProbe:
             httpGet:
               path: /api/health
-              port: 3300
+              port: 3000
             initialDelaySeconds: 10
             periodSeconds: 10
             timeoutSeconds: 5
@@ -126,7 +126,7 @@ spec:
           livenessProbe:
             httpGet:
               path: /api/health
-              port: 3300
+              port: 3000
             initialDelaySeconds: 30
             periodSeconds: 30
             timeoutSeconds: 5
@@ -179,7 +179,7 @@ spec:
   ports:
     - name: http
       port: 80
-      targetPort: 3300
+      targetPort: 3000
       protocol: TCP
   selector:
     app: dhanam-web
