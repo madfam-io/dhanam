@@ -7,7 +7,7 @@ const publicPaths = [
   '/register',
   '/forgot-password',
   '/reset-password',
-  '/auth/callback',  // OAuth callback from Janua SSO
+  '/auth/callback', // OAuth callback from Janua SSO
 ];
 
 export function middleware(request: NextRequest) {
