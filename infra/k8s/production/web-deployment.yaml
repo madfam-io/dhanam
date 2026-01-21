@@ -36,6 +36,9 @@ spec:
         runAsUser: 1001
         fsGroup: 1001
 
+      imagePullSecrets:
+        - name: ghcr-credentials
+
       containers:
         - name: web
           image: ghcr.io/madfam-org/dhanam-web:latest
@@ -70,6 +73,9 @@ spec:
               value: "https://auth.madfam.io"
             - name: NEXT_PUBLIC_OIDC_CLIENT_ID
               value: "jnc_uE2zp9ume_Fd6jMl1elL6wqjiECM711t"
+            # Janua OAuth API (Required for SSO button visibility)
+            - name: NEXT_PUBLIC_JANUA_API_URL
+              value: "https://api.janua.dev"
             - name: OIDC_CLIENT_SECRET
               valueFrom:
                 secretKeyRef:
