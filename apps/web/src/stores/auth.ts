@@ -50,6 +50,10 @@ export const authStore = create<AuthState>()(
           refreshToken: null,
           isAuthenticated: false,
         });
+        // Clear the auth cookie marker for middleware
+        if (typeof document !== 'undefined') {
+          document.cookie = 'auth-storage=; path=/; max-age=0; SameSite=Lax';
+        }
       },
 
       setLoading: (loading) => {

@@ -112,6 +112,10 @@ function CallbackContent() {
         };
         localStorage.setItem('auth-storage', JSON.stringify(authStorage));
 
+        // Set a cookie marker for the middleware to check
+        // This enables server-side auth checking without exposing the full token
+        document.cookie = `auth-storage=true; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
+
         setStatus('success');
 
         // Redirect to the intended destination or dashboard
