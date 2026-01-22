@@ -66,7 +66,7 @@ describe('Transactions E2E', () => {
         provider: 'manual',
         providerAccountId: 'manual-checking-test',
         name: 'Test Checking Account',
-        type: 'depository',
+        type: 'checking',
         subtype: 'checking',
         currency: 'MXN',
         balance: 10000,
@@ -81,7 +81,7 @@ describe('Transactions E2E', () => {
   });
 
   describe('Transaction CRUD Operations', () => {
-    describe('POST /v1/transactions', () => {
+    describe('POST /v1/spaces/:spaceId/transactions', () => {
       it('should create a new transaction', async () => {
         const transactionData = {
           accountId,
@@ -94,7 +94,7 @@ describe('Transactions E2E', () => {
         };
 
         const response = await request(app.getHttpServer())
-          .post('/v1/transactions')
+          .post(`/v1/spaces/${spaceId}/transactions`)
           .set('Authorization', `Bearer ${authToken}`)
           .send(transactionData)
           .expect(201);
@@ -116,7 +116,7 @@ describe('Transactions E2E', () => {
         };
 
         await request(app.getHttpServer())
-          .post('/v1/transactions')
+          .post(`/v1/spaces/${spaceId}/transactions`)
           .send(transactionData)
           .expect(401);
       });
@@ -127,7 +127,7 @@ describe('Transactions E2E', () => {
         };
 
         await request(app.getHttpServer())
-          .post('/v1/transactions')
+          .post(`/v1/spaces/${spaceId}/transactions`)
           .set('Authorization', `Bearer ${authToken}`)
           .send(invalidData)
           .expect(400);
@@ -144,7 +144,7 @@ describe('Transactions E2E', () => {
         };
 
         const response = await request(app.getHttpServer())
-          .post('/v1/transactions')
+          .post(`/v1/spaces/${spaceId}/transactions`)
           .set('Authorization', `Bearer ${authToken}`)
           .send(incomeData)
           .expect(201);
@@ -154,10 +154,10 @@ describe('Transactions E2E', () => {
       });
     });
 
-    describe('GET /v1/transactions', () => {
+    describe('GET /v1/spaces/:spaceId/transactions', () => {
       it('should list transactions for the user', async () => {
         const response = await request(app.getHttpServer())
-          .get('/v1/transactions')
+          .get(`/v1/spaces/${spaceId}/transactions`)
           .set('Authorization', `Bearer ${authToken}`)
           .expect(200);
 
@@ -168,7 +168,7 @@ describe('Transactions E2E', () => {
 
       it('should filter transactions by account', async () => {
         const response = await request(app.getHttpServer())
-          .get(`/v1/transactions?accountId=${accountId}`)
+          .get(`/v1/spaces/${spaceId}/transactions?accountId=${accountId}`)
           .set('Authorization', `Bearer ${authToken}`)
           .expect(200);
 
@@ -184,7 +184,7 @@ describe('Transactions E2E', () => {
         const endDate = new Date();
 
         const response = await request(app.getHttpServer())
-          .get(`/v1/transactions?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`)
+          .get(`/v1/spaces/${spaceId}/transactions?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`)
           .set('Authorization', `Bearer ${authToken}`)
           .expect(200);
 
@@ -198,7 +198,7 @@ describe('Transactions E2E', () => {
 
       it('should paginate results', async () => {
         const response = await request(app.getHttpServer())
-          .get('/v1/transactions?page=1&limit=1')
+          .get(`/v1/spaces/${spaceId}/transactions?page=1&limit=1`)
           .set('Authorization', `Bearer ${authToken}`)
           .expect(200);
 
@@ -209,10 +209,10 @@ describe('Transactions E2E', () => {
       });
     });
 
-    describe('GET /v1/transactions/:id', () => {
+    describe('GET /v1/spaces/:spaceId/transactions/:id', () => {
       it('should get a specific transaction', async () => {
         const response = await request(app.getHttpServer())
-          .get(`/v1/transactions/${transactionId}`)
+          .get(`/v1/spaces/${spaceId}/transactions/${transactionId}`)
           .set('Authorization', `Bearer ${authToken}`)
           .expect(200);
 
@@ -225,13 +225,13 @@ describe('Transactions E2E', () => {
         const fakeId = '00000000-0000-0000-0000-000000000000';
 
         await request(app.getHttpServer())
-          .get(`/v1/transactions/${fakeId}`)
+          .get(`/v1/spaces/${spaceId}/transactions/${fakeId}`)
           .set('Authorization', `Bearer ${authToken}`)
           .expect(404);
       });
     });
 
-    describe('PATCH /v1/transactions/:id', () => {
+    describe('PATCH /v1/spaces/:spaceId/transactions/:id', () => {
       it('should update a transaction', async () => {
         const updateData = {
           description: 'Updated grocery purchase',
@@ -239,7 +239,7 @@ describe('Transactions E2E', () => {
         };
 
         const response = await request(app.getHttpServer())
-          .patch(`/v1/transactions/${transactionId}`)
+          .patch(`/v1/spaces/${spaceId}/transactions/${transactionId}`)
           .set('Authorization', `Bearer ${authToken}`)
           .send(updateData)
           .expect(200);
@@ -257,7 +257,7 @@ describe('Transactions E2E', () => {
         });
 
         await request(app.getHttpServer())
-          .patch(`/v1/transactions/${transactionId}`)
+          .patch(`/v1/spaces/${spaceId}/transactions/${transactionId}`)
           .set('Authorization', `Bearer ${otherToken}`)
           .send({ description: 'Hacked!' })
           .expect((res) => {
@@ -267,7 +267,7 @@ describe('Transactions E2E', () => {
       });
     });
 
-    describe('DELETE /v1/transactions/:id', () => {
+    describe('DELETE /v1/spaces/:spaceId/transactions/:id', () => {
       let transactionToDelete: string;
 
       beforeAll(async () => {
@@ -281,13 +281,13 @@ describe('Transactions E2E', () => {
 
       it('should delete a transaction', async () => {
         await request(app.getHttpServer())
-          .delete(`/v1/transactions/${transactionToDelete}`)
+          .delete(`/v1/spaces/${spaceId}/transactions/${transactionToDelete}`)
           .set('Authorization', `Bearer ${authToken}`)
           .expect(200);
 
         // Verify it's deleted
         await request(app.getHttpServer())
-          .get(`/v1/transactions/${transactionToDelete}`)
+          .get(`/v1/spaces/${spaceId}/transactions/${transactionToDelete}`)
           .set('Authorization', `Bearer ${authToken}`)
           .expect(404);
       });
@@ -325,7 +325,7 @@ describe('Transactions E2E', () => {
 
     it('should categorize a transaction', async () => {
       const response = await request(app.getHttpServer())
-        .patch(`/v1/transactions/${uncategorizedTxId}`)
+        .patch(`/v1/spaces/${spaceId}/transactions/${uncategorizedTxId}`)
         .set('Authorization', `Bearer ${authToken}`)
         .send({ categoryId })
         .expect(200);
@@ -335,7 +335,7 @@ describe('Transactions E2E', () => {
 
     it('should uncategorize a transaction', async () => {
       const response = await request(app.getHttpServer())
-        .patch(`/v1/transactions/${uncategorizedTxId}`)
+        .patch(`/v1/spaces/${spaceId}/transactions/${uncategorizedTxId}`)
         .set('Authorization', `Bearer ${authToken}`)
         .send({ categoryId: null })
         .expect(200);
@@ -372,7 +372,7 @@ describe('Transactions E2E', () => {
       });
 
       const response = await request(app.getHttpServer())
-        .post('/v1/transactions/bulk/categorize')
+        .post(`/v1/spaces/${spaceId}/transactions/bulk/categorize`)
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           transactionIds: bulkTransactionIds.slice(0, 3),
@@ -390,7 +390,7 @@ describe('Transactions E2E', () => {
   describe('Transaction Search', () => {
     it('should search transactions by description', async () => {
       const response = await request(app.getHttpServer())
-        .get('/v1/transactions?search=grocery')
+        .get(`/v1/spaces/${spaceId}/transactions?search=grocery`)
         .set('Authorization', `Bearer ${authToken}`)
         .expect(200);
 
@@ -404,7 +404,7 @@ describe('Transactions E2E', () => {
 
     it('should search transactions by merchant', async () => {
       const response = await request(app.getHttpServer())
-        .get('/v1/transactions?merchant=Walmart')
+        .get(`/v1/spaces/${spaceId}/transactions?merchant=Walmart`)
         .set('Authorization', `Bearer ${authToken}`)
         .expect(200);
 

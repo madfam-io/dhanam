@@ -47,18 +47,17 @@ describe('AppController (e2e)', () => {
         password: 'password123',
       });
 
-    authToken = loginResponse.body.accessToken;
+    authToken = loginResponse.body.tokens?.accessToken;
   });
 
   afterAll(async () => {
     await app.close();
   });
 
-  it('/ (GET)', () => {
+  it('/health (GET)', () => {
     return request(app.getHttpServer())
-      .get('/')
-      .expect(200)
-      .expect('Hello World!');
+      .get('/health')
+      .expect(200);
   });
 
   describe('/auth', () => {
@@ -74,10 +73,10 @@ describe('AppController (e2e)', () => {
         })
         .expect(201);
 
-      expect(response.body).toHaveProperty('user');
-      expect(response.body).toHaveProperty('accessToken');
-      expect(response.body).toHaveProperty('refreshToken');
-      expect(response.body.user.email).toBe('newuser@example.com');
+      expect(response.body).toHaveProperty('tokens');
+      expect(response.body.tokens).toHaveProperty('accessToken');
+      expect(response.body.tokens).toHaveProperty('refreshToken');
+      expect(response.body.tokens).toHaveProperty('expiresIn');
     });
 
     it('/auth/login (POST)', async () => {
@@ -89,8 +88,9 @@ describe('AppController (e2e)', () => {
         })
         .expect(200);
 
-      expect(response.body).toHaveProperty('accessToken');
-      expect(response.body).toHaveProperty('refreshToken');
+      expect(response.body).toHaveProperty('tokens');
+      expect(response.body.tokens).toHaveProperty('accessToken');
+      expect(response.body.tokens).toHaveProperty('refreshToken');
     });
 
     it('/auth/me (GET)', async () => {
@@ -99,7 +99,8 @@ describe('AppController (e2e)', () => {
         .set('Authorization', `Bearer ${authToken}`)
         .expect(200);
 
-      expect(response.body.email).toBe('test@example.com');
+      expect(response.body).toHaveProperty('user');
+      expect(response.body.user.email).toBe('test@example.com');
     });
   });
 

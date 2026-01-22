@@ -46,10 +46,16 @@ describe('Onboarding Flow E2E', () => {
         .send(OnboardingTestData.newUser)
         .expect(201);
 
-      expect(registerResponse.body).toHaveProperty('user');
-      expect(registerResponse.body).toHaveProperty('accessToken');
-      authToken = registerResponse.body.accessToken;
-      userId = registerResponse.body.user.id;
+      expect(registerResponse.body).toHaveProperty('tokens');
+      expect(registerResponse.body.tokens).toHaveProperty('accessToken');
+      authToken = registerResponse.body.tokens.accessToken;
+
+      // Get user info from /auth/me
+      const meResponse = await request(app.getHttpServer())
+        .get('/auth/me')
+        .set('Authorization', `Bearer ${authToken}`)
+        .expect(200);
+      userId = meResponse.body.user.id;
 
       // Verify initial onboarding status
       const initialStatus = await request(app.getHttpServer())
@@ -162,9 +168,9 @@ describe('Onboarding Flow E2E', () => {
         .expect(200);
 
       const budgetResponse = await request(app.getHttpServer())
-        .post('/budgets')
+        .post(`/spaces/${spaceId}/budgets`)
         .set('Authorization', `Bearer ${authToken}`)
-        .send({ ...OnboardingTestData.firstBudget, spaceId })
+        .send(OnboardingTestData.firstBudget)
         .expect(201);
 
       expect(budgetResponse.body).toHaveProperty('id');

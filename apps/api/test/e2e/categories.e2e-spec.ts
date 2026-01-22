@@ -78,7 +78,7 @@ describe('Categories E2E', () => {
   });
 
   describe('Category CRUD Operations', () => {
-    describe('POST /v1/categories', () => {
+    describe('POST /v1/spaces/:spaceId/categories', () => {
       it('should create a new expense category', async () => {
         const categoryData = {
           budgetId,
@@ -91,7 +91,7 @@ describe('Categories E2E', () => {
         };
 
         const response = await request(app.getHttpServer())
-          .post('/v1/categories')
+          .post(`/v1/spaces/${spaceId}/categories`)
           .set('Authorization', `Bearer ${authToken}`)
           .send(categoryData)
           .expect(201);
@@ -115,7 +115,7 @@ describe('Categories E2E', () => {
         };
 
         const response = await request(app.getHttpServer())
-          .post('/v1/categories')
+          .post(`/v1/spaces/${spaceId}/categories`)
           .set('Authorization', `Bearer ${authToken}`)
           .send(categoryData)
           .expect(201);
@@ -132,7 +132,7 @@ describe('Categories E2E', () => {
         };
 
         await request(app.getHttpServer())
-          .post('/v1/categories')
+          .post(`/v1/spaces/${spaceId}/categories`)
           .send(categoryData)
           .expect(401);
       });
@@ -143,7 +143,7 @@ describe('Categories E2E', () => {
         };
 
         await request(app.getHttpServer())
-          .post('/v1/categories')
+          .post(`/v1/spaces/${spaceId}/categories`)
           .set('Authorization', `Bearer ${authToken}`)
           .send(invalidData)
           .expect(400);
@@ -158,7 +158,7 @@ describe('Categories E2E', () => {
         };
 
         await request(app.getHttpServer())
-          .post('/v1/categories')
+          .post(`/v1/spaces/${spaceId}/categories`)
           .set('Authorization', `Bearer ${authToken}`)
           .send(categoryData)
           .expect((res) => {
@@ -168,10 +168,10 @@ describe('Categories E2E', () => {
       });
     });
 
-    describe('GET /v1/categories', () => {
+    describe('GET /v1/spaces/:spaceId/categories', () => {
       it('should list categories for the user', async () => {
         const response = await request(app.getHttpServer())
-          .get('/v1/categories')
+          .get(`/v1/spaces/${spaceId}/categories`)
           .set('Authorization', `Bearer ${authToken}`)
           .expect(200);
 
@@ -182,7 +182,7 @@ describe('Categories E2E', () => {
 
       it('should filter categories by budget', async () => {
         const response = await request(app.getHttpServer())
-          .get(`/v1/categories?budgetId=${budgetId}`)
+          .get(`/v1/spaces/${spaceId}/categories?budgetId=${budgetId}`)
           .set('Authorization', `Bearer ${authToken}`)
           .expect(200);
 
@@ -194,7 +194,7 @@ describe('Categories E2E', () => {
 
       it('should filter categories by type', async () => {
         const response = await request(app.getHttpServer())
-          .get('/v1/categories?type=expense')
+          .get(`/v1/spaces/${spaceId}/categories?type=expense`)
           .set('Authorization', `Bearer ${authToken}`)
           .expect(200);
 
@@ -205,10 +205,10 @@ describe('Categories E2E', () => {
       });
     });
 
-    describe('GET /v1/categories/:id', () => {
+    describe('GET /v1/spaces/:spaceId/categories/:id', () => {
       it('should get a specific category', async () => {
         const response = await request(app.getHttpServer())
-          .get(`/v1/categories/${categoryId}`)
+          .get(`/v1/spaces/${spaceId}/categories/${categoryId}`)
           .set('Authorization', `Bearer ${authToken}`)
           .expect(200);
 
@@ -222,20 +222,20 @@ describe('Categories E2E', () => {
         const fakeId = '00000000-0000-0000-0000-000000000000';
 
         await request(app.getHttpServer())
-          .get(`/v1/categories/${fakeId}`)
+          .get(`/v1/spaces/${spaceId}/categories/${fakeId}`)
           .set('Authorization', `Bearer ${authToken}`)
           .expect(404);
       });
     });
 
-    describe('PATCH /v1/categories/:id', () => {
+    describe('PATCH /v1/spaces/:spaceId/categories/:id', () => {
       it('should update a category name', async () => {
         const updateData = {
           name: 'Restaurants & Takeout',
         };
 
         const response = await request(app.getHttpServer())
-          .patch(`/v1/categories/${categoryId}`)
+          .patch(`/v1/spaces/${spaceId}/categories/${categoryId}`)
           .set('Authorization', `Bearer ${authToken}`)
           .send(updateData)
           .expect(200);
@@ -249,7 +249,7 @@ describe('Categories E2E', () => {
         };
 
         const response = await request(app.getHttpServer())
-          .patch(`/v1/categories/${categoryId}`)
+          .patch(`/v1/spaces/${spaceId}/categories/${categoryId}`)
           .set('Authorization', `Bearer ${authToken}`)
           .send(updateData)
           .expect(200);
@@ -264,7 +264,7 @@ describe('Categories E2E', () => {
         };
 
         const response = await request(app.getHttpServer())
-          .patch(`/v1/categories/${categoryId}`)
+          .patch(`/v1/spaces/${spaceId}/categories/${categoryId}`)
           .set('Authorization', `Bearer ${authToken}`)
           .send(updateData)
           .expect(200);
@@ -282,7 +282,7 @@ describe('Categories E2E', () => {
         });
 
         await request(app.getHttpServer())
-          .patch(`/v1/categories/${categoryId}`)
+          .patch(`/v1/spaces/${spaceId}/categories/${categoryId}`)
           .set('Authorization', `Bearer ${otherToken}`)
           .send({ name: 'Hacked!' })
           .expect((res) => {
@@ -292,7 +292,7 @@ describe('Categories E2E', () => {
       });
     });
 
-    describe('DELETE /v1/categories/:id', () => {
+    describe('DELETE /v1/spaces/:spaceId/categories/:id', () => {
       let categoryToDelete: string;
 
       beforeAll(async () => {
@@ -306,13 +306,13 @@ describe('Categories E2E', () => {
 
       it('should delete a category', async () => {
         await request(app.getHttpServer())
-          .delete(`/v1/categories/${categoryToDelete}`)
+          .delete(`/v1/spaces/${spaceId}/categories/${categoryToDelete}`)
           .set('Authorization', `Bearer ${authToken}`)
           .expect(200);
 
         // Verify it's deleted
         await request(app.getHttpServer())
-          .get(`/v1/categories/${categoryToDelete}`)
+          .get(`/v1/spaces/${spaceId}/categories/${categoryToDelete}`)
           .set('Authorization', `Bearer ${authToken}`)
           .expect(404);
       });
@@ -336,7 +336,7 @@ describe('Categories E2E', () => {
         provider: 'manual',
         providerAccountId: 'manual-checking-categories',
         name: 'Test Checking',
-        type: 'depository',
+        type: 'checking',
         subtype: 'checking',
         currency: 'MXN',
         balance: 10000,
@@ -353,7 +353,7 @@ describe('Categories E2E', () => {
       });
 
       const response = await request(app.getHttpServer())
-        .get(`/v1/categories/${trackingCategoryId}`)
+        .get(`/v1/spaces/${spaceId}/categories/${trackingCategoryId}`)
         .set('Authorization', `Bearer ${authToken}`)
         .expect(200);
 
@@ -364,7 +364,7 @@ describe('Categories E2E', () => {
 
     it('should calculate remaining budget', async () => {
       const response = await request(app.getHttpServer())
-        .get(`/v1/categories/${trackingCategoryId}`)
+        .get(`/v1/spaces/${spaceId}/categories/${trackingCategoryId}`)
         .set('Authorization', `Bearer ${authToken}`)
         .expect(200);
 
@@ -374,7 +374,7 @@ describe('Categories E2E', () => {
 
     it('should get category summary with spending statistics', async () => {
       const response = await request(app.getHttpServer())
-        .get(`/v1/categories/${trackingCategoryId}/summary`)
+        .get(`/v1/spaces/${spaceId}/categories/${trackingCategoryId}/summary`)
         .set('Authorization', `Bearer ${authToken}`)
         .expect((res) => {
           // Accept 200 or 404 if endpoint doesn't exist
@@ -410,7 +410,7 @@ describe('Categories E2E', () => {
       };
 
       const response = await request(app.getHttpServer())
-        .post('/v1/rules')
+        .post(`/v1/spaces/${spaceId}/rules`)
         .set('Authorization', `Bearer ${authToken}`)
         .send(ruleData)
         .expect((res) => {
@@ -424,7 +424,7 @@ describe('Categories E2E', () => {
 
     it('should list rules for a category', async () => {
       const response = await request(app.getHttpServer())
-        .get(`/v1/rules?categoryId=${rulesCategoryId}`)
+        .get(`/v1/spaces/${spaceId}/rules?categoryId=${rulesCategoryId}`)
         .set('Authorization', `Bearer ${authToken}`)
         .expect(200);
 
@@ -452,7 +452,7 @@ describe('Categories E2E', () => {
       };
 
       const response = await request(app.getHttpServer())
-        .post('/v1/transactions')
+        .post(`/v1/spaces/${spaceId}/transactions`)
         .set('Authorization', `Bearer ${authToken}`)
         .send(txData)
         .expect(201);
@@ -474,7 +474,7 @@ describe('Categories E2E', () => {
 
       for (const cat of categories) {
         const response = await request(app.getHttpServer())
-          .post('/v1/categories')
+          .post(`/v1/spaces/${spaceId}/categories`)
           .set('Authorization', `Bearer ${authToken}`)
           .send({
             budgetId,
@@ -496,7 +496,7 @@ describe('Categories E2E', () => {
 
     it('should get budget summary with all categories', async () => {
       const response = await request(app.getHttpServer())
-        .get(`/v1/budgets/${budgetId}`)
+        .get(`/v1/spaces/${spaceId}/budgets/${budgetId}`)
         .set('Authorization', `Bearer ${authToken}`)
         .expect(200);
 

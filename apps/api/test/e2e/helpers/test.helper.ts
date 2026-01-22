@@ -24,7 +24,7 @@ export interface CreateAccountData {
   provider: string;
   providerAccountId: string;
   name: string;
-  type: string;
+  type: 'checking' | 'savings' | 'credit' | 'investment' | 'crypto' | 'other';
   subtype: string;
   currency: string;
   balance: number;
@@ -300,7 +300,7 @@ export class TestHelper {
       provider: 'manual',
       providerAccountId: 'manual-checking',
       name: 'Test Checking',
-      type: 'depository',
+      type: 'checking',
       subtype: 'checking',
       currency: 'MXN',
       balance: 10000,
@@ -310,7 +310,7 @@ export class TestHelper {
       provider: 'manual',
       providerAccountId: 'manual-savings',
       name: 'Test Savings',
-      type: 'depository',
+      type: 'savings',
       subtype: 'savings',
       currency: 'MXN',
       balance: 50000,
