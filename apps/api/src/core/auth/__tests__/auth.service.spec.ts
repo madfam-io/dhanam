@@ -588,7 +588,8 @@ describe('AuthService', () => {
         sub: mockUser.id,
         email: mockUser.email,
       });
-      expect(capturedPayload.exp - capturedPayload.iat).toBe(15 * 60);
+      // exp and iat are now handled by JWT module's signOptions (expiresIn: '15m')
+      // so we only verify the result's expiresIn matches expected value
       expect(result.expiresIn).toBe(15 * 60);
     });
 

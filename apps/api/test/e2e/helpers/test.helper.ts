@@ -33,9 +33,9 @@ export interface CreateAccountData {
 export interface CreateBudgetData {
   name: string;
   period: 'weekly' | 'monthly' | 'quarterly' | 'yearly';
-  currency: string;
   startDate: Date;
-  endDate: Date;
+  endDate?: Date;
+  income?: number;
 }
 
 export class TestHelper {
@@ -59,8 +59,7 @@ export class TestHelper {
       this.prisma.userSpace.deleteMany(),
       this.prisma.space.deleteMany(),
       this.prisma.providerConnection.deleteMany(),
-      this.prisma.userPreference.deleteMany(),
-      this.prisma.spacePreference.deleteMany(),
+      this.prisma.userPreferences.deleteMany(),
       this.prisma.auditLog.deleteMany(),
       this.prisma.user.deleteMany(),
     ]);
@@ -123,32 +122,28 @@ export class TestHelper {
         spaceId,
         name: data.name,
         period: data.period,
-        currency: data.currency,
         startDate: data.startDate,
         endDate: data.endDate,
-        isActive: true,
+        income: data.income || 0,
       },
     });
   }
 
   async createCategory(budgetId: string, data: {
     name: string;
-    type: 'income' | 'expense';
-    limit?: number;
-    currency: string;
-    period: string;
+    budgetedAmount: number;
+    icon?: string;
+    color?: string;
+    description?: string;
   }): Promise<Category> {
     return await this.prisma.category.create({
       data: {
         budgetId,
         name: data.name,
-        type: data.type,
-        limit: data.limit || 0,
-        spent: 0,
-        currency: data.currency,
-        period: data.period,
-        icon: 'default',
-        color: '#000000',
+        budgetedAmount: data.budgetedAmount,
+        icon: data.icon || 'default',
+        color: data.color || '#000000',
+        description: data.description,
       },
     });
   }
@@ -222,6 +217,7 @@ export class TestHelper {
     description: string;
     date?: Date;
     categoryId?: string;
+    merchant?: string;
   }) {
     return await this.prisma.transaction.create({
       data: {
@@ -232,8 +228,7 @@ export class TestHelper {
         pending: false,
         categoryId: data.categoryId,
         currency: 'MXN',
-        merchantName: data.description,
-        type: data.amount < 0 ? 'expense' : 'income',
+        merchant: data.merchant || data.description,
       },
     });
   }
@@ -246,18 +241,9 @@ export class TestHelper {
   }
 
   async createUserPreferences(userId: string, preferences: any) {
-    return await this.prisma.userPreference.create({
+    return await this.prisma.userPreferences.create({
       data: {
         userId,
-        ...preferences,
-      },
-    });
-  }
-
-  async createSpacePreferences(spaceId: string, preferences: any) {
-    return await this.prisma.spacePreference.create({
-      data: {
-        spaceId,
         ...preferences,
       },
     });
@@ -334,25 +320,18 @@ export class TestHelper {
     const budget = await this.createBudget(spaceId, {
       name: 'Monthly Budget',
       period: 'monthly',
-      currency: 'MXN',
       startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
       endDate: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0),
     });
 
     const foodCategory = await this.createCategory(budget.id, {
       name: 'Food & Dining',
-      type: 'expense',
-      limit: 5000,
-      currency: 'MXN',
-      period: 'monthly',
+      budgetedAmount: 5000,
     });
 
     const transportCategory = await this.createCategory(budget.id, {
       name: 'Transportation',
-      type: 'expense',
-      limit: 3000,
-      currency: 'MXN',
-      period: 'monthly',
+      budgetedAmount: 3000,
     });
 
     // Create transactions

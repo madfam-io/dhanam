@@ -215,11 +215,10 @@ export class AuthService {
   }
 
   private async generateTokens(userId: string, email: string): Promise<AuthTokens> {
-    const payload: JwtPayload = {
+    // Note: iat and exp are handled by JWT signOptions in auth.module.ts
+    const payload = {
       sub: userId,
       email,
-      iat: Math.floor(Date.now() / 1000),
-      exp: Math.floor(Date.now() / 1000) + 15 * 60, // 15 minutes
     };
 
     const accessToken = this.jwtService.sign(payload);
