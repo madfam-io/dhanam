@@ -108,7 +108,8 @@ describe('JwtStrategy', () => {
         },
       });
       expect(result).toEqual({
-        userId: 'user-123',
+        id: 'user-123',
+        userId: 'user-123', // Backwards compatibility alias
         email: 'test@example.com',
         name: 'Test User',
         locale: 'en',

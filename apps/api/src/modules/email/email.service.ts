@@ -15,7 +15,7 @@ import { EmailJobData, EmailTemplate, EmailOptions } from './types';
 @Injectable()
 export class EmailService {
   private readonly logger = new Logger(EmailService.name);
-  private transporter: nodemailer.Transporter;
+  private transporter: nodemailer.Transporter | null = null;
   private templates = new Map<EmailTemplate, handlebars.TemplateDelegate>();
   private readonly templatesDir = path.join(__dirname, 'templates');
 
@@ -29,22 +29,41 @@ export class EmailService {
   }
 
   private initializeTransporter() {
-    const smtpConfig = {
-      host: this.configService.get('SMTP_HOST'),
+    const smtpHost = this.configService.get('SMTP_HOST');
+
+    // Skip SMTP configuration when SMTP is not configured
+    if (!smtpHost) {
+      this.logger.warn('Email transporter not configured - SMTP_HOST not set');
+      return;
+    }
+
+    const smtpUser = this.configService.get('SMTP_USER');
+    const smtpPassword = this.configService.get('SMTP_PASSWORD');
+
+    const smtpConfig: Record<string, any> = {
+      host: smtpHost,
       port: this.configService.get('SMTP_PORT', 587),
       secure: this.configService.get('SMTP_SECURE', false),
-      auth: {
-        user: this.configService.get('SMTP_USER'),
-        pass: this.configService.get('SMTP_PASSWORD'),
-      },
     };
+
+    // Only add auth if credentials are provided (skip for MailHog/dev environments)
+    if (smtpUser && smtpPassword) {
+      smtpConfig.auth = {
+        user: smtpUser,
+        pass: smtpPassword,
+      };
+    }
 
     this.transporter = nodemailer.createTransport(smtpConfig);
 
-    // Verify connection
+    // Verify connection - don't block on verification failure
     this.transporter.verify((error) => {
       if (error) {
-        this.logger.error('Email transporter verification failed:', error);
+        this.logger.warn(
+          'Email transporter verification failed - emails may not be delivered:',
+          error.message
+        );
+        // Don't throw - allow service to continue, emails will fail at send time
       } else {
         this.logger.log('Email transporter ready');
       }
@@ -120,6 +139,12 @@ export class EmailService {
 
   // Send email immediately (used by processor)
   async sendEmailDirect(data: EmailJobData): Promise<void> {
+    // Skip if transporter is not configured (SMTP_HOST not set)
+    if (!this.transporter) {
+      this.logger.log(`[SKIP] Email to ${data.to} skipped - no SMTP configured`);
+      return;
+    }
+
     try {
       const template = this.templates.get(data.template);
       if (!template) {

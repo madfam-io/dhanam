@@ -10,7 +10,8 @@ export const CurrentUser = createParamDecorator(
 );
 
 export interface AuthenticatedUser {
-  userId: string;
+  id: string;
+  userId: string; // Backwards compatibility alias for id
   email: string;
   name: string;
   locale: string;

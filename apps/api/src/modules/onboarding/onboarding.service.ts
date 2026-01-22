@@ -150,8 +150,24 @@ export class OnboardingService {
     if (stepConfig?.dependencies) {
       const user = await this.prisma.user.findUnique({
         where: { id: userId },
-        include: { userSpaces: { include: { space: true } } },
+        include: {
+          userSpaces: {
+            include: {
+              space: {
+                include: {
+                  accounts: true,
+                  budgets: true,
+                },
+              },
+            },
+          },
+          providerConnections: true,
+        },
       });
+
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
 
       const currentStatus = await this.calculateStepStatus(user);
 

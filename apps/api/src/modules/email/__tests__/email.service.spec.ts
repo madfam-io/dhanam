@@ -38,13 +38,29 @@ describe('EmailService', () => {
 
     (nodemailer.createTransport as jest.Mock).mockReturnValue(mockTransporter);
 
+    // Create config mock with implementation BEFORE module compilation
+    const mockConfigGet = jest.fn((key: string, defaultValue?: any) => {
+      const config: Record<string, any> = {
+        SMTP_HOST: 'smtp.test.com',
+        SMTP_PORT: 587,
+        SMTP_SECURE: false,
+        SMTP_USER: 'test@test.com',
+        SMTP_PASSWORD: 'password',
+        APP_URL: 'https://app.dhanam.io',
+        WEB_URL: 'https://app.dhanam.io',
+        SUPPORT_EMAIL: 'support@dhanam.io',
+        EMAIL_FROM: 'Dhanam <noreply@dhanam.io>',
+      };
+      return config[key] ?? defaultValue;
+    });
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         EmailService,
         {
           provide: ConfigService,
           useValue: {
-            get: jest.fn(),
+            get: mockConfigGet,
           },
         },
         {
@@ -70,23 +86,9 @@ describe('EmailService', () => {
     prisma = module.get(PrismaService) as jest.Mocked<PrismaService>;
     emailQueue = module.get(getQueueToken('email')) as jest.Mocked<Queue>;
 
-    // Setup default config values
-    configService.get.mockImplementation((key: string, defaultValue?: any) => {
-      const config: Record<string, any> = {
-        SMTP_HOST: 'smtp.test.com',
-        SMTP_PORT: 587,
-        SMTP_SECURE: false,
-        SMTP_USER: 'test@test.com',
-        SMTP_PASSWORD: 'password',
-        APP_URL: 'https://app.dhanam.io',
-        WEB_URL: 'https://app.dhanam.io',
-        SUPPORT_EMAIL: 'support@dhanam.io',
-        EMAIL_FROM: 'Dhanam <noreply@dhanam.io>',
-      };
-      return config[key] ?? defaultValue;
-    });
-
-    jest.clearAllMocks();
+    // Clear call history but keep the implementations
+    mockConfigGet.mockClear();
+    (nodemailer.createTransport as jest.Mock).mockClear();
   });
 
   it('should be defined', () => {

@@ -3,8 +3,14 @@ import 'reflect-metadata';
 
 // Mock environment variables for testing (only if not already set by CI)
 process.env.NODE_ENV = 'test';
-process.env.DATABASE_URL = process.env.DATABASE_URL || 'postgresql://test:test@localhost:5432/test';
+// Use development database for E2E tests (matches docker-compose.yml)
+process.env.DATABASE_URL = process.env.DATABASE_URL || 'postgresql://dhanam:localdev@localhost:5432/dhanam';
+// Redis (no password for local development)
 process.env.REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
+process.env.REDIS_HOST = process.env.REDIS_HOST || 'localhost';
+process.env.REDIS_PORT = process.env.REDIS_PORT || '6379';
+process.env.REDIS_PASSWORD = process.env.REDIS_PASSWORD || '';
+process.env.REDIS_DB = process.env.REDIS_DB || '0';
 process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-jwt-secret-key-very-long-string';
 process.env.JWT_ACCESS_EXPIRY = process.env.JWT_ACCESS_EXPIRY || '15m';
 process.env.JWT_REFRESH_EXPIRY = process.env.JWT_REFRESH_EXPIRY || '30d';
@@ -63,7 +69,6 @@ global.testUtils = {
     currency: 'USD',
     balance: 1000,
     lastSyncedAt: new Date(),
-    isActive: true,
     metadata: null,
     createdAt: new Date(),
     updatedAt: new Date(),

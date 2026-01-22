@@ -40,12 +40,23 @@ export interface CreateBudgetData {
 
 export class TestHelper {
   private configService: ConfigService;
+  private static emailCounter = 0;
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
   ) {
     this.configService = new ConfigService();
+  }
+
+  /**
+   * Generate a unique email address for testing
+   * Uses timestamp + counter to ensure uniqueness across test runs
+   */
+  static generateUniqueEmail(prefix: string = 'test'): string {
+    const timestamp = Date.now();
+    const counter = ++TestHelper.emailCounter;
+    return `${prefix}.${timestamp}.${counter}@example.com`;
   }
 
   async cleanDatabase(): Promise<void> {
@@ -111,7 +122,6 @@ export class TestHelper {
         currency: data.currency,
         balance: data.balance,
         lastSyncedAt: new Date(),
-        isActive: true,
       },
     });
   }
@@ -149,17 +159,17 @@ export class TestHelper {
   }
 
   async createProviderConnection(userId: string, data: {
-    provider: 'belvo' | 'plaid' | 'bitso';
-    encryptedAccessToken: string;
+    provider: 'belvo' | 'plaid' | 'bitso' | 'mx' | 'finicity' | 'blockchain' | 'manual';
+    encryptedToken: string;
+    providerUserId: string;
     metadata?: any;
   }): Promise<ProviderConnection> {
     return await this.prisma.providerConnection.create({
       data: {
         userId,
         provider: data.provider,
-        encryptedAccessToken: data.encryptedAccessToken,
-        lastSyncedAt: new Date(),
-        status: 'active',
+        providerUserId: data.providerUserId,
+        encryptedToken: data.encryptedToken,
         metadata: data.metadata || {},
       },
     });
@@ -175,6 +185,8 @@ export class TestHelper {
     return this.jwtService.sign(payload, {
       secret: this.configService.get('JWT_SECRET') || 'test-jwt-secret-key-very-long-string',
       expiresIn: '15m',
+      issuer: 'dhanam-api',
+      audience: 'dhanam-web',
     });
   }
 
@@ -188,6 +200,8 @@ export class TestHelper {
     return this.jwtService.sign(payload, {
       secret: this.configService.get('JWT_SECRET') || 'test-jwt-secret-key-very-long-string',
       expiresIn: '30d',
+      issuer: 'dhanam-api',
+      audience: 'dhanam-web',
     });
   }
 
@@ -280,14 +294,14 @@ export class TestHelper {
   async getAuditLogs(filters: {
     userId?: string;
     action?: string;
-    entityType?: string;
+    resource?: string;
     limit?: number;
   }) {
     return await this.prisma.auditLog.findMany({
       where: {
         userId: filters.userId,
         action: filters.action,
-        entityType: filters.entityType,
+        resource: filters.resource,
       },
       take: filters.limit || 10,
       orderBy: { createdAt: 'desc' },
