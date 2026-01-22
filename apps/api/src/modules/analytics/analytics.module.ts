@@ -7,12 +7,13 @@ import { AnalyticsController } from './analytics.controller';
 import { AnalyticsService } from './analytics.service';
 import { PostHogService } from './posthog.service';
 import { ReportService } from './report.service';
+import { ReportsController } from './reports.controller';
 import { WealthAnalytics } from './wealth.analytics';
 
 @Global() // Make analytics services available globally without importing
 @Module({
   imports: [PrismaModule, SpacesModule],
-  controllers: [AnalyticsController],
+  controllers: [AnalyticsController, ReportsController],
   providers: [AnalyticsService, ReportService, PostHogService, WealthAnalytics],
   exports: [AnalyticsService, ReportService, PostHogService, WealthAnalytics],
 })
