@@ -10,7 +10,8 @@
     "^@/(.*)$": "<rootDir>/src/$1",
     "^@core/(.*)$": "<rootDir>/src/core/$1",
     "^@modules/(.*)$": "<rootDir>/src/modules/$1",
-    "^@dhanam/shared$": "<rootDir>/../../packages/shared/src/index"
+    "^@dhanam/shared$": "<rootDir>/../../packages/shared/src/index",
+    "^@dhanam/esg$": "<rootDir>/../../packages/esg/src/index"
   },
   "setupFilesAfterEnv": ["<rootDir>/test/setup.ts"],
   "testTimeout": 30000,
