@@ -304,7 +304,6 @@ describe('Transactions E2E', () => {
       const budget = await testHelper.createBudget(spaceId, {
         name: 'Monthly Budget',
         period: 'monthly',
-        currency: 'MXN',
         startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
         endDate: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0),
       });
@@ -312,10 +311,7 @@ describe('Transactions E2E', () => {
 
       const category = await testHelper.createCategory(budgetId, {
         name: 'Food & Dining',
-        type: 'expense',
-        limit: 5000,
-        currency: 'MXN',
-        period: 'monthly',
+        budgetedAmount: 5000,
       });
       categoryId = category.id;
 
@@ -366,17 +362,13 @@ describe('Transactions E2E', () => {
       const budget = await testHelper.createBudget(spaceId, {
         name: 'Bulk Test Budget',
         period: 'monthly',
-        currency: 'MXN',
         startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
         endDate: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0),
       });
 
       const category = await testHelper.createCategory(budget.id, {
         name: 'Bulk Test Category',
-        type: 'expense',
-        limit: 1000,
-        currency: 'MXN',
-        period: 'monthly',
+        budgetedAmount: 1000,
       });
 
       const response = await request(app.getHttpServer())

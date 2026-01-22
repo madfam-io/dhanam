@@ -65,7 +65,6 @@ describe('Categories E2E', () => {
       const budget = await testHelper.createBudget(spaceId, {
         name: 'Monthly Budget',
         period: 'monthly',
-        currency: 'MXN',
         startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
         endDate: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0),
       });
@@ -300,10 +299,7 @@ describe('Categories E2E', () => {
         // Create a category to delete
         const category = await testHelper.createCategory(budgetId, {
           name: 'Category to Delete',
-          type: 'expense',
-          limit: 1000,
-          currency: 'MXN',
-          period: 'monthly',
+          budgetedAmount: 1000,
         });
         categoryToDelete = category.id;
       });
@@ -331,10 +327,7 @@ describe('Categories E2E', () => {
       // Create a category for spending tracking
       const category = await testHelper.createCategory(budgetId, {
         name: 'Entertainment',
-        type: 'expense',
-        limit: 2000,
-        currency: 'MXN',
-        period: 'monthly',
+        budgetedAmount: 2000,
       });
       trackingCategoryId = category.id;
 
@@ -403,10 +396,7 @@ describe('Categories E2E', () => {
       // Create a category for rules testing
       const category = await testHelper.createCategory(budgetId, {
         name: 'Transportation',
-        type: 'expense',
-        limit: 3000,
-        currency: 'MXN',
-        period: 'monthly',
+        budgetedAmount: 3000,
       });
       rulesCategoryId = category.id;
     });

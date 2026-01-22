@@ -376,6 +376,8 @@ jobs:
         env:
           DATABASE_URL: postgresql://test:test@localhost:5432/dhanam_e2e
           REDIS_URL: redis://localhost:6379
+          JWT_SECRET: test-jwt-secret-for-ci-minimum-32-chars
+          JWT_REFRESH_SECRET: test-jwt-refresh-secret-for-ci-32-chars
           NODE_ENV: test
 
       - name: Upload E2E test results
