@@ -52,7 +52,6 @@ export class TestHelper {
     // Clean in order to respect foreign key constraints
     await this.prisma.$transaction([
       this.prisma.transaction.deleteMany(),
-      this.prisma.rule.deleteMany(),
       this.prisma.category.deleteMany(),
       this.prisma.budget.deleteMany(),
       this.prisma.account.deleteMany(),
