@@ -39,11 +39,21 @@ export const useAuth = create<AuthState>()(
       setAuth: (user, tokens) => {
         apiClient.setTokens(tokens);
         set({ user, tokens, token: tokens.accessToken, isAuthenticated: true });
+
+        // Set cookie marker for middleware detection (prevents redirect flash)
+        if (typeof document !== 'undefined') {
+          document.cookie = 'auth-storage=true; path=/; max-age=604800; SameSite=Lax';
+        }
       },
 
       clearAuth: () => {
         apiClient.clearTokens();
         set({ user: null, tokens: null, token: null, isAuthenticated: false });
+
+        // Clear cookie marker for middleware detection
+        if (typeof document !== 'undefined') {
+          document.cookie = 'auth-storage=; path=/; max-age=0; SameSite=Lax';
+        }
       },
 
       logout: async () => {
