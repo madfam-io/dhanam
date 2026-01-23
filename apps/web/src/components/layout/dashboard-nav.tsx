@@ -26,17 +26,17 @@ const navigation = [
   },
   {
     name: 'Accounts',
-    href: '/dashboard/accounts',
+    href: '/accounts',
     icon: Wallet,
   },
   {
     name: 'Transactions',
-    href: '/dashboard/transactions',
+    href: '/transactions',
     icon: Receipt,
   },
   {
     name: 'Budgets',
-    href: '/dashboard/budgets',
+    href: '/budgets',
     icon: PiggyBank,
   },
   {
@@ -56,12 +56,12 @@ const navigation = [
   },
   {
     name: 'Analytics',
-    href: '/dashboard/analytics',
+    href: '/analytics',
     icon: TrendingUp,
   },
   {
     name: 'ESG Insights',
-    href: '/dashboard/esg',
+    href: '/esg',
     icon: Leaf,
   },
   {
@@ -76,12 +76,12 @@ const navigation = [
   },
   {
     name: 'Reports',
-    href: '/dashboard/reports',
+    href: '/reports',
     icon: FileText,
   },
   {
     name: 'Settings',
-    href: '/dashboard/settings',
+    href: '/settings',
     icon: Settings,
   },
 ];
