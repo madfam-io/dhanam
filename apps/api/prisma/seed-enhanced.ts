@@ -586,17 +586,17 @@ async function main() {
     
     if (!checkingAccount) continue;
 
-    // Generate 90 days of transaction history
+    // Generate 180 days of transaction history (6 months for full analytics coverage)
     const endDate = new Date();
-    const startDate = subDays(endDate, 90);
+    const startDate = subDays(endDate, 180);
     
     // Determine transaction templates based on space type
     const templates = space.type === SpaceType.business 
       ? transactionTemplates.expenses.business 
       : transactionTemplates.expenses.personal;
 
-    // Generate expenses
-    for (let i = 0; i < 150; i++) {
+    // Generate expenses (~2 per day over 180 days)
+    for (let i = 0; i < 320; i++) {
       const template = templates[Math.floor(Math.random() * templates.length)];
       const category = categories.find(c => c.name.includes(template.category.split(' ')[0]));
       
@@ -615,8 +615,8 @@ async function main() {
       });
     }
 
-    // Generate income (less frequent)
-    for (let i = 0; i < 10; i++) {
+    // Generate income (~1 per 9 days over 180 days = salary + occasional freelance)
+    for (let i = 0; i < 20; i++) {
       const template = transactionTemplates.income[Math.floor(Math.random() * transactionTemplates.income.length)];
       
       await prisma.transaction.create({
@@ -635,33 +635,52 @@ async function main() {
   }
 
   // 7. GENERATE ESG SCORES FOR CRYPTO ACCOUNTS
-  console.log('\n🌱 Generating ESG scores...');
-  
+  console.log('\n🌱 Generating ESG scores for diverse crypto portfolio...');
+
   const cryptoAccounts = await prisma.account.findMany({
     where: { type: 'crypto' }
   });
 
-  for (const account of cryptoAccounts) {
-    await prisma.eSGScore.create({
-      data: {
-        accountId: account.id,
-        assetSymbol: 'BTC',
-        environmentalScore: 35,
-        socialScore: 65,
-        governanceScore: 70,
-      },
-    });
+  // Comprehensive ESG data for varied crypto assets
+  const cryptoESGData = [
+    // Bitcoin - High energy consumption, decentralized governance
+    { symbol: 'BTC', name: 'Bitcoin', env: 35, social: 65, gov: 70,
+      notes: 'Proof-of-work consensus - significant energy footprint' },
+    // Ethereum - Post-merge, much improved environmental
+    { symbol: 'ETH', name: 'Ethereum', env: 75, social: 80, gov: 85,
+      notes: 'Proof-of-stake since 2022 - 99.95% energy reduction' },
+    // Solana - Energy efficient but centralization concerns
+    { symbol: 'SOL', name: 'Solana', env: 82, social: 72, gov: 65,
+      notes: 'High throughput with low energy - some centralization concerns' },
+    // Cardano - Research-driven, energy efficient
+    { symbol: 'ADA', name: 'Cardano', env: 88, social: 85, gov: 90,
+      notes: 'Peer-reviewed development, proof-of-stake, academic approach' },
+    // XRP - Fast settlements but regulatory challenges
+    { symbol: 'XRP', name: 'XRP', env: 85, social: 60, gov: 55,
+      notes: 'Energy efficient but facing regulatory scrutiny' },
+    // Polkadot - Interoperability focus, good governance
+    { symbol: 'DOT', name: 'Polkadot', env: 80, social: 78, gov: 88,
+      notes: 'On-chain governance, parachain architecture' },
+    // Avalanche - Fast finality, eco-conscious
+    { symbol: 'AVAX', name: 'Avalanche', env: 84, social: 75, gov: 82,
+      notes: 'Subnets allow for efficient scaling' },
+  ];
 
-    await prisma.eSGScore.create({
-      data: {
-        accountId: account.id,
-        assetSymbol: 'ETH',
-        environmentalScore: 75,
-        socialScore: 80,
-        governanceScore: 85,
-      },
-    });
+  for (const account of cryptoAccounts) {
+    for (const crypto of cryptoESGData) {
+      await prisma.eSGScore.create({
+        data: {
+          accountId: account.id,
+          assetSymbol: crypto.symbol,
+          environmentalScore: crypto.env,
+          socialScore: crypto.social,
+          governanceScore: crypto.gov,
+        },
+      });
+    }
   }
+
+  console.log(`  ✓ Created ${cryptoESGData.length} ESG scores per crypto account`);
 
   // 8. GENERATE ASSET VALUATIONS (for net worth trends)
   console.log('\n📊 Generating asset valuation history...');
@@ -669,9 +688,9 @@ async function main() {
   for (const { space } of spaces) {
     const accounts = await prisma.account.findMany({ where: { spaceId: space.id } });
 
-    // Generate 30 days of daily valuations for each account
+    // Generate 60 days of daily valuations for each account (better trend analysis)
     for (const account of accounts) {
-      for (let i = 30; i >= 0; i--) {
+      for (let i = 60; i >= 0; i--) {
         const date = subDays(new Date(), i);
         const variation = (Math.random() - 0.5) * 0.02; // +/- 2% daily variation
         const valuatedAmount = account.balance * (1 + variation);
@@ -1189,22 +1208,160 @@ async function main() {
     }
   }
 
+  // 12. CREATE DEMO HOUSEHOLD WITH ESTATE PLANNING
+  console.log('\n🏠 Creating demo household with estate planning...');
+
+  // Create the Demo Family Household
+  const demoHousehold = await prisma.household.create({
+    data: {
+      name: 'The Demo Family',
+      type: 'family',
+      baseCurrency: Currency.MXN,
+      description: 'Demo household showcasing family financial planning and estate management features',
+    },
+  });
+
+  // Add household members - Guest (head of household) and Maria (spouse/partner)
+  const guestMember = await prisma.householdMember.create({
+    data: {
+      householdId: demoHousehold.id,
+      userId: guestUser.id,
+      relationship: 'spouse', // Head of household as spouse role
+      isMinor: false,
+      notes: 'Head of household - primary financial planner',
+    },
+  });
+
+  const mariaMember = await prisma.householdMember.create({
+    data: {
+      householdId: demoHousehold.id,
+      userId: mariaUser.id,
+      relationship: 'spouse',
+      isMinor: false,
+      notes: 'Co-head of household - shared financial management',
+    },
+  });
+
+  // Create a demo minor child member (uses existing user for simplicity)
+  // In real scenario, minors might not have user accounts
+  const childMember = await prisma.householdMember.create({
+    data: {
+      householdId: demoHousehold.id,
+      userId: carlosUser.id, // Reusing Carlos as a "child" for demo purposes
+      relationship: 'child',
+      isMinor: false, // Adult child for demo
+      accessStartDate: new Date('2015-01-01'),
+      notes: 'Adult child - included in estate planning',
+    },
+  });
+
+  // Link household to Guest's space
+  await prisma.space.update({
+    where: { id: guestSpace.id },
+    data: { householdId: demoHousehold.id },
+  });
+
+  console.log(`  ✓ Created household: ${demoHousehold.name}`);
+  console.log(`  ✓ Added 3 household members (Guest, Maria, Carlos as adult child)`);
+
+  // Create Demo Will
+  const demoWill = await prisma.will.create({
+    data: {
+      householdId: demoHousehold.id,
+      name: 'Demo Family Estate Plan 2025',
+      status: 'active',
+      lastReviewedAt: subDays(new Date(), 30),
+      activatedAt: subDays(new Date(), 90),
+      notes: 'Primary estate plan for the Demo Family. This is a demonstration document - not legal advice.',
+      legalDisclaimer: true,
+    },
+  });
+
+  console.log(`  ✓ Created will: ${demoWill.name}`);
+
+  // Create beneficiary designations
+  // Maria gets 50% of all assets
+  await prisma.beneficiaryDesignation.create({
+    data: {
+      willId: demoWill.id,
+      beneficiaryId: mariaMember.id,
+      assetType: 'bank_account',
+      percentage: 50.00,
+      notes: 'Primary beneficiary for all liquid assets',
+    },
+  });
+
+  // Child gets 50% of all assets
+  await prisma.beneficiaryDesignation.create({
+    data: {
+      willId: demoWill.id,
+      beneficiaryId: childMember.id,
+      assetType: 'bank_account',
+      percentage: 50.00,
+      conditions: { type: 'age_requirement', minAge: 25, notes: 'Full access at age 25' },
+      notes: 'Secondary beneficiary - assets held in trust until age requirements met',
+    },
+  });
+
+  // Crypto assets specific designation
+  await prisma.beneficiaryDesignation.create({
+    data: {
+      willId: demoWill.id,
+      beneficiaryId: childMember.id,
+      assetType: 'crypto_account',
+      percentage: 100.00,
+      notes: 'All cryptocurrency holdings to next generation',
+    },
+  });
+
+  console.log('  ✓ Created 3 beneficiary designations');
+
+  // Create will executors
+  // Maria as primary executor
+  await prisma.willExecutor.create({
+    data: {
+      willId: demoWill.id,
+      executorId: mariaMember.id,
+      isPrimary: true,
+      order: 1,
+      acceptedAt: subDays(new Date(), 85),
+      notes: 'Primary executor - spouse',
+    },
+  });
+
+  // Child as backup executor
+  await prisma.willExecutor.create({
+    data: {
+      willId: demoWill.id,
+      executorId: childMember.id,
+      isPrimary: false,
+      order: 2,
+      acceptedAt: subDays(new Date(), 80),
+      notes: 'Secondary executor if primary unable to serve',
+    },
+  });
+
+  console.log('  ✓ Created 2 will executors (primary + backup)');
+
   console.log('\n✅ Enhanced seeding completed!');
   console.log('─────────────────────────────────────────');
   console.log('\n📊 Summary:');
   console.log('  - 1 Guest user (instant demo access) 🎭');
   console.log('    ✓ 4 accounts (checking, savings, credit, crypto)');
-  console.log('    ✓ 160 realistic transactions over 90 days');
+  console.log('    ✓ 340 realistic transactions over 180 days (6 months)');
   console.log('    ✓ Monthly budget with 8 categories');
   console.log('    ✓ 3 probabilistic goals with Monte Carlo simulations');
   console.log('    ✓ 1 shared goal (Maria\'s Education Fund - viewer access)');
-  console.log('    ✓ ESG scores for BTC & ETH');
-  console.log('    ✓ 31 days of asset valuation history per account');
+  console.log('    ✓ ESG scores for 7 crypto assets (BTC, ETH, SOL, ADA, XRP, DOT, AVAX)');
+  console.log('    ✓ 61 days of asset valuation history per account');
+  console.log('    ✓ Household member with estate planning access');
   console.log('  - 1 Individual user (Maria)');
   console.log('    ✓ 2 probabilistic goals (education, travel)');
   console.log('    ✓ Education Fund shared with Guest user');
+  console.log('    ✓ Household member + will executor');
   console.log('  - 1 Small business owner (Carlos)');
   console.log('    ✓ 1 probabilistic goal (business expansion)');
+  console.log('    ✓ Household member (adult child)');
   console.log('  - 1 Enterprise admin (Patricia)');
   console.log('  - 1 Platform admin');
   console.log('  - 5 Spaces with budgets');
@@ -1212,13 +1369,17 @@ async function main() {
   console.log('  - 6 Probabilistic Goals with confidence intervals');
   console.log('  - 1 Goal Share (Maria → Guest) with activity feed');
   console.log('  - 9 Goal Activities across 2 goals');
-  console.log('  - 800+ Transactions');
-  console.log('  - 589 Asset valuations (31 days × 19 accounts)');
-  console.log('  - ESG scores for all crypto holdings');
+  console.log('  - 1,700+ Transactions (340 per space × 5 spaces)');
+  console.log('  - 1,159 Asset valuations (61 days × 19 accounts)');
+  console.log('  - 14 ESG scores (7 crypto assets × 2 crypto accounts)');
   console.log('  - Feature flags configured');
   console.log('  - Categorization rules set up');
+  console.log('  - 1 Household (The Demo Family) with 3 members');
+  console.log('  - 1 Estate Plan (Will) with beneficiaries and executors');
+  console.log('  - 3 Beneficiary designations + 2 Will executors');
   console.log('\n🎉 Demo environment ready!');
-  console.log('💡 Guest demo showcases: budgets, cashflow forecast, net worth trends, ESG scores, probabilistic goal planning, goal collaboration!');
+  console.log('💡 Guest demo showcases: budgets, cashflow forecast, net worth trends, ESG scores,');
+  console.log('   probabilistic goal planning, goal collaboration, household management, estate planning!');
 }
 
 main()

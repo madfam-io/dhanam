@@ -28,6 +28,7 @@
     "db:migrate:resolve": "prisma migrate resolve",
     "db:push": "prisma db push --accept-data-loss",
     "db:seed": "tsx prisma/seed.ts",
+    "db:seed:enhanced": "tsx prisma/seed-enhanced.ts",
     "db:seed:madfam": "tsx prisma/seed-madfam.ts",
     "db:studio": "prisma studio",
     "clean": "rm -rf dist .turbo node_modules"
