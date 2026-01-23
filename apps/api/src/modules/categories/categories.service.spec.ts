@@ -112,6 +112,8 @@ describe('CategoriesService', () => {
           _count: { select: { transactions: true } },
         },
         orderBy: { name: 'asc' },
+        skip: 0,
+        take: 50,
       });
       expect(result).toHaveLength(1);
       expect(result[0].name).toBe('Groceries');

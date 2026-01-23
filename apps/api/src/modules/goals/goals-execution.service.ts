@@ -95,8 +95,13 @@ export class GoalsExecutionService {
 
   /**
    * Analyze a specific goal for rebalancing needs
+   * @param goal - The goal to analyze
+   * @param autoExecute - Whether to automatically execute rebalancing actions (default: true for cron job compatibility)
    */
-  async analyzeGoalRebalancing(goal: any): Promise<RebalancingAction[]> {
+  async analyzeGoalRebalancing(
+    goal: any,
+    autoExecute: boolean = true
+  ): Promise<RebalancingAction[]> {
     const actions: RebalancingAction[] = [];
 
     if (!goal.allocations || goal.allocations.length === 0) {
@@ -137,8 +142,8 @@ export class GoalsExecutionService {
       }
     }
 
-    // Execute rebalancing actions if user has auto-rebalancing enabled
-    if (actions.length > 0) {
+    // Execute rebalancing actions if auto-execution is enabled
+    if (actions.length > 0 && autoExecute) {
       await this.executeRebalancingActions(goal, actions);
     }
 
@@ -323,7 +328,8 @@ export class GoalsExecutionService {
       throw new Error('Goal not found or access denied');
     }
 
-    const actions = await this.analyzeGoalRebalancing(goal);
+    // Only analyze without executing - this is a suggestion endpoint
+    const actions = await this.analyzeGoalRebalancing(goal, false);
 
     return {
       goalId: goal.id,
@@ -372,7 +378,8 @@ export class GoalsExecutionService {
       throw new Error('Goal not found or access denied');
     }
 
-    const actions = await this.analyzeGoalRebalancing(goal);
+    // Analyze without auto-execute, then explicitly execute to avoid double execution
+    const actions = await this.analyzeGoalRebalancing(goal, false);
 
     if (actions.length === 0) {
       return {

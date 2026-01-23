@@ -72,6 +72,7 @@ describe('GoalsExecutionService', () => {
             },
             account: {
               findUnique: jest.fn(),
+              findMany: jest.fn(),
             },
           },
         },
@@ -106,6 +107,12 @@ describe('GoalsExecutionService', () => {
     jest.spyOn(Logger.prototype, 'warn').mockImplementation();
 
     jest.clearAllMocks();
+
+    // Default mock for account.findMany to return mock accounts from goal allocations
+    prisma.account.findMany.mockResolvedValue([
+      mockGoal.allocations[0].account,
+      mockGoal.allocations[1].account,
+    ] as any);
   });
 
   it('should be defined', () => {
@@ -353,6 +360,11 @@ describe('GoalsExecutionService', () => {
       jest.clearAllMocks(); // Clear any previous test calls
 
       prisma.goal.findFirst.mockResolvedValue(mockGoal as any);
+      // Mock account.findMany for batch account lookup (N+1 fix)
+      prisma.account.findMany.mockResolvedValue([
+        mockGoal.allocations[0].account,
+        mockGoal.allocations[1].account,
+      ] as any);
       // Mock account.findUnique for both allocations
       prisma.account.findUnique
         .mockResolvedValueOnce(mockGoal.allocations[0].account as any)
