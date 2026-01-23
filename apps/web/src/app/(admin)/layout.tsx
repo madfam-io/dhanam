@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { AdminNav } from '~/components/admin/admin-nav';
 import { AdminHeader } from '~/components/admin/admin-header';
 import { useAuth } from '~/lib/hooks/use-auth';
@@ -9,11 +8,14 @@ import { AdminProvider } from '~/contexts/AdminContext';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { user, isAuthenticated } = useAuth();
-  const router = useRouter();
 
   useEffect(() => {
     if (!isAuthenticated) {
-      router.push('/login');
+      // Redirect to app subdomain login with return URL for cross-subdomain auth
+      const appUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://app.dhan.am';
+      const returnUrl =
+        typeof window !== 'undefined' ? encodeURIComponent(window.location.href) : '';
+      window.location.href = `${appUrl}/login?from=${returnUrl}`;
       return;
     }
 
@@ -25,9 +27,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
 
     if (!hasAdminAccess) {
-      router.push('/dashboard');
+      // Redirect non-admins to app subdomain dashboard
+      const appUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://app.dhan.am';
+      window.location.href = `${appUrl}/dashboard`;
     }
-  }, [isAuthenticated, user, router]);
+  }, [isAuthenticated, user]);
 
   if (!isAuthenticated || !user) {
     return null;

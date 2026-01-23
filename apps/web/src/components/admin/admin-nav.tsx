@@ -5,12 +5,13 @@ import Link from 'next/link';
 import { cn } from '~/lib/utils';
 import { LayoutDashboard, Users, FileText, BarChart3, Flag } from 'lucide-react';
 
+// Navigation hrefs without /admin prefix - middleware rewrites these to /admin/* internally
 const navigation = [
-  { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
-  { name: 'Users', href: '/admin/users', icon: Users },
-  { name: 'Audit Logs', href: '/admin/audit-logs', icon: FileText },
-  { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
-  { name: 'Feature Flags', href: '/admin/feature-flags', icon: Flag },
+  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { name: 'Users', href: '/users', icon: Users },
+  { name: 'Audit Logs', href: '/audit-logs', icon: FileText },
+  { name: 'Analytics', href: '/analytics', icon: BarChart3 },
+  { name: 'Feature Flags', href: '/feature-flags', icon: Flag },
 ];
 
 export function AdminNav() {
@@ -23,7 +24,7 @@ export function AdminNav() {
           {navigation.map((item) => {
             const isActive =
               pathname === item.href ||
-              (item.href !== '/admin/dashboard' && pathname.startsWith(item.href));
+              (item.href !== '/dashboard' && pathname.startsWith(item.href));
 
             return (
               <li key={item.name}>

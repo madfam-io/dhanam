@@ -27,7 +27,7 @@
 #       noTLSVerify: true
 #
 #   - hostname: admin.dhan.am
-#     service: http://dhanam-admin.dhanam.svc.cluster.local:80
+#     service: http://dhanam-web.dhanam.svc.cluster.local:80  # Same as app.dhan.am (single deployment)
 #     originRequest:
 #       noTLSVerify: true
 #
@@ -103,7 +103,7 @@ spec:
                 port:
                   number: 80
 
-    # Admin Dashboard
+    # Admin Dashboard (same service as app - subdomain routing handled by middleware)
     - host: admin.dhan.am
       http:
         paths:
@@ -111,7 +111,7 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: dhanam-admin
+                name: dhanam-web
                 port:
                   number: 80
 

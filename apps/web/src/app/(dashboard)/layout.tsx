@@ -33,32 +33,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const router = useRouter();
   // Track if client has hydrated - prevents SSR/client mismatch
   const [hasMounted, setHasMounted] = useState(false);
-  // Track if we've attempted to fetch user profile
-  const [userFetchAttempted, setUserFetchAttempted] = useState(false);
 
   // Mark as mounted after initial render (client-side only)
   useEffect(() => {
     setHasMounted(true);
   }, []);
 
-  // Fetch user profile if we have tokens but no user data
+  // Fetch user profile in background if we have tokens but no user data
   // This happens after SSO login where only tokens are stored
+  // Non-blocking: don't wait for this to render the dashboard
   useEffect(() => {
-    console.log('[DashboardLayout] refreshUser effect check:', {
-      hasMounted,
-      _hasHydrated,
-      isAuthenticated,
-      hasUser: !!user,
-      userFetchAttempted,
-    });
-    if (hasMounted && _hasHydrated && isAuthenticated && !user && !userFetchAttempted) {
-      console.log('[DashboardLayout] Calling refreshUser...');
-      setUserFetchAttempted(true);
-      refreshUser().catch((error) => {
-        console.error('Failed to fetch user profile:', error);
-      });
+    if (_hasHydrated && isAuthenticated && !user) {
+      refreshUser().catch(console.error);
     }
-  }, [hasMounted, _hasHydrated, isAuthenticated, user, userFetchAttempted, refreshUser]);
+  }, [_hasHydrated, isAuthenticated, user, refreshUser]);
 
   // Redirect unauthenticated users after Zustand hydration is complete
   useEffect(() => {

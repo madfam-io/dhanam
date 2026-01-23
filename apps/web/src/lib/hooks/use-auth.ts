@@ -41,8 +41,11 @@ export const useAuth = create<AuthState>()(
         set({ user, tokens, token: tokens.accessToken, isAuthenticated: true });
 
         // Set cookie marker for middleware detection (prevents redirect flash)
+        // Use Domain=.dhan.am for cross-subdomain auth (app.dhan.am + admin.dhan.am)
         if (typeof document !== 'undefined') {
-          document.cookie = 'auth-storage=true; path=/; max-age=604800; SameSite=Lax';
+          const isProduction = window.location.hostname.endsWith('.dhan.am');
+          const domainAttr = isProduction ? ' Domain=.dhan.am;' : '';
+          document.cookie = `auth-storage=true; path=/;${domainAttr} max-age=604800; SameSite=Lax`;
         }
       },
 
@@ -51,8 +54,11 @@ export const useAuth = create<AuthState>()(
         set({ user: null, tokens: null, token: null, isAuthenticated: false });
 
         // Clear cookie marker for middleware detection
+        // Use Domain=.dhan.am for cross-subdomain auth (app.dhan.am + admin.dhan.am)
         if (typeof document !== 'undefined') {
-          document.cookie = 'auth-storage=; path=/; max-age=0; SameSite=Lax';
+          const isProduction = window.location.hostname.endsWith('.dhan.am');
+          const domainAttr = isProduction ? ' Domain=.dhan.am;' : '';
+          document.cookie = `auth-storage=; path=/;${domainAttr} max-age=0; SameSite=Lax`;
         }
       },
 
@@ -168,5 +174,5 @@ if (typeof window !== 'undefined') {
       console.warn('[useAuth] Hydration timeout - forcing completion');
       state.setHasHydrated(true);
     }
-  }, 2000);
+  }, 500); // localStorage is synchronous - 500ms is sufficient safety margin
 }

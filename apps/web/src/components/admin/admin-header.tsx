@@ -1,21 +1,23 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import { Button } from '@dhanam/ui';
 import { useAuth } from '~/lib/hooks/use-auth';
 import { Shield, LogOut, Home } from 'lucide-react';
 
 export function AdminHeader() {
   const { user, logout } = useAuth();
-  const router = useRouter();
 
   const handleLogout = async () => {
     await logout();
-    router.push('/login');
+    // Redirect to app subdomain login after logout for cross-subdomain consistency
+    const appUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://app.dhan.am';
+    window.location.href = `${appUrl}/login`;
   };
 
   const handleBackToDashboard = () => {
-    router.push('/dashboard');
+    // Navigate to app subdomain dashboard for cross-subdomain navigation
+    const appUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://app.dhan.am';
+    window.location.href = `${appUrl}/dashboard`;
   };
 
   return (

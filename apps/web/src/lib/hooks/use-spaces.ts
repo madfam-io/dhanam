@@ -12,17 +12,19 @@ import { useSpaceStore } from '@/stores/space';
 const SPACES_KEY = ['spaces'];
 
 export function useSpaces(): UseQueryResult<Space[], Error> {
-  const { setCurrentSpace } = useSpaceStore();
+  const { setCurrentSpace, setSpaces, spaces: persistedSpaces } = useSpaceStore();
 
   return useQuery({
     queryKey: SPACES_KEY,
     queryFn: async () => {
       const spaces = await apiClient.get<Space[]>('/spaces');
+      setSpaces(spaces);
       if (spaces.length > 0 && !useSpaceStore.getState().currentSpace) {
         setCurrentSpace(spaces[0] || null);
       }
       return spaces;
     },
+    placeholderData: persistedSpaces.length > 0 ? persistedSpaces : undefined,
   });
 }
 

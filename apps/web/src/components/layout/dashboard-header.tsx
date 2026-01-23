@@ -17,7 +17,7 @@ import { useSpaceStore } from '~/stores/space';
 
 export function DashboardHeader() {
   const { user, logout } = useAuth();
-  const { data: spaces } = useSpaces();
+  const { data: spaces, isLoading: spacesLoading, isPlaceholderData } = useSpaces();
   const { currentSpace, setCurrentSpace } = useSpaceStore();
   const router = useRouter();
 
@@ -32,32 +32,54 @@ export function DashboardHeader() {
         <div className="flex items-center gap-4">
           <h1 className="text-2xl font-bold">Dhanam</h1>
 
-          {spaces && spaces.length > 0 && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="min-w-[200px] justify-between">
-                  <span>{currentSpace?.name || 'Select Space'}</span>
-                  <ChevronDown className="ml-2 h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-[200px]">
-                <DropdownMenuLabel>Your Spaces</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                {spaces.map((space) => (
-                  <DropdownMenuItem key={space.id} onClick={() => setCurrentSpace(space)}>
-                    <div className="flex items-center justify-between w-full">
-                      <span>{space.name}</span>
-                      <span className="text-xs text-muted-foreground">{space.type}</span>
-                    </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                className="min-w-[200px] justify-between"
+                disabled={spacesLoading && !spaces?.length}
+              >
+                {spacesLoading && !spaces?.length ? (
+                  <span className="flex items-center gap-2">
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                    Loading...
+                  </span>
+                ) : (
+                  <>
+                    <span>{currentSpace?.name || 'Select Space'}</span>
+                    {isPlaceholderData && (
+                      <span className="h-2 w-2 rounded-full bg-yellow-500 animate-pulse" />
+                    )}
+                    <ChevronDown className="ml-2 h-4 w-4" />
+                  </>
+                )}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-[200px]">
+              <DropdownMenuLabel>Your Spaces</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {spaces && spaces.length > 0 ? (
+                <>
+                  {spaces.map((space) => (
+                    <DropdownMenuItem key={space.id} onClick={() => setCurrentSpace(space)}>
+                      <div className="flex items-center justify-between w-full">
+                        <span>{space.name}</span>
+                        <span className="text-xs text-muted-foreground">{space.type}</span>
+                      </div>
+                    </DropdownMenuItem>
+                  ))}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => router.push('/dashboard/spaces/new')}>
+                    Create New Space
                   </DropdownMenuItem>
-                ))}
-                <DropdownMenuSeparator />
+                </>
+              ) : (
                 <DropdownMenuItem onClick={() => router.push('/dashboard/spaces/new')}>
-                  Create New Space
+                  Create Your First Space
                 </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         <div className="ml-auto flex items-center gap-4">
@@ -81,7 +103,13 @@ export function DashboardHeader() {
               </DropdownMenuItem>
               {/* Show admin link for users with admin/owner roles */}
               {user?.spaces?.some((space) => space.role === 'admin' || space.role === 'owner') && (
-                <DropdownMenuItem onClick={() => router.push('/admin/dashboard')}>
+                <DropdownMenuItem
+                  onClick={() => {
+                    // Navigate to admin subdomain for cross-subdomain navigation
+                    const adminUrl = process.env.NEXT_PUBLIC_ADMIN_URL || 'https://admin.dhan.am';
+                    window.location.href = `${adminUrl}/dashboard`;
+                  }}
+                >
                   <Shield className="mr-2 h-4 w-4" />
                   Admin Dashboard
                 </DropdownMenuItem>

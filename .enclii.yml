@@ -123,6 +123,10 @@ spec:
       tls: true
       tlsIssuer: cloudflare
       primary: true
+    # Admin subdomain (same deployment, subdomain-based routing in middleware)
+    - domain: admin.dhan.am
+      tls: true
+      tlsIssuer: cloudflare
     # Internal MADFAM domain (secondary)
     - domain: dhanam.madfam.io
       tls: true

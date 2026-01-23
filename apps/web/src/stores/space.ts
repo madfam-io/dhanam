@@ -5,11 +5,13 @@ import { Space } from '@dhanam/shared';
 interface SpaceStore {
   currentSpace: Space | null;
   spaces: Space[];
+  _hasHydrated: boolean;
   setCurrentSpace: (space: Space | null) => void;
   setSpaces: (spaces: Space[]) => void;
   addSpace: (space: Space) => void;
   updateSpace: (spaceId: string, updates: Partial<Space>) => void;
   removeSpace: (spaceId: string) => void;
+  setHasHydrated: (state: boolean) => void;
 }
 
 export const useSpaceStore = create<SpaceStore>()(
@@ -17,6 +19,7 @@ export const useSpaceStore = create<SpaceStore>()(
     (set) => ({
       currentSpace: null,
       spaces: [],
+      _hasHydrated: false,
       setCurrentSpace: (space) => set({ currentSpace: space }),
       setSpaces: (spaces) => set({ spaces }),
       addSpace: (space) => set((state) => ({ spaces: [...state.spaces, space] })),
@@ -33,9 +36,13 @@ export const useSpaceStore = create<SpaceStore>()(
           spaces: state.spaces.filter((s) => s.id !== spaceId),
           currentSpace: state.currentSpace?.id === spaceId ? null : state.currentSpace,
         })),
+      setHasHydrated: (state) => set({ _hasHydrated: state }),
     }),
     {
       name: 'space-storage',
+      onRehydrateStorage: () => () => {
+        useSpaceStore.getState().setHasHydrated(true);
+      },
     }
   )
 );
