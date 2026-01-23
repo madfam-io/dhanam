@@ -16,6 +16,7 @@
     "build:packages": "turbo build --filter='./packages/*'",
     "test": "turbo test",
     "lint": "turbo lint",
+    "lint:file-sizes": "node scripts/check-file-sizes.js",
     "typecheck": "turbo typecheck",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "clean": "turbo clean && rm -rf node_modules",

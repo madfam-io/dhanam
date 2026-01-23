@@ -22,6 +22,15 @@ module.exports = {
     },
   },
   rules: {
+    // File size discipline - hard limit at 800 lines
+    'max-lines': [
+      'error',
+      {
+        max: 800,
+        skipBlankLines: true,
+        skipComments: true,
+      },
+    ],
     'no-console': ['warn', { allow: ['warn', 'error'] }],
     'no-unused-vars': 'off',
     '@typescript-eslint/no-unused-vars': [
@@ -60,5 +69,14 @@ module.exports = {
     'coverage/',
     '*.config.js',
     '*.config.ts',
+  ],
+  overrides: [
+    {
+      // Type declaration files often mirror generated code and may exceed line limits
+      files: ['*.d.ts'],
+      rules: {
+        'max-lines': 'off',
+      },
+    },
   ],
 };
