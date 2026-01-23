@@ -41,9 +41,9 @@
 
 ## Tech Stack
 
-- **Frontend**: Next.js 14, React Native + Expo
+- **Frontend**: Next.js 15/16, React Native + Expo
 - **Backend**: NestJS (Fastify), PostgreSQL, Redis
-- **Infrastructure**: Docker, AWS ECS/Fargate, Terraform
+- **Infrastructure**: Docker, AWS ECS/Fargate, Terraform, Enclii PaaS
 - **Build**: Turborepo, pnpm monorepo
 
 ## Quick Start
@@ -121,14 +121,16 @@
 ```
 dhanam/
 ├── apps/
-│   ├── api/          # NestJS backend API
-│   ├── web/          # Next.js web dashboard
-│   └── mobile/       # React Native mobile app
+│   ├── admin/        # Next.js 16 admin dashboard (port 3400)
+│   ├── api/          # NestJS backend API (port 4010)
+│   ├── mobile/       # React Native mobile app (Expo)
+│   └── web/          # Next.js 15 web dashboard (port 3040)
 ├── packages/
-│   ├── shared/       # Shared types, utils, and constants
-│   ├── ui/           # Reusable UI components
+│   ├── config/       # Shared configuration (ESLint, tsconfig, prettier)
 │   ├── esg/          # ESG scoring integration
-│   └── config/       # Shared configuration
+│   ├── shared/       # Shared types, utils, and constants
+│   ├── simulations/  # Monte Carlo & scenario analysis engines
+│   └── ui/           # Reusable UI components (shadcn-ui)
 ├── infra/
 │   ├── docker/       # Docker configurations
 │   └── terraform/    # Infrastructure as code
@@ -190,7 +192,7 @@ async login(@Body() dto: LoginDto): Promise<AuthResponse> {
 ### Working with the Frontend
 
 The web app uses:
-- **Next.js 14** with App Router
+- **Next.js 15** with App Router (admin uses Next.js 16)
 - **Tailwind CSS** for styling
 - **shadcn/ui** components
 - **Zustand** for state management

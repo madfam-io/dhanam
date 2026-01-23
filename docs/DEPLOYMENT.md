@@ -2,7 +2,53 @@
 
 ## Overview
 
-This guide covers deploying Dhanam Ledger to production environments using AWS ECS/Fargate with Terraform infrastructure as code.
+This guide covers deploying Dhanam Ledger to production environments.
+
+**Primary Deployment Method**: Enclii PaaS (auto-deploy on push to `main`)
+**Fallback/Manual Method**: AWS ECS/Fargate with Terraform
+
+## Enclii Deployment (Primary)
+
+Dhanam uses **Enclii** (MADFAM's own PaaS) for all production deployments.
+
+### How It Works
+
+1. Push code to `main` branch
+2. Enclii detects the change automatically
+3. Enclii builds Docker images
+4. Enclii deploys to bare metal Kubernetes cluster
+
+### Configuration
+
+Enclii configuration is defined in `.enclii.yml` at the project root.
+
+### Production URLs
+
+| Service | URL |
+|---------|-----|
+| Web Dashboard | `https://app.dhan.am` |
+| Admin Dashboard | `https://admin.dhanam.com` |
+| API Backend | `https://api.dhan.am` |
+
+### Infrastructure
+
+- **Cluster**: 2-Node Hetzner Cluster
+- **Production Node**: "The Sanctuary" (AX41-NVMe)
+- **Build Node**: "The Forge" (CPX11)
+- **Ingress**: Cloudflare Tunnel (zero-trust)
+
+### Manual Deployment via Enclii
+
+```bash
+# If auto-deploy is disabled or you need to force a deployment:
+enclii deploy --app dhanam --env production
+```
+
+---
+
+## AWS ECS/Fargate Deployment (Fallback)
+
+The following section covers manual deployment to AWS ECS/Fargate, which serves as a fallback option when Enclii is unavailable.
 
 ## Architecture
 

@@ -24,12 +24,17 @@ Dhanam uses **Enclii** (MADFAM's own deployment platform) for ALL production dep
 - **Auto-deploy**: Enabled on `main` branch
 - **Flow**: Push to main → Enclii detects → Builds → Deploys to bare metal K8s
 
-**DO NOT** use GitHub Actions workflows (`deploy-*.yml`) for production deployments. They are NOT the primary deployment mechanism.
-
 **To deploy**: Simply push to main. Enclii handles everything automatically.
+
+**GitHub Actions Workflows** (`.github/workflows/`):
+- `ci.yml`, `lint.yml`, `test-coverage.yml` - CI/CD quality gates (run on all PRs)
+- `check-migrations.yml` - Database migration validation
+- `deploy-enclii.yml`, `deploy-k8s.yml`, `deploy-web-k8s.yml` - Manual/fallback deployment options
+- Primary production deployment is via **Enclii auto-deploy**, not GitHub Actions
 
 ### Production URLs
 - Web: `https://app.dhan.am`
+- Admin: `https://admin.dhanam.com`
 - API: `https://api.dhan.am`
 
 ---
@@ -51,14 +56,16 @@ This is the Dhanam Ledger project - a comprehensive budget and wealth tracking a
 **Monorepo Structure (Turborepo + pnpm):**
 ```
 apps/
-├─ web/           # Next.js dashboard app
-├─ mobile/        # React Native + Expo app  
-└─ api/           # NestJS (Fastify) backend
+├─ admin/         # Next.js 16 admin dashboard (port 3400)
+├─ api/           # NestJS (Fastify) backend (port 4010)
+├─ mobile/        # React Native + Expo app
+└─ web/           # Next.js 15 user dashboard (port 3040)
 packages/
-├─ shared/        # Shared TS utils, types, i18n
+├─ config/        # ESLint, tsconfig, prettier presets
 ├─ esg/           # Dhanam ESG adapters
-├─ ui/            # Reusable UI components (shadcn-ui)
-└─ config/        # ESLint, tsconfig, prettier presets
+├─ shared/        # Shared TS utils, types, i18n
+├─ simulations/   # Monte Carlo & scenario analysis engines
+└─ ui/            # Reusable UI components (shadcn-ui)
 infra/
 ├─ docker/        # Local dev docker-compose
 └─ terraform/     # AWS ECS/Fargate infrastructure
@@ -82,8 +89,9 @@ pnpm db:push      # Prisma schema sync
 pnpm db:seed      # Seed demo data
 
 # Development servers
-pnpm dev:api      # Backend at http://localhost:4000
-pnpm dev:web      # Frontend at http://localhost:3000  
+pnpm dev:api      # Backend at http://localhost:4010
+pnpm dev:web      # Web dashboard at http://localhost:3040
+pnpm dev:admin    # Admin dashboard at http://localhost:3400
 pnpm dev:mobile   # Expo dev client
 
 # Quality checks
@@ -121,10 +129,14 @@ turbo test        # Turborepo test
 - Background sync every hour via BullMQ queues
 
 **Provider Integration Patterns:**
-- Belvo (Mexico): OAuth flow → encrypted token storage → 90+ day transaction history
-- Plaid (US): Link flow → webhook updates → balance/transaction sync
-- Bitso (crypto): API integration → real-time crypto positions
-- Non-custodial: ETH/BTC/xPub address tracking (no secrets needed)
+- **Belvo** (Mexico): OAuth flow → encrypted token storage → 90+ day transaction history
+- **Plaid** (US): Link flow → webhook updates → balance/transaction sync
+- **MX** (US/Canada): Aggregation API → multi-institution support
+- **Finicity** (US): Open Banking API → Mastercard-backed data access
+- **Bitso** (crypto exchange): API integration → real-time crypto positions
+- **Blockchain** (on-chain): ETH/BTC/xPub address tracking (non-custodial, no secrets)
+
+The provider orchestrator (`apps/api/src/modules/providers/orchestrator/`) handles failover and multi-provider redundancy.
 
 ## Testing Strategy
 
