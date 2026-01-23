@@ -63,4 +63,27 @@ export const analyticsApi = {
   getPortfolioAllocation: async (spaceId: string): Promise<PortfolioAllocation[]> => {
     return apiClient.get<PortfolioAllocation[]>(`/analytics/${spaceId}/portfolio-allocation`);
   },
+
+  /**
+   * Get combined dashboard data in a single request
+   * Reduces waterfall by returning all dashboard data at once
+   */
+  getDashboardData: async (spaceId: string): Promise<DashboardData> => {
+    return apiClient.get<DashboardData>(`/analytics/${spaceId}/dashboard-data`);
+  },
 };
+
+// Dashboard data type for combined endpoint
+export interface DashboardData {
+  accounts: any[];
+  recentTransactions: {
+    data: any[];
+    total: number;
+  };
+  budgets: any[];
+  currentBudgetSummary: any | null;
+  netWorth: NetWorthResponse;
+  cashflowForecast: CashflowForecast;
+  portfolioAllocation: PortfolioAllocation[];
+  goals: any[];
+}

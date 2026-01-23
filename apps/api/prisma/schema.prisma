@@ -262,6 +262,8 @@ model User {
   sentGoalInvites  GoalShare[]      @relation("GoalInvites")
   goalActivities   GoalActivity[]   @relation("GoalActivities")
 
+  @@index([onboardingCompleted, createdAt(sort: Desc)])
+  @@index([lastLoginAt(sort: Desc)])
   @@map("users")
 }
 
@@ -474,6 +476,7 @@ model Transaction {
   @@unique([accountId, providerTransactionId])
   @@index([accountId, date(sort: Desc)])
   @@index([categoryId])
+  @@index([accountId, categoryId])
   @@index([pending])
   @@index([isSplit])
   @@map("transactions")
@@ -784,6 +787,7 @@ model Goal {
   @@index([currentProbability])
   @@index([createdBy])
   @@index([isShared])
+  @@index([status, updatedAt(sort: Desc)])
   @@map("goals")
 }
 

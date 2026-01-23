@@ -12,8 +12,15 @@ export class CategoriesService {
     private spacesService: SpacesService
   ) {}
 
-  async findAll(spaceId: string, userId: string): Promise<any[]> {
+  async findAll(
+    spaceId: string,
+    userId: string,
+    options?: { skip?: number; take?: number }
+  ): Promise<any[]> {
     await this.spacesService.verifyUserAccess(userId, spaceId, 'viewer');
+
+    const take = options?.take ?? 50;
+    const skip = options?.skip ?? 0;
 
     const categories = await this.prisma.category.findMany({
       where: {
@@ -26,6 +33,8 @@ export class CategoriesService {
         },
       },
       orderBy: { name: 'asc' },
+      skip,
+      take,
     });
 
     return categories.map((category) => ({

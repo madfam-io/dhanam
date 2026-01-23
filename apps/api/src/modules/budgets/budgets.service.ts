@@ -21,8 +21,15 @@ export class BudgetsService {
     private spacesService: SpacesService
   ) {}
 
-  async findAll(spaceId: string, userId: string): Promise<BudgetResponseDto[]> {
+  async findAll(
+    spaceId: string,
+    userId: string,
+    options?: { skip?: number; take?: number }
+  ): Promise<BudgetResponseDto[]> {
     await this.spacesService.verifyUserAccess(userId, spaceId, 'viewer');
+
+    const take = options?.take ?? 50;
+    const skip = options?.skip ?? 0;
 
     const budgets = await this.prisma.budget.findMany({
       where: { spaceId },
@@ -36,6 +43,8 @@ export class BudgetsService {
         },
       },
       orderBy: { createdAt: 'desc' },
+      skip,
+      take,
     });
 
     return budgets.map((budget) => this.transformBudgetToDto(budget));

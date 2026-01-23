@@ -317,4 +317,211 @@ export class AnalyticsService {
       };
     });
   }
+
+  /**
+   * Combined dashboard data endpoint to reduce waterfall requests
+   * Returns all data needed for dashboard in a single API call
+   */
+  async getDashboardData(userId: string, spaceId: string) {
+    await this.spacesService.verifyUserAccess(userId, spaceId, 'viewer');
+
+    // Fetch all data in parallel
+    const [
+      accounts,
+      recentTransactions,
+      budgetsWithSummary,
+      netWorth,
+      cashflowForecast,
+      portfolioAllocation,
+      goals,
+    ] = await Promise.all([
+      // Accounts
+      this.prisma.account.findMany({
+        where: { spaceId },
+        orderBy: { balance: 'desc' },
+      }),
+      // Recent transactions (limit 5)
+      this.prisma.transaction.findMany({
+        where: { account: { spaceId } },
+        orderBy: { date: 'desc' },
+        take: 5,
+        include: { account: true },
+      }),
+      // Budgets with first budget summary
+      this.getBudgetsWithSummary(spaceId),
+      // Net worth
+      this.getNetWorth(userId, spaceId),
+      // Cashflow forecast
+      this.getCashflowForecast(userId, spaceId, 60),
+      // Portfolio allocation
+      this.getPortfolioAllocation(userId, spaceId),
+      // Goals
+      this.prisma.goal.findMany({
+        where: { spaceId },
+        include: {
+          allocations: {
+            include: {
+              account: {
+                select: {
+                  id: true,
+                  name: true,
+                  balance: true,
+                  currency: true,
+                },
+              },
+            },
+          },
+        },
+        orderBy: [{ priority: 'asc' }, { targetDate: 'asc' }],
+        take: 10,
+      }),
+    ]);
+
+    return {
+      accounts: accounts.map((a) => ({
+        ...a,
+        balance: a.balance.toNumber(),
+      })),
+      recentTransactions: {
+        data: recentTransactions.map((t) => ({
+          ...t,
+          amount: t.amount.toNumber(),
+          date: t.date.toISOString(),
+        })),
+        total: recentTransactions.length,
+      },
+      budgets: budgetsWithSummary.budgets,
+      currentBudgetSummary: budgetsWithSummary.summary,
+      netWorth,
+      cashflowForecast,
+      portfolioAllocation,
+      goals: goals.map((g) => ({
+        ...g,
+        targetAmount: g.targetAmount.toNumber(),
+        currentProbability: g.currentProbability?.toNumber() ?? null,
+        confidenceLow: g.confidenceLow?.toNumber() ?? null,
+        confidenceHigh: g.confidenceHigh?.toNumber() ?? null,
+        currentProgress: g.currentProgress?.toNumber() ?? null,
+        expectedReturn: g.expectedReturn?.toNumber() ?? null,
+        volatility: g.volatility?.toNumber() ?? null,
+        monthlyContribution: g.monthlyContribution?.toNumber() ?? null,
+        allocations: g.allocations.map((a) => ({
+          ...a,
+          percentage: a.percentage.toNumber(),
+          account: {
+            ...a.account,
+            balance: a.account.balance.toNumber(),
+          },
+        })),
+      })),
+    };
+  }
+
+  private async getBudgetsWithSummary(spaceId: string) {
+    const budgets = await this.prisma.budget.findMany({
+      where: { spaceId },
+      include: {
+        categories: {
+          include: {
+            _count: {
+              select: { transactions: true },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (budgets.length === 0) {
+      return { budgets: [], summary: null };
+    }
+
+    const currentBudget = budgets[0];
+    if (!currentBudget) {
+      return { budgets: [], summary: null };
+    }
+
+    // Get transactions for current budget
+    const transactions = await this.prisma.transaction.findMany({
+      where: {
+        account: { spaceId },
+        date: {
+          gte: currentBudget.startDate,
+          lte: currentBudget.endDate || undefined,
+        },
+        categoryId: {
+          in: currentBudget.categories.map((c) => c.id),
+        },
+      },
+    });
+
+    // Calculate category summaries
+    const categories = currentBudget.categories.map((category) => {
+      const categoryTransactions = transactions.filter((t) => t.categoryId === category.id);
+      const spent = categoryTransactions.reduce((sum, t) => sum + Math.abs(t.amount.toNumber()), 0);
+      const budgetedAmount = category.budgetedAmount.toNumber();
+      const carryoverAmount = category.carryoverAmount.toNumber();
+      const remaining = budgetedAmount + carryoverAmount - spent;
+      const percentUsed =
+        budgetedAmount + carryoverAmount > 0
+          ? (spent / (budgetedAmount + carryoverAmount)) * 100
+          : 0;
+
+      return {
+        id: category.id,
+        budgetId: category.budgetId,
+        name: category.name,
+        budgetedAmount,
+        carryoverAmount,
+        icon: category.icon,
+        color: category.color,
+        description: category.description,
+        spent,
+        remaining,
+        percentUsed,
+        transactionCount: categoryTransactions.length,
+      };
+    });
+
+    const totalIncome = currentBudget.income.toNumber();
+    const totalBudgeted = currentBudget.categories.reduce(
+      (sum, c) => sum + c.budgetedAmount.toNumber(),
+      0
+    );
+    const totalCarryover = currentBudget.categories.reduce(
+      (sum, c) => sum + c.carryoverAmount.toNumber(),
+      0
+    );
+    const totalSpent = categories.reduce((sum, c) => sum + c.spent, 0);
+    const totalRemaining = totalBudgeted + totalCarryover - totalSpent;
+    const totalPercentUsed =
+      totalBudgeted + totalCarryover > 0
+        ? (totalSpent / (totalBudgeted + totalCarryover)) * 100
+        : 0;
+
+    return {
+      budgets: budgets.map((b) => ({
+        id: b.id,
+        name: b.name,
+        period: b.period,
+        startDate: b.startDate.toISOString(),
+        endDate: b.endDate?.toISOString() || null,
+        income: b.income.toNumber(),
+      })),
+      summary: {
+        id: currentBudget.id,
+        name: currentBudget.name,
+        categories,
+        summary: {
+          totalBudgeted,
+          totalSpent,
+          totalRemaining,
+          totalPercentUsed,
+          totalIncome,
+          readyToAssign: totalIncome + totalCarryover - totalBudgeted,
+          totalCarryover,
+        },
+      },
+    };
+  }
 }

@@ -181,7 +181,7 @@ export class GoalsService {
   /**
    * Get all goals for a space
    */
-  async findBySpace(spaceId: string, userId: string) {
+  async findBySpace(spaceId: string, userId: string, options?: { skip?: number; take?: number }) {
     // Verify user has access to the space
     const userSpace = await this.prisma.userSpace.findFirst({
       where: {
@@ -193,6 +193,9 @@ export class GoalsService {
     if (!userSpace) {
       throw new NotFoundException('Space not found or you do not have access');
     }
+
+    const take = options?.take ?? 50;
+    const skip = options?.skip ?? 0;
 
     return this.prisma.goal.findMany({
       where: { spaceId },
@@ -211,6 +214,8 @@ export class GoalsService {
         },
       },
       orderBy: [{ priority: 'asc' }, { targetDate: 'asc' }],
+      skip,
+      take,
     });
   }
 

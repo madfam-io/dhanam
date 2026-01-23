@@ -8,10 +8,8 @@ import { Button } from '@dhanam/ui';
 import { Progress } from '@dhanam/ui';
 import { useAuth } from '~/lib/hooks/use-auth';
 import { useSpaceStore } from '~/stores/space';
-import { accountsApi } from '~/lib/api/accounts';
-import { transactionsApi } from '~/lib/api/transactions';
-import { budgetsApi, CategorySummary } from '~/lib/api/budgets';
 import { analyticsApi } from '~/lib/api/analytics';
+import { CategorySummary } from '~/lib/api/budgets';
 import { formatCurrency } from '~/lib/utils';
 import {
   TrendingUp,
@@ -30,90 +28,36 @@ import { AnalyticsEmptyState } from '@/components/demo/analytics-empty-state';
 import { ProbabilisticGoalCard } from '@/components/goals/probabilistic-goal-card';
 import { GoalHealthScore } from '@/components/goals/goal-health-score';
 import { GoalProbabilityTimeline } from '@/components/goals/goal-probability-timeline';
-import { useGoals } from '@/hooks/useGoals';
 
 export default function DashboardPage() {
   const router = useRouter();
   const { user } = useAuth();
   const { currentSpace } = useSpaceStore();
-  const { getGoalsBySpace } = useGoals();
   const isGuestDemo = user?.email === 'guest@dhanam.demo';
 
-  const { data: accounts, isLoading: isLoadingAccounts } = useQuery({
-    queryKey: ['accounts', currentSpace?.id],
+  // Single combined query for all dashboard data - eliminates waterfall
+  const { data: dashboardData, isLoading } = useQuery({
+    queryKey: ['dashboard-data', currentSpace?.id],
     queryFn: () => {
       if (!currentSpace) throw new Error('No current space');
-      return accountsApi.getAccounts(currentSpace.id);
+      return analyticsApi.getDashboardData(currentSpace.id);
     },
     enabled: !!currentSpace,
+    staleTime: 30000, // 30 seconds
   });
 
-  const { data: recentTransactions, isLoading: isLoadingTransactions } = useQuery({
-    queryKey: ['recent-transactions', currentSpace?.id],
-    queryFn: () => {
-      if (!currentSpace) throw new Error('No current space');
-      return transactionsApi.getTransactions(currentSpace.id, { limit: 5 });
-    },
-    enabled: !!currentSpace,
-  });
-
-  const { data: budgets, isLoading: isLoadingBudgets } = useQuery({
-    queryKey: ['budgets', currentSpace?.id],
-    queryFn: () => {
-      if (!currentSpace) throw new Error('No current space');
-      return budgetsApi.getBudgets(currentSpace.id);
-    },
-    enabled: !!currentSpace,
-  });
-
-  const { data: currentBudgetSummary } = useQuery({
-    queryKey: ['current-budget-summary', currentSpace?.id, budgets?.[0]?.id],
-    queryFn: () => {
-      if (!currentSpace || !budgets || budgets.length === 0 || !budgets[0]) return null;
-      return budgetsApi.getBudgetSummary(currentSpace.id, budgets[0].id);
-    },
-    enabled: !!currentSpace && !!budgets && budgets.length > 0 && !!budgets[0],
-  });
-
-  // New analytics queries
-  const { data: netWorthData } = useQuery({
-    queryKey: ['net-worth', currentSpace?.id],
-    queryFn: () => {
-      if (!currentSpace) throw new Error('No current space');
-      return analyticsApi.getNetWorth(currentSpace.id);
-    },
-    enabled: !!currentSpace,
-  });
-
-  const { data: cashflowForecast } = useQuery({
-    queryKey: ['cashflow-forecast', currentSpace?.id],
-    queryFn: () => {
-      if (!currentSpace) throw new Error('No current space');
-      return analyticsApi.getCashflowForecast(currentSpace.id);
-    },
-    enabled: !!currentSpace,
-  });
-
-  const { data: portfolioAllocation } = useQuery({
-    queryKey: ['portfolio-allocation', currentSpace?.id],
-    queryFn: () => {
-      if (!currentSpace) throw new Error('No current space');
-      return analyticsApi.getPortfolioAllocation(currentSpace.id);
-    },
-    enabled: !!currentSpace,
-  });
-
-  const { data: goals, isLoading: isLoadingGoals } = useQuery({
-    queryKey: ['goals', currentSpace?.id],
-    queryFn: () => {
-      if (!currentSpace) throw new Error('No current space');
-      return getGoalsBySpace(currentSpace.id);
-    },
-    enabled: !!currentSpace,
-  });
+  // Extract data from combined response
+  const accounts = dashboardData?.accounts;
+  const recentTransactions = dashboardData?.recentTransactions;
+  const budgets = dashboardData?.budgets;
+  const currentBudgetSummary = dashboardData?.currentBudgetSummary;
+  const netWorthData = dashboardData?.netWorth;
+  const cashflowForecast = dashboardData?.cashflowForecast;
+  const portfolioAllocation = dashboardData?.portfolioAllocation;
+  const goals = dashboardData?.goals;
 
   // Filter active goals for display
-  const activeGoals = goals?.filter((g) => g.status === 'active') || [];
+  const activeGoals = goals?.filter((g: any) => g.status === 'active') || [];
 
   if (!currentSpace) {
     return <EmptyState />;
@@ -122,10 +66,17 @@ export default function DashboardPage() {
   // Use analytics data when available, fallback to account calculations
   const totalAssets =
     netWorthData?.totalAssets ??
-    (accounts?.filter((a) => a.balance > 0).reduce((sum, a) => sum + a.balance, 0) || 0);
+    (accounts
+      ?.filter((a: any) => a.balance > 0)
+      .reduce((sum: number, a: any) => sum + a.balance, 0) ||
+      0);
   const totalLiabilities =
     netWorthData?.totalLiabilities ??
-    Math.abs(accounts?.filter((a) => a.balance < 0).reduce((sum, a) => sum + a.balance, 0) || 0);
+    Math.abs(
+      accounts
+        ?.filter((a: any) => a.balance < 0)
+        .reduce((sum: number, a: any) => sum + a.balance, 0) || 0
+    );
   const netWorth = netWorthData?.netWorth ?? totalAssets - totalLiabilities;
   const netWorthChange = netWorthData?.changePercent ?? 0;
 
@@ -160,7 +111,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {isLoadingAccounts ? (
+              {isLoading ? (
                 <Skeleton className="h-8 w-24" />
               ) : (
                 formatCurrency(netWorth, currentSpace.currency)
@@ -191,7 +142,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {isLoadingAccounts ? (
+              {isLoading ? (
                 <Skeleton className="h-8 w-24" />
               ) : (
                 formatCurrency(totalAssets, currentSpace.currency)
@@ -210,7 +161,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {isLoadingAccounts ? (
+              {isLoading ? (
                 <Skeleton className="h-8 w-24" />
               ) : (
                 formatCurrency(totalLiabilities, currentSpace.currency)
@@ -235,7 +186,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {isLoadingBudgets ? (
+              {isLoading ? (
                 <Skeleton className="h-8 w-24" />
               ) : currentBudgetSummary ? (
                 `${currentBudgetSummary.summary.totalPercentUsed.toFixed(0)}%`
@@ -252,7 +203,7 @@ export default function DashboardPage() {
         </Card>
 
         {/* Goal Health Score - Only show if there are goals with probability data */}
-        {!isLoadingGoals && goals && goals.length > 0 && <GoalHealthScore goals={goals} />}
+        {!isLoading && goals && goals.length > 0 && <GoalHealthScore goals={goals} />}
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
@@ -263,7 +214,7 @@ export default function DashboardPage() {
             <CardDescription>Your connected accounts and balances</CardDescription>
           </CardHeader>
           <CardContent>
-            {isLoadingAccounts ? (
+            {isLoading ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
               </div>
@@ -302,7 +253,7 @@ export default function DashboardPage() {
             <CardDescription>Your latest financial activity</CardDescription>
           </CardHeader>
           <CardContent>
-            {isLoadingTransactions ? (
+            {isLoading ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
               </div>
@@ -437,7 +388,7 @@ export default function DashboardPage() {
       ) : null}
 
       {/* Probabilistic Goals */}
-      {isLoadingGoals ? (
+      {isLoading ? (
         <div className="flex items-center justify-center py-8">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>

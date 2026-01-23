@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@dhanam/ui';
 import { Button } from '@dhanam/ui';
 import {
@@ -22,7 +23,15 @@ import {
   DropdownMenuTrigger,
 } from '@dhanam/ui';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@dhanam/ui';
-import { Plus, MoreVertical, Loader2, Receipt, Calendar } from 'lucide-react';
+import {
+  Plus,
+  MoreVertical,
+  Loader2,
+  Receipt,
+  Calendar,
+  ChevronLeft,
+  ChevronRight,
+} from 'lucide-react';
 import { useSpaceStore } from '@/stores/space';
 import { transactionsApi } from '@/lib/api/transactions';
 import { accountsApi } from '@/lib/api/accounts';
@@ -30,17 +39,28 @@ import { Transaction } from '@dhanam/shared';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { toast } from 'sonner';
 
+const ITEMS_PER_PAGE = 25;
+
+const TRANSACTION_ROW_HEIGHT = 80; // Estimated height of each transaction row
+
 export default function TransactionsPage() {
   const { currentSpace } = useSpaceStore();
   const queryClient = useQueryClient();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+  const [page, setPage] = useState(1);
+  const parentRef = useRef<HTMLDivElement>(null);
 
   const { data: transactionsData, isLoading: isLoadingTransactions } = useQuery({
-    queryKey: ['transactions', currentSpace?.id],
+    queryKey: ['transactions', currentSpace?.id, page],
     queryFn: () => {
       if (!currentSpace) throw new Error('No current space');
-      return transactionsApi.getTransactions(currentSpace.id, {});
+      return transactionsApi.getTransactions(currentSpace.id, {
+        page,
+        limit: ITEMS_PER_PAGE,
+        sortBy: 'date',
+        sortOrder: 'desc',
+      });
     },
     enabled: !!currentSpace,
   });
@@ -134,6 +154,14 @@ export default function TransactionsPage() {
       },
     });
   };
+
+  // Virtualization setup for smooth scrolling with large lists
+  const rowVirtualizer = useVirtualizer({
+    count: transactionsData?.data.length ?? 0,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => TRANSACTION_ROW_HEIGHT,
+    overscan: 5, // Render 5 extra items outside visible area for smooth scrolling
+  });
 
   if (!currentSpace) {
     return null;
@@ -246,69 +274,121 @@ export default function TransactionsPage() {
             <CardDescription>{transactionsData?.total} transactions found</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {transactionsData?.data.map((transaction) => {
-                const account = accounts?.find((a) => a.id === transaction.accountId);
-                return (
-                  <div
-                    key={transaction.id}
-                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="p-2 bg-muted rounded-full">
-                        <Receipt className="h-4 w-4" />
-                      </div>
-                      <div>
-                        <p className="font-medium">{transaction.description}</p>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Calendar className="h-3 w-3" />
-                          {formatDate(transaction.date)}
-                          {account && (
-                            <>
-                              <span>•</span>
-                              <span>{account.name}</span>
-                            </>
-                          )}
+            {/* Virtualized list container */}
+            <div ref={parentRef} className="h-[500px] overflow-auto" style={{ contain: 'strict' }}>
+              <div
+                style={{
+                  height: `${rowVirtualizer.getTotalSize()}px`,
+                  width: '100%',
+                  position: 'relative',
+                }}
+              >
+                {rowVirtualizer.getVirtualItems().map((virtualItem) => {
+                  const transaction = transactionsData?.data[virtualItem.index];
+                  if (!transaction) return null;
+                  const account = accounts?.find((a) => a.id === transaction.accountId);
+
+                  return (
+                    <div
+                      key={transaction.id}
+                      className="absolute top-0 left-0 w-full"
+                      style={{
+                        height: `${virtualItem.size}px`,
+                        transform: `translateY(${virtualItem.start}px)`,
+                      }}
+                    >
+                      <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors mx-1 my-1">
+                        <div className="flex items-center gap-4">
+                          <div className="p-2 bg-muted rounded-full">
+                            <Receipt className="h-4 w-4" />
+                          </div>
+                          <div>
+                            <p className="font-medium">{transaction.description}</p>
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <Calendar className="h-3 w-3" />
+                              {formatDate(transaction.date)}
+                              {account && (
+                                <>
+                                  <span>•</span>
+                                  <span>{account.name}</span>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <div className="text-right">
+                            <p
+                              className={`font-medium ${transaction.amount < 0 ? 'text-red-600' : 'text-green-600'}`}
+                            >
+                              {formatCurrency(
+                                transaction.amount,
+                                account?.currency || transaction.currency
+                              )}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {account?.name || 'Unknown'}
+                            </p>
+                          </div>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" className="h-8 w-8 p-0">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => setSelectedTransaction(transaction)}>
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => deleteMutation.mutate(transaction.id)}
+                                className="text-destructive"
+                              >
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-4">
-                      <div className="text-right">
-                        <p
-                          className={`font-medium ${transaction.amount < 0 ? 'text-red-600' : 'text-green-600'}`}
-                        >
-                          {formatCurrency(
-                            transaction.amount,
-                            account?.currency || transaction.currency
-                          )}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {account?.name || 'Unknown'}
-                        </p>
-                      </div>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => setSelectedTransaction(transaction)}>
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => deleteMutation.mutate(transaction.id)}
-                            className="text-destructive"
-                          >
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
+
+            {/* Pagination Controls */}
+            {transactionsData && transactionsData.total > ITEMS_PER_PAGE && (
+              <div className="flex items-center justify-between mt-6 pt-4 border-t">
+                <p className="text-sm text-muted-foreground">
+                  Showing {(page - 1) * ITEMS_PER_PAGE + 1} to{' '}
+                  {Math.min(page * ITEMS_PER_PAGE, transactionsData.total)} of{' '}
+                  {transactionsData.total} transactions
+                </p>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                  >
+                    <ChevronLeft className="h-4 w-4 mr-1" />
+                    Previous
+                  </Button>
+                  <span className="text-sm text-muted-foreground px-2">
+                    Page {page} of {Math.ceil(transactionsData.total / ITEMS_PER_PAGE)}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPage((p) => p + 1)}
+                    disabled={page * ITEMS_PER_PAGE >= transactionsData.total}
+                  >
+                    Next
+                    <ChevronRight className="h-4 w-4 ml-1" />
+                  </Button>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}

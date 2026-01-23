@@ -42,13 +42,21 @@ export class GoalsExecutionService {
     this.logger.log('Starting daily goals rebalancing analysis');
 
     try {
-      // Get all active goals
+      // Get all active goals with optimized field selection
       const activeGoals = await this.prisma.goal.findMany({
         where: { status: 'active' },
         include: {
           allocations: {
             include: {
-              account: true,
+              account: {
+                select: {
+                  id: true,
+                  balance: true,
+                  currency: true,
+                  provider: true,
+                  metadata: true,
+                },
+              },
             },
           },
           space: {
@@ -56,7 +64,11 @@ export class GoalsExecutionService {
               userSpaces: {
                 take: 1,
                 include: {
-                  user: true,
+                  user: {
+                    select: {
+                      id: true,
+                    },
+                  },
                 },
               },
             },
@@ -143,12 +155,22 @@ export class GoalsExecutionService {
       return;
     }
 
+    // Pre-fetch all accounts in a single query to avoid N+1
+    const accountIds = actions.map((a) => a.accountId);
+    const accounts = await this.prisma.account.findMany({
+      where: { id: { in: accountIds } },
+      select: {
+        id: true,
+        currency: true,
+        provider: true,
+      },
+    });
+    const accountMap = new Map<string, (typeof accounts)[number]>(accounts.map((a) => [a.id, a]));
+
     for (const action of actions) {
       try {
-        // Determine provider based on account
-        const account = await this.prisma.account.findUnique({
-          where: { id: action.accountId },
-        });
+        // Get account from pre-fetched map
+        const account = accountMap.get(action.accountId);
 
         if (!account) {
           this.logger.warn(`Account ${action.accountId} not found`);

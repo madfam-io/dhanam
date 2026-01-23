@@ -90,4 +90,10 @@ export class AnalyticsController {
   ): Promise<PortfolioAllocation[]> {
     return this.analyticsService.getPortfolioAllocation(req.user!.userId, spaceId);
   }
+
+  @Get(':spaceId/dashboard-data')
+  @ApiOperation({ summary: 'Get combined dashboard data in a single request' })
+  async getDashboardData(@Request() req: any, @Param('spaceId') spaceId: string) {
+    return this.analyticsService.getDashboardData(req.user!.userId, spaceId);
+  }
 }

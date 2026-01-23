@@ -42,11 +42,9 @@ function EmailVerificationContent() {
         setStatus('success');
         setMessage(response.message);
 
-        // Redirect to onboarding after a short delay
-        setTimeout(() => {
-          setIsRedirecting(true);
-          router.push('/onboarding');
-        }, 2000);
+        // Redirect to onboarding immediately
+        setIsRedirecting(true);
+        router.push('/onboarding');
       } else {
         setStatus('error');
         setMessage(response.message);

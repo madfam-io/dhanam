@@ -136,7 +136,17 @@ export class AdminService {
             },
           },
         },
-        providerConnections: true,
+        // SECURITY: Exclude encryptedToken from provider connections
+        providerConnections: {
+          select: {
+            id: true,
+            provider: true,
+            providerUserId: true,
+            metadata: true,
+            createdAt: true,
+            updatedAt: true,
+          },
+        },
         sessions: {
           orderBy: { createdAt: 'desc' },
           take: 5,
@@ -152,8 +162,8 @@ export class AdminService {
       throw new NotFoundException('User not found');
     }
 
-    // Log admin access to user details
-    await this.auditService.logEvent({
+    // Log admin access to user details (non-blocking)
+    this.auditService.logEvent({
       userId: adminUserId,
       action: 'admin.view_user_details',
       resource: 'User',
@@ -162,41 +172,44 @@ export class AdminService {
       severity: 'medium',
     });
 
-    // Get transaction and account counts
+    // Consolidate all queries into parallel execution
     const spaces = user.userSpaces.map((us) => us.spaceId);
-    const [transactionCount, accountCount] = await Promise.all([
-      this.prisma.transaction.count({
-        where: {
-          account: {
+    const [transactionCount, accountCount, lastTransaction, lastSync, accounts] = await Promise.all(
+      [
+        this.prisma.transaction.count({
+          where: {
+            account: {
+              spaceId: { in: spaces },
+            },
+          },
+        }),
+        this.prisma.account.count({
+          where: {
             spaceId: { in: spaces },
           },
-        },
-      }),
-      this.prisma.account.count({
-        where: {
-          spaceId: { in: spaces },
-        },
-      }),
-    ]);
-
-    // Get last sync and transaction dates
-    const lastTransaction = await this.prisma.transaction.findFirst({
-      where: {
-        account: {
-          spaceId: { in: spaces },
-        },
-      },
-      orderBy: { date: 'desc' },
-      select: { date: true },
-    });
-
-    const lastSync = await this.prisma.account.findFirst({
-      where: {
-        spaceId: { in: spaces },
-      },
-      orderBy: { lastSyncedAt: 'desc' },
-      select: { lastSyncedAt: true },
-    });
+        }),
+        this.prisma.transaction.findFirst({
+          where: {
+            account: {
+              spaceId: { in: spaces },
+            },
+          },
+          orderBy: { date: 'desc' },
+          select: { date: true },
+        }),
+        this.prisma.account.findFirst({
+          where: {
+            spaceId: { in: spaces },
+          },
+          orderBy: { lastSyncedAt: 'desc' },
+          select: { lastSyncedAt: true },
+        }),
+        this.prisma.account.findMany({
+          where: { spaceId: { in: spaces } },
+          select: { provider: true, lastSyncedAt: true },
+        }),
+      ]
+    );
 
     // Format provider connections
     const connectionsByProvider = user.providerConnections.reduce(
@@ -213,12 +226,6 @@ export class AdminService {
       },
       {} as Record<string, any>
     );
-
-    // Get account counts per provider
-    const accounts = await this.prisma.account.findMany({
-      where: { spaceId: { in: spaces } },
-      select: { provider: true, lastSyncedAt: true },
-    });
 
     accounts.forEach((account) => {
       if (connectionsByProvider[account.provider]) {
