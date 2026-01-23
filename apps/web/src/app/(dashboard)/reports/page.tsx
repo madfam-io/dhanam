@@ -152,8 +152,14 @@ export default function ReportsPage() {
 
   if (!currentSpace) {
     return (
-      <div className="flex items-center justify-center py-16">
-        <p className="text-muted-foreground">Please select a space to generate reports</p>
+      <div className="flex flex-col items-center justify-center py-16 text-center">
+        <div className="rounded-full bg-muted p-4 mb-4">
+          <FileText className="h-8 w-8 text-muted-foreground" />
+        </div>
+        <h3 className="font-semibold text-lg mb-2">No space selected</h3>
+        <p className="text-muted-foreground text-sm max-w-sm">
+          Please select a space from the sidebar to generate reports
+        </p>
       </div>
     );
   }

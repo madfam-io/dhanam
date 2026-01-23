@@ -94,10 +94,14 @@ export default function RetirementPage() {
             </Tabs>
           ) : (
             <div className="flex items-center justify-center h-[600px] border border-dashed rounded-lg">
-              <div className="text-center">
-                <p className="text-muted-foreground mb-2">No results yet</p>
-                <p className="text-sm text-muted-foreground">
-                  Fill out the form and click "Calculate Retirement Plan" to see your results
+              <div className="flex flex-col items-center text-center">
+                <div className="rounded-full bg-muted p-4 mb-4">
+                  <Info className="h-8 w-8 text-muted-foreground" />
+                </div>
+                <h3 className="font-semibold text-lg mb-2">No retirement projection yet</h3>
+                <p className="text-sm text-muted-foreground max-w-sm">
+                  Enter your details in the form and click &quot;Calculate Retirement Plan&quot; to
+                  see your projected timeline
                 </p>
               </div>
             </div>

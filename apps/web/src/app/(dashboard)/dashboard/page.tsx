@@ -57,7 +57,7 @@ export default function DashboardPage() {
   const goals = dashboardData?.goals;
 
   // Filter active goals for display
-  const activeGoals = goals?.filter((g: any) => g.status === 'active') || [];
+  const activeGoals = goals?.filter((g) => g.status === 'active') || [];
 
   if (!currentSpace) {
     return <EmptyState />;
@@ -66,17 +66,10 @@ export default function DashboardPage() {
   // Use analytics data when available, fallback to account calculations
   const totalAssets =
     netWorthData?.totalAssets ??
-    (accounts
-      ?.filter((a: any) => a.balance > 0)
-      .reduce((sum: number, a: any) => sum + a.balance, 0) ||
-      0);
+    (accounts?.filter((a) => a.balance > 0).reduce((sum, a) => sum + a.balance, 0) || 0);
   const totalLiabilities =
     netWorthData?.totalLiabilities ??
-    Math.abs(
-      accounts
-        ?.filter((a: any) => a.balance < 0)
-        .reduce((sum: number, a: any) => sum + a.balance, 0) || 0
-    );
+    Math.abs(accounts?.filter((a) => a.balance < 0).reduce((sum, a) => sum + a.balance, 0) || 0);
   const netWorth = netWorthData?.netWorth ?? totalAssets - totalLiabilities;
   const netWorthChange = netWorthData?.changePercent ?? 0;
 

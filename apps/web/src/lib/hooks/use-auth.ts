@@ -92,15 +92,12 @@ export const useAuth = create<AuthState>()(
 
       refreshUser: async () => {
         const { tokens, setAuth } = get();
-        console.log('[useAuth] refreshUser called, hasTokens:', !!tokens?.accessToken);
         if (!tokens?.accessToken) {
-          console.log('[useAuth] refreshUser: No access token, returning early');
           return;
         }
 
         try {
           const apiUrl = getJanuaApiUrl();
-          console.log('[useAuth] refreshUser: Fetching from', `${apiUrl}/api/v1/auth/me`);
           // Fetch user profile from Janua's /auth/me endpoint
           const response = await fetch(`${apiUrl}/api/v1/auth/me`, {
             headers: {

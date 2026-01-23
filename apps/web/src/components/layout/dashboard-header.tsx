@@ -14,10 +14,14 @@ import { Bell, Settings, User, LogOut, ChevronDown, Shield } from 'lucide-react'
 import { useAuth } from '~/lib/hooks/use-auth';
 import { useSpaces } from '~/lib/hooks/use-spaces';
 import { useSpaceStore } from '~/stores/space';
+import type { Space } from '@dhanam/shared';
 
 export function DashboardHeader() {
   const { user, logout } = useAuth();
-  const { data: spaces, isLoading: spacesLoading, isPlaceholderData } = useSpaces();
+  const spacesQuery = useSpaces();
+  const spaces = spacesQuery.data as Space[] | undefined;
+  const spacesLoading = spacesQuery.isLoading;
+  const isPlaceholderData = spacesQuery.isPlaceholderData;
   const { currentSpace, setCurrentSpace } = useSpaceStore();
   const router = useRouter();
 

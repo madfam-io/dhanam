@@ -25,7 +25,11 @@ export default function SettingsPage() {
   const queryClient = useQueryClient();
   const [isResetting, setIsResetting] = useState(false);
 
-  const { data: preferences, isLoading } = useQuery({
+  const {
+    data: preferences,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ['preferences'],
     queryFn: () => preferencesApi.getPreferences(),
   });
@@ -71,10 +75,21 @@ export default function SettingsPage() {
     );
   }
 
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 gap-2">
+        <p className="text-destructive font-medium">Failed to load preferences</p>
+        <p className="text-sm text-muted-foreground">
+          {error instanceof Error ? error.message : 'An unexpected error occurred'}
+        </p>
+      </div>
+    );
+  }
+
   if (!preferences) {
     return (
       <div className="flex items-center justify-center py-16">
-        <p className="text-muted-foreground">Failed to load preferences</p>
+        <p className="text-muted-foreground">No preferences found</p>
       </div>
     );
   }

@@ -1,7 +1,9 @@
 'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, LineChart } from 'lucide-react';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 import { type Goal } from '@/hooks/useGoals';
 
 interface GoalProbabilityTimelineProps {
@@ -20,7 +22,29 @@ export function GoalProbabilityTimeline({ goals }: GoalProbabilityTimelineProps)
   );
 
   if (goalsWithProbability.length === 0) {
-    return null;
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Goal Probability Trends</CardTitle>
+          <CardDescription>90-day probability history for your active goals</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col items-center justify-center py-8 text-center">
+            <div className="rounded-full bg-muted p-4 mb-4">
+              <LineChart className="h-8 w-8 text-muted-foreground" />
+            </div>
+            <h3 className="font-semibold text-lg mb-2">No probability data yet</h3>
+            <p className="text-muted-foreground text-sm max-w-sm mb-4">
+              Goals with probability tracking will appear here once you have active goals with
+              progress data
+            </p>
+            <Button asChild variant="outline" size="sm">
+              <Link href="/goals">View Goals</Link>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
   }
 
   // Calculate overall trend across all goals

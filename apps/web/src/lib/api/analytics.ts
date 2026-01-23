@@ -6,7 +6,12 @@ import {
   IncomeVsExpenses,
   AccountBalanceAnalytics,
   PortfolioAllocation,
+  Account,
+  Transaction,
+  Budget,
 } from '@dhanam/shared';
+import type { Goal } from '@/hooks/useGoals';
+import type { BudgetSummary } from './budgets';
 
 export const analyticsApi = {
   /**
@@ -75,15 +80,15 @@ export const analyticsApi = {
 
 // Dashboard data type for combined endpoint
 export interface DashboardData {
-  accounts: any[];
+  accounts: Account[];
   recentTransactions: {
-    data: any[];
+    data: Transaction[];
     total: number;
   };
-  budgets: any[];
-  currentBudgetSummary: any | null;
+  budgets: Budget[];
+  currentBudgetSummary: BudgetSummary | null;
   netWorth: NetWorthResponse;
   cashflowForecast: CashflowForecast;
   portfolioAllocation: PortfolioAllocation[];
-  goals: any[];
+  goals: Goal[];
 }

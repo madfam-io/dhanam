@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@dhanam/ui';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, Button } from '@dhanam/ui';
 import { Skeleton } from '@dhanam/ui';
 import {
   TrendingUp,
@@ -11,7 +11,9 @@ import {
   BarChart3,
   Calendar,
   Loader2,
+  Plus,
 } from 'lucide-react';
+import Link from 'next/link';
 import { useSpaceStore } from '@/stores/space';
 import { analyticsApi } from '@/lib/api/analytics';
 import { formatCurrency } from '@/lib/utils';
@@ -68,8 +70,14 @@ export default function AnalyticsPage() {
 
   if (!currentSpace) {
     return (
-      <div className="flex items-center justify-center py-16">
-        <p className="text-muted-foreground">Please select a space to view analytics</p>
+      <div className="flex flex-col items-center justify-center py-16 text-center">
+        <div className="rounded-full bg-muted p-4 mb-4">
+          <TrendingUp className="h-8 w-8 text-muted-foreground" />
+        </div>
+        <h3 className="font-semibold text-lg mb-2">No space selected</h3>
+        <p className="text-muted-foreground text-sm max-w-sm">
+          Please select a space from the sidebar to view your analytics
+        </p>
       </div>
     );
   }
@@ -222,9 +230,20 @@ export default function AnalyticsPage() {
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground text-center py-8">
-                No spending data available for this period
-              </p>
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <div className="rounded-full bg-muted p-3 mb-3">
+                  <PieChart className="h-6 w-6 text-muted-foreground" />
+                </div>
+                <p className="text-sm text-muted-foreground mb-3">
+                  No spending data available for this period
+                </p>
+                <Button asChild variant="outline" size="sm">
+                  <Link href="/transactions">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add Transaction
+                  </Link>
+                </Button>
+              </div>
             )}
           </CardContent>
         </Card>
@@ -275,9 +294,20 @@ export default function AnalyticsPage() {
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground text-center py-8">
-                No income/expense data available
-              </p>
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <div className="rounded-full bg-muted p-3 mb-3">
+                  <BarChart3 className="h-6 w-6 text-muted-foreground" />
+                </div>
+                <p className="text-sm text-muted-foreground mb-3">
+                  No income/expense data available
+                </p>
+                <Button asChild variant="outline" size="sm">
+                  <Link href="/accounts">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Connect Account
+                  </Link>
+                </Button>
+              </div>
             )}
           </CardContent>
         </Card>
@@ -373,9 +403,18 @@ export default function AnalyticsPage() {
               )}
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground text-center py-8">
-              No cashflow forecast available
-            </p>
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+              <div className="rounded-full bg-muted p-3 mb-3">
+                <Calendar className="h-6 w-6 text-muted-foreground" />
+              </div>
+              <p className="text-sm text-muted-foreground mb-3">No cashflow forecast available</p>
+              <Button asChild variant="outline" size="sm">
+                <Link href="/accounts">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Connect Account
+                </Link>
+              </Button>
+            </div>
           )}
         </CardContent>
       </Card>
@@ -422,9 +461,20 @@ export default function AnalyticsPage() {
               ))}
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground text-center py-8">
-              No portfolio allocation data available
-            </p>
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+              <div className="rounded-full bg-muted p-3 mb-3">
+                <PieChart className="h-6 w-6 text-muted-foreground" />
+              </div>
+              <p className="text-sm text-muted-foreground mb-3">
+                No portfolio allocation data available
+              </p>
+              <Button asChild variant="outline" size="sm">
+                <Link href="/accounts">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Connect Account
+                </Link>
+              </Button>
+            </div>
           )}
         </CardContent>
       </Card>

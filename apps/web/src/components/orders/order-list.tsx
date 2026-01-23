@@ -13,6 +13,7 @@ import {
   XCircle,
   Clock,
   AlertCircle,
+  Receipt,
 } from 'lucide-react';
 import {
   TransactionOrder,
@@ -134,8 +135,14 @@ export function OrderList({ spaceId, filters, onOrderClick }: OrderListProps) {
 
   if (orders.length === 0) {
     return (
-      <div className="text-center p-8 text-muted-foreground">
-        <p>No orders found</p>
+      <div className="flex flex-col items-center justify-center p-8 text-center">
+        <div className="rounded-full bg-muted p-4 mb-4">
+          <Receipt className="h-8 w-8 text-muted-foreground" />
+        </div>
+        <h3 className="font-semibold text-lg mb-2">No orders found</h3>
+        <p className="text-muted-foreground text-sm max-w-sm">
+          Orders will appear here when you make purchases or transfers
+        </p>
       </div>
     );
   }

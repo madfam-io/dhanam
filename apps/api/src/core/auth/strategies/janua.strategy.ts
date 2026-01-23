@@ -51,6 +51,7 @@ export interface JanuaJwtPayload {
  * Validated user context attached to request after JWT validation.
  */
 export interface JanuaUser {
+  id: string; // Primary ID for @CurrentUser('id') compatibility
   userId: string; // Janua user ID
   email: string;
   name?: string;
@@ -198,7 +199,9 @@ export class JanuaStrategy extends PassportStrategy(Strategy, 'janua') {
     }
 
     // Return validated user context
+    // IMPORTANT: Include 'id' for compatibility with @CurrentUser('id') decorator
     return {
+      id: dhanamUser?.id || payload.sub, // Required by @CurrentUser('id')
       userId: payload.sub,
       email: payload.email,
       name: payload.name,

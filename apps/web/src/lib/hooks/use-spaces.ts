@@ -2,6 +2,7 @@ import {
   useQuery,
   useMutation,
   useQueryClient,
+  queryOptions,
   UseQueryResult,
   UseMutationResult,
 } from '@tanstack/react-query';
@@ -9,14 +10,13 @@ import { apiClient } from '../api/client';
 import { Space, CreateSpaceDto, UpdateSpaceDto } from '@dhanam/shared';
 import { useSpaceStore } from '@/stores/space';
 
-const SPACES_KEY = ['spaces'];
+const SPACES_KEY = ['spaces'] as const;
 
-export function useSpaces(): UseQueryResult<Space[], Error> {
-  const { setCurrentSpace, setSpaces, spaces: persistedSpaces } = useSpaceStore();
-
-  return useQuery({
+function spacesQueryOptions(persistedSpaces: Space[]) {
+  return queryOptions({
     queryKey: SPACES_KEY,
-    queryFn: async () => {
+    queryFn: async (): Promise<Space[]> => {
+      const { setSpaces, setCurrentSpace } = useSpaceStore.getState();
       const spaces = await apiClient.get<Space[]>('/spaces');
       setSpaces(spaces);
       if (spaces.length > 0 && !useSpaceStore.getState().currentSpace) {
@@ -24,8 +24,13 @@ export function useSpaces(): UseQueryResult<Space[], Error> {
       }
       return spaces;
     },
-    placeholderData: persistedSpaces.length > 0 ? persistedSpaces : undefined,
+    placeholderData: persistedSpaces.length > 0 ? persistedSpaces : [],
   });
+}
+
+export function useSpaces() {
+  const { spaces: persistedSpaces } = useSpaceStore();
+  return useQuery(spacesQueryOptions(persistedSpaces));
 }
 
 export function useSpace(spaceId: string): UseQueryResult<Space, Error> {
