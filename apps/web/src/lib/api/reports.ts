@@ -41,11 +41,7 @@ export const reportsApi = {
   /**
    * Download PDF report
    */
-  downloadPdfReport: async (
-    spaceId: string,
-    startDate: string,
-    endDate: string
-  ): Promise<Blob> => {
+  downloadPdfReport: async (spaceId: string, startDate: string, endDate: string): Promise<Blob> => {
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.dhan.am/v1';
     const response = await fetch(
       `${baseUrl}/reports/${spaceId}/download/pdf?startDate=${startDate}&endDate=${endDate}`,
@@ -66,11 +62,7 @@ export const reportsApi = {
   /**
    * Download CSV export
    */
-  downloadCsvExport: async (
-    spaceId: string,
-    startDate: string,
-    endDate: string
-  ): Promise<Blob> => {
+  downloadCsvExport: async (spaceId: string, startDate: string, endDate: string): Promise<Blob> => {
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.dhan.am/v1';
     const response = await fetch(
       `${baseUrl}/reports/${spaceId}/download/csv?startDate=${startDate}&endDate=${endDate}`,

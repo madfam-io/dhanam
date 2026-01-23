@@ -6,13 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@dhan
 import { Button } from '@dhanam/ui';
 import { Input } from '@dhanam/ui';
 import { Label } from '@dhanam/ui';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@dhanam/ui';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@dhanam/ui';
 import {
   FileText,
   Download,
@@ -114,7 +108,7 @@ export default function ReportsPage() {
       document.body.removeChild(a);
 
       toast.success('Report downloaded successfully');
-    } catch (error) {
+    } catch {
       toast.error('Failed to generate report');
     } finally {
       setIsGenerating(false);
@@ -149,7 +143,7 @@ export default function ReportsPage() {
       document.body.removeChild(a);
 
       toast.success(`${format.toUpperCase()} downloaded successfully`);
-    } catch (error) {
+    } catch {
       toast.error('Failed to download');
     } finally {
       setIsGenerating(false);
@@ -168,9 +162,7 @@ export default function ReportsPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Reports</h1>
-        <p className="text-muted-foreground">
-          Generate and export financial reports and data
-        </p>
+        <p className="text-muted-foreground">Generate and export financial reports and data</p>
       </div>
 
       {/* Quick Export */}
@@ -266,9 +258,7 @@ export default function ReportsPage() {
                           {template.format}
                         </span>
                       </div>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {template.description}
-                      </p>
+                      <p className="text-sm text-muted-foreground mt-1">{template.description}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -300,11 +290,7 @@ export default function ReportsPage() {
                   onChange={(e) => setStartDate(e.target.value)}
                 />
                 <span className="text-muted-foreground">to</span>
-                <Input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                />
+                <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
               </div>
             </div>
             <div className="space-y-2">
@@ -324,11 +310,7 @@ export default function ReportsPage() {
             </div>
             <div className="space-y-2">
               <Label>&nbsp;</Label>
-              <Button
-                onClick={handleGenerateReport}
-                disabled={isGenerating}
-                className="w-full"
-              >
+              <Button onClick={handleGenerateReport} disabled={isGenerating} className="w-full">
                 {isGenerating ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />

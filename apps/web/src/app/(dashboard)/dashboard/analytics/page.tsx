@@ -78,9 +78,7 @@ export default function AnalyticsPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Analytics</h1>
-        <p className="text-muted-foreground">
-          Comprehensive insights into your financial health
-        </p>
+        <p className="text-muted-foreground">Comprehensive insights into your financial health</p>
       </div>
 
       {/* Net Worth Overview */}
@@ -99,18 +97,23 @@ export default function AnalyticsPage() {
                   {formatCurrency(netWorthData?.netWorth || 0, currentSpace.currency)}
                 </div>
                 <p className="text-xs text-muted-foreground flex items-center gap-1">
-                  {netWorthData?.changePercent !== undefined && netWorthData.changePercent !== 0 && (
-                    <>
-                      {netWorthData.changePercent > 0 ? (
-                        <TrendingUp className="h-3 w-3 text-green-600" />
-                      ) : (
-                        <TrendingDown className="h-3 w-3 text-red-600" />
-                      )}
-                      <span className={netWorthData.changePercent > 0 ? 'text-green-600' : 'text-red-600'}>
-                        {Math.abs(netWorthData.changePercent).toFixed(1)}%
-                      </span>
-                    </>
-                  )}
+                  {netWorthData?.changePercent !== undefined &&
+                    netWorthData.changePercent !== 0 && (
+                      <>
+                        {netWorthData.changePercent > 0 ? (
+                          <TrendingUp className="h-3 w-3 text-green-600" />
+                        ) : (
+                          <TrendingDown className="h-3 w-3 text-red-600" />
+                        )}
+                        <span
+                          className={
+                            netWorthData.changePercent > 0 ? 'text-green-600' : 'text-red-600'
+                          }
+                        >
+                          {Math.abs(netWorthData.changePercent).toFixed(1)}%
+                        </span>
+                      </>
+                    )}
                   vs last month
                 </p>
               </>
@@ -131,9 +134,7 @@ export default function AnalyticsPage() {
                 <div className="text-2xl font-bold">
                   {formatCurrency(netWorthData?.totalAssets || 0, currentSpace.currency)}
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Savings, investments, and crypto
-                </p>
+                <p className="text-xs text-muted-foreground">Savings, investments, and crypto</p>
               </>
             )}
           </CardContent>
@@ -152,9 +153,7 @@ export default function AnalyticsPage() {
                 <div className="text-2xl font-bold">
                   {formatCurrency(netWorthData?.totalLiabilities || 0, currentSpace.currency)}
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Credit cards and loans
-                </p>
+                <p className="text-xs text-muted-foreground">Credit cards and loans</p>
               </>
             )}
           </CardContent>
@@ -173,11 +172,10 @@ export default function AnalyticsPage() {
                 <div className="text-2xl font-bold">
                   {netWorthData?.totalAssets
                     ? ((netWorthData.totalLiabilities / netWorthData.totalAssets) * 100).toFixed(1)
-                    : 0}%
+                    : 0}
+                  %
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Liabilities to assets
-                </p>
+                <p className="text-xs text-muted-foreground">Liabilities to assets</p>
               </>
             )}
           </CardContent>
@@ -329,7 +327,10 @@ export default function AnalyticsPage() {
                         : 'text-red-600'
                     }`}
                   >
-                    {formatCurrency(cashflowForecast.summary.projectedBalance, currentSpace.currency)}
+                    {formatCurrency(
+                      cashflowForecast.summary.projectedBalance,
+                      currentSpace.currency
+                    )}
                   </p>
                 </div>
               </div>

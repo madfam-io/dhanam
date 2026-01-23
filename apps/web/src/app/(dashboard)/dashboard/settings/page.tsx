@@ -158,9 +158,7 @@ export default function SettingsPage() {
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <Label>Budget Alerts</Label>
-              <p className="text-sm text-muted-foreground">
-                Alerts when approaching budget limits
-              </p>
+              <p className="text-sm text-muted-foreground">Alerts when approaching budget limits</p>
             </div>
             <Switch
               checked={preferences.budgetAlerts}
@@ -357,9 +355,7 @@ export default function SettingsPage() {
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <Label>Sustainability Alerts</Label>
-              <p className="text-sm text-muted-foreground">
-                Get alerts about ESG score changes
-              </p>
+              <p className="text-sm text-muted-foreground">Get alerts about ESG score changes</p>
             </div>
             <Switch
               checked={preferences.sustainabilityAlerts}

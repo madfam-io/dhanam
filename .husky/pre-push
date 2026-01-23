@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "Running type check before push..."
+pnpm typecheck || {
+  echo "❌ Type check failed. Push aborted."
+  exit 1
+}

@@ -10,14 +10,15 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
-import { Response } from 'express';
 import { IsString, IsDateString, IsOptional, IsEnum } from 'class-validator';
+import { Response } from 'express';
 
-import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
 import { CurrentUser } from '@core/auth/decorators/current-user.decorator';
+import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
+
+import { SpacesService } from '../spaces/spaces.service';
 
 import { ReportService } from './report.service';
-import { SpacesService } from '../spaces/spaces.service';
 
 class GenerateReportDto {
   @IsString()
@@ -58,7 +59,7 @@ export class ReportsController {
     @Param('spaceId') spaceId: string
   ): Promise<{ reports: ReportListItem[] }> {
     // Verify user has access to space
-    await this.spacesService.getUserSpace(userId, spaceId);
+    await this.spacesService.verifyUserAccess(userId, spaceId, 'viewer');
 
     // Return available report types
     const reports: ReportListItem[] = [
@@ -99,7 +100,7 @@ export class ReportsController {
     @Res() res: Response
   ): Promise<void> {
     // Verify user has access to space
-    await this.spacesService.getUserSpace(userId, dto.spaceId);
+    await this.spacesService.verifyUserAccess(userId, dto.spaceId, 'viewer');
 
     const startDate = new Date(dto.startDate);
     const endDate = new Date(dto.endDate);
@@ -138,7 +139,7 @@ export class ReportsController {
     @Res() res: Response
   ): Promise<void> {
     // Verify user has access to space
-    await this.spacesService.getUserSpace(userId, spaceId);
+    await this.spacesService.verifyUserAccess(userId, spaceId, 'viewer');
 
     const pdf = await this.reportService.generatePdfReport(
       spaceId,
@@ -166,7 +167,7 @@ export class ReportsController {
     @Res() res: Response
   ): Promise<void> {
     // Verify user has access to space
-    await this.spacesService.getUserSpace(userId, spaceId);
+    await this.spacesService.verifyUserAccess(userId, spaceId, 'viewer');
 
     const csv = await this.reportService.generateCsvExport(
       spaceId,
