@@ -276,7 +276,7 @@ apps/mobile/src/contexts/AuthContext.tsx
 - ISC: ~10%
 - BSD: ~5%
 
-**Assessment:** All compatible with MIT license project. No GPL/AGPL violations.
+**Assessment:** All compatible with AGPL-3.0 license project.
 
 ### Peer Dependencies: GOOD
 

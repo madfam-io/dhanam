@@ -270,5 +270,5 @@ Uses binary search to find the withdrawal rate that achieves a target success pr
 
 **Package**: `@dhanam/simulations`
 **Version**: 0.1.0
-**License**: MIT
+**License**: AGPL-3.0
 **Last Updated**: January 2025

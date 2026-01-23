@@ -70,10 +70,10 @@ The Dhanam Ledger project is a **well-architected, comprehensive financial manag
 - 24+ documentation files covering all aspects
 
 **Issues:**
-- No LICENSE file (MIT mentioned but not present)
+- LICENSE file exists (AGPL-3.0)
 - Minor: Mobile app package name could be more specific
 
-**Recommendation:** Add LICENSE file. Otherwise, excellent structure.
+**Recommendation:** Excellent structure overall.
 
 ---
 

@@ -984,9 +984,9 @@ catch (error: any) {
    - No PR requirements
    - Risk: Community contribution barriers
 
-3. **LICENSE** - HIGH
-   - License mentioned (MIT) but no LICENSE file
-   - Risk: Legal ambiguity
+3. **LICENSE** - RESOLVED
+   - License: AGPL-3.0 (LICENSE file exists)
+   - Status: Properly documented
 
 4. **CHANGELOG.md** - HIGH
    - No version history
