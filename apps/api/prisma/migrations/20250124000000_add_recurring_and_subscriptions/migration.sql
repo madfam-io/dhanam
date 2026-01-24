@@ -110,18 +110,6 @@ CREATE UNIQUE INDEX "subscriptions_space_id_service_name_key" ON "subscriptions"
 -- CreateIndex
 CREATE INDEX "transactions_recurring_id_idx" ON "transactions"("recurring_id");
 
--- CreateIndex
-CREATE INDEX "transactions_account_id_category_id_idx" ON "transactions"("account_id", "category_id");
-
--- CreateIndex (missing from init migration)
-CREATE INDEX "goals_status_updated_at_idx" ON "goals"("status", "updated_at" DESC);
-
--- CreateIndex (missing from init migration - user indexes)
-CREATE INDEX "users_onboarding_completed_created_at_idx" ON "users"("onboarding_completed", "created_at" DESC);
-
--- CreateIndex
-CREATE INDEX "users_last_login_at_idx" ON "users"("last_login_at" DESC);
-
 -- AddForeignKey
 ALTER TABLE "transactions" ADD CONSTRAINT "transactions_recurring_id_fkey" FOREIGN KEY ("recurring_id") REFERENCES "recurring_transactions"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
