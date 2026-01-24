@@ -8,10 +8,35 @@ import {
   Currency,
 } from '@dhanam/shared';
 import { Injectable } from '@nestjs/common';
+import { subDays, startOfDay, eachDayOfInterval, format } from 'date-fns';
 
 import { PrismaService } from '../../core/prisma/prisma.service';
 import { FxRatesService } from '../fx-rates/fx-rates.service';
 import { SpacesService } from '../spaces/spaces.service';
+
+export interface NetWorthHistoryPoint {
+  date: string;
+  netWorth: number;
+  assets: number;
+  liabilities: number;
+}
+
+export type OwnershipFilter = 'yours' | 'mine' | 'ours' | 'all';
+
+export interface NetWorthByOwnership {
+  yours: number; // Accounts owned by the current user (individual)
+  mine: number; // Accounts owned by partner (individual, ownerId !== userId)
+  ours: number; // Joint accounts
+  total: number;
+  currency: Currency;
+  breakdown: {
+    category: OwnershipFilter;
+    assets: number;
+    liabilities: number;
+    netWorth: number;
+    accountCount: number;
+  }[];
+}
 
 @Injectable()
 export class AnalyticsService {
@@ -81,6 +106,23 @@ export class AnalyticsService {
         totalAssets += convertedBalance;
       } else {
         totalLiabilities += Math.abs(convertedBalance);
+      }
+
+      // Add DeFi value for crypto accounts (stored in metadata from sync)
+      if (account.type === 'crypto') {
+        const metadata = account.metadata as { defiValueUsd?: number } | null;
+        if (metadata?.defiValueUsd && metadata.defiValueUsd > 0) {
+          // DeFi values are already in USD, convert to target currency if needed
+          let defiValue = metadata.defiValueUsd;
+          if (displayCurrency !== Currency.USD) {
+            defiValue = await this.fxRatesService.convertAmount(
+              defiValue,
+              Currency.USD,
+              displayCurrency
+            );
+          }
+          totalAssets += defiValue;
+        }
       }
     }
 
@@ -153,6 +195,273 @@ export class AnalyticsService {
       changePercent: Math.round(changePercent * 100) / 100,
       changeAmount: Math.round(changeAmount * 100) / 100,
     };
+  }
+
+  /**
+   * Get net worth breakdown by ownership (yours, mine, ours).
+   * Used for household views where couples want to see individual vs joint assets.
+   * @param userId - The current user ID
+   * @param spaceId - The space ID
+   * @param targetCurrency - Optional target currency for conversion
+   */
+  async getNetWorthByOwnership(
+    userId: string,
+    spaceId: string,
+    targetCurrency?: Currency
+  ): Promise<NetWorthByOwnership> {
+    await this.spacesService.verifyUserAccess(userId, spaceId, 'viewer');
+
+    // Get space to determine default currency
+    const space = await this.prisma.space.findUnique({
+      where: { id: spaceId },
+    });
+
+    const displayCurrency = targetCurrency || (space?.currency as Currency) || Currency.MXN;
+
+    // Fetch all accounts with owner information
+    const accounts = await this.prisma.account.findMany({
+      where: { spaceId },
+    });
+
+    // Initialize totals for each category
+    const categories = {
+      yours: { assets: 0, liabilities: 0, count: 0 },
+      mine: { assets: 0, liabilities: 0, count: 0 },
+      ours: { assets: 0, liabilities: 0, count: 0 },
+    };
+
+    for (const account of accounts) {
+      const balance = account.balance.toNumber();
+      const accountCurrency = account.currency as Currency;
+
+      // Convert to target currency if different
+      let convertedBalance = balance;
+      if (accountCurrency !== displayCurrency) {
+        convertedBalance = await this.fxRatesService.convertAmount(
+          Math.abs(balance),
+          accountCurrency,
+          displayCurrency
+        );
+        if (balance < 0) convertedBalance = -convertedBalance;
+      }
+
+      // Determine ownership category
+      let category: 'yours' | 'mine' | 'ours';
+      if (account.ownership === 'joint' || account.ownership === 'trust') {
+        category = 'ours';
+      } else if (account.ownerId === userId || !account.ownerId) {
+        // Individual account owned by current user (or unassigned - default to yours)
+        category = 'yours';
+      } else {
+        // Individual account owned by partner
+        category = 'mine';
+      }
+
+      // Add to appropriate category
+      categories[category].count++;
+      if (convertedBalance > 0) {
+        categories[category].assets += convertedBalance;
+      } else {
+        categories[category].liabilities += Math.abs(convertedBalance);
+      }
+
+      // Add DeFi value for crypto accounts
+      if (account.type === 'crypto') {
+        const metadata = account.metadata as { defiValueUsd?: number } | null;
+        if (metadata?.defiValueUsd && metadata.defiValueUsd > 0) {
+          let defiValue = metadata.defiValueUsd;
+          if (displayCurrency !== Currency.USD) {
+            defiValue = await this.fxRatesService.convertAmount(
+              defiValue,
+              Currency.USD,
+              displayCurrency
+            );
+          }
+          categories[category].assets += defiValue;
+        }
+      }
+    }
+
+    // Calculate net worth for each category
+    const yoursNetWorth = categories.yours.assets - categories.yours.liabilities;
+    const mineNetWorth = categories.mine.assets - categories.mine.liabilities;
+    const oursNetWorth = categories.ours.assets - categories.ours.liabilities;
+    const totalNetWorth = yoursNetWorth + mineNetWorth + oursNetWorth;
+
+    return {
+      yours: Math.round(yoursNetWorth * 100) / 100,
+      mine: Math.round(mineNetWorth * 100) / 100,
+      ours: Math.round(oursNetWorth * 100) / 100,
+      total: Math.round(totalNetWorth * 100) / 100,
+      currency: displayCurrency,
+      breakdown: [
+        {
+          category: 'yours',
+          assets: Math.round(categories.yours.assets * 100) / 100,
+          liabilities: Math.round(categories.yours.liabilities * 100) / 100,
+          netWorth: Math.round(yoursNetWorth * 100) / 100,
+          accountCount: categories.yours.count,
+        },
+        {
+          category: 'mine',
+          assets: Math.round(categories.mine.assets * 100) / 100,
+          liabilities: Math.round(categories.mine.liabilities * 100) / 100,
+          netWorth: Math.round(mineNetWorth * 100) / 100,
+          accountCount: categories.mine.count,
+        },
+        {
+          category: 'ours',
+          assets: Math.round(categories.ours.assets * 100) / 100,
+          liabilities: Math.round(categories.ours.liabilities * 100) / 100,
+          netWorth: Math.round(oursNetWorth * 100) / 100,
+          accountCount: categories.ours.count,
+        },
+      ],
+    };
+  }
+
+  /**
+   * Get accounts filtered by ownership type.
+   * @param userId - The current user ID
+   * @param spaceId - The space ID
+   * @param ownership - Filter: 'yours', 'mine', 'ours', or 'all'
+   */
+  async getAccountsByOwnership(
+    userId: string,
+    spaceId: string,
+    ownership: OwnershipFilter = 'all'
+  ) {
+    await this.spacesService.verifyUserAccess(userId, spaceId, 'viewer');
+
+    const accounts = await this.prisma.account.findMany({
+      where: { spaceId },
+      orderBy: { balance: 'desc' },
+    });
+
+    if (ownership === 'all') {
+      return accounts.map((a) => ({
+        ...a,
+        balance: a.balance.toNumber(),
+        ownershipCategory: this.determineOwnershipCategory(a, userId),
+      }));
+    }
+
+    return accounts
+      .filter((account) => {
+        const category = this.determineOwnershipCategory(account, userId);
+        return category === ownership;
+      })
+      .map((a) => ({
+        ...a,
+        balance: a.balance.toNumber(),
+        ownershipCategory: ownership,
+      }));
+  }
+
+  private determineOwnershipCategory(
+    account: { ownership: string; ownerId: string | null },
+    userId: string
+  ): 'yours' | 'mine' | 'ours' {
+    if (account.ownership === 'joint' || account.ownership === 'trust') {
+      return 'ours';
+    }
+    if (account.ownerId === userId || !account.ownerId) {
+      return 'yours';
+    }
+    return 'mine';
+  }
+
+  /**
+   * Get net worth history for charting
+   * Returns daily snapshots of net worth, assets, and liabilities
+   */
+  async getNetWorthHistory(
+    userId: string,
+    spaceId: string,
+    days = 30
+  ): Promise<NetWorthHistoryPoint[]> {
+    await this.spacesService.verifyUserAccess(userId, spaceId, 'viewer');
+
+    const endDate = startOfDay(new Date());
+    const startDate = startOfDay(subDays(endDate, days));
+
+    // Get all accounts in the space
+    const accounts = await this.prisma.account.findMany({
+      where: { spaceId },
+    });
+
+    // Get manual assets
+    const manualAssets = await this.prisma.manualAsset.findMany({
+      where: { spaceId },
+    });
+
+    // Get all valuations in the date range
+    const valuations = await this.prisma.assetValuation.findMany({
+      where: {
+        accountId: { in: accounts.map((a) => a.id) },
+        date: { gte: startDate, lte: endDate },
+      },
+      orderBy: { date: 'asc' },
+    });
+
+    // Group valuations by date
+    const valuationsByDate = new Map<string, Map<string, number>>();
+    for (const v of valuations) {
+      const dateKey = format(v.date, 'yyyy-MM-dd');
+      if (!valuationsByDate.has(dateKey)) {
+        valuationsByDate.set(dateKey, new Map());
+      }
+      valuationsByDate.get(dateKey)!.set(v.accountId, v.value.toNumber());
+    }
+
+    // Build daily history using last known values
+    const allDates = eachDayOfInterval({ start: startDate, end: endDate });
+    const history: NetWorthHistoryPoint[] = [];
+    const lastKnownValues = new Map<string, number>();
+
+    // Initialize with current balances as fallback
+    for (const account of accounts) {
+      lastKnownValues.set(account.id, account.balance.toNumber());
+    }
+
+    for (const date of allDates) {
+      const dateKey = format(date, 'yyyy-MM-dd');
+      const dayValuations = valuationsByDate.get(dateKey);
+
+      // Update last known values with any valuations for this day
+      if (dayValuations) {
+        for (const [accountId, value] of dayValuations) {
+          lastKnownValues.set(accountId, value);
+        }
+      }
+
+      // Calculate totals using last known values
+      let assets = 0;
+      let liabilities = 0;
+
+      for (const account of accounts) {
+        const value = lastKnownValues.get(account.id) || 0;
+        if (value > 0 && account.type !== 'credit') {
+          assets += value;
+        } else if (value < 0 || account.type === 'credit') {
+          liabilities += Math.abs(value);
+        }
+      }
+
+      // Add manual assets (use current value as they don't have daily history)
+      for (const asset of manualAssets) {
+        assets += asset.currentValue.toNumber();
+      }
+
+      history.push({
+        date: dateKey,
+        netWorth: Math.round((assets - liabilities) * 100) / 100,
+        assets: Math.round(assets * 100) / 100,
+        liabilities: Math.round(liabilities * 100) / 100,
+      });
+    }
+
+    return history;
   }
 
   async getCashflowForecast(userId: string, spaceId: string, days = 60): Promise<CashflowForecast> {

@@ -238,6 +238,12 @@ model User {
   onboardingCompletedAt DateTime? @map("onboarding_completed_at")
   onboardingStep        String?   @map("onboarding_step")
   lastLoginAt           DateTime? @map("last_login_at")
+  lastActivityAt        DateTime? @map("last_activity_at")
+
+  // Life Beat (Dead Man's Switch) settings
+  lifeBeatEnabled       Boolean   @default(false) @map("life_beat_enabled")
+  lifeBeatAlertDays     Int[]     @default([30, 60, 90]) @map("life_beat_alert_days") // Days of inactivity before alerts
+  lifeBeatLegalAgreedAt DateTime? @map("life_beat_legal_agreed_at")
 
   // Subscription fields
   subscriptionTier      SubscriptionTier @default(free) @map("subscription_tier")
@@ -275,9 +281,15 @@ model User {
   goalShares          GoalShare[]                @relation("GoalShares")
   sentGoalInvites     GoalShare[]                @relation("GoalInvites")
   goalActivities      GoalActivity[]             @relation("GoalActivities")
+  notifications       UserNotification[]
+  inactivityAlerts    InactivityAlert[]
+  executorAssignments ExecutorAssignment[]       @relation("AccountHolder")
+  assignedAsExecutor  ExecutorAssignment[]       @relation("Executor")
 
   @@index([onboardingCompleted, createdAt(sort: Desc)])
   @@index([lastLoginAt(sort: Desc)])
+  @@index([lastActivityAt])
+  @@index([lifeBeatEnabled])
   @@map("users")
 }
 
@@ -335,6 +347,90 @@ model UserPreferences {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("user_preferences")
+}
+
+model UserNotification {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  type      String   // connection_error, connection_reauth, connection_degraded, budget_alert, etc.
+  title     String
+  message   String
+  metadata  Json?    // Flexible payload for notification-specific data
+  read      Boolean  @default(false)
+  readAt    DateTime? @map("read_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, read])
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([type])
+  @@map("user_notifications")
+}
+
+// Life Beat (Dead Man's Switch) - Inactivity Alerts
+model InactivityAlert {
+  id         String   @id @default(uuid())
+  userId     String   @map("user_id")
+  alertLevel Int      @map("alert_level") // Days of inactivity: 30, 60, 90
+  sentAt     DateTime @default(now()) @map("sent_at")
+  channel    String   @default("email") // email, sms, push
+  responded  Boolean  @default(false)
+  respondedAt DateTime? @map("responded_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, alertLevel, sentAt])
+  @@index([userId, alertLevel])
+  @@index([sentAt(sort: Desc)])
+  @@map("inactivity_alerts")
+}
+
+// Executor assignments for Life Beat
+model ExecutorAssignment {
+  id              String   @id @default(uuid())
+  userId          String   @map("user_id") // Account holder
+  executorEmail   String   @map("executor_email")
+  executorName    String   @map("executor_name")
+  executorUserId  String?  @map("executor_user_id") // If executor is also a user
+  relationship    String   // spouse, child, sibling, attorney, financial_advisor, other
+  priority        Int      @default(1) // Order of notification (1 = first)
+  verified        Boolean  @default(false)
+  verifiedAt      DateTime? @map("verified_at")
+  accessGranted   Boolean  @default(false) @map("access_granted")
+  accessGrantedAt DateTime? @map("access_granted_at")
+  accessExpiresAt DateTime? @map("access_expires_at")
+  accessToken     String?  @unique @map("access_token") // Secure one-time access token
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  accountHolder User  @relation("AccountHolder", fields: [userId], references: [id], onDelete: Cascade)
+  executor      User? @relation("Executor", fields: [executorUserId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, executorEmail])
+  @@index([userId])
+  @@index([executorUserId])
+  @@index([accessToken])
+  @@map("executor_assignments")
+}
+
+// Audit log for executor access actions
+model ExecutorAccessLog {
+  id                   String   @id @default(uuid())
+  executorAssignmentId String   @map("executor_assignment_id")
+  action               String   // viewed_accounts, viewed_transactions, downloaded_report, etc.
+  resourceType         String?  @map("resource_type") // account, transaction, report
+  resourceId           String?  @map("resource_id")
+  ipAddress            String?  @map("ip_address")
+  userAgent            String?  @map("user_agent")
+  createdAt            DateTime @default(now()) @map("created_at")
+
+  @@index([executorAssignmentId, createdAt(sort: Desc)])
+  @@map("executor_access_logs")
 }
 
 model Session {
@@ -1526,12 +1622,16 @@ model ProviderHealthStatus {
   lastError          String?   @map("last_error")
   circuitBreakerOpen Boolean   @default(false) @map("circuit_breaker_open")
   windowStartAt      DateTime  @default(now()) @map("window_start_at") // Rolling window start
+  lastHealthCheckAt  DateTime? @map("last_health_check_at")
+  rateLimited        Boolean   @default(false) @map("rate_limited")
+  rateLimitResetAt   DateTime? @map("rate_limit_reset_at")
   createdAt          DateTime  @default(now()) @map("created_at")
   updatedAt          DateTime  @updatedAt @map("updated_at")
 
   @@unique([provider, region])
   @@index([status])
   @@index([circuitBreakerOpen])
+  @@index([rateLimited])
   @@map("provider_health_status")
 }
 
@@ -1580,6 +1680,26 @@ model TransactionSplit {
   @@index([userId])
   @@index([transactionId])
   @@map("transaction_splits")
+}
+
+// Category Correction (ML Learning Loop)
+model CategoryCorrection {
+  id                String   @id @default(uuid())
+  spaceId           String   @map("space_id")
+  transactionId     String   @map("transaction_id")
+  originalCategoryId String? @map("original_category_id")
+  correctedCategoryId String @map("corrected_category_id")
+  merchantPattern   String?  @map("merchant_pattern") // Normalized merchant name for pattern learning
+  descriptionPattern String? @map("description_pattern") // Key terms from description
+  confidence        Decimal? @db.Decimal(3, 2) // Original prediction confidence (0.00 to 1.00)
+  createdBy         String   @map("created_by") // User who made the correction
+  appliedToFuture   Boolean  @default(true) @map("applied_to_future") // Whether to apply to future similar transactions
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  @@index([spaceId, merchantPattern])
+  @@index([spaceId, createdAt(sort: Desc)])
+  @@index([correctedCategoryId])
+  @@map("category_corrections")
 }
 
 // Account Sharing Permissions (for Yours/Mine/Ours flexibility)

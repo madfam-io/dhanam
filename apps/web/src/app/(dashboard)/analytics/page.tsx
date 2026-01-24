@@ -7,25 +7,43 @@ import {
   TrendingUp,
   TrendingDown,
   Wallet,
-  PieChart,
-  BarChart3,
   Calendar,
   Loader2,
   Plus,
+  Download,
+  Clock,
 } from 'lucide-react';
 import Link from 'next/link';
+import { useState } from 'react';
 import { useSpaceStore } from '@/stores/space';
 import { analyticsApi } from '@/lib/api/analytics';
 import { formatCurrency } from '@/lib/utils';
+import {
+  NetWorthChart,
+  IncomeExpenseChart,
+  SpendingCategoryChart,
+  PortfolioChart,
+} from '@/components/analytics';
+import { ScheduleReportModal } from '@/components/reports/schedule-report-modal';
 
 export default function AnalyticsPage() {
   const { currentSpace } = useSpaceStore();
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
 
   const { data: netWorthData, isLoading: isLoadingNetWorth } = useQuery({
     queryKey: ['net-worth', currentSpace?.id],
     queryFn: () => {
       if (!currentSpace) throw new Error('No current space');
       return analyticsApi.getNetWorth(currentSpace.id);
+    },
+    enabled: !!currentSpace,
+  });
+
+  const { data: netWorthHistory, isLoading: isLoadingNetWorthHistory } = useQuery({
+    queryKey: ['net-worth-history', currentSpace?.id],
+    queryFn: () => {
+      if (!currentSpace) throw new Error('No current space');
+      return analyticsApi.getNetWorthHistory(currentSpace.id, 30);
     },
     enabled: !!currentSpace,
   });
@@ -84,12 +102,26 @@ export default function AnalyticsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Analytics</h1>
-        <p className="text-muted-foreground">Comprehensive insights into your financial health</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Analytics</h1>
+          <p className="text-muted-foreground">Comprehensive insights into your financial health</p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setShowScheduleModal(true)}>
+            <Clock className="mr-2 h-4 w-4" />
+            Schedule Reports
+          </Button>
+          <Button variant="outline" asChild>
+            <a href={`/api/analytics/${currentSpace.id}/export?format=excel`} download>
+              <Download className="mr-2 h-4 w-4" />
+              Export Excel
+            </a>
+          </Button>
+        </div>
       </div>
 
-      {/* Net Worth Overview */}
+      {/* Net Worth Overview Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -139,7 +171,7 @@ export default function AnalyticsPage() {
               <Skeleton className="h-8 w-24" />
             ) : (
               <>
-                <div className="text-2xl font-bold">
+                <div className="text-2xl font-bold text-green-600">
                   {formatCurrency(netWorthData?.totalAssets || 0, currentSpace.currency)}
                 </div>
                 <p className="text-xs text-muted-foreground">Savings, investments, and crypto</p>
@@ -158,7 +190,7 @@ export default function AnalyticsPage() {
               <Skeleton className="h-8 w-24" />
             ) : (
               <>
-                <div className="text-2xl font-bold">
+                <div className="text-2xl font-bold text-red-600">
                   {formatCurrency(netWorthData?.totalLiabilities || 0, currentSpace.currency)}
                 </div>
                 <p className="text-xs text-muted-foreground">Credit cards and loans</p>
@@ -170,7 +202,7 @@ export default function AnalyticsPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Debt Ratio</CardTitle>
-            <BarChart3 className="h-4 w-4 text-muted-foreground" />
+            <Wallet className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             {isLoadingNetWorth ? (
@@ -190,128 +222,34 @@ export default function AnalyticsPage() {
         </Card>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        {/* Spending by Category */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <PieChart className="h-5 w-5" />
-              Spending by Category
-            </CardTitle>
-            <CardDescription>Last 30 days breakdown</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {isLoadingSpending ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-              </div>
-            ) : spendingData && spendingData.length > 0 ? (
-              <div className="space-y-4">
-                {spendingData.slice(0, 8).map((category, index) => (
-                  <div key={index} className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className="w-3 h-3 rounded-full"
-                        style={{
-                          backgroundColor: `hsl(${(index * 45) % 360}, 70%, 50%)`,
-                        }}
-                      />
-                      <span className="text-sm font-medium">{category.categoryName}</span>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-medium">
-                        {formatCurrency(Math.abs(category.amount), currentSpace.currency)}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {category.percentage.toFixed(1)}%
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center py-8 text-center">
-                <div className="rounded-full bg-muted p-3 mb-3">
-                  <PieChart className="h-6 w-6 text-muted-foreground" />
-                </div>
-                <p className="text-sm text-muted-foreground mb-3">
-                  No spending data available for this period
-                </p>
-                <Button asChild variant="outline" size="sm">
-                  <Link href="/transactions">
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add Transaction
-                  </Link>
-                </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+      {/* Net Worth Chart */}
+      <NetWorthChart
+        data={netWorthHistory || []}
+        currency={currentSpace.currency}
+        isLoading={isLoadingNetWorthHistory}
+      />
 
-        {/* Income vs Expenses */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5" />
-              Income vs Expenses
-            </CardTitle>
-            <CardDescription>Last 6 months trend</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {isLoadingIncomeExpenses ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-              </div>
-            ) : incomeVsExpenses && incomeVsExpenses.length > 0 ? (
-              <div className="space-y-4">
-                {incomeVsExpenses.map((month, index) => (
-                  <div key={index} className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="font-medium">{month.month}</span>
-                      <span
-                        className={
-                          month.income - month.expenses >= 0 ? 'text-green-600' : 'text-red-600'
-                        }
-                      >
-                        {formatCurrency(month.income - month.expenses, currentSpace.currency)}
-                      </span>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 text-xs">
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Income</span>
-                        <span className="text-green-600">
-                          {formatCurrency(month.income, currentSpace.currency)}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Expenses</span>
-                        <span className="text-red-600">
-                          {formatCurrency(month.expenses, currentSpace.currency)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center py-8 text-center">
-                <div className="rounded-full bg-muted p-3 mb-3">
-                  <BarChart3 className="h-6 w-6 text-muted-foreground" />
-                </div>
-                <p className="text-sm text-muted-foreground mb-3">
-                  No income/expense data available
-                </p>
-                <Button asChild variant="outline" size="sm">
-                  <Link href="/accounts">
-                    <Plus className="mr-2 h-4 w-4" />
-                    Connect Account
-                  </Link>
-                </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+      {/* Income vs Expenses and Spending by Category */}
+      <div className="grid gap-4 lg:grid-cols-2">
+        <IncomeExpenseChart
+          data={incomeVsExpenses || []}
+          currency={currentSpace.currency}
+          isLoading={isLoadingIncomeExpenses}
+        />
+
+        <SpendingCategoryChart
+          data={spendingData || []}
+          currency={currentSpace.currency}
+          isLoading={isLoadingSpending}
+        />
       </div>
+
+      {/* Portfolio Allocation */}
+      <PortfolioChart
+        data={portfolioAllocation || []}
+        currency={currentSpace.currency}
+        isLoading={isLoadingPortfolio}
+      />
 
       {/* Cashflow Forecast */}
       <Card>
@@ -330,25 +268,31 @@ export default function AnalyticsPage() {
           ) : cashflowForecast ? (
             <div className="space-y-6">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="text-center">
+                <div className="text-center p-4 bg-muted/50 rounded-lg">
                   <p className="text-sm text-muted-foreground">Current Balance</p>
                   <p className="text-lg font-semibold">
                     {formatCurrency(cashflowForecast.summary.currentBalance, currentSpace.currency)}
                   </p>
                 </div>
-                <div className="text-center">
+                <div className="text-center p-4 bg-green-50 dark:bg-green-950/20 rounded-lg">
                   <p className="text-sm text-muted-foreground">Projected Income</p>
                   <p className="text-lg font-semibold text-green-600">
                     {formatCurrency(cashflowForecast.summary.totalIncome, currentSpace.currency)}
                   </p>
                 </div>
-                <div className="text-center">
+                <div className="text-center p-4 bg-red-50 dark:bg-red-950/20 rounded-lg">
                   <p className="text-sm text-muted-foreground">Projected Expenses</p>
                   <p className="text-lg font-semibold text-red-600">
                     {formatCurrency(cashflowForecast.summary.totalExpenses, currentSpace.currency)}
                   </p>
                 </div>
-                <div className="text-center">
+                <div
+                  className={`text-center p-4 rounded-lg ${
+                    cashflowForecast.summary.projectedBalance >= 0
+                      ? 'bg-green-50 dark:bg-green-950/20'
+                      : 'bg-red-50 dark:bg-red-950/20'
+                  }`}
+                >
                   <p className="text-sm text-muted-foreground">Projected Balance</p>
                   <p
                     className={`text-lg font-semibold ${
@@ -367,34 +311,42 @@ export default function AnalyticsPage() {
 
               {cashflowForecast.forecast && cashflowForecast.forecast.length > 0 && (
                 <div className="space-y-3">
-                  <h4 className="font-medium">Forecast Timeline</h4>
-                  <div className="space-y-2">
+                  <h4 className="font-medium">Weekly Forecast</h4>
+                  <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-4">
                     {cashflowForecast.forecast.slice(0, 8).map((point, index) => (
                       <div
                         key={index}
-                        className="flex items-center justify-between p-3 border rounded-lg"
+                        className="p-3 border rounded-lg hover:bg-muted/50 transition-colors"
                       >
-                        <div>
-                          <p className="text-sm font-medium">Day {index + 1}</p>
-                          <p className="text-xs text-muted-foreground">{point.date}</p>
+                        <div className="flex justify-between items-center mb-2">
+                          <p className="text-sm font-medium">Week {index + 1}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(point.date).toLocaleDateString()}
+                          </p>
                         </div>
-                        <div className="text-right">
-                          <p className="text-sm">
+                        <div className="space-y-1 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Income</span>
                             <span className="text-green-600">
                               +{formatCurrency(point.income, currentSpace.currency)}
                             </span>
-                            {' / '}
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Expenses</span>
                             <span className="text-red-600">
                               -{formatCurrency(point.expenses, currentSpace.currency)}
                             </span>
-                          </p>
-                          <p
-                            className={`text-xs ${
-                              point.balance >= 0 ? 'text-green-600' : 'text-red-600'
-                            }`}
-                          >
-                            Balance: {formatCurrency(point.balance, currentSpace.currency)}
-                          </p>
+                          </div>
+                          <div className="flex justify-between border-t pt-1 mt-1">
+                            <span className="font-medium">Balance</span>
+                            <span
+                              className={`font-medium ${
+                                point.balance >= 0 ? 'text-green-600' : 'text-red-600'
+                              }`}
+                            >
+                              {formatCurrency(point.balance, currentSpace.currency)}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -419,65 +371,12 @@ export default function AnalyticsPage() {
         </CardContent>
       </Card>
 
-      {/* Portfolio Allocation */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <PieChart className="h-5 w-5" />
-            Portfolio Allocation
-          </CardTitle>
-          <CardDescription>Asset distribution across your accounts</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isLoadingPortfolio ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            </div>
-          ) : portfolioAllocation && portfolioAllocation.length > 0 ? (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {portfolioAllocation.map((allocation, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between p-4 border rounded-lg"
-                >
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="w-4 h-4 rounded-full"
-                      style={{
-                        backgroundColor: `hsl(${(index * 60) % 360}, 70%, 50%)`,
-                      }}
-                    />
-                    <div>
-                      <p className="font-medium">{allocation.assetType}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {allocation.percentage.toFixed(1)}% of portfolio
-                      </p>
-                    </div>
-                  </div>
-                  <p className="font-semibold">
-                    {formatCurrency(allocation.value, currentSpace.currency)}
-                  </p>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-8 text-center">
-              <div className="rounded-full bg-muted p-3 mb-3">
-                <PieChart className="h-6 w-6 text-muted-foreground" />
-              </div>
-              <p className="text-sm text-muted-foreground mb-3">
-                No portfolio allocation data available
-              </p>
-              <Button asChild variant="outline" size="sm">
-                <Link href="/accounts">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Connect Account
-                </Link>
-              </Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      {/* Schedule Report Modal */}
+      <ScheduleReportModal
+        open={showScheduleModal}
+        onOpenChange={setShowScheduleModal}
+        spaceId={currentSpace.id}
+      />
     </div>
   );
 }

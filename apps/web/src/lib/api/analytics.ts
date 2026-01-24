@@ -13,12 +13,48 @@ import {
 import type { Goal } from '@/hooks/useGoals';
 import type { BudgetSummary } from './budgets';
 
+export interface NetWorthHistoryPoint {
+  date: string;
+  netWorth: number;
+  assets: number;
+  liabilities: number;
+}
+
+export type OwnershipFilter = 'yours' | 'mine' | 'ours' | 'all';
+
+export interface NetWorthByOwnership {
+  yours: number;
+  mine: number;
+  ours: number;
+  total: number;
+  currency: string;
+  breakdown: {
+    category: OwnershipFilter;
+    assets: number;
+    liabilities: number;
+    netWorth: number;
+    accountCount: number;
+  }[];
+}
+
+export interface AccountWithOwnership extends Account {
+  ownershipCategory: 'yours' | 'mine' | 'ours';
+}
+
 export const analyticsApi = {
   /**
    * Get net worth analysis for a space
    */
   getNetWorth: async (spaceId: string): Promise<NetWorthResponse> => {
     return apiClient.get<NetWorthResponse>(`/analytics/${spaceId}/net-worth`);
+  },
+
+  /**
+   * Get net worth history for charting
+   */
+  getNetWorthHistory: async (spaceId: string, days?: number): Promise<NetWorthHistoryPoint[]> => {
+    const params = days ? { days: days.toString() } : {};
+    return apiClient.get<NetWorthHistoryPoint[]>(`/analytics/${spaceId}/net-worth-history`, params);
   },
 
   /**
@@ -75,6 +111,35 @@ export const analyticsApi = {
    */
   getDashboardData: async (spaceId: string): Promise<DashboardData> => {
     return apiClient.get<DashboardData>(`/analytics/${spaceId}/dashboard-data`);
+  },
+
+  /**
+   * Get net worth breakdown by ownership (yours, mine, ours)
+   * Used for household views where couples want to see individual vs joint assets
+   */
+  getNetWorthByOwnership: async (
+    spaceId: string,
+    currency?: string
+  ): Promise<NetWorthByOwnership> => {
+    const params = currency ? { currency } : {};
+    return apiClient.get<NetWorthByOwnership>(
+      `/analytics/${spaceId}/net-worth-by-ownership`,
+      params
+    );
+  },
+
+  /**
+   * Get accounts filtered by ownership type
+   */
+  getAccountsByOwnership: async (
+    spaceId: string,
+    ownership?: OwnershipFilter
+  ): Promise<AccountWithOwnership[]> => {
+    const params = ownership ? { ownership } : {};
+    return apiClient.get<AccountWithOwnership[]>(
+      `/analytics/${spaceId}/accounts-by-ownership`,
+      params
+    );
   },
 };
 

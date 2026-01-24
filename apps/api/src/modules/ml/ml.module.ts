@@ -4,6 +4,10 @@ import { LoggerModule } from '@core/logger/logger.module';
 import { PrismaModule } from '@core/prisma/prisma.module';
 import { SpacesModule } from '@modules/spaces/spaces.module';
 
+import { CorrectionAggregatorService } from './correction-aggregator.service';
+import { CategoryCorrectionService } from './correction.service';
+import { FuzzyMatcherService } from './fuzzy-matcher.service';
+import { MerchantNormalizerService } from './merchant-normalizer.service';
 import { MlController } from './ml.controller';
 import { ProviderSelectionService } from './provider-selection.service';
 import { SplitPredictionService } from './split-prediction.service';
@@ -11,8 +15,26 @@ import { TransactionCategorizationService } from './transaction-categorization.s
 
 @Module({
   imports: [PrismaModule, LoggerModule, SpacesModule],
-  providers: [ProviderSelectionService, TransactionCategorizationService, SplitPredictionService],
+  providers: [
+    // Core ML services
+    FuzzyMatcherService,
+    MerchantNormalizerService,
+    CategoryCorrectionService,
+    CorrectionAggregatorService,
+    // Existing services
+    ProviderSelectionService,
+    TransactionCategorizationService,
+    SplitPredictionService,
+  ],
   controllers: [MlController],
-  exports: [ProviderSelectionService, TransactionCategorizationService, SplitPredictionService],
+  exports: [
+    FuzzyMatcherService,
+    MerchantNormalizerService,
+    CategoryCorrectionService,
+    CorrectionAggregatorService,
+    ProviderSelectionService,
+    TransactionCategorizationService,
+    SplitPredictionService,
+  ],
 })
 export class MlModule {}

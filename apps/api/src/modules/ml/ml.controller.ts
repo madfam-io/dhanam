@@ -1,10 +1,13 @@
 import { Controller, Get, Post, Body, Param, Query, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 
+import { CurrentUser } from '@core/auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
 
 import { SpaceGuard } from '../spaces/guards/space.guard';
 
+import { CorrectionAggregatorService } from './correction-aggregator.service';
+import { CategoryCorrectionService } from './correction.service';
 import { ProviderSelectionService } from './provider-selection.service';
 import { SplitPredictionService } from './split-prediction.service';
 import { TransactionCategorizationService } from './transaction-categorization.service';
@@ -17,7 +20,9 @@ export class MlController {
   constructor(
     private providerSelection: ProviderSelectionService,
     private categorization: TransactionCategorizationService,
-    private splitPrediction: SplitPredictionService
+    private splitPrediction: SplitPredictionService,
+    private correctionService: CategoryCorrectionService,
+    private correctionAggregator: CorrectionAggregatorService
   ) {}
 
   // Provider Selection Endpoints
@@ -185,5 +190,55 @@ export class MlController {
     const minutes = Math.floor((totalSeconds % 3600) / 60);
 
     return `${hours}h ${minutes}m saved`;
+  }
+
+  // Category Correction Endpoints (Learning Loop)
+
+  @Post('spaces/:spaceId/transactions/:transactionId/correct-category')
+  @UseGuards(SpaceGuard)
+  @ApiOperation({ summary: 'Correct transaction category (ML learning loop)' })
+  @ApiResponse({ status: 200, description: 'Correction recorded and applied' })
+  async correctCategory(
+    @Param('spaceId') spaceId: string,
+    @Param('transactionId') transactionId: string,
+    @Body() body: { categoryId: string; applyToFuture?: boolean },
+    @CurrentUser() user: { id: string }
+  ) {
+    await this.correctionService.recordCorrection({
+      transactionId,
+      spaceId,
+      correctedCategoryId: body.categoryId,
+      userId: user.id,
+      applyToFuture: body.applyToFuture ?? true,
+    });
+
+    // Invalidate pattern cache after correction
+    this.correctionAggregator.invalidateCache(spaceId);
+
+    return { success: true, message: 'Category corrected and patterns updated' };
+  }
+
+  @Get('spaces/:spaceId/ml/learned-patterns')
+  @UseGuards(SpaceGuard)
+  @ApiOperation({ summary: 'Get learned categorization patterns from corrections' })
+  @ApiResponse({ status: 200, description: 'List of learned merchant patterns' })
+  async getLearnedPatterns(@Param('spaceId') spaceId: string) {
+    return this.correctionService.getLearnedPatterns(spaceId);
+  }
+
+  @Get('spaces/:spaceId/ml/correction-stats')
+  @UseGuards(SpaceGuard)
+  @ApiOperation({ summary: 'Get category correction statistics' })
+  @ApiResponse({ status: 200, description: 'Correction statistics' })
+  async getCorrectionStats(@Param('spaceId') spaceId: string, @Query('days') days: number = 30) {
+    return this.correctionService.getCorrectionStats(spaceId, days);
+  }
+
+  @Get('spaces/:spaceId/ml/pattern-stats')
+  @UseGuards(SpaceGuard)
+  @ApiOperation({ summary: 'Get aggregated pattern statistics' })
+  @ApiResponse({ status: 200, description: 'Pattern statistics' })
+  async getPatternStats(@Param('spaceId') spaceId: string) {
+    return this.correctionAggregator.getPatternStats(spaceId);
   }
 }

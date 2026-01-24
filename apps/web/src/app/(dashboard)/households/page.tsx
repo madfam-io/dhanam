@@ -8,6 +8,8 @@ import {
   type HouseholdGoalSummary,
   type CreateHouseholdInput,
 } from '@/hooks/useHouseholds';
+import { useOwnershipNetWorth, type OwnershipFilter } from '@/hooks/useOwnershipNetWorth';
+import { OwnershipToggle } from '@/components/accounts/ownership-toggle';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -30,7 +32,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Users, Plus, Home, Building2, Briefcase, Target, Loader2, DollarSign } from 'lucide-react';
+import {
+  Users,
+  Plus,
+  Home,
+  Building2,
+  Briefcase,
+  Target,
+  Loader2,
+  DollarSign,
+  Heart,
+} from 'lucide-react';
 
 export default function HouseholdsPage() {
   const {
@@ -43,11 +55,20 @@ export default function HouseholdsPage() {
     error,
   } = useHouseholds();
 
+  const {
+    netWorth: ownershipNetWorth,
+    accounts: ownershipAccounts,
+    loading: ownershipLoading,
+    fetchNetWorthByOwnership,
+    fetchAccountsByOwnership,
+  } = useOwnershipNetWorth();
+
   const [households, setHouseholds] = useState<Household[]>([]);
   const [selectedHousehold, setSelectedHousehold] = useState<Household | null>(null);
   const [netWorth, setNetWorth] = useState<HouseholdNetWorth | null>(null);
   const [goalSummary, setGoalSummary] = useState<HouseholdGoalSummary | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [selectedOwnershipFilter, setSelectedOwnershipFilter] = useState<OwnershipFilter>('yours');
   const [newHousehold, setNewHousehold] = useState<CreateHouseholdInput>({
     name: '',
     type: 'family',
@@ -80,8 +101,25 @@ export default function HouseholdsPage() {
       setSelectedHousehold(fullHousehold);
       setNetWorth(netWorthData);
       setGoalSummary(goalsData);
+
+      // Fetch ownership breakdown for the first space if available
+      const firstSpace = fullHousehold.spaces?.[0];
+      if (firstSpace) {
+        await Promise.all([
+          fetchNetWorthByOwnership(firstSpace.id),
+          fetchAccountsByOwnership(firstSpace.id, 'all'),
+        ]);
+      }
     } catch (err) {
       console.error('Failed to load household details:', err);
+    }
+  };
+
+  const handleOwnershipFilterChange = async (filter: OwnershipFilter) => {
+    setSelectedOwnershipFilter(filter);
+    const firstSpace = selectedHousehold?.spaces?.[0];
+    if (firstSpace) {
+      await fetchAccountsByOwnership(firstSpace.id, filter === 'yours' ? undefined : filter);
     }
   };
 
@@ -401,6 +439,90 @@ export default function HouseholdsPage() {
               </CardContent>
             </Card>
           </div>
+
+          {/* Yours, Mine, Ours Section */}
+          {selectedHousehold.spaces && selectedHousehold.spaces.length > 0 && (
+            <div className="space-y-6 mt-8">
+              <div className="flex items-center gap-2">
+                <Heart className="h-6 w-6 text-primary" />
+                <h3 className="text-xl font-semibold">Yours, Mine & Ours</h3>
+              </div>
+              <p className="text-muted-foreground">
+                View your household finances by ownership. Filter accounts between individual and
+                joint ownership.
+              </p>
+
+              {ownershipLoading ? (
+                <div className="flex justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : (
+                <>
+                  {ownershipNetWorth && selectedHousehold.spaces?.[0] && (
+                    <OwnershipToggle
+                      spaceId={selectedHousehold.spaces[0].id}
+                      netWorth={{
+                        yours: ownershipNetWorth.yours,
+                        mine: ownershipNetWorth.mine,
+                        ours: ownershipNetWorth.ours,
+                        total: ownershipNetWorth.total,
+                      }}
+                      currency={ownershipNetWorth.currency || selectedHousehold.baseCurrency}
+                      onFilterChange={(filter) =>
+                        handleOwnershipFilterChange(filter as OwnershipFilter)
+                      }
+                      partnerName={
+                        selectedHousehold.members?.find((m) => m.relationship === 'spouse')?.user
+                          ?.name || 'Partner'
+                      }
+                    />
+                  )}
+
+                  {/* Filtered Accounts List */}
+                  {ownershipAccounts.length > 0 && (
+                    <div className="mt-6">
+                      <h4 className="text-lg font-medium mb-4">
+                        {selectedOwnershipFilter === 'yours'
+                          ? 'Your Accounts'
+                          : selectedOwnershipFilter === 'mine'
+                            ? "Partner's Accounts"
+                            : selectedOwnershipFilter === 'ours'
+                              ? 'Joint Accounts'
+                              : 'All Accounts'}
+                        <Badge variant="secondary" className="ml-2">
+                          {ownershipAccounts.length}
+                        </Badge>
+                      </h4>
+                      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                        {ownershipAccounts.map((account) => (
+                          <Card key={account.id}>
+                            <CardHeader className="pb-2">
+                              <div className="flex items-center justify-between">
+                                <CardTitle className="text-sm font-medium">
+                                  {account.name}
+                                </CardTitle>
+                                <Badge variant="outline" className="capitalize text-xs">
+                                  {account.ownershipCategory}
+                                </Badge>
+                              </div>
+                              <CardDescription className="capitalize">
+                                {account.type}
+                              </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                              <div className="text-2xl font-bold">
+                                {formatCurrency(account.balance, account.currency)}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>

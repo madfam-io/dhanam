@@ -2,11 +2,16 @@ import { Injectable, Logger } from '@nestjs/common';
 
 import { PrismaService } from '@core/prisma/prisma.service';
 
+import { CorrectionAggregatorService } from './correction-aggregator.service';
+import { FuzzyMatcherService } from './fuzzy-matcher.service';
+import { MerchantNormalizerService } from './merchant-normalizer.service';
+
 export interface CategoryPrediction {
   categoryId: string;
   categoryName: string;
   confidence: number;
   reasoning: string;
+  source?: 'correction' | 'fuzzy' | 'merchant' | 'keyword' | 'amount';
 }
 
 interface MerchantPattern {
@@ -18,7 +23,7 @@ interface MerchantPattern {
 
 /**
  * Smart transaction categorization using ML
- * Learns from user's historical categorization patterns
+ * Learns from user's historical categorization patterns and corrections
  */
 @Injectable()
 export class TransactionCategorizationService {
@@ -29,10 +34,16 @@ export class TransactionCategorizationService {
   private readonly MEDIUM_CONFIDENCE = 0.7;
   private readonly LOW_CONFIDENCE = 0.5;
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private fuzzyMatcher: FuzzyMatcherService,
+    private merchantNormalizer: MerchantNormalizerService,
+    private correctionAggregator: CorrectionAggregatorService
+  ) {}
 
   /**
    * Predict category for a new transaction using ML
+   * Uses a multi-strategy approach with user corrections taking priority
    */
   async predictCategory(
     spaceId: string,
@@ -40,34 +51,52 @@ export class TransactionCategorizationService {
     merchant: string | null,
     amount: number
   ): Promise<CategoryPrediction | null> {
-    // Strategy 1: Exact merchant match (highest confidence)
+    // Strategy 0: Check learned patterns from user corrections (highest priority)
+    const correctionMatch = await this.correctionAggregator.findBestMatch(
+      spaceId,
+      merchant,
+      description
+    );
+    if (correctionMatch && correctionMatch.confidence >= 0.7) {
+      return {
+        categoryId: correctionMatch.categoryId,
+        categoryName: await this.getCategoryName(correctionMatch.categoryId),
+        confidence: correctionMatch.confidence,
+        reasoning: `Learned from your corrections for "${correctionMatch.patternKey}"`,
+        source: 'correction',
+      };
+    }
+
+    // Strategy 1: Exact merchant match (high confidence)
     if (merchant) {
-      const merchantMatch = await this.findMerchantPattern(spaceId, merchant);
+      const normalizedMerchant = this.merchantNormalizer.normalize(merchant);
+      const merchantMatch = await this.findMerchantPattern(spaceId, normalizedMerchant);
       if (merchantMatch && merchantMatch.count >= 3) {
-        // Need at least 3 historical transactions for high confidence
         return {
           categoryId: merchantMatch.categoryId,
           categoryName: await this.getCategoryName(merchantMatch.categoryId),
           confidence: this.calculateMerchantConfidence(merchantMatch.count),
-          reasoning: `${merchant} consistently categorized based on ${merchantMatch.count} past transactions`,
+          reasoning: `${normalizedMerchant} consistently categorized based on ${merchantMatch.count} past transactions`,
+          source: 'merchant',
         };
       }
     }
 
-    // Strategy 2: Fuzzy merchant match
+    // Strategy 2: Enhanced fuzzy merchant match using Levenshtein
     if (merchant) {
-      const fuzzyMatch = await this.findFuzzyMerchantMatch(spaceId, merchant);
+      const fuzzyMatch = await this.findEnhancedFuzzyMerchantMatch(spaceId, merchant);
       if (fuzzyMatch) {
         return {
           categoryId: fuzzyMatch.categoryId,
           categoryName: await this.getCategoryName(fuzzyMatch.categoryId),
-          confidence: this.MEDIUM_CONFIDENCE,
-          reasoning: `Similar to "${fuzzyMatch.merchant}" (${fuzzyMatch.count} past transactions)`,
+          confidence: fuzzyMatch.similarity * 0.85,
+          reasoning: `Similar to "${fuzzyMatch.merchant}" (${(fuzzyMatch.similarity * 100).toFixed(0)}% match)`,
+          source: 'fuzzy',
         };
       }
     }
 
-    // Strategy 3: Description keyword matching
+    // Strategy 3: Description keyword matching with TF-IDF style scoring
     const keywordMatch = await this.findKeywordMatch(spaceId, description);
     if (keywordMatch) {
       return {
@@ -75,6 +104,7 @@ export class TransactionCategorizationService {
         categoryName: await this.getCategoryName(keywordMatch.categoryId),
         confidence: this.MEDIUM_CONFIDENCE,
         reasoning: `Description matches pattern for ${keywordMatch.categoryName}`,
+        source: 'keyword',
       };
     }
 
@@ -86,10 +116,78 @@ export class TransactionCategorizationService {
         categoryName: await this.getCategoryName(amountMatch.categoryId),
         confidence: this.LOW_CONFIDENCE,
         reasoning: `Amount range ($${amount}) common for ${amountMatch.categoryName}`,
+        source: 'amount',
       };
     }
 
     // No confident prediction
+    return null;
+  }
+
+  /**
+   * Enhanced fuzzy merchant matching using Levenshtein distance and normalization
+   */
+  private async findEnhancedFuzzyMerchantMatch(
+    spaceId: string,
+    merchant: string
+  ): Promise<{ categoryId: string; merchant: string; similarity: number; count: number } | null> {
+    // Normalize the input merchant
+    const _normalizedMerchant = this.merchantNormalizer.normalize(merchant);
+    const patternKey = this.merchantNormalizer.extractPatternKey(merchant);
+
+    // Get all unique merchants from transactions
+    const transactions = await this.prisma.transaction.findMany({
+      where: {
+        account: { spaceId },
+        merchant: { not: null },
+        categoryId: { not: null },
+      },
+      select: {
+        merchant: true,
+        categoryId: true,
+      },
+      distinct: ['merchant'],
+      take: 500,
+    });
+
+    // Normalize all merchants and find best match
+    const normalizedCandidates = transactions.map((t) => ({
+      original: t.merchant!,
+      normalized: this.merchantNormalizer.normalize(t.merchant),
+      patternKey: this.merchantNormalizer.extractPatternKey(t.merchant),
+      categoryId: t.categoryId!,
+    }));
+
+    // Use combined similarity for robust matching
+    let bestMatch: (typeof normalizedCandidates)[0] | null = null;
+    let bestSimilarity = 0;
+
+    for (const candidate of normalizedCandidates) {
+      const similarity = this.fuzzyMatcher.combinedSimilarity(patternKey, candidate.patternKey);
+      if (similarity > bestSimilarity && similarity >= 0.75) {
+        bestSimilarity = similarity;
+        bestMatch = candidate;
+      }
+    }
+
+    if (bestMatch) {
+      // Get count for this category/merchant pattern
+      const count = await this.prisma.transaction.count({
+        where: {
+          account: { spaceId },
+          merchant: bestMatch.original,
+          categoryId: bestMatch.categoryId,
+        },
+      });
+
+      return {
+        categoryId: bestMatch.categoryId,
+        merchant: bestMatch.normalized,
+        similarity: bestSimilarity,
+        count,
+      };
+    }
+
     return null;
   }
 

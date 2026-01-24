@@ -1,5 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { format } from 'date-fns';
+import * as ExcelJS from 'exceljs';
 import PDFDocument from 'pdfkit';
 
 import { PrismaService } from '@core/prisma/prisma.service';
@@ -8,6 +9,8 @@ import { AnalyticsService } from './analytics.service';
 
 @Injectable()
 export class ReportService {
+  private readonly logger = new Logger(ReportService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly analyticsService: AnalyticsService
@@ -290,5 +293,272 @@ export class ReportService {
     }
 
     return csv;
+  }
+
+  /**
+   * Generate Excel (xlsx) export with multiple sheets
+   */
+  async generateExcelExport(spaceId: string, startDate: Date, endDate: Date): Promise<Buffer> {
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = 'Dhanam';
+    workbook.created = new Date();
+
+    // Get space details
+    const space = await this.prisma.space.findUnique({
+      where: { id: spaceId },
+      include: {
+        userSpaces: { include: { user: true } },
+      },
+    });
+
+    if (!space) {
+      throw new Error('Space not found');
+    }
+
+    // Sheet 1: Transactions
+    const transactionsSheet = workbook.addWorksheet('Transactions');
+    transactionsSheet.columns = [
+      { header: 'Date', key: 'date', width: 12 },
+      { header: 'Account', key: 'account', width: 20 },
+      { header: 'Category', key: 'category', width: 18 },
+      { header: 'Merchant', key: 'merchant', width: 25 },
+      { header: 'Description', key: 'description', width: 40 },
+      { header: 'Amount', key: 'amount', width: 15 },
+      { header: 'Currency', key: 'currency', width: 10 },
+      { header: 'Pending', key: 'pending', width: 10 },
+    ];
+
+    // Style header row
+    transactionsSheet.getRow(1).font = { bold: true };
+    transactionsSheet.getRow(1).fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FF4472C4' },
+    };
+    transactionsSheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
+
+    const transactions = await this.prisma.transaction.findMany({
+      where: {
+        account: { spaceId },
+        date: { gte: startDate, lte: endDate },
+      },
+      include: { account: true, category: true },
+      orderBy: { date: 'desc' },
+    });
+
+    for (const txn of transactions) {
+      const row = transactionsSheet.addRow({
+        date: format(txn.date, 'yyyy-MM-dd'),
+        account: txn.account.name,
+        category: txn.category?.name || 'Uncategorized',
+        merchant: txn.merchant || '',
+        description: txn.description,
+        amount: parseFloat(txn.amount.toString()),
+        currency: txn.currency,
+        pending: txn.pending ? 'Yes' : 'No',
+      });
+
+      // Color negative amounts red, positive green
+      const amountCell = row.getCell('amount');
+      if (parseFloat(txn.amount.toString()) < 0) {
+        amountCell.font = { color: { argb: 'FFDC3545' } };
+      } else if (parseFloat(txn.amount.toString()) > 0) {
+        amountCell.font = { color: { argb: 'FF28A745' } };
+      }
+    }
+
+    // Format amount column as currency
+    transactionsSheet.getColumn('amount').numFmt = '#,##0.00';
+
+    // Sheet 2: Summary
+    const summarySheet = workbook.addWorksheet('Summary');
+    summarySheet.columns = [
+      { header: 'Metric', key: 'metric', width: 30 },
+      { header: 'Value', key: 'value', width: 20 },
+    ];
+    summarySheet.getRow(1).font = { bold: true };
+    summarySheet.getRow(1).fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FF4472C4' },
+    };
+    summarySheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
+
+    // Calculate summary metrics
+    const incomeTransactions = transactions.filter((t) => t.amount.gt(0));
+    const expenseTransactions = transactions.filter((t) => t.amount.lt(0));
+    const totalIncome = incomeTransactions.reduce(
+      (sum, t) => sum + parseFloat(t.amount.toString()),
+      0
+    );
+    const totalExpenses = Math.abs(
+      expenseTransactions.reduce((sum, t) => sum + parseFloat(t.amount.toString()), 0)
+    );
+
+    summarySheet.addRows([
+      {
+        metric: 'Report Period',
+        value: `${format(startDate, 'MMM d, yyyy')} - ${format(endDate, 'MMM d, yyyy')}`,
+      },
+      { metric: 'Space', value: space.name },
+      { metric: 'Total Transactions', value: transactions.length },
+      { metric: 'Total Income', value: totalIncome },
+      { metric: 'Total Expenses', value: totalExpenses },
+      { metric: 'Net Savings', value: totalIncome - totalExpenses },
+      {
+        metric: 'Savings Rate',
+        value:
+          totalIncome > 0
+            ? `${(((totalIncome - totalExpenses) / totalIncome) * 100).toFixed(1)}%`
+            : 'N/A',
+      },
+    ]);
+
+    // Sheet 3: Spending by Category
+    const categorySheet = workbook.addWorksheet('Spending by Category');
+    categorySheet.columns = [
+      { header: 'Category', key: 'category', width: 25 },
+      { header: 'Amount', key: 'amount', width: 15 },
+      { header: 'Transactions', key: 'count', width: 15 },
+      { header: '% of Total', key: 'percentage', width: 12 },
+    ];
+    categorySheet.getRow(1).font = { bold: true };
+    categorySheet.getRow(1).fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FF4472C4' },
+    };
+    categorySheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
+
+    // Group by category
+    const categorySpending = expenseTransactions.reduce(
+      (acc, txn) => {
+        const category = txn.category?.name || 'Uncategorized';
+        if (!acc[category]) {
+          acc[category] = { amount: 0, count: 0 };
+        }
+        acc[category].amount += Math.abs(parseFloat(txn.amount.toString()));
+        acc[category].count += 1;
+        return acc;
+      },
+      {} as Record<string, { amount: number; count: number }>
+    );
+
+    const sortedCategories = Object.entries(categorySpending).sort(
+      (a, b) => b[1].amount - a[1].amount
+    );
+
+    for (const [category, data] of sortedCategories) {
+      categorySheet.addRow({
+        category,
+        amount: data.amount,
+        count: data.count,
+        percentage:
+          totalExpenses > 0 ? `${((data.amount / totalExpenses) * 100).toFixed(1)}%` : '0%',
+      });
+    }
+
+    categorySheet.getColumn('amount').numFmt = '#,##0.00';
+
+    // Sheet 4: Account Balances
+    const accountsSheet = workbook.addWorksheet('Account Balances');
+    accountsSheet.columns = [
+      { header: 'Account', key: 'name', width: 25 },
+      { header: 'Type', key: 'type', width: 15 },
+      { header: 'Balance', key: 'balance', width: 15 },
+      { header: 'Currency', key: 'currency', width: 10 },
+      { header: 'Last Synced', key: 'lastSynced', width: 20 },
+    ];
+    accountsSheet.getRow(1).font = { bold: true };
+    accountsSheet.getRow(1).fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FF4472C4' },
+    };
+    accountsSheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
+
+    const accounts = await this.prisma.account.findMany({
+      where: { spaceId },
+      orderBy: { balance: 'desc' },
+    });
+
+    for (const account of accounts) {
+      accountsSheet.addRow({
+        name: account.name,
+        type: account.type,
+        balance: parseFloat(account.balance.toString()),
+        currency: account.currency,
+        lastSynced: account.lastSyncedAt
+          ? format(account.lastSyncedAt, 'yyyy-MM-dd HH:mm')
+          : 'Never',
+      });
+    }
+
+    accountsSheet.getColumn('balance').numFmt = '#,##0.00';
+
+    // Generate buffer
+    const buffer = await workbook.xlsx.writeBuffer();
+    this.logger.log(
+      `Generated Excel report for space ${spaceId} with ${transactions.length} transactions`
+    );
+
+    return Buffer.from(buffer);
+  }
+
+  /**
+   * Generate JSON export
+   */
+  async generateJsonExport(spaceId: string, startDate: Date, endDate: Date): Promise<string> {
+    const [transactions, accounts, budgets] = await Promise.all([
+      this.prisma.transaction.findMany({
+        where: {
+          account: { spaceId },
+          date: { gte: startDate, lte: endDate },
+        },
+        include: { account: true, category: true },
+        orderBy: { date: 'desc' },
+      }),
+      this.prisma.account.findMany({
+        where: { spaceId },
+      }),
+      this.prisma.budget.findMany({
+        where: { spaceId },
+        include: { categories: true },
+      }),
+    ]);
+
+    const exportData = {
+      exportedAt: new Date().toISOString(),
+      period: {
+        start: startDate.toISOString(),
+        end: endDate.toISOString(),
+      },
+      transactions: transactions.map((t) => ({
+        date: t.date.toISOString(),
+        account: t.account.name,
+        category: t.category?.name || null,
+        merchant: t.merchant,
+        description: t.description,
+        amount: parseFloat(t.amount.toString()),
+        currency: t.currency,
+        pending: t.pending,
+      })),
+      accounts: accounts.map((a) => ({
+        name: a.name,
+        type: a.type,
+        balance: parseFloat(a.balance.toString()),
+        currency: a.currency,
+      })),
+      budgets: budgets.map((b) => ({
+        name: b.name,
+        period: b.period,
+        categories: b.categories.map((c) => ({
+          name: c.name,
+          budgeted: parseFloat(c.budgetedAmount.toString()),
+        })),
+      })),
+    };
+
+    return JSON.stringify(exportData, null, 2);
   }
 }

@@ -6,11 +6,12 @@ import { BillingModule } from '../billing/billing.module';
 
 import { EstatePlanningController } from './estate-planning.controller';
 import { EstatePlanningService } from './estate-planning.service';
+import { ExecutorAccessService } from './executor-access.service';
 
 @Module({
   imports: [PrismaModule, AuditModule, BillingModule],
   controllers: [EstatePlanningController],
-  providers: [EstatePlanningService],
-  exports: [EstatePlanningService],
+  providers: [EstatePlanningService, ExecutorAccessService],
+  exports: [EstatePlanningService, ExecutorAccessService],
 })
 export class EstatePlanningModule {}
