@@ -2,7 +2,10 @@
 . "$(dirname -- "$0")/_/husky.sh"
 
 # Run linting on staged files
-pnpm lint-staged
+pnpm lint-staged || {
+  echo "❌ Lint errors found. Please fix them before committing."
+  exit 1
+}
 
 # Run TypeScript type checking on affected packages
 # This catches type errors before they reach CI
@@ -11,3 +14,14 @@ pnpm typecheck || {
   echo "❌ TypeScript errors found. Please fix them before committing."
   exit 1
 }
+
+# Check for schema drift if Prisma files changed
+if git diff --cached --name-only | grep -q "prisma/schema.prisma"; then
+  echo "Checking Prisma schema..."
+  cd apps/api
+  if ! pnpm prisma validate; then
+    echo "❌ Prisma schema validation failed."
+    exit 1
+  fi
+  echo "✅ Prisma schema valid"
+fi

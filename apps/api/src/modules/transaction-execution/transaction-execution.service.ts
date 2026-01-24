@@ -124,7 +124,7 @@ export class TransactionExecutionService {
         status: requiresOtp ? ('pending_verification' as any) : ('pending_execution' as any),
         priority: (dto.priority || OrderPriority.normal) as any,
         amount: dto.amount,
-        currency: dto.currency,
+        currency: dto.currency as any,
         assetSymbol: dto.assetSymbol,
         targetPrice: dto.targetPrice,
         toAccountId: dto.toAccountId,

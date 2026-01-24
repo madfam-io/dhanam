@@ -60,14 +60,14 @@ jobs:
           # Deploy migrations to test database
           pnpm db:migrate:deploy
 
-          # Check for schema drift (migrations folder vs schema.prisma)
-          # This compares what migrations would produce vs what schema.prisma defines
+          # Check for schema drift (deployed database state vs schema.prisma)
+          # This compares what the database has vs what schema.prisma defines
           pnpm prisma migrate diff \
-            --from-migrations prisma/migrations \
+            --from-url "$DATABASE_URL" \
             --to-schema-datamodel prisma/schema.prisma \
             --exit-code || {
             echo "❌ Schema drift detected!"
-            echo "The schema.prisma file doesn't match the migrations."
+            echo "The schema.prisma file doesn't match the deployed migrations."
             echo "Run 'pnpm db:migrate:dev' to create a new migration."
             exit 1
           }

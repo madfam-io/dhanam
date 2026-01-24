@@ -573,13 +573,12 @@ export class BillingService {
     await this.prisma.billingEvent.create({
       data: {
         userId: user.id,
-        eventType: 'subscription_created',
+        type: 'subscription_created',
         status: 'succeeded',
-        provider: provider,
-        providerEventId: payload.id,
+        stripeEventId: payload.id,
         amount: 0,
         currency: payload.data.currency || 'USD',
-        metadata: { subscription_id, plan_id },
+        metadata: { subscription_id, plan_id, provider },
       },
     });
 
@@ -637,13 +636,12 @@ export class BillingService {
     await this.prisma.billingEvent.create({
       data: {
         userId: user.id,
-        eventType: 'subscription_cancelled',
+        type: 'subscription_cancelled',
         status: 'succeeded',
-        provider: provider,
-        providerEventId: payload.id,
+        stripeEventId: payload.id,
         amount: 0,
         currency: payload.data.currency || 'USD',
-        metadata: {},
+        metadata: { provider },
       },
     });
 
@@ -708,13 +706,12 @@ export class BillingService {
     await this.prisma.billingEvent.create({
       data: {
         userId: user.id,
-        eventType: 'payment_succeeded',
+        type: 'payment_succeeded',
         status: 'succeeded',
-        provider: provider,
-        providerEventId: payload.id,
+        stripeEventId: payload.id,
         amount: amount || 0,
         currency: currency || 'USD',
-        metadata: {},
+        metadata: { provider },
       },
     });
 
@@ -745,13 +742,12 @@ export class BillingService {
     await this.prisma.billingEvent.create({
       data: {
         userId: user.id,
-        eventType: 'payment_failed',
+        type: 'payment_failed',
         status: 'failed',
-        provider: provider,
-        providerEventId: payload.id,
+        stripeEventId: payload.id,
         amount: amount || 0,
         currency: currency || 'USD',
-        metadata: {},
+        metadata: { provider },
       },
     });
 
@@ -776,13 +772,12 @@ export class BillingService {
     await this.prisma.billingEvent.create({
       data: {
         userId: user.id,
-        eventType: 'refund_issued',
+        type: 'refund_issued',
         status: 'succeeded',
-        provider: provider,
-        providerEventId: payload.id,
+        stripeEventId: payload.id,
         amount: amount || 0,
         currency: currency || 'USD',
-        metadata: {},
+        metadata: { provider },
       },
     });
 

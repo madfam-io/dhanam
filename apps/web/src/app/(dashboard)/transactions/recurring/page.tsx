@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@dhanam/ui';
+import { Card, CardContent, CardHeader, CardTitle } from '@dhanam/ui';
 import { Button } from '@dhanam/ui';
 import { Badge } from '@dhanam/ui';
 import {
@@ -21,7 +21,6 @@ import {
   DropdownMenuTrigger,
 } from '@dhanam/ui';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@dhanam/ui';
-import { Progress } from '@dhanam/ui';
 import {
   Loader2,
   MoreVertical,
@@ -33,7 +32,6 @@ import {
   Trash2,
   Calendar,
   DollarSign,
-  TrendingUp,
   AlertCircle,
   Repeat,
 } from 'lucide-react';
@@ -62,7 +60,9 @@ const statusColors: Record<RecurringStatus, string> = {
 export default function RecurringTransactionsPage() {
   const { currentSpace } = useSpaceStore();
   const queryClient = useQueryClient();
-  const [selectedRecurring, setSelectedRecurring] = useState<RecurringTransactionResponse | null>(null);
+  const [selectedRecurring, setSelectedRecurring] = useState<RecurringTransactionResponse | null>(
+    null
+  );
   const [isDetecting, setIsDetecting] = useState(false);
 
   // Fetch recurring transactions
@@ -252,15 +252,9 @@ export default function RecurringTransactionsPage() {
       ) : (
         <Tabs defaultValue="confirmed" className="space-y-4">
           <TabsList>
-            <TabsTrigger value="confirmed">
-              Active ({confirmed.length})
-            </TabsTrigger>
-            <TabsTrigger value="detected">
-              Detected ({detected.length})
-            </TabsTrigger>
-            <TabsTrigger value="paused">
-              Paused ({paused.length})
-            </TabsTrigger>
+            <TabsTrigger value="confirmed">Active ({confirmed.length})</TabsTrigger>
+            <TabsTrigger value="detected">Detected ({detected.length})</TabsTrigger>
+            <TabsTrigger value="paused">Paused ({paused.length})</TabsTrigger>
           </TabsList>
 
           <TabsContent value="confirmed" className="space-y-4">
@@ -268,7 +262,9 @@ export default function RecurringTransactionsPage() {
               <Card>
                 <CardContent className="flex flex-col items-center justify-center py-8">
                   <Repeat className="h-12 w-12 text-muted-foreground mb-4" />
-                  <h3 className="font-semibold text-lg mb-2">No confirmed recurring transactions</h3>
+                  <h3 className="font-semibold text-lg mb-2">
+                    No confirmed recurring transactions
+                  </h3>
                   <p className="text-muted-foreground text-center mb-4">
                     Click "Detect Patterns" to find recurring transactions
                   </p>
@@ -381,9 +377,7 @@ export default function RecurringTransactionsPage() {
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Confidence</p>
-                    <p className="font-medium">
-                      {Math.round(selectedRecurring.confidence * 100)}%
-                    </p>
+                    <p className="font-medium">{Math.round(selectedRecurring.confidence * 100)}%</p>
                   </div>
                 </div>
 
@@ -398,9 +392,7 @@ export default function RecurringTransactionsPage() {
                         >
                           <div>
                             <p className="text-sm font-medium">{txn.description}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {formatDate(txn.date)}
-                            </p>
+                            <p className="text-xs text-muted-foreground">{formatDate(txn.date)}</p>
                           </div>
                           <p className="font-medium text-red-600">
                             {formatCurrency(-txn.amount, selectedRecurring.currency)}

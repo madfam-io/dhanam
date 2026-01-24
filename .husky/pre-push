@@ -1,8 +1,24 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-echo "Running type check before push..."
+echo "Running pre-push checks..."
+
+# Full type check
 pnpm typecheck || {
   echo "❌ Type check failed. Push aborted."
   exit 1
 }
+
+# Run lint across entire codebase
+pnpm lint || {
+  echo "❌ Lint check failed. Push aborted."
+  exit 1
+}
+
+# Check for uncommitted schema drift
+cd apps/api
+if pnpm prisma migrate status 2>&1 | grep -q "have not yet been applied"; then
+  echo "⚠️  Warning: Pending migrations detected"
+fi
+
+echo "✅ Pre-push checks passed"

@@ -121,7 +121,7 @@ export class PaymentRouterService {
         name: true,
         stripeCustomerId: true,
         paddleCustomerId: true,
-        billingCountry: true,
+        countryCode: true,
       },
     });
 
@@ -175,7 +175,7 @@ export class PaymentRouterService {
         data: {
           stripeCustomerId: customerId,
           billingProvider: 'stripe_mx',
-          billingCountry: 'MX',
+          countryCode: 'MX',
         },
       });
     }
@@ -236,7 +236,7 @@ export class PaymentRouterService {
         data: {
           paddleCustomerId: customerId,
           billingProvider: 'paddle',
-          billingCountry: countryCode,
+          countryCode: countryCode,
         },
       });
     }

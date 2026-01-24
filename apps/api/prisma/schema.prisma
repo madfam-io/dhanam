@@ -239,8 +239,12 @@ model User {
 
   // Janua multi-provider billing (Conekta for MX, Polar for international)
   januaCustomerId String? @unique @map("janua_customer_id")
-  billingProvider String? @map("billing_provider") // 'conekta' | 'polar' | 'stripe'
+  billingProvider String? @map("billing_provider") // 'conekta' | 'polar' | 'stripe' | 'stripe_mx' | 'paddle'
   countryCode     String? @map("country_code") // ISO country code for billing routing
+
+  // Paddle billing (Merchant of Record for international)
+  paddleCustomerId     String? @unique @map("paddle_customer_id")
+  paddleSubscriptionId String? @unique @map("paddle_subscription_id")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -1245,6 +1249,10 @@ model TransactionOrder {
   // Metadata
   notes    String? @db.Text
   metadata Json?
+
+  // Error tracking
+  errorCode    String? @map("error_code")
+  errorMessage String? @map("error_message") @db.Text
 
   // Timestamps
   submittedAt DateTime  @default(now()) @map("submitted_at")

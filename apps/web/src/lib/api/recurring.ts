@@ -6,11 +6,12 @@ import {
   UpdateRecurringTransactionDto,
   ConfirmRecurringDto,
   RecurringStatus,
-  Currency,
-  RecurrenceFrequency,
 } from '@dhanam/shared';
 
-export interface RecurringTransactionResponse extends Omit<RecurringTransaction, 'recentTransactions'> {
+export interface RecurringTransactionResponse extends Omit<
+  RecurringTransaction,
+  'recentTransactions'
+> {
   recentTransactions: Array<{
     id: string;
     date: string;
@@ -41,10 +42,7 @@ export const recurringApi = {
     const params: Record<string, unknown> = {};
     if (options?.status) params.status = options.status;
     if (options?.includeDetected) params.includeDetected = 'true';
-    return apiClient.get<RecurringTransactionResponse[]>(
-      `/spaces/${spaceId}/recurring`,
-      params
-    );
+    return apiClient.get<RecurringTransactionResponse[]>(`/spaces/${spaceId}/recurring`, params);
   },
 
   /**
