@@ -12,14 +12,33 @@
 
 ## Features
 
+### Core Financial Management
 - 💰 **Multi-Space Management** - Separate personal and business finances
 - 🏦 **Bank Integration** - Connect with Belvo (Mexico), Plaid (US), and Bitso (crypto)
 - 📊 **Budget Tracking** - Category-based budgets with alerts and rules
 - 💎 **Wealth Management** - Net worth tracking and asset allocation
 - 🌱 **ESG Scoring** - Environmental, Social, and Governance metrics for crypto
+
+### Smart Categorization
+- 🤖 **AI-Powered Categorization** - Machine learning with learning loop
+- 🔄 **Merchant Normalization** - Fuzzy matching for consistent categorization
+- 📝 **User Corrections** - Train the model with your preferences
+
+### Advanced Wealth Tracking
+- 🌐 **DeFi/Web3 Portfolios** - Zapper integration for Uniswap, Aave, Compound, Curve, Lido, and more
+- 🏠 **Zillow Real Estate** - Automated property valuations via Zestimate
+- 📈 **10-30 Year Projections** - Retirement planning with Monte Carlo simulations
+- 👥 **Yours/Mine/Ours Views** - Household ownership filtering and breakdown
+
+### Estate Planning
+- 📜 **Digital Wills** - Beneficiary designations and executor management
+- 💓 **Life Beat** - Dead man's switch with 30/60/90 day escalation for executor access
+
+### Platform & Security
 - 📱 **Multi-Platform** - Web dashboard and mobile app
 - 🔒 **Security First** - Janua SSO (OIDC/PKCE), 2FA, and encrypted data storage
 - 🌎 **LATAM Focused** - Spanish/English support with MXN/USD currencies
+- 📄 **Document Storage** - R2-backed attachments for manual assets
 
 ## Production Status
 

@@ -634,6 +634,434 @@ Get ESG scoring methodology documentation.
 }
 ```
 
+## AI Categorization
+
+Machine learning-powered transaction categorization with learning loop.
+
+### GET /ml/corrections
+List category corrections for a space.
+
+**Query Parameters:**
+- `spaceId` (required): Space identifier
+- `status`: Filter by status (pending, applied, rejected)
+- `limit`: Number of results (default: 50)
+- `offset`: Pagination offset
+
+**Response:**
+```json
+{
+  "corrections": [
+    {
+      "id": "corr_123",
+      "transactionId": "txn_456",
+      "originalCategoryId": "cat_food",
+      "correctedCategoryId": "cat_business",
+      "merchantName": "Starbucks",
+      "normalizedMerchant": "starbucks",
+      "confidence": 0.85,
+      "status": "applied",
+      "createdAt": "2025-01-15T10:00:00Z"
+    }
+  ],
+  "pagination": {
+    "total": 125,
+    "limit": 50,
+    "offset": 0
+  }
+}
+```
+
+### POST /ml/corrections
+Submit a category correction to train the ML model.
+
+```json
+{
+  "transactionId": "txn_456",
+  "correctedCategoryId": "cat_business",
+  "applyToSimilar": true
+}
+```
+
+**Response:**
+```json
+{
+  "correctionId": "corr_123",
+  "affectedTransactions": 15,
+  "message": "Correction applied to 15 similar transactions"
+}
+```
+
+### POST /ml/retrain
+Trigger a manual ML model retrain (admin only).
+
+**Response:**
+```json
+{
+  "jobId": "job_789",
+  "status": "queued",
+  "estimatedCompletion": "2025-01-15T11:00:00Z"
+}
+```
+
+---
+
+## DeFi/Web3 Positions
+
+Track DeFi protocol positions via Zapper API integration.
+
+### GET /defi/positions
+List DeFi positions for a space.
+
+**Query Parameters:**
+- `spaceId` (required): Space identifier
+- `protocol`: Filter by protocol (uniswap, aave, compound, etc.)
+- `network`: Filter by network (ethereum, polygon, arbitrum, etc.)
+
+**Response:**
+```json
+{
+  "positions": [
+    {
+      "id": "pos_123",
+      "protocol": "uniswap-v3",
+      "network": "ethereum",
+      "type": "liquidity-pool",
+      "label": "ETH/USDC Pool",
+      "tokens": [
+        {
+          "symbol": "ETH",
+          "balance": 1.5,
+          "balanceUSD": 3750.00
+        },
+        {
+          "symbol": "USDC",
+          "balance": 3500,
+          "balanceUSD": 3500.00
+        }
+      ],
+      "totalValueUSD": 7250.00,
+      "unrealizedGain": 450.00,
+      "apy": 12.5,
+      "lastUpdated": "2025-01-15T10:00:00Z"
+    }
+  ],
+  "summary": {
+    "totalValueUSD": 45000.00,
+    "byProtocol": {
+      "uniswap-v3": 15000.00,
+      "aave-v3": 20000.00,
+      "lido": 10000.00
+    },
+    "byNetwork": {
+      "ethereum": 35000.00,
+      "polygon": 7000.00,
+      "arbitrum": 3000.00
+    }
+  }
+}
+```
+
+### POST /defi/wallets
+Connect a wallet address for DeFi tracking.
+
+```json
+{
+  "spaceId": "space_123",
+  "address": "0x742d35Cc6634C0532925a3b844Bc9e7595f8e123",
+  "label": "Main DeFi Wallet",
+  "networks": ["ethereum", "polygon", "arbitrum"]
+}
+```
+
+### POST /defi/sync
+Trigger a manual sync of DeFi positions.
+
+```json
+{
+  "spaceId": "space_123",
+  "walletIds": ["wallet_123", "wallet_456"]
+}
+```
+
+---
+
+## Estate Planning - Life Beat
+
+Dead man's switch functionality for estate planning.
+
+### GET /estate-planning/life-beat/config
+Get Life Beat configuration for a household.
+
+**Query Parameters:**
+- `householdId` (required): Household identifier
+
+**Response:**
+```json
+{
+  "enabled": true,
+  "checkInInterval": "weekly",
+  "lastCheckIn": "2025-01-10T09:00:00Z",
+  "nextCheckInDue": "2025-01-17T09:00:00Z",
+  "escalationDays": [30, 60, 90],
+  "currentEscalationLevel": 0,
+  "executorId": "member_456",
+  "notificationChannels": ["email", "sms"]
+}
+```
+
+### PUT /estate-planning/life-beat/config
+Update Life Beat configuration.
+
+```json
+{
+  "householdId": "hh_123",
+  "enabled": true,
+  "checkInInterval": "biweekly",
+  "escalationDays": [30, 60, 90],
+  "executorId": "member_456",
+  "notificationChannels": ["email"]
+}
+```
+
+### POST /estate-planning/life-beat/check-in
+Record a check-in to reset the escalation timer.
+
+```json
+{
+  "householdId": "hh_123"
+}
+```
+
+**Response:**
+```json
+{
+  "lastCheckIn": "2025-01-15T10:00:00Z",
+  "nextCheckInDue": "2025-01-29T10:00:00Z",
+  "escalationReset": true
+}
+```
+
+### POST /estate-planning/life-beat/emergency-access
+Grant emergency access to executor (triggered by escalation).
+
+```json
+{
+  "householdId": "hh_123",
+  "executorId": "member_456",
+  "accessLevel": "read-only",
+  "expiresAt": "2025-02-15T00:00:00Z"
+}
+```
+
+---
+
+## Zillow Integration
+
+Automated real estate valuations for manual assets.
+
+### GET /manual-assets/:id/zillow/estimate
+Get Zillow Zestimate for a real estate asset.
+
+**Response:**
+```json
+{
+  "zestimate": 875000.00,
+  "rentZestimate": 4200.00,
+  "currency": "USD",
+  "lastUpdated": "2025-01-14T00:00:00Z",
+  "valuationRange": {
+    "low": 830000.00,
+    "high": 920000.00
+  },
+  "propertyDetails": {
+    "bedrooms": 3,
+    "bathrooms": 2,
+    "sqft": 1850,
+    "yearBuilt": 2005
+  }
+}
+```
+
+### POST /manual-assets/:id/zillow/lookup
+Look up Zillow data by address.
+
+```json
+{
+  "address": "123 Main Street",
+  "city": "San Francisco",
+  "state": "CA",
+  "zipCode": "94102"
+}
+```
+
+### POST /manual-assets/:id/zillow/sync
+Sync current Zestimate to asset valuation.
+
+**Response:**
+```json
+{
+  "previousValue": 850000.00,
+  "newValue": 875000.00,
+  "source": "Zillow Zestimate",
+  "valuationCreated": true
+}
+```
+
+---
+
+## Long-Term Projections
+
+10-30 year cashflow forecasting with Monte Carlo simulation.
+
+### GET /projections/long-term
+Get long-term projection for a space.
+
+**Query Parameters:**
+- `spaceId` (required): Space identifier
+- `years`: Projection horizon (10, 20, 30) - default: 30
+- `scenarios`: Number of Monte Carlo runs (100-10000) - default: 1000
+
+**Response:**
+```json
+{
+  "projection": {
+    "horizon": 30,
+    "scenarios": 1000,
+    "assumptions": {
+      "inflationRate": 0.03,
+      "incomeGrowthRate": 0.025,
+      "portfolioReturn": 0.07,
+      "portfolioVolatility": 0.15
+    },
+    "outcomes": {
+      "median": {
+        "year10": 450000,
+        "year20": 1200000,
+        "year30": 2500000
+      },
+      "percentile10": {
+        "year10": 280000,
+        "year20": 650000,
+        "year30": 1100000
+      },
+      "percentile90": {
+        "year10": 680000,
+        "year20": 2100000,
+        "year30": 5200000
+      }
+    },
+    "successProbability": 0.87,
+    "runOutYear": null
+  },
+  "yearByYear": [
+    {
+      "year": 1,
+      "projectedNetWorth": 155000,
+      "projectedIncome": 120000,
+      "projectedExpenses": 95000,
+      "projectedSavings": 25000
+    }
+  ]
+}
+```
+
+### POST /projections/long-term
+Create a custom projection with specific parameters.
+
+```json
+{
+  "spaceId": "space_123",
+  "years": 25,
+  "scenarios": 5000,
+  "assumptions": {
+    "inflationRate": 0.035,
+    "incomeGrowthRate": 0.02,
+    "retirementAge": 65,
+    "retirementSpending": 80000
+  },
+  "lifeEvents": [
+    {
+      "year": 5,
+      "type": "home_purchase",
+      "amount": -150000
+    },
+    {
+      "year": 18,
+      "type": "college",
+      "amount": -200000
+    },
+    {
+      "year": 22,
+      "type": "retirement",
+      "incomeChange": -100000
+    }
+  ]
+}
+```
+
+### GET /projections/scenarios
+List saved projection scenarios.
+
+### POST /projections/scenarios/compare
+Compare multiple projection scenarios.
+
+```json
+{
+  "scenarioIds": ["scen_123", "scen_456", "scen_789"]
+}
+```
+
+---
+
+## Document Upload
+
+Cloudflare R2 storage for manual asset attachments.
+
+### POST /manual-assets/:id/documents/presign
+Get a presigned URL for document upload.
+
+```json
+{
+  "filename": "appraisal-2025.pdf",
+  "contentType": "application/pdf",
+  "category": "appraisal"
+}
+```
+
+**Response:**
+```json
+{
+  "uploadUrl": "https://r2.example.com/presigned/...",
+  "documentId": "doc_123",
+  "expiresAt": "2025-01-15T11:00:00Z"
+}
+```
+
+### GET /manual-assets/:id/documents
+List documents attached to an asset.
+
+**Response:**
+```json
+{
+  "documents": [
+    {
+      "id": "doc_123",
+      "filename": "appraisal-2025.pdf",
+      "category": "appraisal",
+      "contentType": "application/pdf",
+      "size": 2456789,
+      "uploadedAt": "2025-01-10T10:00:00Z",
+      "downloadUrl": "https://r2.example.com/signed/..."
+    }
+  ]
+}
+```
+
+### DELETE /manual-assets/:id/documents/:docId
+Delete a document attachment.
+
+---
+
 ## Analytics & Reporting
 
 ### GET /analytics/dashboard
@@ -907,5 +1335,5 @@ The sandbox environment includes:
 
 ---
 
-**Last Updated**: January 2024  
-**API Version**: v1.0.0
+**Last Updated**: January 2025
+**API Version**: v1.1.0

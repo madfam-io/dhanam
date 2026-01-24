@@ -347,6 +347,12 @@ PLAID_CLIENT_ID=...
 BELVO_SECRET_ID=...
 BITSO_API_KEY=...
 
+# DeFi/Web3
+ZAPPER_API_KEY=...
+
+# Real Estate
+ZILLOW_API_KEY=...
+
 # Email
 SMTP_HOST=...
 SMTP_USER=...
@@ -354,6 +360,75 @@ SMTP_PASS=...
 
 # Analytics
 POSTHOG_API_KEY=...
+
+# Cloudflare R2 Storage
+R2_ACCOUNT_ID=...
+R2_ACCESS_KEY_ID=...
+R2_SECRET_ACCESS_KEY=...
+R2_BUCKET_NAME=dhanam-documents
+R2_PUBLIC_URL=https://docs.dhanam.io  # Optional: for public asset URLs
+```
+
+## Cloudflare R2 Storage
+
+Document storage for manual asset attachments uses Cloudflare R2.
+
+### R2 Configuration
+
+```typescript
+// apps/api/src/modules/storage/r2.config.ts
+import { S3Client } from '@aws-sdk/client-s3';
+
+export const r2Client = new S3Client({
+  region: 'auto',
+  endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+  credentials: {
+    accessKeyId: process.env.R2_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY!,
+  },
+});
+```
+
+### Bucket Structure
+
+```
+dhanam-documents/
+├── spaces/
+│   └── {spaceId}/
+│       └── assets/
+│           └── {assetId}/
+│               ├── appraisal-2025.pdf
+│               ├── deed.pdf
+│               └── photos/
+│                   └── front-view.jpg
+```
+
+### CORS Configuration
+
+```json
+[
+  {
+    "AllowedOrigins": ["https://app.dhan.am", "https://admin.dhanam.com"],
+    "AllowedMethods": ["GET", "PUT", "DELETE"],
+    "AllowedHeaders": ["*"],
+    "MaxAgeSeconds": 3600
+  }
+]
+```
+
+### Lifecycle Rules
+
+```json
+{
+  "Rules": [
+    {
+      "ID": "DeleteOldTempUploads",
+      "Status": "Enabled",
+      "Filter": { "Prefix": "temp/" },
+      "Expiration": { "Days": 1 }
+    }
+  ]
+}
 ```
 
 ### Production Checklist

@@ -288,24 +288,129 @@ Unrealized Gain = Current Value - Acquisition Cost
 - Red text for losses (negative)
 - Shows in asset summary and individual asset details
 
+## Zillow Integration
+
+Real estate assets can be automatically valued using Zillow's Zestimate API.
+
+### Setup
+
+1. Create a real estate manual asset with address metadata
+2. Click "Connect to Zillow" or use the lookup API
+3. System fetches and stores Zestimate value
+
+### API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/manual-assets/:id/zillow/estimate` | Get current Zestimate |
+| `POST` | `/manual-assets/:id/zillow/lookup` | Look up property by address |
+| `POST` | `/manual-assets/:id/zillow/sync` | Sync Zestimate to asset value |
+
+### Zillow Lookup
+
+```typescript
+// Look up property by address
+const result = await fetch(`/api/manual-assets/${assetId}/zillow/lookup`, {
+  method: 'POST',
+  body: JSON.stringify({
+    address: '123 Main Street',
+    city: 'San Francisco',
+    state: 'CA',
+    zipCode: '94102'
+  }),
+});
+
+// Response includes Zestimate and property details
+{
+  "zestimate": 875000,
+  "rentZestimate": 4200,
+  "valuationRange": { "low": 830000, "high": 920000 },
+  "propertyDetails": {
+    "bedrooms": 3,
+    "bathrooms": 2,
+    "sqft": 1850,
+    "yearBuilt": 2005
+  }
+}
+```
+
+### Auto-Update Configuration
+
+Zestimate values can be automatically synced via cron job:
+
+```env
+# Zillow sync schedule (weekly on Sundays at 2 AM)
+ZILLOW_SYNC_CRON="0 2 * * 0"
+ZILLOW_API_KEY=your_zillow_api_key
+```
+
+---
+
 ## Document Management
 
-### Document Storage
-Documents are stored in S3 with metadata in JSON field:
+### Document Storage (Cloudflare R2)
+
+Documents are stored in Cloudflare R2 with presigned URLs for secure access:
+
 ```json
 {
   "documents": [
     {
-      "key": "s3-object-key",
-      "url": "https://cdn.example.com/...",
+      "id": "doc_123",
+      "key": "spaces/space_123/assets/asset_456/appraisal-2025.pdf",
       "filename": "appraisal-2025.pdf",
       "uploadedAt": "2025-11-20T10:00:00Z",
-      "fileType": "application/pdf",
+      "contentType": "application/pdf",
+      "size": 2456789,
       "category": "appraisal"
     }
   ]
 }
 ```
+
+### Upload Flow
+
+1. Request presigned URL from API
+2. Upload file directly to R2 using presigned URL
+3. Confirm upload completion
+
+```typescript
+// Step 1: Get presigned URL
+const { uploadUrl, documentId } = await fetch(
+  `/api/manual-assets/${assetId}/documents/presign`,
+  {
+    method: 'POST',
+    body: JSON.stringify({
+      filename: 'appraisal-2025.pdf',
+      contentType: 'application/pdf',
+      category: 'appraisal'
+    }),
+  }
+).then(r => r.json());
+
+// Step 2: Upload to R2
+await fetch(uploadUrl, {
+  method: 'PUT',
+  body: file,
+  headers: {
+    'Content-Type': 'application/pdf'
+  }
+});
+
+// Step 3: Confirm upload (optional, validates file exists)
+await fetch(`/api/manual-assets/${assetId}/documents/${documentId}/confirm`, {
+  method: 'POST'
+});
+```
+
+### Document API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/manual-assets/:id/documents/presign` | Get presigned upload URL |
+| `GET` | `/manual-assets/:id/documents` | List all documents |
+| `GET` | `/manual-assets/:id/documents/:docId` | Get document download URL |
+| `DELETE` | `/manual-assets/:id/documents/:docId` | Delete document |
 
 ### Supported Document Types
 - Appraisal reports (PDF)
@@ -314,6 +419,28 @@ Documents are stored in S3 with metadata in JSON field:
 - Certificates of authenticity (PDF/Image)
 - Title deeds (PDF)
 - Investment memos (PDF/Word)
+- Insurance policies (PDF)
+- Photos (JPEG/PNG)
+
+### Document Categories
+
+| Category | Use Case |
+|----------|----------|
+| `appraisal` | Professional valuations |
+| `deed` | Property titles, ownership documents |
+| `certificate` | Authenticity certificates, certifications |
+| `agreement` | Purchase agreements, contracts |
+| `photo` | Asset photos, condition documentation |
+| `insurance` | Insurance policies |
+| `other` | Miscellaneous documents |
+
+### Storage Limits
+
+| Plan | Max File Size | Total Storage |
+|------|---------------|---------------|
+| Free | 10 MB | 100 MB |
+| Premium | 50 MB | 5 GB |
+| Enterprise | 100 MB | Unlimited |
 
 ## Integration with Net Worth Calculation
 

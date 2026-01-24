@@ -45,10 +45,17 @@ This is the Dhanam Ledger project - a comprehensive budget and wealth tracking a
 
 **Core Features:**
 - Personal and business budgeting with category caps and rules-based auto-categorization
+- AI-powered transaction categorization with machine learning and user correction loop
 - Wealth tracking with net worth calculations and asset allocation views
+- DeFi/Web3 portfolio tracking via Zapper API (Uniswap, Aave, Compound, Curve, Lido, and more)
 - ESG scoring for crypto assets using the Dhanam package
 - Read-only financial data integration (Belvo for MX, Plaid for US, Bitso for crypto)
 - 60-day cashflow forecasting with weekly granularity
+- 10-30 year long-term projections with Monte Carlo simulation
+- Life Beat dead man's switch for estate planning with executor access
+- Zillow integration for automated real estate valuations
+- Yours/Mine/Ours household ownership views
+- Document storage via Cloudflare R2 for manual asset attachments
 - TOTP 2FA security with JWT + rotating refresh tokens
 
 ## Architecture
@@ -135,6 +142,8 @@ turbo test        # Turborepo test
 - **Finicity** (US): Open Banking API → Mastercard-backed data access
 - **Bitso** (crypto exchange): API integration → real-time crypto positions
 - **Blockchain** (on-chain): ETH/BTC/xPub address tracking (non-custodial, no secrets)
+- **Zapper** (DeFi): API integration → protocol positions across 7 networks (Ethereum, Polygon, Arbitrum, Optimism, Base, Avalanche, BSC)
+- **Zillow** (Real Estate): Property valuation API → automated Zestimate updates for manual assets
 
 The provider orchestrator (`apps/api/src/modules/providers/orchestrator/`) handles failover and multi-provider redundancy.
 
