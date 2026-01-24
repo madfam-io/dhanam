@@ -57,13 +57,13 @@ describe('Formatters', () => {
     it('should format date in Spanish locale', () => {
       const date = new Date('2025-11-17');
       const result = formatDate(date, 'es');
-      expect(result).toContain('noviembre') || expect(result).toContain('2025');
+      expect(result).toMatch(/noviembre|2025/i);
     });
 
     it('should format date in English locale', () => {
       const date = new Date('2025-11-17');
       const result = formatDate(date, 'en');
-      expect(result).toContain('November') || expect(result).toContain('2025');
+      expect(result).toMatch(/November|2025/i);
     });
 
     it('should accept string dates', () => {
@@ -176,17 +176,17 @@ describe('Formatters', () => {
   describe('formatCompactNumber', () => {
     it('should format thousands as K', () => {
       const result = formatCompactNumber(1500, 'en');
-      expect(result.toLowerCase()).toContain('k') || expect(result).toContain('1.5');
+      expect(result.toLowerCase()).toMatch(/k|1\.5/);
     });
 
     it('should format millions as M', () => {
       const result = formatCompactNumber(1500000, 'en');
-      expect(result.toLowerCase()).toContain('m') || expect(result).toContain('1.5');
+      expect(result.toLowerCase()).toMatch(/m|1\.5/);
     });
 
     it('should format billions as B', () => {
       const result = formatCompactNumber(1500000000, 'en');
-      expect(result.toLowerCase()).toContain('b') || expect(result).toContain('1.5');
+      expect(result.toLowerCase()).toMatch(/b|1\.5/);
     });
   });
 

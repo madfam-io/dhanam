@@ -1,4 +1,3 @@
-import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { EmptyState } from '../components/empty-state';
 
@@ -29,14 +28,15 @@ jest.mock('../components/card', () => ({
   ),
 }));
 
-// Mock icon component
-const MockIcon = (props: any) => (
+// Mock icon components - cast to any to satisfy ForwardRefExoticComponent type
+// This is acceptable in tests since we're mocking Lucide icon components
+const MockIcon = ((props: any) => (
   <svg data-testid="mock-icon" {...props} />
-);
+)) as any;
 
-const MockActionIcon = (props: any) => (
+const MockActionIcon = ((props: any) => (
   <svg data-testid="mock-action-icon" {...props} />
-);
+)) as any;
 
 describe('EmptyState', () => {
   describe('Basic Rendering', () => {

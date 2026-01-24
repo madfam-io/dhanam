@@ -38,24 +38,24 @@ describe('Semantic Color Tokens', () => {
       });
 
       it('color values should be valid HSL format', () => {
-        Object.entries(semanticColorTokens.light).forEach(([key, value]) => {
+        Object.entries(semanticColorTokens.light).forEach(([_key, value]) => {
           // HSL format: "H S% L%" (e.g., "142.1 76.2% 36.3%")
           expect(value).toMatch(/^[\d.]+ [\d.]+% [\d.]+%$/);
         });
       });
 
       it('success color should be green (hue ~142)', () => {
-        const hue = parseFloat(semanticColorTokens.light.success.split(' ')[0]);
+        const hue = parseFloat(semanticColorTokens.light.success.split(' ')[0] ?? '0');
         expect(hue).toBeCloseTo(142, 0);
       });
 
       it('warning color should be yellow/orange (hue ~38)', () => {
-        const hue = parseFloat(semanticColorTokens.light.warning.split(' ')[0]);
+        const hue = parseFloat(semanticColorTokens.light.warning.split(' ')[0] ?? '0');
         expect(hue).toBeCloseTo(38, 0);
       });
 
       it('info color should be blue (hue ~217)', () => {
-        const hue = parseFloat(semanticColorTokens.light.info.split(' ')[0]);
+        const hue = parseFloat(semanticColorTokens.light.info.split(' ')[0] ?? '0');
         expect(hue).toBeCloseTo(217, 0);
       });
     });
@@ -68,14 +68,14 @@ describe('Semantic Color Tokens', () => {
       });
 
       it('dark colors should have higher lightness for main colors', () => {
-        const lightSuccess = parseFloat(semanticColorTokens.light.success.split(' ')[2]);
-        const darkSuccess = parseFloat(semanticColorTokens.dark.success.split(' ')[2]);
+        const lightSuccess = parseFloat(semanticColorTokens.light.success.split(' ')[2] ?? '0');
+        const darkSuccess = parseFloat(semanticColorTokens.dark.success.split(' ')[2] ?? '0');
         expect(darkSuccess).toBeGreaterThan(lightSuccess);
       });
 
       it('dark background colors should have lower lightness', () => {
-        const lightBg = parseFloat(semanticColorTokens.light.successBg.split(' ')[2]);
-        const darkBg = parseFloat(semanticColorTokens.dark.successBg.split(' ')[2]);
+        const lightBg = parseFloat(semanticColorTokens.light.successBg.split(' ')[2] ?? '0');
+        const darkBg = parseFloat(semanticColorTokens.dark.successBg.split(' ')[2] ?? '0');
         expect(darkBg).toBeLessThan(lightBg);
       });
     });

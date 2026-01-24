@@ -3,3 +3,11 @@
 
 # Run linting on staged files
 pnpm lint-staged
+
+# Run TypeScript type checking on affected packages
+# This catches type errors before they reach CI
+echo "Running TypeScript type check..."
+pnpm typecheck || {
+  echo "❌ TypeScript errors found. Please fix them before committing."
+  exit 1
+}
