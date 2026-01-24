@@ -16,6 +16,7 @@ import {
   AlertTriangle,
   Users,
   ScrollText,
+  Landmark,
 } from 'lucide-react';
 
 const navigation = [
@@ -38,6 +39,11 @@ const navigation = [
     name: 'Budgets',
     href: '/budgets',
     icon: PiggyBank,
+  },
+  {
+    name: 'Zero-Based',
+    href: '/budgets/zero-based',
+    icon: Landmark,
   },
   {
     name: 'Goals',

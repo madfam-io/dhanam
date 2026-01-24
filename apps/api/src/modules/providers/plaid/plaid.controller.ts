@@ -7,9 +7,10 @@ import {
   UseGuards,
   Get,
   Param,
+  Query,
   BadRequestException,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 
 import { CurrentUser } from '@core/auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
@@ -70,6 +71,34 @@ export class PlaidController {
 
     return {
       message: 'Webhook processed successfully',
+    };
+  }
+
+  @Get('spaces/:spaceId/bills/upcoming')
+  @UseGuards(JwtAuthGuard, SpaceGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Get upcoming bills for a space',
+    description: 'Returns liability accounts (credit cards, loans) with upcoming payment due dates',
+  })
+  @ApiQuery({
+    name: 'days',
+    required: false,
+    description: 'Number of days ahead to look (default: 30)',
+  })
+  @ApiResponse({ status: 200, description: 'Upcoming bills retrieved successfully' })
+  async getUpcomingBills(
+    @Param('spaceId') spaceId: string,
+    @CurrentUser() _user: User,
+    @Query('days') days?: string
+  ) {
+    const daysAhead = days ? parseInt(days, 10) : 30;
+    const bills = await this.plaidService.getUpcomingBills(spaceId, daysAhead);
+
+    return {
+      bills,
+      count: bills.length,
+      overdueCount: bills.filter((b) => b.isOverdue).length,
     };
   }
 

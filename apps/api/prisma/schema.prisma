@@ -104,6 +104,15 @@ enum ManualAssetType {
   other
 }
 
+// Private Equity Cash Flow Types
+enum PECashFlowType {
+  capital_call // Money going into the investment
+  distribution // Money coming back from the investment
+  management_fee // Fees paid to fund managers
+  carry // Carried interest payments
+  recallable // Previously distributed amounts that can be recalled
+}
+
 enum AccountOwnership {
   individual // Owned by a single household member
   joint // Shared by multiple household members
@@ -385,6 +394,7 @@ model Space {
   manualAssets       ManualAsset[]
   connectionAttempts ConnectionAttempt[]
   subscriptions      Subscription[]
+  incomeEvents       IncomeEvent[]
 
   @@index([householdId])
   @@map("spaces")
@@ -421,6 +431,18 @@ model Account {
   lastSyncedAt         DateTime?        @map("last_synced_at")
   createdAt            DateTime         @default(now()) @map("created_at")
   updatedAt            DateTime         @updatedAt @map("updated_at")
+
+  // Liability-specific fields (credit cards, loans, mortgages)
+  liabilityType      String?   @map("liability_type") // credit, student, mortgage, auto, personal
+  apr                Decimal?  @db.Decimal(6, 4) // Annual percentage rate (e.g., 0.1999 = 19.99%)
+  minimumPayment     Decimal?  @map("minimum_payment") @db.Decimal(19, 4)
+  nextPaymentDueDate DateTime? @map("next_payment_due_date") @db.Date
+  lastPaymentAmount  Decimal?  @map("last_payment_amount") @db.Decimal(19, 4)
+  lastPaymentDate    DateTime? @map("last_payment_date") @db.Date
+  isOverdue          Boolean   @default(false) @map("is_overdue")
+  creditLimit        Decimal?  @map("credit_limit") @db.Decimal(19, 4)
+  originationDate    DateTime? @map("origination_date") @db.Date
+  originalPrincipal  Decimal?  @map("original_principal") @db.Decimal(19, 4)
 
   // Relations
   space                Space                      @relation(fields: [spaceId], references: [id], onDelete: Cascade)
@@ -536,50 +558,50 @@ model RecurringTransaction {
 }
 
 model Subscription {
-  id                  String               @id @default(uuid())
-  spaceId             String               @map("space_id")
-  recurringId         String?              @unique @map("recurring_id") // Link to detected recurring pattern
+  id          String  @id @default(uuid())
+  spaceId     String  @map("space_id")
+  recurringId String? @unique @map("recurring_id") // Link to detected recurring pattern
 
   // Service details
-  serviceName         String               @map("service_name")
-  serviceUrl          String?              @map("service_url")
-  serviceIcon         String?              @map("service_icon")
-  category            SubscriptionCategory @default(other)
-  description         String?
+  serviceName String               @map("service_name")
+  serviceUrl  String?              @map("service_url")
+  serviceIcon String?              @map("service_icon")
+  category    SubscriptionCategory @default(other)
+  description String?
 
   // Billing details
-  amount              Decimal              @db.Decimal(19, 4)
-  currency            Currency
-  billingCycle        RecurrenceFrequency  @map("billing_cycle")
-  nextBillingDate     DateTime?            @map("next_billing_date") @db.Date
-  lastBillingDate     DateTime?            @map("last_billing_date") @db.Date
+  amount          Decimal             @db.Decimal(19, 4)
+  currency        Currency
+  billingCycle    RecurrenceFrequency @map("billing_cycle")
+  nextBillingDate DateTime?           @map("next_billing_date") @db.Date
+  lastBillingDate DateTime?           @map("last_billing_date") @db.Date
 
   // Status tracking
-  status              SubscriptionStatus   @default(active)
-  startDate           DateTime             @map("start_date") @db.Date
-  endDate             DateTime?            @map("end_date") @db.Date
-  trialEndDate        DateTime?            @map("trial_end_date") @db.Date
-  cancelledAt         DateTime?            @map("cancelled_at")
-  cancellationReason  String?              @map("cancellation_reason")
+  status             SubscriptionStatus @default(active)
+  startDate          DateTime           @map("start_date") @db.Date
+  endDate            DateTime?          @map("end_date") @db.Date
+  trialEndDate       DateTime?          @map("trial_end_date") @db.Date
+  cancelledAt        DateTime?          @map("cancelled_at")
+  cancellationReason String?            @map("cancellation_reason")
 
   // Savings & recommendations
-  annualCost          Decimal              @map("annual_cost") @db.Decimal(19, 4)
-  usageFrequency      String?              @map("usage_frequency") // low, medium, high, unknown
-  savingsRecommendation String?            @map("savings_recommendation")
-  alternativeServices Json?                @map("alternative_services") // [{name, price, url}]
+  annualCost            Decimal @map("annual_cost") @db.Decimal(19, 4)
+  usageFrequency        String? @map("usage_frequency") // low, medium, high, unknown
+  savingsRecommendation String? @map("savings_recommendation")
+  alternativeServices   Json?   @map("alternative_services") // [{name, price, url}]
 
   // Notification preferences
-  alertBeforeDays     Int                  @default(3) @map("alert_before_days")
-  alertEnabled        Boolean              @default(true) @map("alert_enabled")
+  alertBeforeDays Int     @default(3) @map("alert_before_days")
+  alertEnabled    Boolean @default(true) @map("alert_enabled")
 
-  notes               String?
-  metadata            Json?
-  createdAt           DateTime             @default(now()) @map("created_at")
-  updatedAt           DateTime             @updatedAt @map("updated_at")
+  notes     String?
+  metadata  Json?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   // Relations
-  space               Space                @relation(fields: [spaceId], references: [id], onDelete: Cascade)
-  recurringPattern    RecurringTransaction? @relation(fields: [recurringId], references: [id], onDelete: SetNull)
+  space            Space                 @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  recurringPattern RecurringTransaction? @relation(fields: [recurringId], references: [id], onDelete: SetNull)
 
   @@unique([spaceId, serviceName])
   @@index([spaceId, status])
@@ -601,13 +623,82 @@ model Category {
   updatedAt       DateTime @updatedAt @map("updated_at")
 
   // Relations
-  budget       Budget            @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+  budget       Budget              @relation(fields: [budgetId], references: [id], onDelete: Cascade)
   transactions Transaction[]
   rules        TransactionRule[]
+  allocations  IncomeAllocation[]
+  goal         CategoryGoal?
 
   @@unique([budgetId, name])
   @@index([budgetId])
   @@map("categories")
+}
+
+// Zero-Based Budgeting - Category Goal Types
+enum CategoryGoalType {
+  monthly_spending // Target spending amount per month
+  target_balance // Save X amount by date Y
+  weekly_spending // Target spending amount per week
+  percentage_income // Allocate X% of income to this category
+}
+
+// Zero-Based Budgeting - Income Event (when money comes in)
+model IncomeEvent {
+  id          String   @id @default(uuid())
+  spaceId     String   @map("space_id")
+  amount      Decimal  @db.Decimal(19, 4)
+  currency    Currency
+  source      String // "paycheck", "freelance", "refund", "bonus", "transfer", "other"
+  description String?
+  receivedAt  DateTime @map("received_at")
+  isAllocated Boolean  @default(false) @map("is_allocated")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  space       Space              @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  allocations IncomeAllocation[]
+
+  @@index([spaceId, receivedAt(sort: Desc)])
+  @@index([spaceId, isAllocated])
+  @@map("income_events")
+}
+
+// Zero-Based Budgeting - Income Allocation (how income is assigned to categories)
+model IncomeAllocation {
+  id            String   @id @default(uuid())
+  incomeEventId String   @map("income_event_id")
+  categoryId    String   @map("category_id")
+  amount        Decimal  @db.Decimal(19, 4)
+  notes         String?
+  allocatedAt   DateTime @default(now()) @map("allocated_at")
+
+  // Relations
+  incomeEvent IncomeEvent @relation(fields: [incomeEventId], references: [id], onDelete: Cascade)
+  category    Category    @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@index([incomeEventId])
+  @@index([categoryId])
+  @@map("income_allocations")
+}
+
+// Zero-Based Budgeting - Category Goal (funding targets)
+model CategoryGoal {
+  id               String           @id @default(uuid())
+  categoryId       String           @unique @map("category_id")
+  goalType         CategoryGoalType @map("goal_type")
+  targetAmount     Decimal?         @map("target_amount") @db.Decimal(19, 4)
+  targetDate       DateTime?        @map("target_date") @db.Date
+  monthlyFunding   Decimal?         @map("monthly_funding") @db.Decimal(19, 4)
+  percentageTarget Decimal?         @map("percentage_target") @db.Decimal(5, 2) // For percentage_income type
+  notes            String?
+  createdAt        DateTime         @default(now()) @map("created_at")
+  updatedAt        DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@map("category_goals")
 }
 
 model TransactionRule {
@@ -712,8 +803,9 @@ model ManualAsset {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   // Relations
-  space            Space                  @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  space            Space                    @relation(fields: [spaceId], references: [id], onDelete: Cascade)
   valuationHistory ManualAssetValuation[]
+  cashFlows        PrivateEquityCashFlow[]
 
   @@index([spaceId])
   @@index([type])
@@ -736,6 +828,28 @@ model ManualAssetValuation {
   @@unique([assetId, date])
   @@index([assetId, date(sort: Desc)])
   @@map("manual_asset_valuations")
+}
+
+// Private Equity Cash Flow Tracking
+model PrivateEquityCashFlow {
+  id          String         @id @default(uuid())
+  assetId     String         @map("asset_id")
+  type        PECashFlowType
+  amount      Decimal        @db.Decimal(19, 4)
+  currency    Currency
+  date        DateTime       @db.Date
+  description String?
+  notes       String?
+  metadata    Json? // Additional info like call number, distribution type, etc.
+  createdAt   DateTime       @default(now()) @map("created_at")
+  updatedAt   DateTime       @updatedAt @map("updated_at")
+
+  // Relations
+  asset ManualAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@index([assetId, date(sort: Desc)])
+  @@index([assetId, type])
+  @@map("private_equity_cash_flows")
 }
 
 model AuditLog {

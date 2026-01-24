@@ -10,17 +10,37 @@ import {
 import { Injectable } from '@nestjs/common';
 
 import { PrismaService } from '../../core/prisma/prisma.service';
+import { FxRatesService } from '../fx-rates/fx-rates.service';
 import { SpacesService } from '../spaces/spaces.service';
 
 @Injectable()
 export class AnalyticsService {
   constructor(
     private prisma: PrismaService,
-    private spacesService: SpacesService
+    private spacesService: SpacesService,
+    private fxRatesService: FxRatesService
   ) {}
 
-  async getNetWorth(userId: string, spaceId: string): Promise<NetWorthResponse> {
+  /**
+   * Calculate net worth with multi-currency support.
+   * Converts all account balances to the target currency (defaults to space's base currency).
+   * @param userId - The user ID
+   * @param spaceId - The space ID
+   * @param targetCurrency - Optional target currency for conversion (defaults to space currency)
+   */
+  async getNetWorth(
+    userId: string,
+    spaceId: string,
+    targetCurrency?: Currency
+  ): Promise<NetWorthResponse> {
     await this.spacesService.verifyUserAccess(userId, spaceId, 'viewer');
+
+    // Get space to determine default currency
+    const space = await this.prisma.space.findUnique({
+      where: { id: spaceId },
+    });
+
+    const displayCurrency = targetCurrency || (space?.currency as Currency) || Currency.MXN;
 
     const accounts = await this.prisma.account.findMany({
       where: { spaceId },
@@ -32,13 +52,54 @@ export class AnalyticsService {
       },
     });
 
-    const totalAssets = accounts
-      .filter((a) => a.balance.toNumber() > 0)
-      .reduce((sum, account) => sum + account.balance.toNumber(), 0);
+    // Also fetch manual assets for comprehensive net worth
+    const manualAssets = await this.prisma.manualAsset.findMany({
+      where: { spaceId },
+    });
 
-    const totalLiabilities = accounts
-      .filter((a) => a.balance.toNumber() < 0)
-      .reduce((sum, account) => sum + Math.abs(account.balance.toNumber()), 0);
+    // Convert all account balances to target currency
+    let totalAssets = 0;
+    let totalLiabilities = 0;
+
+    for (const account of accounts) {
+      const balance = account.balance.toNumber();
+      const accountCurrency = account.currency as Currency;
+
+      // Convert to target currency if different
+      let convertedBalance = balance;
+      if (accountCurrency !== displayCurrency) {
+        convertedBalance = await this.fxRatesService.convertAmount(
+          Math.abs(balance),
+          accountCurrency,
+          displayCurrency
+        );
+        // Preserve sign after conversion
+        if (balance < 0) convertedBalance = -convertedBalance;
+      }
+
+      if (convertedBalance > 0) {
+        totalAssets += convertedBalance;
+      } else {
+        totalLiabilities += Math.abs(convertedBalance);
+      }
+    }
+
+    // Add manual assets (converted to target currency)
+    for (const asset of manualAssets) {
+      const value = asset.currentValue.toNumber();
+      const assetCurrency = asset.currency as Currency;
+
+      let convertedValue = value;
+      if (assetCurrency !== displayCurrency) {
+        convertedValue = await this.fxRatesService.convertAmount(
+          value,
+          assetCurrency,
+          displayCurrency
+        );
+      }
+
+      totalAssets += convertedValue;
+    }
 
     const netWorth = totalAssets - totalLiabilities;
 
@@ -54,20 +115,43 @@ export class AnalyticsService {
       orderBy: { date: 'asc' },
     });
 
-    const trend = historicalValuations.map((v) => ({
-      date: v.date.toISOString(),
-      value: v.value.toNumber(),
-    }));
+    // Convert historical valuations to target currency for consistent trend
+    const trendPromises = historicalValuations.map(async (v) => {
+      const account = accounts.find((a) => a.id === v.accountId);
+      const valuationCurrency = (v.currency || account?.currency || Currency.MXN) as Currency;
+      let value = v.value.toNumber();
+
+      if (valuationCurrency !== displayCurrency) {
+        value = await this.fxRatesService.convertAmount(value, valuationCurrency, displayCurrency);
+      }
+
+      return {
+        date: v.date.toISOString(),
+        value,
+      };
+    });
+
+    const trend = await Promise.all(trendPromises);
+
+    // Calculate change from earliest to latest
+    let changeAmount = 0;
+    let changePercent = 0;
+    if (trend.length >= 2) {
+      const earliest = trend[0]?.value || 0;
+      const latest = trend[trend.length - 1]?.value || 0;
+      changeAmount = latest - earliest;
+      changePercent = earliest > 0 ? ((latest - earliest) / earliest) * 100 : 0;
+    }
 
     return {
-      totalAssets,
-      totalLiabilities,
-      netWorth,
-      currency: Currency.MXN,
+      totalAssets: Math.round(totalAssets * 100) / 100,
+      totalLiabilities: Math.round(totalLiabilities * 100) / 100,
+      netWorth: Math.round(netWorth * 100) / 100,
+      currency: displayCurrency,
       lastUpdated: new Date().toISOString(),
       trend,
-      changePercent: 0, // TODO: Calculate actual change
-      changeAmount: 0,
+      changePercent: Math.round(changePercent * 100) / 100,
+      changeAmount: Math.round(changeAmount * 100) / 100,
     };
   }
 

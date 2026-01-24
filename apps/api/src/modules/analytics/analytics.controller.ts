@@ -5,6 +5,7 @@ import {
   IncomeVsExpenses,
   AccountBalanceAnalytics,
   PortfolioAllocation,
+  Currency,
 } from '@dhanam/shared';
 import { Controller, Get, Query, UseGuards, Request, Param } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
@@ -25,12 +26,14 @@ export class AnalyticsController {
   ) {}
 
   @Get(':spaceId/net-worth')
-  @ApiOperation({ summary: 'Get net worth for a space' })
+  @ApiOperation({ summary: 'Get net worth for a space (with multi-currency conversion)' })
   async getNetWorth(
     @Request() req: any,
-    @Param('spaceId') spaceId: string
+    @Param('spaceId') spaceId: string,
+    @Query('currency') currency?: string
   ): Promise<NetWorthResponse> {
-    return this.analyticsService.getNetWorth(req.user!.userId, spaceId);
+    const targetCurrency = currency ? (currency.toUpperCase() as Currency) : undefined;
+    return this.analyticsService.getNetWorth(req.user!.userId, spaceId, targetCurrency);
   }
 
   @Get(':spaceId/cashflow-forecast')

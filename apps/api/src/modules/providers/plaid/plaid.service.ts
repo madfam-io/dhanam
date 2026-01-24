@@ -15,6 +15,8 @@ import {
   TransactionsSyncRequest,
   DepositoryAccountSubtype,
   CreditAccountSubtype,
+  LiabilitiesGetRequest,
+  LoanAccountSubtype,
 } from 'plaid';
 
 import { MonitorPerformance } from '@core/decorators/monitor-performance.decorator';
@@ -73,7 +75,7 @@ export class PlaidService {
 
     try {
       const request: LinkTokenCreateRequest = {
-        products: [Products.Transactions, Products.Auth],
+        products: [Products.Transactions, Products.Auth, Products.Liabilities],
         client_name: 'Dhanam Ledger',
         country_codes: [CountryCode.Us],
         language: 'en',
@@ -87,6 +89,16 @@ export class PlaidService {
           },
           credit: {
             account_subtypes: [CreditAccountSubtype.CreditCard],
+          },
+          loan: {
+            account_subtypes: [
+              LoanAccountSubtype.Auto,
+              LoanAccountSubtype.Student,
+              LoanAccountSubtype.Mortgage,
+              LoanAccountSubtype.Consumer,
+              LoanAccountSubtype.HomeEquity,
+              LoanAccountSubtype.LineOfCredit,
+            ],
           },
         },
       };
@@ -215,6 +227,14 @@ export class PlaidService {
       // Initial transaction sync
       await this.syncTransactions(access_token, item_id);
 
+      // Initial liability sync (for credit cards, loans, mortgages)
+      try {
+        await this.syncLiabilities(access_token, item_id);
+      } catch (error) {
+        // Liabilities may not be available for all accounts, log but don't fail
+        this.logger.warn(`Liabilities sync skipped for item ${item_id}:`, error);
+      }
+
       this.logger.log(`Successfully linked Plaid item ${item_id} for user ${userId}`);
       return { accounts };
     } catch (error) {
@@ -327,6 +347,179 @@ export class PlaidService {
       this.logger.error(`Failed to sync transactions for item ${itemId}:`, error);
       throw error;
     }
+  }
+
+  /**
+   * Sync liability data (credit cards, loans, mortgages) from Plaid
+   * Updates account records with APR, minimum payment, due dates, etc.
+   */
+  @MonitorPerformance(3000)
+  async syncLiabilities(
+    accessToken: string,
+    itemId: string
+  ): Promise<{ accountsUpdated: number; liabilityTypes: string[] }> {
+    if (!this.plaidClient) {
+      throw new BadRequestException('Plaid integration not configured');
+    }
+
+    try {
+      const request: LiabilitiesGetRequest = {
+        access_token: accessToken,
+      };
+
+      const response = await this.plaidClient.liabilitiesGet(request);
+      const { liabilities, accounts } = response.data;
+
+      const liabilityTypes: string[] = [];
+      let accountsUpdated = 0;
+
+      // Process credit card liabilities
+      if (liabilities.credit) {
+        liabilityTypes.push('credit');
+        for (const credit of liabilities.credit) {
+          const account = accounts.find((a) => a.account_id === credit.account_id);
+          if (!account) continue;
+
+          await this.prisma.account.updateMany({
+            where: {
+              provider: 'plaid',
+              providerAccountId: credit.account_id,
+            },
+            data: {
+              liabilityType: 'credit',
+              apr: credit.aprs?.[0]?.apr_percentage ? credit.aprs[0].apr_percentage / 100 : null,
+              minimumPayment: credit.minimum_payment_amount || null,
+              nextPaymentDueDate: credit.next_payment_due_date
+                ? new Date(credit.next_payment_due_date)
+                : null,
+              lastPaymentAmount: credit.last_payment_amount || null,
+              lastPaymentDate: credit.last_payment_date ? new Date(credit.last_payment_date) : null,
+              isOverdue: credit.is_overdue || false,
+              creditLimit: account.balances.limit || null,
+              lastSyncedAt: new Date(),
+            },
+          });
+          accountsUpdated++;
+        }
+      }
+
+      // Process student loans
+      if (liabilities.student) {
+        liabilityTypes.push('student');
+        for (const student of liabilities.student) {
+          await this.prisma.account.updateMany({
+            where: {
+              provider: 'plaid',
+              providerAccountId: student.account_id,
+            },
+            data: {
+              liabilityType: 'student',
+              apr: student.interest_rate_percentage ? student.interest_rate_percentage / 100 : null,
+              minimumPayment: student.minimum_payment_amount || null,
+              nextPaymentDueDate: student.next_payment_due_date
+                ? new Date(student.next_payment_due_date)
+                : null,
+              lastPaymentAmount: student.last_payment_amount || null,
+              lastPaymentDate: student.last_payment_date
+                ? new Date(student.last_payment_date)
+                : null,
+              isOverdue: student.is_overdue || false,
+              originationDate: student.origination_date ? new Date(student.origination_date) : null,
+              originalPrincipal: student.origination_principal_amount || null,
+              lastSyncedAt: new Date(),
+            },
+          });
+          accountsUpdated++;
+        }
+      }
+
+      // Process mortgages
+      if (liabilities.mortgage) {
+        liabilityTypes.push('mortgage');
+        for (const mortgage of liabilities.mortgage) {
+          await this.prisma.account.updateMany({
+            where: {
+              provider: 'plaid',
+              providerAccountId: mortgage.account_id,
+            },
+            data: {
+              liabilityType: 'mortgage',
+              apr: mortgage.interest_rate?.percentage
+                ? mortgage.interest_rate.percentage / 100
+                : null,
+              nextPaymentDueDate: mortgage.next_payment_due_date
+                ? new Date(mortgage.next_payment_due_date)
+                : null,
+              lastPaymentAmount: mortgage.last_payment_amount || null,
+              lastPaymentDate: mortgage.last_payment_date
+                ? new Date(mortgage.last_payment_date)
+                : null,
+              isOverdue: mortgage.past_due_amount ? mortgage.past_due_amount > 0 : false,
+              originationDate: mortgage.origination_date
+                ? new Date(mortgage.origination_date)
+                : null,
+              originalPrincipal: mortgage.origination_principal_amount || null,
+              lastSyncedAt: new Date(),
+            },
+          });
+          accountsUpdated++;
+        }
+      }
+
+      this.logger.log(
+        `Synced liabilities for item ${itemId}: ${accountsUpdated} accounts, types: ${liabilityTypes.join(', ')}`
+      );
+
+      return { accountsUpdated, liabilityTypes };
+    } catch (error) {
+      this.logger.error(`Failed to sync liabilities for item ${itemId}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get upcoming bills for a space based on liability due dates
+   */
+  async getUpcomingBills(
+    spaceId: string,
+    daysAhead: number = 30
+  ): Promise<
+    Array<{
+      accountId: string;
+      accountName: string;
+      liabilityType: string;
+      amount: number;
+      dueDate: Date;
+      isOverdue: boolean;
+    }>
+  > {
+    const futureDate = new Date();
+    futureDate.setDate(futureDate.getDate() + daysAhead);
+
+    const accounts = await this.prisma.account.findMany({
+      where: {
+        spaceId,
+        liabilityType: { not: null },
+        OR: [
+          {
+            nextPaymentDueDate: {
+              lte: futureDate,
+            },
+          },
+          { isOverdue: true },
+        ],
+      },
+      orderBy: [{ isOverdue: 'desc' }, { nextPaymentDueDate: 'asc' }],
+    });
+
+    return accounts.map((account) => ({
+      accountId: account.id,
+      accountName: account.name,
+      liabilityType: account.liabilityType || 'unknown',
+      amount: account.minimumPayment?.toNumber() || 0,
+      dueDate: account.nextPaymentDueDate || new Date(),
+      isOverdue: account.isOverdue,
+    }));
   }
 
   private async createTransactionFromPlaid(plaidTransaction: any, _itemId: string) {
