@@ -93,6 +93,8 @@ module.exports = {
     },
   },
   moduleNameMapper: {
+    '^@db/(.*)$': '<rootDir>/generated/prisma/$1',
+    '^@db$': '<rootDir>/generated/prisma',
     '^@/(.*)$': '<rootDir>/src/$1',
     '^@modules/(.*)$': '<rootDir>/src/modules/$1',
     '^@core/(.*)$': '<rootDir>/src/core/$1',

@@ -15,6 +15,17 @@ pnpm lint || {
   exit 1
 }
 
+# Check if schema.prisma was modified without a migration
+if git diff origin/main --name-only 2>/dev/null | grep -q "prisma/schema.prisma"; then
+  MIGRATION_CHANGES=$(git diff origin/main --name-only 2>/dev/null | grep "prisma/migrations" | wc -l | tr -d ' ')
+  if [ "$MIGRATION_CHANGES" -eq 0 ]; then
+    echo ""
+    echo "⚠️  Warning: schema.prisma modified but no new migration detected"
+    echo "   Run 'cd apps/api && pnpm prisma migrate dev --name <migration_name>' to create a migration"
+    echo ""
+  fi
+fi
+
 # Check for uncommitted schema drift
 cd apps/api
 if pnpm prisma migrate status 2>&1 | grep -q "have not yet been applied"; then

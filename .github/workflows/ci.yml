@@ -207,6 +207,17 @@ jobs:
       - name: Build packages
         run: pnpm build:packages
 
+      - name: Validate Jest configuration
+        run: |
+          cd apps/api
+          # Verify Jest can load without module errors
+          pnpm jest --listTests > /dev/null 2>&1 || {
+            echo "❌ Jest configuration has module resolution issues"
+            pnpm jest --listTests 2>&1 | head -20
+            exit 1
+          }
+          echo "✅ Jest configuration valid"
+
       - name: Run tests
         run: pnpm test
 
