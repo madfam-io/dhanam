@@ -1,4 +1,3 @@
-import { GoalType, Currency } from '@prisma/client';
 import { Type } from 'class-transformer';
 import {
   IsString,
@@ -11,6 +10,8 @@ import {
   Max,
   IsUUID,
 } from 'class-validator';
+
+import { GoalType, Currency } from '@db';
 
 export class CreateGoalDto {
   @IsUUID()

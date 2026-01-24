@@ -1,4 +1,3 @@
-import { RelationshipType } from '@prisma/client';
 import {
   IsUUID,
   IsNotEmpty,
@@ -8,6 +7,8 @@ import {
   IsDateString,
   IsString,
 } from 'class-validator';
+
+import { RelationshipType } from '@db';
 
 export class AddMemberDto {
   @IsUUID()

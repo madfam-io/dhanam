@@ -1,7 +1,7 @@
 import { BudgetPeriod } from '@dhanam/shared';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsString, IsDate, IsEnum, IsOptional } from 'class-validator';
+import { IsString, IsDate, IsEnum, IsOptional, IsBoolean } from 'class-validator';
 
 export class CreateBudgetDto {
   @ApiProperty()
@@ -22,4 +22,12 @@ export class CreateBudgetDto {
   @Type(() => Date)
   @IsDate()
   endDate?: Date;
+
+  @ApiPropertyOptional({
+    description: 'Enable automatic rollover of unspent funds',
+    default: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  rolloverEnabled?: boolean;
 }

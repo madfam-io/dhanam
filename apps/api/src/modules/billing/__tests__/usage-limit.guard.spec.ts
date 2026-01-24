@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { UsageMetricType } from '@prisma/client';
+import { UsageMetricType } from '@db';
 
 import { UsageLimitGuard } from '../guards/usage-limit.guard';
 import { BillingService } from '../billing.service';

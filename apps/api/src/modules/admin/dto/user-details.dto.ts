@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { SpaceRole, SpaceType, Provider, Currency } from '@prisma/client';
+
+import { SpaceRole, SpaceType, Provider, Currency } from '@db';
 
 export class UserDetailsDto {
   @ApiProperty()

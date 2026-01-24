@@ -5,11 +5,11 @@ import {
   BadRequestException,
   ForbiddenException,
 } from '@nestjs/common';
-import { AccountOwnership as _AccountOwnership } from '@prisma/client';
 import { v4 as uuidv4 } from 'uuid';
 
 import { LoggerService } from '@core/logger/logger.service';
 import { PrismaService } from '@core/prisma/prisma.service';
+import { AccountOwnership as _AccountOwnership } from '@db';
 
 import { ConnectAccountDto } from './dto/connect-account.dto';
 import { CreateAccountDto } from './dto/create-account.dto';

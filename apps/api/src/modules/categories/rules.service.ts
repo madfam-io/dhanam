@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Transaction } from '@prisma/client';
 
 import { PrismaService } from '@core/prisma/prisma.service';
+import { Transaction } from '@db';
 
 export interface CategoryRule {
   id: string;

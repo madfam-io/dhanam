@@ -23,8 +23,11 @@ import { ManualAssetsModule } from '@modules/manual-assets/manual-assets.module'
 import { OnboardingModule } from '@modules/onboarding/onboarding.module';
 import { PreferencesModule } from '@modules/preferences/preferences.module';
 import { ProvidersModule } from '@modules/providers/providers.module';
+import { RecurringModule } from '@modules/recurring/recurring.module';
+import { SearchModule } from '@modules/search/search.module';
 import { SimulationsModule } from '@modules/simulations/simulations.module';
 import { SpacesModule } from '@modules/spaces/spaces.module';
+import { SubscriptionsModule } from '@modules/subscriptions/subscriptions.module';
 import { TransactionExecutionModule } from '@modules/transaction-execution/transaction-execution.module';
 import { TransactionsModule } from '@modules/transactions/transactions.module';
 import { UsersModule } from '@modules/users/users.module';
@@ -67,6 +70,9 @@ import { validationSchema } from './config/validation';
     SimulationsModule,
     TransactionExecutionModule,
     ManualAssetsModule,
+    RecurringModule,
+    SubscriptionsModule,
+    SearchModule,
   ],
 })
 export class AppModule {}

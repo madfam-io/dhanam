@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
 import { BadRequestException } from '@nestjs/common';
-import { Currency } from '@prisma/client';
+import { Currency } from '@db';
 import { of, throwError } from 'rxjs';
 
 import { PrismaService } from '../../../core/prisma/prisma.service';

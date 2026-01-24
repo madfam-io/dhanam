@@ -1,6 +1,7 @@
-import { GoalType, GoalStatus, Currency } from '@prisma/client';
 import { Type } from 'class-transformer';
 import { IsString, IsOptional, IsEnum, IsNumber, IsDateString, Min, Max } from 'class-validator';
+
+import { GoalType, GoalStatus, Currency } from '@db';
 
 export class UpdateGoalDto {
   @IsString()

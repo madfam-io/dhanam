@@ -2,9 +2,10 @@ import * as crypto from 'crypto';
 
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Provider, AccountType, Currency, Prisma as _Prisma } from '@prisma/client';
 import type { InputJsonValue } from '@prisma/client/runtime/library';
 import { Configuration, MxPlatformApi } from 'mx-platform-node';
+
+import { Provider, AccountType, Currency, Prisma as _Prisma } from '@db';
 
 import { CryptoService } from '../../../core/crypto/crypto.service';
 import { PrismaService } from '../../../core/prisma/prisma.service';

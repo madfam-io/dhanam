@@ -8,9 +8,10 @@ import {
   ConflictException,
   Logger,
 } from '@nestjs/common';
-import { Prisma as _Prisma } from '@prisma/client';
 import type { InputJsonValue } from '@prisma/client/runtime/library';
 import { addDays, isAfter } from 'date-fns';
+
+import { Prisma as _Prisma } from '@db';
 
 import { AuditService } from '../../core/audit/audit.service';
 import { PrismaService } from '../../core/prisma/prisma.service';

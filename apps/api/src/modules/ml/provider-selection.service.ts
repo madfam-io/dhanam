@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Provider } from '@prisma/client';
 
 import { PrismaService } from '@core/prisma/prisma.service';
+import { Provider } from '@db';
 
 interface ProviderMetrics {
   provider: Provider;

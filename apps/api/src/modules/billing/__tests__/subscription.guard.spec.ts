@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { SubscriptionTier } from '@prisma/client';
+import { SubscriptionTier } from '@db';
 
 import { SubscriptionGuard } from '../guards/subscription.guard';
 import { PaymentRequiredException, SubscriptionExpiredException } from '../exceptions';

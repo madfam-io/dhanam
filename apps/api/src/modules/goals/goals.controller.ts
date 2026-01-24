@@ -11,7 +11,8 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { GoalShareRole } from '@prisma/client';
+
+import { GoalShareRole } from '@db';
 
 import { JwtAuthGuard } from '../../core/auth/guards/jwt-auth.guard';
 

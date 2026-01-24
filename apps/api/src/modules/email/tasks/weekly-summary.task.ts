@@ -1,9 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
-import { Currency } from '@prisma/client';
 import { startOfWeek, endOfWeek, subWeeks, format } from 'date-fns';
 
 import { PrismaService } from '@core/prisma/prisma.service';
+import { Currency } from '@db';
 import { AnalyticsService } from '@modules/analytics/analytics.service';
 
 import { EmailService } from '../email.service';

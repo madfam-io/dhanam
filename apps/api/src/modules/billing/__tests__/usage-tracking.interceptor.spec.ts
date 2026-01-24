@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ExecutionContext, CallHandler } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { of, throwError } from 'rxjs';
-import { UsageMetricType } from '@prisma/client';
+import { UsageMetricType } from '@db';
 
 import { UsageTrackingInterceptor } from '../interceptors/usage-tracking.interceptor';
 import { BillingService } from '../billing.service';

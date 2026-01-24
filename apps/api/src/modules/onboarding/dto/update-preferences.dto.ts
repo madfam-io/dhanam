@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Currency } from '@prisma/client';
 import { IsString, IsOptional, IsIn, IsBoolean } from 'class-validator';
+
+import { Currency } from '@db';
 
 export class UpdatePreferencesDto {
   @ApiProperty({

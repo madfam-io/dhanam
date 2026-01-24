@@ -9,10 +9,10 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
-import { User } from '@prisma/client';
 
 import { CurrentUser } from '@core/auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
+import { User } from '@db';
 
 import { EnhancedEsgService } from './enhanced-esg.service';
 import { EsgService } from './esg.service';

@@ -1,4 +1,4 @@
-import { Currency } from '@prisma/client';
+import { Currency } from '@db';
 
 export interface GoalProgress {
   goalId: string;

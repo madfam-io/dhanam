@@ -15,7 +15,9 @@
       "~/*": ["./src/*"],
       "@modules/*": ["./src/modules/*"],
       "@core/*": ["./src/core/*"],
-      "@shared/*": ["./src/shared/*"]
+      "@shared/*": ["./src/shared/*"],
+      "@db/*": ["./generated/prisma/*"],
+      "@db": ["./generated/prisma"]
     }
   },
   "include": ["src/**/*"],

@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
-import { UsageMetricType } from '@prisma/client';
+import { UsageMetricType } from '@db';
 import Stripe from 'stripe';
 
 import { PrismaService } from '../../../core/prisma/prisma.service';

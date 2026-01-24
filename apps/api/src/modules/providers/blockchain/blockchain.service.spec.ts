@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { BadRequestException } from '@nestjs/common';
-import { AccountType } from '@prisma/client';
+import { AccountType } from '@db';
 import { Decimal } from '@prisma/client/runtime/library';
 
 import { PrismaService } from '../../../core/prisma/prisma.service';

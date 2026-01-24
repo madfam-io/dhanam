@@ -1,5 +1,6 @@
-import { HouseholdType, Currency } from '@prisma/client';
 import { IsString, IsEnum, IsOptional } from 'class-validator';
+
+import { HouseholdType, Currency } from '@db';
 
 export class UpdateHouseholdDto {
   @IsString()

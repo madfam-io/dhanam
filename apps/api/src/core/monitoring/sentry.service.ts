@@ -1,8 +1,9 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import type { User } from '@prisma/client';
 import * as Sentry from '@sentry/node';
 import { ProfilingIntegration } from '@sentry/profiling-node';
+
+import type { User } from '@db';
 
 @Injectable()
 export class SentryService implements OnModuleInit {

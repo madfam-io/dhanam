@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
-import { Currency } from '@prisma/client';
+import { Currency } from '@db';
 import { of, throwError } from 'rxjs';
 import { FxRatesService } from './fx-rates.service';
 import { PrismaService } from '@core/prisma/prisma.service';

@@ -2,7 +2,6 @@ import * as crypto from 'crypto';
 
 import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Prisma as _Prisma, Account, Currency, AccountType } from '@prisma/client';
 import type { InputJsonValue } from '@prisma/client/runtime/library';
 import {
   PlaidApi,
@@ -19,6 +18,7 @@ import {
 } from 'plaid';
 
 import { MonitorPerformance } from '@core/decorators/monitor-performance.decorator';
+import { Prisma as _Prisma, Account, Currency, AccountType } from '@db';
 
 import { CryptoService } from '../../../core/crypto/crypto.service';
 import { PrismaService } from '../../../core/prisma/prisma.service';

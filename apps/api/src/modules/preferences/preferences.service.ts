@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException, Logger } from '@nestjs/common';
-import { UserPreferences, Currency } from '@prisma/client';
+
+import { UserPreferences, Currency } from '@db';
 
 import { AuditService } from '../../core/audit/audit.service';
 import { PrismaService } from '../../core/prisma/prisma.service';

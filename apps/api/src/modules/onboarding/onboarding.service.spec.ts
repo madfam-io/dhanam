@@ -9,7 +9,7 @@ import { EmailService } from '../email/email.service';
 import { OnboardingAnalytics } from './onboarding.analytics';
 import { PreferencesService } from '../preferences/preferences.service';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
-import { Currency } from '@prisma/client';
+import { Currency } from '@db';
 import {
   UpdateOnboardingStepDto,
   CompleteOnboardingDto,

@@ -2,13 +2,13 @@ import * as crypto from 'crypto';
 
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Account, Transaction, Prisma as _Prisma, Currency, AccountType } from '@prisma/client';
 import type { InputJsonValue } from '@prisma/client/runtime/library';
 
 import { AuditService } from '@core/audit/audit.service';
 import { CryptoService } from '@core/crypto/crypto.service';
 import { MonitorPerformance } from '@core/decorators/monitor-performance.decorator';
 import { PrismaService } from '@core/prisma/prisma.service';
+import { Account, Transaction, Prisma as _Prisma, Currency, AccountType } from '@db';
 
 import { CreateBelvoLinkDto, BelvoWebhookDto, BelvoWebhookEvent } from './dto';
 

@@ -5,9 +5,9 @@ import {
   ForbiddenException,
   BadRequestException,
 } from '@nestjs/common';
-import { GoalShareRole, GoalShareStatus, GoalActivityAction } from '@prisma/client';
 
 import { PrismaService } from '@core/prisma/prisma.service';
+import { GoalShareRole, GoalShareStatus, GoalActivityAction } from '@db';
 
 export interface ShareGoalInput {
   goalId: string;

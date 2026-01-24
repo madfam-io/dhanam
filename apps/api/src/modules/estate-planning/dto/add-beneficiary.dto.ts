@@ -1,4 +1,3 @@
-import { AssetType } from '@prisma/client';
 import { Type } from 'class-transformer';
 import {
   IsUUID,
@@ -10,6 +9,8 @@ import {
   Min,
   Max,
 } from 'class-validator';
+
+import { AssetType } from '@db';
 
 export class AddBeneficiaryDto {
   @IsUUID()

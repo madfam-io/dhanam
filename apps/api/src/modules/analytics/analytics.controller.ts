@@ -12,13 +12,17 @@ import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
 
 import { AnalyticsService } from './analytics.service';
+import { AnomalyService } from './anomaly.service';
 
 @ApiTags('analytics')
 @Controller('analytics')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 export class AnalyticsController {
-  constructor(private readonly analyticsService: AnalyticsService) {}
+  constructor(
+    private readonly analyticsService: AnalyticsService,
+    private readonly anomalyService: AnomalyService
+  ) {}
 
   @Get(':spaceId/net-worth')
   @ApiOperation({ summary: 'Get net worth for a space' })
@@ -95,5 +99,25 @@ export class AnalyticsController {
   @ApiOperation({ summary: 'Get combined dashboard data in a single request' })
   async getDashboardData(@Request() req: any, @Param('spaceId') spaceId: string) {
     return this.analyticsService.getDashboardData(req.user!.userId, spaceId);
+  }
+
+  @Get(':spaceId/anomalies')
+  @ApiOperation({ summary: 'Detect spending anomalies' })
+  async getAnomalies(
+    @Request() req: any,
+    @Param('spaceId') spaceId: string,
+    @Query('days') days?: string,
+    @Query('limit') limit?: string
+  ) {
+    return this.anomalyService.detectAnomalies(req.user!.userId, spaceId, {
+      days: days ? parseInt(days, 10) : 30,
+      limit: limit ? parseInt(limit, 10) : 50,
+    });
+  }
+
+  @Get(':spaceId/anomalies/summary')
+  @ApiOperation({ summary: 'Get anomaly detection summary' })
+  async getAnomalySummary(@Request() req: any, @Param('spaceId') spaceId: string) {
+    return this.anomalyService.getAnomalySummary(spaceId, req.user!.userId);
   }
 }

@@ -6,7 +6,8 @@ import {
   ScenarioType,
 } from '@dhanam/simulations';
 import { Injectable, NotFoundException, Logger } from '@nestjs/common';
-import { UsageMetricType } from '@prisma/client';
+
+import { UsageMetricType } from '@db';
 
 import { PrismaService } from '../../core/prisma/prisma.service';
 import { BillingService } from '../billing/billing.service';

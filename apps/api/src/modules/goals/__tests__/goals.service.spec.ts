@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
-import { Goal, GoalType, GoalStatus, Currency } from '@prisma/client';
+import { Goal, GoalType, GoalStatus, Currency } from '@db';
 
 import { PrismaService } from '../../../core/prisma/prisma.service';
 import { AuditService } from '../../../core/audit/audit.service';

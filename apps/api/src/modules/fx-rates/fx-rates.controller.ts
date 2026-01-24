@@ -1,10 +1,10 @@
 import { Controller, Get, Query, UseGuards, BadRequestException } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
-import { Currency } from '@prisma/client';
 import { Type } from 'class-transformer';
 import { IsEnum, IsOptional, IsDateString, IsNumber, Min } from 'class-validator';
 
 import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
+import { Currency } from '@db';
 
 import { FxRatesService } from './fx-rates.service';
 

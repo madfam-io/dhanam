@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { BadRequestException } from '@nestjs/common';
-import { Currency } from '@prisma/client';
+import { Currency } from '@db';
 
 import { PrismaService } from '../../../core/prisma/prisma.service';
 import { CryptoService } from '../../../core/crypto/crypto.service';

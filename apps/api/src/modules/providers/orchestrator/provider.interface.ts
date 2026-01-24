@@ -4,7 +4,7 @@ import {
   Transaction as _Transaction,
   Currency,
   AccountType,
-} from '@prisma/client';
+} from '@db';
 
 /**
  * Base provider interface that all financial data providers must implement

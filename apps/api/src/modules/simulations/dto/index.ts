@@ -1,5 +1,6 @@
-import { SimulationType } from '@prisma/client';
 import { IsNumber, IsOptional, IsString, IsEnum, Min, Max, IsInt } from 'class-validator';
+
+import { SimulationType } from '@db';
 
 export class RunSimulationDto {
   @IsEnum(SimulationType)

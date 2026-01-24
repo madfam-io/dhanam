@@ -116,6 +116,7 @@ export class BudgetsService {
         startDate: dto.startDate,
         endDate,
         income: 0,
+        rolloverEnabled: dto.rolloverEnabled ?? false,
       },
       include: {
         categories: {
@@ -187,6 +188,7 @@ export class BudgetsService {
         ...(dto.period && { period: dto.period }),
         ...(dto.startDate && { startDate: dto.startDate }),
         ...(dto.endDate && { endDate: dto.endDate }),
+        ...(dto.rolloverEnabled !== undefined && { rolloverEnabled: dto.rolloverEnabled }),
       },
       include: {
         categories: {
@@ -322,6 +324,7 @@ export class BudgetsService {
       startDate: budget.startDate.toISOString(),
       endDate: budget.endDate?.toISOString() || null,
       income: totalIncome,
+      rolloverEnabled: budget.rolloverEnabled ?? false,
       createdAt: budget.createdAt.toISOString(),
       updatedAt: budget.updatedAt.toISOString(),
       categories: categoryTotals,
@@ -568,6 +571,7 @@ export class BudgetsService {
       startDate: budget.startDate.toISOString(),
       endDate: budget.endDate?.toISOString() || null,
       income: budget.income.toNumber(),
+      rolloverEnabled: budget.rolloverEnabled ?? false,
       createdAt: budget.createdAt.toISOString(),
       updatedAt: budget.updatedAt.toISOString(),
       categories:

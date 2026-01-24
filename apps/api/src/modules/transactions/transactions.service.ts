@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
-import { Transaction, Prisma } from '@prisma/client';
 import type { InputJsonValue } from '@prisma/client/runtime/library';
+
+import { Transaction, Prisma } from '@db';
 
 import { PrismaService } from '../../core/prisma/prisma.service';
 import { SpacesService } from '../spaces/spaces.service';

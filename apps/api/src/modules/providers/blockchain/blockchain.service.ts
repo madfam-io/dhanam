@@ -1,6 +1,5 @@
 import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Prisma as _Prisma, Account, Currency, AccountType } from '@prisma/client';
 import type { InputJsonValue } from '@prisma/client/runtime/library';
 import axios, { AxiosInstance } from 'axios';
 // import * as crypto from 'crypto'; - not used
@@ -8,6 +7,7 @@ import * as bitcoin from 'bitcoinjs-lib';
 import * as ethers from 'ethers';
 
 import { MonitorPerformance } from '@core/decorators/monitor-performance.decorator';
+import { Prisma as _Prisma, Account, Currency, AccountType } from '@db';
 
 import { AuditService } from '../../../core/audit/audit.service';
 // import { CryptoService } from '../../../core/crypto/crypto.service';

@@ -1,5 +1,6 @@
 import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
-import { Goal, GoalAllocation, Prisma } from '@prisma/client';
+
+import { Goal, GoalAllocation, Prisma } from '@db';
 
 import { AuditService } from '../../core/audit/audit.service';
 import { PrismaService } from '../../core/prisma/prisma.service';

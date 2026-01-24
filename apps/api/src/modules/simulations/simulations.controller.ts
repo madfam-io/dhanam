@@ -10,7 +10,8 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { UsageMetricType } from '@prisma/client';
+
+import { UsageMetricType } from '@db';
 
 import { CurrentUser } from '../../core/auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../../core/auth/guards/jwt-auth.guard';

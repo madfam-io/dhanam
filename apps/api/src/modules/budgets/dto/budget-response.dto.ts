@@ -59,6 +59,9 @@ export class BudgetResponseDto {
   @ApiProperty()
   income: number;
 
+  @ApiProperty({ description: 'Whether unspent funds automatically roll over to next period' })
+  rolloverEnabled: boolean;
+
   @ApiProperty()
   createdAt: string;
 

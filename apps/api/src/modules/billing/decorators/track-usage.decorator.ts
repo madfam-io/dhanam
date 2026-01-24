@@ -1,5 +1,6 @@
 import { SetMetadata } from '@nestjs/common';
-import { UsageMetricType } from '@prisma/client';
+
+import { UsageMetricType } from '@db';
 
 export const USAGE_METRIC_KEY = 'usage_metric';
 

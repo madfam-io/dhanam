@@ -1,5 +1,6 @@
 import { SetMetadata } from '@nestjs/common';
-import { SubscriptionTier } from '@prisma/client';
+
+import { SubscriptionTier } from '@db';
 
 export const TIER_KEY = 'subscription_tier';
 

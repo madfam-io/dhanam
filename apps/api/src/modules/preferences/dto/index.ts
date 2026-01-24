@@ -1,5 +1,6 @@
-import { Currency } from '@prisma/client';
 import { IsBoolean, IsOptional, IsString, IsEnum } from 'class-validator';
+
+import { Currency } from '@db';
 
 export class UpdatePreferencesDto {
   // Notification preferences

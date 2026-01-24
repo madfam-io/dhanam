@@ -2,10 +2,10 @@ import { HttpService } from '@nestjs/axios';
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { Currency } from '@prisma/client';
 import { firstValueFrom } from 'rxjs';
 
 import { MonitorPerformance } from '@core/decorators/monitor-performance.decorator';
+import { Currency } from '@db';
 
 import { PrismaService } from '../../core/prisma/prisma.service';
 import { RedisService } from '../../core/redis/redis.service';
