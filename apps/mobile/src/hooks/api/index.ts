@@ -13,3 +13,4 @@ export * from './useScenarios';
 export * from './useAssets';
 export * from './useHouseholds';
 export * from './useEstatePlanning';
+export * from './useGoals';

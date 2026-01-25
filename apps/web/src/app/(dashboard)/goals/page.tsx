@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useGoals, type Goal, type GoalProgress, type GoalSummary } from '@/hooks/useGoals';
 import { useSimulations } from '@/hooks/useSimulations';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { PremiumGate } from '~/components/billing/PremiumGate';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -390,124 +391,127 @@ export default function GoalsPage() {
               </TabsContent>
 
               <TabsContent value="probability" className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Calculator className="h-5 w-5" />
-                      Success Probability Analysis
-                    </CardTitle>
-                    <CardDescription>
-                      Monte Carlo simulation to calculate likelihood of achieving this goal
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {!probability ? (
-                      <div className="text-center py-8">
-                        <Button
-                          onClick={calculateProbability}
-                          disabled={loadingProbability}
-                          size="lg"
-                        >
-                          {loadingProbability ? (
-                            <>
-                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                              Running simulation...
-                            </>
-                          ) : (
-                            <>
-                              <Calculator className="mr-2 h-4 w-4" />
-                              Calculate Probability
-                            </>
-                          )}
-                        </Button>
-                        <p className="text-sm text-muted-foreground mt-2">Requires Premium tier</p>
-                      </div>
-                    ) : (
-                      <div className="space-y-6">
-                        {/* Success Rate */}
-                        <div>
-                          <p className="text-sm text-muted-foreground mb-2">
-                            Probability of Success
-                          </p>
-                          <p className="text-4xl font-bold">
-                            {(probability.probabilityOfSuccess * 100).toFixed(1)}%
-                          </p>
-                          <Progress
-                            value={probability.probabilityOfSuccess * 100}
-                            className="mt-2 h-3"
-                          />
+                <PremiumGate feature="Advanced Goal Probability Tracking">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Calculator className="h-5 w-5" />
+                        Success Probability Analysis
+                      </CardTitle>
+                      <CardDescription>
+                        Monte Carlo simulation to calculate likelihood of achieving this goal
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {!probability ? (
+                        <div className="text-center py-8">
+                          <Button
+                            onClick={calculateProbability}
+                            disabled={loadingProbability}
+                            size="lg"
+                          >
+                            {loadingProbability ? (
+                              <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Running simulation...
+                              </>
+                            ) : (
+                              <>
+                                <Calculator className="mr-2 h-4 w-4" />
+                                Calculate Probability
+                              </>
+                            )}
+                          </Button>
                         </div>
-
-                        {/* Median Outcome */}
-                        <div className="grid grid-cols-2 gap-4">
+                      ) : (
+                        <div className="space-y-6">
+                          {/* Success Rate */}
                           <div>
-                            <p className="text-sm text-muted-foreground">
-                              Expected Outcome (Median)
+                            <p className="text-sm text-muted-foreground mb-2">
+                              Probability of Success
                             </p>
-                            <p className="text-2xl font-semibold">
-                              $
-                              {probability.medianOutcome.toLocaleString(undefined, {
-                                maximumFractionDigits: 0,
-                              })}
+                            <p className="text-4xl font-bold">
+                              {(probability.probabilityOfSuccess * 100).toFixed(1)}%
                             </p>
+                            <Progress
+                              value={probability.probabilityOfSuccess * 100}
+                              className="mt-2 h-3"
+                            />
                           </div>
-                          <div>
-                            <p className="text-sm text-muted-foreground">Expected Shortfall</p>
-                            <p className="text-2xl font-semibold">
-                              $
-                              {probability.expectedShortfall.toLocaleString(undefined, {
-                                maximumFractionDigits: 0,
-                              })}
-                            </p>
-                          </div>
-                        </div>
 
-                        {/* 90% Confidence Range */}
-                        <div>
-                          <p className="text-sm font-semibold mb-2">90% Confidence Range</p>
-                          <div className="flex justify-between items-center">
+                          {/* Median Outcome */}
+                          <div className="grid grid-cols-2 gap-4">
                             <div>
-                              <p className="text-xs text-muted-foreground">Worst 10%</p>
-                              <p className="text-lg font-semibold">
+                              <p className="text-sm text-muted-foreground">
+                                Expected Outcome (Median)
+                              </p>
+                              <p className="text-2xl font-semibold">
                                 $
-                                {probability.confidence90Range.low.toLocaleString(undefined, {
+                                {probability.medianOutcome.toLocaleString(undefined, {
                                   maximumFractionDigits: 0,
                                 })}
                               </p>
                             </div>
-                            <TrendingUp className="h-6 w-6 text-muted-foreground" />
-                            <div className="text-right">
-                              <p className="text-xs text-muted-foreground">Best 10%</p>
-                              <p className="text-lg font-semibold">
+                            <div>
+                              <p className="text-sm text-muted-foreground">Expected Shortfall</p>
+                              <p className="text-2xl font-semibold">
                                 $
-                                {probability.confidence90Range.high.toLocaleString(undefined, {
+                                {probability.expectedShortfall.toLocaleString(undefined, {
                                   maximumFractionDigits: 0,
                                 })}
                               </p>
                             </div>
                           </div>
-                        </div>
 
-                        {/* Recommendation */}
-                        {probability.recommendedMonthlyContribution >
-                          probability.currentMonthlyContribution && (
-                          <Alert>
-                            <AlertCircle className="h-4 w-4" />
-                            <AlertDescription>
-                              <p className="font-semibold mb-1">Increase savings to improve odds</p>
-                              <p className="text-sm">
-                                Recommended monthly contribution: $
-                                {probability.recommendedMonthlyContribution.toLocaleString()}
-                                (current: ${probability.currentMonthlyContribution.toLocaleString()}
-                                )
-                              </p>
-                            </AlertDescription>
-                          </Alert>
-                        )}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
+                          {/* 90% Confidence Range */}
+                          <div>
+                            <p className="text-sm font-semibold mb-2">90% Confidence Range</p>
+                            <div className="flex justify-between items-center">
+                              <div>
+                                <p className="text-xs text-muted-foreground">Worst 10%</p>
+                                <p className="text-lg font-semibold">
+                                  $
+                                  {probability.confidence90Range.low.toLocaleString(undefined, {
+                                    maximumFractionDigits: 0,
+                                  })}
+                                </p>
+                              </div>
+                              <TrendingUp className="h-6 w-6 text-muted-foreground" />
+                              <div className="text-right">
+                                <p className="text-xs text-muted-foreground">Best 10%</p>
+                                <p className="text-lg font-semibold">
+                                  $
+                                  {probability.confidence90Range.high.toLocaleString(undefined, {
+                                    maximumFractionDigits: 0,
+                                  })}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Recommendation */}
+                          {probability.recommendedMonthlyContribution >
+                            probability.currentMonthlyContribution && (
+                            <Alert>
+                              <AlertCircle className="h-4 w-4" />
+                              <AlertDescription>
+                                <p className="font-semibold mb-1">
+                                  Increase savings to improve odds
+                                </p>
+                                <p className="text-sm">
+                                  Recommended monthly contribution: $
+                                  {probability.recommendedMonthlyContribution.toLocaleString()}
+                                  (current: $
+                                  {probability.currentMonthlyContribution.toLocaleString()})
+                                </p>
+                              </AlertDescription>
+                            </Alert>
+                          )}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </PremiumGate>
               </TabsContent>
 
               <TabsContent value="collaboration" className="space-y-6">

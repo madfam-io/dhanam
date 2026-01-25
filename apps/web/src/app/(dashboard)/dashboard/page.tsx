@@ -28,6 +28,7 @@ import { AnalyticsEmptyState } from '@/components/demo/analytics-empty-state';
 import { ProbabilisticGoalCard } from '@/components/goals/probabilistic-goal-card';
 import { GoalHealthScore } from '@/components/goals/goal-health-score';
 import { GoalProbabilityTimeline } from '@/components/goals/goal-probability-timeline';
+import { PremiumGate } from '@/components/billing/PremiumGate';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -196,7 +197,11 @@ export default function DashboardPage() {
         </Card>
 
         {/* Goal Health Score - Only show if there are goals with probability data */}
-        {!isLoading && goals && goals.length > 0 && <GoalHealthScore goals={goals} />}
+        {!isLoading && goals && goals.length > 0 && (
+          <PremiumGate feature="Goal Probability Tracking">
+            <GoalHealthScore goals={goals} />
+          </PremiumGate>
+        )}
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
@@ -386,33 +391,35 @@ export default function DashboardPage() {
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
       ) : activeGoals.length > 0 ? (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-2xl font-bold tracking-tight">Financial Goals</h3>
-              <p className="text-sm text-muted-foreground flex items-center gap-2">
-                Track probability of achieving your goals with Monte Carlo simulations
-                <HelpTooltip content="Each goal shows success probability based on 10,000 Monte Carlo simulations, considering your current savings, monthly contributions, and market volatility." />
-              </p>
+        <PremiumGate feature="Goal Probability Tracking">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-2xl font-bold tracking-tight">Financial Goals</h3>
+                <p className="text-sm text-muted-foreground flex items-center gap-2">
+                  Track probability of achieving your goals with Monte Carlo simulations
+                  <HelpTooltip content="Each goal shows success probability based on 10,000 Monte Carlo simulations, considering your current savings, monthly contributions, and market volatility." />
+                </p>
+              </div>
+              <Button variant="outline" onClick={() => router.push('/goals')}>
+                View All Goals
+              </Button>
             </div>
-            <Button variant="outline" onClick={() => router.push('/goals')}>
-              View All Goals
-            </Button>
-          </div>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {activeGoals.slice(0, 3).map((goal) => (
-              <ProbabilisticGoalCard
-                key={goal.id}
-                goal={goal}
-                onClick={() => router.push('/goals')}
-                showActions={false}
-              />
-            ))}
-          </div>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {activeGoals.slice(0, 3).map((goal) => (
+                <ProbabilisticGoalCard
+                  key={goal.id}
+                  goal={goal}
+                  onClick={() => router.push('/goals')}
+                  showActions={false}
+                />
+              ))}
+            </div>
 
-          {/* Probability Timeline */}
-          {activeGoals.length > 0 && <GoalProbabilityTimeline goals={activeGoals} />}
-        </div>
+            {/* Probability Timeline */}
+            {activeGoals.length > 0 && <GoalProbabilityTimeline goals={activeGoals} />}
+          </div>
+        </PremiumGate>
       ) : null}
 
       {/* Budget Overview */}

@@ -108,6 +108,13 @@ const menuItems: MenuItem[] = [
     icon: 'help-circle-outline',
     route: '/more/help',
   },
+  {
+    id: 'billing',
+    title: 'Premium',
+    description: 'Subscription and billing',
+    icon: 'diamond-outline',
+    route: '/more/billing',
+  },
 ];
 
 export default function MoreScreen() {

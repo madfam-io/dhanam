@@ -140,13 +140,158 @@ export function useEsg() {
     }
   }, []);
 
+  // ===============================
+  // V2 Methods - Enhanced ESG API
+  // ===============================
+
+  const getAssetScoreV2 = useCallback(async (symbol: string, assetType = 'crypto') => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await esgApi.getAssetScoreV2(symbol, assetType);
+      return data;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch ESG score (v2)';
+      setError(errorMessage);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const getPortfolioAnalysisV2 = useCallback(async (): Promise<PortfolioEsgAnalysis | null> => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await esgApi.getPortfolioAnalysisV2();
+      return data;
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : 'Failed to fetch portfolio ESG analysis (v2)';
+      setError(errorMessage);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const getSpacePortfolioV2 = useCallback(
+    async (spaceId: string): Promise<PortfolioEsgAnalysis | null> => {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await esgApi.getSpacePortfolioV2(spaceId);
+        return data;
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : 'Failed to fetch space portfolio ESG analysis';
+        setError(errorMessage);
+        return null;
+      } finally {
+        setLoading(false);
+      }
+    },
+    []
+  );
+
+  const compareAssetsV2 = useCallback(
+    async (symbols: string[]): Promise<AssetComparison | null> => {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await esgApi.compareAssetsV2(symbols);
+        return data;
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to compare assets (v2)';
+        setError(errorMessage);
+        return null;
+      } finally {
+        setLoading(false);
+      }
+    },
+    []
+  );
+
+  const getTrendsV2 = useCallback(async (): Promise<EsgTrends | null> => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await esgApi.getTrendsV2();
+      return data;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch ESG trends (v2)';
+      setError(errorMessage);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const refreshESGData = useCallback(
+    async (symbols: string[]): Promise<{ refreshed: string[]; errors: string[] } | null> => {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await esgApi.refreshESGData(symbols);
+        return data;
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to refresh ESG data';
+        setError(errorMessage);
+        return null;
+      } finally {
+        setLoading(false);
+      }
+    },
+    []
+  );
+
+  const getCacheStats = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await esgApi.getCacheStats();
+      return data;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch cache stats';
+      setError(errorMessage);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const clearCache = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await esgApi.clearCache();
+      return data;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to clear cache';
+      setError(errorMessage);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   return {
     loading,
     error,
+    // V1 Methods
     getAssetScore,
     getPortfolioAnalysis,
     compareAssets,
     getTrends,
     getMethodology,
+    // V2 Methods
+    getAssetScoreV2,
+    getPortfolioAnalysisV2,
+    getSpacePortfolioV2,
+    compareAssetsV2,
+    getTrendsV2,
+    refreshESGData,
+    getCacheStats,
+    clearCache,
   };
 }

@@ -123,4 +123,76 @@ export const esgApi = {
   getMethodology: async (): Promise<EsgMethodology> => {
     return apiClient.get<EsgMethodology>('/esg/methodology');
   },
+
+  // ===============================
+  // V2 Endpoints - Enhanced ESG API
+  // ===============================
+
+  /**
+   * Get ESG score for a specific asset (v2 - enhanced with more data)
+   */
+  getAssetScoreV2: async (
+    symbol: string,
+    assetType = 'crypto'
+  ): Promise<EsgScore & { methodology: string; dataSource: string }> => {
+    return apiClient.get<EsgScore & { methodology: string; dataSource: string }>(
+      `/esg/v2/score/${symbol}?assetType=${assetType}`
+    );
+  },
+
+  /**
+   * Get portfolio ESG analysis (v2 - enhanced with more insights)
+   */
+  getPortfolioAnalysisV2: async (): Promise<PortfolioEsgAnalysis> => {
+    return apiClient.get<PortfolioEsgAnalysis>('/esg/v2/portfolio');
+  },
+
+  /**
+   * Get portfolio ESG analysis for a specific space (v2)
+   */
+  getSpacePortfolioV2: async (spaceId: string): Promise<PortfolioEsgAnalysis> => {
+    return apiClient.get<PortfolioEsgAnalysis>(`/esg/v2/spaces/${spaceId}/portfolio`);
+  },
+
+  /**
+   * Compare ESG scores of multiple assets (v2 - supports up to 20 symbols)
+   */
+  compareAssetsV2: async (symbols: string[]): Promise<AssetComparison> => {
+    return apiClient.post<AssetComparison>('/esg/v2/compare', { symbols });
+  },
+
+  /**
+   * Get ESG trends and market insights (v2)
+   */
+  getTrendsV2: async (): Promise<EsgTrends> => {
+    return apiClient.get<EsgTrends>('/esg/v2/trends');
+  },
+
+  /**
+   * Refresh ESG data for specific symbols
+   */
+  refreshESGData: async (symbols: string[]): Promise<{ refreshed: string[]; errors: string[] }> => {
+    return apiClient.post<{ refreshed: string[]; errors: string[] }>('/esg/v2/refresh', {
+      symbols,
+    });
+  },
+
+  /**
+   * Get ESG cache statistics (admin/debugging)
+   */
+  getCacheStats: async (): Promise<{
+    totalEntries: number;
+    cacheHitRate: number;
+    lastRefresh: string;
+    staleEntries: number;
+  }> => {
+    return apiClient.get('/esg/v2/cache/stats');
+  },
+
+  /**
+   * Clear ESG cache (admin operation)
+   */
+  clearCache: async (): Promise<{ message: string; entriesCleared: number }> => {
+    return apiClient.post<{ message: string; entriesCleared: number }>('/esg/v2/cache/clear');
+  },
 };

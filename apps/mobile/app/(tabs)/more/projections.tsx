@@ -21,6 +21,7 @@ import {
   Portal,
   Dialog,
   TextInput,
+  router,
 } from '@/lib/react-native-compat';
 
 function formatCurrency(amount: number, currency = 'USD'): string {
@@ -173,7 +174,7 @@ export default function ProjectionsScreen() {
                 mode="contained"
                 buttonColor="#4CAF50"
                 style={styles.upgradeButton}
-                onPress={() => Alert.alert('Upgrade', 'Upgrade functionality coming soon')}
+                onPress={() => router.push('/more/billing')}
               >
                 Upgrade to Premium
               </Button>

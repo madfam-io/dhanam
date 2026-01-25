@@ -21,6 +21,7 @@ import {
   Divider,
   Menu,
   Chip,
+  router,
 } from '@/lib/react-native-compat';
 
 function formatCurrency(amount: number, currency = 'USD'): string {
@@ -153,7 +154,7 @@ export default function ScenariosScreen() {
                 mode="contained"
                 buttonColor="#4CAF50"
                 style={styles.upgradeButton}
-                onPress={() => Alert.alert('Upgrade', 'Upgrade flow coming soon')}
+                onPress={() => router.push('/more/billing')}
               >
                 Upgrade to Premium
               </Button>

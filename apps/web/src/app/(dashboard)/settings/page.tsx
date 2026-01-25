@@ -17,8 +17,10 @@ import {
   Leaf,
   HardDrive,
   RotateCcw,
+  Gauge,
 } from 'lucide-react';
 import { preferencesApi, UserPreferences } from '@/lib/api/preferences';
+import { UsageOverview } from '~/components/billing/UsageIndicator';
 import { toast } from 'sonner';
 
 export default function SettingsPage() {
@@ -137,6 +139,20 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Usage Limits */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Gauge className="h-5 w-5" />
+            Usage Limits
+          </CardTitle>
+          <CardDescription>Track your daily usage of premium features</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <UsageOverview />
+        </CardContent>
+      </Card>
 
       {/* Notifications */}
       <Card>
