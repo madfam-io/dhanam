@@ -18,6 +18,11 @@ import {
   ApiBody,
   ApiResponse,
   ApiQuery,
+  ApiNotFoundResponse,
+  ApiUnauthorizedResponse,
+  ApiForbiddenResponse,
+  ApiBadRequestResponse,
+  ApiParam,
 } from '@nestjs/swagger';
 import { Request } from 'express';
 
@@ -40,6 +45,8 @@ import { RealEstateValuationService } from './real-estate-valuation.service';
 @Controller('spaces/:spaceId/manual-assets')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
+@ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+@ApiForbiddenResponse({ description: 'User lacks access to this resource' })
 export class ManualAssetsController {
   constructor(
     private readonly manualAssetsService: ManualAssetsService,
@@ -65,6 +72,8 @@ export class ManualAssetsController {
   @Get(':id')
   @ApiOperation({ summary: 'Get a manual asset by id' })
   @ApiOkResponse({ type: ManualAssetResponseDto })
+  @ApiNotFoundResponse({ description: 'Manual asset not found' })
+  @ApiParam({ name: 'id', description: 'Manual asset ID' })
   findOne(@Param('spaceId') spaceId: string, @Param('id') id: string, @Req() req: Request) {
     return this.manualAssetsService.findOne(spaceId, req.user!.id, id);
   }
@@ -72,6 +81,7 @@ export class ManualAssetsController {
   @Post()
   @ApiOperation({ summary: 'Create a new manual asset' })
   @ApiOkResponse({ type: ManualAssetResponseDto })
+  @ApiBadRequestResponse({ description: 'Invalid request body' })
   create(
     @Param('spaceId') spaceId: string,
     @Body() createManualAssetDto: CreateManualAssetDto,
@@ -83,6 +93,9 @@ export class ManualAssetsController {
   @Patch(':id')
   @ApiOperation({ summary: 'Update a manual asset' })
   @ApiOkResponse({ type: ManualAssetResponseDto })
+  @ApiNotFoundResponse({ description: 'Manual asset not found' })
+  @ApiBadRequestResponse({ description: 'Invalid request body' })
+  @ApiParam({ name: 'id', description: 'Manual asset ID' })
   update(
     @Param('spaceId') spaceId: string,
     @Param('id') id: string,
@@ -94,6 +107,8 @@ export class ManualAssetsController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a manual asset' })
+  @ApiNotFoundResponse({ description: 'Manual asset not found' })
+  @ApiParam({ name: 'id', description: 'Manual asset ID' })
   remove(@Param('spaceId') spaceId: string, @Param('id') id: string, @Req() req: Request) {
     return this.manualAssetsService.remove(spaceId, req.user!.id, id);
   }
@@ -101,6 +116,9 @@ export class ManualAssetsController {
   @Post(':id/valuations')
   @ApiOperation({ summary: 'Add a valuation entry to track asset value over time' })
   @ApiOkResponse({ type: ManualAssetValuationDto })
+  @ApiNotFoundResponse({ description: 'Manual asset not found' })
+  @ApiBadRequestResponse({ description: 'Invalid request body' })
+  @ApiParam({ name: 'id', description: 'Manual asset ID' })
   addValuation(
     @Param('spaceId') spaceId: string,
     @Param('id') id: string,
@@ -136,6 +154,8 @@ export class ManualAssetsController {
     status: 200,
     description: 'Performance metrics including IRR, multiples, and cash flow summary',
   })
+  @ApiNotFoundResponse({ description: 'PE asset not found' })
+  @ApiParam({ name: 'id', description: 'PE asset ID' })
   getPEPerformance(
     @Param('spaceId') spaceId: string,
     @Param('id') id: string,
@@ -153,6 +173,8 @@ export class ManualAssetsController {
     status: 200,
     description: 'List of cash flows ordered by date',
   })
+  @ApiNotFoundResponse({ description: 'PE asset not found' })
+  @ApiParam({ name: 'id', description: 'PE asset ID' })
   getPECashFlows(@Param('spaceId') spaceId: string, @Param('id') id: string, @Req() req: Request) {
     return this.peAnalyticsService.getCashFlows(spaceId, req.user!.id, id);
   }
@@ -185,6 +207,9 @@ export class ManualAssetsController {
     status: 201,
     description: 'Cash flow created successfully',
   })
+  @ApiNotFoundResponse({ description: 'PE asset not found' })
+  @ApiBadRequestResponse({ description: 'Invalid request body' })
+  @ApiParam({ name: 'id', description: 'PE asset ID' })
   addPECashFlow(
     @Param('spaceId') spaceId: string,
     @Param('id') id: string,
@@ -203,6 +228,9 @@ export class ManualAssetsController {
     status: 200,
     description: 'Cash flow deleted successfully',
   })
+  @ApiNotFoundResponse({ description: 'PE asset or cash flow not found' })
+  @ApiParam({ name: 'id', description: 'PE asset ID' })
+  @ApiParam({ name: 'cashFlowId', description: 'Cash flow ID' })
   deletePECashFlow(
     @Param('spaceId') spaceId: string,
     @Param('id') id: string,
@@ -233,6 +261,8 @@ export class ManualAssetsController {
     summary: 'Get all documents for an asset',
     description: 'Returns list of uploaded documents with metadata',
   })
+  @ApiNotFoundResponse({ description: 'Asset not found' })
+  @ApiParam({ name: 'id', description: 'Asset ID' })
   getDocuments(@Param('spaceId') spaceId: string, @Param('id') id: string, @Req() req: Request) {
     return this.documentService.getDocuments(spaceId, req.user!.id, id);
   }
@@ -249,6 +279,9 @@ export class ManualAssetsController {
     required: false,
     description: 'Document category (deed, title, appraisal, etc.)',
   })
+  @ApiNotFoundResponse({ description: 'Asset not found' })
+  @ApiBadRequestResponse({ description: 'Invalid query parameters' })
+  @ApiParam({ name: 'id', description: 'Asset ID' })
   getUploadUrl(
     @Param('spaceId') spaceId: string,
     @Param('id') id: string,
@@ -285,6 +318,9 @@ export class ManualAssetsController {
       },
     },
   })
+  @ApiNotFoundResponse({ description: 'Asset not found' })
+  @ApiBadRequestResponse({ description: 'Invalid request body' })
+  @ApiParam({ name: 'id', description: 'Asset ID' })
   confirmUpload(
     @Param('spaceId') spaceId: string,
     @Param('id') id: string,
@@ -299,6 +335,9 @@ export class ManualAssetsController {
     summary: 'Get presigned URL for document download',
     description: 'Returns a time-limited URL for downloading the document',
   })
+  @ApiNotFoundResponse({ description: 'Asset or document not found' })
+  @ApiParam({ name: 'id', description: 'Asset ID' })
+  @ApiParam({ name: 'documentKey', description: 'Document storage key' })
   getDownloadUrl(
     @Param('spaceId') spaceId: string,
     @Param('id') id: string,
@@ -315,6 +354,9 @@ export class ManualAssetsController {
     summary: 'Delete a document from an asset',
     description: 'Removes document from both storage and asset record',
   })
+  @ApiNotFoundResponse({ description: 'Asset or document not found' })
+  @ApiParam({ name: 'id', description: 'Asset ID' })
+  @ApiParam({ name: 'documentKey', description: 'Document storage key' })
   deleteDocument(
     @Param('spaceId') spaceId: string,
     @Param('id') id: string,
@@ -340,6 +382,8 @@ export class ManualAssetsController {
     status: 400,
     description: 'Property not found in Zillow or missing address information',
   })
+  @ApiNotFoundResponse({ description: 'Property asset not found' })
+  @ApiParam({ name: 'id', description: 'Property asset ID' })
   linkToZillow(@Param('spaceId') spaceId: string, @Param('id') id: string, @Req() req: Request) {
     // Verify space access first
     void req.user!.id;

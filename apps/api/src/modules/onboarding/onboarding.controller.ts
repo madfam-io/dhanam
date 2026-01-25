@@ -1,6 +1,14 @@
 import { User } from '@dhanam/shared';
-import { Controller, Get, Post, Put, Body, Param, UseGuards, HttpStatus } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { Controller, Get, Post, Put, Body, Param, UseGuards } from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiOkResponse,
+  ApiUnauthorizedResponse,
+  ApiBadRequestResponse,
+  ApiParam,
+} from '@nestjs/swagger';
 
 import { CurrentUser } from '@core/auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
@@ -17,31 +25,28 @@ import { OnboardingService } from './onboarding.service';
 
 @ApiTags('Onboarding')
 @Controller('onboarding')
+@ApiBearerAuth()
 export class OnboardingController {
   constructor(private readonly onboardingService: OnboardingService) {}
 
   @Get('status')
   @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
   @ApiOperation({ summary: 'Get user onboarding status and progress' })
-  @ApiResponse({
-    status: HttpStatus.OK,
+  @ApiOkResponse({
     description: 'Onboarding status retrieved successfully',
     type: OnboardingStatusDto,
   })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
   async getOnboardingStatus(@CurrentUser() user: User): Promise<OnboardingStatusDto> {
     return await this.onboardingService.getOnboardingStatus(user.id);
   }
 
   @Put('step')
   @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
   @ApiOperation({ summary: 'Update current onboarding step' })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Onboarding step updated successfully',
-    type: OnboardingStatusDto,
-  })
+  @ApiOkResponse({ description: 'Onboarding step updated successfully', type: OnboardingStatusDto })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiBadRequestResponse({ description: 'Invalid step data' })
   async updateOnboardingStep(
     @CurrentUser() user: User,
     @Body() dto: UpdateOnboardingStepDto
@@ -51,13 +56,9 @@ export class OnboardingController {
 
   @Post('complete')
   @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
   @ApiOperation({ summary: 'Mark onboarding as completed' })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Onboarding completed successfully',
-    type: OnboardingStatusDto,
-  })
+  @ApiOkResponse({ description: 'Onboarding completed successfully', type: OnboardingStatusDto })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
   async completeOnboarding(
     @CurrentUser() user: User,
     @Body() dto: CompleteOnboardingDto
@@ -67,12 +68,10 @@ export class OnboardingController {
 
   @Put('preferences')
   @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
   @ApiOperation({ summary: 'Update user preferences during onboarding' })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Preferences updated successfully',
-  })
+  @ApiOkResponse({ description: 'Preferences updated successfully' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiBadRequestResponse({ description: 'Invalid preferences data' })
   async updatePreferences(
     @CurrentUser() user: User,
     @Body() dto: UpdatePreferencesDto
@@ -82,22 +81,17 @@ export class OnboardingController {
 
   @Post('verify-email')
   @ApiOperation({ summary: 'Verify user email address' })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Email verified successfully',
-  })
+  @ApiOkResponse({ description: 'Email verified successfully' })
+  @ApiBadRequestResponse({ description: 'Invalid verification token' })
   async verifyEmail(@Body() dto: VerifyEmailDto): Promise<{ success: boolean; message: string }> {
     return await this.onboardingService.verifyEmail(dto);
   }
 
   @Post('resend-verification')
   @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
   @ApiOperation({ summary: 'Resend email verification' })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Verification email sent',
-  })
+  @ApiOkResponse({ description: 'Verification email sent' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
   async resendEmailVerification(
     @CurrentUser() user: User
   ): Promise<{ success: boolean; message: string }> {
@@ -106,13 +100,11 @@ export class OnboardingController {
 
   @Post('skip/:step')
   @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
   @ApiOperation({ summary: 'Skip an optional onboarding step' })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Step skipped successfully',
-    type: OnboardingStatusDto,
-  })
+  @ApiParam({ name: 'step', description: 'Onboarding step to skip' })
+  @ApiOkResponse({ description: 'Step skipped successfully', type: OnboardingStatusDto })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiBadRequestResponse({ description: 'Step cannot be skipped' })
   async skipOnboardingStep(
     @CurrentUser() user: User,
     @Param('step') step: OnboardingStep
@@ -122,20 +114,16 @@ export class OnboardingController {
 
   @Post('reset')
   @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
   @ApiOperation({ summary: 'Reset onboarding progress (for testing/support)' })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Onboarding reset successfully',
-    type: OnboardingStatusDto,
-  })
+  @ApiOkResponse({ description: 'Onboarding reset successfully', type: OnboardingStatusDto })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
   async resetOnboarding(@CurrentUser() user: User): Promise<OnboardingStatusDto> {
     return await this.onboardingService.resetOnboarding(user.id);
   }
 
   @Get('health')
   @ApiOperation({ summary: 'Check onboarding service health' })
-  @ApiResponse({ status: HttpStatus.OK, description: 'Service health status' })
+  @ApiOkResponse({ description: 'Service health status' })
   getHealth() {
     return {
       service: 'onboarding',

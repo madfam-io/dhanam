@@ -3,6 +3,14 @@ import { cva, type VariantProps } from 'class-variance-authority';
 
 import { cn } from '../lib/utils';
 
+/**
+ * Alert variant styles
+ *
+ * ## Variants
+ * - `default`: Neutral information alert
+ * - `destructive`: Error or danger alert (red)
+ * - `warning`: Warning alert (yellow)
+ */
 const alertVariants = cva(
   'relative w-full rounded-lg border p-4 [&>svg~*]:pl-7 [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 [&>svg]:text-foreground',
   {
@@ -21,6 +29,33 @@ const alertVariants = cva(
   }
 );
 
+/**
+ * Alert component for important messages
+ *
+ * Accessible alert with ARIA role="alert" for screen readers.
+ * Supports icons positioned absolutely within the container.
+ *
+ * @example
+ * ```tsx
+ * // Success/Info alert
+ * <Alert>
+ *   <InfoIcon className="h-4 w-4" />
+ *   <AlertTitle>Transaction synced</AlertTitle>
+ *   <AlertDescription>
+ *     Your accounts have been updated with 15 new transactions.
+ *   </AlertDescription>
+ * </Alert>
+ *
+ * // Error alert
+ * <Alert variant="destructive">
+ *   <AlertCircleIcon className="h-4 w-4" />
+ *   <AlertTitle>Sync failed</AlertTitle>
+ *   <AlertDescription>
+ *     Unable to connect to your bank. Please try again.
+ *   </AlertDescription>
+ * </Alert>
+ * ```
+ */
 const Alert = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement> & VariantProps<typeof alertVariants>

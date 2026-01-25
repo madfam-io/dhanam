@@ -10,6 +10,19 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiOkResponse,
+  ApiNotFoundResponse,
+  ApiUnauthorizedResponse,
+  ApiForbiddenResponse,
+  ApiBadRequestResponse,
+  ApiParam,
+  ApiQuery,
+  ApiNoContentResponse,
+} from '@nestjs/swagger';
 
 import { UsageMetricType } from '@db';
 
@@ -29,6 +42,8 @@ import {
 } from './dto';
 import { SimulationsService } from './simulations.service';
 
+@ApiTags('Simulations')
+@ApiBearerAuth()
 @Controller('simulations')
 @UseGuards(JwtAuthGuard)
 export class SimulationsController {
@@ -40,6 +55,11 @@ export class SimulationsController {
   @TrackUsage(UsageMetricType.monte_carlo_simulation)
   @MonitorPerformance(15000)
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Run Monte Carlo simulation' })
+  @ApiOkResponse({ description: 'Simulation completed successfully' })
+  @ApiBadRequestResponse({ description: 'Invalid simulation parameters' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiForbiddenResponse({ description: 'Premium subscription required' })
   async runSimulation(@CurrentUser() user: { id: string }, @Body() dto: RunSimulationDto) {
     return this.simulationsService.runSimulation(user.id, dto);
   }
@@ -50,6 +70,11 @@ export class SimulationsController {
   @TrackUsage(UsageMetricType.monte_carlo_simulation)
   @MonitorPerformance(20000)
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Run retirement planning simulation' })
+  @ApiOkResponse({ description: 'Retirement simulation completed successfully' })
+  @ApiBadRequestResponse({ description: 'Invalid retirement parameters' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiForbiddenResponse({ description: 'Premium subscription required' })
   async runRetirementSimulation(
     @CurrentUser() user: { id: string },
     @Body() dto: RunRetirementSimulationDto
@@ -63,6 +88,11 @@ export class SimulationsController {
   @TrackUsage(UsageMetricType.monte_carlo_simulation)
   @MonitorPerformance(15000)
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Calculate safe withdrawal rate' })
+  @ApiOkResponse({ description: 'Safe withdrawal rate calculated successfully' })
+  @ApiBadRequestResponse({ description: 'Invalid withdrawal rate parameters' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiForbiddenResponse({ description: 'Premium subscription required' })
   async calculateSafeWithdrawalRate(
     @CurrentUser() user: { id: string },
     @Body() dto: CalculateSafeWithdrawalRateDto
@@ -75,11 +105,23 @@ export class SimulationsController {
   @UseGuards(SubscriptionGuard, UsageLimitGuard)
   @MonitorPerformance(30000) // Longer timeout for stress testing
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Run scenario analysis with stress testing' })
+  @ApiOkResponse({ description: 'Scenario analysis completed successfully' })
+  @ApiBadRequestResponse({ description: 'Invalid scenario parameters' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiForbiddenResponse({ description: 'Premium subscription required' })
   async analyzeScenario(@CurrentUser() user: { id: string }, @Body() dto: AnalyzeScenarioDto) {
     return this.simulationsService.analyzeScenario(user.id, dto);
   }
 
   @Get()
+  @ApiOperation({ summary: 'List saved simulations' })
+  @ApiQuery({ name: 'spaceId', required: false, description: 'Filter by space UUID' })
+  @ApiQuery({ name: 'goalId', required: false, description: 'Filter by goal UUID' })
+  @ApiQuery({ name: 'type', required: false, description: 'Filter by simulation type' })
+  @ApiQuery({ name: 'limit', required: false, description: 'Maximum number of results' })
+  @ApiOkResponse({ description: 'List of simulations' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
   async listSimulations(
     @CurrentUser() user: { id: string },
     @Query('spaceId') spaceId?: string,
@@ -96,12 +138,22 @@ export class SimulationsController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get simulation details' })
+  @ApiParam({ name: 'id', description: 'Simulation UUID' })
+  @ApiOkResponse({ description: 'Simulation details' })
+  @ApiNotFoundResponse({ description: 'Simulation not found' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
   async getSimulation(@CurrentUser() user: { id: string }, @Param('id') simulationId: string) {
     return this.simulationsService.getSimulation(user.id, simulationId);
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Delete a simulation' })
+  @ApiParam({ name: 'id', description: 'Simulation UUID' })
+  @ApiNoContentResponse({ description: 'Simulation deleted successfully' })
+  @ApiNotFoundResponse({ description: 'Simulation not found' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
   async deleteSimulation(@CurrentUser() user: { id: string }, @Param('id') simulationId: string) {
     return this.simulationsService.deleteSimulation(user.id, simulationId);
   }

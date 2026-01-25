@@ -2,6 +2,29 @@ import * as React from 'react';
 
 import { cn } from '../lib/utils';
 
+/**
+ * Card container component
+ *
+ * A flexible container for grouping related content with consistent
+ * styling. Use with CardHeader, CardContent, and CardFooter for
+ * structured layouts.
+ *
+ * @example
+ * ```tsx
+ * <Card>
+ *   <CardHeader>
+ *     <CardTitle>Account Balance</CardTitle>
+ *     <CardDescription>Your current balance across all accounts</CardDescription>
+ *   </CardHeader>
+ *   <CardContent>
+ *     <p className="text-2xl font-bold">$12,345.67</p>
+ *   </CardContent>
+ *   <CardFooter>
+ *     <Button>View Details</Button>
+ *   </CardFooter>
+ * </Card>
+ * ```
+ */
 const Card = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
@@ -17,6 +40,11 @@ const Card = React.forwardRef<
 ));
 Card.displayName = 'Card';
 
+/**
+ * Card header section
+ *
+ * Contains CardTitle and CardDescription for card heading area.
+ */
 const CardHeader = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
@@ -29,6 +57,11 @@ const CardHeader = React.forwardRef<
 ));
 CardHeader.displayName = 'CardHeader';
 
+/**
+ * Card title component
+ *
+ * Renders as h3 with consistent typography.
+ */
 const CardTitle = React.forwardRef<
   HTMLParagraphElement,
   React.HTMLAttributes<HTMLHeadingElement>
@@ -44,6 +77,11 @@ const CardTitle = React.forwardRef<
 ));
 CardTitle.displayName = 'CardTitle';
 
+/**
+ * Card description component
+ *
+ * Muted text for card subtitle or description.
+ */
 const CardDescription = React.forwardRef<
   HTMLParagraphElement,
   React.HTMLAttributes<HTMLParagraphElement>
@@ -56,6 +94,11 @@ const CardDescription = React.forwardRef<
 ));
 CardDescription.displayName = 'CardDescription';
 
+/**
+ * Card main content area
+ *
+ * Primary content section with appropriate padding.
+ */
 const CardContent = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
@@ -64,6 +107,11 @@ const CardContent = React.forwardRef<
 ));
 CardContent.displayName = 'CardContent';
 
+/**
+ * Card footer section
+ *
+ * Bottom section typically used for actions/buttons.
+ */
 const CardFooter = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>

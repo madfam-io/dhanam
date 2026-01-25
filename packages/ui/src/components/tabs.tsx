@@ -2,6 +2,38 @@ import * as React from 'react';
 import * as TabsPrimitive from '@radix-ui/react-tabs';
 import { cn } from '../lib/utils';
 
+/**
+ * Tabs component for content organization
+ *
+ * Accessible tab interface built on Radix UI primitives.
+ * Supports keyboard navigation (arrow keys), screen readers, and custom styling.
+ *
+ * ## Components
+ * - `Tabs`: Root context provider
+ * - `TabsList`: Container for tab triggers
+ * - `TabsTrigger`: Individual tab button
+ * - `TabsContent`: Content panel for each tab
+ *
+ * @example
+ * ```tsx
+ * <Tabs defaultValue="overview">
+ *   <TabsList>
+ *     <TabsTrigger value="overview">Overview</TabsTrigger>
+ *     <TabsTrigger value="transactions">Transactions</TabsTrigger>
+ *     <TabsTrigger value="analytics">Analytics</TabsTrigger>
+ *   </TabsList>
+ *   <TabsContent value="overview">
+ *     <Card>Account summary content...</Card>
+ *   </TabsContent>
+ *   <TabsContent value="transactions">
+ *     <TransactionList />
+ *   </TabsContent>
+ *   <TabsContent value="analytics">
+ *     <AnalyticsCharts />
+ *   </TabsContent>
+ * </Tabs>
+ * ```
+ */
 const Tabs = TabsPrimitive.Root;
 
 const TabsList = React.forwardRef<

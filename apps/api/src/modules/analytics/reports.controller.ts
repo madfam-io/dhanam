@@ -9,7 +9,17 @@ import {
   Res,
   HttpStatus,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiQuery,
+  ApiOkResponse,
+  ApiUnauthorizedResponse,
+  ApiForbiddenResponse,
+  ApiBadRequestResponse,
+  ApiParam,
+} from '@nestjs/swagger';
 import { IsString, IsDateString, IsOptional, IsEnum } from 'class-validator';
 import { Response } from 'express';
 
@@ -54,6 +64,10 @@ export class ReportsController {
 
   @Get(':spaceId')
   @ApiOperation({ summary: 'Get available report types for a space' })
+  @ApiParam({ name: 'spaceId', description: 'Space UUID' })
+  @ApiOkResponse({ description: 'List of available report types' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiForbiddenResponse({ description: 'User lacks access to this space' })
   async getAvailableReports(
     @CurrentUser('id') userId: string,
     @Param('spaceId') spaceId: string
@@ -94,6 +108,10 @@ export class ReportsController {
 
   @Post('generate')
   @ApiOperation({ summary: 'Generate a financial report' })
+  @ApiOkResponse({ description: 'Report generated successfully (PDF or CSV)' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiForbiddenResponse({ description: 'User lacks access to this space' })
+  @ApiBadRequestResponse({ description: 'Invalid date range or format' })
   async generateReport(
     @CurrentUser('id') userId: string,
     @Body() dto: GenerateReportDto,
@@ -129,8 +147,13 @@ export class ReportsController {
 
   @Get(':spaceId/download/pdf')
   @ApiOperation({ summary: 'Download PDF report' })
+  @ApiParam({ name: 'spaceId', description: 'Space UUID' })
   @ApiQuery({ name: 'startDate', required: true })
   @ApiQuery({ name: 'endDate', required: true })
+  @ApiOkResponse({ description: 'PDF report file' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiForbiddenResponse({ description: 'User lacks access to this space' })
+  @ApiBadRequestResponse({ description: 'Invalid date parameters' })
   async downloadPdfReport(
     @CurrentUser('id') userId: string,
     @Param('spaceId') spaceId: string,
@@ -157,8 +180,13 @@ export class ReportsController {
 
   @Get(':spaceId/download/csv')
   @ApiOperation({ summary: 'Download CSV export' })
+  @ApiParam({ name: 'spaceId', description: 'Space UUID' })
   @ApiQuery({ name: 'startDate', required: true })
   @ApiQuery({ name: 'endDate', required: true })
+  @ApiOkResponse({ description: 'CSV export file' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiForbiddenResponse({ description: 'User lacks access to this space' })
+  @ApiBadRequestResponse({ description: 'Invalid date parameters' })
   async downloadCsvExport(
     @CurrentUser('id') userId: string,
     @Param('spaceId') spaceId: string,

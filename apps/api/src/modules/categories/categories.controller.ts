@@ -1,5 +1,15 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiOkResponse,
+  ApiNotFoundResponse,
+  ApiUnauthorizedResponse,
+  ApiForbiddenResponse,
+  ApiBadRequestResponse,
+  ApiParam,
+} from '@nestjs/swagger';
 
 import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
 
@@ -22,12 +32,22 @@ export class CategoriesController {
 
   @Get()
   @ApiOperation({ summary: 'Get all categories in a space' })
+  @ApiParam({ name: 'spaceId', description: 'Space UUID' })
+  @ApiOkResponse({ description: 'List of categories in the space' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiForbiddenResponse({ description: 'User lacks access to this space' })
   findAll(@Param('spaceId') spaceId: string, @Req() req: AuthenticatedRequest) {
     return this.categoriesService.findAll(spaceId, req.user!.id);
   }
 
   @Get('budget/:budgetId')
   @ApiOperation({ summary: 'Get categories by budget' })
+  @ApiParam({ name: 'spaceId', description: 'Space UUID' })
+  @ApiParam({ name: 'budgetId', description: 'Budget UUID' })
+  @ApiOkResponse({ description: 'List of categories for the budget' })
+  @ApiNotFoundResponse({ description: 'Budget not found' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiForbiddenResponse({ description: 'User lacks access to this space' })
   findByBudget(
     @Param('spaceId') spaceId: string,
     @Param('budgetId') budgetId: string,
@@ -38,6 +58,12 @@ export class CategoriesController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get a category by id' })
+  @ApiParam({ name: 'spaceId', description: 'Space UUID' })
+  @ApiParam({ name: 'id', description: 'Category UUID' })
+  @ApiOkResponse({ description: 'Category details' })
+  @ApiNotFoundResponse({ description: 'Category not found' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiForbiddenResponse({ description: 'User lacks access to this space' })
   findOne(
     @Param('spaceId') spaceId: string,
     @Param('id') id: string,
@@ -48,6 +74,12 @@ export class CategoriesController {
 
   @Get(':id/spending')
   @ApiOperation({ summary: 'Get category spending details' })
+  @ApiParam({ name: 'spaceId', description: 'Space UUID' })
+  @ApiParam({ name: 'id', description: 'Category UUID' })
+  @ApiOkResponse({ description: 'Category spending details' })
+  @ApiNotFoundResponse({ description: 'Category not found' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiForbiddenResponse({ description: 'User lacks access to this space' })
   getCategorySpending(
     @Param('spaceId') spaceId: string,
     @Param('id') id: string,
@@ -58,6 +90,11 @@ export class CategoriesController {
 
   @Post()
   @ApiOperation({ summary: 'Create a new category' })
+  @ApiParam({ name: 'spaceId', description: 'Space UUID' })
+  @ApiOkResponse({ description: 'Category created successfully' })
+  @ApiBadRequestResponse({ description: 'Invalid request body' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiForbiddenResponse({ description: 'User lacks access to this space' })
   create(
     @Param('spaceId') spaceId: string,
     @Body() createCategoryDto: CreateCategoryDto,
@@ -68,6 +105,13 @@ export class CategoriesController {
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update a category' })
+  @ApiParam({ name: 'spaceId', description: 'Space UUID' })
+  @ApiParam({ name: 'id', description: 'Category UUID' })
+  @ApiOkResponse({ description: 'Category updated successfully' })
+  @ApiNotFoundResponse({ description: 'Category not found' })
+  @ApiBadRequestResponse({ description: 'Invalid request body' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiForbiddenResponse({ description: 'User lacks access to this space' })
   update(
     @Param('spaceId') spaceId: string,
     @Param('id') id: string,
@@ -79,6 +123,12 @@ export class CategoriesController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a category' })
+  @ApiParam({ name: 'spaceId', description: 'Space UUID' })
+  @ApiParam({ name: 'id', description: 'Category UUID' })
+  @ApiOkResponse({ description: 'Category deleted successfully' })
+  @ApiNotFoundResponse({ description: 'Category not found' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiForbiddenResponse({ description: 'User lacks access to this space' })
   remove(
     @Param('spaceId') spaceId: string,
     @Param('id') id: string,

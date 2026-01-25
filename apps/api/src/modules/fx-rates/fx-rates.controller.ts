@@ -1,5 +1,13 @@
 import { Controller, Get, Query, UseGuards, BadRequestException } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiQuery,
+  ApiOkResponse,
+  ApiUnauthorizedResponse,
+  ApiBadRequestResponse,
+} from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsEnum, IsOptional, IsDateString, IsNumber, Min } from 'class-validator';
 
@@ -63,7 +71,9 @@ export class FxRatesController {
   @ApiQuery({ name: 'from', enum: Currency, description: 'Source currency' })
   @ApiQuery({ name: 'to', enum: Currency, description: 'Target currency' })
   @ApiQuery({ name: 'date', required: false, description: 'Date for historical rate (ISO 8601)' })
-  @ApiResponse({ status: 200, description: 'Exchange rate retrieved successfully' })
+  @ApiOkResponse({ description: 'Exchange rate retrieved successfully' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiBadRequestResponse({ description: 'Invalid currency parameters' })
   async getRate(@Query() query: GetRateDto) {
     const date = query.date ? new Date(query.date) : undefined;
     const rate = await this.fxRatesService.getExchangeRate(query.from, query.to, date);
@@ -85,7 +95,9 @@ export class FxRatesController {
   @ApiQuery({ name: 'from', enum: Currency, description: 'Source currency' })
   @ApiQuery({ name: 'to', enum: Currency, description: 'Target currency' })
   @ApiQuery({ name: 'date', required: false, description: 'Date for historical rate (ISO 8601)' })
-  @ApiResponse({ status: 200, description: 'Amount converted successfully' })
+  @ApiOkResponse({ description: 'Amount converted successfully' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiBadRequestResponse({ description: 'Invalid amount or currency parameters' })
   async convertAmount(@Query() query: ConvertAmountDto) {
     const date = query.date ? new Date(query.date) : undefined;
     const convertedAmount = await this.fxRatesService.convertAmount(
@@ -116,7 +128,9 @@ export class FxRatesController {
   @ApiQuery({ name: 'to', enum: Currency, description: 'Target currency' })
   @ApiQuery({ name: 'startDate', description: 'Start date (ISO 8601)' })
   @ApiQuery({ name: 'endDate', description: 'End date (ISO 8601)' })
-  @ApiResponse({ status: 200, description: 'Historical rates retrieved successfully' })
+  @ApiOkResponse({ description: 'Historical rates retrieved successfully' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiBadRequestResponse({ description: 'Invalid date range or currency parameters' })
   async getHistoricalRates(@Query() query: HistoricalRatesDto) {
     const startDate = new Date(query.startDate);
     const endDate = new Date(query.endDate);
@@ -148,7 +162,7 @@ export class FxRatesController {
 
   @Get('currencies')
   @ApiOperation({ summary: 'Get supported currencies' })
-  @ApiResponse({ status: 200, description: 'Supported currencies retrieved successfully' })
+  @ApiOkResponse({ description: 'Supported currencies retrieved successfully' })
   async getSupportedCurrencies() {
     const currencies = await this.fxRatesService.getSupportedCurrencies();
 
@@ -160,7 +174,7 @@ export class FxRatesController {
 
   @Get('health')
   @ApiOperation({ summary: 'Check FX rates service health' })
-  @ApiResponse({ status: 200, description: 'Service health status' })
+  @ApiOkResponse({ description: 'Service health status' })
   async getHealth() {
     // Test by getting current USD/MXN rate
     try {

@@ -8,7 +8,18 @@ import {
   Currency,
 } from '@dhanam/shared';
 import { Controller, Get, Post, Query, Body, UseGuards, Request, Param } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiOkResponse,
+  ApiNotFoundResponse,
+  ApiUnauthorizedResponse,
+  ApiForbiddenResponse,
+  ApiBadRequestResponse,
+  ApiParam,
+  ApiQuery,
+} from '@nestjs/swagger';
 
 import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
 
@@ -38,6 +49,16 @@ export class AnalyticsController {
 
   @Get(':spaceId/net-worth')
   @ApiOperation({ summary: 'Get net worth for a space (with multi-currency conversion)' })
+  @ApiParam({ name: 'spaceId', description: 'The space ID to retrieve net worth for' })
+  @ApiQuery({
+    name: 'currency',
+    required: false,
+    description: 'Target currency for conversion (e.g., USD, MXN, EUR)',
+  })
+  @ApiOkResponse({ description: 'Net worth data retrieved successfully' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiForbiddenResponse({ description: 'User lacks access to this space' })
+  @ApiNotFoundResponse({ description: 'Space not found' })
   async getNetWorth(
     @Request() req: any,
     @Param('spaceId') spaceId: string,
@@ -49,6 +70,16 @@ export class AnalyticsController {
 
   @Get(':spaceId/net-worth-history')
   @ApiOperation({ summary: 'Get net worth history for charting' })
+  @ApiParam({ name: 'spaceId', description: 'The space ID to retrieve net worth history for' })
+  @ApiQuery({
+    name: 'days',
+    required: false,
+    description: 'Number of days of history (default: 30)',
+  })
+  @ApiOkResponse({ description: 'Net worth history retrieved successfully' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiForbiddenResponse({ description: 'User lacks access to this space' })
+  @ApiNotFoundResponse({ description: 'Space not found' })
   async getNetWorthHistory(
     @Request() req: any,
     @Param('spaceId') spaceId: string,
@@ -63,6 +94,12 @@ export class AnalyticsController {
 
   @Get(':spaceId/net-worth-by-ownership')
   @ApiOperation({ summary: 'Get net worth breakdown by ownership (yours, mine, ours)' })
+  @ApiParam({ name: 'spaceId', description: 'The space ID to retrieve ownership breakdown for' })
+  @ApiQuery({ name: 'currency', required: false, description: 'Target currency for conversion' })
+  @ApiOkResponse({ description: 'Net worth by ownership retrieved successfully' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiForbiddenResponse({ description: 'User lacks access to this space' })
+  @ApiNotFoundResponse({ description: 'Space not found' })
   async getNetWorthByOwnership(
     @Request() req: any,
     @Param('spaceId') spaceId: string,
@@ -74,6 +111,16 @@ export class AnalyticsController {
 
   @Get(':spaceId/accounts-by-ownership')
   @ApiOperation({ summary: 'Get accounts filtered by ownership type' })
+  @ApiParam({ name: 'spaceId', description: 'The space ID to retrieve accounts for' })
+  @ApiQuery({
+    name: 'ownership',
+    required: false,
+    description: 'Ownership filter (yours, mine, ours, all)',
+  })
+  @ApiOkResponse({ description: 'Accounts by ownership retrieved successfully' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiForbiddenResponse({ description: 'User lacks access to this space' })
+  @ApiNotFoundResponse({ description: 'Space not found' })
   async getAccountsByOwnership(
     @Request() req: any,
     @Param('spaceId') spaceId: string,
@@ -85,6 +132,16 @@ export class AnalyticsController {
 
   @Get(':spaceId/cashflow-forecast')
   @ApiOperation({ summary: 'Get cashflow forecast' })
+  @ApiParam({ name: 'spaceId', description: 'The space ID to generate cashflow forecast for' })
+  @ApiQuery({
+    name: 'days',
+    required: false,
+    description: 'Number of days to forecast (default: 60)',
+  })
+  @ApiOkResponse({ description: 'Cashflow forecast retrieved successfully' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiForbiddenResponse({ description: 'User lacks access to this space' })
+  @ApiNotFoundResponse({ description: 'Space not found' })
   async getCashflowForecast(
     @Request() req: any,
     @Param('spaceId') spaceId: string,
@@ -99,6 +156,22 @@ export class AnalyticsController {
 
   @Get(':spaceId/spending-by-category')
   @ApiOperation({ summary: 'Get spending breakdown by category' })
+  @ApiParam({ name: 'spaceId', description: 'The space ID to retrieve spending breakdown for' })
+  @ApiQuery({
+    name: 'startDate',
+    required: true,
+    description: 'Start date for the analysis period (ISO 8601)',
+  })
+  @ApiQuery({
+    name: 'endDate',
+    required: true,
+    description: 'End date for the analysis period (ISO 8601)',
+  })
+  @ApiOkResponse({ description: 'Spending by category retrieved successfully' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiForbiddenResponse({ description: 'User lacks access to this space' })
+  @ApiNotFoundResponse({ description: 'Space not found' })
+  @ApiBadRequestResponse({ description: 'Invalid date format' })
   async getSpendingByCategory(
     @Request() req: any,
     @Param('spaceId') spaceId: string,
@@ -115,6 +188,16 @@ export class AnalyticsController {
 
   @Get(':spaceId/income-vs-expenses')
   @ApiOperation({ summary: 'Get income vs expenses trend' })
+  @ApiParam({ name: 'spaceId', description: 'The space ID to retrieve income vs expenses for' })
+  @ApiQuery({
+    name: 'months',
+    required: false,
+    description: 'Number of months to analyze (default: 6)',
+  })
+  @ApiOkResponse({ description: 'Income vs expenses trend retrieved successfully' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiForbiddenResponse({ description: 'User lacks access to this space' })
+  @ApiNotFoundResponse({ description: 'Space not found' })
   async getIncomeVsExpenses(
     @Request() req: any,
     @Param('spaceId') spaceId: string,
@@ -129,6 +212,11 @@ export class AnalyticsController {
 
   @Get(':spaceId/account-balances')
   @ApiOperation({ summary: 'Get all account balances' })
+  @ApiParam({ name: 'spaceId', description: 'The space ID to retrieve account balances for' })
+  @ApiOkResponse({ description: 'Account balances retrieved successfully' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiForbiddenResponse({ description: 'User lacks access to this space' })
+  @ApiNotFoundResponse({ description: 'Space not found' })
   async getAccountBalances(
     @Request() req: any,
     @Param('spaceId') spaceId: string
@@ -138,6 +226,11 @@ export class AnalyticsController {
 
   @Get(':spaceId/portfolio-allocation')
   @ApiOperation({ summary: 'Get portfolio allocation breakdown' })
+  @ApiParam({ name: 'spaceId', description: 'The space ID to retrieve portfolio allocation for' })
+  @ApiOkResponse({ description: 'Portfolio allocation retrieved successfully' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiForbiddenResponse({ description: 'User lacks access to this space' })
+  @ApiNotFoundResponse({ description: 'Space not found' })
   async getPortfolioAllocation(
     @Request() req: any,
     @Param('spaceId') spaceId: string
@@ -147,12 +240,32 @@ export class AnalyticsController {
 
   @Get(':spaceId/dashboard-data')
   @ApiOperation({ summary: 'Get combined dashboard data in a single request' })
+  @ApiParam({ name: 'spaceId', description: 'The space ID to retrieve dashboard data for' })
+  @ApiOkResponse({ description: 'Dashboard data retrieved successfully' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiForbiddenResponse({ description: 'User lacks access to this space' })
+  @ApiNotFoundResponse({ description: 'Space not found' })
   async getDashboardData(@Request() req: any, @Param('spaceId') spaceId: string) {
     return this.analyticsService.getDashboardData(req.user!.userId, spaceId);
   }
 
   @Get(':spaceId/anomalies')
   @ApiOperation({ summary: 'Detect spending anomalies' })
+  @ApiParam({ name: 'spaceId', description: 'The space ID to detect anomalies for' })
+  @ApiQuery({
+    name: 'days',
+    required: false,
+    description: 'Number of days to analyze (default: 30)',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    description: 'Maximum number of anomalies to return (default: 50)',
+  })
+  @ApiOkResponse({ description: 'Anomalies detected successfully' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiForbiddenResponse({ description: 'User lacks access to this space' })
+  @ApiNotFoundResponse({ description: 'Space not found' })
   async getAnomalies(
     @Request() req: any,
     @Param('spaceId') spaceId: string,
@@ -167,6 +280,11 @@ export class AnalyticsController {
 
   @Get(':spaceId/anomalies/summary')
   @ApiOperation({ summary: 'Get anomaly detection summary' })
+  @ApiParam({ name: 'spaceId', description: 'The space ID to get anomaly summary for' })
+  @ApiOkResponse({ description: 'Anomaly summary retrieved successfully' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiForbiddenResponse({ description: 'User lacks access to this space' })
+  @ApiNotFoundResponse({ description: 'Space not found' })
   async getAnomalySummary(@Request() req: any, @Param('spaceId') spaceId: string) {
     return this.anomalyService.getAnomalySummary(spaceId, req.user!.userId);
   }
@@ -175,6 +293,12 @@ export class AnalyticsController {
 
   @Post(':spaceId/projections')
   @ApiOperation({ summary: 'Generate a long-term financial projection (10-30 years)' })
+  @ApiParam({ name: 'spaceId', description: 'The space ID to generate projection for' })
+  @ApiOkResponse({ description: 'Projection generated successfully' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiForbiddenResponse({ description: 'User lacks access to this space' })
+  @ApiNotFoundResponse({ description: 'Space not found' })
+  @ApiBadRequestResponse({ description: 'Invalid request body' })
   async generateProjection(
     @Request() req: any,
     @Param('spaceId') spaceId: string,
@@ -185,6 +309,12 @@ export class AnalyticsController {
 
   @Post(':spaceId/projections/compare')
   @ApiOperation({ summary: 'Compare what-if scenarios against baseline projection' })
+  @ApiParam({ name: 'spaceId', description: 'The space ID to compare scenarios for' })
+  @ApiOkResponse({ description: 'Scenario comparison completed successfully' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiForbiddenResponse({ description: 'User lacks access to this space' })
+  @ApiNotFoundResponse({ description: 'Space not found' })
+  @ApiBadRequestResponse({ description: 'Invalid request body' })
   async compareScenarios(
     @Request() req: any,
     @Param('spaceId') spaceId: string,
@@ -195,6 +325,14 @@ export class AnalyticsController {
 
   @Get(':spaceId/projections/quick')
   @ApiOperation({ summary: 'Get quick projection summary for dashboard' })
+  @ApiParam({ name: 'spaceId', description: 'The space ID to get quick projection for' })
+  @ApiQuery({ name: 'currentAge', required: true, description: 'Current age of the user' })
+  @ApiQuery({ name: 'retirementAge', required: true, description: 'Target retirement age' })
+  @ApiOkResponse({ description: 'Quick projection retrieved successfully' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiForbiddenResponse({ description: 'User lacks access to this space' })
+  @ApiNotFoundResponse({ description: 'Space not found' })
+  @ApiBadRequestResponse({ description: 'Invalid query parameters' })
   async getQuickProjection(
     @Request() req: any,
     @Param('spaceId') spaceId: string,
@@ -211,6 +349,9 @@ export class AnalyticsController {
 
   @Get(':spaceId/projections/scenario-templates')
   @ApiOperation({ summary: 'Get predefined what-if scenario templates' })
+  @ApiParam({ name: 'spaceId', description: 'The space ID (used for context)' })
+  @ApiOkResponse({ description: 'Scenario templates retrieved successfully' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
   getScenarioTemplates() {
     return this.longTermForecastService.getScenarioTemplates();
   }

@@ -89,7 +89,38 @@ describe('BillingController', () => {
 
       const result = await controller.upgradeToPremium(mockRequest, {});
 
-      expect(billingService.upgradeToPremium).toHaveBeenCalledWith('user-123');
+      expect(billingService.upgradeToPremium).toHaveBeenCalledWith('user-123', {
+        orgId: undefined,
+        plan: undefined,
+        successUrl: undefined,
+        cancelUrl: undefined,
+        countryCode: undefined,
+      });
+      expect(result).toEqual({ checkoutUrl: mockCheckoutUrl });
+    });
+
+    it('should pass external app options to billing service', async () => {
+      const mockRequest = { user: mockUser };
+      const mockCheckoutUrl = 'https://checkout.stripe.com/pay/cs_test123';
+      const dto = {
+        orgId: 'org_enclii_123',
+        plan: 'enclii_sovereign',
+        successUrl: 'https://app.enclii.dev/billing/callback?status=success',
+        cancelUrl: 'https://app.enclii.dev/billing/callback?status=cancel',
+        countryCode: 'MX',
+      };
+
+      billingService.upgradeToPremium.mockResolvedValue({ checkoutUrl: mockCheckoutUrl });
+
+      const result = await controller.upgradeToPremium(mockRequest, dto);
+
+      expect(billingService.upgradeToPremium).toHaveBeenCalledWith('user-123', {
+        orgId: 'org_enclii_123',
+        plan: 'enclii_sovereign',
+        successUrl: 'https://app.enclii.dev/billing/callback?status=success',
+        cancelUrl: 'https://app.enclii.dev/billing/callback?status=cancel',
+        countryCode: 'MX',
+      });
       expect(result).toEqual({ checkoutUrl: mockCheckoutUrl });
     });
   });

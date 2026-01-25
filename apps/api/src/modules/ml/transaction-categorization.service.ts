@@ -22,8 +22,50 @@ interface MerchantPattern {
 }
 
 /**
- * Smart transaction categorization using ML
- * Learns from user's historical categorization patterns and corrections
+ * Transaction Categorization Service
+ *
+ * AI-powered transaction categorization that learns from user behavior.
+ * Uses a multi-strategy approach with cascading confidence levels.
+ *
+ * ## Categorization Strategies (Priority Order)
+ * 1. **User Corrections** (highest priority) - Learned patterns from manual corrections
+ * 2. **Exact Merchant Match** - Historical categorization for same merchant
+ * 3. **Fuzzy Merchant Match** - Levenshtein distance for similar merchants
+ * 4. **Keyword Matching** - TF-IDF style description analysis
+ * 5. **Amount Patterns** - Statistical analysis of transaction amounts
+ *
+ * ## Confidence Thresholds
+ * - HIGH (≥0.90): Auto-categorized without user intervention
+ * - MEDIUM (≥0.70): Suggested to user with high confidence
+ * - LOW (≥0.50): Suggested to user with lower confidence
+ *
+ * ## Learning Loop
+ * When users correct categorizations, the system learns:
+ * 1. Correction is stored with merchant/description pattern
+ * 2. Future transactions matching pattern use learned category
+ * 3. Confidence increases with more corrections for same pattern
+ *
+ * @example
+ * ```typescript
+ * // Predict category for new transaction
+ * const prediction = await categorizationService.predictCategory(
+ *   'space-123',
+ *   'UBER TRIP',
+ *   'UBER',
+ *   25.50
+ * );
+ *
+ * if (prediction && prediction.confidence >= 0.9) {
+ *   // Auto-categorize with high confidence
+ *   await categorizationService.autoCategorize(
+ *     transactionId, spaceId, description, merchant, amount
+ *   );
+ * }
+ * ```
+ *
+ * @see CorrectionAggregatorService - Handles user correction learning
+ * @see FuzzyMatcherService - Levenshtein distance calculations
+ * @see MerchantNormalizerService - Merchant name normalization
  */
 @Injectable()
 export class TransactionCategorizationService {
@@ -43,7 +85,27 @@ export class TransactionCategorizationService {
 
   /**
    * Predict category for a new transaction using ML
-   * Uses a multi-strategy approach with user corrections taking priority
+   *
+   * Uses a cascading multi-strategy approach where user corrections take priority,
+   * followed by merchant matching, fuzzy matching, keyword analysis, and amount patterns.
+   *
+   * @param spaceId - Space containing the transaction
+   * @param description - Transaction description from provider
+   * @param merchant - Normalized merchant name (may be null)
+   * @param amount - Transaction amount (negative for expenses)
+   * @returns Category prediction with confidence score, or null if no confident prediction
+   *
+   * @example
+   * ```typescript
+   * const prediction = await service.predictCategory(
+   *   'space-123',
+   *   'Payment to Starbucks Coffee',
+   *   'STARBUCKS',
+   *   -5.75
+   * );
+   * // Returns: { categoryId: 'cat-456', categoryName: 'Food & Drink',
+   * //           confidence: 0.92, reasoning: 'Starbucks consistently categorized...', source: 'merchant' }
+   * ```
    */
   async predictCategory(
     spaceId: string,
@@ -192,7 +254,27 @@ export class TransactionCategorizationService {
   }
 
   /**
-   * Auto-categorize transaction if confidence is high enough
+   * Auto-categorize transaction if confidence exceeds threshold
+   *
+   * Only auto-categorizes when confidence >= 0.90 (HIGH_CONFIDENCE).
+   * Stores ML metadata including confidence score and reasoning.
+   *
+   * @param transactionId - Transaction to categorize
+   * @param spaceId - Space containing the transaction
+   * @param description - Transaction description
+   * @param merchant - Merchant name
+   * @param amount - Transaction amount
+   * @returns Object indicating if categorization occurred and details
+   *
+   * @example
+   * ```typescript
+   * const result = await service.autoCategorize(
+   *   'txn-123', 'space-456', 'Netflix', 'NETFLIX', -15.99
+   * );
+   * if (result.categorized) {
+   *   console.log(`Auto-categorized as ${result.categoryId} (${result.confidence})`);
+   * }
+   * ```
    */
   async autoCategorize(
     transactionId: string,
@@ -508,7 +590,20 @@ export class TransactionCategorizationService {
   }
 
   /**
-   * Get categorization accuracy metrics
+   * Get categorization accuracy metrics for a space
+   *
+   * Returns statistics about auto-categorized transactions including
+   * total count and average confidence level.
+   *
+   * @param spaceId - Space to analyze
+   * @param days - Number of days to look back (default: 30)
+   * @returns Accuracy metrics object
+   *
+   * @example
+   * ```typescript
+   * const metrics = await service.getCategorizationAccuracy('space-123', 30);
+   * console.log(`${metrics.totalAutoCategorized} auto-categorized with ${metrics.averageConfidence} avg confidence`);
+   * ```
    */
   async getCategorizationAccuracy(spaceId: string, days: number = 30) {
     const sinceDate = new Date();

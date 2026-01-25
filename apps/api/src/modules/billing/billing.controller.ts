@@ -12,6 +12,15 @@ import {
   Logger,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiOkResponse,
+  ApiCreatedResponse,
+  ApiUnauthorizedResponse,
+  ApiBadRequestResponse,
+} from '@nestjs/swagger';
 
 import { JwtAuthGuard } from '../../core/auth/guards/jwt-auth.guard';
 
@@ -21,6 +30,8 @@ import { JanuaWebhookPayloadDto, JanuaWebhookEventType } from './dto/janua-webho
 import { JanuaBillingService } from './janua-billing.service';
 import { StripeService } from './stripe.service';
 
+@ApiTags('Billing')
+@ApiBearerAuth()
 @Controller('billing')
 export class BillingController {
   private readonly logger = new Logger(BillingController.name);
@@ -34,11 +45,22 @@ export class BillingController {
 
   /**
    * Initiate upgrade to premium subscription
+   * Supports external app integration (e.g., Enclii) via orgId parameter
    */
   @Post('upgrade')
   @UseGuards(JwtAuthGuard)
-  async upgradeToPremium(@Req() req: any, @Body() _dto: UpgradeToPremiumDto) {
-    return this.billingService.upgradeToPremium(req.user.id);
+  @ApiOperation({ summary: 'Initiate upgrade to premium subscription' })
+  @ApiCreatedResponse({ description: 'Checkout session created successfully' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiBadRequestResponse({ description: 'Invalid request body' })
+  async upgradeToPremium(@Req() req: any, @Body() dto: UpgradeToPremiumDto) {
+    return this.billingService.upgradeToPremium(req.user.id, {
+      orgId: dto.orgId,
+      plan: dto.plan,
+      successUrl: dto.successUrl,
+      cancelUrl: dto.cancelUrl,
+      countryCode: dto.countryCode,
+    });
   }
 
   /**
@@ -46,6 +68,9 @@ export class BillingController {
    */
   @Post('portal')
   @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Create billing portal session for subscription management' })
+  @ApiCreatedResponse({ description: 'Portal session created successfully' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
   async createPortalSession(@Req() req: any) {
     return this.billingService.createPortalSession(req.user.id);
   }
@@ -55,6 +80,9 @@ export class BillingController {
    */
   @Get('usage')
   @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Get current usage metrics for the authenticated user' })
+  @ApiOkResponse({ description: 'Usage metrics retrieved successfully' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
   async getUsage(@Req() req: any) {
     return this.billingService.getUserUsage(req.user.id);
   }
@@ -64,6 +92,9 @@ export class BillingController {
    */
   @Get('history')
   @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Get billing history for the authenticated user' })
+  @ApiOkResponse({ description: 'Billing history retrieved successfully' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
   async getBillingHistory(@Req() req: any) {
     return this.billingService.getBillingHistory(req.user.id);
   }
@@ -73,6 +104,9 @@ export class BillingController {
    */
   @Get('status')
   @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Get subscription status for the authenticated user' })
+  @ApiOkResponse({ description: 'Subscription status retrieved successfully' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
   async getSubscriptionStatus(@Req() req: any) {
     const user = req.user;
 
@@ -92,6 +126,9 @@ export class BillingController {
    */
   @Post('webhook')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Handle Stripe webhook events' })
+  @ApiOkResponse({ description: 'Webhook processed successfully' })
+  @ApiBadRequestResponse({ description: 'Invalid webhook signature or payload' })
   async handleWebhook(
     @Req() req: RawBodyRequest<Request>,
     @Headers('stripe-signature') signature: string
@@ -160,6 +197,9 @@ export class BillingController {
    */
   @Post('webhook/janua')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Handle Janua billing webhook events' })
+  @ApiOkResponse({ description: 'Webhook processed successfully' })
+  @ApiBadRequestResponse({ description: 'Invalid webhook signature or payload' })
   async handleJanuaWebhook(
     @Req() req: RawBodyRequest<Request>,
     @Headers('x-janua-signature') signature: string,

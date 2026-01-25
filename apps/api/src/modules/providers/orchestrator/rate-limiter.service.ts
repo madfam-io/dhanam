@@ -25,8 +25,54 @@ interface RateLimitState {
 }
 
 /**
- * Rate limiter with exponential backoff for provider API calls
- * Prevents hitting rate limits and handles backoff when limits are exceeded
+ * Rate Limiter Service
+ *
+ * Implements sliding window rate limiting with exponential backoff for
+ * financial data provider API calls (Plaid, Belvo, MX, Finicity, Bitso).
+ *
+ * ## Rate Limiting Strategy
+ * Uses a dual-window approach (minute + hour) to enforce both burst limits
+ * and sustained throughput limits per provider.
+ *
+ * ## Provider-Specific Configurations
+ * | Provider   | Req/Min | Req/Hour | Burst | Max Backoff |
+ * |------------|---------|----------|-------|-------------|
+ * | Plaid      | 100     | 3,000    | 20    | 5 min       |
+ * | Belvo      | 60      | 1,000    | 10    | 5 min       |
+ * | MX         | 60      | 1,000    | 10    | 5 min       |
+ * | Finicity   | 50      | 1,000    | 10    | 5 min       |
+ * | Bitso      | 30      | 500      | 5     | 10 min      |
+ * | Blockchain | 30      | 1,000    | 5     | 5 min       |
+ *
+ * ## Backoff Algorithm
+ * ```
+ * backoff_ms = min(base_ms * 2^(retry-1), max_backoff)
+ * backoff_ms += jitter (±10%)
+ * ```
+ *
+ * ## State Management
+ * - In-memory state for single-instance deployments
+ * - Can be extended to Redis for multi-instance deployments
+ * - State keyed by `provider:region` for geographic isolation
+ *
+ * @example
+ * ```typescript
+ * // Check if request is allowed
+ * const { allowed, waitMs, reason } = await rateLimiter.canMakeRequest(Provider.plaid, 'US');
+ * if (!allowed) {
+ *   await sleep(waitMs);
+ * }
+ *
+ * // Execute with automatic rate limiting and retry
+ * const result = await rateLimiter.executeWithRateLimit(
+ *   Provider.belvo,
+ *   'MX',
+ *   () => belvoClient.getAccounts()
+ * );
+ * ```
+ *
+ * @see ProviderOrchestratorService - Uses rate limiter for provider calls
+ * @see CircuitBreakerService - Complementary pattern for failure handling
  */
 @Injectable()
 export class RateLimiterService {
@@ -98,7 +144,22 @@ export class RateLimiterService {
   constructor(private prisma: PrismaService) {}
 
   /**
-   * Check if a request can be made (returns wait time if rate limited)
+   * Check if a request can be made to a provider
+   *
+   * Evaluates current rate limit state against provider configuration.
+   * Returns whether the request is allowed and how long to wait if not.
+   *
+   * @param provider - Financial data provider to check
+   * @param region - Geographic region (affects rate tracking isolation)
+   * @returns Object with allowed status, wait time in ms, and reason if blocked
+   *
+   * @example
+   * ```typescript
+   * const { allowed, waitMs, reason } = await rateLimiter.canMakeRequest(Provider.plaid, 'US');
+   * if (!allowed) {
+   *   console.log(`Rate limited: ${reason}. Retry in ${waitMs}ms`);
+   * }
+   * ```
    */
   async canMakeRequest(
     provider: Provider,
@@ -145,7 +206,13 @@ export class RateLimiterService {
   }
 
   /**
-   * Record a successful request
+   * Record a successful request to update rate limit counters
+   *
+   * Should be called immediately before executing a provider request.
+   * Resets consecutive retry counter on successful recording.
+   *
+   * @param provider - Provider the request was made to
+   * @param region - Geographic region for the request
    */
   async recordRequest(provider: Provider, region: string = 'US'): Promise<void> {
     const state = this.getOrCreateState(provider, region);
@@ -166,6 +233,30 @@ export class RateLimiterService {
 
   /**
    * Handle rate limit error with exponential backoff
+   *
+   * Calculates backoff duration using exponential algorithm with jitter:
+   * `backoff = min(base * 2^(retry-1), max) ± 10% jitter`
+   *
+   * If server provides `Retry-After` header, uses that value instead.
+   *
+   * @param provider - Provider that returned rate limit error
+   * @param region - Geographic region
+   * @param retryAfterSeconds - Optional server-provided retry delay
+   * @returns Whether to retry and how long to wait
+   *
+   * @example
+   * ```typescript
+   * try {
+   *   await plaidClient.sync();
+   * } catch (error) {
+   *   if (error.status === 429) {
+   *     const { shouldRetry, waitMs } = await rateLimiter.handleRateLimitError(
+   *       Provider.plaid, 'US', error.headers['retry-after']
+   *     );
+   *     if (shouldRetry) await sleep(waitMs);
+   *   }
+   * }
+   * ```
    */
   async handleRateLimitError(
     provider: Provider,
@@ -217,7 +308,14 @@ export class RateLimiterService {
   }
 
   /**
-   * Get current rate limit status for a provider
+   * Get current rate limit status for monitoring dashboards
+   *
+   * Returns comprehensive state including current window counts, limits,
+   * and any active backoff periods.
+   *
+   * @param provider - Provider to check status for
+   * @param region - Geographic region
+   * @returns Current rate limit state with limits and counters
    */
   async getRateLimitStatus(
     provider: Provider,
@@ -280,6 +378,30 @@ export class RateLimiterService {
 
   /**
    * Execute a request with automatic rate limiting and retry
+   *
+   * Wraps provider calls with full rate limit handling:
+   * 1. Checks if request is allowed (waits if necessary)
+   * 2. Records the request attempt
+   * 3. Executes the function
+   * 4. Handles rate limit errors with exponential backoff
+   * 5. Retries up to maxRetries times
+   *
+   * @param provider - Provider to execute request against
+   * @param region - Geographic region for rate tracking
+   * @param fn - Async function to execute (the actual provider call)
+   * @returns Result of the provider call
+   * @throws Error if max attempts exceeded or non-rate-limit error
+   *
+   * @example
+   * ```typescript
+   * const accounts = await rateLimiter.executeWithRateLimit(
+   *   Provider.belvo,
+   *   'MX',
+   *   async () => {
+   *     return belvoClient.getAccounts(connectionId);
+   *   }
+   * );
+   * ```
    */
   async executeWithRateLimit<T>(
     provider: Provider,

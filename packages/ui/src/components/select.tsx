@@ -3,6 +3,44 @@ import * as SelectPrimitive from '@radix-ui/react-select';
 import { Check, ChevronDown, ChevronUp } from '../lib/icon-compat';
 import { cn } from '../lib/utils';
 
+/**
+ * Select dropdown component
+ *
+ * Accessible select/dropdown built on Radix UI primitives.
+ * Supports keyboard navigation, screen readers, and custom styling.
+ *
+ * ## Components
+ * - `Select`: Root context provider (controlled/uncontrolled)
+ * - `SelectTrigger`: The button that opens the dropdown
+ * - `SelectValue`: Displays the selected value
+ * - `SelectContent`: The dropdown content container
+ * - `SelectItem`: Individual selectable option
+ * - `SelectGroup`: Groups options with a label
+ * - `SelectLabel`: Label for a group
+ * - `SelectSeparator`: Visual separator between items
+ *
+ * @example
+ * ```tsx
+ * <Select value={category} onValueChange={setCategory}>
+ *   <SelectTrigger>
+ *     <SelectValue placeholder="Select category" />
+ *   </SelectTrigger>
+ *   <SelectContent>
+ *     <SelectGroup>
+ *       <SelectLabel>Income</SelectLabel>
+ *       <SelectItem value="salary">Salary</SelectItem>
+ *       <SelectItem value="investment">Investment</SelectItem>
+ *     </SelectGroup>
+ *     <SelectSeparator />
+ *     <SelectGroup>
+ *       <SelectLabel>Expenses</SelectLabel>
+ *       <SelectItem value="groceries">Groceries</SelectItem>
+ *       <SelectItem value="utilities">Utilities</SelectItem>
+ *     </SelectGroup>
+ *   </SelectContent>
+ * </Select>
+ * ```
+ */
 const Select = SelectPrimitive.Root;
 
 const SelectGroup = SelectPrimitive.Group;

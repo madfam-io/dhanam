@@ -10,6 +10,68 @@ import { PrismaService } from '../../core/prisma/prisma.service';
 import { BillingProvider, JanuaBillingService } from './janua-billing.service';
 import { StripeService } from './stripe.service';
 
+/**
+ * Options for premium upgrade
+ * Used for external app integration (e.g., Enclii)
+ */
+export interface UpgradeOptions {
+  orgId?: string;
+  plan?: string;
+  successUrl?: string;
+  cancelUrl?: string;
+  countryCode?: string;
+}
+
+/**
+ * Billing Service
+ *
+ * Manages subscription lifecycle, usage tracking, and payment processing.
+ * Supports multi-provider billing through Janua (MADFAM's SSO platform).
+ *
+ * ## Payment Providers (via Janua)
+ * - **Conekta**: Mexico (MXN)
+ * - **Polar**: International
+ * - **Stripe**: Fallback/Direct integration
+ *
+ * ## Subscription Tiers
+ * - **Free**: Limited usage (10 ESG calcs, 3 simulations/day)
+ * - **Premium**: Unlimited usage, all features
+ *
+ * ## Usage Tracking
+ * Daily usage metrics tracked per user:
+ * - ESG calculations
+ * - Monte Carlo simulations
+ * - Goal probability calculations
+ * - Scenario analyses
+ * - API requests
+ *
+ * ## Webhook Handling
+ * Handles events from both Stripe and Janua:
+ * - subscription.created/updated/cancelled
+ * - payment.succeeded/failed/refunded
+ * - subscription.paused/resumed
+ *
+ * @example
+ * ```typescript
+ * // Initiate premium upgrade
+ * const { checkoutUrl, provider } = await billingService.upgradeToPremium(
+ *   userId,
+ *   { countryCode: 'MX' }  // Will use Conekta
+ * );
+ *
+ * // Check usage limit before operation
+ * const canRun = await billingService.checkUsageLimit(userId, 'monte_carlo_simulation');
+ * if (!canRun) {
+ *   throw new Error('Daily simulation limit reached. Upgrade to Premium for unlimited.');
+ * }
+ *
+ * // Record usage after operation
+ * await billingService.recordUsage(userId, 'monte_carlo_simulation');
+ * ```
+ *
+ * @see JanuaBillingService - Janua multi-provider integration
+ * @see StripeService - Direct Stripe integration (fallback)
+ */
 @Injectable()
 export class BillingService {
   private readonly logger = new Logger(BillingService.name);
@@ -45,11 +107,16 @@ export class BillingService {
   /**
    * Initiate upgrade to premium subscription
    * Uses Janua multi-provider billing when available, falls back to direct Stripe
+   *
+   * @param userId - The user initiating the upgrade
+   * @param options - Optional parameters for external app integration
    */
   async upgradeToPremium(
     userId: string,
-    countryCode: string = 'US'
+    options: UpgradeOptions = {}
   ): Promise<{ checkoutUrl: string; provider: string }> {
+    const countryCode = options.countryCode || 'US';
+
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: {
@@ -80,11 +147,11 @@ export class BillingService {
 
     // Try Janua multi-provider billing first
     if (this.januaBilling.isEnabled()) {
-      return this.upgradeToPremiumViaJanua(user, countryCode, webUrl);
+      return this.upgradeToPremiumViaJanua(user, countryCode, webUrl, options);
     }
 
     // Fallback to direct Stripe
-    return this.upgradeToPremiumViaStripe(user, webUrl);
+    return this.upgradeToPremiumViaStripe(user, webUrl, options);
   }
 
   /**
@@ -93,7 +160,8 @@ export class BillingService {
   private async upgradeToPremiumViaJanua(
     user: { id: string; email: string; name: string; januaCustomerId?: string },
     countryCode: string,
-    webUrl: string
+    webUrl: string,
+    options: UpgradeOptions = {}
   ): Promise<{ checkoutUrl: string; provider: BillingProvider }> {
     let customerId = user.januaCustomerId;
     let provider: BillingProvider = this.januaBilling.getProviderForCountry(countryCode);
@@ -103,6 +171,7 @@ export class BillingService {
         email: user.email,
         name: user.name,
         countryCode,
+        orgId: options.orgId,
         metadata: { userId: user.id },
       });
 
@@ -118,24 +187,39 @@ export class BillingService {
       });
     }
 
+    // Build metadata including orgId for Janua organization linking
+    const metadata: Record<string, string> = { userId: user.id };
+    if (options.orgId) {
+      metadata.orgId = options.orgId;
+    }
+
     const result = await this.januaBilling.createCheckoutSession({
       customerId,
       customerEmail: user.email,
-      priceId: 'premium',
+      priceId: options.plan || 'premium',
       countryCode,
-      successUrl: `${webUrl}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancelUrl: `${webUrl}/billing/cancel`,
-      metadata: { userId: user.id },
+      successUrl:
+        options.successUrl || `${webUrl}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancelUrl: options.cancelUrl || `${webUrl}/billing/cancel`,
+      orgId: options.orgId,
+      metadata,
     });
 
     await this.audit.log({
       userId: user.id,
       action: 'BILLING_UPGRADE_INITIATED',
       severity: 'medium',
-      metadata: { sessionId: result.sessionId, provider: result.provider },
+      metadata: {
+        sessionId: result.sessionId,
+        provider: result.provider,
+        orgId: options.orgId,
+        plan: options.plan,
+      },
     });
 
-    this.logger.log(`Upgrade initiated via Janua (${result.provider}) for user ${user.id}`);
+    this.logger.log(
+      `Upgrade initiated via Janua (${result.provider}) for user ${user.id}${options.orgId ? ` (org: ${options.orgId})` : ''}`
+    );
 
     return { checkoutUrl: result.checkoutUrl, provider: result.provider };
   }
@@ -145,7 +229,8 @@ export class BillingService {
    */
   private async upgradeToPremiumViaStripe(
     user: { id: string; email: string; name: string; stripeCustomerId?: string },
-    webUrl: string
+    webUrl: string,
+    options: UpgradeOptions = {}
   ): Promise<{ checkoutUrl: string; provider: BillingProvider }> {
     let customerId = user.stripeCustomerId;
 
@@ -166,19 +251,26 @@ export class BillingService {
 
     const priceId = this.config.get<string>('STRIPE_PREMIUM_PRICE_ID');
 
+    // Build metadata including orgId for external app linking
+    const metadata: Record<string, string> = { userId: user.id };
+    if (options.orgId) {
+      metadata.orgId = options.orgId;
+    }
+
     const session = await this.stripe.createCheckoutSession({
       customerId,
       priceId,
-      successUrl: `${webUrl}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancelUrl: `${webUrl}/billing/cancel`,
-      metadata: { userId: user.id },
+      successUrl:
+        options.successUrl || `${webUrl}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancelUrl: options.cancelUrl || `${webUrl}/billing/cancel`,
+      metadata,
     });
 
     await this.audit.log({
       userId: user.id,
       action: 'BILLING_UPGRADE_INITIATED',
       severity: 'medium',
-      metadata: { sessionId: session.id, provider: 'stripe' },
+      metadata: { sessionId: session.id, provider: 'stripe', orgId: options.orgId },
     });
 
     this.logger.log(`Upgrade initiated via Stripe for user ${user.id}, session: ${session.id}`);
@@ -414,6 +506,17 @@ export class BillingService {
 
   /**
    * Record usage metric for a user
+   *
+   * Increments the daily usage counter for the specified metric type.
+   * Counters reset daily at midnight UTC.
+   *
+   * @param userId - User to record usage for
+   * @param metricType - Type of metric (e.g., 'monte_carlo_simulation')
+   *
+   * @example
+   * ```typescript
+   * await billingService.recordUsage(userId, 'esg_calculation');
+   * ```
    */
   async recordUsage(userId: string, metricType: UsageMetricType): Promise<void> {
     const today = new Date();
@@ -440,7 +543,21 @@ export class BillingService {
   }
 
   /**
-   * Check if user has exceeded usage limit for a metric type
+   * Check if user can perform an operation based on usage limits
+   *
+   * Returns true if the user has not exceeded their daily limit for the metric.
+   * Premium users always return true (unlimited usage).
+   *
+   * @param userId - User to check
+   * @param metricType - Type of metric to check
+   * @returns true if operation is allowed, false if limit exceeded
+   *
+   * @example
+   * ```typescript
+   * if (!await billingService.checkUsageLimit(userId, 'monte_carlo_simulation')) {
+   *   throw new HttpException('Daily limit exceeded', HttpStatus.PAYMENT_REQUIRED);
+   * }
+   * ```
    */
   async checkUsageLimit(userId: string, metricType: UsageMetricType): Promise<boolean> {
     const user = await this.prisma.user.findUnique({
@@ -494,7 +611,19 @@ export class BillingService {
   }
 
   /**
-   * Get user's current usage for today
+   * Get user's current usage metrics for today
+   *
+   * Returns usage counts and limits for all metric types.
+   * Limit of -1 indicates unlimited (Premium tier).
+   *
+   * @param userId - User to get usage for
+   * @returns Usage object with counts and limits by metric type
+   *
+   * @example
+   * ```typescript
+   * const usage = await billingService.getUserUsage(userId);
+   * // Returns: { tier: 'free', usage: { monte_carlo_simulation: { used: 2, limit: 3 } } }
+   * ```
    */
   async getUserUsage(userId: string) {
     const today = new Date();
@@ -550,7 +679,7 @@ export class BillingService {
    * Handle Janua subscription created event
    */
   async handleJanuaSubscriptionCreated(payload: any): Promise<void> {
-    const { customer_id, subscription_id, plan_id, provider } = payload.data;
+    const { customer_id, subscription_id, plan_id, provider, metadata } = payload.data;
 
     const user = await this.prisma.user.findFirst({
       where: { januaCustomerId: customer_id },
@@ -583,6 +712,12 @@ export class BillingService {
     });
 
     this.logger.log(`Janua subscription created for user ${user.id} via ${provider}`);
+
+    // Notify Janua identity system if this subscription is linked to an organization
+    // This enables the Enclii → Dhanam → Janua payment loop
+    if (metadata?.orgId) {
+      await this.notifyJanuaOfTierChange(metadata.orgId, customer_id, plan_id);
+    }
   }
 
   /**
@@ -782,5 +917,72 @@ export class BillingService {
     });
 
     this.logger.log(`Janua refund processed for user ${user.id}: ${currency} ${amount}`);
+  }
+
+  // ==========================================
+  // Janua Identity System Notification
+  // ==========================================
+
+  /**
+   * Notify Janua identity system of subscription tier change
+   * This updates the organization's subscription_tier, enabling
+   * the Enclii → Dhanam → Janua payment loop
+   *
+   * @param orgId - Janua organization ID
+   * @param customerId - Billing customer ID
+   * @param planId - The plan that was activated
+   */
+  private async notifyJanuaOfTierChange(
+    orgId: string,
+    customerId: string,
+    planId: string
+  ): Promise<void> {
+    const januaApiUrl = this.config.get<string>('JANUA_API_URL');
+    const dhanamWebhookSecret = this.config.get<string>('DHANAM_WEBHOOK_SECRET');
+
+    if (!januaApiUrl || !dhanamWebhookSecret) {
+      this.logger.warn('Cannot notify Janua: missing JANUA_API_URL or DHANAM_WEBHOOK_SECRET');
+      return;
+    }
+
+    const payload = JSON.stringify({
+      type: 'subscription.created',
+      data: {
+        customer_id: customerId,
+        plan_id: planId,
+        organization_id: orgId,
+      },
+      timestamp: new Date().toISOString(),
+    });
+
+    // Sign the payload using HMAC-SHA256
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const crypto = require('crypto');
+    const signature = crypto
+      .createHmac('sha256', dhanamWebhookSecret)
+      .update(payload)
+      .digest('hex');
+
+    try {
+      const response = await fetch(`${januaApiUrl}/api/v1/webhooks/dhanam/subscription`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Dhanam-Signature': signature,
+        },
+        body: payload,
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        this.logger.error(
+          `Failed to notify Janua of tier change: ${response.status} - ${errorText}`
+        );
+      } else {
+        this.logger.log(`Notified Janua of tier change for org ${orgId} (plan: ${planId})`);
+      }
+    } catch (error) {
+      this.logger.error(`Error notifying Janua of tier change: ${error.message}`);
+    }
   }
 }

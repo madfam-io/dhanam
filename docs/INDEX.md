@@ -27,12 +27,94 @@
 | [Infrastructure](INFRASTRUCTURE.md) | Cloud and services setup |
 | [Implementation Summary](IMPLEMENTATION_SUMMARY.md) | Feature implementation details |
 
+## Architecture Decision Records (ADRs)
+
+| ADR | Title | Status |
+|-----|-------|--------|
+| [ADR-001](adr/001-nestjs-fastify.md) | NestJS with Fastify over Express | Accepted |
+| [ADR-002](adr/002-prisma-orm.md) | Prisma ORM for Database Access | Accepted |
+| [ADR-003](adr/003-multi-provider-strategy.md) | Multi-Provider Financial Data Strategy | Accepted |
+| [ADR-004](adr/004-janua-auth-integration.md) | Janua Authentication Integration | Accepted |
+| [ADR-005](adr/005-enclii-deployment.md) | Enclii Deployment Platform | Accepted |
+
 ## API Documentation
 
 | Document | Description |
 |----------|-------------|
 | [API Reference](API.md) | Full API documentation |
 | [API Details](api/) | Endpoint specifications |
+| [Swagger UI](/api/docs) | Interactive API explorer |
+
+## Package Documentation
+
+| Package | Description |
+|---------|-------------|
+| [@dhanam/shared](../packages/shared/README.md) | Types, utilities, constants, i18n |
+| [@dhanam/config](../packages/config/README.md) | ESLint & TypeScript configurations |
+| [@dhanam/esg](../packages/esg/README.md) | ESG scoring for crypto assets |
+| [@dhanam/simulations](../packages/simulations/README.md) | Monte Carlo & scenario analysis |
+| [@dhanam/ui](../packages/ui/README.md) | Reusable UI components |
+
+## Module Documentation
+
+### Core Modules
+
+| Module | Description |
+|--------|-------------|
+| [accounts](../apps/api/src/modules/accounts/README.md) | Account management |
+| [transactions](../apps/api/src/modules/transactions/README.md) | Transaction management |
+| [budgets](../apps/api/src/modules/budgets/README.md) | YNAB-style budgeting |
+| [categories](../apps/api/src/modules/categories/README.md) | Category & rules management |
+| [spaces](../apps/api/src/modules/spaces/README.md) | Multi-tenant spaces |
+| [users](../apps/api/src/modules/users/README.md) | User management |
+
+### Analytics & Reporting
+
+| Module | Description |
+|--------|-------------|
+| [analytics](../apps/api/src/modules/analytics/README.md) | Financial analytics |
+| [simulations](../apps/api/src/modules/simulations/README.md) | Monte Carlo simulations |
+| [goals](../apps/api/src/modules/goals/README.md) | Goal tracking |
+| [esg](../apps/api/src/modules/esg/README.md) | ESG scoring API |
+
+### Provider Integration
+
+| Module | Description |
+|--------|-------------|
+| [providers/orchestrator](../apps/api/src/modules/providers/orchestrator/README.md) | Multi-provider coordination |
+| [providers/belvo](../apps/api/src/modules/providers/belvo/README.md) | Mexico banking (Belvo) |
+| [providers/plaid](../apps/api/src/modules/providers/plaid/README.md) | US banking (Plaid) |
+| [providers/bitso](../apps/api/src/modules/providers/bitso/README.md) | Crypto exchange (Bitso) |
+| [providers/defi](../apps/api/src/modules/providers/defi/README.md) | DeFi tracking (Zapper) |
+| [providers/blockchain](../apps/api/src/modules/providers/blockchain/README.md) | Blockchain tracking |
+
+### ML & Automation
+
+| Module | Description |
+|--------|-------------|
+| [ml](../apps/api/src/modules/ml/README.md) | Transaction categorization ML |
+| [recurring](../apps/api/src/modules/recurring/README.md) | Recurring transaction detection |
+| [jobs](../apps/api/src/modules/jobs/README.md) | Background job processing |
+
+### Billing & Admin
+
+| Module | Description |
+|--------|-------------|
+| [billing](../apps/api/src/modules/billing/README.md) | Subscription & payments |
+| [admin](../apps/api/src/modules/admin/README.md) | Admin functionality |
+
+### Other Modules
+
+| Module | Description |
+|--------|-------------|
+| [manual-assets](../apps/api/src/modules/manual-assets/README.md) | Manual asset tracking |
+| [estate-planning](../apps/api/src/modules/estate-planning/README.md) | Estate planning (Life Beat) |
+| [households](../apps/api/src/modules/households/README.md) | Household management |
+| [fx-rates](../apps/api/src/modules/fx-rates/README.md) | Currency exchange rates |
+| [storage](../apps/api/src/modules/storage/README.md) | Document storage (R2) |
+| [email](../apps/api/src/modules/email/README.md) | Email service |
+| [onboarding](../apps/api/src/modules/onboarding/README.md) | User onboarding |
+| [search](../apps/api/src/modules/search/README.md) | Natural language search |
 
 ## Features
 
@@ -106,4 +188,4 @@
 
 ---
 
-*Last updated: November 2025*
+*Last updated: January 2025*

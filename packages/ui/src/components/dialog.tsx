@@ -4,6 +4,45 @@ import { X } from '../lib/icon-compat';
 
 import { cn } from '../lib/utils';
 
+/**
+ * Dialog (Modal) component
+ *
+ * Accessible modal dialog built on Radix UI primitives. Use for
+ * confirmations, forms, or any content that requires user attention.
+ *
+ * ## Components
+ * - `Dialog`: Root context provider
+ * - `DialogTrigger`: Element that opens the dialog
+ * - `DialogContent`: The modal content container
+ * - `DialogHeader`: Top section for title/description
+ * - `DialogFooter`: Bottom section for actions
+ * - `DialogTitle`: Accessible title
+ * - `DialogDescription`: Accessible description
+ * - `DialogClose`: Close button
+ *
+ * @example
+ * ```tsx
+ * <Dialog>
+ *   <DialogTrigger asChild>
+ *     <Button>Open Dialog</Button>
+ *   </DialogTrigger>
+ *   <DialogContent>
+ *     <DialogHeader>
+ *       <DialogTitle>Confirm Action</DialogTitle>
+ *       <DialogDescription>
+ *         Are you sure you want to delete this transaction?
+ *       </DialogDescription>
+ *     </DialogHeader>
+ *     <DialogFooter>
+ *       <DialogClose asChild>
+ *         <Button variant="outline">Cancel</Button>
+ *       </DialogClose>
+ *       <Button variant="destructive">Delete</Button>
+ *     </DialogFooter>
+ *   </DialogContent>
+ * </Dialog>
+ * ```
+ */
 const Dialog = DialogPrimitive.Root;
 
 const DialogTrigger = DialogPrimitive.Trigger;

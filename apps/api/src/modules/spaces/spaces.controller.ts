@@ -11,7 +11,17 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiParam,
+  ApiUnauthorizedResponse,
+  ApiForbiddenResponse,
+  ApiBadRequestResponse,
+  ApiNotFoundResponse,
+} from '@nestjs/swagger';
 
 import { CurrentUser } from '@core/auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
@@ -34,6 +44,7 @@ export class SpacesController {
   @Get()
   @ApiOperation({ summary: 'List user spaces' })
   @ApiResponse({ status: 200, description: 'List of spaces' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
   async listSpaces(@CurrentUser('id') userId: string): Promise<Space[]> {
     return this.spacesService.listUserSpaces(userId);
   }
@@ -41,6 +52,8 @@ export class SpacesController {
   @Post()
   @ApiOperation({ summary: 'Create new space' })
   @ApiResponse({ status: 201, description: 'Space created' })
+  @ApiBadRequestResponse({ description: 'Invalid request body' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
   async createSpace(
     @CurrentUser('id') userId: string,
     @Body() dto: CreateSpaceDto
@@ -51,7 +64,11 @@ export class SpacesController {
   @Get(':spaceId')
   @UseGuards(SpaceGuard)
   @ApiOperation({ summary: 'Get space details' })
+  @ApiParam({ name: 'spaceId', description: 'Space UUID' })
   @ApiResponse({ status: 200, description: 'Space details' })
+  @ApiNotFoundResponse({ description: 'Space not found' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiForbiddenResponse({ description: 'User lacks access to this space' })
   async getSpace(@Param('spaceId') spaceId: string): Promise<Space> {
     return this.spacesService.getSpace(spaceId);
   }
@@ -60,7 +77,12 @@ export class SpacesController {
   @UseGuards(SpaceGuard)
   @RequireRole('owner', 'admin')
   @ApiOperation({ summary: 'Update space' })
+  @ApiParam({ name: 'spaceId', description: 'Space UUID' })
   @ApiResponse({ status: 200, description: 'Space updated' })
+  @ApiNotFoundResponse({ description: 'Space not found' })
+  @ApiBadRequestResponse({ description: 'Invalid request body' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiForbiddenResponse({ description: 'User lacks access to this space or insufficient role' })
   async updateSpace(
     @Param('spaceId') spaceId: string,
     @Body() dto: UpdateSpaceDto
@@ -73,7 +95,11 @@ export class SpacesController {
   @RequireRole('owner')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete space' })
+  @ApiParam({ name: 'spaceId', description: 'Space UUID' })
   @ApiResponse({ status: 204, description: 'Space deleted' })
+  @ApiNotFoundResponse({ description: 'Space not found' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiForbiddenResponse({ description: 'User is not the owner of this space' })
   async deleteSpace(@Param('spaceId') spaceId: string): Promise<void> {
     await this.spacesService.deleteSpace(spaceId);
   }
@@ -81,7 +107,11 @@ export class SpacesController {
   @Get(':spaceId/members')
   @UseGuards(SpaceGuard)
   @ApiOperation({ summary: 'List space members' })
+  @ApiParam({ name: 'spaceId', description: 'Space UUID' })
   @ApiResponse({ status: 200, description: 'List of members' })
+  @ApiNotFoundResponse({ description: 'Space not found' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiForbiddenResponse({ description: 'User lacks access to this space' })
   async listMembers(@Param('spaceId') spaceId: string): Promise<SpaceMember[]> {
     return this.spacesService.listMembers(spaceId);
   }
@@ -90,7 +120,12 @@ export class SpacesController {
   @UseGuards(SpaceGuard)
   @RequireRole('owner', 'admin')
   @ApiOperation({ summary: 'Invite member to space' })
+  @ApiParam({ name: 'spaceId', description: 'Space UUID' })
   @ApiResponse({ status: 201, description: 'Member invited' })
+  @ApiNotFoundResponse({ description: 'Space not found' })
+  @ApiBadRequestResponse({ description: 'Invalid email or member already exists' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiForbiddenResponse({ description: 'User lacks access to this space or insufficient role' })
   async inviteMember(
     @Param('spaceId') spaceId: string,
     @Body() dto: InviteMemberDto
@@ -102,7 +137,13 @@ export class SpacesController {
   @UseGuards(SpaceGuard)
   @RequireRole('owner')
   @ApiOperation({ summary: 'Update member role' })
+  @ApiParam({ name: 'spaceId', description: 'Space UUID' })
+  @ApiParam({ name: 'userId', description: 'User UUID to update' })
   @ApiResponse({ status: 200, description: 'Role updated' })
+  @ApiNotFoundResponse({ description: 'Space or member not found' })
+  @ApiBadRequestResponse({ description: 'Invalid role value' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiForbiddenResponse({ description: 'User is not the owner of this space' })
   async updateMemberRole(
     @Param('spaceId') spaceId: string,
     @Param('userId') userId: string,
@@ -116,7 +157,12 @@ export class SpacesController {
   @RequireRole('owner', 'admin')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Remove member from space' })
+  @ApiParam({ name: 'spaceId', description: 'Space UUID' })
+  @ApiParam({ name: 'userId', description: 'User UUID to remove' })
   @ApiResponse({ status: 204, description: 'Member removed' })
+  @ApiNotFoundResponse({ description: 'Space or member not found' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiForbiddenResponse({ description: 'User lacks access to this space or insufficient role' })
   async removeMember(
     @Param('spaceId') spaceId: string,
     @Param('userId') userId: string,

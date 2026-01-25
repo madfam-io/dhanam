@@ -10,7 +10,16 @@ import {
   HttpStatus,
   NotFoundException,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiParam,
+  ApiUnauthorizedResponse,
+  ApiForbiddenResponse,
+  ApiBadRequestResponse,
+} from '@nestjs/swagger';
 
 import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
 
@@ -31,12 +40,15 @@ import { AdminGuard } from './guards/admin.guard';
 @ApiBearerAuth()
 @Controller('admin')
 @UseGuards(JwtAuthGuard, AdminGuard)
+@ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+@ApiForbiddenResponse({ description: 'User lacks admin privileges' })
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
   @Get('users')
   @ApiOperation({ summary: 'Search and list users with pagination' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Users retrieved successfully' })
+  @ApiBadRequestResponse({ description: 'Invalid query parameters' })
   async searchUsers(@Query() dto: UserSearchDto): Promise<PaginatedResponseDto<any>> {
     return this.adminService.searchUsers(dto);
   }
@@ -71,6 +83,7 @@ export class AdminController {
   @Get('audit-logs')
   @ApiOperation({ summary: 'Search and view audit logs' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Audit logs retrieved successfully' })
+  @ApiBadRequestResponse({ description: 'Invalid query parameters' })
   async searchAuditLogs(@Query() dto: AuditLogSearchDto): Promise<PaginatedResponseDto<any>> {
     return this.adminService.searchAuditLogs(dto);
   }
@@ -123,6 +136,7 @@ export class AdminController {
     type: FeatureFlagDto,
   })
   @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Feature flag not found' })
+  @ApiBadRequestResponse({ description: 'Invalid request body' })
   async updateFeatureFlag(
     @Param('key') key: string,
     @Body() dto: UpdateFeatureFlagDto,

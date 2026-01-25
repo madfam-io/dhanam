@@ -4,6 +4,47 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { X } from '../lib/icon-compat';
 import { cn } from '../lib/utils';
 
+/**
+ * Toast notification system
+ *
+ * Accessible toast notifications built on Radix UI primitives.
+ * Supports swipe-to-dismiss, keyboard navigation, and screen readers.
+ * Use the `useToast` hook to trigger toasts programmatically.
+ *
+ * ## Components
+ * - `ToastProvider`: Context provider (wrap at app root)
+ * - `ToastViewport`: Container for toast positioning
+ * - `Toast`: Individual toast notification
+ * - `ToastTitle`: Toast heading
+ * - `ToastDescription`: Toast message body
+ * - `ToastAction`: Optional action button
+ * - `ToastClose`: Close button
+ *
+ * @example
+ * ```tsx
+ * // In your app root
+ * <ToastProvider>
+ *   <App />
+ *   <Toaster />
+ * </ToastProvider>
+ *
+ * // Using the toast hook
+ * const { toast } = useToast();
+ *
+ * // Success toast
+ * toast({
+ *   title: "Transaction synced",
+ *   description: "15 new transactions imported.",
+ * });
+ *
+ * // Error toast
+ * toast({
+ *   variant: "destructive",
+ *   title: "Sync failed",
+ *   description: "Unable to connect to your bank.",
+ * });
+ * ```
+ */
 const ToastProvider = ToastPrimitives.Provider;
 
 const ToastViewport = React.forwardRef<

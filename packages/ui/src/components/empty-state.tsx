@@ -4,21 +4,76 @@ import { cn } from '../lib/utils';
 import { Button } from './button';
 import { Card, CardContent } from './card';
 
+/**
+ * Action configuration for empty state
+ */
 interface EmptyStateAction {
+  /** Button label text */
   label: string;
+  /** Link href (renders as anchor) */
   href?: string;
+  /** Click handler (renders as button) */
   onClick?: () => void;
+  /** Optional icon to show in button */
   icon?: LucideIcon;
 }
 
+/**
+ * EmptyState component props
+ */
 export interface EmptyStateProps {
+  /** Lucide icon to display */
   icon: LucideIcon;
+  /** Main heading text */
   title: string;
+  /** Optional description below title */
   description?: string;
+  /** Optional call-to-action button */
   action?: EmptyStateAction;
+  /** Additional CSS classes */
   className?: string;
 }
 
+/**
+ * Empty state placeholder component
+ *
+ * Displays a centered card with icon, message, and optional action
+ * when there's no data to show. Common for empty lists, first-run
+ * experiences, and error states.
+ *
+ * @example
+ * ```tsx
+ * // No transactions yet
+ * <EmptyState
+ *   icon={WalletIcon}
+ *   title="No transactions"
+ *   description="Connect your bank account to see your transactions here."
+ *   action={{
+ *     label: "Connect Account",
+ *     href: "/accounts/connect",
+ *     icon: PlusIcon
+ *   }}
+ * />
+ *
+ * // No search results
+ * <EmptyState
+ *   icon={SearchIcon}
+ *   title="No results found"
+ *   description="Try adjusting your search terms or filters."
+ * />
+ *
+ * // First budget
+ * <EmptyState
+ *   icon={PiggyBankIcon}
+ *   title="Create your first budget"
+ *   description="Set spending limits for different categories."
+ *   action={{
+ *     label: "Create Budget",
+ *     onClick: () => setShowBudgetDialog(true)
+ *   }}
+ * />
+ * ```
+ */
 function EmptyState({ icon: Icon, title, description, action, className }: EmptyStateProps) {
   const ActionIcon = action?.icon;
 

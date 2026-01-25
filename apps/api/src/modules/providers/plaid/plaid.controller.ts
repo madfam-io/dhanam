@@ -10,7 +10,19 @@ import {
   Query,
   BadRequestException,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiQuery,
+  ApiOkResponse,
+  ApiCreatedResponse,
+  ApiNotFoundResponse,
+  ApiUnauthorizedResponse,
+  ApiForbiddenResponse,
+  ApiBadRequestResponse,
+  ApiParam,
+} from '@nestjs/swagger';
 
 import { CurrentUser } from '@core/auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
@@ -29,7 +41,8 @@ export class PlaidController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create Plaid Link token' })
-  @ApiResponse({ status: 201, description: 'Link token created successfully' })
+  @ApiCreatedResponse({ description: 'Link token created successfully' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
   async createLinkToken(@CurrentUser() user: User) {
     const result = await this.plaidService.createLinkToken(user.id);
     return {
@@ -42,7 +55,12 @@ export class PlaidController {
   @UseGuards(JwtAuthGuard, SpaceGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Link Plaid account to space' })
-  @ApiResponse({ status: 201, description: 'Account linked successfully' })
+  @ApiParam({ name: 'spaceId', description: 'Space ID to link the account to' })
+  @ApiCreatedResponse({ description: 'Account linked successfully' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiForbiddenResponse({ description: 'User lacks access to this space' })
+  @ApiBadRequestResponse({ description: 'Invalid request body' })
+  @ApiNotFoundResponse({ description: 'Space not found' })
   async createLink(
     @Param('spaceId') spaceId: string,
     @CurrentUser() user: User,
@@ -58,7 +76,8 @@ export class PlaidController {
 
   @Post('webhook')
   @ApiOperation({ summary: 'Handle Plaid webhook' })
-  @ApiResponse({ status: 200, description: 'Webhook processed successfully' })
+  @ApiOkResponse({ description: 'Webhook processed successfully' })
+  @ApiBadRequestResponse({ description: 'Invalid request body or missing webhook signature' })
   async handleWebhook(
     @Body() webhookData: PlaidWebhookDto,
     @Headers('plaid-verification') signature: string
@@ -81,12 +100,16 @@ export class PlaidController {
     summary: 'Get upcoming bills for a space',
     description: 'Returns liability accounts (credit cards, loans) with upcoming payment due dates',
   })
+  @ApiParam({ name: 'spaceId', description: 'Space ID to get upcoming bills for' })
   @ApiQuery({
     name: 'days',
     required: false,
     description: 'Number of days ahead to look (default: 30)',
   })
-  @ApiResponse({ status: 200, description: 'Upcoming bills retrieved successfully' })
+  @ApiOkResponse({ description: 'Upcoming bills retrieved successfully' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiForbiddenResponse({ description: 'User lacks access to this space' })
+  @ApiNotFoundResponse({ description: 'Space not found' })
   async getUpcomingBills(
     @Param('spaceId') spaceId: string,
     @CurrentUser() _user: User,
@@ -104,7 +127,7 @@ export class PlaidController {
 
   @Get('health')
   @ApiOperation({ summary: 'Check Plaid service health' })
-  @ApiResponse({ status: 200, description: 'Service health status' })
+  @ApiOkResponse({ description: 'Service health status' })
   getHealth() {
     return {
       service: 'plaid',

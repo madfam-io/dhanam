@@ -1,5 +1,15 @@
 import { Controller, Get, Post, Body, Param, Query, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiOkResponse,
+  ApiNotFoundResponse,
+  ApiUnauthorizedResponse,
+  ApiForbiddenResponse,
+  ApiBadRequestResponse,
+  ApiParam,
+} from '@nestjs/swagger';
 
 import { CurrentUser } from '@core/auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
@@ -16,6 +26,7 @@ import { TransactionCategorizationService } from './transaction-categorization.s
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @Controller()
+@ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
 export class MlController {
   constructor(
     private providerSelection: ProviderSelectionService,
@@ -29,7 +40,7 @@ export class MlController {
 
   @Get('ml/provider-insights')
   @ApiOperation({ summary: 'Get provider selection insights' })
-  @ApiResponse({ status: 200, description: 'Provider performance metrics' })
+  @ApiOkResponse({ description: 'Provider performance metrics' })
   async getProviderInsights(
     @Query('region') region: string = 'US',
     @Query('days') days: number = 30
@@ -42,7 +53,11 @@ export class MlController {
   @Post('spaces/:spaceId/transactions/:transactionId/predict-category')
   @UseGuards(SpaceGuard)
   @ApiOperation({ summary: 'Predict category for transaction using ML' })
-  @ApiResponse({ status: 200, description: 'Category prediction with confidence' })
+  @ApiParam({ name: 'spaceId', description: 'Space UUID' })
+  @ApiParam({ name: 'transactionId', description: 'Transaction UUID' })
+  @ApiOkResponse({ description: 'Category prediction with confidence' })
+  @ApiNotFoundResponse({ description: 'Transaction not found' })
+  @ApiForbiddenResponse({ description: 'User lacks access to this space' })
   async predictCategory(
     @Param('spaceId') spaceId: string,
     @Param('transactionId') transactionId: string
@@ -72,7 +87,11 @@ export class MlController {
   @Post('spaces/:spaceId/transactions/:transactionId/auto-categorize')
   @UseGuards(SpaceGuard)
   @ApiOperation({ summary: 'Auto-categorize transaction if confidence is high' })
-  @ApiResponse({ status: 200, description: 'Categorization result' })
+  @ApiParam({ name: 'spaceId', description: 'Space UUID' })
+  @ApiParam({ name: 'transactionId', description: 'Transaction UUID' })
+  @ApiOkResponse({ description: 'Categorization result' })
+  @ApiNotFoundResponse({ description: 'Transaction not found' })
+  @ApiForbiddenResponse({ description: 'User lacks access to this space' })
   async autoCategorize(
     @Param('spaceId') spaceId: string,
     @Param('transactionId') transactionId: string
@@ -100,7 +119,9 @@ export class MlController {
   @Get('spaces/:spaceId/ml/categorization-accuracy')
   @UseGuards(SpaceGuard)
   @ApiOperation({ summary: 'Get categorization accuracy metrics' })
-  @ApiResponse({ status: 200, description: 'Accuracy metrics' })
+  @ApiParam({ name: 'spaceId', description: 'Space UUID' })
+  @ApiOkResponse({ description: 'Accuracy metrics' })
+  @ApiForbiddenResponse({ description: 'User lacks access to this space' })
   async getCategorizationAccuracy(
     @Param('spaceId') spaceId: string,
     @Query('days') days: number = 30
@@ -113,7 +134,12 @@ export class MlController {
   @Post('spaces/:spaceId/transactions/:transactionId/suggest-split')
   @UseGuards(SpaceGuard)
   @ApiOperation({ summary: 'Get AI-suggested split amounts for transaction' })
-  @ApiResponse({ status: 200, description: 'Split suggestions with confidence' })
+  @ApiParam({ name: 'spaceId', description: 'Space UUID' })
+  @ApiParam({ name: 'transactionId', description: 'Transaction UUID' })
+  @ApiOkResponse({ description: 'Split suggestions with confidence' })
+  @ApiNotFoundResponse({ description: 'Transaction not found' })
+  @ApiForbiddenResponse({ description: 'User lacks access to this space' })
+  @ApiBadRequestResponse({ description: 'Invalid household member IDs' })
   async suggestSplit(
     @Param('spaceId') spaceId: string,
     @Param('transactionId') transactionId: string,
@@ -144,7 +170,9 @@ export class MlController {
   @Get('spaces/:spaceId/ml/split-accuracy')
   @UseGuards(SpaceGuard)
   @ApiOperation({ summary: 'Get split prediction accuracy metrics' })
-  @ApiResponse({ status: 200, description: 'Split prediction metrics' })
+  @ApiParam({ name: 'spaceId', description: 'Space UUID' })
+  @ApiOkResponse({ description: 'Split prediction metrics' })
+  @ApiForbiddenResponse({ description: 'User lacks access to this space' })
   async getSplitAccuracy(@Param('spaceId') spaceId: string, @Query('days') days: number = 30) {
     return this.splitPrediction.getSplitPredictionAccuracy(spaceId, days);
   }
@@ -154,7 +182,9 @@ export class MlController {
   @Get('spaces/:spaceId/ml/insights')
   @UseGuards(SpaceGuard)
   @ApiOperation({ summary: 'Get comprehensive ML insights dashboard' })
-  @ApiResponse({ status: 200, description: 'Complete ML performance metrics' })
+  @ApiParam({ name: 'spaceId', description: 'Space UUID' })
+  @ApiOkResponse({ description: 'Complete ML performance metrics' })
+  @ApiForbiddenResponse({ description: 'User lacks access to this space' })
   async getMlInsights(@Param('spaceId') spaceId: string, @Query('days') days: number = 30) {
     const [categorization, splits] = await Promise.all([
       this.categorization.getCategorizationAccuracy(spaceId, days),
@@ -197,7 +227,11 @@ export class MlController {
   @Post('spaces/:spaceId/transactions/:transactionId/correct-category')
   @UseGuards(SpaceGuard)
   @ApiOperation({ summary: 'Correct transaction category (ML learning loop)' })
-  @ApiResponse({ status: 200, description: 'Correction recorded and applied' })
+  @ApiParam({ name: 'spaceId', description: 'Space UUID' })
+  @ApiParam({ name: 'transactionId', description: 'Transaction UUID' })
+  @ApiOkResponse({ description: 'Correction recorded and applied' })
+  @ApiForbiddenResponse({ description: 'User lacks access to this space' })
+  @ApiBadRequestResponse({ description: 'Invalid category ID' })
   async correctCategory(
     @Param('spaceId') spaceId: string,
     @Param('transactionId') transactionId: string,
@@ -221,7 +255,9 @@ export class MlController {
   @Get('spaces/:spaceId/ml/learned-patterns')
   @UseGuards(SpaceGuard)
   @ApiOperation({ summary: 'Get learned categorization patterns from corrections' })
-  @ApiResponse({ status: 200, description: 'List of learned merchant patterns' })
+  @ApiParam({ name: 'spaceId', description: 'Space UUID' })
+  @ApiOkResponse({ description: 'List of learned merchant patterns' })
+  @ApiForbiddenResponse({ description: 'User lacks access to this space' })
   async getLearnedPatterns(@Param('spaceId') spaceId: string) {
     return this.correctionService.getLearnedPatterns(spaceId);
   }
@@ -229,7 +265,9 @@ export class MlController {
   @Get('spaces/:spaceId/ml/correction-stats')
   @UseGuards(SpaceGuard)
   @ApiOperation({ summary: 'Get category correction statistics' })
-  @ApiResponse({ status: 200, description: 'Correction statistics' })
+  @ApiParam({ name: 'spaceId', description: 'Space UUID' })
+  @ApiOkResponse({ description: 'Correction statistics' })
+  @ApiForbiddenResponse({ description: 'User lacks access to this space' })
   async getCorrectionStats(@Param('spaceId') spaceId: string, @Query('days') days: number = 30) {
     return this.correctionService.getCorrectionStats(spaceId, days);
   }
@@ -237,7 +275,9 @@ export class MlController {
   @Get('spaces/:spaceId/ml/pattern-stats')
   @UseGuards(SpaceGuard)
   @ApiOperation({ summary: 'Get aggregated pattern statistics' })
-  @ApiResponse({ status: 200, description: 'Pattern statistics' })
+  @ApiParam({ name: 'spaceId', description: 'Space UUID' })
+  @ApiOkResponse({ description: 'Pattern statistics' })
+  @ApiForbiddenResponse({ description: 'User lacks access to this space' })
   async getPatternStats(@Param('spaceId') spaceId: string) {
     return this.correctionAggregator.getPatternStats(spaceId);
   }

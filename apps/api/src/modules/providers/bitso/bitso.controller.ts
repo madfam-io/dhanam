@@ -9,7 +9,18 @@ import {
   Param,
   BadRequestException,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiOkResponse,
+  ApiCreatedResponse,
+  ApiNotFoundResponse,
+  ApiUnauthorizedResponse,
+  ApiForbiddenResponse,
+  ApiBadRequestResponse,
+  ApiParam,
+} from '@nestjs/swagger';
 
 import { CurrentUser } from '@core/auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
@@ -28,7 +39,12 @@ export class BitsoController {
   @UseGuards(JwtAuthGuard, SpaceGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Connect Bitso account to space' })
-  @ApiResponse({ status: 201, description: 'Account connected successfully' })
+  @ApiParam({ name: 'spaceId', description: 'Space ID to connect the account to' })
+  @ApiCreatedResponse({ description: 'Account connected successfully' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiForbiddenResponse({ description: 'User lacks access to this space' })
+  @ApiBadRequestResponse({ description: 'Invalid request body' })
+  @ApiNotFoundResponse({ description: 'Space not found' })
   async connectAccount(
     @Param('spaceId') spaceId: string,
     @CurrentUser() user: User,
@@ -46,7 +62,8 @@ export class BitsoController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Sync Bitso portfolio' })
-  @ApiResponse({ status: 200, description: 'Portfolio synced successfully' })
+  @ApiOkResponse({ description: 'Portfolio synced successfully' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
   async syncPortfolio(@CurrentUser() user: User) {
     await this.bitsoService.syncPortfolio(user.id);
     return {
@@ -58,7 +75,8 @@ export class BitsoController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get Bitso portfolio summary' })
-  @ApiResponse({ status: 200, description: 'Portfolio summary retrieved successfully' })
+  @ApiOkResponse({ description: 'Portfolio summary retrieved successfully' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
   async getPortfolioSummary(@CurrentUser() user: User) {
     const summary = await this.bitsoService.getPortfolioSummary(user.id);
     return {
@@ -70,7 +88,8 @@ export class BitsoController {
 
   @Post('webhook')
   @ApiOperation({ summary: 'Handle Bitso webhook' })
-  @ApiResponse({ status: 200, description: 'Webhook processed successfully' })
+  @ApiOkResponse({ description: 'Webhook processed successfully' })
+  @ApiBadRequestResponse({ description: 'Invalid request body or missing webhook signature' })
   async handleWebhook(
     @Body() webhookData: BitsoWebhookDto,
     @Headers('bitso-signature') signature: string
@@ -88,7 +107,7 @@ export class BitsoController {
 
   @Get('health')
   @ApiOperation({ summary: 'Check Bitso service health' })
-  @ApiResponse({ status: 200, description: 'Service health status' })
+  @ApiOkResponse({ description: 'Service health status' })
   getHealth() {
     return {
       service: 'bitso',

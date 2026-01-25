@@ -8,7 +8,18 @@ import {
   Body,
   NotFoundException,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiQuery,
+  ApiOkResponse,
+  ApiNotFoundResponse,
+  ApiUnauthorizedResponse,
+  ApiForbiddenResponse,
+  ApiBadRequestResponse,
+  ApiParam,
+} from '@nestjs/swagger';
 
 import { CurrentUser } from '@core/auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
@@ -27,8 +38,10 @@ export class EsgController {
 
   @Get('score/:symbol')
   @ApiOperation({ summary: 'Get ESG score for an asset' })
-  @ApiResponse({ status: 200, description: 'ESG score retrieved successfully' })
+  @ApiParam({ name: 'symbol', description: 'Asset symbol (e.g., BTC, ETH)' })
   @ApiQuery({ name: 'assetType', required: false, enum: ['crypto', 'equity', 'etf'] })
+  @ApiOkResponse({ description: 'ESG score retrieved successfully' })
+  @ApiNotFoundResponse({ description: 'Asset not found' })
   async getEsgScore(@Param('symbol') symbol: string, @Query('assetType') assetType = 'crypto') {
     const score = await this.esgService.getEsgScore(symbol, assetType);
     return {
@@ -42,7 +55,8 @@ export class EsgController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get portfolio ESG analysis' })
-  @ApiResponse({ status: 200, description: 'Portfolio ESG analysis retrieved successfully' })
+  @ApiOkResponse({ description: 'Portfolio ESG analysis retrieved successfully' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
   async getPortfolioEsgScore(@CurrentUser() user: User) {
     const analysis = await this.esgService.getPortfolioEsgScore(user.id);
     return {
@@ -54,7 +68,8 @@ export class EsgController {
 
   @Post('compare')
   @ApiOperation({ summary: 'Compare ESG scores of multiple assets' })
-  @ApiResponse({ status: 200, description: 'ESG comparison completed successfully' })
+  @ApiOkResponse({ description: 'ESG comparison completed successfully' })
+  @ApiBadRequestResponse({ description: 'Invalid symbols array or too many symbols' })
   async compareAssets(@Body('symbols') symbols: string[]) {
     if (!symbols || symbols.length === 0) {
       return { error: 'Please provide at least one symbol to compare' };
@@ -74,7 +89,7 @@ export class EsgController {
 
   @Get('trends')
   @ApiOperation({ summary: 'Get ESG trends and market insights' })
-  @ApiResponse({ status: 200, description: 'ESG trends retrieved successfully' })
+  @ApiOkResponse({ description: 'ESG trends retrieved successfully' })
   async getEsgTrends() {
     const trends = await this.esgService.getEsgTrends();
     return {
@@ -86,7 +101,7 @@ export class EsgController {
 
   @Get('methodology')
   @ApiOperation({ summary: 'Get ESG scoring methodology' })
-  @ApiResponse({ status: 200, description: 'ESG methodology information' })
+  @ApiOkResponse({ description: 'ESG methodology information' })
   getMethodology() {
     return {
       framework: 'Dhanam ESG Framework v2.0',
@@ -160,7 +175,9 @@ export class EsgController {
 
   @Get('v2/score/:symbol')
   @ApiOperation({ summary: 'Get enhanced ESG score for an asset (v2)' })
-  @ApiResponse({ status: 200, description: 'Enhanced ESG score retrieved successfully' })
+  @ApiParam({ name: 'symbol', description: 'Asset symbol (e.g., BTC, ETH)' })
+  @ApiOkResponse({ description: 'Enhanced ESG score retrieved successfully' })
+  @ApiNotFoundResponse({ description: 'ESG data not found for symbol' })
   async getEnhancedEsgScore(@Param('symbol') symbol: string) {
     const esgData = await this.enhancedEsgService.getAssetESG(symbol);
     if (!esgData) {
@@ -173,10 +190,8 @@ export class EsgController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get enhanced portfolio ESG analysis (v2)' })
-  @ApiResponse({
-    status: 200,
-    description: 'Enhanced portfolio ESG analysis retrieved successfully',
-  })
+  @ApiOkResponse({ description: 'Enhanced portfolio ESG analysis retrieved successfully' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
   async getEnhancedPortfolioAnalysis(@CurrentUser() user: User) {
     return this.enhancedEsgService.getPortfolioESGAnalysis(user.id);
   }
@@ -185,14 +200,18 @@ export class EsgController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get space-specific portfolio ESG analysis (v2)' })
-  @ApiResponse({ status: 200, description: 'Space portfolio ESG analysis retrieved successfully' })
+  @ApiParam({ name: 'spaceId', description: 'Space UUID' })
+  @ApiOkResponse({ description: 'Space portfolio ESG analysis retrieved successfully' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiForbiddenResponse({ description: 'User lacks access to this space' })
   async getSpacePortfolioAnalysis(@Param('spaceId') spaceId: string) {
     return this.enhancedEsgService.getSpacePortfolioESG(spaceId);
   }
 
   @Post('v2/compare')
   @ApiOperation({ summary: 'Compare enhanced ESG scores of multiple assets (v2)' })
-  @ApiResponse({ status: 200, description: 'Enhanced ESG comparison completed successfully' })
+  @ApiOkResponse({ description: 'Enhanced ESG comparison completed successfully' })
+  @ApiBadRequestResponse({ description: 'Invalid symbols array or too many symbols' })
   async compareEnhancedAssets(@Body('symbols') symbols: string[]) {
     if (!symbols || symbols.length === 0) {
       return { error: 'Please provide at least one symbol to compare' };
@@ -207,7 +226,7 @@ export class EsgController {
 
   @Get('v2/trends')
   @ApiOperation({ summary: 'Get enhanced ESG trends and insights (v2)' })
-  @ApiResponse({ status: 200, description: 'Enhanced ESG trends retrieved successfully' })
+  @ApiOkResponse({ description: 'Enhanced ESG trends retrieved successfully' })
   async getEnhancedTrends() {
     return this.enhancedEsgService.getESGTrends();
   }
@@ -216,7 +235,9 @@ export class EsgController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Refresh ESG data for specified assets' })
-  @ApiResponse({ status: 200, description: 'ESG data refresh completed' })
+  @ApiOkResponse({ description: 'ESG data refresh completed' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiBadRequestResponse({ description: 'No symbols provided' })
   async refreshEsgData(@Body('symbols') symbols: string[]) {
     if (!symbols || symbols.length === 0) {
       return { error: 'Please provide symbols to refresh' };
@@ -234,7 +255,8 @@ export class EsgController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get ESG cache statistics' })
-  @ApiResponse({ status: 200, description: 'Cache statistics retrieved' })
+  @ApiOkResponse({ description: 'Cache statistics retrieved' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
   async getCacheStats() {
     return this.enhancedEsgService.getCacheStats();
   }
@@ -243,7 +265,8 @@ export class EsgController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Clear ESG cache' })
-  @ApiResponse({ status: 200, description: 'Cache cleared successfully' })
+  @ApiOkResponse({ description: 'Cache cleared successfully' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
   async clearCache() {
     await this.enhancedEsgService.clearESGCache();
     return { success: true, message: 'ESG cache cleared' };

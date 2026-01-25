@@ -11,14 +11,31 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiOkResponse,
+  ApiCreatedResponse,
+  ApiNoContentResponse,
+  ApiParam,
+  ApiUnauthorizedResponse,
+  ApiForbiddenResponse,
+  ApiBadRequestResponse,
+  ApiNotFoundResponse,
+} from '@nestjs/swagger';
 
 import { JwtAuthGuard } from '../../core/auth/guards/jwt-auth.guard';
 
 import { CreateHouseholdDto, UpdateHouseholdDto, AddMemberDto, UpdateMemberDto } from './dto';
 import { HouseholdsService } from './households.service';
 
+@ApiTags('Households')
+@ApiBearerAuth()
 @Controller('households')
 @UseGuards(JwtAuthGuard)
+@ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+@ApiForbiddenResponse({ description: 'User lacks access to this resource' })
 export class HouseholdsController {
   constructor(private householdsService: HouseholdsService) {}
 
@@ -26,6 +43,9 @@ export class HouseholdsController {
    * Create a new household
    */
   @Post()
+  @ApiOperation({ summary: 'Create a new household' })
+  @ApiCreatedResponse({ description: 'Household created successfully' })
+  @ApiBadRequestResponse({ description: 'Invalid request body' })
   async create(@Body() dto: CreateHouseholdDto, @Req() req: any) {
     return this.householdsService.create(dto, req.user.id);
   }
@@ -34,6 +54,8 @@ export class HouseholdsController {
    * Get all households for the current user
    */
   @Get()
+  @ApiOperation({ summary: 'Get all households for the current user' })
+  @ApiOkResponse({ description: 'List of households' })
   async findAll(@Req() req: any) {
     return this.householdsService.findByUser(req.user.id);
   }
@@ -42,6 +64,10 @@ export class HouseholdsController {
    * Get a single household by ID
    */
   @Get(':id')
+  @ApiOperation({ summary: 'Get a single household by ID' })
+  @ApiParam({ name: 'id', description: 'Household UUID' })
+  @ApiOkResponse({ description: 'Household details' })
+  @ApiNotFoundResponse({ description: 'Household not found' })
   async findById(@Param('id') id: string, @Req() req: any) {
     return this.householdsService.findById(id, req.user.id);
   }
@@ -50,6 +76,11 @@ export class HouseholdsController {
    * Update a household
    */
   @Put(':id')
+  @ApiOperation({ summary: 'Update a household' })
+  @ApiParam({ name: 'id', description: 'Household UUID' })
+  @ApiOkResponse({ description: 'Household updated successfully' })
+  @ApiNotFoundResponse({ description: 'Household not found' })
+  @ApiBadRequestResponse({ description: 'Invalid request body' })
   async update(@Param('id') id: string, @Body() dto: UpdateHouseholdDto, @Req() req: any) {
     return this.householdsService.update(id, dto, req.user.id);
   }
@@ -59,6 +90,10 @@ export class HouseholdsController {
    */
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Delete a household' })
+  @ApiParam({ name: 'id', description: 'Household UUID' })
+  @ApiNoContentResponse({ description: 'Household deleted successfully' })
+  @ApiNotFoundResponse({ description: 'Household not found' })
   async delete(@Param('id') id: string, @Req() req: any) {
     await this.householdsService.delete(id, req.user.id);
   }
@@ -67,6 +102,10 @@ export class HouseholdsController {
    * Get household net worth aggregation
    */
   @Get(':id/net-worth')
+  @ApiOperation({ summary: 'Get household net worth aggregation' })
+  @ApiParam({ name: 'id', description: 'Household UUID' })
+  @ApiOkResponse({ description: 'Household net worth' })
+  @ApiNotFoundResponse({ description: 'Household not found' })
   async getNetWorth(@Param('id') id: string, @Req() req: any) {
     return this.householdsService.getNetWorth(id, req.user.id);
   }
@@ -75,6 +114,10 @@ export class HouseholdsController {
    * Get household goal summary
    */
   @Get(':id/goals/summary')
+  @ApiOperation({ summary: 'Get household goal summary' })
+  @ApiParam({ name: 'id', description: 'Household UUID' })
+  @ApiOkResponse({ description: 'Household goal summary' })
+  @ApiNotFoundResponse({ description: 'Household not found' })
   async getGoalSummary(@Param('id') id: string, @Req() req: any) {
     return this.householdsService.getGoalSummary(id, req.user.id);
   }
@@ -83,6 +126,11 @@ export class HouseholdsController {
    * Add a member to a household
    */
   @Post(':id/members')
+  @ApiOperation({ summary: 'Add a member to a household' })
+  @ApiParam({ name: 'id', description: 'Household UUID' })
+  @ApiCreatedResponse({ description: 'Member added successfully' })
+  @ApiNotFoundResponse({ description: 'Household not found' })
+  @ApiBadRequestResponse({ description: 'Invalid member data' })
   async addMember(@Param('id') id: string, @Body() dto: AddMemberDto, @Req() req: any) {
     return this.householdsService.addMember(id, dto, req.user.id);
   }
@@ -91,6 +139,12 @@ export class HouseholdsController {
    * Update a household member
    */
   @Put(':id/members/:memberId')
+  @ApiOperation({ summary: 'Update a household member' })
+  @ApiParam({ name: 'id', description: 'Household UUID' })
+  @ApiParam({ name: 'memberId', description: 'Member UUID' })
+  @ApiOkResponse({ description: 'Member updated successfully' })
+  @ApiNotFoundResponse({ description: 'Household or member not found' })
+  @ApiBadRequestResponse({ description: 'Invalid member data' })
   async updateMember(
     @Param('id') id: string,
     @Param('memberId') memberId: string,
@@ -105,6 +159,11 @@ export class HouseholdsController {
    */
   @Delete(':id/members/:memberId')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Remove a member from a household' })
+  @ApiParam({ name: 'id', description: 'Household UUID' })
+  @ApiParam({ name: 'memberId', description: 'Member UUID' })
+  @ApiNoContentResponse({ description: 'Member removed successfully' })
+  @ApiNotFoundResponse({ description: 'Household or member not found' })
   async removeMember(
     @Param('id') id: string,
     @Param('memberId') memberId: string,

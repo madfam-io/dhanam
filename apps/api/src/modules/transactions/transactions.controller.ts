@@ -10,7 +10,17 @@ import {
   Query,
   Req,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiOkResponse,
+  ApiNotFoundResponse,
+  ApiUnauthorizedResponse,
+  ApiForbiddenResponse,
+  ApiBadRequestResponse,
+  ApiParam,
+} from '@nestjs/swagger';
 import { Request } from 'express';
 
 import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
@@ -27,6 +37,10 @@ export class TransactionsController {
 
   @Get()
   @ApiOperation({ summary: 'Get all transactions in a space' })
+  @ApiParam({ name: 'spaceId', description: 'Space UUID' })
+  @ApiOkResponse({ description: 'List of transactions' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiForbiddenResponse({ description: 'User lacks access to this space' })
   findAll(
     @Param('spaceId') spaceId: string,
     @Query() filter: TransactionsFilterDto,
@@ -37,12 +51,23 @@ export class TransactionsController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get a transaction by id' })
+  @ApiParam({ name: 'spaceId', description: 'Space UUID' })
+  @ApiParam({ name: 'id', description: 'Transaction UUID' })
+  @ApiOkResponse({ description: 'Transaction details' })
+  @ApiNotFoundResponse({ description: 'Transaction not found' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiForbiddenResponse({ description: 'User lacks access to this space' })
   findOne(@Param('spaceId') spaceId: string, @Param('id') id: string, @Req() req: Request) {
     return this.transactionsService.findOne(spaceId, req.user!.id, id);
   }
 
   @Post()
   @ApiOperation({ summary: 'Create a new transaction' })
+  @ApiParam({ name: 'spaceId', description: 'Space UUID' })
+  @ApiOkResponse({ description: 'Transaction created successfully' })
+  @ApiBadRequestResponse({ description: 'Invalid request body' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiForbiddenResponse({ description: 'User lacks access to this space' })
   create(
     @Param('spaceId') spaceId: string,
     @Body() createTransactionDto: CreateTransactionDto,
@@ -53,6 +78,13 @@ export class TransactionsController {
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update a transaction' })
+  @ApiParam({ name: 'spaceId', description: 'Space UUID' })
+  @ApiParam({ name: 'id', description: 'Transaction UUID' })
+  @ApiOkResponse({ description: 'Transaction updated successfully' })
+  @ApiNotFoundResponse({ description: 'Transaction not found' })
+  @ApiBadRequestResponse({ description: 'Invalid request body' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiForbiddenResponse({ description: 'User lacks access to this space' })
   update(
     @Param('spaceId') spaceId: string,
     @Param('id') id: string,
@@ -64,12 +96,23 @@ export class TransactionsController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a transaction' })
+  @ApiParam({ name: 'spaceId', description: 'Space UUID' })
+  @ApiParam({ name: 'id', description: 'Transaction UUID' })
+  @ApiOkResponse({ description: 'Transaction deleted successfully' })
+  @ApiNotFoundResponse({ description: 'Transaction not found' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiForbiddenResponse({ description: 'User lacks access to this space' })
   remove(@Param('spaceId') spaceId: string, @Param('id') id: string, @Req() req: Request) {
     return this.transactionsService.remove(spaceId, req.user!.id, id);
   }
 
   @Post('bulk-categorize')
   @ApiOperation({ summary: 'Bulk categorize transactions' })
+  @ApiParam({ name: 'spaceId', description: 'Space UUID' })
+  @ApiOkResponse({ description: 'Transactions categorized successfully' })
+  @ApiBadRequestResponse({ description: 'Invalid request body or transaction IDs' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiForbiddenResponse({ description: 'User lacks access to this space' })
   bulkCategorize(
     @Param('spaceId') spaceId: string,
     @Body() body: { transactionIds: string[]; categoryId: string },

@@ -6,12 +6,56 @@ export type BillingProvider = 'conekta' | 'polar' | 'stripe';
 /**
  * Janua Billing Service
  *
- * Integrates with Janua's multi-provider billing system:
- * - Conekta for Mexico (SPEI, cards, CFDI)
- * - Polar.sh for international digital products
- * - Stripe as fallback
+ * Integrates with Janua's unified multi-provider billing system for
+ * geographic-optimized payment processing across MADFAM ecosystem products.
  *
- * This service handles provider routing based on geographic location.
+ * ## Provider Routing Strategy
+ * | Country | Provider | Payment Methods | Features |
+ * |---------|----------|-----------------|----------|
+ * | Mexico  | Conekta  | SPEI, Cards, Cash | CFDI invoicing, MXN |
+ * | Others  | Polar.sh | Cards, Digital | Tax compliance (MoR) |
+ * | Fallback| Stripe   | Cards, ACH | USD/EUR |
+ *
+ * ## Architecture
+ * ```
+ * Dhanam App → JanuaBillingService → Janua API → Provider (Conekta/Polar/Stripe)
+ *                                         ↓
+ *                              Unified webhooks back to Dhanam
+ * ```
+ *
+ * ## Janua Integration Benefits
+ * - Single API for multiple payment providers
+ * - Automatic tax compliance (Polar as Merchant of Record)
+ * - CFDI invoice generation for Mexico
+ * - Unified subscription management
+ * - Cross-product billing (Dhanam, Enclii, etc.)
+ *
+ * ## Configuration
+ * - `JANUA_API_URL`: Janua API endpoint (default: http://janua-api:8001)
+ * - `JANUA_API_KEY`: API key for authentication
+ * - `JANUA_BILLING_ENABLED`: Enable/disable Janua (fallback to Stripe direct)
+ * - `JANUA_WEBHOOK_SECRET`: HMAC secret for webhook verification
+ *
+ * @example
+ * ```typescript
+ * // Create customer and checkout session
+ * const { customerId, provider } = await janua.createCustomer({
+ *   email: 'user@example.com',
+ *   countryCode: 'MX',
+ * });
+ *
+ * const { checkoutUrl } = await janua.createCheckoutSession({
+ *   customerId,
+ *   customerEmail: 'user@example.com',
+ *   priceId: 'premium',
+ *   countryCode: 'MX',
+ *   successUrl: 'https://app.dhan.am/billing/success',
+ *   cancelUrl: 'https://app.dhan.am/billing/cancel',
+ * });
+ * ```
+ *
+ * @see BillingService - Uses Janua for subscription management
+ * @see https://auth.madfam.io - Janua OIDC issuer
  */
 @Injectable()
 export class JanuaBillingService {
@@ -41,6 +85,21 @@ export class JanuaBillingService {
 
   /**
    * Determine the best payment provider for a country
+   *
+   * Routes to the optimal provider based on:
+   * - Local payment methods (SPEI for Mexico)
+   * - Tax compliance requirements (Polar handles MoR internationally)
+   * - Currency support (MXN via Conekta)
+   *
+   * @param countryCode - ISO 3166-1 alpha-2 country code
+   * @returns Provider identifier for Janua API
+   *
+   * @example
+   * ```typescript
+   * janua.getProviderForCountry('MX'); // 'conekta'
+   * janua.getProviderForCountry('US'); // 'polar'
+   * janua.getProviderForCountry('DE'); // 'polar'
+   * ```
    */
   getProviderForCountry(countryCode: string): 'conekta' | 'polar' | 'stripe' {
     // Mexico → Conekta (supports SPEI, cards, CFDI)
@@ -55,11 +114,35 @@ export class JanuaBillingService {
 
   /**
    * Create a customer via Janua's unified API
+   *
+   * Creates a customer record in the appropriate payment provider based on
+   * country. Customer IDs are scoped to the provider but unified through Janua.
+   *
+   * @param params - Customer creation parameters
+   * @param params.email - Customer email address
+   * @param params.name - Optional customer name
+   * @param params.countryCode - ISO country code for provider routing
+   * @param params.orgId - Janua organization ID for cross-product linking
+   * @param params.metadata - Additional metadata to store with customer
+   * @returns Customer ID and provider used
+   * @throws Error if Janua billing not enabled or API call fails
+   *
+   * @example
+   * ```typescript
+   * const { customerId, provider } = await janua.createCustomer({
+   *   email: 'usuario@example.com',
+   *   name: 'Juan Pérez',
+   *   countryCode: 'MX',
+   *   orgId: 'org_dhanam_123',
+   * });
+   * // customerId: 'cus_conekta_abc123', provider: 'conekta'
+   * ```
    */
   async createCustomer(params: {
     email: string;
     name?: string;
     countryCode: string;
+    orgId?: string;
     metadata?: Record<string, string>;
   }): Promise<{ customerId: string; provider: BillingProvider }> {
     if (!this.isEnabled()) {
@@ -79,9 +162,11 @@ export class JanuaBillingService {
         name: params.name,
         country_code: params.countryCode,
         provider,
+        organization_id: params.orgId,
         metadata: {
           ...params.metadata,
           product: 'dhanam',
+          orgId: params.orgId,
         },
       }),
     });
@@ -103,6 +188,34 @@ export class JanuaBillingService {
 
   /**
    * Create a checkout session via Janua
+   *
+   * Generates a hosted checkout page URL with provider-specific payment methods.
+   * Mexico customers get Conekta (SPEI, cards) while international users get Polar.
+   *
+   * @param params - Checkout session parameters
+   * @param params.customerId - Customer ID from createCustomer
+   * @param params.customerEmail - Customer email for receipts
+   * @param params.priceId - Dhanam plan ID (e.g., 'premium')
+   * @param params.countryCode - ISO country code for provider/currency routing
+   * @param params.successUrl - Redirect URL after successful payment
+   * @param params.cancelUrl - Redirect URL if user cancels
+   * @param params.orgId - Janua organization ID for cross-product linking
+   * @param params.metadata - Additional metadata for the session
+   * @returns Checkout URL for redirect and session ID for tracking
+   * @throws Error if Janua billing not enabled or API call fails
+   *
+   * @example
+   * ```typescript
+   * const { checkoutUrl, sessionId, provider } = await janua.createCheckoutSession({
+   *   customerId: 'cus_conekta_abc123',
+   *   customerEmail: 'usuario@example.com',
+   *   priceId: 'premium',
+   *   countryCode: 'MX',
+   *   successUrl: 'https://app.dhan.am/billing/success?session_id={CHECKOUT_SESSION_ID}',
+   *   cancelUrl: 'https://app.dhan.am/billing/cancel',
+   * });
+   * // Redirect user to checkoutUrl for payment
+   * ```
    */
   async createCheckoutSession(params: {
     customerId: string;
@@ -111,6 +224,7 @@ export class JanuaBillingService {
     countryCode: string;
     successUrl: string;
     cancelUrl: string;
+    orgId?: string;
     metadata?: Record<string, string>;
   }): Promise<{ checkoutUrl: string; sessionId: string; provider: BillingProvider }> {
     if (!this.isEnabled()) {
@@ -131,11 +245,13 @@ export class JanuaBillingService {
         plan_id: `dhanam_${params.priceId}`,
         country_code: params.countryCode,
         provider,
+        organization_id: params.orgId,
         success_url: params.successUrl,
         cancel_url: params.cancelUrl,
         metadata: {
           ...params.metadata,
           product: 'dhanam',
+          orgId: params.orgId,
         },
       }),
     });
@@ -158,6 +274,16 @@ export class JanuaBillingService {
 
   /**
    * Create a billing portal session via Janua
+   *
+   * Generates a customer-facing portal URL where users can manage their
+   * subscription, update payment methods, view invoices, and cancel.
+   *
+   * @param params - Portal session parameters
+   * @param params.customerId - Customer ID to create portal for
+   * @param params.countryCode - Country for provider routing
+   * @param params.returnUrl - URL to return to after portal session
+   * @returns Portal URL for redirect
+   * @throws Error if Janua billing not enabled or API call fails
    */
   async createPortalSession(params: {
     customerId: string;
@@ -195,6 +321,15 @@ export class JanuaBillingService {
 
   /**
    * Cancel a subscription via Janua
+   *
+   * Cancels an active subscription. By default, cancels at end of billing period.
+   * Set immediate=true to cancel immediately (prorated refund depends on provider).
+   *
+   * @param params - Cancellation parameters
+   * @param params.subscriptionId - Subscription to cancel
+   * @param params.provider - Provider the subscription is on
+   * @param params.immediate - Cancel immediately vs end of period (default: false)
+   * @throws Error if Janua billing not enabled or API call fails
    */
   async cancelSubscription(params: {
     subscriptionId: string;
@@ -231,6 +366,21 @@ export class JanuaBillingService {
 
   /**
    * Get available plans with localized pricing
+   *
+   * Returns Dhanam subscription plans with pricing in local currency.
+   * Mexico gets MXN pricing, all others get USD.
+   *
+   * @param countryCode - ISO country code for currency selection
+   * @returns Array of plans with features and localized pricing
+   *
+   * @example
+   * ```typescript
+   * const plans = await janua.getPlans('MX');
+   * // [
+   * //   { id: 'free', price: 0, currency: 'MXN', ... },
+   * //   { id: 'premium', price: 499, currency: 'MXN', ... }
+   * // ]
+   * ```
    */
   async getPlans(countryCode: string): Promise<
     Array<{
@@ -281,6 +431,27 @@ export class JanuaBillingService {
 
   /**
    * Verify webhook signature from Janua
+   *
+   * Uses HMAC-SHA256 with timing-safe comparison to prevent timing attacks.
+   * Should be called for every webhook before processing the payload.
+   *
+   * @param payload - Raw request body as string
+   * @param signature - X-Janua-Signature header value
+   * @returns True if signature is valid
+   *
+   * @example
+   * ```typescript
+   * app.post('/webhooks/janua', (req, res) => {
+   *   const isValid = janua.verifyWebhookSignature(
+   *     req.rawBody,
+   *     req.headers['x-janua-signature']
+   *   );
+   *   if (!isValid) {
+   *     return res.status(401).send('Invalid signature');
+   *   }
+   *   // Process webhook...
+   * });
+   * ```
    */
   verifyWebhookSignature(payload: string, signature: string): boolean {
     const webhookSecret = this.config.get<string>('JANUA_WEBHOOK_SECRET', '');

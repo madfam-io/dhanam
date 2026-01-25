@@ -13,7 +13,54 @@ import { StatisticsUtil } from '../utils/statistics.util';
  * Monte Carlo Simulation Engine
  *
  * Performs stochastic simulations of portfolio growth using Monte Carlo methods.
- * Uses geometric Brownian motion for modeling asset returns with random walk.
+ * Uses geometric Brownian motion (GBM) for modeling asset returns.
+ *
+ * ## Mathematical Model
+ * Portfolio value follows: `dS = μSdt + σSdW`
+ * Where:
+ * - `μ` = expected annual return (drift)
+ * - `σ` = annual volatility (standard deviation)
+ * - `dW` = Wiener process (random walk)
+ *
+ * Monthly discretization: `S(t+1) = S(t) * (1 + r) + C`
+ * Where: `r = μ_monthly + σ_monthly * Z`, `Z ~ N(0,1)`
+ *
+ * ## Features
+ * - Configurable iterations (default: 10,000)
+ * - Monthly contribution modeling
+ * - Market shock scenarios (bear markets, recessions, crashes)
+ * - Success probability calculations
+ * - Required contribution finder via binary search
+ *
+ * ## Predefined Scenarios
+ * - BEAR_MARKET: 30% decline over 6 months
+ * - GREAT_RECESSION: 50% decline (2008-style)
+ * - DOT_COM_BUST: 45% decline (2000-style)
+ * - COVID_SHOCK: 35% crash with V-shaped recovery
+ * - And more...
+ *
+ * @example
+ * ```typescript
+ * // Run basic simulation
+ * const result = await engine.simulate({
+ *   initialBalance: 100000,
+ *   monthlyContribution: 1000,
+ *   expectedReturn: 0.07,  // 7% annual
+ *   volatility: 0.15,       // 15% annual
+ *   months: 240,            // 20 years
+ *   iterations: 10000
+ * });
+ *
+ * console.log(`Median: $${result.median.toLocaleString()}`);
+ * console.log(`P10-P90: $${result.p10.toLocaleString()} - $${result.p90.toLocaleString()}`);
+ *
+ * // Calculate probability of reaching $1M
+ * const successRate = engine.calculateSuccessRate(result.finalValues, 1000000);
+ * console.log(`${(successRate * 100).toFixed(1)}% chance of reaching $1M`);
+ * ```
+ *
+ * @see SimulationsService - High-level simulation orchestration
+ * @see StatisticsUtil - Statistical helper functions
  */
 @Injectable()
 export class MonteCarloEngine {
@@ -21,6 +68,20 @@ export class MonteCarloEngine {
 
   /**
    * Run Monte Carlo simulation
+   *
+   * Executes multiple iterations of portfolio growth using geometric Brownian motion.
+   * Returns comprehensive statistics including percentiles and time series.
+   *
+   * @param config - Simulation configuration
+   * @param config.initialBalance - Starting portfolio value
+   * @param config.monthlyContribution - Monthly contribution amount
+   * @param config.expectedReturn - Expected annual return (e.g., 0.07 for 7%)
+   * @param config.volatility - Annual volatility (e.g., 0.15 for 15%)
+   * @param config.months - Simulation duration in months
+   * @param config.iterations - Number of Monte Carlo iterations
+   * @returns Simulation results with statistics and time series
+   *
+   * @throws Error if configuration is invalid (negative balance, non-positive months, etc.)
    */
   simulate(config: MonteCarloConfig): SimulationResult {
     this.logger.log(
@@ -127,6 +188,19 @@ export class MonteCarloEngine {
 
   /**
    * Run simulation with market shocks (scenario analysis)
+   *
+   * Simulates portfolio growth with predefined market events (crashes, recessions, booms).
+   * Shocks override the random return for affected months.
+   *
+   * @param config - Base simulation configuration
+   * @param shocks - Array of market shock events to apply
+   * @returns Simulation results incorporating shock events
+   *
+   * @example
+   * ```typescript
+   * // Simulate with 2008-style recession
+   * const result = engine.simulateWithShocks(config, MonteCarloEngine.SCENARIOS.GREAT_RECESSION.shocks);
+   * ```
    */
   simulateWithShocks(config: MonteCarloConfig, shocks: MarketShock[]): SimulationResult {
     this.logger.log(`Running scenario simulation with ${shocks.length} market shocks`);
@@ -178,6 +252,16 @@ export class MonteCarloEngine {
 
   /**
    * Calculate probability of reaching a target amount
+   *
+   * @param finalValues - Array of final portfolio values from simulation
+   * @param targetAmount - Target amount to reach
+   * @returns Probability (0-1) of reaching target amount
+   *
+   * @example
+   * ```typescript
+   * const successRate = engine.calculateSuccessRate(result.finalValues, 1000000);
+   * console.log(`${(successRate * 100).toFixed(1)}% chance of reaching $1M`);
+   * ```
    */
   calculateSuccessRate(finalValues: number[], targetAmount: number): number {
     const successfulIterations = finalValues.filter((value) => value >= targetAmount).length;
@@ -185,7 +269,20 @@ export class MonteCarloEngine {
   }
 
   /**
-   * Calculate expected shortfall (average amount short of target when target is not met)
+   * Calculate expected shortfall (Conditional Value at Risk)
+   *
+   * Returns the average amount by which the portfolio falls short of the target
+   * in scenarios where the target is not met. Useful for risk assessment.
+   *
+   * @param finalValues - Array of final portfolio values from simulation
+   * @param targetAmount - Target amount
+   * @returns Average shortfall amount (0 if target always met)
+   *
+   * @example
+   * ```typescript
+   * const shortfall = engine.calculateExpectedShortfall(result.finalValues, 1000000);
+   * console.log(`In failure scenarios, average shortfall is $${shortfall.toLocaleString()}`);
+   * ```
    */
   calculateExpectedShortfall(finalValues: number[], targetAmount: number): number {
     const shortfalls = finalValues
@@ -199,7 +296,26 @@ export class MonteCarloEngine {
 
   /**
    * Find required monthly contribution for desired success rate
-   * Uses binary search to find the contribution amount
+   *
+   * Uses binary search to find the minimum monthly contribution needed
+   * to achieve a target amount with the specified probability.
+   *
+   * @param config - Simulation config (without monthlyContribution)
+   * @param targetAmount - Target portfolio value to reach
+   * @param desiredSuccessRate - Desired probability (e.g., 0.90 for 90%)
+   * @param tolerance - Acceptable deviation from desired success rate (default: 0.01)
+   * @returns Required monthly contribution amount
+   *
+   * @example
+   * ```typescript
+   * // Find contribution needed for 90% chance of reaching $1M
+   * const contribution = engine.findRequiredContribution(
+   *   { initialBalance: 50000, expectedReturn: 0.07, volatility: 0.15, months: 240, iterations: 5000 },
+   *   1000000,
+   *   0.90
+   * );
+   * console.log(`Need $${contribution.toFixed(0)}/month for 90% success rate`);
+   * ```
    */
   findRequiredContribution(
     config: Omit<MonteCarloConfig, 'monthlyContribution'>,

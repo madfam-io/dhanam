@@ -4,6 +4,23 @@ import { cva, type VariantProps } from 'class-variance-authority';
 
 import { cn } from '../lib/utils';
 
+/**
+ * Button variant styles using class-variance-authority
+ *
+ * ## Variants
+ * - `default`: Primary action button (filled background)
+ * - `destructive`: Dangerous actions like delete (red)
+ * - `outline`: Secondary action (bordered)
+ * - `secondary`: Alternative secondary style
+ * - `ghost`: Minimal, no background
+ * - `link`: Text-only link style
+ *
+ * ## Sizes
+ * - `default`: Standard height (h-10)
+ * - `sm`: Small (h-9)
+ * - `lg`: Large (h-11)
+ * - `icon`: Square icon button (h-10 w-10)
+ */
 const buttonVariants = cva(
   'inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
   {
@@ -33,12 +50,42 @@ const buttonVariants = cva(
   }
 );
 
+/**
+ * Button component props
+ * @extends React.ButtonHTMLAttributes<HTMLButtonElement>
+ */
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
+  /** Render as child component (e.g., for Link wrapper) */
   asChild?: boolean;
 }
 
+/**
+ * Primary button component for user actions
+ *
+ * Built with shadcn/ui and Radix UI primitives. Supports multiple
+ * variants, sizes, and can render as different elements via `asChild`.
+ *
+ * @example
+ * ```tsx
+ * // Primary action
+ * <Button variant="default">Save Changes</Button>
+ *
+ * // Destructive action
+ * <Button variant="destructive">Delete Account</Button>
+ *
+ * // As a link
+ * <Button asChild variant="link">
+ *   <Link href="/settings">Settings</Link>
+ * </Button>
+ *
+ * // Icon button
+ * <Button variant="ghost" size="icon">
+ *   <PlusIcon />
+ * </Button>
+ * ```
+ */
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, ...props }, ref) => {
     const Comp = asChild ? Slot : 'button';

@@ -1,6 +1,16 @@
 import { User } from '@dhanam/shared';
 import { Controller, Get, Param, UseGuards, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiQuery,
+  ApiOkResponse,
+  ApiNotFoundResponse,
+  ApiUnauthorizedResponse,
+  ApiForbiddenResponse,
+  ApiParam,
+} from '@nestjs/swagger';
 
 import { CurrentUser } from '@core/auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
@@ -13,6 +23,7 @@ import { ConnectionHealthService } from './connection-health.service';
 @Controller('providers/connection-health')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
+@ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
 export class ConnectionHealthController {
   constructor(private readonly connectionHealthService: ConnectionHealthService) {}
 
@@ -23,8 +34,8 @@ export class ConnectionHealthController {
     description:
       'Returns health status for all connected accounts including sync status, errors, and required actions',
   })
-  @ApiResponse({
-    status: 200,
+  @ApiParam({ name: 'spaceId', description: 'Space UUID' })
+  @ApiOkResponse({
     description: 'Connection health dashboard data',
     schema: {
       type: 'object',
@@ -79,10 +90,9 @@ export class ConnectionHealthController {
     summary: 'Get accounts that need attention',
     description: 'Returns only accounts with errors, requiring reauth, or disconnected',
   })
-  @ApiResponse({
-    status: 200,
-    description: 'List of accounts needing attention',
-  })
+  @ApiParam({ name: 'spaceId', description: 'Space UUID' })
+  @ApiOkResponse({ description: 'List of accounts needing attention' })
+  @ApiForbiddenResponse({ description: 'User lacks access to this space' })
   async getAccountsNeedingAttention(@Param('spaceId') spaceId: string, @CurrentUser() _user: User) {
     const accounts = await this.connectionHealthService.getAccountsNeedingAttention(spaceId);
     return {
@@ -96,10 +106,9 @@ export class ConnectionHealthController {
   @ApiOperation({
     summary: 'Get health status for a specific account',
   })
-  @ApiResponse({
-    status: 200,
-    description: 'Account connection health details',
-  })
+  @ApiParam({ name: 'accountId', description: 'Account UUID' })
+  @ApiOkResponse({ description: 'Account connection health details' })
+  @ApiNotFoundResponse({ description: 'Account not found' })
   async getAccountHealth(@Param('accountId') accountId: string, @CurrentUser() _user: User) {
     const health = await this.connectionHealthService.getAccountHealth(accountId);
     if (!health) {
@@ -117,16 +126,15 @@ export class ConnectionHealthController {
     summary: 'Get quick health summary',
     description: 'Returns a simplified health status for display in dashboard widgets',
   })
+  @ApiParam({ name: 'spaceId', description: 'Space UUID' })
   @ApiQuery({
     name: 'includeProviders',
     required: false,
     type: Boolean,
     description: 'Include provider-level health information',
   })
-  @ApiResponse({
-    status: 200,
-    description: 'Quick health summary',
-  })
+  @ApiOkResponse({ description: 'Quick health summary' })
+  @ApiForbiddenResponse({ description: 'User lacks access to this space' })
   async getHealthSummary(
     @Param('spaceId') spaceId: string,
     @CurrentUser() _user: User,

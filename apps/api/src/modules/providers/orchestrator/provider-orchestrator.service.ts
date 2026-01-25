@@ -17,8 +17,45 @@ import {
 } from './provider.interface';
 
 /**
- * Provider Orchestrator - Coordinates multiple financial data providers
- * Implements failover logic and circuit breaker pattern for reliability
+ * Provider Orchestrator Service
+ *
+ * Coordinates multiple financial data providers (Plaid, Belvo, MX, Finicity, Bitso)
+ * with intelligent failover and circuit breaker pattern for high availability.
+ *
+ * ## Architecture
+ * - Uses ML-based provider selection for optimal routing
+ * - Implements circuit breaker pattern to prevent cascading failures
+ * - Supports automatic failover when primary providers fail
+ * - Logs all connection attempts for monitoring and analytics
+ *
+ * ## Provider Priority by Region
+ * - **Mexico (MX)**: Belvo → MX
+ * - **US/Canada**: Plaid → MX → Finicity
+ * - **Crypto**: Bitso (exchange) + Blockchain (on-chain)
+ *
+ * ## Error Handling
+ * - Auth errors: Non-retryable (requires user intervention)
+ * - Rate limits: Retryable with backoff
+ * - Network errors: Retryable with failover
+ * - Provider down: Circuit breaker opens, failover to backup
+ *
+ * @example
+ * ```typescript
+ * // Execute operation with automatic failover
+ * const result = await orchestrator.executeWithFailover(
+ *   'syncTransactions',
+ *   { spaceId, accountId, userId },
+ *   Provider.plaid,
+ *   'US'
+ * );
+ *
+ * if (result.success) {
+ *   console.log(`Synced via ${result.provider} in ${result.responseTimeMs}ms`);
+ * }
+ * ```
+ *
+ * @see CircuitBreakerService - Circuit breaker implementation
+ * @see ProviderSelectionService - ML-based provider selection
  */
 @Injectable()
 export class ProviderOrchestratorService {
@@ -32,7 +69,18 @@ export class ProviderOrchestratorService {
   ) {}
 
   /**
-   * Register a provider implementation
+   * Register a financial provider implementation
+   *
+   * Called during module initialization to make providers available
+   * for the orchestrator to use during operations.
+   *
+   * @param provider - Provider implementation conforming to IFinancialProvider interface
+   *
+   * @example
+   * ```typescript
+   * orchestrator.registerProvider(plaidProvider);
+   * orchestrator.registerProvider(belvoProvider);
+   * ```
    */
   registerProvider(provider: IFinancialProvider): void {
     this.providers.set(provider.name, provider);
@@ -40,7 +88,20 @@ export class ProviderOrchestratorService {
   }
 
   /**
-   * Get available providers for an institution
+   * Get available providers for a financial institution
+   *
+   * Looks up institution-provider mappings and filters out providers
+   * with open circuit breakers.
+   *
+   * @param institutionId - External institution identifier (e.g., Plaid institution_id)
+   * @param region - Geographic region code ('US', 'MX', 'CA')
+   * @returns Array of available providers, ordered by priority
+   *
+   * @example
+   * ```typescript
+   * const providers = await orchestrator.getAvailableProviders('ins_123', 'MX');
+   * // Returns: [Provider.belvo, Provider.mx]
+   * ```
    */
   async getAvailableProviders(institutionId: string, region: string = 'US'): Promise<Provider[]> {
     const mapping = await this.prisma.institutionProviderMapping.findFirst({
@@ -84,7 +145,40 @@ export class ProviderOrchestratorService {
   }
 
   /**
-   * Execute provider operation with automatic failover and ML-based selection
+   * Execute a provider operation with automatic failover and ML-based selection
+   *
+   * This is the main entry point for all provider operations. It handles:
+   * 1. ML-based optimal provider selection (if no preference specified)
+   * 2. Circuit breaker checks before attempting operations
+   * 3. Sequential failover through backup providers on failure
+   * 4. Logging of all attempts for monitoring
+   *
+   * @template T - Return type of the operation
+   * @param operation - The operation to execute ('createLink' | 'exchangeToken' | 'getAccounts' | 'syncTransactions')
+   * @param params - Operation-specific parameters (varies by operation type)
+   * @param preferredProvider - Optional preferred provider (ML selects if not specified)
+   * @param region - Geographic region for provider selection ('US' | 'MX' | 'CA')
+   * @returns Promise resolving to ProviderAttemptResult with success/failure status
+   *
+   * @example
+   * ```typescript
+   * // Sync transactions with automatic provider selection
+   * const result = await orchestrator.executeWithFailover<Transaction[]>(
+   *   'syncTransactions',
+   *   { spaceId: 'space-123', accountId: 'acc-456', userId: 'user-789' },
+   *   undefined, // Let ML select
+   *   'US'
+   * );
+   *
+   * if (result.success) {
+   *   console.log(`Got ${result.data.length} transactions`);
+   *   if (result.failoverUsed) {
+   *     console.log(`Primary failed, used ${result.provider}`);
+   *   }
+   * } else {
+   *   console.error(`All providers failed: ${result.error.message}`);
+   * }
+   * ```
    */
   async executeWithFailover<T>(
     operation: 'createLink' | 'exchangeToken' | 'getAccounts' | 'syncTransactions',
@@ -247,7 +341,14 @@ export class ProviderOrchestratorService {
   }
 
   /**
-   * Get backup providers for a primary provider
+   * Get backup providers for failover
+   *
+   * Returns region-appropriate backup providers when primary fails.
+   * Filters out providers with open circuit breakers.
+   *
+   * @param primaryProvider - The primary provider that failed
+   * @param region - Geographic region for backup selection
+   * @returns Array of available backup providers
    */
   private async getBackupProviders(primaryProvider: Provider, region: string): Promise<Provider[]> {
     const backups: Provider[] = [];
@@ -278,7 +379,18 @@ export class ProviderOrchestratorService {
   }
 
   /**
-   * Parse provider error into standardized format
+   * Parse provider error into standardized ProviderError format
+   *
+   * Classifies errors by type and determines if they are retryable:
+   * - auth: Credential issues (non-retryable)
+   * - rate_limit: Too many requests (retryable)
+   * - network: Connection issues (retryable)
+   * - provider_down: Service unavailable (retryable)
+   * - validation: Invalid request (non-retryable)
+   *
+   * @param error - Raw error from provider
+   * @param provider - Provider that threw the error
+   * @returns Standardized ProviderError object
    */
   private parseError(error: any, provider: Provider): ProviderError {
     const errorMessage = error.message || 'Unknown error';
@@ -353,6 +465,23 @@ export class ProviderOrchestratorService {
 
   /**
    * Get provider health status for monitoring dashboard
+   *
+   * Returns health metrics for all providers in a region, including:
+   * - Circuit breaker state (open/closed/half-open)
+   * - Success/failure counts
+   * - Average response times
+   * - Last error messages
+   *
+   * @param region - Geographic region to get health for
+   * @returns Array of provider health status records
+   *
+   * @example
+   * ```typescript
+   * const health = await orchestrator.getProviderHealth('US');
+   * health.forEach(p => {
+   *   console.log(`${p.provider}: ${p.status}, circuit: ${p.circuitBreakerOpen ? 'OPEN' : 'CLOSED'}`);
+   * });
+   * ```
    */
   async getProviderHealth(region: string = 'US') {
     return await this.prisma.providerHealthStatus.findMany({

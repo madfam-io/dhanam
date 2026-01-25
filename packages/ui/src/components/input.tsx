@@ -2,9 +2,37 @@ import * as React from 'react';
 
 import { cn } from '../lib/utils';
 
+/**
+ * Input component props
+ * @extends React.InputHTMLAttributes<HTMLInputElement>
+ */
 export interface InputProps
   extends React.InputHTMLAttributes<HTMLInputElement> {}
 
+/**
+ * Text input component
+ *
+ * Standard form input with consistent styling and focus states.
+ * Supports all native input types (text, email, password, number, etc.).
+ *
+ * @example
+ * ```tsx
+ * // Basic text input
+ * <Input placeholder="Enter your name" />
+ *
+ * // Currency input
+ * <Input type="number" step="0.01" placeholder="0.00" />
+ *
+ * // With label
+ * <div>
+ *   <Label htmlFor="email">Email</Label>
+ *   <Input id="email" type="email" placeholder="user@example.com" />
+ * </div>
+ *
+ * // Disabled state
+ * <Input disabled value="Read only" />
+ * ```
+ */
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
   ({ className, type, ...props }, ref) => {
     return (
