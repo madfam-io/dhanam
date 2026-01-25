@@ -14,12 +14,19 @@ interface AuthState {
   isAuthenticated: boolean;
 }
 
+interface UpdateProfileData {
+  name?: string;
+  locale?: string;
+  timezone?: string;
+}
+
 interface AuthContextType extends AuthState {
   login: (credentials: LoginCredentials) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
   logout: () => Promise<void>;
   refreshAuth: () => Promise<void>;
   refreshUser: () => Promise<void>;
+  updateProfile: (data: UpdateProfileData) => Promise<void>;
 }
 
 interface LoginCredentials {
@@ -261,6 +268,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [state.accessToken]);
 
+  const updateProfile = useCallback(
+    async (data: UpdateProfileData) => {
+      try {
+        if (!state.accessToken) {
+          throw new Error('No access token available');
+        }
+
+        const response = await apiClient.patch('/users/me', data);
+        dispatch({ type: 'SET_USER', payload: response.data });
+
+        // Update stored user data
+        await AsyncStorage.setItem(USER_KEY, JSON.stringify(response.data));
+      } catch (error) {
+        console.error('Failed to update profile:', error);
+        throw error;
+      }
+    },
+    [state.accessToken]
+  );
+
   const value: AuthContextType = {
     ...state,
     login,
@@ -268,6 +295,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     logout,
     refreshAuth,
     refreshUser,
+    updateProfile,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useGoals, type Goal, type GoalProgress, type GoalSummary } from '@/hooks/useGoals';
 import { useSimulations } from '@/hooks/useSimulations';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { useSpaceStore } from '@/stores/space';
 import { PremiumGate } from '~/components/billing/PremiumGate';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -36,6 +37,7 @@ export default function GoalsPage() {
   } = useGoals();
   const { calculateGoalProbability } = useSimulations();
   const analytics = useAnalytics();
+  const { currentSpace } = useSpaceStore();
 
   const [goals, setGoals] = useState<Goal[]>([]);
   const [summary, setSummary] = useState<GoalSummary | null>(null);
@@ -46,15 +48,19 @@ export default function GoalsPage() {
   const [loadingProbability, setLoadingProbability] = useState(false);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
 
-  // TODO: Get actual spaceId from user context
-  const spaceId = 'default-space-id';
+  // Get spaceId from current space context
+  const spaceId = currentSpace?.id;
 
   useEffect(() => {
-    loadGoals();
+    if (spaceId) {
+      loadGoals();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [spaceId]);
 
   const loadGoals = async () => {
+    if (!spaceId) return;
+
     const [goalsData, summaryData] = await Promise.all([
       getGoalsBySpace(spaceId),
       getGoalSummary(spaceId),
@@ -137,6 +143,21 @@ export default function GoalsPage() {
     };
     return colors[status];
   };
+
+  // Show loading state while waiting for space context
+  if (!currentSpace) {
+    return (
+      <div className="container mx-auto py-8 space-y-8">
+        <div>
+          <h1 className="text-4xl font-bold tracking-tight">Financial Goals</h1>
+          <p className="text-muted-foreground mt-2">Loading your space...</p>
+        </div>
+        <div className="flex items-center justify-center h-[400px]">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto py-8 space-y-8">

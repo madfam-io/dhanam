@@ -61,7 +61,7 @@ export class BelvoService {
         }
       );
 
-      // Store encrypted link
+      // Store encrypted link with spaceId in metadata for proper routing
       const encryptedLinkId = this.cryptoService.encrypt(link.id);
       await this.prisma.providerConnection.create({
         data: {
@@ -69,6 +69,7 @@ export class BelvoService {
           providerUserId: link.id,
           encryptedToken: JSON.stringify(encryptedLinkId),
           metadata: {
+            spaceId, // Store spaceId for webhook routing
             institution: dto.institution,
             createdAt: new Date().toISOString(),
           } as InputJsonValue,
@@ -418,19 +419,29 @@ export class BelvoService {
       return;
     }
 
-    // Get the first space (TODO: handle multiple spaces)
-    const space = connection.user.userSpaces[0]?.space;
-    if (!space) {
-      this.logger.warn(`No space found for user: ${connection.userId}`);
-      return;
+    // Get spaceId from connection metadata (stored when link was created)
+    const metadata = connection.metadata as { spaceId?: string } | null;
+    let spaceId = metadata?.spaceId;
+
+    // Fallback: If spaceId not in metadata (older connections), use first space
+    if (!spaceId) {
+      const firstSpace = connection.user.userSpaces[0]?.space;
+      if (!firstSpace) {
+        this.logger.warn(`No space found for user: ${connection.userId}`);
+        return;
+      }
+      spaceId = firstSpace.id;
+      this.logger.warn(
+        `Using fallback space ${spaceId} for Belvo webhook. Connection ${connection.id} should be migrated to store spaceId in metadata.`
+      );
     }
 
     switch (dto.event) {
       case BelvoWebhookEvent.ACCOUNTS_CREATED:
-        await this.syncAccounts(space.id, connection.userId, dto.link_id);
+        await this.syncAccounts(spaceId, connection.userId, dto.link_id);
         break;
       case BelvoWebhookEvent.TRANSACTIONS_CREATED:
-        await this.syncTransactions(space.id, connection.userId, dto.link_id);
+        await this.syncTransactions(spaceId, connection.userId, dto.link_id);
         break;
       case BelvoWebhookEvent.LINK_FAILED:
         // TODO: Handle link failure

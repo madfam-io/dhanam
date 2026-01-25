@@ -36,10 +36,11 @@ interface SettingsItem {
 }
 
 export default function SettingsScreen() {
-  const { user } = useAuth();
+  const { user, updateProfile } = useAuth();
 
   // Settings state
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const [budgetAlerts, setBudgetAlerts] = useState(true);
   const [transactionNotifications, setTransactionNotifications] = useState(true);
   const [biometricEnabled, setBiometricEnabled] = useState(false);
@@ -268,10 +269,22 @@ export default function SettingsScreen() {
     );
   };
 
-  const handleSaveName = () => {
-    // TODO: Update user profile via API
-    console.log('Saving name:', editedName);
-    setShowNameDialog(false);
+  const handleSaveName = async () => {
+    if (!editedName.trim() || editedName === user?.name) {
+      setShowNameDialog(false);
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      await updateProfile({ name: editedName.trim() });
+      setShowNameDialog(false);
+    } catch (error) {
+      console.error('Failed to update name:', error);
+      // Could show an error toast here
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -311,8 +324,12 @@ export default function SettingsScreen() {
             />
           </Dialog.Content>
           <Dialog.Actions>
-            <Button onPress={() => setShowNameDialog(false)}>Cancel</Button>
-            <Button onPress={handleSaveName}>Save</Button>
+            <Button onPress={() => setShowNameDialog(false)} disabled={isSaving}>
+              Cancel
+            </Button>
+            <Button onPress={handleSaveName} loading={isSaving} disabled={isSaving}>
+              Save
+            </Button>
           </Dialog.Actions>
         </Dialog>
       </Portal>

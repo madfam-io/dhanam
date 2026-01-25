@@ -11,6 +11,9 @@ import { LoggerService } from '@core/logger/logger.service';
 import { PrismaService } from '@core/prisma/prisma.service';
 import { AccountOwnership as _AccountOwnership } from '@db';
 
+import { BitsoService } from '../providers/bitso/bitso.service';
+import { PlaidService } from '../providers/plaid/plaid.service';
+
 import { ConnectAccountDto } from './dto/connect-account.dto';
 import { CreateAccountDto } from './dto/create-account.dto';
 import { ShareAccountDto, UpdateSharingPermissionDto } from './dto/share-account.dto';
@@ -21,7 +24,9 @@ import { UpdateOwnershipDto } from './dto/update-ownership.dto';
 export class AccountsService {
   constructor(
     private prisma: PrismaService,
-    private logger: LoggerService
+    private logger: LoggerService,
+    private plaidService: PlaidService,
+    private bitsoService: BitsoService
   ) {}
 
   async listAccounts(spaceId: string, type?: string): Promise<Account[]> {
@@ -60,13 +65,10 @@ export class AccountsService {
   }
 
   async connectAccount(
-    _spaceId: string,
-    _userId: string,
+    spaceId: string,
+    userId: string,
     dto: ConnectAccountDto
   ): Promise<Account[]> {
-    // This is a placeholder for provider integration
-    // In production, this would call the appropriate provider service
-
     if (!['belvo', 'plaid', 'bitso'].includes(dto.provider)) {
       throw new BadRequestException('Invalid provider');
     }
@@ -74,16 +76,49 @@ export class AccountsService {
     // Route to appropriate provider
     switch (dto.provider) {
       case 'belvo':
-        // For Belvo, we'll need to handle this through the Belvo module
+        // Belvo uses a different OAuth flow - redirect to dedicated endpoint
         throw new BadRequestException(
           'Belvo connections should be initiated through /providers/belvo/link endpoint'
         );
-      case 'plaid':
-        // TODO: Implement Plaid integration
-        throw new BadRequestException('Plaid integration not yet implemented');
-      case 'bitso':
-        // TODO: Implement Bitso integration
-        throw new BadRequestException('Bitso integration not yet implemented');
+
+      case 'plaid': {
+        // Plaid requires a public token from Link flow
+        if (!dto.linkToken) {
+          throw new BadRequestException(
+            'Plaid connections require a linkToken (public token from Plaid Link)'
+          );
+        }
+        const plaidResult = await this.plaidService.createLink(spaceId, userId, {
+          publicToken: dto.linkToken,
+          externalId: dto.credentials?.externalId,
+        });
+        this.logger.log(
+          `Plaid account connected for user ${userId}, ${plaidResult.accounts.length} accounts synced`,
+          'AccountsService'
+        );
+        return plaidResult.accounts.map(this.sanitizeAccount);
+      }
+
+      case 'bitso': {
+        // Bitso requires API key and secret
+        if (!dto.credentials?.apiKey || !dto.credentials?.apiSecret) {
+          throw new BadRequestException(
+            'Bitso connections require apiKey and apiSecret in credentials'
+          );
+        }
+        const bitsoResult = await this.bitsoService.connectAccount(spaceId, userId, {
+          apiKey: dto.credentials.apiKey,
+          apiSecret: dto.credentials.apiSecret,
+          externalId: dto.credentials.externalId,
+          autoSync: dto.credentials.autoSync ?? true,
+        });
+        this.logger.log(
+          `Bitso account connected for user ${userId}, ${bitsoResult.accounts.length} accounts synced`,
+          'AccountsService'
+        );
+        return bitsoResult.accounts.map(this.sanitizeAccount);
+      }
+
       default:
         throw new BadRequestException(`Unknown provider: ${dto.provider}`);
     }

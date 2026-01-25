@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 
 import { AuditModule } from '../../core/audit/audit.module';
+import { AuthModule } from '../../core/auth/auth.module';
 import { CryptoModule } from '../../core/crypto/crypto.module';
 import { PrismaModule } from '../../core/prisma/prisma.module';
 import { BillingModule } from '../billing/billing.module';
@@ -18,7 +19,7 @@ import { TransactionExecutionController } from './transaction-execution.controll
 import { TransactionExecutionService } from './transaction-execution.service';
 
 @Module({
-  imports: [PrismaModule, AuditModule, SpacesModule, BillingModule, CryptoModule],
+  imports: [PrismaModule, AuditModule, AuthModule, SpacesModule, BillingModule, CryptoModule],
   controllers: [TransactionExecutionController],
   providers: [
     TransactionExecutionService,

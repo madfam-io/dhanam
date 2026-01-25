@@ -14,6 +14,7 @@ import { addDays, isAfter } from 'date-fns';
 import { Prisma as _Prisma } from '@db';
 
 import { AuditService } from '../../core/audit/audit.service';
+import { TotpService } from '../../core/auth/totp.service';
 import { PrismaService } from '../../core/prisma/prisma.service';
 import { SpacesService } from '../spaces/spaces.service';
 
@@ -46,6 +47,7 @@ export class TransactionExecutionService {
   constructor(
     private prisma: PrismaService,
     private auditService: AuditService,
+    private totpService: TotpService,
     private spacesService: SpacesService,
     private providerFactory: ProviderFactoryService
   ) {}
@@ -899,12 +901,43 @@ export class TransactionExecutionService {
   }
 
   /**
-   * Helper: Validate OTP code
-   * Simplified implementation - real version would use TOTP library
+   * Helper: Validate OTP code using TotpService
+   * Validates against user's TOTP secret or backup codes
    */
   private async validateOtp(userId: string, otpCode: string): Promise<boolean> {
-    // TODO: Implement proper TOTP validation using speakeasy or similar
-    // For now, accept any 6-digit code in development
-    return /^\d{6}$/.test(otpCode);
+    // Validate code format
+    if (!/^\d{6}$/.test(otpCode) && !/^[A-F0-9]{8}$/i.test(otpCode)) {
+      return false;
+    }
+
+    // Fetch user's TOTP configuration
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { totpSecret: true, totpEnabled: true },
+    });
+
+    if (!user?.totpEnabled || !user.totpSecret) {
+      this.logger.warn(`TOTP validation attempted for user ${userId} without TOTP enabled`);
+      return false;
+    }
+
+    // Try TOTP validation first (6-digit codes)
+    if (/^\d{6}$/.test(otpCode)) {
+      const isValid = this.totpService.verifyToken(user.totpSecret, otpCode);
+      if (isValid) {
+        return true;
+      }
+    }
+
+    // Fall back to backup code validation (8-character hex codes)
+    if (/^[A-F0-9]{8}$/i.test(otpCode)) {
+      const isValidBackup = await this.totpService.verifyBackupCode(userId, otpCode.toUpperCase());
+      if (isValidBackup) {
+        this.logger.log(`User ${userId} used backup code for transaction verification`);
+        return true;
+      }
+    }
+
+    return false;
   }
 }

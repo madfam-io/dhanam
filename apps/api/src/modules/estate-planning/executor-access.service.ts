@@ -1,9 +1,12 @@
 import { randomBytes } from 'crypto';
 
 import { Injectable, Logger, ForbiddenException, NotFoundException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 
 import { AuditService } from '@core/audit/audit.service';
 import { PrismaService } from '@core/prisma/prisma.service';
+
+import { JanuaEmailService, JANUA_TEMPLATES } from '../email/janua-email.service';
 
 export interface ExecutorAccessGrant {
   accessToken: string;
@@ -25,7 +28,9 @@ export class ExecutorAccessService {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly auditService: AuditService
+    private readonly auditService: AuditService,
+    private readonly emailService: JanuaEmailService,
+    private readonly configService: ConfigService
   ) {}
 
   /**
@@ -53,6 +58,12 @@ export class ExecutorAccessService {
     if (existing) {
       throw new ForbiddenException('This executor is already assigned');
     }
+
+    // Get account holder info for email
+    const accountHolder = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { name: true, email: true },
+    });
 
     // Get current max priority for ordering
     const maxPriority = await this.prisma.executorAssignment.aggregate({
@@ -84,8 +95,43 @@ export class ExecutorAccessService {
 
     this.logger.log(`Executor ${executorData.email} added for user ${userId}`);
 
-    // TODO: Send verification email to executor
-    return { id: assignment.id, verificationSent: true };
+    // Send verification email to executor
+    let verificationSent = false;
+    try {
+      const webUrl = this.configService.get<string>('WEB_URL', 'https://app.dhan.am');
+      const encodedEmail = encodeURIComponent(executorData.email);
+      const verificationUrl = `${webUrl}/executor/verify?id=${assignment.id}&email=${encodedEmail}`;
+
+      const emailResult = await this.emailService.sendTemplateEmail(
+        {
+          to: executorData.email,
+          template: JANUA_TEMPLATES.INVITATION_TEAM,
+          variables: {
+            recipient_name: executorData.name,
+            inviter_name: accountHolder?.name || 'A Dhanam user',
+            role: 'Executor',
+            organization_name: 'Dhanam Estate Planning',
+            message: `You have been designated as an executor for ${accountHolder?.name || 'a Dhanam user'}'s estate planning. This role allows you to access their financial information in the event of their incapacity or passing.`,
+            action_url: verificationUrl,
+            action_text: 'Confirm Your Role',
+            expires_in: '30 days',
+          },
+        },
+        'estate-planning'
+      );
+
+      verificationSent = emailResult.success;
+      if (!emailResult.success) {
+        this.logger.warn(
+          `Failed to send executor verification email to ${executorData.email}: ${emailResult.error}`
+        );
+      }
+    } catch (error) {
+      this.logger.error(`Error sending executor verification email: ${error}`);
+      verificationSent = false;
+    }
+
+    return { id: assignment.id, verificationSent };
   }
 
   /**
