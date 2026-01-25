@@ -392,16 +392,24 @@ export default function ScenariosPage() {
               />
             </div>
           ) : (
-            <div className="flex items-center justify-center h-[600px] border border-dashed rounded-lg">
-              <div className="flex flex-col items-center text-center">
+            <div className="flex items-center justify-center min-h-[400px] lg:min-h-[500px] border border-dashed rounded-lg">
+              <div className="flex flex-col items-center text-center p-8">
                 <div className="rounded-full bg-muted p-4 mb-4">
                   <TrendingDown className="h-8 w-8 text-muted-foreground" />
                 </div>
                 <h3 className="font-semibold text-lg mb-2">No scenario analysis yet</h3>
-                <p className="text-sm text-muted-foreground max-w-sm">
+                <p className="text-sm text-muted-foreground max-w-sm mb-6">
                   Configure your portfolio parameters and select a scenario to stress test your
-                  investments
+                  investments against historical market events.
                 </p>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    document.getElementById('initialBalance')?.focus();
+                  }}
+                >
+                  Get Started
+                </Button>
               </div>
             </div>
           )}

@@ -1,6 +1,7 @@
 'use client';
 
 import { ReactNode } from 'react';
+import { useAuth } from '~/lib/hooks/use-auth';
 import { PremiumUpsell } from './PremiumUpsell';
 
 interface PremiumGateProps {
@@ -21,13 +22,8 @@ interface PremiumGateProps {
  * </PremiumGate>
  */
 export function PremiumGate({ children, feature, fallback }: PremiumGateProps) {
-  // TODO: Get actual subscription status from auth context
-  // For now, we'll check if the user has a premium subscription
-  // const { user } = useAuth();
-  // const isPremium = user?.subscriptionTier === 'premium';
-
-  // Temporary: Always show upsell for demo
-  const isPremium = false;
+  const { user } = useAuth();
+  const isPremium = user?.subscriptionTier === 'premium';
 
   if (!isPremium) {
     return fallback ? (

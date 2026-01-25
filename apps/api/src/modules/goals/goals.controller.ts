@@ -23,11 +23,14 @@ import {
   ApiBadRequestResponse,
   ApiParam,
   ApiNoContentResponse,
+  ApiPaymentRequiredResponse,
 } from '@nestjs/swagger';
 
-import { GoalShareRole } from '@db';
+import { GoalShareRole, UsageMetricType } from '@db';
 
 import { JwtAuthGuard } from '../../core/auth/guards/jwt-auth.guard';
+import { TrackUsage } from '../billing/decorators/track-usage.decorator';
+import { UsageLimitGuard } from '../billing/guards/usage-limit.guard';
 
 import { CreateGoalDto, UpdateGoalDto, AddAllocationDto } from './dto';
 import { GoalCollaborationService } from './goal-collaboration.service';
@@ -184,22 +187,28 @@ export class GoalsController {
   }
 
   @Get(':id/probability')
+  @UseGuards(UsageLimitGuard)
+  @TrackUsage(UsageMetricType.goal_probability)
   @ApiOperation({ summary: 'Get goal probability (Monte Carlo simulation)' })
   @ApiParam({ name: 'id', description: 'Goal UUID' })
   @ApiOkResponse({ description: 'Goal probability calculation result' })
   @ApiNotFoundResponse({ description: 'Goal not found' })
   @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiPaymentRequiredResponse({ description: 'Daily goal probability limit exceeded' })
   @ApiForbiddenResponse({ description: 'User lacks access to this goal' })
   async getProbability(@Param('id') id: string, @Req() req: any) {
     return this.goalProbabilityService.calculateGoalProbability(req.user.id, id);
   }
 
   @Post(':id/probability/update')
+  @UseGuards(UsageLimitGuard)
+  @TrackUsage(UsageMetricType.goal_probability)
   @ApiOperation({ summary: 'Update goal probability (recalculate)' })
   @ApiParam({ name: 'id', description: 'Goal UUID' })
   @ApiOkResponse({ description: 'Probability updated successfully' })
   @ApiNotFoundResponse({ description: 'Goal not found' })
   @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiPaymentRequiredResponse({ description: 'Daily goal probability limit exceeded' })
   @ApiForbiddenResponse({ description: 'User lacks access to this goal' })
   async updateProbability(@Param('id') id: string, @Req() req: any) {
     await this.goalProbabilityService.updateGoalProbability(req.user.id, id);
@@ -207,12 +216,15 @@ export class GoalsController {
   }
 
   @Post(':id/what-if')
+  @UseGuards(UsageLimitGuard)
+  @TrackUsage(UsageMetricType.goal_probability)
   @ApiOperation({ summary: 'Run what-if scenario for a goal' })
   @ApiParam({ name: 'id', description: 'Goal UUID' })
   @ApiOkResponse({ description: 'What-if scenario results' })
   @ApiNotFoundResponse({ description: 'Goal not found' })
   @ApiBadRequestResponse({ description: 'Invalid scenario parameters' })
   @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiPaymentRequiredResponse({ description: 'Daily goal probability limit exceeded' })
   @ApiForbiddenResponse({ description: 'User lacks access to this goal' })
   async runWhatIf(
     @Param('id') id: string,
@@ -234,10 +246,13 @@ export class GoalsController {
   }
 
   @Post('space/:spaceId/probability/update-all')
+  @UseGuards(UsageLimitGuard)
+  @TrackUsage(UsageMetricType.goal_probability)
   @ApiOperation({ summary: 'Bulk update probabilities for all goals in a space' })
   @ApiParam({ name: 'spaceId', description: 'Space UUID' })
   @ApiOkResponse({ description: 'All goal probabilities updated successfully' })
   @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiPaymentRequiredResponse({ description: 'Daily goal probability limit exceeded' })
   @ApiForbiddenResponse({ description: 'User lacks access to this space' })
   async updateAllProbabilities(@Param('spaceId') spaceId: string, @Req() req: any) {
     await this.goalProbabilityService.updateAllGoalProbabilities(req.user.id, spaceId);

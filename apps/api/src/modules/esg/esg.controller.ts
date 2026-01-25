@@ -19,12 +19,15 @@ import {
   ApiForbiddenResponse,
   ApiBadRequestResponse,
   ApiParam,
+  ApiPaymentRequiredResponse,
 } from '@nestjs/swagger';
 
 import { CurrentUser } from '@core/auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
-import { User } from '@db';
+import { UsageMetricType, User } from '@db';
 
+import { TrackUsage } from '../billing/decorators/track-usage.decorator';
+import { UsageLimitGuard } from '../billing/guards/usage-limit.guard';
 import { EnhancedEsgService } from './enhanced-esg.service';
 import { EsgService } from './esg.service';
 
@@ -37,10 +40,15 @@ export class EsgController {
   ) {}
 
   @Get('score/:symbol')
+  @UseGuards(JwtAuthGuard, UsageLimitGuard)
+  @TrackUsage(UsageMetricType.esg_calculation)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Get ESG score for an asset' })
   @ApiParam({ name: 'symbol', description: 'Asset symbol (e.g., BTC, ETH)' })
   @ApiQuery({ name: 'assetType', required: false, enum: ['crypto', 'equity', 'etf'] })
   @ApiOkResponse({ description: 'ESG score retrieved successfully' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiPaymentRequiredResponse({ description: 'Daily ESG calculation limit exceeded' })
   @ApiNotFoundResponse({ description: 'Asset not found' })
   async getEsgScore(@Param('symbol') symbol: string, @Query('assetType') assetType = 'crypto') {
     const score = await this.esgService.getEsgScore(symbol, assetType);
@@ -52,11 +60,13 @@ export class EsgController {
   }
 
   @Get('portfolio')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, UsageLimitGuard)
+  @TrackUsage(UsageMetricType.esg_calculation)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get portfolio ESG analysis' })
   @ApiOkResponse({ description: 'Portfolio ESG analysis retrieved successfully' })
   @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiPaymentRequiredResponse({ description: 'Daily ESG calculation limit exceeded' })
   async getPortfolioEsgScore(@CurrentUser() user: User) {
     const analysis = await this.esgService.getPortfolioEsgScore(user.id);
     return {
@@ -67,8 +77,13 @@ export class EsgController {
   }
 
   @Post('compare')
+  @UseGuards(JwtAuthGuard, UsageLimitGuard)
+  @TrackUsage(UsageMetricType.esg_calculation)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Compare ESG scores of multiple assets' })
   @ApiOkResponse({ description: 'ESG comparison completed successfully' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiPaymentRequiredResponse({ description: 'Daily ESG calculation limit exceeded' })
   @ApiBadRequestResponse({ description: 'Invalid symbols array or too many symbols' })
   async compareAssets(@Body('symbols') symbols: string[]) {
     if (!symbols || symbols.length === 0) {
@@ -174,9 +189,14 @@ export class EsgController {
   }
 
   @Get('v2/score/:symbol')
+  @UseGuards(JwtAuthGuard, UsageLimitGuard)
+  @TrackUsage(UsageMetricType.esg_calculation)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Get enhanced ESG score for an asset (v2)' })
   @ApiParam({ name: 'symbol', description: 'Asset symbol (e.g., BTC, ETH)' })
   @ApiOkResponse({ description: 'Enhanced ESG score retrieved successfully' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiPaymentRequiredResponse({ description: 'Daily ESG calculation limit exceeded' })
   @ApiNotFoundResponse({ description: 'ESG data not found for symbol' })
   async getEnhancedEsgScore(@Param('symbol') symbol: string) {
     const esgData = await this.enhancedEsgService.getAssetESG(symbol);
@@ -187,30 +207,39 @@ export class EsgController {
   }
 
   @Get('v2/portfolio')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, UsageLimitGuard)
+  @TrackUsage(UsageMetricType.esg_calculation)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get enhanced portfolio ESG analysis (v2)' })
   @ApiOkResponse({ description: 'Enhanced portfolio ESG analysis retrieved successfully' })
   @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiPaymentRequiredResponse({ description: 'Daily ESG calculation limit exceeded' })
   async getEnhancedPortfolioAnalysis(@CurrentUser() user: User) {
     return this.enhancedEsgService.getPortfolioESGAnalysis(user.id);
   }
 
   @Get('v2/spaces/:spaceId/portfolio')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, UsageLimitGuard)
+  @TrackUsage(UsageMetricType.esg_calculation)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get space-specific portfolio ESG analysis (v2)' })
   @ApiParam({ name: 'spaceId', description: 'Space UUID' })
   @ApiOkResponse({ description: 'Space portfolio ESG analysis retrieved successfully' })
   @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiPaymentRequiredResponse({ description: 'Daily ESG calculation limit exceeded' })
   @ApiForbiddenResponse({ description: 'User lacks access to this space' })
   async getSpacePortfolioAnalysis(@Param('spaceId') spaceId: string) {
     return this.enhancedEsgService.getSpacePortfolioESG(spaceId);
   }
 
   @Post('v2/compare')
+  @UseGuards(JwtAuthGuard, UsageLimitGuard)
+  @TrackUsage(UsageMetricType.esg_calculation)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Compare enhanced ESG scores of multiple assets (v2)' })
   @ApiOkResponse({ description: 'Enhanced ESG comparison completed successfully' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiPaymentRequiredResponse({ description: 'Daily ESG calculation limit exceeded' })
   @ApiBadRequestResponse({ description: 'Invalid symbols array or too many symbols' })
   async compareEnhancedAssets(@Body('symbols') symbols: string[]) {
     if (!symbols || symbols.length === 0) {
@@ -232,11 +261,13 @@ export class EsgController {
   }
 
   @Post('v2/refresh')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, UsageLimitGuard)
+  @TrackUsage(UsageMetricType.esg_calculation)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Refresh ESG data for specified assets' })
   @ApiOkResponse({ description: 'ESG data refresh completed' })
   @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiPaymentRequiredResponse({ description: 'Daily ESG calculation limit exceeded' })
   @ApiBadRequestResponse({ description: 'No symbols provided' })
   async refreshEsgData(@Body('symbols') symbols: string[]) {
     if (!symbols || symbols.length === 0) {

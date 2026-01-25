@@ -97,16 +97,31 @@ export const useAuth = create<AuthState>()(
         }
 
         try {
-          const apiUrl = getJanuaApiUrl();
-          // Fetch user profile from Janua's /auth/me endpoint
-          const response = await fetch(`${apiUrl}/api/v1/auth/me`, {
+          // First, try to fetch from Dhanam API which has full profile + subscriptionTier
+          const dhanamApiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.dhan.am/v1';
+          const dhanamResponse = await fetch(`${dhanamApiUrl}/users/me`, {
+            headers: {
+              Authorization: `Bearer ${tokens.accessToken}`,
+            },
+          });
+
+          if (dhanamResponse.ok) {
+            const dhanamData = await dhanamResponse.json();
+            const userProfile: UserProfile = dhanamData.data || dhanamData;
+            setAuth(userProfile, tokens);
+            return;
+          }
+
+          // Fallback to Janua if Dhanam API fails (e.g., user not synced yet)
+          const januaApiUrl = getJanuaApiUrl();
+          const response = await fetch(`${januaApiUrl}/api/v1/auth/me`, {
             headers: {
               Authorization: `Bearer ${tokens.accessToken}`,
             },
           });
 
           if (!response.ok) {
-            throw new Error('Failed to fetch user profile from Janua');
+            throw new Error('Failed to fetch user profile');
           }
 
           const data = await response.json();
@@ -122,6 +137,7 @@ export const useAuth = create<AuthState>()(
             totpEnabled: januaUser.mfa_enabled || false,
             emailVerified: januaUser.email_verified || false,
             onboardingCompleted: true, // SSO users are considered onboarded
+            subscriptionTier: 'free', // Default for Janua-only users
             createdAt: januaUser.created_at || new Date().toISOString(),
             updatedAt: januaUser.updated_at || new Date().toISOString(),
             spaces: [], // Spaces will be loaded separately

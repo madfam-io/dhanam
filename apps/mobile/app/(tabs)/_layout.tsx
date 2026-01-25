@@ -70,6 +70,16 @@ export default function TabLayout() {
           tabBarIcon: ({ color }: { color: string }) => <TabBarIcon name="leaf" color={color} />,
         }}
       />
+      <Tabs.Screen
+        name="more"
+        options={{
+          title: 'More',
+          headerShown: false,
+          tabBarIcon: ({ color }: { color: string }) => (
+            <TabBarIcon name="ellipsis-horizontal" color={color} />
+          ),
+        }}
+      />
     </Tabs>
   );
 }

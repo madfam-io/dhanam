@@ -78,6 +78,21 @@ export const FAB = RNPaper.FAB as any;
 export const SegmentedButtons = RNPaper.SegmentedButtons as any;
 export const Searchbar = RNPaper.Searchbar as any;
 export const ProgressBar = RNPaper.ProgressBar as any;
+export const Divider = RNPaper.Divider as any;
+export const Switch = RNPaper.Switch as any;
+export const Portal = RNPaper.Portal as any;
+
+// Avatar namespace
+const _Avatar: any = RNPaper.Avatar;
+export const Avatar = Object.assign(_Avatar, { Text: _Avatar.Text, Icon: _Avatar.Icon, Image: _Avatar.Image });
+
+// Dialog namespace
+const _Dialog: any = RNPaper.Dialog;
+export const Dialog = Object.assign(_Dialog, {
+  Title: _Dialog.Title,
+  Content: _Dialog.Content,
+  Actions: _Dialog.Actions,
+});
 
 // Paper components with potential naming conflicts (prefixed with Paper)
 export const PaperSwitch = RNPaper.Switch as any;

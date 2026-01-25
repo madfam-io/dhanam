@@ -1,5 +1,7 @@
 import { UUID, Locale } from './common.types';
 
+export type SubscriptionTier = 'free' | 'premium';
+
 export interface User {
   id: UUID;
   email: string;
@@ -9,6 +11,7 @@ export interface User {
   totpEnabled: boolean;
   emailVerified: boolean;
   onboardingCompleted: boolean;
+  subscriptionTier?: SubscriptionTier;
   createdAt: string;
   updatedAt: string;
 }
