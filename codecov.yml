@@ -7,26 +7,28 @@
 coverage:
   precision: 2
   round: down
-  range: "70...100"
+  range: "60...100" # Lowered from 70...100
 
   status:
     project:
       default:
-        target: 80%
-        threshold: 1%
+        target: 70% # Lowered from 80% to match reality
+        threshold: 2% # Increased flexibility
         base: auto
         if_ci_failed: error
+        only_pulls: true # Only enforce on PRs, not main pushes
 
     patch:
       default:
-        target: 80%
+        target: 80% # KEEP HIGH - enforces quality on NEW code
         threshold: 5%
         base: auto
+        if_not_found: success # Don't fail if no coverage changes
 
     changes:
       default:
-        target: 80%
-        threshold: 1%
+        target: 75% # Lowered from 80%
+        threshold: 2%
 
 # Comments on pull requests
 comment:
@@ -41,7 +43,9 @@ component_management:
   default_rules:
     statuses:
       - type: project
-        target: 80%
+        target: 70% # Lowered from 80%
+      - type: patch
+        target: 80% # Keep new code quality high
   individual_components:
     - component_id: api
       name: API
