@@ -1078,5 +1078,94 @@ describe('LongTermForecastService', () => {
       await service.generateProjection(testUserId, testSpaceId, validDto);
       expect(longTermCashflowEngine.project).toHaveBeenCalled();
     });
+
+    it('should convert recurring transaction with different currency', async () => {
+      prismaMock.recurringTransaction.findMany.mockResolvedValue([
+        {
+          id: 'rt-1',
+          merchantName: 'Foreign Employer',
+          expectedAmount: { toNumber: () => 4000 },
+          frequency: 'monthly',
+          currency: 'EUR', // Different from target currency (USD)
+          status: 'confirmed',
+          categoryId: null,
+        },
+      ]);
+      prismaMock.budget.findMany.mockResolvedValue([]);
+      fxRatesServiceMock.convertAmount.mockResolvedValue(4400); // EUR to USD conversion
+
+      await service.generateProjection(testUserId, testSpaceId, validDto);
+
+      expect(fxRatesServiceMock.convertAmount).toHaveBeenCalledWith(4000, 'EUR', 'USD');
+      expect(longTermCashflowEngine.project).toHaveBeenCalledWith(
+        expect.objectContaining({
+          incomeStreams: expect.arrayContaining([
+            expect.objectContaining({
+              name: 'Foreign Employer',
+              annualAmount: 52800, // 4400 * 12
+            }),
+          ]),
+        })
+      );
+    });
+
+    it('should use original amount if recurring transaction currency conversion fails', async () => {
+      prismaMock.recurringTransaction.findMany.mockResolvedValue([
+        {
+          id: 'rt-1',
+          merchantName: 'Foreign Subscription',
+          expectedAmount: { toNumber: () => -50 },
+          frequency: 'monthly',
+          currency: 'GBP', // Different from target currency
+          status: 'confirmed',
+          categoryId: null,
+        },
+      ]);
+      prismaMock.budget.findMany.mockResolvedValue([]);
+      fxRatesServiceMock.convertAmount.mockRejectedValue(new Error('No rate available'));
+
+      await service.generateProjection(testUserId, testSpaceId, validDto);
+
+      expect(longTermCashflowEngine.project).toHaveBeenCalledWith(
+        expect.objectContaining({
+          expenses: expect.arrayContaining([
+            expect.objectContaining({
+              name: 'Foreign Subscription',
+              annualAmount: 600, // 50 * 12 (original amount used)
+            }),
+          ]),
+        })
+      );
+    });
+
+    it('should convert manual asset with different currency', async () => {
+      prismaMock.account.findMany.mockResolvedValue([]);
+      prismaMock.manualAsset.findMany.mockResolvedValue([
+        {
+          id: 'ma-1',
+          name: 'European Property',
+          type: 'real_estate',
+          currentValue: { toNumber: () => 200000 },
+          currency: 'EUR',
+          valuations: [],
+        },
+      ]);
+      fxRatesServiceMock.convertAmount.mockResolvedValue(220000); // EUR to USD
+
+      await service.generateProjection(testUserId, testSpaceId, validDto);
+
+      expect(fxRatesServiceMock.convertAmount).toHaveBeenCalledWith(200000, 'EUR', 'USD');
+      expect(longTermCashflowEngine.project).toHaveBeenCalledWith(
+        expect.objectContaining({
+          assets: expect.arrayContaining([
+            expect.objectContaining({
+              name: 'European Property',
+              currentValue: 220000,
+              type: 'real_estate',
+            }),
+          ]),
+        })
+      );
+    });
   });
 });
