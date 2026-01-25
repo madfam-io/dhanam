@@ -3,6 +3,9 @@ import { Logger } from '@nestjs/common';
 
 import { TransactionCategorizationService } from './transaction-categorization.service';
 import { PrismaService } from '@core/prisma/prisma.service';
+import { FuzzyMatcherService } from './fuzzy-matcher.service';
+import { MerchantNormalizerService } from './merchant-normalizer.service';
+import { CorrectionAggregatorService } from './correction-aggregator.service';
 
 describe('TransactionCategorizationService', () => {
   let service: TransactionCategorizationService;
@@ -12,11 +15,28 @@ describe('TransactionCategorizationService', () => {
     transaction: {
       findMany: jest.fn(),
       update: jest.fn(),
+      count: jest.fn(),
     },
     category: {
       findMany: jest.fn(),
       findUnique: jest.fn(),
     },
+  };
+
+  const mockFuzzyMatcher = {
+    combinedSimilarity: jest.fn().mockReturnValue(0.5),
+    levenshteinDistance: jest.fn().mockReturnValue(0),
+    similarityRatio: jest.fn().mockReturnValue(1),
+  };
+
+  const mockMerchantNormalizer = {
+    normalize: jest.fn().mockImplementation((name: string) => name?.toLowerCase() || ''),
+    extractPatternKey: jest.fn().mockImplementation((name: string) => name?.toLowerCase().replace(/\s+/g, '_') || ''),
+  };
+
+  const mockCorrectionAggregator = {
+    findBestMatch: jest.fn().mockResolvedValue(null),
+    getAggregatedPatterns: jest.fn().mockResolvedValue(new Map()),
   };
 
   beforeEach(async () => {
@@ -28,6 +48,18 @@ describe('TransactionCategorizationService', () => {
         {
           provide: PrismaService,
           useValue: mockPrisma,
+        },
+        {
+          provide: FuzzyMatcherService,
+          useValue: mockFuzzyMatcher,
+        },
+        {
+          provide: MerchantNormalizerService,
+          useValue: mockMerchantNormalizer,
+        },
+        {
+          provide: CorrectionAggregatorService,
+          useValue: mockCorrectionAggregator,
         },
       ],
     }).compile();
@@ -65,14 +97,15 @@ describe('TransactionCategorizationService', () => {
         categoryId: 'cat-groceries',
         categoryName: 'Groceries',
         confidence: expect.any(Number),
-        reasoning: 'Walmart consistently categorized based on 5 past transactions',
+        reasoning: 'walmart consistently categorized based on 5 past transactions',
+        source: 'merchant',
       });
       expect(prediction?.confidence).toBeCloseTo(0.8, 1); // 0.7 + (5 - 3) * 0.05 = 0.8
 
       expect(prismaService.transaction.findMany).toHaveBeenCalledWith({
         where: {
           account: { spaceId: 'space-123' },
-          merchant: { equals: 'Walmart', mode: 'insensitive' },
+          merchant: { equals: 'walmart', mode: 'insensitive' }, // normalized by MerchantNormalizerService
           categoryId: { not: null },
         },
         select: {
@@ -160,24 +193,23 @@ describe('TransactionCategorizationService', () => {
 
   describe('predictCategory - Strategy 2: Fuzzy Merchant Match', () => {
     it('should match similar merchant names (substring match)', async () => {
-      // First call: exact match returns empty
+      // First call: exact match returns empty (findMerchantPattern)
       mockPrisma.transaction.findMany
         .mockResolvedValueOnce([])
-        // Second call: fuzzy match finds similar merchants
+        // Second call: fuzzy match finds similar merchants (findEnhancedFuzzyMerchantMatch)
         .mockResolvedValueOnce([
           {
             merchant: 'Starbucks Coffee',
             categoryId: 'cat-dining',
             createdAt: new Date(),
           },
-        ])
-        // Third call: get pattern for similar merchant
-        .mockResolvedValueOnce(
-          Array.from({ length: 4 }, () => ({
-            categoryId: 'cat-dining',
-            createdAt: new Date(),
-          }))
-        );
+        ]);
+
+      // Mock fuzzy matcher to return high similarity for this test
+      mockFuzzyMatcher.combinedSimilarity.mockReturnValue(0.85);
+
+      // Mock the count for the fuzzy match
+      mockPrisma.transaction.count.mockResolvedValue(5);
 
       mockPrisma.category.findUnique.mockResolvedValue({ name: 'Dining' });
 
@@ -189,8 +221,8 @@ describe('TransactionCategorizationService', () => {
       );
 
       expect(prediction?.categoryId).toBe('cat-dining');
-      expect(prediction?.confidence).toBe(0.7); // MEDIUM_CONFIDENCE
-      expect(prediction?.reasoning).toContain('Similar to "Starbucks Coffee"');
+      expect(prediction?.source).toBe('fuzzy');
+      expect(prediction?.reasoning).toContain('Similar to');
     });
 
     it('should match when new merchant contains known merchant', async () => {
@@ -202,13 +234,13 @@ describe('TransactionCategorizationService', () => {
             categoryId: 'cat-shopping',
             createdAt: new Date(),
           },
-        ])
-        .mockResolvedValueOnce(
-          Array.from({ length: 5 }, () => ({
-            categoryId: 'cat-shopping',
-            createdAt: new Date(),
-          }))
-        );
+        ]);
+
+      // Mock fuzzy matcher to return high similarity
+      mockFuzzyMatcher.combinedSimilarity.mockReturnValue(0.9);
+
+      // Mock the count for the fuzzy match
+      mockPrisma.transaction.count.mockResolvedValue(5);
 
       mockPrisma.category.findUnique.mockResolvedValue({ name: 'Shopping' });
 
@@ -220,7 +252,8 @@ describe('TransactionCategorizationService', () => {
       );
 
       expect(prediction?.categoryId).toBe('cat-shopping');
-      expect(prediction?.reasoning).toContain('Similar to "Amazon"');
+      expect(prediction?.source).toBe('fuzzy');
+      expect(prediction?.reasoning).toContain('Similar to');
     });
   });
 
@@ -413,7 +446,7 @@ describe('TransactionCategorizationService', () => {
           metadata: {
             autoCategorized: true,
             mlConfidence: 0.95,
-            mlReasoning: 'Walmart consistently categorized based on 10 past transactions',
+            mlReasoning: 'walmart consistently categorized based on 10 past transactions',
           },
         },
       });

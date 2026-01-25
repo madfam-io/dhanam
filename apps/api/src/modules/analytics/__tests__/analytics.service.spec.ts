@@ -3,6 +3,7 @@ import { Currency } from '@dhanam/shared';
 
 import { PrismaService } from '../../../core/prisma/prisma.service';
 import { SpacesService } from '../../spaces/spaces.service';
+import { FxRatesService } from '../../fx-rates/fx-rates.service';
 import { AnalyticsService } from '../analytics.service';
 
 describe('AnalyticsService', () => {
@@ -33,12 +34,25 @@ describe('AnalyticsService', () => {
             category: {
               findMany: jest.fn(),
             },
+            space: {
+              findUnique: jest.fn().mockResolvedValue({ currency: 'MXN' }),
+            },
+            manualAsset: {
+              findMany: jest.fn().mockResolvedValue([]),
+            },
           },
         },
         {
           provide: SpacesService,
           useValue: {
             verifyUserAccess: jest.fn().mockResolvedValue(undefined),
+          },
+        },
+        {
+          provide: FxRatesService,
+          useValue: {
+            convertAmount: jest.fn().mockImplementation((amount: number) => Promise.resolve(amount)),
+            getExchangeRate: jest.fn().mockResolvedValue(1),
           },
         },
       ],

@@ -13,6 +13,7 @@ jest.mock('plaid', () => ({
     itemPublicTokenExchange: jest.fn(),
     accountsGet: jest.fn(),
     transactionsSync: jest.fn(),
+    liabilitiesGet: jest.fn(),
   })),
   Configuration: jest.fn(),
   PlaidEnvironments: {
@@ -21,9 +22,17 @@ jest.mock('plaid', () => ({
     production: 'https://production.plaid.com',
   },
   CountryCode: { Us: 'US' },
-  Products: { Transactions: 'transactions', Auth: 'auth' },
+  Products: { Transactions: 'transactions', Auth: 'auth', Liabilities: 'liabilities' },
   DepositoryAccountSubtype: { Checking: 'checking', Savings: 'savings' },
   CreditAccountSubtype: { CreditCard: 'credit_card' },
+  LoanAccountSubtype: {
+    Auto: 'auto',
+    Student: 'student',
+    Mortgage: 'mortgage',
+    Consumer: 'consumer',
+    HomeEquity: 'home_equity',
+    LineOfCredit: 'line_of_credit',
+  },
 }));
 
 describe('PlaidService', () => {
@@ -90,12 +99,16 @@ describe('PlaidService', () => {
         },
       };
 
+      const mockLinkTokenCreate = jest.fn().mockResolvedValue(mockResponse);
+
+      // Set mock BEFORE calling method - override the plaidClient entirely
       (service as any).plaidClient = {
-        linkTokenCreate: jest.fn().mockResolvedValue(mockResponse),
+        linkTokenCreate: mockLinkTokenCreate,
       };
 
       const result = await service.createLinkToken('user1');
-      
+
+      expect(mockLinkTokenCreate).toHaveBeenCalled();
       expect(result).toBeDefined();
       expect(result.linkToken).toBe('link-token-123');
       expect(result.expiration).toBeInstanceOf(Date);
