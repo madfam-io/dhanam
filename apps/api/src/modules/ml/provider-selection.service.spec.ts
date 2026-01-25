@@ -272,6 +272,69 @@ describe('ProviderSelectionService', () => {
       // Should still return a provider (using defaults)
       expect(provider).toBe('plaid' as any);
     });
+
+    it('should use default success rate of 85% when no attempt history', async () => {
+      mockPrisma.institutionProviderMapping.findFirst.mockResolvedValue({
+        institutionId: 'inst-123',
+        region: 'US',
+        primaryProvider: 'plaid' as any,
+        backupProviders: ['mx' as any],
+      });
+      mockPrisma.providerHealthStatus.findUnique.mockResolvedValue(null);
+      // Empty arrays for both providers - no historical data
+      mockPrisma.connectionAttempt.findMany
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([]);
+
+      const provider = await service.selectOptimalProvider('inst-123', 'US');
+
+      // Should still select a provider using default metrics
+      expect(provider).toBeDefined();
+    });
+
+    it('should use health status response time when no attempt response times', async () => {
+      mockPrisma.institutionProviderMapping.findFirst.mockResolvedValue({
+        institutionId: 'inst-123',
+        region: 'US',
+        primaryProvider: 'plaid' as any,
+        backupProviders: null,
+      });
+      mockPrisma.providerHealthStatus.findUnique.mockResolvedValue({
+        provider: 'plaid' as any,
+        region: 'US',
+        avgResponseTimeMs: 1200, // Has health status
+        status: 'healthy',
+      });
+      // Attempts with null response times
+      mockPrisma.connectionAttempt.findMany.mockResolvedValue([
+        { provider: 'plaid' as any, status: 'success', responseTimeMs: null, attemptedAt: new Date() },
+      ]);
+
+      const provider = await service.selectOptimalProvider('inst-123', 'US');
+
+      // Should use health status avgResponseTimeMs (1200)
+      expect(provider).toBe('plaid' as any);
+    });
+
+    it('should use default 2000ms response time when no data available', async () => {
+      mockPrisma.institutionProviderMapping.findFirst.mockResolvedValue({
+        institutionId: 'inst-123',
+        region: 'US',
+        primaryProvider: 'plaid' as any,
+        backupProviders: null,
+      });
+      // No health status
+      mockPrisma.providerHealthStatus.findUnique.mockResolvedValue(null);
+      // No attempt response times
+      mockPrisma.connectionAttempt.findMany.mockResolvedValue([
+        { provider: 'plaid' as any, status: 'success', responseTimeMs: null, attemptedAt: new Date() },
+      ]);
+
+      const provider = await service.selectOptimalProvider('inst-123', 'US');
+
+      // Should use default 2000ms and still work
+      expect(provider).toBe('plaid' as any);
+    });
   });
 
   describe('calculateMLScore', () => {
@@ -559,6 +622,41 @@ describe('ProviderSelectionService', () => {
 
       expect(insights).toEqual([]);
     });
+
+    it('should use default region when not specified', async () => {
+      mockPrisma.connectionAttempt.findMany.mockResolvedValue([]);
+
+      const insights = await service.getProviderInsights(); // No params - use defaults
+
+      expect(insights).toEqual([]);
+      expect(mockPrisma.connectionAttempt.findMany).toHaveBeenCalled();
+    });
+
+    it('should use default days when only region specified', async () => {
+      mockPrisma.connectionAttempt.findMany.mockResolvedValue([]);
+
+      const insights = await service.getProviderInsights('MX'); // Only region, default days
+
+      expect(insights).toEqual([]);
+    });
+
+    it('should handle attempts without response times in insights', async () => {
+      mockPrisma.connectionAttempt.findMany.mockResolvedValue([
+        {
+          provider: 'plaid' as any,
+          status: 'success',
+          responseTimeMs: null, // No response time
+          failoverUsed: false,
+          attemptedAt: new Date(),
+        },
+      ]);
+
+      const insights = await service.getProviderInsights('US', 30);
+
+      expect(insights).toHaveLength(1);
+      // With null responseTimeMs, the avgResponseTime calculation should handle it
+      expect(insights[0].avgResponseTime).toBeDefined();
+    });
   });
 
   describe('updateSelectionModel', () => {
@@ -580,6 +678,35 @@ describe('ProviderSelectionService', () => {
       expect(logSpy).toHaveBeenCalledWith(
         expect.stringContaining('success=false')
       );
+    });
+  });
+
+  describe('fallback when no providers available', () => {
+    it('should return belvo for MX region when no providers available', async () => {
+      // Spy on private method to force empty providers
+      jest.spyOn<any, any>(service, 'getAvailableProviders').mockResolvedValue([]);
+
+      const provider = await service.selectOptimalProvider('inst-123', 'MX');
+
+      expect(provider).toBe('belvo' as any);
+    });
+
+    it('should return plaid for US region when no providers available', async () => {
+      // Spy on private method to force empty providers
+      jest.spyOn<any, any>(service, 'getAvailableProviders').mockResolvedValue([]);
+
+      const provider = await service.selectOptimalProvider('inst-123', 'US');
+
+      expect(provider).toBe('plaid' as any);
+    });
+
+    it('should return plaid for EU region when no providers available', async () => {
+      // Spy on private method to force empty providers
+      jest.spyOn<any, any>(service, 'getAvailableProviders').mockResolvedValue([]);
+
+      const provider = await service.selectOptimalProvider('inst-123', 'EU');
+
+      expect(provider).toBe('plaid' as any);
     });
   });
 

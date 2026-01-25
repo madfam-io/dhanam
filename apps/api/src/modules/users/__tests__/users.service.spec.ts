@@ -557,6 +557,54 @@ describe('UsersService', () => {
       });
     });
 
+    it('should delete space when other users are only members not owners (line 79 role filter branch)', async () => {
+      const mockTx = {
+        userSpace: {
+          findMany: jest.fn(),
+        },
+        space: {
+          delete: jest.fn(),
+        },
+        user: {
+          delete: jest.fn(),
+        },
+      };
+
+      (prisma.$transaction as jest.Mock).mockImplementation(async (callback) => {
+        return callback(mockTx);
+      });
+
+      // User owns a space with other members (but no other owners)
+      // This tests the us.role === 'owner' filter condition returning false
+      const ownedSpaceWithMembers = [
+        {
+          userId: 'user-123',
+          spaceId: 'space-with-members',
+          role: 'owner',
+          space: {
+            id: 'space-with-members',
+            name: 'Space With Members Only',
+            userSpaces: [
+              { userId: 'user-123', spaceId: 'space-with-members', role: 'owner' },
+              { userId: 'user-456', spaceId: 'space-with-members', role: 'member' }, // member, not owner
+              { userId: 'user-789', spaceId: 'space-with-members', role: 'viewer' }, // viewer, not owner
+            ],
+          },
+        },
+      ];
+
+      mockTx.userSpace.findMany.mockResolvedValue(ownedSpaceWithMembers);
+      mockTx.space.delete.mockResolvedValue({ id: 'space-with-members' });
+      mockTx.user.delete.mockResolvedValue(mockUser);
+
+      await service.deleteAccount('user-123');
+
+      // Space should be deleted since user is the only owner (other users are just members)
+      expect(mockTx.space.delete).toHaveBeenCalledWith({
+        where: { id: 'space-with-members' },
+      });
+    });
+
     it('should log account deletion', async () => {
       const mockTx = {
         userSpace: {

@@ -296,6 +296,23 @@ describe('DocumentService', () => {
         service.confirmUpload(testSpaceId, testUserId, testAssetId, maxSizeDto)
       ).resolves.toBeDefined();
     });
+
+    it('should handle null documents array (line 151 branch)', async () => {
+      prismaMock.manualAsset.findFirst.mockResolvedValue({
+        ...mockAsset,
+        documents: null,
+      });
+
+      const result = await service.confirmUpload(testSpaceId, testUserId, testAssetId, confirmDto);
+
+      expect(result.key).toBe(confirmDto.key);
+      expect(prismaMock.manualAsset.update).toHaveBeenCalledWith({
+        where: { id: testAssetId },
+        data: {
+          documents: expect.arrayContaining([expect.objectContaining({ key: confirmDto.key })]),
+        },
+      });
+    });
   });
 
   describe('getDocuments', () => {
@@ -392,6 +409,17 @@ describe('DocumentService', () => {
         service.getDownloadUrl(testSpaceId, testUserId, testAssetId, 'wrong-key.pdf')
       ).rejects.toThrow(NotFoundException);
     });
+
+    it('should handle null documents array (line 203 branch)', async () => {
+      prismaMock.manualAsset.findFirst.mockResolvedValue({
+        ...mockAsset,
+        documents: null,
+      });
+
+      await expect(
+        service.getDownloadUrl(testSpaceId, testUserId, testAssetId, documentKey)
+      ).rejects.toThrow(NotFoundException);
+    });
   });
 
   describe('deleteDocument', () => {
@@ -460,6 +488,17 @@ describe('DocumentService', () => {
       const updateCall = prismaMock.manualAsset.update.mock.calls[0][0];
       expect(updateCall.data.documents).toHaveLength(1);
       expect(updateCall.data.documents[0].key).toBe('other.pdf');
+    });
+
+    it('should handle null documents array (line 233 branch)', async () => {
+      prismaMock.manualAsset.findFirst.mockResolvedValue({
+        ...mockAsset,
+        documents: null,
+      });
+
+      await expect(
+        service.deleteDocument(testSpaceId, testUserId, testAssetId, documentKey)
+      ).rejects.toThrow(NotFoundException);
     });
   });
 

@@ -178,6 +178,28 @@ describe('LogSanitizer', () => {
       expect(result.message).toBe('Something went wrong');
       expect(result.password).toBe('[REDACTED]');
     });
+
+    it('should handle error without stack (lines 185-190 branch)', () => {
+      const error = new Error('Test error');
+      // Remove the stack property
+      delete error.stack;
+
+      const result = LogSanitizer.sanitizeError(error);
+
+      expect(result.name).toBe('Error');
+      expect(result.message).toBe('Test error');
+      // When stack is undefined, the ternary returns undefined
+      expect(result.stack === undefined || result.stack === '').toBe(true);
+    });
+
+    it('should handle error with undefined message (line 167 branch)', () => {
+      const error = new Error();
+      error.message = undefined as any;
+
+      const result = LogSanitizer.sanitizeError(error);
+
+      expect(result.message).toBe('');
+    });
   });
 
   describe('sanitizeRequest', () => {
@@ -230,6 +252,39 @@ describe('LogSanitizer', () => {
 
       expect(result.headers.cookie).toBe('[REDACTED]');
       expect(result.headers['set-cookie']).toBe('[REDACTED]');
+    });
+
+    it('should handle request with undefined headers (line 219 branch)', () => {
+      const req = {
+        method: 'GET',
+        url: '/health',
+        headers: undefined,
+        query: {},
+        params: {},
+        body: {},
+        ip: '127.0.0.1',
+      };
+
+      const result = LogSanitizer.sanitizeRequest(req);
+
+      expect(result.method).toBe('GET');
+      expect(result.headers).toEqual({});
+    });
+
+    it('should handle request with null headers', () => {
+      const req = {
+        method: 'GET',
+        url: '/health',
+        headers: null,
+        query: {},
+        params: {},
+        body: {},
+        ip: '127.0.0.1',
+      };
+
+      const result = LogSanitizer.sanitizeRequest(req);
+
+      expect(result.headers).toEqual({});
     });
   });
 

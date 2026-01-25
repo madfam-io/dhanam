@@ -399,6 +399,27 @@ describe('EstatePlanningService', () => {
       expect(mockAuditService.log).toHaveBeenCalled();
     });
 
+    it('should throw BadRequestException when activating non-draft will', async () => {
+      const activeWill = { ...mockWill, status: WillStatus.active };
+      mockPrismaService.will.findFirst.mockResolvedValue(activeWill);
+
+      await expect(service.activateWill(mockWillId, mockUserId)).rejects.toThrow(
+        BadRequestException
+      );
+      await expect(service.activateWill(mockWillId, mockUserId)).rejects.toThrow(
+        'Can only activate draft wills'
+      );
+    });
+
+    it('should throw BadRequestException when activating revoked will', async () => {
+      const revokedWill = { ...mockWill, status: WillStatus.revoked };
+      mockPrismaService.will.findFirst.mockResolvedValue(revokedWill);
+
+      await expect(service.activateWill(mockWillId, mockUserId)).rejects.toThrow(
+        BadRequestException
+      );
+    });
+
     it('should throw BadRequestException if legalDisclaimer not accepted', async () => {
       const willWithoutDisclaimer = { ...mockWill, legalDisclaimer: false };
       mockPrismaService.will.findFirst.mockResolvedValue(willWithoutDisclaimer);
@@ -699,6 +720,18 @@ describe('EstatePlanningService', () => {
         service.updateBeneficiary(mockWillId, 'invalid', {}, mockUserId)
       ).rejects.toThrow(NotFoundException);
     });
+
+    it('should throw BadRequestException when updating beneficiary on executed will', async () => {
+      const executedWill = { ...mockWill, status: WillStatus.executed };
+      mockPrismaService.will.findFirst.mockResolvedValue(executedWill);
+
+      await expect(
+        service.updateBeneficiary(mockWillId, mockBeneficiaryId, { percentage: 50 }, mockUserId)
+      ).rejects.toThrow(BadRequestException);
+      await expect(
+        service.updateBeneficiary(mockWillId, mockBeneficiaryId, { percentage: 50 }, mockUserId)
+      ).rejects.toThrow('Cannot modify an executed will');
+    });
   });
 
   describe('removeBeneficiary', () => {
@@ -726,6 +759,18 @@ describe('EstatePlanningService', () => {
       await expect(
         service.removeBeneficiary(mockWillId, mockBeneficiaryId, mockUserId)
       ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw NotFoundException if beneficiary not found', async () => {
+      mockPrismaService.will.findFirst.mockResolvedValue(mockWill);
+      mockPrismaService.beneficiaryDesignation.findFirst.mockResolvedValue(null);
+
+      await expect(
+        service.removeBeneficiary(mockWillId, 'invalid-beneficiary', mockUserId)
+      ).rejects.toThrow(NotFoundException);
+      await expect(
+        service.removeBeneficiary(mockWillId, 'invalid-beneficiary', mockUserId)
+      ).rejects.toThrow('Beneficiary designation not found');
     });
   });
 
@@ -822,6 +867,18 @@ describe('EstatePlanningService', () => {
         service.updateExecutor(mockWillId, 'invalid', {}, mockUserId)
       ).rejects.toThrow(NotFoundException);
     });
+
+    it('should throw BadRequestException when updating executor on executed will', async () => {
+      const executedWill = { ...mockWill, status: WillStatus.executed };
+      mockPrismaService.will.findFirst.mockResolvedValue(executedWill);
+
+      await expect(
+        service.updateExecutor(mockWillId, mockExecutorId, { isPrimary: false }, mockUserId)
+      ).rejects.toThrow(BadRequestException);
+      await expect(
+        service.updateExecutor(mockWillId, mockExecutorId, { isPrimary: false }, mockUserId)
+      ).rejects.toThrow('Cannot modify an executed will');
+    });
   });
 
   describe('removeExecutor', () => {
@@ -845,6 +902,18 @@ describe('EstatePlanningService', () => {
       await expect(
         service.removeExecutor(mockWillId, mockExecutorId, mockUserId)
       ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw NotFoundException if executor not found', async () => {
+      mockPrismaService.will.findFirst.mockResolvedValue(mockWill);
+      mockPrismaService.willExecutor.findFirst.mockResolvedValue(null);
+
+      await expect(
+        service.removeExecutor(mockWillId, 'invalid-executor', mockUserId)
+      ).rejects.toThrow(NotFoundException);
+      await expect(
+        service.removeExecutor(mockWillId, 'invalid-executor', mockUserId)
+      ).rejects.toThrow('Executor not found');
     });
   });
 });

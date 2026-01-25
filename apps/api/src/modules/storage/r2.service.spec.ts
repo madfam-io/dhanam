@@ -102,6 +102,32 @@ describe('R2StorageService', () => {
         expect(result.key).toContain('mock-uuid-1234.README');
       });
 
+      it('should handle filename with trailing dot', async () => {
+        const result = await service.getPresignedUploadUrl(
+          'space-123',
+          'asset-456',
+          'file.',
+          'application/octet-stream'
+        );
+
+        // split('.').pop() returns '' for 'file.', then || '' makes it ''
+        // Result is 'mock-uuid-1234.'
+        expect(result.key).toContain('mock-uuid-1234.');
+      });
+
+      it('should handle empty filename extension edge case', async () => {
+        // Test the || '' fallback when split returns undefined somehow
+        const result = await service.getPresignedUploadUrl(
+          'space-123',
+          'asset-456',
+          '',
+          'application/octet-stream'
+        );
+
+        // Empty string split('.').pop() returns ''
+        expect(result.key).toContain('mock-uuid-1234.');
+      });
+
       it('should call getSignedUrl with correct parameters', async () => {
         await service.getPresignedUploadUrl(
           'space-123',
@@ -383,6 +409,77 @@ describe('R2StorageService', () => {
 
       const svc = module.get<R2StorageService>(R2StorageService);
       expect(svc.isAvailable()).toBe(false);
+    });
+  });
+
+  describe('constructor configuration fallbacks', () => {
+    it('should use default bucket name when R2_BUCKET_NAME not provided (line 40 fallback)', async () => {
+      configMock = createConfigMock({
+        R2_ACCOUNT_ID: 'test-account',
+        R2_ACCESS_KEY_ID: 'test-key',
+        R2_SECRET_ACCESS_KEY: 'test-secret',
+        R2_BUCKET_NAME: '', // Empty - should use default
+        R2_PUBLIC_URL: 'https://custom.url',
+      });
+
+      const module = await Test.createTestingModule({
+        providers: [
+          R2StorageService,
+          { provide: ConfigService, useValue: configMock },
+        ],
+      }).compile();
+
+      const svc = module.get<R2StorageService>(R2StorageService);
+      // Verify default bucket is used by checking public URL generation
+      const url = svc.getPublicUrl('test.pdf');
+      expect(url).toBe('https://custom.url/test.pdf');
+    });
+
+    it('should use default public URL when R2_PUBLIC_URL not provided (line 41-43 fallback)', async () => {
+      configMock = createConfigMock({
+        R2_ACCOUNT_ID: 'test-account-id',
+        R2_ACCESS_KEY_ID: 'test-key',
+        R2_SECRET_ACCESS_KEY: 'test-secret',
+        R2_BUCKET_NAME: 'my-bucket',
+        R2_PUBLIC_URL: '', // Empty - should use default based on account ID
+      });
+
+      const module = await Test.createTestingModule({
+        providers: [
+          R2StorageService,
+          { provide: ConfigService, useValue: configMock },
+        ],
+      }).compile();
+
+      const svc = module.get<R2StorageService>(R2StorageService);
+      const url = svc.getPublicUrl('test.pdf');
+      // Default URL format: https://${bucket}.${accountId}.r2.cloudflarestorage.com
+      expect(url).toContain('my-bucket');
+      expect(url).toContain('test-account-id');
+      expect(url).toContain('r2.cloudflarestorage.com');
+    });
+
+    it('should use both default bucket and URL when neither provided', async () => {
+      configMock = createConfigMock({
+        R2_ACCOUNT_ID: 'account-xyz',
+        R2_ACCESS_KEY_ID: 'key',
+        R2_SECRET_ACCESS_KEY: 'secret',
+        R2_BUCKET_NAME: '', // Uses 'dhanam-documents' default
+        R2_PUBLIC_URL: '', // Uses constructed default
+      });
+
+      const module = await Test.createTestingModule({
+        providers: [
+          R2StorageService,
+          { provide: ConfigService, useValue: configMock },
+        ],
+      }).compile();
+
+      const svc = module.get<R2StorageService>(R2StorageService);
+      const url = svc.getPublicUrl('file.pdf');
+      // Should contain default bucket name
+      expect(url).toContain('dhanam-documents');
+      expect(url).toContain('account-xyz');
     });
   });
 });

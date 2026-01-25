@@ -105,10 +105,10 @@ module.exports = {
   ],
   coverageThreshold: {
     global: {
-      branches: 69, // Phase 5: +1% from Phase 4
-      functions: 82, // Phase 5: +2% from Phase 4
-      lines: 80, // Phase 5: +2% from Phase 4
-      statements: 80, // Phase 5: +2% from Phase 4
+      branches: 90, // Phase 16: Final push to 90%+ branches (achieved 90.06%)
+      functions: 96, // Phase 8: +4% from Phase 7
+      lines: 95, // Phase 8: +4% from Phase 7
+      statements: 95, // Phase 8: +4% from Phase 7
     },
   },
   moduleNameMapper: {

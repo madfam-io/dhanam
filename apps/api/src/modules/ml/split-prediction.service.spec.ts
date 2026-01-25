@@ -80,6 +80,42 @@ describe('SplitPredictionService', () => {
       expect(suggestions[1].suggestedPercentage).toBeCloseTo(40, 0);
     });
 
+    it('should adjust rounding errors when amounts do not sum exactly (lines 289-291)', async () => {
+      // Create a scenario with 3 users and amounts that cause rounding errors
+      const mockTransactions = Array.from({ length: 5 }, () => ({
+        amount: -100,
+        splits: [
+          { userId: 'user-1', amount: 33.33 },
+          { userId: 'user-2', amount: 33.33 },
+          { userId: 'user-3', amount: 33.34 },
+        ],
+      }));
+
+      const threeUsers = [
+        { id: 'user-1', name: 'Alice' },
+        { id: 'user-2', name: 'Bob' },
+        { id: 'user-3', name: 'Charlie' },
+      ];
+
+      mockPrisma.transaction.findMany.mockResolvedValue(mockTransactions);
+      mockPrisma.user.findMany.mockResolvedValue(threeUsers);
+
+      // Use a transaction amount that will cause rounding issues: 99.99
+      const suggestions = await service.suggestSplits(
+        'space-123',
+        -99.99,
+        'Test Merchant',
+        null,
+        ['user-1', 'user-2', 'user-3']
+      );
+
+      expect(suggestions).toHaveLength(3);
+
+      // The total should equal the original amount (after adjustment)
+      const total = suggestions.reduce((sum, s) => sum + s.suggestedAmount, 0);
+      expect(Math.abs(total - 99.99)).toBeLessThanOrEqual(0.01);
+    });
+
     it('should not use merchant pattern if less than 3 transactions', async () => {
       const mockTransactions = Array.from({ length: 2 }, () => ({
         amount: -100,
@@ -310,7 +346,151 @@ describe('SplitPredictionService', () => {
     });
   });
 
-  describe('edge cases', () => {
+  describe('rounding and edge cases', () => {
+    it('should adjust for rounding errors when splits do not sum exactly', async () => {
+      // Create a pattern with 3 people at 33.33% each
+      // Use a larger transaction amount to amplify rounding differences
+      const mockTransactions = Array.from({ length: 5 }, () => ({
+        amount: -300, // 300 split 3 ways = 100 each = 33.33% each
+        splits: [
+          { userId: 'user-1', amount: 100 },
+          { userId: 'user-2', amount: 100 },
+          { userId: 'user-3', amount: 100 },
+        ],
+      }));
+
+      mockPrisma.transaction.findMany.mockResolvedValue(mockTransactions);
+      mockPrisma.user.findMany.mockResolvedValue([
+        { id: 'user-1', name: 'Alice' },
+        { id: 'user-2', name: 'Bob' },
+        { id: 'user-3', name: 'Charlie' },
+      ]);
+
+      // Use 100.07 which when split 3 ways (33.33% each) gives:
+      // 33.36 + 33.36 + 33.36 = 100.08, diff = 0.01
+      // Not quite > 0.01, let's try $100.10
+      // 33.37 + 33.37 + 33.37 = 100.11, diff = 0.01
+      // Use $100.50 for clearer difference
+      // 33.50 + 33.50 + 33.50 = 100.50 exact (won't trigger)
+      // Use an odd amount like -100.13
+      const suggestions = await service.suggestSplits(
+        'space-123',
+        -100.13,
+        'Walmart',
+        null,
+        ['user-1', 'user-2', 'user-3']
+      );
+
+      // Total should be close to transaction amount
+      const total = suggestions.reduce((sum, s) => sum + s.suggestedAmount, 0);
+      expect(total).toBeCloseTo(100.13, 1);
+    });
+
+    it('should handle getCategoryName being called', async () => {
+      // Use a mock that creates 5+ category transactions for the category pattern to trigger
+      const mockCategoryTransactions = Array.from({ length: 6 }, () => ({
+        amount: -100,
+        categoryId: 'cat-test',
+        splits: [
+          { userId: 'user-1', amount: 70 },
+          { userId: 'user-2', amount: 30 },
+        ],
+      }));
+
+      // When merchant is null, only category pattern is called (one findMany call)
+      mockPrisma.transaction.findMany.mockResolvedValueOnce(mockCategoryTransactions);
+      mockPrisma.user.findMany.mockResolvedValue(mockUsers);
+      mockPrisma.category.findUnique.mockResolvedValue({ name: 'Groceries' });
+
+      const suggestions = await service.suggestSplits(
+        'space-123',
+        -200,
+        null,
+        'cat-groceries',
+        ['user-1', 'user-2']
+      );
+
+      expect(suggestions).toHaveLength(2);
+      expect(suggestions[0].confidence).toBe(0.75);
+      expect(suggestions[0].reasoning).toContain('Groceries');
+      expect(mockPrisma.category.findUnique).toHaveBeenCalledWith({
+        where: { id: 'cat-groceries' },
+        select: { name: true },
+      });
+    });
+
+    it('should use Unknown when category name not found', async () => {
+      const mockCategoryTransactions = Array.from({ length: 6 }, () => ({
+        amount: -100,
+        categoryId: 'cat-unknown',
+        splits: [
+          { userId: 'user-1', amount: 60 },
+          { userId: 'user-2', amount: 40 },
+        ],
+      }));
+
+      // When merchant is null, only category pattern is called (one findMany call)
+      mockPrisma.transaction.findMany.mockResolvedValueOnce(mockCategoryTransactions);
+      mockPrisma.user.findMany.mockResolvedValue(mockUsers);
+      mockPrisma.category.findUnique.mockResolvedValue(null); // Category not found
+
+      const suggestions = await service.suggestSplits(
+        'space-123',
+        -100,
+        null,
+        'cat-unknown',
+        ['user-1', 'user-2']
+      );
+
+      expect(suggestions).toHaveLength(2);
+      expect(suggestions[0].reasoning).toContain('Unknown');
+    });
+
+    it('should return null from merchant pattern when no transactions found', async () => {
+      mockPrisma.transaction.findMany.mockResolvedValue([]);
+      mockPrisma.user.findMany.mockResolvedValue(mockUsers);
+
+      // When there are no merchant transactions but we still call with a merchant
+      const suggestions = await service.suggestSplits(
+        'space-123',
+        -100,
+        'New Store Never Seen',
+        null,
+        ['user-1', 'user-2']
+      );
+
+      // Should fall back to equal split
+      expect(suggestions[0].reasoning).toContain('Equal split');
+    });
+
+    it('should return category pattern suggestions with correct confidence', async () => {
+      const mockCategoryTransactions = Array.from({ length: 6 }, () => ({
+        amount: -100,
+        categoryId: 'cat-dining',
+        splits: [
+          { userId: 'user-1', amount: 60 },
+          { userId: 'user-2', amount: 40 },
+        ],
+      }));
+
+      // When merchant is null, only category pattern is called (one findMany call)
+      mockPrisma.transaction.findMany.mockResolvedValueOnce(mockCategoryTransactions);
+      mockPrisma.user.findMany.mockResolvedValue(mockUsers);
+      mockPrisma.category.findUnique.mockResolvedValue({ name: 'Dining' });
+
+      const suggestions = await service.suggestSplits(
+        'space-123',
+        -150,
+        null,
+        'cat-dining',
+        ['user-1', 'user-2']
+      );
+
+      expect(suggestions).toHaveLength(2);
+      expect(suggestions[0].confidence).toBe(0.75); // Category pattern confidence
+      expect(suggestions[0].reasoning).toContain('Dining');
+    });
+
     it('should normalize split ratios that do not sum to 100%', async () => {
       const mockTransactions = [
         {

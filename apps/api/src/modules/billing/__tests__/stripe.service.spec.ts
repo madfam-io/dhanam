@@ -139,6 +139,37 @@ describe('StripeService', () => {
       });
       expect(result).toEqual(mockSession);
     });
+
+    it('should create checkout session with empty metadata if not provided (lines 66, 70 branches)', async () => {
+      const mockSession = {
+        id: 'cs_test456',
+        url: 'https://checkout.stripe.com/pay/cs_test456',
+        customer: 'cus_test123',
+        mode: 'subscription',
+      } as Stripe.Checkout.Session;
+
+      const createSpy = jest.spyOn(service['stripe'].checkout.sessions, 'create').mockResolvedValue(mockSession);
+
+      await service.createCheckoutSession({
+        customerId: 'cus_test123',
+        priceId: 'price_test123',
+        successUrl: 'https://app.dhanam.com/success',
+        cancelUrl: 'https://app.dhanam.com/cancel',
+        // No metadata provided - tests lines 66 and 70 fallback to {}
+      });
+
+      expect(createSpy).toHaveBeenCalledWith({
+        customer: 'cus_test123',
+        mode: 'subscription',
+        line_items: [{ price: 'price_test123', quantity: 1 }],
+        success_url: 'https://app.dhanam.com/success',
+        cancel_url: 'https://app.dhanam.com/cancel',
+        metadata: {},
+        billing_address_collection: 'auto',
+        allow_promotion_codes: true,
+        subscription_data: { metadata: {} },
+      });
+    });
   });
 
   describe('createPortalSession', () => {

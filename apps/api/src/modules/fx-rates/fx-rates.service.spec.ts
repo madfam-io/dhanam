@@ -186,6 +186,57 @@ describe('FxRatesService', () => {
       expect(rate).toBeCloseTo(17.25 / 19.50, 5);
     });
 
+    it('should calculate inverse rate for MXN to EUR', async () => {
+      redisService.get.mockResolvedValue(null);
+      const eurMxnResponse = {
+        data: {
+          bmx: {
+            series: [
+              {
+                idSerie: 'SF46410',
+                titulo: 'EUR/MXN',
+                datos: [{ fecha: '2025-01-15', dato: '19.50' }],
+              },
+            ],
+          },
+        },
+      };
+      httpService.get.mockReturnValue(of(eurMxnResponse) as any);
+      prisma.exchangeRate.upsert.mockResolvedValue({} as any);
+
+      const rate = await service.getExchangeRate(Currency.MXN, Currency.EUR);
+
+      // MXN to EUR is inverse of EUR to MXN (1/19.50)
+      expect(rate).toBeCloseTo(1 / 19.50, 5);
+    });
+
+    it('should calculate cross rate for EUR to USD', async () => {
+      redisService.get.mockResolvedValue(null);
+      httpService.get
+        .mockReturnValueOnce(of(mockBanxicoResponse) as any) // USD to MXN (17.25)
+        .mockReturnValueOnce(
+          of({
+            data: {
+              bmx: {
+                series: [
+                  {
+                    idSerie: 'SF46410',
+                    datos: [{ fecha: '2025-01-15', dato: '19.50' }],
+                  },
+                ],
+              },
+            },
+          }) as any
+        ); // EUR to MXN (19.50)
+
+      prisma.exchangeRate.upsert.mockResolvedValue({} as any);
+
+      const rate = await service.getExchangeRate(Currency.EUR, Currency.USD);
+
+      // EUR to USD = EUR to MXN / USD to MXN = 19.50 / 17.25
+      expect(rate).toBeCloseTo(19.50 / 17.25, 5);
+    });
+
     it('should store exchange rate in database', async () => {
       redisService.get.mockResolvedValue(null);
       httpService.get.mockReturnValue(of(mockBanxicoResponse) as any);
@@ -590,6 +641,130 @@ describe('FxRatesService', () => {
       // so Redis errors will propagate. This is expected behavior for cache failures
       // that should be handled at a higher level.
       await expect(service.getExchangeRate(Currency.USD, Currency.MXN)).rejects.toThrow('Redis connection failed');
+    });
+  });
+
+  describe('getBanxicoRate edge cases', () => {
+    it('should handle API response with missing dato field (line 152 fallback)', async () => {
+      redisService.get.mockResolvedValue(null);
+      httpService.get.mockReturnValue(
+        of({
+          data: {
+            bmx: {
+              series: [
+                {
+                  idSerie: 'SF43718',
+                  datos: [{ fecha: '2025-01-15' }], // dato field missing
+                },
+              ],
+            },
+          },
+        }) as any
+      );
+      prisma.exchangeRate.upsert.mockResolvedValue({} as any);
+
+      const rate = await service.getExchangeRate(Currency.USD, Currency.MXN);
+
+      // Should default to 1 when dato is undefined
+      expect(rate).toBe(1);
+    });
+
+    it('should handle API response with null series (line 147 branch)', async () => {
+      redisService.get.mockResolvedValue(null);
+      httpService.get.mockReturnValue(
+        of({
+          data: {
+            bmx: {
+              series: [null], // Series is null
+            },
+          },
+        }) as any
+      );
+      prisma.exchangeRate.findFirst.mockResolvedValue(null);
+
+      const rate = await service.getExchangeRate(Currency.USD, Currency.MXN);
+
+      // Should fall back to hardcoded rate
+      expect(rate).toBe(17.5);
+    });
+  });
+
+  describe('getLatestFromDatabase edge cases', () => {
+    it('should return null when rate property is undefined (line 188 branch)', async () => {
+      redisService.get.mockResolvedValue(null);
+      httpService.get.mockReturnValue(
+        throwError(() => new Error('API Error')) as any
+      );
+      // Return object without rate property
+      prisma.exchangeRate.findFirst.mockResolvedValue({
+        fromCurrency: Currency.USD,
+        toCurrency: Currency.MXN,
+        date: new Date(),
+        // rate is undefined
+      } as any);
+
+      const rate = await service.getExchangeRate(Currency.USD, Currency.MXN);
+
+      // Should fall back to hardcoded rate because rate is undefined
+      expect(rate).toBe(17.5);
+    });
+  });
+
+  describe('getFallbackRate edge cases', () => {
+    it('should return 1 for unknown currency pair (line 171 fallback)', async () => {
+      redisService.get.mockResolvedValue(null);
+      httpService.get.mockReturnValue(
+        throwError(() => new Error('API Error')) as any
+      );
+      prisma.exchangeRate.findFirst.mockResolvedValue(null);
+
+      // BTC is not a supported currency, so fallback key won't exist
+      const rate = await service.getExchangeRate(
+        'BTC' as Currency,
+        'ETH' as Currency
+      );
+
+      // Should return default of 1
+      expect(rate).toBe(1);
+    });
+
+    it('should return hardcoded rate for EUR_USD', async () => {
+      redisService.get.mockResolvedValue(null);
+      httpService.get.mockReturnValue(
+        throwError(() => new Error('API Error')) as any
+      );
+      prisma.exchangeRate.findFirst.mockResolvedValue(null);
+
+      const rate = await service.getExchangeRate(Currency.EUR, Currency.USD);
+
+      // Should return hardcoded EUR_USD fallback of 1.1
+      expect(rate).toBe(1.1);
+    });
+
+    it('should return hardcoded rate for MXN_EUR', async () => {
+      redisService.get.mockResolvedValue(null);
+      httpService.get.mockReturnValue(
+        throwError(() => new Error('API Error')) as any
+      );
+      prisma.exchangeRate.findFirst.mockResolvedValue(null);
+
+      const rate = await service.getExchangeRate(Currency.MXN, Currency.EUR);
+
+      // Should return hardcoded MXN_EUR fallback of 0.052
+      expect(rate).toBe(0.052);
+    });
+
+    it('should return hardcoded rate for MXN_USD', async () => {
+      redisService.get.mockResolvedValue(null);
+      httpService.get.mockReturnValue(
+        throwError(() => new Error('API Error')) as any
+      );
+      prisma.exchangeRate.findFirst.mockResolvedValue(null);
+
+      const rate = await service.getExchangeRate(Currency.MXN, Currency.USD);
+
+      // Should return hardcoded MXN_USD fallback of 0.057
+      expect(rate).toBe(0.057);
     });
   });
 });

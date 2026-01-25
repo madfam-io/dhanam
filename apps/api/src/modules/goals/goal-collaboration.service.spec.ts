@@ -750,4 +750,91 @@ describe('GoalCollaborationService', () => {
       expect(result.isOwner).toBe(false);
     });
   });
+
+  describe('declineShare edge cases', () => {
+    it('should throw BadRequestException when declining non-pending share (line 206)', async () => {
+      const acceptedShare = {
+        id: 'share-123',
+        goalId: 'goal-123',
+        sharedWith: 'user-invited',
+        status: 'accepted', // Not 'pending'
+      };
+
+      mockPrismaService.goalShare.findUnique.mockResolvedValue(acceptedShare);
+
+      await expect(
+        service.declineShare('user-invited', 'share-123')
+      ).rejects.toThrow(BadRequestException);
+      await expect(
+        service.declineShare('user-invited', 'share-123')
+      ).rejects.toThrow('Cannot decline invitation with status: accepted');
+    });
+
+    it('should throw BadRequestException when declining revoked share', async () => {
+      const revokedShare = {
+        id: 'share-123',
+        goalId: 'goal-123',
+        sharedWith: 'user-invited',
+        status: 'revoked',
+      };
+
+      mockPrismaService.goalShare.findUnique.mockResolvedValue(revokedShare);
+
+      await expect(
+        service.declineShare('user-invited', 'share-123')
+      ).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  describe('verifyGoalAccess edge cases', () => {
+    it('should throw ForbiddenException when shared role is insufficient (lines 432-438)', async () => {
+      // Goal not owned by user
+      mockPrismaService.goal.findFirst.mockResolvedValue(null);
+
+      // User has shared access but with viewer role
+      const shareWithViewerRole = {
+        id: 'share-123',
+        goalId: 'goal-123',
+        sharedWith: 'user-shared',
+        role: 'viewer', // Has viewer, but needs manager
+        goal: {
+          id: 'goal-123',
+          name: 'Test Goal',
+          space: { id: 'space-123' },
+        },
+      };
+      mockPrismaService.goalShare.findFirst.mockResolvedValue(shareWithViewerRole);
+
+      // Try to access with manager role requirement (e.g., revoking share)
+      await expect(
+        service.revokeShare('user-shared', 'share-456')
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should throw ForbiddenException with specific message for insufficient role', async () => {
+      mockPrismaService.goal.findFirst.mockResolvedValue(null);
+
+      const shareWithContributorRole = {
+        id: 'share-123',
+        goalId: 'goal-123',
+        sharedWith: 'user-shared',
+        role: 'contributor',
+        goal: {
+          id: 'goal-123',
+          name: 'Test Goal',
+          space: { id: 'space-123' },
+        },
+      };
+      mockPrismaService.goalShare.findFirst.mockResolvedValue(shareWithContributorRole);
+      mockPrismaService.goalShare.findUnique.mockResolvedValue({
+        id: 'share-456',
+        goalId: 'goal-123',
+        goal: { id: 'goal-123' },
+      });
+
+      await expect(
+        service.revokeShare('user-shared', 'share-456')
+      ).rejects.toThrow('Insufficient permissions');
+    });
+  });
 });

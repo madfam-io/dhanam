@@ -622,6 +622,40 @@ describe('EmailService', () => {
       );
     });
 
+    it('should use default stepsCompleted when not provided in metadata', async () => {
+      const mockUser = {
+        id: 'user-123',
+        email: 'test@example.com',
+        name: 'John Doe',
+      };
+
+      prisma.user.findUnique.mockResolvedValue(mockUser as any);
+
+      await service.sendOnboardingComplete('user-123', {
+        skipOptional: true,
+        completedAt: '2024-01-01T00:00:00Z',
+        metadata: {
+          // No stepsCompleted provided - should default to '7'
+        },
+      });
+
+      const callArgs = (emailQueue.add as jest.Mock).mock.calls[0][1];
+      expect(callArgs.context.stepsCompleted).toBe('7');
+      expect(callArgs.context.completionTime).toBe('N/A');
+    });
+
+    it('should throw error if user not found', async () => {
+      prisma.user.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.sendOnboardingComplete('user-123', {
+          skipOptional: false,
+          completedAt: '2024-01-01T00:00:00Z',
+          metadata: {},
+        })
+      ).rejects.toThrow('User not found');
+    });
+
     it('should format duration correctly for seconds', async () => {
       const mockUser = {
         id: 'user-123',
@@ -663,5 +697,326 @@ describe('EmailService', () => {
       const context = (emailQueue.add as jest.Mock).mock.calls[0][1].context;
       expect(context.completionTime).toBe('1h 5m');
     });
+  });
+});
+
+describe('EmailService - SMTP not configured', () => {
+  let service: EmailService;
+  let emailQueue: jest.Mocked<Queue>;
+
+  beforeEach(async () => {
+    // Config without SMTP_HOST to test fallback branch
+    const mockConfigGetNoSmtp = jest.fn((key: string, defaultValue?: any) => {
+      const config: Record<string, any> = {
+        // SMTP_HOST is undefined/null
+        SMTP_PORT: 587,
+        SMTP_SECURE: false,
+        APP_URL: 'https://app.dhanam.io',
+        WEB_URL: 'https://app.dhanam.io',
+        SUPPORT_EMAIL: 'support@dhanam.io',
+        EMAIL_FROM: 'Dhanam <noreply@dhanam.io>',
+      };
+      return config[key] ?? defaultValue;
+    });
+
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        EmailService,
+        {
+          provide: ConfigService,
+          useValue: {
+            get: mockConfigGetNoSmtp,
+          },
+        },
+        {
+          provide: PrismaService,
+          useValue: {
+            user: {
+              findUnique: jest.fn(),
+            },
+          },
+        },
+        {
+          provide: getQueueToken('email'),
+          useValue: {
+            add: jest.fn(),
+            addBulk: jest.fn(),
+          },
+        },
+      ],
+    }).compile();
+
+    service = module.get<EmailService>(EmailService);
+    emailQueue = module.get(getQueueToken('email')) as jest.Mocked<Queue>;
+  });
+
+  it('should skip email sending when SMTP not configured', async () => {
+    await service.sendEmailDirect({
+      to: 'test@example.com',
+      subject: 'Test Email',
+      template: 'welcome' as EmailTemplate,
+      context: { userName: 'John' },
+      priority: 'normal',
+    });
+
+    // No sendMail call should happen - transporter is null
+    // Service should log skip message and return early
+    expect(emailQueue.add).not.toHaveBeenCalled();
+  });
+});
+
+describe('EmailService - SMTP verification failure', () => {
+  let service: EmailService;
+  let mockTransporter: any;
+
+  beforeEach(async () => {
+    mockTransporter = {
+      verify: jest.fn((callback) => callback(new Error('Connection refused'))),
+      sendMail: jest.fn().mockResolvedValue({ messageId: 'test-id' }),
+    };
+
+    (nodemailer.createTransport as jest.Mock).mockReturnValue(mockTransporter);
+
+    const mockConfigGet = jest.fn((key: string, defaultValue?: any) => {
+      const config: Record<string, any> = {
+        SMTP_HOST: 'smtp.test.com',
+        SMTP_PORT: 587,
+        SMTP_SECURE: false,
+        // No SMTP_USER/SMTP_PASSWORD to test auth-less path
+        APP_URL: 'https://app.dhanam.io',
+        WEB_URL: 'https://app.dhanam.io',
+        SUPPORT_EMAIL: 'support@dhanam.io',
+        EMAIL_FROM: 'Dhanam <noreply@dhanam.io>',
+      };
+      return config[key] ?? defaultValue;
+    });
+
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        EmailService,
+        {
+          provide: ConfigService,
+          useValue: {
+            get: mockConfigGet,
+          },
+        },
+        {
+          provide: PrismaService,
+          useValue: {
+            user: {
+              findUnique: jest.fn(),
+            },
+          },
+        },
+        {
+          provide: getQueueToken('email'),
+          useValue: {
+            add: jest.fn(),
+            addBulk: jest.fn(),
+          },
+        },
+      ],
+    }).compile();
+
+    service = module.get<EmailService>(EmailService);
+  });
+
+  it('should continue operating despite verification failure', async () => {
+    // Service should be defined even when verification fails
+    expect(service).toBeDefined();
+
+    // Transporter should be created without auth when credentials not provided
+    expect(nodemailer.createTransport).toHaveBeenCalledWith(
+      expect.objectContaining({
+        host: 'smtp.test.com',
+        port: 587,
+      }),
+    );
+  });
+
+  it('should still send emails even after verification warning', async () => {
+    await service.sendEmailDirect({
+      to: 'test@example.com',
+      subject: 'Test Email',
+      template: 'welcome' as EmailTemplate,
+      context: { userName: 'John' },
+      priority: 'normal',
+    });
+
+    expect(mockTransporter.sendMail).toHaveBeenCalled();
+  });
+});
+
+describe('EmailService - sendMail failure', () => {
+  let service: EmailService;
+  let mockTransporter: any;
+
+  beforeEach(async () => {
+    mockTransporter = {
+      verify: jest.fn((callback) => callback(null)),
+      sendMail: jest.fn().mockRejectedValue(new Error('SMTP connection failed')),
+    };
+
+    (nodemailer.createTransport as jest.Mock).mockReturnValue(mockTransporter);
+
+    const mockConfigGet = jest.fn((key: string, defaultValue?: any) => {
+      const config: Record<string, any> = {
+        SMTP_HOST: 'smtp.test.com',
+        SMTP_PORT: 587,
+        SMTP_SECURE: false,
+        SMTP_USER: 'test@test.com',
+        SMTP_PASSWORD: 'password',
+        APP_URL: 'https://app.dhanam.io',
+        WEB_URL: 'https://app.dhanam.io',
+        SUPPORT_EMAIL: 'support@dhanam.io',
+        EMAIL_FROM: 'Dhanam <noreply@dhanam.io>',
+      };
+      return config[key] ?? defaultValue;
+    });
+
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        EmailService,
+        {
+          provide: ConfigService,
+          useValue: {
+            get: mockConfigGet,
+          },
+        },
+        {
+          provide: PrismaService,
+          useValue: {
+            user: {
+              findUnique: jest.fn(),
+            },
+          },
+        },
+        {
+          provide: getQueueToken('email'),
+          useValue: {
+            add: jest.fn(),
+            addBulk: jest.fn(),
+          },
+        },
+      ],
+    }).compile();
+
+    service = module.get<EmailService>(EmailService);
+  });
+
+  it('should throw error when sendMail fails', async () => {
+    await expect(
+      service.sendEmailDirect({
+        to: 'test@example.com',
+        subject: 'Test Email',
+        template: 'welcome' as EmailTemplate,
+        context: { userName: 'John' },
+        priority: 'normal',
+      }),
+    ).rejects.toThrow('SMTP connection failed');
+  });
+});
+
+describe('EmailService - sendTransactionCategorizedEmail', () => {
+  let service: EmailService;
+  let emailQueue: jest.Mocked<Queue>;
+  let mockTransporter: any;
+
+  beforeEach(async () => {
+    mockTransporter = {
+      verify: jest.fn((callback) => callback(null)),
+      sendMail: jest.fn().mockResolvedValue({ messageId: 'test-message-id' }),
+    };
+
+    (nodemailer.createTransport as jest.Mock).mockReturnValue(mockTransporter);
+
+    const mockConfigGet = jest.fn((key: string, defaultValue?: any) => {
+      const config: Record<string, any> = {
+        SMTP_HOST: 'smtp.test.com',
+        SMTP_PORT: 587,
+        SMTP_SECURE: false,
+        SMTP_USER: 'test@test.com',
+        SMTP_PASSWORD: 'password',
+        APP_URL: 'https://app.dhanam.io',
+        WEB_URL: 'https://app.dhanam.io',
+        SUPPORT_EMAIL: 'support@dhanam.io',
+        EMAIL_FROM: 'Dhanam <noreply@dhanam.io>',
+      };
+      return config[key] ?? defaultValue;
+    });
+
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        EmailService,
+        {
+          provide: ConfigService,
+          useValue: {
+            get: mockConfigGet,
+          },
+        },
+        {
+          provide: PrismaService,
+          useValue: {
+            user: {
+              findUnique: jest.fn(),
+            },
+          },
+        },
+        {
+          provide: getQueueToken('email'),
+          useValue: {
+            add: jest.fn(),
+            addBulk: jest.fn(),
+          },
+        },
+      ],
+    }).compile();
+
+    service = module.get<EmailService>(EmailService);
+    emailQueue = module.get(getQueueToken('email')) as jest.Mocked<Queue>;
+  });
+
+  it('should send transaction categorized email with correct subject', async () => {
+    const transactions = [
+      { id: 'tx1', description: 'Grocery Store', amount: 50.00, category: 'Food' },
+      { id: 'tx2', description: 'Gas Station', amount: 35.00, category: 'Transportation' },
+    ];
+
+    await service.sendTransactionCategorizedEmail('test@example.com', 'John', transactions);
+
+    expect(emailQueue.add).toHaveBeenCalledWith(
+      'send-email',
+      expect.objectContaining({
+        to: 'test@example.com',
+        subject: '2 Transactions Categorized',
+        template: 'transaction-categorized',
+        context: expect.objectContaining({
+          name: 'John',
+          transactions,
+          count: 2,
+        }),
+        priority: 'low',
+      }),
+      expect.any(Object),
+    );
+  });
+
+  it('should handle single transaction correctly', async () => {
+    const transactions = [
+      { id: 'tx1', description: 'Coffee Shop', amount: 5.00, category: 'Food' },
+    ];
+
+    await service.sendTransactionCategorizedEmail('test@example.com', 'Jane', transactions);
+
+    expect(emailQueue.add).toHaveBeenCalledWith(
+      'send-email',
+      expect.objectContaining({
+        subject: '1 Transactions Categorized',
+        context: expect.objectContaining({
+          count: 1,
+        }),
+      }),
+      expect.any(Object),
+    );
   });
 });

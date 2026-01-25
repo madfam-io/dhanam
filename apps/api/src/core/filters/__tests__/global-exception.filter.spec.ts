@@ -264,6 +264,91 @@ describe('GlobalExceptionFilter', () => {
       );
     });
 
+    it('should handle P2014 (relation constraint violation)', () => {
+      const exception = new PrismaClientKnownRequestError('Relation constraint failed', {
+        code: 'P2014',
+        clientVersion: '5.0.0',
+      });
+
+      filter.catch(exception, mockHost);
+
+      expect(mockResponse.send).toHaveBeenCalledWith(
+        expect.objectContaining({
+          error: expect.objectContaining({
+            message: 'The change you are trying to make would violate a relation constraint',
+          }),
+        })
+      );
+    });
+
+    it('should handle P2016 (query interpretation error)', () => {
+      const exception = new PrismaClientKnownRequestError('Query interpretation error', {
+        code: 'P2016',
+        clientVersion: '5.0.0',
+      });
+
+      filter.catch(exception, mockHost);
+
+      expect(mockResponse.send).toHaveBeenCalledWith(
+        expect.objectContaining({
+          error: expect.objectContaining({
+            message: 'Query interpretation error',
+          }),
+        })
+      );
+    });
+
+    it('should handle P2017 (relation not connected)', () => {
+      const exception = new PrismaClientKnownRequestError('Relation not connected', {
+        code: 'P2017',
+        clientVersion: '5.0.0',
+      });
+
+      filter.catch(exception, mockHost);
+
+      expect(mockResponse.send).toHaveBeenCalledWith(
+        expect.objectContaining({
+          error: expect.objectContaining({
+            message: 'Records for relation not connected',
+          }),
+        })
+      );
+    });
+
+    it('should handle P2021 (table does not exist)', () => {
+      const exception = new PrismaClientKnownRequestError('Table does not exist', {
+        code: 'P2021',
+        clientVersion: '5.0.0',
+      });
+
+      filter.catch(exception, mockHost);
+
+      expect(mockResponse.send).toHaveBeenCalledWith(
+        expect.objectContaining({
+          error: expect.objectContaining({
+            message: 'Table does not exist in database',
+          }),
+        })
+      );
+    });
+
+    it('should handle P2022 (column does not exist)', () => {
+      const exception = new PrismaClientKnownRequestError('Column does not exist', {
+        code: 'P2022',
+        clientVersion: '5.0.0',
+      });
+
+      filter.catch(exception, mockHost);
+
+      expect(mockResponse.send).toHaveBeenCalledWith(
+        expect.objectContaining({
+          error: expect.objectContaining({
+            message: 'Column does not exist in database',
+          }),
+        })
+      );
+    });
+
     it('should handle unknown Prisma error codes', () => {
       const exception = new PrismaClientKnownRequestError('Unknown error', {
         code: 'P9999',

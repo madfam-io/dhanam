@@ -216,6 +216,101 @@ describe('GoalsService', () => {
       expect(updateCall.data).toHaveProperty('name', 'New Name');
       expect(updateCall.data).not.toHaveProperty('targetAmount');
     });
+
+    it('should update description when provided', async () => {
+      prisma.goal.update.mockResolvedValue({ ...mockGoal, description: 'New description' } as any);
+
+      await service.update('goal-123', { description: 'New description' }, 'user-123');
+
+      const updateCall = prisma.goal.update.mock.calls[0][0];
+      expect(updateCall.data).toHaveProperty('description', 'New description');
+    });
+
+    it('should update goal type when provided', async () => {
+      prisma.goal.update.mockResolvedValue({ ...mockGoal, type: 'education' } as any);
+
+      await service.update('goal-123', { type: 'education' }, 'user-123');
+
+      const updateCall = prisma.goal.update.mock.calls[0][0];
+      expect(updateCall.data).toHaveProperty('type', 'education');
+    });
+
+    it('should update currency when provided', async () => {
+      prisma.goal.update.mockResolvedValue({ ...mockGoal, currency: 'EUR' } as any);
+
+      await service.update('goal-123', { currency: 'EUR' }, 'user-123');
+
+      const updateCall = prisma.goal.update.mock.calls[0][0];
+      expect(updateCall.data).toHaveProperty('currency', 'EUR');
+    });
+
+    it('should update targetDate when provided', async () => {
+      const newDate = '2035-01-01';
+      prisma.goal.update.mockResolvedValue({ ...mockGoal, targetDate: new Date(newDate) } as any);
+
+      await service.update('goal-123', { targetDate: newDate }, 'user-123');
+
+      const updateCall = prisma.goal.update.mock.calls[0][0];
+      expect(updateCall.data.targetDate).toEqual(new Date(newDate));
+    });
+
+    it('should update priority when provided', async () => {
+      prisma.goal.update.mockResolvedValue({ ...mockGoal, priority: 2 } as any);
+
+      await service.update('goal-123', { priority: 2 }, 'user-123');
+
+      const updateCall = prisma.goal.update.mock.calls[0][0];
+      expect(updateCall.data).toHaveProperty('priority', 2);
+    });
+
+    it('should update status when provided', async () => {
+      prisma.goal.update.mockResolvedValue({ ...mockGoal, status: 'achieved' } as any);
+
+      await service.update('goal-123', { status: 'achieved' }, 'user-123');
+
+      const updateCall = prisma.goal.update.mock.calls[0][0];
+      expect(updateCall.data).toHaveProperty('status', 'achieved');
+    });
+
+    it('should update notes when provided', async () => {
+      prisma.goal.update.mockResolvedValue({ ...mockGoal, notes: 'Some notes' } as any);
+
+      await service.update('goal-123', { notes: 'Some notes' }, 'user-123');
+
+      const updateCall = prisma.goal.update.mock.calls[0][0];
+      expect(updateCall.data).toHaveProperty('notes', 'Some notes');
+    });
+
+    it('should handle updating all fields at once', async () => {
+      const fullUpdate: UpdateGoalDto = {
+        name: 'Full Update Goal',
+        description: 'Full description',
+        type: 'emergency',
+        targetAmount: 200000,
+        currency: 'MXN',
+        targetDate: '2040-12-31',
+        priority: 3,
+        status: 'paused',
+        notes: 'Important notes',
+      };
+
+      prisma.goal.update.mockResolvedValue({ ...mockGoal, ...fullUpdate } as any);
+
+      await service.update('goal-123', fullUpdate, 'user-123');
+
+      const updateCall = prisma.goal.update.mock.calls[0][0];
+      expect(updateCall.data).toMatchObject({
+        name: 'Full Update Goal',
+        description: 'Full description',
+        type: 'emergency',
+        targetAmount: 200000,
+        currency: 'MXN',
+        priority: 3,
+        status: 'paused',
+        notes: 'Important notes',
+      });
+      expect(updateCall.data.targetDate).toEqual(new Date('2040-12-31'));
+    });
   });
 
   describe('delete', () => {
@@ -270,6 +365,15 @@ describe('GoalsService', () => {
 
       await expect(service.findById('nonexistent', 'user-123')).rejects.toThrow(NotFoundException);
     });
+
+    it('should throw NotFoundException when goal is null after access check', async () => {
+      // Mock access check passes but goal findUnique returns null (edge case)
+      jest.spyOn(service as any, 'findByIdWithAccess').mockResolvedValue(mockGoal);
+      prisma.goal.findUnique.mockResolvedValue(null);
+
+      await expect(service.findById('goal-123', 'user-123')).rejects.toThrow(NotFoundException);
+      await expect(service.findById('goal-123', 'user-123')).rejects.toThrow('Goal not found');
+    });
   });
 
   describe('findBySpace', () => {
@@ -295,6 +399,15 @@ describe('GoalsService', () => {
         expect.objectContaining({
           orderBy: [{ priority: 'asc' }, { targetDate: 'asc' }],
         })
+      );
+    });
+
+    it('should throw NotFoundException when user does not have access to space', async () => {
+      prisma.userSpace.findFirst.mockResolvedValue(null);
+
+      await expect(service.findBySpace('space-123', 'user-123')).rejects.toThrow(NotFoundException);
+      await expect(service.findBySpace('space-123', 'user-123')).rejects.toThrow(
+        'Space not found or you do not have access'
       );
     });
   });
@@ -416,6 +529,17 @@ describe('GoalsService', () => {
         expect.objectContaining({
           action: 'GOAL_ALLOCATION_REMOVED',
         })
+      );
+    });
+
+    it('should throw NotFoundException when allocation does not exist', async () => {
+      prisma.goalAllocation.findUnique.mockResolvedValue(null);
+
+      await expect(service.removeAllocation('goal-123', 'account-123', 'user-123')).rejects.toThrow(
+        NotFoundException
+      );
+      await expect(service.removeAllocation('goal-123', 'account-123', 'user-123')).rejects.toThrow(
+        'Allocation not found'
       );
     });
   });
@@ -542,6 +666,43 @@ describe('GoalsService', () => {
       expect(result.totalTargetAmount).toBe(0);
       expect(result.totalCurrentValue).toBe(0);
       expect(result.overallProgress).toBe(0);
+    });
+  });
+
+  describe('findByIdWithAccess (private method via public API)', () => {
+    it('should throw NotFoundException when goal does not exist', async () => {
+      // Don't mock findByIdWithAccess - let it run naturally
+      prisma.goal.findUnique.mockResolvedValue(null);
+
+      await expect(service.update('nonexistent', { name: 'Test' }, 'user-123')).rejects.toThrow(
+        NotFoundException
+      );
+      await expect(service.update('nonexistent', { name: 'Test' }, 'user-123')).rejects.toThrow(
+        'Goal not found'
+      );
+    });
+
+    it('should throw NotFoundException when user does not have access to goal space', async () => {
+      // Goal exists but user has no access to its space
+      prisma.goal.findUnique.mockResolvedValue(mockGoal as any);
+      prisma.userSpace.findFirst.mockResolvedValue(null);
+
+      await expect(service.update('goal-123', { name: 'Test' }, 'user-456')).rejects.toThrow(
+        NotFoundException
+      );
+      await expect(service.update('goal-123', { name: 'Test' }, 'user-456')).rejects.toThrow(
+        'Goal not found or you do not have access'
+      );
+    });
+
+    it('should succeed when goal exists and user has access', async () => {
+      prisma.goal.findUnique.mockResolvedValue(mockGoal as any);
+      prisma.userSpace.findFirst.mockResolvedValue({ userId: 'user-123', spaceId: 'space-123' } as any);
+      prisma.goal.update.mockResolvedValue({ ...mockGoal, name: 'Updated' } as any);
+
+      const result = await service.update('goal-123', { name: 'Updated' }, 'user-123');
+
+      expect(result.name).toBe('Updated');
     });
   });
 });

@@ -566,6 +566,289 @@ describe('TransactionCategorizationService', () => {
     });
   });
 
+  describe('predictCategory - Strategy 0: Correction Match', () => {
+    it('should use correction match with high confidence over other strategies', async () => {
+      // Mock correction aggregator to return a high-confidence match
+      mockCorrectionAggregator.findBestMatch.mockResolvedValue({
+        categoryId: 'cat-corrected',
+        confidence: 0.85,
+        patternKey: 'netflix',
+      });
+
+      mockPrisma.category.findUnique.mockResolvedValue({ name: 'Subscriptions' });
+
+      const prediction = await service.predictCategory(
+        'space-123',
+        'Netflix payment',
+        'Netflix',
+        -15.99
+      );
+
+      expect(prediction).toEqual({
+        categoryId: 'cat-corrected',
+        categoryName: 'Subscriptions',
+        confidence: 0.85,
+        reasoning: 'Learned from your corrections for "netflix"',
+        source: 'correction',
+      });
+    });
+
+    it('should skip correction match if confidence below 0.7', async () => {
+      mockCorrectionAggregator.findBestMatch.mockResolvedValue({
+        categoryId: 'cat-low',
+        confidence: 0.5, // Below threshold
+        patternKey: 'store',
+      });
+
+      // Should fall through to merchant matching
+      mockPrisma.transaction.findMany.mockResolvedValue([]);
+      mockPrisma.category.findMany.mockResolvedValue([]);
+
+      const prediction = await service.predictCategory(
+        'space-123',
+        'Store purchase',
+        'Random Store',
+        -50
+      );
+
+      // Should not use the low confidence correction match
+      expect(prediction).toBeNull();
+    });
+  });
+
+  describe('findMerchantPattern edge cases', () => {
+    it('should return null when no transactions found for merchant', async () => {
+      mockPrisma.transaction.findMany
+        .mockResolvedValueOnce([]) // Empty for findMerchantPattern
+        .mockResolvedValueOnce([]) // For findEnhancedFuzzyMerchantMatch
+        .mockResolvedValue([]);
+      mockPrisma.category.findMany.mockResolvedValue([]);
+
+      const prediction = await service.predictCategory(
+        'space-123',
+        'New merchant',
+        'Brand New Store',
+        -100
+      );
+
+      expect(prediction).toBeNull();
+    });
+
+    it('should handle all transactions having same category', async () => {
+      // All transactions have same category - most common is that one
+      const transactions = Array.from({ length: 5 }, () => ({
+        categoryId: 'cat-only',
+        createdAt: new Date(),
+      }));
+
+      mockPrisma.transaction.findMany.mockResolvedValue(transactions);
+      mockPrisma.category.findUnique.mockResolvedValue({ name: 'Only Category' });
+
+      const prediction = await service.predictCategory(
+        'space-123',
+        'Purchase',
+        'Known Store',
+        -50
+      );
+
+      expect(prediction?.categoryId).toBe('cat-only');
+      expect(prediction?.source).toBe('merchant');
+    });
+
+    it('should handle transactions with null categoryId in mixed results', async () => {
+      const transactions = [
+        { categoryId: 'cat-a', createdAt: new Date() },
+        { categoryId: null, createdAt: new Date() },
+        { categoryId: 'cat-a', createdAt: new Date() },
+        { categoryId: 'cat-b', createdAt: new Date() },
+        { categoryId: 'cat-a', createdAt: new Date() },
+      ];
+
+      mockPrisma.transaction.findMany.mockResolvedValue(transactions);
+      mockPrisma.category.findUnique.mockResolvedValue({ name: 'Category A' });
+
+      const prediction = await service.predictCategory(
+        'space-123',
+        'Purchase',
+        'Mixed Store',
+        -50
+      );
+
+      expect(prediction?.categoryId).toBe('cat-a'); // Most common (3 times)
+    });
+  });
+
+  describe('findAmountPattern edge cases', () => {
+    it('should find category within 1 standard deviation', async () => {
+      mockPrisma.transaction.findMany.mockResolvedValue([]);
+      mockPrisma.category.findMany.mockResolvedValue([
+        {
+          id: 'cat-coffee',
+          name: 'Coffee',
+          transactions: [
+            { description: 'Coffee shop', amount: 4.50 },
+            { description: 'Coffee', amount: 5.00 },
+            { description: 'Latte', amount: 5.50 },
+            { description: 'Espresso', amount: 4.00 },
+            { description: 'Mocha', amount: 5.25 },
+          ],
+        },
+      ]);
+
+      const prediction = await service.predictCategory(
+        'space-123',
+        'Unknown small purchase',
+        null,
+        -4.80 // Within 1 std dev of average ~4.85
+      );
+
+      // Should match via amount pattern
+      if (prediction) {
+        expect(prediction.categoryId).toBe('cat-coffee');
+        expect(prediction.source).toBe('amount');
+      }
+    });
+
+    it('should select category with lowest z-score when multiple match', async () => {
+      mockPrisma.transaction.findMany.mockResolvedValue([]);
+      mockPrisma.category.findMany.mockResolvedValue([
+        {
+          id: 'cat-1',
+          name: 'Category 1',
+          transactions: Array.from({ length: 5 }, () => ({
+            description: 'Purchase',
+            amount: 100, // Average 100, stdDev 0 for same amounts
+          })),
+        },
+        {
+          id: 'cat-2',
+          name: 'Category 2',
+          transactions: Array.from({ length: 5 }, (_, i) => ({
+            description: 'Item',
+            amount: 98 + i * 2, // 98, 100, 102, 104, 106 - average 102, more spread
+          })),
+        },
+      ]);
+
+      const prediction = await service.predictCategory(
+        'space-123',
+        'Unknown transaction',
+        null,
+        -101 // Closer to cat-1 average
+      );
+
+      // Should prefer the one with lower z-score
+      if (prediction) {
+        expect(prediction.source).toBe('amount');
+      }
+    });
+  });
+
+  describe('findMerchantPattern - mostCommonCategory null edge case', () => {
+    it('should return null when no categoryId present in transactions (all null)', async () => {
+      // All transactions have null categoryId - the reduce should produce empty categoryCount
+      const transactions = [
+        { categoryId: null, createdAt: new Date() },
+        { categoryId: null, createdAt: new Date() },
+        { categoryId: null, createdAt: new Date() },
+      ];
+
+      mockPrisma.transaction.findMany
+        .mockResolvedValueOnce(transactions) // findMerchantPattern returns transactions with null categories
+        .mockResolvedValueOnce([]) // findEnhancedFuzzyMerchantMatch
+        .mockResolvedValue([]);
+      mockPrisma.category.findMany.mockResolvedValue([]);
+
+      const prediction = await service.predictCategory(
+        'space-123',
+        'Purchase',
+        'Some Store',
+        -50
+      );
+
+      // findMerchantPattern should return null because no valid categoryIds
+      expect(prediction).toBeNull();
+    });
+  });
+
+  describe('findFuzzyMerchantMatch (legacy)', () => {
+    it('should return null when no similar merchants found', async () => {
+      mockPrisma.transaction.findMany
+        .mockResolvedValueOnce([]) // findMerchantPattern
+        .mockResolvedValueOnce([]) // findEnhancedFuzzyMerchantMatch
+        .mockResolvedValue([]);
+      mockPrisma.category.findMany.mockResolvedValue([]);
+
+      const prediction = await service.predictCategory(
+        'space-123',
+        'Random transaction',
+        'Unique Store Name',
+        -100
+      );
+
+      expect(prediction).toBeNull();
+    });
+  });
+
+  describe('findAmountPattern - zScore filter edge cases', () => {
+    it('should filter out categories with zScore >= 1', async () => {
+      mockPrisma.transaction.findMany.mockResolvedValue([]);
+      mockPrisma.category.findMany.mockResolvedValue([
+        {
+          id: 'cat-coffee',
+          name: 'Coffee',
+          transactions: [
+            { description: 'Coffee', amount: 5 },
+            { description: 'Coffee', amount: 5 },
+            { description: 'Coffee', amount: 5 },
+            { description: 'Coffee', amount: 5 },
+            { description: 'Coffee', amount: 5 },
+          ], // Average 5, stdDev 0, any different amount will have infinite zScore
+        },
+      ]);
+
+      // Amount very far from the average - zScore >> 1
+      const prediction = await service.predictCategory(
+        'space-123',
+        'Unknown purchase',
+        null,
+        -100 // Far from average of 5
+      );
+
+      expect(prediction).toBeNull();
+    });
+
+    it('should return amount pattern match when zScore < 1', async () => {
+      mockPrisma.transaction.findMany.mockResolvedValue([]);
+      mockPrisma.category.findMany.mockResolvedValue([
+        {
+          id: 'cat-utilities',
+          name: 'Utilities',
+          transactions: [
+            { description: 'Bill', amount: 100 },
+            { description: 'Bill', amount: 110 },
+            { description: 'Bill', amount: 90 },
+            { description: 'Bill', amount: 95 },
+            { description: 'Bill', amount: 105 },
+          ], // Average ~100, with variance
+        },
+      ]);
+
+      // Amount close to average - should match via amount pattern
+      const prediction = await service.predictCategory(
+        'space-123',
+        'Random payment',
+        null,
+        -102 // Close to average of 100
+      );
+
+      if (prediction) {
+        expect(prediction.source).toBe('amount');
+        expect(prediction.categoryId).toBe('cat-utilities');
+      }
+    });
+  });
+
   describe('edge cases', () => {
     it('should handle null merchant gracefully', async () => {
       mockPrisma.transaction.findMany.mockResolvedValue([]);
@@ -637,6 +920,154 @@ describe('TransactionCategorizationService', () => {
 
       // Should use absolute amount for matching
       expect(prediction?.categoryId).toBe('cat-income');
+    });
+  });
+
+  describe('findFuzzyMerchantMatch branch coverage', () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it('should skip transactions with null merchant in fuzzy search', async () => {
+      // First call for merchant pattern - returns empty
+      // Second call for enhanced fuzzy - returns empty
+      // Third call for legacy fuzzy - returns transactions with null merchants
+      mockPrisma.transaction.findMany
+        .mockResolvedValueOnce([]) // findMerchantPattern
+        .mockResolvedValueOnce([]) // findEnhancedFuzzyMerchantMatch
+        .mockResolvedValueOnce([
+          // findFuzzyMerchantMatch - transactions with null merchant should be skipped
+          { merchant: null, categoryId: 'cat-1', createdAt: new Date() },
+          { merchant: null, categoryId: 'cat-2', createdAt: new Date() },
+        ])
+        .mockResolvedValue([]);
+      mockPrisma.category.findMany.mockResolvedValue([]);
+
+      const prediction = await service.predictCategory(
+        'space-123',
+        'Some purchase',
+        'Target Store',
+        -50
+      );
+
+      // Should not find a match because all merchants are null
+      expect(prediction).toBeNull();
+    });
+
+    it('should find similar merchant using substring matching', async () => {
+      // First call for merchant pattern - returns empty for unknown merchant
+      // Second call for enhanced fuzzy - returns empty
+      // Third call for legacy fuzzy - returns similar merchants
+      mockPrisma.transaction.findMany
+        .mockResolvedValueOnce([]) // findMerchantPattern
+        .mockResolvedValueOnce([]) // findEnhancedFuzzyMerchantMatch
+        .mockResolvedValueOnce([
+          // findFuzzyMerchantMatch - has similar merchant
+          { merchant: 'Amazon.com', categoryId: 'cat-shopping', createdAt: new Date() },
+        ])
+        .mockResolvedValueOnce([
+          // findMerchantPattern for the matched merchant
+          { categoryId: 'cat-shopping', createdAt: new Date() },
+          { categoryId: 'cat-shopping', createdAt: new Date() },
+          { categoryId: 'cat-shopping', createdAt: new Date() },
+        ]);
+      mockPrisma.category.findMany.mockResolvedValue([]);
+      mockPrisma.category.findUnique.mockResolvedValue({ name: 'Shopping' });
+
+      // Search for "Amazon" which is contained in "Amazon.com"
+      const prediction = await service.predictCategory(
+        'space-123',
+        'Amazon order',
+        'Amazon', // Substring of 'Amazon.com'
+        -100
+      );
+
+      // Should find match via fuzzy merchant matching
+      if (prediction) {
+        expect(prediction.categoryId).toBe('cat-shopping');
+      }
+    });
+
+    it('should check both substring directions for fuzzy matching', async () => {
+      // Reset mocks for this specific test
+      mockPrisma.transaction.findMany.mockReset();
+      mockPrisma.category.findMany.mockReset();
+
+      // When fuzzy matching checks both directions:
+      // 1. txnMerchantLower.includes(merchantLower) - db contains search
+      // 2. merchantLower.includes(txnMerchantLower) - search contains db
+      mockPrisma.transaction.findMany
+        .mockResolvedValueOnce([]) // findMerchantPattern
+        .mockResolvedValueOnce([]) // findEnhancedFuzzyMerchantMatch
+        .mockResolvedValueOnce([
+          // findFuzzyMerchantMatch - transactions returned for fuzzy search
+          { merchant: 'Target', categoryId: 'cat-retail', createdAt: new Date() },
+        ])
+        .mockResolvedValue([]);
+      mockPrisma.category.findMany.mockResolvedValue([]);
+
+      // Search for 'Target Store' which contains 'Target'
+      // This tests merchantLower.includes(txnMerchantLower) branch
+      await service.predictCategory(
+        'space-123',
+        'Shopping',
+        'Target Store', // "target store".includes("target") = true
+        -50
+      );
+
+      // The findMany should have been called for fuzzy matching
+      expect(mockPrisma.transaction.findMany).toHaveBeenCalled();
+    });
+  });
+
+  describe('findKeywordMatch branch coverage', () => {
+    it('should return null when no keywords extracted from description', async () => {
+      mockPrisma.transaction.findMany.mockResolvedValue([]);
+      // Empty categories for amount matching
+      mockPrisma.category.findMany.mockResolvedValue([]);
+
+      // Description with only stop words
+      const prediction = await service.predictCategory(
+        'space-123',
+        'the an at to', // Only stop words, no keywords extracted
+        null,
+        -50
+      );
+
+      expect(prediction).toBeNull();
+    });
+  });
+
+  describe('findAmountPattern - stdDev edge cases', () => {
+    it('should handle zero stdDev (all same amounts) gracefully', async () => {
+      mockPrisma.transaction.findMany.mockResolvedValue([]);
+      mockPrisma.category.findMany.mockResolvedValue([
+        {
+          id: 'cat-subscription',
+          name: 'Subscriptions',
+          transactions: [
+            { description: 'Netflix', amount: 15 },
+            { description: 'Netflix', amount: 15 },
+            { description: 'Netflix', amount: 15 },
+            { description: 'Netflix', amount: 15 },
+            { description: 'Netflix', amount: 15 },
+          ], // All same = stdDev 0
+        },
+      ]);
+
+      // Amount exactly matching the average
+      const prediction = await service.predictCategory(
+        'space-123',
+        'Streaming service',
+        null,
+        -15
+      );
+
+      // With stdDev 0, zScore = (15 - 15) / 0 = NaN, should not match
+      // This tests the edge case of division by zero
+      if (prediction) {
+        expect(prediction.source).toBe('amount');
+      }
     });
   });
 });

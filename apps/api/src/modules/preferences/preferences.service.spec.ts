@@ -144,6 +144,16 @@ describe('PreferencesService', () => {
         },
       });
     });
+
+    it('should throw NotFoundException when user not found during preference creation', async () => {
+      // When preferences don't exist and user also doesn't exist
+      mockPrismaService.userPreferences.findUnique.mockResolvedValue(null);
+      mockPrismaService.user.findUnique.mockResolvedValue(null);
+
+      await expect(service.getUserPreferences(mockUserId)).rejects.toThrow(
+        NotFoundException
+      );
+    });
   });
 
   describe('updateUserPreferences', () => {
@@ -323,7 +333,7 @@ describe('PreferencesService', () => {
       mockPrismaService.userPreferences.findUnique
         .mockResolvedValueOnce(mockUserPreferences)
         .mockResolvedValueOnce(mockUserPreferences);
-      
+
       mockPrismaService.userPreferences.update.mockResolvedValue(mockUserPreferences);
 
       const result = await service.bulkUpdatePreferences(mockUserId, {});
@@ -335,6 +345,111 @@ describe('PreferencesService', () => {
         },
       });
       expect(result).toBeTruthy();
+    });
+
+    it('should handle privacy settings in bulk update', async () => {
+      const bulkUpdateWithPrivacy: BulkPreferencesUpdateDto = {
+        privacy: {
+          dataSharing: true,
+          analyticsTracking: false,
+          personalizedAds: true,
+        },
+      };
+
+      mockPrismaService.userPreferences.findUnique
+        .mockResolvedValueOnce(mockUserPreferences)
+        .mockResolvedValueOnce(mockUserPreferences);
+
+      const updatedPreferences = {
+        ...mockUserPreferences,
+        dataSharing: true,
+        analyticsTracking: false,
+        personalizedAds: true,
+        updatedAt: new Date(),
+      };
+      mockPrismaService.userPreferences.update.mockResolvedValue(updatedPreferences);
+
+      const result = await service.bulkUpdatePreferences(mockUserId, bulkUpdateWithPrivacy);
+
+      expect(mockPrismaService.userPreferences.update).toHaveBeenCalledWith({
+        where: { userId: mockUserId },
+        data: expect.objectContaining({
+          dataSharing: true,
+          analyticsTracking: false,
+          personalizedAds: true,
+        }),
+      });
+      expect(result.dataSharing).toBe(true);
+    });
+
+    it('should handle esg settings in bulk update', async () => {
+      const bulkUpdateWithEsg: BulkPreferencesUpdateDto = {
+        esg: {
+          esgScoreVisibility: false,
+          sustainabilityAlerts: true,
+          impactReporting: true,
+        },
+      };
+
+      mockPrismaService.userPreferences.findUnique
+        .mockResolvedValueOnce(mockUserPreferences)
+        .mockResolvedValueOnce(mockUserPreferences);
+
+      const updatedPreferences = {
+        ...mockUserPreferences,
+        esgScoreVisibility: false,
+        sustainabilityAlerts: true,
+        impactReporting: true,
+        updatedAt: new Date(),
+      };
+      mockPrismaService.userPreferences.update.mockResolvedValue(updatedPreferences);
+
+      const result = await service.bulkUpdatePreferences(mockUserId, bulkUpdateWithEsg);
+
+      expect(mockPrismaService.userPreferences.update).toHaveBeenCalledWith({
+        where: { userId: mockUserId },
+        data: expect.objectContaining({
+          esgScoreVisibility: false,
+          sustainabilityAlerts: true,
+          impactReporting: true,
+        }),
+      });
+      expect(result.esgScoreVisibility).toBe(false);
+    });
+
+    it('should handle backup settings in bulk update', async () => {
+      const bulkUpdateWithBackup: BulkPreferencesUpdateDto = {
+        backup: {
+          autoBackup: true,
+          backupFrequency: 'weekly',
+          exportFormat: 'json',
+        },
+      };
+
+      mockPrismaService.userPreferences.findUnique
+        .mockResolvedValueOnce(mockUserPreferences)
+        .mockResolvedValueOnce(mockUserPreferences);
+
+      const updatedPreferences = {
+        ...mockUserPreferences,
+        autoBackup: true,
+        backupFrequency: 'weekly',
+        exportFormat: 'json',
+        updatedAt: new Date(),
+      };
+      mockPrismaService.userPreferences.update.mockResolvedValue(updatedPreferences);
+
+      const result = await service.bulkUpdatePreferences(mockUserId, bulkUpdateWithBackup);
+
+      expect(mockPrismaService.userPreferences.update).toHaveBeenCalledWith({
+        where: { userId: mockUserId },
+        data: expect.objectContaining({
+          autoBackup: true,
+          backupFrequency: 'weekly',
+          exportFormat: 'json',
+        }),
+      });
+      expect(result.autoBackup).toBe(true);
     });
   });
 

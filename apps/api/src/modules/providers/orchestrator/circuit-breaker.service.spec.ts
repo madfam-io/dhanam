@@ -431,6 +431,99 @@ describe('CircuitBreakerService', () => {
     });
   });
 
+  describe('getState edge cases', () => {
+    it('should handle lastFailureAt being null', async () => {
+      const mockHealth = {
+        id: 'health-1',
+        provider: 'plaid' as any,
+        region: 'US',
+        circuitBreakerOpen: false,
+        status: 'healthy',
+        successfulCalls: 10,
+        failedCalls: 0,
+        lastSuccessAt: new Date(),
+        lastFailureAt: null, // null case
+        updatedAt: new Date(),
+      };
+
+      mockPrisma.providerHealthStatus.findUnique.mockResolvedValue(mockHealth);
+
+      const state = await service.getState('plaid' as any, 'US');
+
+      expect(state.lastFailureAt).toBeUndefined();
+      expect(state.lastSuccessAt).toBeDefined();
+    });
+
+    it('should handle lastSuccessAt being null', async () => {
+      const mockHealth = {
+        id: 'health-1',
+        provider: 'belvo' as any,
+        region: 'MX',
+        circuitBreakerOpen: false,
+        status: 'degraded',
+        successfulCalls: 0,
+        failedCalls: 3,
+        lastSuccessAt: null, // null case
+        lastFailureAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      mockPrisma.providerHealthStatus.findUnique.mockResolvedValue(mockHealth);
+
+      const state = await service.getState('belvo' as any, 'MX');
+
+      expect(state.lastSuccessAt).toBeUndefined();
+      expect(state.lastFailureAt).toBeDefined();
+    });
+
+    it('should return undefined for nextAttemptAt when state is half-open', async () => {
+      const now = new Date();
+      const oldTime = new Date(now.getTime() - 70000); // > timeout
+
+      const mockHealth = {
+        id: 'health-1',
+        provider: 'plaid' as any,
+        region: 'US',
+        circuitBreakerOpen: true,
+        status: 'degraded',
+        successfulCalls: 0,
+        failedCalls: 5,
+        lastSuccessAt: null,
+        lastFailureAt: new Date(),
+        updatedAt: oldTime,
+      };
+
+      mockPrisma.providerHealthStatus.findUnique.mockResolvedValue(mockHealth);
+
+      const state = await service.getState('plaid' as any, 'US');
+
+      expect(state.state).toBe('half-open');
+      expect(state.nextAttemptAt).toBeUndefined();
+    });
+  });
+
+  describe('shouldOpenCircuit edge cases', () => {
+    it('should handle zero total calls with failureRate fallback', async () => {
+      // This tests the edge case where totalCalls could be 0
+      // failedCalls: -1 + 1 = 0, successfulCalls: 0
+      const mockHealth = {
+        id: 'health-1',
+        provider: 'belvo' as any,
+        region: 'MX',
+        failedCalls: 0, // Will be 1 after this failure
+        successfulCalls: 0, // Total will be 1
+        windowStartAt: new Date(Date.now() - 60000),
+      };
+
+      mockPrisma.providerHealthStatus.upsert.mockResolvedValue(mockHealth as any);
+
+      await service.recordFailure('belvo' as any, 'MX', 'First error');
+
+      // Should not open circuit with just 1 failure (threshold is 5)
+      expect(prismaService.providerHealthStatus.update).not.toHaveBeenCalled();
+    });
+  });
+
   describe('circuit breaker workflow', () => {
     it('should handle full circuit breaker lifecycle', async () => {
       const now = new Date();

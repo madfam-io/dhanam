@@ -301,4 +301,150 @@ describe('ManualAssetsService', () => {
       expect(result.valuationHistory).toHaveLength(10);
     });
   });
+
+  describe('update', () => {
+    const spaceId = 'space-1';
+    const userId = 'user-1';
+    const assetId = 'asset-1';
+
+    const baseAsset = {
+      id: assetId,
+      spaceId,
+      name: 'Original Name',
+      type: 'real_estate',
+      description: 'Original description',
+      currentValue: new Decimal(100000),
+      currency: 'USD',
+      acquisitionDate: new Date('2020-01-01'),
+      acquisitionCost: new Decimal(90000),
+      metadata: { key: 'value' },
+      documents: null,
+      notes: 'Original notes',
+      createdAt: new Date('2023-01-01'),
+      updatedAt: new Date('2023-06-01'),
+      valuationHistory: [],
+    };
+
+    beforeEach(() => {
+      mockSpacesService.verifyUserAccess.mockResolvedValue(undefined);
+      mockPrisma.manualAsset.findFirst.mockResolvedValue(baseAsset as any);
+    });
+
+    it('should update description field (line 123 branch)', async () => {
+      const updateDto = { description: 'New description' };
+      mockPrisma.manualAsset.update.mockResolvedValue({ ...baseAsset, ...updateDto } as any);
+
+      const result = await service.update(spaceId, userId, assetId, updateDto);
+
+      expect(mockPrisma.manualAsset.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ description: 'New description' }),
+        })
+      );
+      expect(result.description).toBe('New description');
+    });
+
+    it('should update currentValue field (line 124 branch)', async () => {
+      const updateDto = { currentValue: 200000 };
+      mockPrisma.manualAsset.update.mockResolvedValue({
+        ...baseAsset,
+        currentValue: new Decimal(200000),
+      } as any);
+
+      const result = await service.update(spaceId, userId, assetId, updateDto);
+
+      expect(mockPrisma.manualAsset.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ currentValue: 200000 }),
+        })
+      );
+      expect(result.currentValue).toBe(200000);
+    });
+
+    it('should update currency field (line 125 branch)', async () => {
+      const updateDto = { currency: 'MXN' };
+      mockPrisma.manualAsset.update.mockResolvedValue({ ...baseAsset, currency: 'MXN' } as any);
+
+      const result = await service.update(spaceId, userId, assetId, updateDto);
+
+      expect(mockPrisma.manualAsset.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ currency: 'MXN' }),
+        })
+      );
+      expect(result.currency).toBe('MXN');
+    });
+
+    it('should update acquisitionDate field (line 126 branch)', async () => {
+      const updateDto = { acquisitionDate: '2022-06-15' };
+      mockPrisma.manualAsset.update.mockResolvedValue({
+        ...baseAsset,
+        acquisitionDate: new Date('2022-06-15'),
+      } as any);
+
+      const result = await service.update(spaceId, userId, assetId, updateDto);
+
+      expect(mockPrisma.manualAsset.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ acquisitionDate: new Date('2022-06-15') }),
+        })
+      );
+    });
+
+    it('should update acquisitionCost field (line 127 branch)', async () => {
+      const updateDto = { acquisitionCost: 85000 };
+      mockPrisma.manualAsset.update.mockResolvedValue({
+        ...baseAsset,
+        acquisitionCost: new Decimal(85000),
+      } as any);
+
+      const result = await service.update(spaceId, userId, assetId, updateDto);
+
+      expect(mockPrisma.manualAsset.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ acquisitionCost: 85000 }),
+        })
+      );
+    });
+
+    it('should update metadata field (line 128 branch)', async () => {
+      const updateDto = { metadata: { newKey: 'newValue' } };
+      mockPrisma.manualAsset.update.mockResolvedValue({
+        ...baseAsset,
+        metadata: { newKey: 'newValue' },
+      } as any);
+
+      const result = await service.update(spaceId, userId, assetId, updateDto);
+
+      expect(mockPrisma.manualAsset.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ metadata: { newKey: 'newValue' } }),
+        })
+      );
+    });
+
+    it('should update notes field', async () => {
+      const updateDto = { notes: 'Updated notes' };
+      mockPrisma.manualAsset.update.mockResolvedValue({
+        ...baseAsset,
+        notes: 'Updated notes',
+      } as any);
+
+      const result = await service.update(spaceId, userId, assetId, updateDto);
+
+      expect(mockPrisma.manualAsset.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ notes: 'Updated notes' }),
+        })
+      );
+    });
+
+    it('should throw NotFoundException if asset not found', async () => {
+      mockPrisma.manualAsset.findFirst.mockResolvedValue(null);
+
+      await expect(
+        service.update(spaceId, userId, assetId, { name: 'New Name' })
+      ).rejects.toThrow(NotFoundException);
+    });
+  });
 });

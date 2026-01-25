@@ -186,6 +186,30 @@ describe('AuthService', () => {
       });
     });
 
+    it('should use default timezone when not provided (line 70 branch)', async () => {
+      const dtoWithoutTimezone: RegisterDto = {
+        email: 'notz@example.com',
+        password: 'SecurePassword123!',
+        name: 'No Timezone User',
+        locale: 'en',
+        // timezone not provided - should fall back to America/Mexico_City
+      };
+
+      prisma.user.findUnique.mockResolvedValue(null);
+      prisma.user.create.mockResolvedValue(mockUser as any);
+      prisma.space.create.mockResolvedValue({} as any);
+      jwtService.sign.mockReturnValue('mock-access-token');
+      sessionService.createRefreshToken.mockResolvedValue('mock-refresh-token');
+
+      await service.register(dtoWithoutTimezone);
+
+      expect(prisma.user.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          timezone: 'America/Mexico_City',
+        }),
+      });
+    });
+
     it('should send welcome email after registration', async () => {
       prisma.user.findUnique.mockResolvedValue(null);
       prisma.user.create.mockResolvedValue(mockUser as any);

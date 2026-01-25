@@ -542,6 +542,82 @@ describe('AdminService', () => {
       expect(result.activitySummary.totalTransactions).toBe(0);
     });
 
+    it('should filter users by isActive flag', async () => {
+      const dto: UserSearchDto = {
+        page: 1,
+        limit: 20,
+        isActive: true,
+      };
+
+      mockPrismaService.user.findMany.mockResolvedValue([]);
+      mockPrismaService.user.count.mockResolvedValue(0);
+
+      await service.searchUsers(dto);
+
+      expect(mockPrismaService.user.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { isActive: true },
+        }),
+      );
+    });
+
+    it('should filter users by emailVerified flag', async () => {
+      const dto: UserSearchDto = {
+        page: 1,
+        limit: 20,
+        emailVerified: false,
+      };
+
+      mockPrismaService.user.findMany.mockResolvedValue([]);
+      mockPrismaService.user.count.mockResolvedValue(0);
+
+      await service.searchUsers(dto);
+
+      expect(mockPrismaService.user.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { emailVerified: false },
+        }),
+      );
+    });
+
+    it('should filter users by totpEnabled flag', async () => {
+      const dto: UserSearchDto = {
+        page: 1,
+        limit: 20,
+        totpEnabled: true,
+      };
+
+      mockPrismaService.user.findMany.mockResolvedValue([]);
+      mockPrismaService.user.count.mockResolvedValue(0);
+
+      await service.searchUsers(dto);
+
+      expect(mockPrismaService.user.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { totpEnabled: true },
+        }),
+      );
+    });
+
+    it('should filter users by onboardingCompleted flag', async () => {
+      const dto: UserSearchDto = {
+        page: 1,
+        limit: 20,
+        onboardingCompleted: false,
+      };
+
+      mockPrismaService.user.findMany.mockResolvedValue([]);
+      mockPrismaService.user.count.mockResolvedValue(0);
+
+      await service.searchUsers(dto);
+
+      expect(mockPrismaService.user.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { onboardingCompleted: false },
+        }),
+      );
+    });
+
     it('should handle date filtering edge cases in searchUsers', async () => {
       const dto = {
         page: 1,
@@ -589,6 +665,263 @@ describe('AdminService', () => {
       const result = await service.getUserDetails('user1', 'admin1');
 
       expect(result.connections).toHaveLength(0);
+    });
+
+    it('should update provider connection lastSyncedAt correctly', async () => {
+      const now = new Date();
+      const earlier = new Date(now.getTime() - 3600000); // 1 hour earlier
+      const mockUser = {
+        id: 'user1',
+        email: 'user@example.com',
+        name: 'Test User',
+        userSpaces: [
+          {
+            spaceId: 'space1',
+            role: 'owner',
+            createdAt: now,
+            space: {
+              id: 'space1',
+              name: 'Personal Space',
+              type: 'personal',
+              currency: 'MXN',
+              _count: { accounts: 2, budgets: 1 },
+            },
+          },
+        ],
+        providerConnections: [
+          {
+            id: 'conn1',
+            provider: 'belvo',
+            providerUserId: 'belvo-123',
+            metadata: {},
+            createdAt: earlier,
+            updatedAt: now,
+          },
+        ],
+        sessions: [{ id: 'session1', createdAt: now }],
+        auditLogs: [
+          {
+            id: 'log1',
+            action: 'login',
+            resource: 'User',
+            resourceId: 'user1',
+            severity: 'low',
+            timestamp: now,
+            ipAddress: '192.168.1.1',
+          },
+        ],
+      };
+
+      mockPrismaService.user.findUnique.mockResolvedValue(mockUser);
+      mockPrismaService.transaction.count.mockResolvedValue(50);
+      mockPrismaService.account.count.mockResolvedValue(2);
+      mockPrismaService.transaction.findFirst.mockResolvedValue({ date: now });
+      mockPrismaService.account.findFirst.mockResolvedValue({ lastSyncedAt: now });
+      // Return accounts with lastSyncedAt - should update the provider connection
+      mockPrismaService.account.findMany.mockResolvedValue([
+        { provider: 'belvo', lastSyncedAt: earlier },
+        { provider: 'belvo', lastSyncedAt: now },
+      ]);
+
+      const result = await service.getUserDetails('user1', 'admin1');
+
+      expect(result.connections).toHaveLength(1);
+      expect(result.connections[0].provider).toBe('belvo');
+      expect(result.connections[0].accountCount).toBe(2);
+      expect(result.connections[0].lastSyncedAt).toEqual(now);
+    });
+
+    it('should format audit logs with optional fields correctly', async () => {
+      const now = new Date();
+      const mockUser = {
+        id: 'user1',
+        email: 'user@example.com',
+        name: 'Test User',
+        userSpaces: [],
+        providerConnections: [],
+        sessions: [{ id: 'session1', createdAt: now }],
+        auditLogs: [
+          {
+            id: 'log1',
+            action: 'login',
+            resource: null,
+            resourceId: null,
+            severity: 'low',
+            timestamp: now,
+            ipAddress: null,
+          },
+          {
+            id: 'log2',
+            action: 'password_change',
+            resource: 'User',
+            resourceId: 'user1',
+            severity: 'high',
+            timestamp: now,
+            ipAddress: '10.0.0.1',
+          },
+        ],
+      };
+
+      mockPrismaService.user.findUnique.mockResolvedValue(mockUser);
+      mockPrismaService.transaction.count.mockResolvedValue(0);
+      mockPrismaService.account.count.mockResolvedValue(0);
+      mockPrismaService.transaction.findFirst.mockResolvedValue(null);
+      mockPrismaService.account.findFirst.mockResolvedValue(null);
+      mockPrismaService.account.findMany.mockResolvedValue([]);
+
+      const result = await service.getUserDetails('user1', 'admin1');
+
+      expect(result.recentAuditLogs).toHaveLength(2);
+      expect(result.recentAuditLogs[0].resource).toBeUndefined();
+      expect(result.recentAuditLogs[0].resourceId).toBeUndefined();
+      expect(result.recentAuditLogs[0].ipAddress).toBeUndefined();
+      expect(result.recentAuditLogs[1].resource).toBe('User');
+      expect(result.recentAuditLogs[1].ipAddress).toBe('10.0.0.1');
+      expect(result.sessions.recentIpAddresses).toEqual(['10.0.0.1']);
+    });
+  });
+
+  describe('searchAuditLogs additional filters', () => {
+    it('should filter audit logs by resource', async () => {
+      const dto = {
+        page: 1,
+        limit: 20,
+        resource: 'User',
+      };
+
+      mockPrismaService.auditLog.findMany.mockResolvedValue([]);
+      mockPrismaService.auditLog.count.mockResolvedValue(0);
+
+      await service.searchAuditLogs(dto);
+
+      expect(mockPrismaService.auditLog.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ resource: 'User' }),
+        }),
+      );
+    });
+
+    it('should filter audit logs by resourceId', async () => {
+      const dto = {
+        page: 1,
+        limit: 20,
+        resourceId: 'resource-123',
+      };
+
+      mockPrismaService.auditLog.findMany.mockResolvedValue([]);
+      mockPrismaService.auditLog.count.mockResolvedValue(0);
+
+      await service.searchAuditLogs(dto);
+
+      expect(mockPrismaService.auditLog.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ resourceId: 'resource-123' }),
+        }),
+      );
+    });
+
+    it('should filter audit logs by severity', async () => {
+      const dto = {
+        page: 1,
+        limit: 20,
+        severity: 'high',
+      };
+
+      mockPrismaService.auditLog.findMany.mockResolvedValue([]);
+      mockPrismaService.auditLog.count.mockResolvedValue(0);
+
+      await service.searchAuditLogs(dto);
+
+      expect(mockPrismaService.auditLog.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ severity: 'high' }),
+        }),
+      );
+    });
+
+    it('should filter audit logs by ipAddress', async () => {
+      const dto = {
+        page: 1,
+        limit: 20,
+        ipAddress: '192.168.1.100',
+      };
+
+      mockPrismaService.auditLog.findMany.mockResolvedValue([]);
+      mockPrismaService.auditLog.count.mockResolvedValue(0);
+
+      await service.searchAuditLogs(dto);
+
+      expect(mockPrismaService.auditLog.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ ipAddress: '192.168.1.100' }),
+        }),
+      );
+    });
+  });
+
+  describe('getQueueStatus error and edge cases', () => {
+    it('should return active status when active jobs exist', async () => {
+      // No failed jobs, but active jobs exist
+      mockPrismaService.auditLog.count
+        .mockResolvedValueOnce(0) // failed jobs
+        .mockResolvedValueOnce(3); // active jobs
+
+      mockRedisService.get.mockResolvedValue(null);
+      mockPrismaService.user.count.mockResolvedValue(0);
+      mockPrismaService.space.count.mockResolvedValue(0);
+      mockPrismaService.space.groupBy.mockResolvedValue([]);
+      mockPrismaService.account.count.mockResolvedValue(0);
+      mockPrismaService.transaction.count.mockResolvedValue(0);
+      mockPrismaService.budget.count.mockResolvedValue(0);
+      mockPrismaService.account.groupBy.mockResolvedValue([]);
+      mockPrismaService.auditLog.findFirst.mockResolvedValue(null);
+      mockPrismaService.$queryRaw.mockResolvedValue([{ connection_count: '10' }]);
+
+      const stats = await service.getSystemStats();
+
+      expect(stats.systemHealth.jobQueueStatus).toBe('active');
+    });
+
+    it('should return idle status when no jobs are active', async () => {
+      // No failed jobs and no active jobs
+      mockPrismaService.auditLog.count
+        .mockResolvedValueOnce(0) // failed jobs
+        .mockResolvedValueOnce(0); // active jobs
+
+      mockRedisService.get.mockResolvedValue(null);
+      mockPrismaService.user.count.mockResolvedValue(0);
+      mockPrismaService.space.count.mockResolvedValue(0);
+      mockPrismaService.space.groupBy.mockResolvedValue([]);
+      mockPrismaService.account.count.mockResolvedValue(0);
+      mockPrismaService.transaction.count.mockResolvedValue(0);
+      mockPrismaService.budget.count.mockResolvedValue(0);
+      mockPrismaService.account.groupBy.mockResolvedValue([]);
+      mockPrismaService.auditLog.findFirst.mockResolvedValue(null);
+      mockPrismaService.$queryRaw.mockResolvedValue([{ connection_count: '10' }]);
+
+      const stats = await service.getSystemStats();
+
+      expect(stats.systemHealth.jobQueueStatus).toBe('idle');
+    });
+
+    it('should return error status when queue status check fails', async () => {
+      // Simulate an error in getQueueStatus
+      mockPrismaService.auditLog.count.mockRejectedValueOnce(new Error('Query failed'));
+
+      mockRedisService.get.mockResolvedValue(null);
+      mockPrismaService.user.count.mockResolvedValue(0);
+      mockPrismaService.space.count.mockResolvedValue(0);
+      mockPrismaService.space.groupBy.mockResolvedValue([]);
+      mockPrismaService.account.count.mockResolvedValue(0);
+      mockPrismaService.transaction.count.mockResolvedValue(0);
+      mockPrismaService.budget.count.mockResolvedValue(0);
+      mockPrismaService.account.groupBy.mockResolvedValue([]);
+      mockPrismaService.auditLog.findFirst.mockResolvedValue(null);
+      mockPrismaService.$queryRaw.mockResolvedValue([{ connection_count: '10' }]);
+
+      const stats = await service.getSystemStats();
+
+      expect(stats.systemHealth.jobQueueStatus).toBe('error');
     });
   });
 });

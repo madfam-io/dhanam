@@ -323,6 +323,26 @@ describe('SessionService', () => {
 
         expect(result).toBeNull();
       });
+
+      it('should return null and log error for corrupted reset token data', async () => {
+        redis.get = jest.fn().mockResolvedValue('invalid-json-data');
+
+        const result = await service.validatePasswordResetToken(token);
+
+        expect(result).toBeNull();
+        expect(logger.error).toHaveBeenCalled();
+        expect(redis.del).toHaveBeenCalledWith(`password_reset:${hashedToken}`);
+      });
+    });
+  });
+
+  describe('onModuleDestroy', () => {
+    it('should disconnect from Redis on module destroy', async () => {
+      redis.disconnect = jest.fn().mockResolvedValue(undefined);
+
+      await service.onModuleDestroy();
+
+      expect(redis.disconnect).toHaveBeenCalled();
     });
   });
 

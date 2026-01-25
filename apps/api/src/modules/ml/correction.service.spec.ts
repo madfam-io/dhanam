@@ -196,6 +196,66 @@ describe('CategoryCorrectionService', () => {
         }),
       });
     });
+
+    it('should handle null merchant pattern (line 84)', async () => {
+      // When extractPatternKey returns null, merchantPattern should be null
+      merchantNormalizerMock.extractPatternKey!.mockReturnValue(null);
+
+      prismaMock.transaction.findUnique.mockResolvedValue({
+        ...mockTransaction,
+        merchant: null, // null merchant should give null pattern
+      });
+
+      await service.recordCorrection({
+        transactionId: testTransactionId,
+        spaceId: testSpaceId,
+        correctedCategoryId: 'new-category',
+        userId: testUserId,
+        applyToFuture: true,
+      });
+
+      expect(prismaMock.categoryCorrection.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          merchantPattern: null,
+        }),
+      });
+
+      // Should NOT call applyCorrectionToSimilarTransactions because merchantPattern is null
+      expect(prismaMock.transaction.update).toHaveBeenCalledTimes(1); // Only the original transaction
+    });
+
+    it('should handle empty description terms (line 85)', async () => {
+      // When extractDescriptionTerms returns empty array, descriptionPattern should be null/empty
+      merchantNormalizerMock.extractDescriptionTerms!.mockReturnValue([]);
+
+      await service.recordCorrection({
+        transactionId: testTransactionId,
+        spaceId: testSpaceId,
+        correctedCategoryId: 'new-category',
+        userId: testUserId,
+      });
+
+      expect(prismaMock.categoryCorrection.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          descriptionPattern: null, // Empty joined string should be null
+        }),
+      });
+    });
+
+    it('should early return from applyCorrectionToSimilarTransactions when merchantPattern is empty (line 129)', async () => {
+      merchantNormalizerMock.extractPatternKey!.mockReturnValue(''); // Empty string pattern
+
+      await service.recordCorrection({
+        transactionId: testTransactionId,
+        spaceId: testSpaceId,
+        correctedCategoryId: 'new-category',
+        userId: testUserId,
+        applyToFuture: true,
+      });
+
+      // Should update only the original transaction because merchantPattern is empty
+      expect(prismaMock.transaction.update).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe('getLearnedPatterns', () => {

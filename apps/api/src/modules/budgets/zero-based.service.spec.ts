@@ -585,6 +585,54 @@ describe('ZeroBasedService', () => {
       expect(result.allocations[0].amount).toBe(400); // 100 * 4 weeks
     });
 
+    it('should allocate based on target_balance goals with targetDate', async () => {
+      // Set targetDate 2 months from now
+      const futureDate = new Date(Date.now() + 60 * 24 * 60 * 60 * 1000); // ~2 months
+
+      prismaMock.category.findMany.mockResolvedValue([
+        {
+          ...mockCategory,
+          goal: {
+            goalType: 'target_balance',
+            targetAmount: createDecimal(1000),
+            targetDate: futureDate,
+          },
+        },
+      ]);
+
+      prismaMock.category.findFirst.mockResolvedValue({
+        ...mockCategory,
+        budget: { ...mockBudget, space: mockSpace },
+      });
+      prismaMock.incomeEvent.findFirst.mockResolvedValue(mockIncomeEvent);
+      prismaMock.incomeAllocation.create.mockResolvedValue({});
+      prismaMock.category.update.mockResolvedValue(mockCategory);
+
+      const result = await service.autoAllocate(testUserId, testSpaceId);
+
+      // Should allocate ~500/month for 2 months to reach 1000
+      expect(result.allocations).toHaveLength(1);
+      expect(result.allocations[0].amount).toBeGreaterThan(0);
+      expect(result.allocations[0].amount).toBeLessThanOrEqual(1000);
+    });
+
+    it('should skip target_balance goals without targetDate', async () => {
+      prismaMock.category.findMany.mockResolvedValue([
+        {
+          ...mockCategory,
+          goal: {
+            goalType: 'target_balance',
+            targetAmount: createDecimal(1000),
+            targetDate: null, // No target date
+          },
+        },
+      ]);
+
+      const result = await service.autoAllocate(testUserId, testSpaceId);
+
+      expect(result.allocations).toHaveLength(0);
+    });
+
     it('should not exceed remaining unallocated funds', async () => {
       prismaMock.incomeEvent.findMany.mockResolvedValue([
         { ...mockIncomeEvent, amount: createDecimal(100) },

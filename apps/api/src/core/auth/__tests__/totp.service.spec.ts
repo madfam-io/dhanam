@@ -161,6 +161,14 @@ describe('TotpService', () => {
       );
     });
 
+    it('should throw error if user is not found (line 59 null user branch)', async () => {
+      prisma.user.findUnique.mockResolvedValue(null);
+
+      await expect(service.enableTotp('nonexistent-user', '123456')).rejects.toThrow(
+        'No TOTP setup in progress',
+      );
+    });
+
     it('should verify token with 2-step window for clock drift', async () => {
       const userWithTempSecret = {
         ...mockUser,
@@ -239,6 +247,14 @@ describe('TotpService', () => {
       prisma.user.findUnique.mockResolvedValue(mockUser as any);
 
       await expect(service.disableTotp(mockUser.id, '123456')).rejects.toThrow(
+        'TOTP not enabled',
+      );
+    });
+
+    it('should throw error if user is not found (line 93 null user branch)', async () => {
+      prisma.user.findUnique.mockResolvedValue(null);
+
+      await expect(service.disableTotp('nonexistent-user', '123456')).rejects.toThrow(
         'TOTP not enabled',
       );
     });
@@ -421,6 +437,15 @@ describe('TotpService', () => {
       const result = await service.verifyBackupCode(mockUser.id, validCode);
 
       expect(result).toBe(false);
+    });
+
+    it('should return false if user is not found', async () => {
+      prisma.user.findUnique.mockResolvedValue(null);
+
+      const result = await service.verifyBackupCode('non-existent-user', validCode);
+
+      expect(result).toBe(false);
+      expect(prisma.user.update).not.toHaveBeenCalled();
     });
 
     it('should log when backup code is used', async () => {
