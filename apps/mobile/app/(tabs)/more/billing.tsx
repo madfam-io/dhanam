@@ -1,7 +1,10 @@
-import React, { useState } from 'react';
-import { ScrollView, Alert, Linking } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { ScrollView, Alert, Linking, NativeModules, Platform } from 'react-native';
+import * as WebBrowser from 'expo-web-browser';
+import * as ExpoLinking from 'expo-linking';
 
 import { useAuth } from '@/hooks/useAuth';
+import { billingApi, SubscriptionStatus } from '@/services/api';
 import {
   Ionicons,
   View,
@@ -66,11 +69,88 @@ const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
   },
 ];
 
+// Get user's country code for payment provider routing (MX → Stripe México, others → Paddle)
+function getCountryCode(): string {
+  try {
+    // Try to get country from device locale
+    if (Platform.OS === 'ios') {
+      const locale =
+        NativeModules.SettingsManager?.settings?.AppleLocale ||
+        NativeModules.SettingsManager?.settings?.AppleLanguages?.[0] ||
+        '';
+      // Locale format can be "en_MX" or "es-MX" - extract the country code
+      const parts = locale.split(/[-_]/);
+      if (parts.length >= 2) {
+        return parts[1].toUpperCase();
+      }
+    } else if (Platform.OS === 'android') {
+      const locale = NativeModules.I18nManager?.localeIdentifier || '';
+      const parts = locale.split(/[-_]/);
+      if (parts.length >= 2) {
+        return parts[1].toUpperCase();
+      }
+    }
+    // Fallback to Intl API
+    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+    // Common Mexico time zones
+    if (timeZone.includes('Mexico') || timeZone.includes('Cancun') || timeZone.includes('Merida')) {
+      return 'MX';
+    }
+    return 'US';
+  } catch {
+    return 'US';
+  }
+}
+
 export default function BillingScreen() {
-  const { user } = useAuth();
-  const isPremium = user?.subscriptionTier === 'premium';
+  const { user, refreshUser } = useAuth();
   const [loading, setLoading] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus | null>(null);
+  const [statusLoading, setStatusLoading] = useState(true);
+
+  // Determine premium status from subscription status or user object
+  const isPremium = subscriptionStatus?.tier === 'premium' || user?.subscriptionTier === 'premium';
+
+  // Fetch subscription status on mount
+  const fetchSubscriptionStatus = useCallback(async () => {
+    try {
+      setStatusLoading(true);
+      const status = await billingApi.getStatus();
+      setSubscriptionStatus(status);
+    } catch (error) {
+      console.error('Failed to fetch subscription status:', error);
+      // Fall back to user object if API fails
+    } finally {
+      setStatusLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchSubscriptionStatus();
+  }, [fetchSubscriptionStatus]);
+
+  // Handle deep link callback after checkout
+  useEffect(() => {
+    const handleDeepLink = async (event: { url: string }) => {
+      const url = event.url;
+      if (url.includes('billing-success') || url.includes('checkout-complete')) {
+        // Refresh subscription status after successful checkout
+        await fetchSubscriptionStatus();
+        if (refreshUser) {
+          await refreshUser();
+        }
+        Alert.alert(
+          'Subscription Activated',
+          'Thank you! Your premium subscription is now active.',
+          [{ text: 'OK' }]
+        );
+      }
+    };
+
+    const subscription = ExpoLinking.addEventListener('url', handleDeepLink);
+    return () => subscription.remove();
+  }, [fetchSubscriptionStatus, refreshUser]);
 
   const handleSubscribe = async (planId: string) => {
     if (planId === 'free') {
@@ -81,33 +161,39 @@ export default function BillingScreen() {
     setLoading(true);
     setSelectedPlan(planId);
 
-    // TODO: Integrate with RevenueCat or Stripe for actual purchases
-    // For now, show a placeholder that directs to web billing
-    setTimeout(() => {
-      setLoading(false);
-      setSelectedPlan(null);
-      Alert.alert(
-        'Complete Purchase',
-        'To complete your premium subscription, please visit our web app.',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Open Web',
-            onPress: () => Linking.openURL('https://app.dhan.am/settings/billing'),
-          },
-        ]
-      );
-    }, 1000);
-  };
+    try {
+      const countryCode = getCountryCode();
+      const plan = planId === 'premium_annual' ? 'annual' : 'monthly';
 
-  const handleRestorePurchases = async () => {
-    setLoading(true);
-    // TODO: Integrate with RevenueCat for restore purchases
-    setTimeout(() => {
-      setLoading(false);
+      // Generate callback URLs for the checkout flow
+      const successUrl = ExpoLinking.createURL('billing-success');
+      const cancelUrl = ExpoLinking.createURL('billing-cancel');
+
+      const response = await billingApi.upgradeToPremium({
+        plan,
+        successUrl,
+        cancelUrl,
+        countryCode,
+      });
+
+      // Open checkout URL in browser
+      const result = await WebBrowser.openAuthSessionAsync(
+        response.checkoutUrl,
+        successUrl
+      );
+
+      if (result.type === 'success') {
+        // Refresh subscription status after returning from checkout
+        await fetchSubscriptionStatus();
+        if (refreshUser) {
+          await refreshUser();
+        }
+      }
+    } catch (error) {
+      console.error('Subscription error:', error);
       Alert.alert(
-        'Restore Purchases',
-        'No previous purchases found. If you believe this is an error, please contact support.',
+        'Subscription Error',
+        'There was a problem starting the checkout process. Please try again or contact support.',
         [
           { text: 'OK' },
           {
@@ -116,27 +202,98 @@ export default function BillingScreen() {
           },
         ]
       );
-    }, 1500);
+    } finally {
+      setLoading(false);
+      setSelectedPlan(null);
+    }
   };
 
-  const handleManageSubscription = () => {
-    // Open the appropriate subscription management page
-    Alert.alert(
-      'Manage Subscription',
-      'Where would you like to manage your subscription?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'App Store',
-          onPress: () => Linking.openURL('https://apps.apple.com/account/subscriptions'),
-        },
-        {
-          text: 'Web Dashboard',
-          onPress: () => Linking.openURL('https://app.dhan.am/settings/billing'),
-        },
-      ]
-    );
+  const handleRestorePurchases = async () => {
+    setLoading(true);
+    try {
+      // Refresh subscription status from the server
+      await fetchSubscriptionStatus();
+      if (refreshUser) {
+        await refreshUser();
+      }
+
+      if (subscriptionStatus?.tier === 'premium') {
+        Alert.alert(
+          'Subscription Restored',
+          'Your premium subscription has been restored successfully!',
+          [{ text: 'OK' }]
+        );
+      } else {
+        Alert.alert(
+          'No Subscription Found',
+          'No active subscription was found for your account. If you believe this is an error, please contact support.',
+          [
+            { text: 'OK' },
+            {
+              text: 'Contact Support',
+              onPress: () => Linking.openURL('mailto:support@dhan.am'),
+            },
+          ]
+        );
+      }
+    } catch (error) {
+      console.error('Restore purchases error:', error);
+      Alert.alert(
+        'Error',
+        'Failed to check subscription status. Please try again.',
+        [{ text: 'OK' }]
+      );
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const handleManageSubscription = async () => {
+    setLoading(true);
+    try {
+      const response = await billingApi.createPortalSession();
+
+      // Open the billing portal in browser
+      await WebBrowser.openBrowserAsync(response.portalUrl);
+
+      // Refresh status after returning from portal
+      await fetchSubscriptionStatus();
+      if (refreshUser) {
+        await refreshUser();
+      }
+    } catch (error) {
+      console.error('Portal error:', error);
+      // Fall back to showing options if portal creation fails
+      Alert.alert(
+        'Manage Subscription',
+        'Unable to open billing portal. Please try an alternative method.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Web Dashboard',
+            onPress: () => Linking.openURL('https://app.dhan.am/settings/billing'),
+          },
+          {
+            text: 'Contact Support',
+            onPress: () => Linking.openURL('mailto:support@dhan.am'),
+          },
+        ]
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (statusLoading) {
+    return (
+      <View style={[styles.container, styles.loadingContainer]}>
+        <ActivityIndicator size="large" color="#2196F3" />
+        <Text variant="bodyMedium" style={styles.loadingText}>
+          Loading subscription status...
+        </Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -172,10 +329,17 @@ export default function BillingScreen() {
                 ? 'You have access to all premium features including Monte Carlo simulations, scenario analysis, and advanced projections.'
                 : 'Upgrade to Premium to unlock advanced financial planning tools.'}
             </Text>
+            {isPremium && subscriptionStatus?.expiresAt && (
+              <Text variant="bodySmall" style={styles.expirationText}>
+                Renews on {new Date(subscriptionStatus.expiresAt).toLocaleDateString()}
+              </Text>
+            )}
             {isPremium && (
               <Button
                 mode="outlined"
                 onPress={handleManageSubscription}
+                loading={loading && !selectedPlan}
+                disabled={loading}
                 style={styles.manageButton}
               >
                 Manage Subscription
@@ -373,6 +537,14 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FAFAFA',
   },
+  loadingContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 12,
+    color: '#757575',
+  },
   scrollView: {
     flex: 1,
   },
@@ -411,6 +583,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#616161',
     lineHeight: 22,
+  },
+  expirationText: {
+    textAlign: 'center',
+    color: '#9E9E9E',
+    marginTop: 8,
   },
   manageButton: {
     marginTop: 16,

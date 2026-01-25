@@ -596,15 +596,22 @@ export class AnalyticsService {
 
     const categoryMap = new Map(categories.map((c) => [c.id, c]));
 
+    // Calculate total spending for percentage calculation
+    const totalSpending = transactions.reduce(
+      (sum, t) => sum + Math.abs(t._sum.amount?.toNumber() || 0),
+      0
+    );
+
     return transactions
       .filter((t) => t.categoryId)
       .map((t) => {
         const category = categoryMap.get(t.categoryId!) as (typeof categories)[0] | undefined;
+        const amount = Math.abs(t._sum.amount?.toNumber() || 0);
         return {
           categoryId: t.categoryId!,
           categoryName: category?.name || 'Unknown',
-          amount: Math.abs(t._sum.amount?.toNumber() || 0),
-          percentage: 0, // TODO: Calculate percentage
+          amount,
+          percentage: totalSpending > 0 ? Math.round((amount / totalSpending) * 10000) / 100 : 0,
           transactionCount: t._count,
           icon: category?.icon || undefined,
           color: category?.color || undefined,

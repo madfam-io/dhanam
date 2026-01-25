@@ -81,4 +81,54 @@ export const onboardingApi = {
   },
 };
 
+// Billing Types
+export interface SubscriptionStatus {
+  tier: 'free' | 'premium';
+  startedAt: string | null;
+  expiresAt: string | null;
+  isActive: boolean;
+}
+
+export interface UpgradeResponse {
+  checkoutUrl: string;
+  provider: 'stripe' | 'paddle';
+}
+
+export interface PortalResponse {
+  portalUrl: string;
+}
+
+// Billing API
+export const billingApi = {
+  /**
+   * Get subscription status for the authenticated user
+   */
+  getStatus: async (): Promise<SubscriptionStatus> => {
+    const response = await apiClient.get<SubscriptionStatus>('/billing/status');
+    return response.data;
+  },
+
+  /**
+   * Initiate upgrade to premium subscription
+   * Backend routes MX → Stripe México, others → Paddle
+   */
+  upgradeToPremium: async (options: {
+    plan?: 'monthly' | 'annual';
+    successUrl?: string;
+    cancelUrl?: string;
+    countryCode?: string;
+  }): Promise<UpgradeResponse> => {
+    const response = await apiClient.post<UpgradeResponse>('/billing/upgrade', options);
+    return response.data;
+  },
+
+  /**
+   * Create billing portal session for subscription management
+   */
+  createPortalSession: async (): Promise<PortalResponse> => {
+    const response = await apiClient.post<PortalResponse>('/billing/portal');
+    return response.data;
+  },
+};
+
 export default apiClient;
