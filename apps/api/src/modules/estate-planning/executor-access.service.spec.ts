@@ -1,9 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 
 import { ExecutorAccessService } from './executor-access.service';
 import { PrismaService } from '../../core/prisma/prisma.service';
 import { AuditService } from '../../core/audit/audit.service';
+import { JanuaEmailService } from '../email/janua-email.service';
 import {
   createPrismaMock,
   createLoggerMock,
@@ -57,6 +59,29 @@ describe('ExecutorAccessService', () => {
         ExecutorAccessService,
         { provide: PrismaService, useValue: prismaMock },
         { provide: AuditService, useValue: auditMock },
+        {
+          provide: JanuaEmailService,
+          useValue: {
+            sendEmail: jest.fn().mockResolvedValue({ success: true }),
+            sendTemplateEmail: jest.fn().mockResolvedValue({ success: true }),
+            sendExecutorVerificationEmail: jest.fn().mockResolvedValue({ success: true }),
+            sendExecutorAccessRequestEmail: jest.fn().mockResolvedValue({ success: true }),
+            sendExecutorAccessGrantedEmail: jest.fn().mockResolvedValue({ success: true }),
+          },
+        },
+        {
+          provide: ConfigService,
+          useValue: {
+            get: jest.fn().mockImplementation((key: string, defaultValue?: any) => {
+              const config: Record<string, any> = {
+                APP_URL: 'http://localhost:3000',
+                WEB_URL: 'http://localhost:3000',
+                EXECUTOR_ACCESS_DAYS: 7,
+              };
+              return config[key] ?? defaultValue;
+            }),
+          },
+        },
       ],
     }).compile();
 

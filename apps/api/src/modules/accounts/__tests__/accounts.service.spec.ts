@@ -4,6 +4,8 @@ import { BadRequestException, ForbiddenException, NotFoundException } from '@nes
 import { LoggerService } from '../../../core/logger/logger.service';
 import { PrismaService } from '../../../core/prisma/prisma.service';
 import { AccountsService } from '../accounts.service';
+import { PlaidService } from '../../providers/plaid/plaid.service';
+import { BitsoService } from '../../providers/bitso/bitso.service';
 
 describe('AccountsService', () => {
   let service: AccountsService;
@@ -85,6 +87,26 @@ describe('AccountsService', () => {
             log: jest.fn(),
             error: jest.fn(),
             warn: jest.fn(),
+          },
+        },
+        {
+          provide: PlaidService,
+          useValue: {
+            createLink: jest.fn(),
+            createLinkToken: jest.fn(),
+            exchangePublicToken: jest.fn(),
+            getAccounts: jest.fn(),
+            getTransactions: jest.fn(),
+            syncTransactions: jest.fn(),
+          },
+        },
+        {
+          provide: BitsoService,
+          useValue: {
+            connectAccount: jest.fn(),
+            getAccounts: jest.fn(),
+            getBalances: jest.fn(),
+            getTransactions: jest.fn(),
           },
         },
       ],
@@ -197,25 +219,25 @@ describe('AccountsService', () => {
       );
     });
 
-    it('should throw error for Plaid (not yet implemented)', async () => {
+    it('should require linkToken for Plaid connections', async () => {
       const dto = {
         provider: 'plaid' as const,
         connectionToken: 'token123',
       };
 
       await expect(service.connectAccount('space-123', 'user-123', dto)).rejects.toThrow(
-        'Plaid integration not yet implemented'
+        'Plaid connections require a linkToken'
       );
     });
 
-    it('should throw error for Bitso (not yet implemented)', async () => {
+    it('should require credentials for Bitso connections', async () => {
       const dto = {
         provider: 'bitso' as const,
         connectionToken: 'token123',
       };
 
       await expect(service.connectAccount('space-123', 'user-123', dto)).rejects.toThrow(
-        'Bitso integration not yet implemented'
+        'Bitso connections require apiKey and apiSecret in credentials'
       );
     });
   });

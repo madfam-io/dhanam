@@ -3,6 +3,8 @@ import { NotFoundException } from '@nestjs/common';
 import { AccountsService } from './accounts.service';
 import { PrismaService } from '../../core/prisma/prisma.service';
 import { LoggerService } from '../../core/logger/logger.service';
+import { PlaidService } from '../providers/plaid/plaid.service';
+import { BitsoService } from '../providers/bitso/bitso.service';
 import { mockDeep, DeepMockProxy } from 'jest-mock-extended';
 import { Provider, AccountType, Currency } from '@dhanam/shared';
 
@@ -26,6 +28,26 @@ describe('AccountsService', () => {
             warn: jest.fn(),
             debug: jest.fn(),
             verbose: jest.fn(),
+          },
+        },
+        {
+          provide: PlaidService,
+          useValue: {
+            createLink: jest.fn(),
+            createLinkToken: jest.fn(),
+            exchangePublicToken: jest.fn(),
+            getAccounts: jest.fn(),
+            getTransactions: jest.fn(),
+            syncTransactions: jest.fn(),
+          },
+        },
+        {
+          provide: BitsoService,
+          useValue: {
+            connectAccount: jest.fn(),
+            getAccounts: jest.fn(),
+            getBalances: jest.fn(),
+            getTransactions: jest.fn(),
           },
         },
       ],

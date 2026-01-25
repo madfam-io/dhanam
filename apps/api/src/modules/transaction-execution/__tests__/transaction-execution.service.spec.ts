@@ -3,6 +3,7 @@ import { BadRequestException, NotFoundException, ConflictException } from '@nest
 import { TransactionExecutionService } from '../transaction-execution.service';
 import { PrismaService } from '../../../core/prisma/prisma.service';
 import { AuditService } from '../../../core/audit/audit.service';
+import { TotpService } from '../../../core/auth/totp.service';
 import { SpacesService } from '../../spaces/spaces.service';
 import { ProviderFactoryService } from '../providers/provider-factory.service';
 import { CreateOrderDto, OrderType, OrderPriority, ExecutionProvider } from '../dto/create-order.dto';
@@ -101,6 +102,17 @@ describe('TransactionExecutionService', () => {
           provide: AuditService,
           useValue: {
             log: jest.fn(),
+          },
+        },
+        {
+          provide: TotpService,
+          useValue: {
+            verifyToken: jest.fn().mockImplementation((secret: string, token: string) => {
+              // Simple mock: 6-digit codes are valid
+              return /^\d{6}$/.test(token);
+            }),
+            generateSecret: jest.fn().mockReturnValue('mock-secret'),
+            generateQRCodeURL: jest.fn().mockReturnValue('mock-qr-url'),
           },
         },
         {
@@ -300,13 +312,23 @@ describe('TransactionExecutionService', () => {
   describe('verifyOrder', () => {
     it('should verify order with valid OTP', async () => {
       const pendingOrder = { ...mockOrder, status: 'pending_verification' };
+      const userWithTotp = {
+        ...mockUser,
+        totpEnabled: true,
+        totpSecret: 'test-secret-key',
+      };
 
       (prisma.transactionOrder.findFirst as jest.Mock).mockResolvedValue(pendingOrder);
+      (prisma.user.findUnique as jest.Mock).mockResolvedValue(userWithTotp);
       (prisma.transactionOrder.update as jest.Mock).mockResolvedValue({
         ...pendingOrder,
         status: 'pending_execution',
         otpVerified: true,
       });
+
+      // Mock totpService to verify the OTP code
+      const totpService = service['totpService'];
+      jest.spyOn(totpService, 'verifyToken').mockReturnValue(true);
 
       const result = await service.verifyOrder(
         mockOrder.id,
@@ -339,6 +361,7 @@ describe('TransactionExecutionService', () => {
       const pendingOrder = { ...mockOrder, status: 'pending_verification' };
 
       (prisma.transactionOrder.findFirst as jest.Mock).mockResolvedValue(pendingOrder);
+      // Invalid OTP format will be rejected before hitting the TOTP service
 
       await expect(
         service.verifyOrder(mockOrder.id, mockUser.id, { otpCode: 'invalid' })
