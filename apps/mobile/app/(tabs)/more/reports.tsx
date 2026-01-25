@@ -1,6 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Alert, Platform } from 'react-native';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import { Alert } from 'react-native';
 
 import {
   useReportSummary,
@@ -19,6 +18,7 @@ import {
   Divider,
   TouchableRipple,
   ActivityIndicator,
+  Chip,
 } from '@/lib/react-native-compat';
 
 function formatCurrency(amount: number, currency = 'USD'): string {
@@ -42,11 +42,66 @@ function displayDate(dateString: string): string {
   });
 }
 
-function getDefaultStartDate(): Date {
-  const date = new Date();
-  date.setMonth(date.getMonth() - 1);
-  return date;
+type DateRangePreset = 'last7days' | 'last30days' | 'thisMonth' | 'lastMonth' | 'last3Months' | 'thisYear';
+
+interface DateRange {
+  startDate: Date;
+  endDate: Date;
+  label: string;
 }
+
+function getDateRange(preset: DateRangePreset): DateRange {
+  const now = new Date();
+  const endDate = new Date(now);
+  let startDate: Date;
+  let label: string;
+
+  switch (preset) {
+    case 'last7days':
+      startDate = new Date(now);
+      startDate.setDate(startDate.getDate() - 7);
+      label = 'Last 7 Days';
+      break;
+    case 'last30days':
+      startDate = new Date(now);
+      startDate.setDate(startDate.getDate() - 30);
+      label = 'Last 30 Days';
+      break;
+    case 'thisMonth':
+      startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+      label = 'This Month';
+      break;
+    case 'lastMonth':
+      startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      endDate.setDate(0); // Last day of previous month
+      label = 'Last Month';
+      break;
+    case 'last3Months':
+      startDate = new Date(now);
+      startDate.setMonth(startDate.getMonth() - 3);
+      label = 'Last 3 Months';
+      break;
+    case 'thisYear':
+      startDate = new Date(now.getFullYear(), 0, 1);
+      label = 'This Year';
+      break;
+    default:
+      startDate = new Date(now);
+      startDate.setMonth(startDate.getMonth() - 1);
+      label = 'Last 30 Days';
+  }
+
+  return { startDate, endDate, label };
+}
+
+const DATE_PRESETS: { id: DateRangePreset; label: string }[] = [
+  { id: 'last7days', label: '7 Days' },
+  { id: 'last30days', label: '30 Days' },
+  { id: 'thisMonth', label: 'This Month' },
+  { id: 'lastMonth', label: 'Last Month' },
+  { id: 'last3Months', label: '3 Months' },
+  { id: 'thisYear', label: 'This Year' },
+];
 
 const reportTemplates = [
   {
@@ -81,13 +136,11 @@ const reportTemplates = [
 
 export default function ReportsScreen() {
   const { currentSpace } = useSpaces();
-  const [startDate, setStartDate] = useState<Date>(getDefaultStartDate);
-  const [endDate, setEndDate] = useState<Date>(new Date());
-  const [showStartPicker, setShowStartPicker] = useState(false);
-  const [showEndPicker, setShowEndPicker] = useState(false);
+  const [selectedPreset, setSelectedPreset] = useState<DateRangePreset>('last30days');
 
-  const startDateString = useMemo(() => formatDate(startDate), [startDate]);
-  const endDateString = useMemo(() => formatDate(endDate), [endDate]);
+  const dateRange = useMemo(() => getDateRange(selectedPreset), [selectedPreset]);
+  const startDateString = useMemo(() => formatDate(dateRange.startDate), [dateRange]);
+  const endDateString = useMemo(() => formatDate(dateRange.endDate), [dateRange]);
 
   const { data: summary, isLoading: summaryLoading } = useReportSummary(
     startDateString,
@@ -105,7 +158,7 @@ export default function ReportsScreen() {
         startDate: startDateString,
         endDate: endDateString,
       });
-    } catch (error) {
+    } catch {
       Alert.alert('Error', 'Failed to generate PDF report');
     }
   };
@@ -116,22 +169,8 @@ export default function ReportsScreen() {
         startDate: startDateString,
         endDate: endDateString,
       });
-    } catch (error) {
+    } catch {
       Alert.alert('Error', 'Failed to export transactions');
-    }
-  };
-
-  const handleStartDateChange = (event: any, selectedDate?: Date) => {
-    setShowStartPicker(Platform.OS === 'ios');
-    if (selectedDate) {
-      setStartDate(selectedDate);
-    }
-  };
-
-  const handleEndDateChange = (event: any, selectedDate?: Date) => {
-    setShowEndPicker(Platform.OS === 'ios');
-    if (selectedDate) {
-      setEndDate(selectedDate);
     }
   };
 
@@ -158,64 +197,29 @@ export default function ReportsScreen() {
             <Text variant="titleMedium" style={styles.sectionTitle}>
               Date Range
             </Text>
-            <View style={styles.dateContainer}>
-              <TouchableRipple
-                onPress={() => setShowStartPicker(true)}
-                style={styles.dateButton}
-              >
-                <View style={styles.dateButtonContent}>
-                  <Ionicons name="calendar-outline" size={20} color="#4CAF50" />
-                  <View style={styles.dateTextContainer}>
-                    <Text variant="bodySmall" style={styles.dateLabel}>
-                      Start Date
-                    </Text>
-                    <Text variant="bodyMedium" style={styles.dateValue}>
-                      {displayDate(startDateString)}
-                    </Text>
-                  </View>
-                </View>
-              </TouchableRipple>
-
-              <Ionicons name="arrow-forward" size={20} color="#BDBDBD" />
-
-              <TouchableRipple
-                onPress={() => setShowEndPicker(true)}
-                style={styles.dateButton}
-              >
-                <View style={styles.dateButtonContent}>
-                  <Ionicons name="calendar-outline" size={20} color="#4CAF50" />
-                  <View style={styles.dateTextContainer}>
-                    <Text variant="bodySmall" style={styles.dateLabel}>
-                      End Date
-                    </Text>
-                    <Text variant="bodyMedium" style={styles.dateValue}>
-                      {displayDate(endDateString)}
-                    </Text>
-                  </View>
-                </View>
-              </TouchableRipple>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.presetsContainer}
+            >
+              {DATE_PRESETS.map((preset) => (
+                <Chip
+                  key={preset.id}
+                  selected={selectedPreset === preset.id}
+                  onPress={() => setSelectedPreset(preset.id)}
+                  style={styles.presetChip}
+                  mode={selectedPreset === preset.id ? 'flat' : 'outlined'}
+                >
+                  {preset.label}
+                </Chip>
+              ))}
+            </ScrollView>
+            <View style={styles.dateRangeDisplay}>
+              <Ionicons name="calendar-outline" size={16} color="#4CAF50" />
+              <Text variant="bodyMedium" style={styles.dateRangeText}>
+                {displayDate(startDateString)} - {displayDate(endDateString)}
+              </Text>
             </View>
-
-            {showStartPicker && (
-              <DateTimePicker
-                value={startDate}
-                mode="date"
-                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                onChange={handleStartDateChange}
-                maximumDate={endDate}
-              />
-            )}
-
-            {showEndPicker && (
-              <DateTimePicker
-                value={endDate}
-                mode="date"
-                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                onChange={handleEndDateChange}
-                minimumDate={startDate}
-                maximumDate={new Date()}
-              />
-            )}
           </Card.Content>
         </Card>
 
@@ -406,30 +410,23 @@ const styles = StyleSheet.create({
     color: '#212121',
     marginBottom: 16,
   },
-  dateContainer: {
+  presetsContainer: {
+    flexDirection: 'row',
+    gap: 8,
+    paddingBottom: 12,
+  },
+  presetChip: {
+    marginRight: 4,
+  },
+  dateRangeDisplay: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    gap: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#E0E0E0',
   },
-  dateButton: {
-    flex: 1,
-    padding: 12,
-    borderRadius: 8,
-    backgroundColor: '#F5F5F5',
-  },
-  dateButtonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  dateTextContainer: {
-    flex: 1,
-  },
-  dateLabel: {
-    color: '#757575',
-  },
-  dateValue: {
-    fontWeight: '600',
+  dateRangeText: {
     color: '#212121',
   },
   exportButtons: {

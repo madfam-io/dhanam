@@ -7,6 +7,7 @@ import {
   ScenarioType,
   ScenarioComparisonResult,
 } from '@/hooks/api/useScenarios';
+import { useAuth } from '@/hooks/useAuth';
 import { useSpaces } from '@/hooks/useSpaces';
 import {
   Ionicons,
@@ -44,9 +45,10 @@ const SEVERITY_COLORS: Record<string, string> = {
 };
 
 export default function ScenariosScreen() {
-  const { currentSpace, userProfile } = useSpaces();
+  const { currentSpace } = useSpaces();
+  const { user } = useAuth();
   const currency = currentSpace?.currency || 'USD';
-  const isPremium = userProfile?.subscriptionTier === 'premium' || userProfile?.subscriptionTier === 'enterprise';
+  const isPremium = user?.subscriptionTier === 'premium';
 
   const [refreshing, setRefreshing] = useState(false);
 

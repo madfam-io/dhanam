@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { ScrollView, RefreshControl, Alert } from 'react-native';
 
 import { useSimulateRetirement, RetirementConfig, RetirementSimulationResult } from '@/hooks/api/useRetirement';
+import { useAuth } from '@/hooks/useAuth';
 import { useSpaces } from '@/hooks/useSpaces';
 import {
   Ionicons,
@@ -38,9 +39,10 @@ const RISK_PROFILES: Record<RiskTolerance, { expectedReturn: number; volatility:
 };
 
 export default function RetirementScreen() {
-  const { currentSpace, userProfile } = useSpaces();
+  const { currentSpace } = useSpaces();
+  const { user } = useAuth();
   const currency = currentSpace?.currency || 'USD';
-  const isPremium = userProfile?.subscriptionTier === 'premium' || userProfile?.subscriptionTier === 'enterprise';
+  const isPremium = user?.subscriptionTier === 'premium';
 
   const [refreshing, setRefreshing] = useState(false);
 
@@ -270,7 +272,7 @@ export default function RetirementScreen() {
             </Text>
             <SegmentedButtons
               value={riskTolerance}
-              onValueChange={(value) => setRiskTolerance(value as RiskTolerance)}
+              onValueChange={(value: string) => setRiskTolerance(value as RiskTolerance)}
               buttons={[
                 { value: 'conservative', label: 'Low' },
                 { value: 'moderate', label: 'Medium' },

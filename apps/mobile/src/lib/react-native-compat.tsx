@@ -102,6 +102,17 @@ export const Dialog = Object.assign(_Dialog, {
 export const PaperSwitch = RNPaper.Switch as any;
 export const PaperActivityIndicator = RNPaper.ActivityIndicator as any;
 
+// Additional Paper components
+export const ActivityIndicator = RNPaper.ActivityIndicator as any;
+export const IconButton = RNPaper.IconButton as any;
+export const TouchableRipple = RNPaper.TouchableRipple as any;
+
+// Menu namespace
+const _Menu: any = RNPaper.Menu;
+export const Menu = Object.assign(_Menu, {
+  Item: _Menu.Item,
+});
+
 // Paper compound components (need to preserve namespaces)
 const _TextInput: any = RNPaper.TextInput;
 export const TextInput = Object.assign(_TextInput, { Icon: _TextInput.Icon });
