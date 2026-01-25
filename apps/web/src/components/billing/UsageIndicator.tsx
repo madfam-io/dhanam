@@ -4,12 +4,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '~/lib/hooks/use-auth';
 import { billingApi, UsageMetrics } from '~/lib/api/billing';
 import { Badge } from '@/components/ui/badge';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Gauge, TrendingUp, Target, LineChart, Briefcase, Activity } from 'lucide-react';
 
 type MetricType =
@@ -193,9 +188,7 @@ export function UsageIndicator({
       <span className={remaining === 0 ? 'text-destructive font-medium' : ''}>
         {remaining}/{metric.limit} remaining
       </span>
-      {remaining === 0 && (
-        <span className="text-xs text-muted-foreground">(limit reached)</span>
-      )}
+      {remaining === 0 && <span className="text-xs text-muted-foreground">(limit reached)</span>}
     </div>
   );
 }
@@ -240,7 +233,9 @@ export function UsageOverview({ className = '' }: { className?: string }) {
   if (isPremium) {
     return (
       <div className={`text-sm text-muted-foreground ${className}`}>
-        <Badge variant="secondary" className="mr-2">Premium</Badge>
+        <Badge variant="secondary" className="mr-2">
+          Premium
+        </Badge>
         Unlimited usage on all features
       </div>
     );
