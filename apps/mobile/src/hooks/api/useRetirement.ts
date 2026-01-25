@@ -74,7 +74,7 @@ export function useSimulateRetirement() {
       // Calculate values from backend response
       const balanceAtRetirement =
         backendResult.balanceAtRetirement?.median ||
-        (backendResult.yearlyProjections?.[yearsToRetirement]?.median) ||
+        backendResult.yearlyProjections?.[yearsToRetirement]?.median ||
         0;
       const safeWithdrawalRate = (balanceAtRetirement * 0.04) / 12; // 4% rule monthly
       const totalContributions = config.monthlyContribution * monthsToRetirement;

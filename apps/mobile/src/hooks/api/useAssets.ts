@@ -50,7 +50,7 @@ export const ASSET_TYPES = [
   { value: 'other', label: 'Other', icon: 'cube-outline' },
 ] as const;
 
-export type AssetType = typeof ASSET_TYPES[number]['value'];
+export type AssetType = (typeof ASSET_TYPES)[number]['value'];
 
 const QUERY_KEY = 'manual-assets';
 
@@ -105,7 +105,10 @@ export function useUpdateManualAsset() {
   return useMutation({
     mutationFn: async ({ assetId, dto }: { assetId: string; dto: UpdateManualAssetDto }) => {
       if (!currentSpace) throw new Error('No space selected');
-      const response = await apiClient.patch(`/spaces/${currentSpace.id}/manual-assets/${assetId}`, dto);
+      const response = await apiClient.patch(
+        `/spaces/${currentSpace.id}/manual-assets/${assetId}`,
+        dto
+      );
       return response.data as ManualAsset;
     },
     onSuccess: () => {

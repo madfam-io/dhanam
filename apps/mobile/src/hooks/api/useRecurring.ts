@@ -57,9 +57,7 @@ export function useRecurring(options?: { includeDetected?: boolean }) {
     queryFn: async () => {
       if (!currentSpace) throw new Error('No space selected');
       const params = options?.includeDetected ? '?includeDetected=true' : '';
-      const response = await apiClient.get(
-        `/recurring?spaceId=${currentSpace.id}${params}`
-      );
+      const response = await apiClient.get(`/recurring?spaceId=${currentSpace.id}${params}`);
       return response.data;
     },
     enabled: !!currentSpace,
@@ -73,9 +71,7 @@ export function useRecurringSummary() {
     queryKey: [QUERY_KEY, 'summary', currentSpace?.id],
     queryFn: async () => {
       if (!currentSpace) throw new Error('No space selected');
-      const response = await apiClient.get(
-        `/recurring/summary?spaceId=${currentSpace.id}`
-      );
+      const response = await apiClient.get(`/recurring/summary?spaceId=${currentSpace.id}`);
       return response.data;
     },
     enabled: !!currentSpace,

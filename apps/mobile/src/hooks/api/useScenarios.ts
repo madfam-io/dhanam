@@ -70,7 +70,7 @@ export const SCENARIOS = [
   { value: 'BOOM_CYCLE', label: 'Boom Cycle', severity: 'positive' as const },
 ] as const;
 
-export type ScenarioType = typeof SCENARIOS[number]['value'];
+export type ScenarioType = (typeof SCENARIOS)[number]['value'];
 
 export function useAnalyzeScenario() {
   return useMutation({

@@ -74,7 +74,7 @@ export const HOUSEHOLD_TYPES = [
   { value: 'partnership', label: 'Partnership', icon: 'briefcase-outline' },
 ] as const;
 
-export type HouseholdType = typeof HOUSEHOLD_TYPES[number]['value'];
+export type HouseholdType = (typeof HOUSEHOLD_TYPES)[number]['value'];
 
 const QUERY_KEY = 'households';
 

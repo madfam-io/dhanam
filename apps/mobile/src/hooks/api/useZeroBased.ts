@@ -5,7 +5,11 @@ import { apiClient } from '@/services/api';
 import { useSpaces } from '../useSpaces';
 
 // Types
-export type GoalType = 'monthly_spending' | 'target_balance' | 'weekly_spending' | 'percentage_income';
+export type GoalType =
+  | 'monthly_spending'
+  | 'target_balance'
+  | 'weekly_spending'
+  | 'percentage_income';
 
 export interface CategoryAllocationStatus {
   categoryId: string;

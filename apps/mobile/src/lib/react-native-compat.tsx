@@ -84,7 +84,11 @@ export const Portal = RNPaper.Portal as any;
 
 // Avatar namespace
 const _Avatar: any = RNPaper.Avatar;
-export const Avatar = Object.assign(_Avatar, { Text: _Avatar.Text, Icon: _Avatar.Icon, Image: _Avatar.Image });
+export const Avatar = Object.assign(_Avatar, {
+  Text: _Avatar.Text,
+  Icon: _Avatar.Icon,
+  Image: _Avatar.Image,
+});
 
 // Dialog namespace
 const _Dialog: any = RNPaper.Dialog;

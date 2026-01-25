@@ -124,7 +124,7 @@ export function useActivateWill() {
       const response = await apiClient.put(`/wills/${willId}/activate`);
       return response.data as Will;
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
     },
   });
@@ -138,7 +138,7 @@ export function useRevokeWill() {
       const response = await apiClient.put(`/wills/${willId}/revoke`);
       return response.data as Will;
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
     },
   });

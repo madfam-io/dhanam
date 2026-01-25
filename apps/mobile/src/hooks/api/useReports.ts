@@ -1,7 +1,5 @@
 import { useQuery, useMutation } from '@tanstack/react-query';
-import * as FileSystem from 'expo-file-system';
-import * as Sharing from 'expo-sharing';
-import { Alert } from 'react-native';
+import { Linking, Alert } from 'react-native';
 
 import { apiClient } from '@/services/api';
 
@@ -24,6 +22,12 @@ export interface ReportSummary {
   accountCount: number;
 }
 
+export interface ReportDownloadResponse {
+  downloadUrl: string;
+  filename: string;
+  expiresAt: string;
+}
+
 const QUERY_KEY = 'reports';
 
 export function useAvailableReports() {
@@ -33,9 +37,7 @@ export function useAvailableReports() {
     queryKey: [QUERY_KEY, 'available', currentSpace?.id],
     queryFn: async () => {
       if (!currentSpace) throw new Error('No space selected');
-      const response = await apiClient.get(
-        `/reports/available?spaceId=${currentSpace.id}`
-      );
+      const response = await apiClient.get(`/reports/available?spaceId=${currentSpace.id}`);
       return response.data;
     },
     enabled: !!currentSpace,
@@ -68,36 +70,26 @@ export function useGeneratePdfReport() {
     }: {
       startDate: string;
       endDate: string;
-    }) => {
+    }): Promise<ReportDownloadResponse> => {
       if (!currentSpace) throw new Error('No space selected');
 
-      // Get the PDF from the API
-      const response = await apiClient.get(
-        `/reports/export/pdf?spaceId=${currentSpace.id}&startDate=${startDate}&endDate=${endDate}`,
-        {
-          responseType: 'blob',
-        }
-      );
-
-      // Save to file system
-      const filename = `dhanam-report-${startDate}-to-${endDate}.pdf`;
-      const fileUri = FileSystem.documentDirectory + filename;
-
-      await FileSystem.writeAsStringAsync(fileUri, response.data, {
-        encoding: FileSystem.EncodingType.Base64,
+      // Request a download URL from the API
+      const response = await apiClient.post<ReportDownloadResponse>(`/reports/export/pdf`, {
+        spaceId: currentSpace.id,
+        startDate,
+        endDate,
       });
 
-      // Share the file
-      if (await Sharing.isAvailableAsync()) {
-        await Sharing.shareAsync(fileUri, {
-          mimeType: 'application/pdf',
-          dialogTitle: 'Export Financial Report',
-        });
+      return response.data;
+    },
+    onSuccess: async (data) => {
+      // Open the download URL in the browser
+      const canOpen = await Linking.canOpenURL(data.downloadUrl);
+      if (canOpen) {
+        await Linking.openURL(data.downloadUrl);
       } else {
-        Alert.alert('Success', `Report saved to ${fileUri}`);
+        Alert.alert('Error', 'Unable to open download link');
       }
-
-      return { filename, fileUri };
     },
   });
 }
@@ -112,36 +104,26 @@ export function useGenerateCsvReport() {
     }: {
       startDate: string;
       endDate: string;
-    }) => {
+    }): Promise<ReportDownloadResponse> => {
       if (!currentSpace) throw new Error('No space selected');
 
-      // Get the CSV from the API
-      const response = await apiClient.get(
-        `/reports/export/csv?spaceId=${currentSpace.id}&startDate=${startDate}&endDate=${endDate}`,
-        {
-          responseType: 'blob',
-        }
-      );
-
-      // Save to file system
-      const filename = `dhanam-transactions-${startDate}-to-${endDate}.csv`;
-      const fileUri = FileSystem.documentDirectory + filename;
-
-      await FileSystem.writeAsStringAsync(fileUri, response.data, {
-        encoding: FileSystem.EncodingType.UTF8,
+      // Request a download URL from the API
+      const response = await apiClient.post<ReportDownloadResponse>(`/reports/export/csv`, {
+        spaceId: currentSpace.id,
+        startDate,
+        endDate,
       });
 
-      // Share the file
-      if (await Sharing.isAvailableAsync()) {
-        await Sharing.shareAsync(fileUri, {
-          mimeType: 'text/csv',
-          dialogTitle: 'Export Transactions',
-        });
+      return response.data;
+    },
+    onSuccess: async (data) => {
+      // Open the download URL in the browser
+      const canOpen = await Linking.canOpenURL(data.downloadUrl);
+      if (canOpen) {
+        await Linking.openURL(data.downloadUrl);
       } else {
-        Alert.alert('Success', `Transactions saved to ${fileUri}`);
+        Alert.alert('Error', 'Unable to open download link');
       }
-
-      return { filename, fileUri };
     },
   });
 }
