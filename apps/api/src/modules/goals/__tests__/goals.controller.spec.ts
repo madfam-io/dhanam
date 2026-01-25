@@ -1,4 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { Reflector } from '@nestjs/core';
+import { BillingService } from '../../billing/billing.service';
 
 // Mock Prisma client enums before importing anything that uses them
 jest.mock('@prisma/client', () => ({
@@ -148,6 +150,15 @@ describe('GoalsController', () => {
             updatePermissions: jest.fn(),
           },
         },
+        {
+          provide: BillingService,
+          useValue: {
+            checkUsageLimit: jest.fn().mockResolvedValue(true),
+            recordUsage: jest.fn(),
+            getUsageMetrics: jest.fn(),
+          },
+        },
+        Reflector,
       ],
     }).compile();
 
