@@ -128,7 +128,7 @@ export class BelvoService {
 
     try {
       // Create link in Belvo with timeout and circuit breaker
-      const link = await this.callBelvoApi('links.register', () =>
+      const link = await this.callBelvoApi<{ id: string }>('links.register', () =>
         this.belvoClient.links.register(dto.institution, dto.username, dto.password, {
           external_id: dto.externalId,
           access_mode: 'recurrent',
@@ -152,7 +152,7 @@ export class BelvoService {
       });
 
       // Fetch accounts immediately with circuit breaker
-      const belvoAccounts = await this.callBelvoApi('accounts.retrieve', () =>
+      const belvoAccounts = await this.callBelvoApi<any[]>('accounts.retrieve', () =>
         this.belvoClient.accounts.retrieve(link.id)
       );
 

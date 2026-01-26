@@ -114,7 +114,9 @@ export class PlaidWebhookHandler {
       access_token: accessToken,
     };
 
-    const response = await callPlaidApi('accountsGet', () => plaidClient.accountsGet(request));
+    const response = await callPlaidApi<{ data: { accounts: any[] } }>('accountsGet', () =>
+      plaidClient.accountsGet(request)
+    );
 
     for (const plaidAccount of response.data.accounts) {
       await this.prisma.account.updateMany({

@@ -100,7 +100,6 @@ export interface ExceptionDetails {
 export abstract class BaseException extends HttpException {
   public readonly code: string;
   public readonly details?: Record<string, unknown>;
-  public readonly cause?: Error;
   public readonly retryable: boolean;
   public readonly retryAfterMs?: number;
   public readonly timestamp: Date;
@@ -124,12 +123,12 @@ export abstract class BaseException extends HttpException {
         retryable: options?.retryable ?? false,
         retryAfterMs: options?.retryAfterMs,
       },
-      status
+      status,
+      { cause: options?.cause }
     );
 
     this.code = code;
     this.details = options?.details;
-    this.cause = options?.cause;
     this.retryable = options?.retryable ?? false;
     this.retryAfterMs = options?.retryAfterMs;
     this.timestamp = new Date();
