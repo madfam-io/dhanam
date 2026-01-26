@@ -361,8 +361,8 @@ importers:
         specifier: ^15.0.3
         version: 15.0.3(expo-font@12.0.10(expo@54.0.32))(react-native@0.82.1(@babel/core@7.28.6)(@types/react@18.2.79)(react@18.3.1))(react@18.3.1)
       '@react-native-async-storage/async-storage':
-        specifier: ^1.23.1
-        version: 1.24.0(react-native@0.82.1(@babel/core@7.28.6)(@types/react@18.2.79)(react@18.3.1))
+        specifier: ^2.2.0
+        version: 2.2.0(react-native@0.82.1(@babel/core@7.28.6)(@types/react@18.2.79)(react@18.3.1))
       '@react-native-community/netinfo':
         specifier: ^11.4.1
         version: 11.4.1(react-native@0.82.1(@babel/core@7.28.6)(@types/react@18.2.79)(react@18.3.1))
@@ -3569,10 +3569,10 @@ packages:
   '@radix-ui/rect@1.1.1':
     resolution: {integrity: sha512-HPwpGIzkl28mWyZqG52jiqDJ12waP11Pa1lGoiyUkIEuMLBP0oeK/C89esbXrxsky5we7dfd8U58nm0SgAWpVw==}
 
-  '@react-native-async-storage/async-storage@1.24.0':
-    resolution: {integrity: sha512-W4/vbwUOYOjco0x3toB8QCr7EjIP6nE9G7o8PMguvvjYT5Awg09lyV4enACRx4s++PPulBiBSjL0KTFx2u0Z/g==}
+  '@react-native-async-storage/async-storage@2.2.0':
+    resolution: {integrity: sha512-gvRvjR5JAaUZF8tv2Kcq/Gbt3JHwbKFYfmb445rhOj6NUMx3qPLixmDx5pZAyb9at1bYvJ4/eTUipU5aki45xw==}
     peerDependencies:
-      react-native: ^0.0.0-0 || >=0.60 <1.0
+      react-native: ^0.0.0-0 || >=0.65 <1.0
 
   '@react-native-community/netinfo@11.4.1':
     resolution: {integrity: sha512-B0BYAkghz3Q2V09BF88RA601XursIEA111tnc2JOaN7axJWmNefmfjZqw/KdSxKZp7CZUuPpjBmz/WCR9uaHYg==}
@@ -13986,7 +13986,7 @@ snapshots:
 
   '@radix-ui/rect@1.1.1': {}
 
-  '@react-native-async-storage/async-storage@1.24.0(react-native@0.82.1(@babel/core@7.28.6)(@types/react@18.2.79)(react@18.3.1))':
+  '@react-native-async-storage/async-storage@2.2.0(react-native@0.82.1(@babel/core@7.28.6)(@types/react@18.2.79)(react@18.3.1))':
     dependencies:
       merge-options: 3.0.4
       react-native: 0.82.1(@babel/core@7.28.6)(@types/react@18.2.79)(react@18.3.1)
