@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@dhanam/shared": "workspace:*",
-    "axios": "^1.13.2",
+    "axios": "^1.13.3",
     "date-fns": "^3.2.0",
     "zod": "3.24.1"
   },
