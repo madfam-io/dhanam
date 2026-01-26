@@ -1,7 +1,10 @@
 import { Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import * as Sentry from '@sentry/node';
 import { Queue, Worker, Job, QueueEvents } from 'bullmq';
 import { Redis } from 'ioredis';
+
+import { InfrastructureException } from '@core/exceptions/domain-exceptions';
 
 export interface JobData {
   type: string;
@@ -9,6 +12,19 @@ export interface JobData {
   userId?: string;
   spaceId?: string;
   retryAttempts?: number;
+}
+
+export interface DeadLetterJob {
+  id: string;
+  queue: string;
+  name: string;
+  data: any;
+  failedReason: string;
+  stacktrace: string[];
+  attemptsMade: number;
+  maxAttempts: number;
+  failedAt: Date;
+  processedAt?: Date;
 }
 
 export interface SyncTransactionsJobData {
@@ -69,13 +85,31 @@ export class QueueService implements OnModuleInit, OnModuleDestroy {
   private queues = new Map<string, Queue>();
   private workers = new Map<string, Worker>();
   private queueEvents = new Map<string, QueueEvents>();
+  private deadLetterQueue: Queue | null = null;
   private isShuttingDown = false;
+
+  // Dead letter queue key prefix for Redis storage
+  private readonly DLQ_KEY = 'dhanam:dlq:jobs';
 
   constructor(private readonly configService: ConfigService) {
     const redisUrl = this.configService.get('REDIS_URL', 'redis://localhost:6379');
     this.redis = new Redis(redisUrl, {
       maxRetriesPerRequest: null, // Required by BullMQ for blocking operations
       lazyConnect: true,
+      retryStrategy: (times: number) => {
+        if (times > 5) {
+          this.logger.error('Redis connection failed after 5 retries', 'QueueService');
+          return null;
+        }
+        return Math.min(times * 200, 2000);
+      },
+    });
+
+    this.redis.on('error', (error: Error) => {
+      this.logger.error(`Redis connection error: ${error.message}`, 'QueueService');
+      Sentry.captureException(error, {
+        tags: { component: 'queue-service', operation: 'redis-connection' },
+      });
     });
   }
 
@@ -133,16 +167,26 @@ export class QueueService implements OnModuleInit, OnModuleDestroy {
       'system-maintenance',
     ];
 
+    // Initialize dead letter queue first
+    this.deadLetterQueue = new Queue('dead-letter', {
+      connection: this.redis,
+      defaultJobOptions: {
+        removeOnComplete: false, // Keep all DLQ jobs for manual review
+        removeOnFail: false,
+      },
+    });
+
     for (const queueName of queueNames) {
+      const maxAttempts = this.getMaxAttemptsForQueue(queueName);
       const queue = new Queue(queueName, {
         connection: this.redis,
         defaultJobOptions: {
           removeOnComplete: 100,
           removeOnFail: 50,
-          attempts: 3,
+          attempts: maxAttempts,
           backoff: {
             type: 'exponential',
-            delay: 5000,
+            delay: this.getBackoffDelayForQueue(queueName),
           },
         },
       });
@@ -154,19 +198,159 @@ export class QueueService implements OnModuleInit, OnModuleDestroy {
       this.queues.set(queueName, queue);
       this.queueEvents.set(queueName, queueEvents);
 
-      // Setup queue event listeners
-      queueEvents.on('completed', (jobId, _returnvalue) => {
+      // Setup queue event listeners with comprehensive error capture
+      queueEvents.on('completed', ({ jobId }) => {
         this.logger.log(`Job ${jobId} in queue ${queueName} completed`);
       });
 
-      queueEvents.on('failed', (jobId, failedReason) => {
+      queueEvents.on('failed', async ({ jobId, failedReason }) => {
         this.logger.error(`Job ${jobId} in queue ${queueName} failed: ${failedReason}`);
+
+        // Capture to Sentry with context
+        Sentry.withScope((scope) => {
+          scope.setTag('queue', queueName);
+          scope.setTag('jobId', jobId);
+          scope.setLevel('error');
+          scope.setContext('job', {
+            queue: queueName,
+            jobId,
+            failedReason,
+          });
+          Sentry.captureMessage(`Job failed: ${queueName}/${jobId}`, 'error');
+        });
+
+        // Check if this is the final failure and move to DLQ
+        await this.handlePotentialDLQJob(queueName, jobId, failedReason);
       });
 
-      queueEvents.on('stalled', (jobId) => {
+      queueEvents.on('stalled', ({ jobId }) => {
         this.logger.warn(`Job ${jobId} in queue ${queueName} stalled`);
+
+        Sentry.withScope((scope) => {
+          scope.setTag('queue', queueName);
+          scope.setTag('jobId', jobId);
+          scope.setLevel('warning');
+          Sentry.captureMessage(`Job stalled: ${queueName}/${jobId}`, 'warning');
+        });
+      });
+
+      queueEvents.on('error', (error) => {
+        this.logger.error(`Queue event error in ${queueName}: ${error.message}`);
+        Sentry.captureException(error, {
+          tags: { component: 'queue-events', queue: queueName },
+        });
       });
     }
+  }
+
+  /**
+   * Get max retry attempts based on queue criticality
+   */
+  private getMaxAttemptsForQueue(queueName: string): number {
+    const criticalQueues = ['sync-transactions', 'email-notifications'];
+    const highPriorityQueues = ['categorize-transactions', 'valuation-snapshots'];
+
+    if (criticalQueues.includes(queueName)) {
+      return 5; // More retries for critical operations
+    }
+    if (highPriorityQueues.includes(queueName)) {
+      return 4;
+    }
+    return 3; // Default
+  }
+
+  /**
+   * Get backoff delay based on queue type
+   */
+  private getBackoffDelayForQueue(queueName: string): number {
+    // External API calls need longer delays to respect rate limits
+    if (queueName === 'sync-transactions') {
+      return 10000; // 10s initial delay for provider syncs
+    }
+    if (queueName === 'email-notifications') {
+      return 5000; // 5s for email
+    }
+    return 3000; // 3s default
+  }
+
+  /**
+   * Handle jobs that have exhausted all retries - move to dead letter queue
+   */
+  private async handlePotentialDLQJob(
+    queueName: string,
+    jobId: string,
+    failedReason: string
+  ): Promise<void> {
+    try {
+      const queue = this.queues.get(queueName);
+      if (!queue) return;
+
+      const job = await queue.getJob(jobId);
+      if (!job) return;
+
+      const maxAttempts = job.opts.attempts || this.getMaxAttemptsForQueue(queueName);
+      const attemptsMade = job.attemptsMade;
+
+      // Only move to DLQ if all retries exhausted
+      if (attemptsMade >= maxAttempts) {
+        await this.moveToDeadLetterQueue(job, queueName, failedReason);
+      }
+    } catch (error) {
+      this.logger.error(`Failed to handle DLQ for job ${jobId}: ${(error as Error).message}`);
+    }
+  }
+
+  /**
+   * Move a failed job to the dead letter queue for manual review
+   */
+  private async moveToDeadLetterQueue(
+    job: Job,
+    queueName: string,
+    failedReason: string
+  ): Promise<void> {
+    if (!this.deadLetterQueue) return;
+
+    const dlqJob: DeadLetterJob = {
+      id: job.id || 'unknown',
+      queue: queueName,
+      name: job.name,
+      data: job.data,
+      failedReason,
+      stacktrace: job.stacktrace || [],
+      attemptsMade: job.attemptsMade,
+      maxAttempts: job.opts.attempts || 3,
+      failedAt: new Date(),
+    };
+
+    // Store in DLQ Redis list for persistence
+    await this.redis.lpush(this.DLQ_KEY, JSON.stringify(dlqJob));
+
+    // Also add to DLQ queue for visibility
+    await this.deadLetterQueue.add('failed-job', dlqJob, {
+      jobId: `dlq-${queueName}-${job.id}-${Date.now()}`,
+    });
+
+    this.logger.warn(
+      `Job ${job.id} from ${queueName} moved to dead letter queue after ${job.attemptsMade} attempts`
+    );
+
+    // Capture comprehensive error to Sentry
+    Sentry.withScope((scope) => {
+      scope.setTag('dlq', 'true');
+      scope.setTag('queue', queueName);
+      scope.setTag('jobId', job.id || 'unknown');
+      scope.setLevel('error');
+      scope.setContext('deadLetterJob', {
+        originalQueue: queueName,
+        jobName: job.name,
+        jobData: job.data,
+        attemptsMade: job.attemptsMade,
+        maxAttempts: job.opts.attempts,
+        failedReason,
+      });
+      scope.setExtra('stacktrace', job.stacktrace);
+      Sentry.captureMessage(`Job exhausted all retries: ${queueName}/${job.name}`, 'error');
+    });
   }
 
   // Helper method to check queue availability
@@ -460,5 +644,166 @@ export class QueueService implements OnModuleInit, OnModuleDestroy {
       }
     }
     return totalActive;
+  }
+
+  // ============ Dead Letter Queue Management ============
+
+  /**
+   * Get all jobs in the dead letter queue
+   */
+  async getDeadLetterJobs(limit = 100): Promise<DeadLetterJob[]> {
+    try {
+      const jobs = await this.redis.lrange(this.DLQ_KEY, 0, limit - 1);
+      return jobs.map((job) => JSON.parse(job) as DeadLetterJob);
+    } catch (error) {
+      this.logger.error(`Failed to get DLQ jobs: ${(error as Error).message}`);
+      return [];
+    }
+  }
+
+  /**
+   * Get dead letter queue statistics
+   */
+  async getDeadLetterQueueStats(): Promise<{
+    total: number;
+    byQueue: Record<string, number>;
+    oldestJob: Date | null;
+    newestJob: Date | null;
+  }> {
+    const jobs = await this.getDeadLetterJobs(1000);
+
+    const byQueue: Record<string, number> = {};
+    let oldestJob: Date | null = null;
+    let newestJob: Date | null = null;
+
+    for (const job of jobs) {
+      byQueue[job.queue] = (byQueue[job.queue] || 0) + 1;
+
+      const failedAt = new Date(job.failedAt);
+      if (!oldestJob || failedAt < oldestJob) oldestJob = failedAt;
+      if (!newestJob || failedAt > newestJob) newestJob = failedAt;
+    }
+
+    return {
+      total: jobs.length,
+      byQueue,
+      oldestJob,
+      newestJob,
+    };
+  }
+
+  /**
+   * Retry a specific job from the dead letter queue
+   */
+  async retryDeadLetterJob(dlqJobId: string): Promise<boolean> {
+    try {
+      const jobs = await this.getDeadLetterJobs(1000);
+      const dlqJob = jobs.find((j) => j.id === dlqJobId);
+
+      if (!dlqJob) {
+        this.logger.warn(`DLQ job ${dlqJobId} not found`);
+        return false;
+      }
+
+      const queue = this.queues.get(dlqJob.queue);
+      if (!queue) {
+        throw InfrastructureException.queueError(
+          'retry_dlq',
+          new Error(`Queue ${dlqJob.queue} not found`)
+        );
+      }
+
+      // Re-add the job to its original queue
+      await queue.add(dlqJob.name, dlqJob.data, {
+        jobId: `retry-${dlqJob.id}-${Date.now()}`,
+      });
+
+      // Remove from DLQ Redis list
+      await this.redis.lrem(this.DLQ_KEY, 1, JSON.stringify(dlqJob));
+
+      // Mark as processed in DLQ queue
+      dlqJob.processedAt = new Date();
+      this.logger.log(`Retried DLQ job ${dlqJobId} from queue ${dlqJob.queue}`);
+
+      return true;
+    } catch (error) {
+      this.logger.error(`Failed to retry DLQ job ${dlqJobId}: ${(error as Error).message}`);
+      Sentry.captureException(error, {
+        tags: { component: 'queue-service', operation: 'retry-dlq' },
+        extra: { dlqJobId },
+      });
+      return false;
+    }
+  }
+
+  /**
+   * Retry all jobs from the dead letter queue for a specific original queue
+   */
+  async retryDeadLetterQueueByOriginalQueue(queueName: string): Promise<{
+    retried: number;
+    failed: number;
+  }> {
+    const jobs = await this.getDeadLetterJobs(1000);
+    const queueJobs = jobs.filter((j) => j.queue === queueName);
+
+    let retried = 0;
+    let failed = 0;
+
+    for (const job of queueJobs) {
+      const success = await this.retryDeadLetterJob(job.id);
+      if (success) {
+        retried++;
+      } else {
+        failed++;
+      }
+    }
+
+    this.logger.log(`Retried ${retried}/${queueJobs.length} DLQ jobs from queue ${queueName}`);
+    return { retried, failed };
+  }
+
+  /**
+   * Clear all jobs from the dead letter queue
+   */
+  async clearDeadLetterQueue(): Promise<number> {
+    try {
+      const count = await this.redis.llen(this.DLQ_KEY);
+      await this.redis.del(this.DLQ_KEY);
+
+      if (this.deadLetterQueue) {
+        await this.deadLetterQueue.obliterate({ force: true });
+      }
+
+      this.logger.log(`Cleared ${count} jobs from dead letter queue`);
+      return count;
+    } catch (error) {
+      this.logger.error(`Failed to clear DLQ: ${(error as Error).message}`);
+      return 0;
+    }
+  }
+
+  /**
+   * Remove old jobs from the dead letter queue (older than specified days)
+   */
+  async pruneDeadLetterQueue(olderThanDays = 30): Promise<number> {
+    try {
+      const jobs = await this.getDeadLetterJobs(10000);
+      const cutoffDate = new Date(Date.now() - olderThanDays * 24 * 60 * 60 * 1000);
+
+      let removed = 0;
+      for (const job of jobs) {
+        const failedAt = new Date(job.failedAt);
+        if (failedAt < cutoffDate) {
+          await this.redis.lrem(this.DLQ_KEY, 1, JSON.stringify(job));
+          removed++;
+        }
+      }
+
+      this.logger.log(`Pruned ${removed} old jobs from dead letter queue`);
+      return removed;
+    } catch (error) {
+      this.logger.error(`Failed to prune DLQ: ${(error as Error).message}`);
+      return 0;
+    }
   }
 }

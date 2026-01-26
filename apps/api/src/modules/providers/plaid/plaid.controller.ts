@@ -9,7 +9,10 @@ import {
   Param,
   Query,
   BadRequestException,
+  Logger,
+  Req,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import {
   ApiTags,
   ApiOperation,
@@ -23,9 +26,12 @@ import {
   ApiBadRequestResponse,
   ApiParam,
 } from '@nestjs/swagger';
+import { FastifyRequest } from 'fastify';
+import { Redis } from 'ioredis';
 
 import { CurrentUser } from '@core/auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
+import { processWebhook, createWebhookResponse } from '@core/utils/webhook.util';
 
 import { SpaceGuard } from '../../spaces/guards/space.guard';
 
@@ -35,7 +41,30 @@ import { PlaidService } from './plaid.service';
 @ApiTags('Plaid Provider')
 @Controller('providers/plaid')
 export class PlaidController {
-  constructor(private readonly plaidService: PlaidService) {}
+  private readonly logger = new Logger(PlaidController.name);
+  private readonly webhookSecret: string;
+  private redis: Redis | null = null;
+
+  constructor(
+    private readonly plaidService: PlaidService,
+    private readonly configService: ConfigService
+  ) {
+    this.webhookSecret = this.configService.get('PLAID_WEBHOOK_SECRET', '');
+
+    // Initialize Redis for idempotency (optional)
+    const redisUrl = this.configService.get('REDIS_URL');
+    if (redisUrl) {
+      try {
+        this.redis = new Redis(redisUrl, { lazyConnect: true });
+        this.redis.connect().catch(() => {
+          this.logger.warn('Redis not available for webhook idempotency');
+          this.redis = null;
+        });
+      } catch {
+        this.logger.warn('Failed to initialize Redis for webhook idempotency');
+      }
+    }
+  }
 
   @Post('link-token')
   @UseGuards(JwtAuthGuard)
@@ -80,17 +109,36 @@ export class PlaidController {
   @ApiBadRequestResponse({ description: 'Invalid request body or missing webhook signature' })
   async handleWebhook(
     @Body() webhookData: PlaidWebhookDto,
-    @Headers('plaid-verification') signature: string
+    @Headers('plaid-verification') signature: string,
+    @Req() request: FastifyRequest
   ) {
+    // Get raw body for signature verification if available
+    const rawBody = (request as any).rawBody || JSON.stringify(webhookData);
+
     if (!signature) {
+      this.logger.warn('Plaid webhook received without signature');
       throw new BadRequestException('Missing webhook signature');
     }
 
-    await this.plaidService.handleWebhook(webhookData, signature);
+    const result = await processWebhook(
+      rawBody,
+      signature,
+      {
+        provider: 'plaid',
+        secret: this.webhookSecret,
+        redis: this.redis || undefined,
+        logger: this.logger,
+      },
+      async () => {
+        // The service will also verify signature, but we've already done it
+        // Skip double verification by passing a known-good signature
+        await this.plaidService.handleWebhook(webhookData, signature);
+      }
+    );
 
-    return {
-      message: 'Webhook processed successfully',
-    };
+    // Always return 200 OK after signature verification to prevent retries
+    // Errors are logged and captured in Sentry
+    return createWebhookResponse(result);
   }
 
   @Get('spaces/:spaceId/bills/upcoming')

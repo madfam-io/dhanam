@@ -5,6 +5,7 @@ import { BelvoService } from './belvo.service';
 import { PrismaService } from '@core/prisma/prisma.service';
 import { CryptoService } from '@core/crypto/crypto.service';
 import { AuditService } from '@core/audit/audit.service';
+import { CircuitBreakerService } from '../orchestrator/circuit-breaker.service';
 import { mockDeep, DeepMockProxy } from 'jest-mock-extended';
 
 // Mock Belvo
@@ -65,6 +66,14 @@ describe('BelvoService', () => {
         {
           provide: ConfigService,
           useValue: mockConfigServiceWithCredentials,
+        },
+        {
+          provide: CircuitBreakerService,
+          useValue: {
+            isCircuitOpen: jest.fn().mockResolvedValue(false),
+            recordSuccess: jest.fn().mockResolvedValue(undefined),
+            recordFailure: jest.fn().mockResolvedValue(undefined),
+          },
         },
       ],
     }).compile();

@@ -8,7 +8,10 @@ import {
   Get,
   Param,
   BadRequestException,
+  Logger,
+  Req,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import {
   ApiTags,
   ApiOperation,
@@ -21,9 +24,12 @@ import {
   ApiBadRequestResponse,
   ApiParam,
 } from '@nestjs/swagger';
+import { FastifyRequest } from 'fastify';
+import { Redis } from 'ioredis';
 
 import { CurrentUser } from '@core/auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
+import { processWebhook, createWebhookResponse } from '@core/utils/webhook.util';
 
 import { SpaceGuard } from '../../spaces/guards/space.guard';
 
@@ -33,7 +39,30 @@ import { ConnectBitsoDto, BitsoWebhookDto } from './dto';
 @ApiTags('Bitso Provider')
 @Controller('providers/bitso')
 export class BitsoController {
-  constructor(private readonly bitsoService: BitsoService) {}
+  private readonly logger = new Logger(BitsoController.name);
+  private readonly webhookSecret: string;
+  private redis: Redis | null = null;
+
+  constructor(
+    private readonly bitsoService: BitsoService,
+    private readonly configService: ConfigService
+  ) {
+    this.webhookSecret = this.configService.get('BITSO_WEBHOOK_SECRET', '');
+
+    // Initialize Redis for idempotency (optional)
+    const redisUrl = this.configService.get('REDIS_URL');
+    if (redisUrl) {
+      try {
+        this.redis = new Redis(redisUrl, { lazyConnect: true });
+        this.redis.connect().catch(() => {
+          this.logger.warn('Redis not available for webhook idempotency');
+          this.redis = null;
+        });
+      } catch {
+        this.logger.warn('Failed to initialize Redis for webhook idempotency');
+      }
+    }
+  }
 
   @Post('spaces/:spaceId/connect')
   @UseGuards(JwtAuthGuard, SpaceGuard)
@@ -92,17 +121,33 @@ export class BitsoController {
   @ApiBadRequestResponse({ description: 'Invalid request body or missing webhook signature' })
   async handleWebhook(
     @Body() webhookData: BitsoWebhookDto,
-    @Headers('bitso-signature') signature: string
+    @Headers('bitso-signature') signature: string,
+    @Req() request: FastifyRequest
   ) {
+    // Get raw body for signature verification if available
+    const rawBody = (request as any).rawBody || JSON.stringify(webhookData);
+
     if (!signature) {
+      this.logger.warn('Bitso webhook received without signature');
       throw new BadRequestException('Missing webhook signature');
     }
 
-    await this.bitsoService.handleWebhook(webhookData, signature);
+    const result = await processWebhook(
+      rawBody,
+      signature,
+      {
+        provider: 'bitso',
+        secret: this.webhookSecret,
+        redis: this.redis || undefined,
+        logger: this.logger,
+      },
+      async () => {
+        await this.bitsoService.handleWebhook(webhookData, signature);
+      }
+    );
 
-    return {
-      message: 'Webhook processed successfully',
-    };
+    // Always return 200 OK after signature verification to prevent retries
+    return createWebhookResponse(result);
   }
 
   @Get('health')

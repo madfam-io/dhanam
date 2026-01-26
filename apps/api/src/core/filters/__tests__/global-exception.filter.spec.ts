@@ -215,11 +215,11 @@ describe('GlobalExceptionFilter', () => {
 
       filter.catch(exception, mockHost);
 
-      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(mockResponse.status).toHaveBeenCalledWith(409);
       expect(mockResponse.send).toHaveBeenCalledWith(
         expect.objectContaining({
           error: expect.objectContaining({
-            code: 'DATABASE_ERROR',
+            code: 'V005',
             message: expect.stringContaining('Duplicate entry'),
             details: expect.objectContaining({
               prismaCode: 'P2002',
@@ -258,7 +258,8 @@ describe('GlobalExceptionFilter', () => {
       expect(mockResponse.send).toHaveBeenCalledWith(
         expect.objectContaining({
           error: expect.objectContaining({
-            message: 'Foreign key constraint failed',
+            code: 'V004',
+            message: 'Related record not found',
           }),
         })
       );
@@ -275,7 +276,8 @@ describe('GlobalExceptionFilter', () => {
       expect(mockResponse.send).toHaveBeenCalledWith(
         expect.objectContaining({
           error: expect.objectContaining({
-            message: 'The change you are trying to make would violate a relation constraint',
+            code: 'V004',
+            message: 'Required relation constraint violated',
           }),
         })
       );
@@ -326,7 +328,8 @@ describe('GlobalExceptionFilter', () => {
       expect(mockResponse.send).toHaveBeenCalledWith(
         expect.objectContaining({
           error: expect.objectContaining({
-            message: 'Table does not exist in database',
+            code: 'I001',
+            message: 'Database schema error',
           }),
         })
       );
@@ -343,7 +346,8 @@ describe('GlobalExceptionFilter', () => {
       expect(mockResponse.send).toHaveBeenCalledWith(
         expect.objectContaining({
           error: expect.objectContaining({
-            message: 'Column does not exist in database',
+            code: 'I001',
+            message: 'Database schema error',
           }),
         })
       );
@@ -377,7 +381,7 @@ describe('GlobalExceptionFilter', () => {
       expect(mockResponse.send).toHaveBeenCalledWith(
         expect.objectContaining({
           error: expect.objectContaining({
-            code: 'APPLICATION_ERROR',
+            code: 'E001',
             message: 'Something went wrong',
           }),
         })

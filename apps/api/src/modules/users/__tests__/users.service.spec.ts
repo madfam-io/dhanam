@@ -674,7 +674,8 @@ describe('UsersService', () => {
       // Simulate transaction failure
       (prisma.$transaction as jest.Mock).mockRejectedValue(new Error('Transaction failed'));
 
-      await expect(service.deleteAccount('user-123')).rejects.toThrow('Transaction failed');
+      // The service wraps errors in InfrastructureException with standardized message
+      await expect(service.deleteAccount('user-123')).rejects.toThrow('Database operation failed');
 
       // Verify transaction was attempted
       expect(prisma.$transaction).toHaveBeenCalled();

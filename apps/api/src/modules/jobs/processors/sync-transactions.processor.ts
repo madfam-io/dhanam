@@ -1,7 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
+import * as Sentry from '@sentry/node';
 import { Job } from 'bullmq';
 
 import { CryptoService } from '@core/crypto/crypto.service';
+import {
+  isDomainException,
+  ProviderException,
+  InfrastructureException,
+} from '@core/exceptions/domain-exceptions';
 import { PrismaService } from '@core/prisma/prisma.service';
 import { BelvoService } from '@modules/providers/belvo/belvo.service';
 import { BitsoService } from '@modules/providers/bitso/bitso.service';
@@ -23,10 +29,26 @@ export class SyncTransactionsProcessor {
 
   async process(job: Job<SyncTransactionsJobData['payload']>): Promise<any> {
     const { provider, userId, connectionId, fullSync } = job.data;
+    const startTime = Date.now();
 
     this.logger.log(
       `Processing sync job for provider ${provider}, user ${userId}, connection ${connectionId}`
     );
+
+    // Set Sentry context for this job
+    Sentry.withScope((scope) => {
+      scope.setTag('job_type', 'sync-transactions');
+      scope.setTag('provider', provider);
+      scope.setTag('job_id', job.id || 'unknown');
+      scope.setUser({ id: userId });
+      scope.setContext('job', {
+        jobId: job.id,
+        attempt: job.attemptsMade + 1,
+        maxAttempts: job.opts.attempts,
+        connectionId,
+        fullSync,
+      });
+    });
 
     try {
       const connection = await this.prisma.providerConnection.findUnique({
@@ -35,11 +57,17 @@ export class SyncTransactionsProcessor {
       });
 
       if (!connection) {
-        throw new Error(`Connection ${connectionId} not found`);
+        throw InfrastructureException.databaseError(
+          'find_connection',
+          new Error(`Connection ${connectionId} not found`)
+        );
       }
 
       if (connection.userId !== userId) {
-        throw new Error(`Connection ${connectionId} does not belong to user ${userId}`);
+        throw InfrastructureException.databaseError(
+          'validate_ownership',
+          new Error(`Connection ${connectionId} does not belong to user ${userId}`)
+        );
       }
 
       let result;
@@ -55,7 +83,10 @@ export class SyncTransactionsProcessor {
           result = await this.syncBitsoTransactions(connection, fullSync);
           break;
         default:
-          throw new Error(`Unsupported provider: ${provider}`);
+          throw ProviderException.unavailable(
+            provider,
+            new Error(`Unsupported provider: ${provider}`)
+          );
       }
 
       // Update connection metadata
@@ -66,19 +97,44 @@ export class SyncTransactionsProcessor {
             ...(connection.metadata as any),
             lastSyncAt: new Date().toISOString(),
             lastSyncResult: result,
+            lastSyncDurationMs: Date.now() - startTime,
           },
         },
       });
 
       this.logger.log(
-        `Sync completed for ${provider} connection ${connectionId}: ${result.transactions} transactions processed`
+        `Sync completed for ${provider} connection ${connectionId}: ${result.transactions} transactions processed in ${Date.now() - startTime}ms`
       );
 
       return result;
     } catch (error) {
+      const durationMs = Date.now() - startTime;
+      const err = error instanceof Error ? error : new Error(String(error));
+
       this.logger.error(
-        `Sync failed for ${provider} connection ${connectionId}: ${(error as Error).message}`
+        `Sync failed for ${provider} connection ${connectionId} after ${durationMs}ms: ${err.message}`
       );
+
+      // Capture to Sentry with full context
+      Sentry.withScope((scope) => {
+        scope.setTag('job_type', 'sync-transactions');
+        scope.setTag('provider', provider);
+        scope.setTag('job_id', job.id || 'unknown');
+        scope.setTag('is_domain_exception', String(isDomainException(error)));
+        scope.setUser({ id: userId });
+        scope.setContext('job', {
+          jobId: job.id,
+          attempt: job.attemptsMade + 1,
+          maxAttempts: job.opts.attempts,
+          connectionId,
+          fullSync,
+          durationMs,
+        });
+        scope.setLevel(job.attemptsMade >= (job.opts.attempts || 3) - 1 ? 'error' : 'warning');
+        Sentry.captureException(err);
+      });
+
+      // Re-throw to let BullMQ handle retry
       throw error;
     }
   }

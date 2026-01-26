@@ -1,5 +1,3 @@
-import * as crypto from 'crypto';
-
 import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { InputJsonValue } from '@prisma/client/runtime/library';
@@ -19,29 +17,40 @@ import {
   LoanAccountSubtype,
 } from 'plaid';
 
+import { AuditService } from '@core/audit/audit.service';
 import { MonitorPerformance } from '@core/decorators/monitor-performance.decorator';
-import { Prisma as _Prisma, Account, Currency, AccountType } from '@db';
+import { Retry } from '@core/decorators/retry.decorator';
+import { ProviderException } from '@core/exceptions/domain-exceptions';
+import { Prisma as _Prisma, Account, Currency } from '@db';
 
 import { CryptoService } from '../../../core/crypto/crypto.service';
 import { PrismaService } from '../../../core/prisma/prisma.service';
 import { PlaidAccountMetadata } from '../../../types/metadata.types';
 import { isUniqueConstraintError } from '../../../types/prisma-errors.types';
+import { CircuitBreakerService } from '../orchestrator/circuit-breaker.service';
 
 import { CreatePlaidLinkDto, PlaidWebhookDto } from './dto';
+import { PlaidWebhookHandler } from './plaid-webhook.handler';
+import { createPlaidApiWrapper, mapPlaidAccountType, mapPlaidCurrency } from './plaid.utils';
 
 @Injectable()
 export class PlaidService {
   private readonly logger = new Logger(PlaidService.name);
   private plaidClient: PlaidApi | null = null;
   private readonly webhookSecret: string;
+  private readonly callPlaidApi: ReturnType<typeof createPlaidApiWrapper>;
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
-    private readonly cryptoService: CryptoService
+    private readonly cryptoService: CryptoService,
+    private readonly circuitBreaker: CircuitBreakerService,
+    private readonly auditService: AuditService,
+    private readonly webhookHandler: PlaidWebhookHandler
   ) {
     this.initializePlaidClient();
     this.webhookSecret = this.configService.get('PLAID_WEBHOOK_SECRET', '');
+    this.callPlaidApi = createPlaidApiWrapper(this.circuitBreaker);
   }
 
   private initializePlaidClient() {
@@ -68,52 +77,51 @@ export class PlaidService {
     this.logger.log('Plaid client initialized successfully');
   }
 
+  @Retry('provider_sync')
   async createLinkToken(userId: string): Promise<{ linkToken: string; expiration: Date }> {
     if (!this.plaidClient) {
-      throw new BadRequestException('Plaid integration not configured');
+      // Configuration error - not retryable
+      throw new BadRequestException('Plaid integration is not configured');
     }
 
-    try {
-      const request: LinkTokenCreateRequest = {
-        products: [Products.Transactions, Products.Auth, Products.Liabilities],
-        client_name: 'Dhanam Ledger',
-        country_codes: [CountryCode.Us],
-        language: 'en',
-        user: {
-          client_user_id: userId,
+    const request: LinkTokenCreateRequest = {
+      products: [Products.Transactions, Products.Auth, Products.Liabilities],
+      client_name: 'Dhanam Ledger',
+      country_codes: [CountryCode.Us],
+      language: 'en',
+      user: {
+        client_user_id: userId,
+      },
+      webhook: this.configService.get('PLAID_WEBHOOK_URL'),
+      account_filters: {
+        depository: {
+          account_subtypes: [DepositoryAccountSubtype.Checking, DepositoryAccountSubtype.Savings],
         },
-        webhook: this.configService.get('PLAID_WEBHOOK_URL'),
-        account_filters: {
-          depository: {
-            account_subtypes: [DepositoryAccountSubtype.Checking, DepositoryAccountSubtype.Savings],
-          },
-          credit: {
-            account_subtypes: [CreditAccountSubtype.CreditCard],
-          },
-          loan: {
-            account_subtypes: [
-              LoanAccountSubtype.Auto,
-              LoanAccountSubtype.Student,
-              LoanAccountSubtype.Mortgage,
-              LoanAccountSubtype.Consumer,
-              LoanAccountSubtype.HomeEquity,
-              LoanAccountSubtype.LineOfCredit,
-            ],
-          },
+        credit: {
+          account_subtypes: [CreditAccountSubtype.CreditCard],
         },
-      };
+        loan: {
+          account_subtypes: [
+            LoanAccountSubtype.Auto,
+            LoanAccountSubtype.Student,
+            LoanAccountSubtype.Mortgage,
+            LoanAccountSubtype.Consumer,
+            LoanAccountSubtype.HomeEquity,
+            LoanAccountSubtype.LineOfCredit,
+          ],
+        },
+      },
+    };
 
-      const response = await this.plaidClient.linkTokenCreate(request);
-      const { link_token, expiration } = response.data;
+    const response = await this.callPlaidApi('linkTokenCreate', () =>
+      this.plaidClient!.linkTokenCreate(request)
+    );
+    const { link_token, expiration } = response.data;
 
-      return {
-        linkToken: link_token,
-        expiration: new Date(expiration),
-      };
-    } catch (error) {
-      this.logger.error('Failed to create Plaid Link token:', error);
-      throw new BadRequestException('Failed to create Link token');
-    }
+    return {
+      linkToken: link_token,
+      expiration: new Date(expiration),
+    };
   }
 
   /**
@@ -186,22 +194,26 @@ export class PlaidService {
     return this.syncTransactions(accessToken, itemId);
   }
 
+  @Retry('provider_sync')
   async createLink(
     spaceId: string,
     userId: string,
     dto: CreatePlaidLinkDto
   ): Promise<{ accounts: Account[] }> {
     if (!this.plaidClient) {
-      throw new BadRequestException('Plaid integration not configured');
+      // Configuration error - not retryable
+      throw new BadRequestException('Plaid integration is not configured');
     }
 
     try {
-      // Exchange public token for access token
+      // Exchange public token for access token (with timeout and circuit breaker)
       const exchangeRequest: ItemPublicTokenExchangeRequest = {
         public_token: dto.publicToken,
       };
 
-      const exchangeResponse = await this.plaidClient.itemPublicTokenExchange(exchangeRequest);
+      const exchangeResponse = await this.callPlaidApi('itemPublicTokenExchange', () =>
+        this.plaidClient!.itemPublicTokenExchange(exchangeRequest)
+      );
       const { access_token, item_id } = exchangeResponse.data;
 
       // Store encrypted access token
@@ -212,6 +224,7 @@ export class PlaidService {
           providerUserId: item_id,
           encryptedToken: JSON.stringify(encryptedToken),
           metadata: {
+            spaceId, // Store spaceId for webhook routing
             publicToken: dto.publicToken,
             itemId: item_id,
             externalId: dto.externalId,
@@ -224,8 +237,13 @@ export class PlaidService {
       // Fetch and sync accounts
       const accounts = await this.syncAccounts(spaceId, access_token, item_id);
 
-      // Initial transaction sync
-      await this.syncTransactions(access_token, item_id);
+      // Initial transaction sync (non-blocking - log errors but don't fail)
+      try {
+        await this.syncTransactions(access_token, item_id);
+      } catch (txError) {
+        this.logger.warn(`Initial transaction sync failed for item ${item_id}:`, txError);
+        // Don't fail the link creation - transactions will sync on next scheduled job
+      }
 
       // Initial liability sync (for credit cards, loans, mortgages)
       try {
@@ -235,11 +253,26 @@ export class PlaidService {
         this.logger.warn(`Liabilities sync skipped for item ${item_id}:`, error);
       }
 
+      // Log successful connection
+      await this.auditService.logProviderConnection('plaid', userId, spaceId, true);
+
       this.logger.log(`Successfully linked Plaid item ${item_id} for user ${userId}`);
       return { accounts };
     } catch (error) {
+      // Log failed connection
+      await this.auditService.logProviderConnection('plaid', userId, spaceId, false);
+
+      // Re-throw if already a domain exception
+      if (error instanceof ProviderException) {
+        throw error;
+      }
+
       this.logger.error('Failed to create Plaid link:', error);
-      throw new BadRequestException('Failed to link Plaid account');
+      throw ProviderException.syncFailed(
+        'plaid',
+        'createLink',
+        error instanceof Error ? error : new Error(String(error))
+      );
     }
   }
 
@@ -248,59 +281,103 @@ export class PlaidService {
     accessToken: string,
     itemId: string
   ): Promise<Account[]> {
-    const request: AccountsGetRequest = {
-      access_token: accessToken,
-    };
-
-    const response = await this.plaidClient!.accountsGet(request);
-    const plaidAccounts = response.data.accounts;
-
-    const accounts: Account[] = [];
-
-    for (const plaidAccount of plaidAccounts) {
-      const accountData = {
-        spaceId,
-        provider: 'plaid' as const,
-        providerAccountId: plaidAccount.account_id,
-        name: plaidAccount.name,
-        type: this.mapAccountType(plaidAccount.type),
-        subtype: plaidAccount.subtype || plaidAccount.type,
-        currency: this.mapCurrency(plaidAccount.balances.iso_currency_code || 'USD'),
-        balance: plaidAccount.balances.current || 0,
-        lastSyncedAt: new Date(),
-        metadata: {
-          mask: plaidAccount.mask,
-          officialName: plaidAccount.official_name,
-          itemId,
-          balances: {
-            available: plaidAccount.balances.available,
-            current: plaidAccount.balances.current,
-            limit: plaidAccount.balances.limit,
-            iso_currency_code: plaidAccount.balances.iso_currency_code,
-            unofficial_currency_code: plaidAccount.balances.unofficial_currency_code,
-          },
-        } as InputJsonValue,
+    try {
+      const request: AccountsGetRequest = {
+        access_token: accessToken,
       };
 
-      const account = await this.prisma.account.create({ data: accountData });
-      accounts.push(account);
-    }
+      const response = await this.callPlaidApi('accountsGet', () =>
+        this.plaidClient!.accountsGet(request)
+      );
+      const plaidAccounts = response.data.accounts;
 
-    return accounts;
+      const accounts: Account[] = [];
+
+      for (const plaidAccount of plaidAccounts) {
+        // Check if account already exists
+        const existingAccount = await this.prisma.account.findFirst({
+          where: {
+            spaceId,
+            provider: 'plaid',
+            providerAccountId: plaidAccount.account_id,
+          },
+        });
+
+        const accountData = {
+          spaceId,
+          provider: 'plaid' as const,
+          providerAccountId: plaidAccount.account_id,
+          name: plaidAccount.name,
+          type: mapPlaidAccountType(plaidAccount.type),
+          subtype: plaidAccount.subtype || plaidAccount.type,
+          currency: mapPlaidCurrency(plaidAccount.balances.iso_currency_code || 'USD'),
+          balance: plaidAccount.balances.current || 0,
+          lastSyncedAt: new Date(),
+          metadata: {
+            mask: plaidAccount.mask,
+            officialName: plaidAccount.official_name,
+            itemId,
+            balances: {
+              available: plaidAccount.balances.available,
+              current: plaidAccount.balances.current,
+              limit: plaidAccount.balances.limit,
+              iso_currency_code: plaidAccount.balances.iso_currency_code,
+              unofficial_currency_code: plaidAccount.balances.unofficial_currency_code,
+            },
+          } as InputJsonValue,
+        };
+
+        if (existingAccount) {
+          // Update existing account
+          const updated = await this.prisma.account.update({
+            where: { id: existingAccount.id },
+            data: accountData,
+          });
+          accounts.push(updated);
+        } else {
+          // Create new account
+          const account = await this.prisma.account.create({ data: accountData });
+          accounts.push(account);
+        }
+      }
+
+      this.logger.log(`Synced ${accounts.length} accounts for item ${itemId}`);
+      return accounts;
+    } catch (error) {
+      // Re-throw domain exceptions
+      if (error instanceof ProviderException) {
+        throw error;
+      }
+
+      this.logger.error('Failed to sync Plaid accounts:', error);
+      throw ProviderException.syncFailed(
+        'plaid',
+        'syncAccounts',
+        error instanceof Error ? error : new Error(String(error))
+      );
+    }
   }
 
+  @Retry('provider_sync')
   @MonitorPerformance(2000) // 2 second threshold for transaction sync
   async syncTransactions(
     accessToken: string,
     itemId: string
   ): Promise<{ transactionCount: number; accountCount: number; nextCursor?: string }> {
+    if (!this.plaidClient) {
+      // Configuration error - not retryable
+      throw new BadRequestException('Plaid integration is not configured');
+    }
+
     try {
-      // Use transactions sync for better performance
+      // Use transactions sync for better performance (with timeout and circuit breaker)
       const request: TransactionsSyncRequest = {
         access_token: accessToken,
       };
 
-      const response = await this.plaidClient!.transactionsSync(request);
+      const response = await this.callPlaidApi('transactionsSync', () =>
+        this.plaidClient!.transactionsSync(request)
+      );
       const { added, modified, removed, next_cursor } = response.data;
 
       // Process added transactions
@@ -344,8 +421,17 @@ export class PlaidService {
         nextCursor: next_cursor,
       };
     } catch (error) {
+      // Re-throw domain exceptions
+      if (error instanceof ProviderException) {
+        throw error;
+      }
+
       this.logger.error(`Failed to sync transactions for item ${itemId}:`, error);
-      throw error;
+      throw ProviderException.syncFailed(
+        'plaid',
+        'syncTransactions',
+        error instanceof Error ? error : new Error(String(error))
+      );
     }
   }
 
@@ -353,13 +439,15 @@ export class PlaidService {
    * Sync liability data (credit cards, loans, mortgages) from Plaid
    * Updates account records with APR, minimum payment, due dates, etc.
    */
+  @Retry('provider_sync')
   @MonitorPerformance(3000)
   async syncLiabilities(
     accessToken: string,
     itemId: string
   ): Promise<{ accountsUpdated: number; liabilityTypes: string[] }> {
     if (!this.plaidClient) {
-      throw new BadRequestException('Plaid integration not configured');
+      // Configuration error - not retryable
+      throw new BadRequestException('Plaid integration is not configured');
     }
 
     try {
@@ -367,7 +455,9 @@ export class PlaidService {
         access_token: accessToken,
       };
 
-      const response = await this.plaidClient.liabilitiesGet(request);
+      const response = await this.callPlaidApi('liabilitiesGet', () =>
+        this.plaidClient!.liabilitiesGet(request)
+      );
       const { liabilities, accounts } = response.data;
 
       const liabilityTypes: string[] = [];
@@ -472,8 +562,17 @@ export class PlaidService {
 
       return { accountsUpdated, liabilityTypes };
     } catch (error) {
+      // Re-throw domain exceptions
+      if (error instanceof ProviderException) {
+        throw error;
+      }
+
       this.logger.error(`Failed to sync liabilities for item ${itemId}:`, error);
-      throw error;
+      throw ProviderException.syncFailed(
+        'plaid',
+        'syncLiabilities',
+        error instanceof Error ? error : new Error(String(error))
+      );
     }
   }
 
@@ -605,25 +704,37 @@ export class PlaidService {
   }
 
   async handleWebhook(webhookData: PlaidWebhookDto, signature: string): Promise<void> {
-    // Verify webhook signature
-    if (!this.verifyWebhookSignature(JSON.stringify(webhookData), signature)) {
+    if (
+      !this.webhookHandler.verifySignature(
+        JSON.stringify(webhookData),
+        signature,
+        this.webhookSecret
+      )
+    ) {
       throw new BadRequestException('Invalid webhook signature');
     }
 
     const { webhook_type, webhook_code, item_id } = webhookData;
-
     this.logger.log(`Received Plaid webhook: ${webhook_type}:${webhook_code} for item ${item_id}`);
 
     try {
       switch (webhook_type) {
         case 'TRANSACTIONS':
-          await this.handleTransactionWebhook(webhookData);
+          await this.webhookHandler.handleTransactionWebhook(
+            webhookData,
+            this.syncTransactions.bind(this),
+            this.removeTransaction.bind(this)
+          );
           break;
         case 'ACCOUNTS':
-          await this.handleAccountWebhook(webhookData);
+          await this.webhookHandler.handleAccountWebhook(
+            webhookData,
+            this.callPlaidApi,
+            this.plaidClient
+          );
           break;
         case 'ITEM':
-          await this.handleItemWebhook(webhookData);
+          await this.webhookHandler.handleItemWebhook(webhookData);
           break;
         default:
           this.logger.log(`Unhandled webhook type: ${webhook_type}`);
@@ -631,235 +742,6 @@ export class PlaidService {
     } catch (error) {
       this.logger.error(`Failed to handle webhook for item ${item_id}:`, error);
       throw error;
-    }
-  }
-
-  private async handleTransactionWebhook(webhook: PlaidWebhookDto) {
-    const { item_id, webhook_code } = webhook;
-
-    // Get access token for the item
-    const connection = await this.prisma.providerConnection.findFirst({
-      where: {
-        provider: 'plaid',
-        providerUserId: item_id,
-      },
-    });
-
-    if (!connection) {
-      this.logger.warn(`No connection found for Plaid item ${item_id}`);
-      return;
-    }
-
-    const accessToken = this.cryptoService.decrypt(JSON.parse(connection.encryptedToken));
-
-    switch (webhook_code) {
-      case 'SYNC_UPDATES_AVAILABLE':
-      case 'DEFAULT_UPDATE':
-      case 'INITIAL_UPDATE':
-      case 'HISTORICAL_UPDATE':
-        await this.syncTransactions(accessToken, item_id);
-        break;
-      case 'TRANSACTIONS_REMOVED':
-        // Handle removed transactions
-        if (webhook.removed_transactions) {
-          for (const removedId of webhook.removed_transactions) {
-            await this.removeTransaction(removedId, item_id);
-          }
-        }
-        break;
-    }
-  }
-
-  private async handleAccountWebhook(webhook: PlaidWebhookDto) {
-    // Handle account updates
-    this.logger.log(`Account webhook received for item ${webhook.item_id}`);
-
-    const connection = await this.prisma.providerConnection.findFirst({
-      where: {
-        provider: 'plaid',
-        providerUserId: webhook.item_id,
-      },
-    });
-
-    if (!connection) {
-      this.logger.warn(`No connection found for Plaid item ${webhook.item_id}`);
-      return;
-    }
-
-    const accessToken = this.cryptoService.decrypt(JSON.parse(connection.encryptedToken));
-
-    // Re-sync accounts to capture balance/metadata changes
-    const request: AccountsGetRequest = {
-      access_token: accessToken,
-    };
-
-    const response = await this.plaidClient!.accountsGet(request);
-
-    for (const plaidAccount of response.data.accounts) {
-      await this.prisma.account.updateMany({
-        where: {
-          provider: 'plaid',
-          providerAccountId: plaidAccount.account_id,
-        },
-        data: {
-          balance: plaidAccount.balances.current || 0,
-          lastSyncedAt: new Date(),
-          metadata: {
-            mask: plaidAccount.mask,
-            officialName: plaidAccount.official_name,
-            itemId: webhook.item_id,
-            balances: {
-              available: plaidAccount.balances.available,
-              current: plaidAccount.balances.current,
-              limit: plaidAccount.balances.limit,
-              iso_currency_code: plaidAccount.balances.iso_currency_code,
-              unofficial_currency_code: plaidAccount.balances.unofficial_currency_code,
-            },
-          } as InputJsonValue,
-        },
-      });
-    }
-
-    this.logger.log(`Updated accounts for Plaid item ${webhook.item_id}`);
-  }
-
-  private async handleItemWebhook(webhook: PlaidWebhookDto) {
-    const { item_id, webhook_code, error } = webhook;
-
-    switch (webhook_code) {
-      case 'ERROR':
-        this.logger.error(`Plaid item error for ${item_id}:`, error);
-
-        // Mark connection as errored
-        await this.prisma.providerConnection.updateMany({
-          where: {
-            provider: 'plaid',
-            providerUserId: item_id,
-          },
-          data: {
-            metadata: {
-              error: error || 'Unknown error',
-              erroredAt: new Date().toISOString(),
-            },
-          },
-        });
-
-        // Disable associated accounts
-        await this.prisma.account.updateMany({
-          where: {
-            provider: 'plaid',
-            metadata: {
-              path: ['itemId'],
-              equals: item_id,
-            },
-          },
-          data: {
-            // Note: Account model may not have isActive field
-            // Store in metadata instead or update Prisma schema
-          },
-        });
-
-        this.logger.log(`Disabled accounts for errored Plaid item ${item_id}`);
-        break;
-
-      case 'PENDING_EXPIRATION':
-        this.logger.warn(`Plaid item ${item_id} will expire soon`);
-
-        // Update connection to indicate pending expiration
-        await this.prisma.providerConnection.updateMany({
-          where: {
-            provider: 'plaid',
-            providerUserId: item_id,
-          },
-          data: {
-            metadata: {
-              pendingExpiration: true,
-              expirationWarningAt: new Date().toISOString(),
-            },
-          },
-        });
-
-        // Note: Should trigger user notification in production
-        // via email service or push notification
-        break;
-
-      case 'USER_PERMISSION_REVOKED':
-        this.logger.log(`User revoked permissions for Plaid item ${item_id}`);
-
-        // Mark connection as revoked
-        await this.prisma.providerConnection.updateMany({
-          where: {
-            provider: 'plaid',
-            providerUserId: item_id,
-          },
-          data: {
-            metadata: {
-              revokedAt: new Date().toISOString(),
-            },
-          },
-        });
-
-        // Disable all associated accounts
-        await this.prisma.account.updateMany({
-          where: {
-            provider: 'plaid',
-            metadata: {
-              path: ['itemId'],
-              equals: item_id,
-            },
-          },
-          data: {
-            // Note: Account model may not have isActive field
-            // Store in metadata instead or update Prisma schema
-          },
-        });
-
-        this.logger.log(`Disabled accounts for revoked Plaid item ${item_id}`);
-        break;
-    }
-  }
-
-  private verifyWebhookSignature(payload: string, signature: string): boolean {
-    if (!this.webhookSecret || !signature) {
-      return false;
-    }
-
-    const expectedSignature = crypto
-      .createHmac('sha256', this.webhookSecret)
-      .update(payload, 'utf8')
-      .digest('hex');
-
-    return crypto.timingSafeEqual(
-      Buffer.from(signature, 'hex') as any,
-      Buffer.from(expectedSignature, 'hex') as any
-    );
-  }
-
-  private mapAccountType(plaidType: string): AccountType {
-    switch (plaidType.toLowerCase()) {
-      case 'depository':
-        return AccountType.checking; // Default for depository
-      case 'credit':
-        return AccountType.credit;
-      case 'investment':
-        return AccountType.investment;
-      default:
-        return AccountType.other;
-    }
-  }
-
-  private mapCurrency(currency: string): Currency {
-    const upperCurrency = currency?.toUpperCase();
-    switch (upperCurrency) {
-      case 'MXN':
-        return Currency.MXN;
-      case 'USD':
-        return Currency.USD;
-      case 'EUR':
-        return Currency.EUR;
-      default:
-        // Default to USD for US-focused Plaid
-        return Currency.USD;
     }
   }
 }

@@ -2,8 +2,11 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { BadRequestException } from '@nestjs/common';
 import { PlaidService } from './plaid.service';
+import { PlaidWebhookHandler } from './plaid-webhook.handler';
 import { PrismaService } from '@core/prisma/prisma.service';
 import { CryptoService } from '@core/crypto/crypto.service';
+import { CircuitBreakerService } from '../orchestrator/circuit-breaker.service';
+import { AuditService } from '@core/audit/audit.service';
 import { mockDeep, DeepMockProxy } from 'jest-mock-extended';
 
 // Mock Plaid
@@ -65,6 +68,7 @@ describe('PlaidService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         PlaidService,
+        PlaidWebhookHandler,
         {
           provide: PrismaService,
           useValue: mockDeep<PrismaService>(),
@@ -76,6 +80,21 @@ describe('PlaidService', () => {
         {
           provide: ConfigService,
           useValue: mockConfigService,
+        },
+        {
+          provide: CircuitBreakerService,
+          useValue: {
+            isCircuitOpen: jest.fn().mockResolvedValue(false),
+            recordSuccess: jest.fn().mockResolvedValue(undefined),
+            recordFailure: jest.fn().mockResolvedValue(undefined),
+          },
+        },
+        {
+          provide: AuditService,
+          useValue: {
+            logProviderConnection: jest.fn().mockResolvedValue(undefined),
+            logSecurityEvent: jest.fn().mockResolvedValue(undefined),
+          },
         },
       ],
     }).compile();
@@ -161,52 +180,4 @@ describe('PlaidService', () => {
     });
   });
 
-  describe('verifyWebhookSignature', () => {
-    it('should verify valid webhook signature', () => {
-      const payload = '{"test":"data"}';
-      const secret = 'webhook-secret';
-      
-      // Calculate expected signature
-      const crypto = require('crypto');
-      const expectedSignature = crypto
-        .createHmac('sha256', secret)
-        .update(payload, 'utf8')
-        .digest('hex');
-
-      configService.get.mockImplementation((key: string) => {
-        if (key === 'PLAID_WEBHOOK_SECRET') return secret;
-        return undefined;
-      });
-
-      const result = (service as any).verifyWebhookSignature(payload, expectedSignature);
-      expect(result).toBe(true);
-    });
-
-    it('should reject invalid webhook signature', () => {
-      const payload = '{"test":"data"}';
-      // Use a valid hex string of same length as SHA256 signature (64 chars) but wrong value
-      const invalidSignature = 'a'.repeat(64);
-
-      const result = (service as any).verifyWebhookSignature(payload, invalidSignature);
-      expect(result).toBe(false);
-    });
-  });
-
-  describe('mapAccountType', () => {
-    it('should map account types correctly', () => {
-      expect((service as any).mapAccountType('depository')).toBe('checking');
-      expect((service as any).mapAccountType('credit')).toBe('credit');
-      expect((service as any).mapAccountType('investment')).toBe('investment');
-      expect((service as any).mapAccountType('unknown')).toBe('other');
-    });
-  });
-
-  describe('mapCurrency', () => {
-    it('should map currencies correctly', () => {
-      expect((service as any).mapCurrency('USD')).toBe('USD');
-      expect((service as any).mapCurrency('MXN')).toBe('MXN');
-      expect((service as any).mapCurrency('EUR')).toBe('EUR');
-      expect((service as any).mapCurrency('UNKNOWN')).toBe('USD'); // Default for Plaid
-    });
-  });
 });

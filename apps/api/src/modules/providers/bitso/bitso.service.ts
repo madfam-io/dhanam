@@ -3,16 +3,22 @@ import * as crypto from 'crypto';
 import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { InputJsonValue } from '@prisma/client/runtime/library';
-import axios, { AxiosInstance } from 'axios';
+import axios, { AxiosInstance, AxiosError } from 'axios';
 
+import { Retry } from '@core/decorators/retry.decorator';
+import { ProviderException } from '@core/exceptions/domain-exceptions';
+import { withTimeout, TIMEOUT_PRESETS } from '@core/utils/timeout.util';
 import { Prisma as _Prisma, Account, Currency } from '@db';
 
 import { CryptoService } from '../../../core/crypto/crypto.service';
 import { PrismaService } from '../../../core/prisma/prisma.service';
 import { BitsoAccountMetadata, BitsoConnectionMetadata } from '../../../types/metadata.types';
 import { isUniqueConstraintError } from '../../../types/prisma-errors.types';
+import { CircuitBreakerService } from '../orchestrator/circuit-breaker.service';
 
 import { ConnectBitsoDto, BitsoWebhookDto } from './dto';
+
+const BITSO_TIMEOUT_MS = TIMEOUT_PRESETS.provider_api;
 
 interface BitsoBalance {
   currency: string;
@@ -54,10 +60,100 @@ export class BitsoService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
-    private readonly cryptoService: CryptoService
+    private readonly cryptoService: CryptoService,
+    private readonly circuitBreaker: CircuitBreakerService
   ) {
     this.initializeBitsoClient();
     this.webhookSecret = this.configService.get('BITSO_WEBHOOK_SECRET', '');
+  }
+
+  /**
+   * Check circuit breaker and throw if open
+   */
+  private async checkCircuitBreaker(): Promise<void> {
+    const isOpen = await this.circuitBreaker.isCircuitOpen('bitso', 'MX');
+    if (isOpen) {
+      throw ProviderException.circuitOpen('bitso');
+    }
+  }
+
+  /**
+   * Record success with circuit breaker
+   */
+  private async recordSuccess(responseTimeMs: number): Promise<void> {
+    await this.circuitBreaker.recordSuccess('bitso', 'MX', responseTimeMs);
+  }
+
+  /**
+   * Record failure with circuit breaker
+   */
+  private async recordFailure(error: Error): Promise<void> {
+    await this.circuitBreaker.recordFailure('bitso', 'MX', error.message);
+  }
+
+  /**
+   * Map Axios errors to domain exceptions
+   */
+  private mapBitsoError(error: unknown, operation: string): ProviderException {
+    if (error instanceof ProviderException) {
+      return error;
+    }
+
+    if (axios.isAxiosError(error)) {
+      const axiosError = error as AxiosError;
+
+      if (axiosError.code === 'ECONNABORTED' || axiosError.message.includes('timeout')) {
+        return ProviderException.timeout('bitso', operation);
+      }
+
+      if (axiosError.response?.status === 401) {
+        return ProviderException.authFailed('bitso', error);
+      }
+
+      if (axiosError.response?.status === 429) {
+        const retryAfter = axiosError.response.headers['retry-after'];
+        return ProviderException.rateLimited(
+          'bitso',
+          retryAfter ? parseInt(retryAfter) * 1000 : 60000
+        );
+      }
+
+      if (axiosError.response?.status === 503 || axiosError.code === 'ECONNREFUSED') {
+        return ProviderException.unavailable('bitso', error);
+      }
+    }
+
+    return ProviderException.syncFailed(
+      'bitso',
+      operation,
+      error instanceof Error ? error : new Error(String(error))
+    );
+  }
+
+  /**
+   * Wrap Bitso API call with timeout, circuit breaker, and error handling
+   */
+  private async callBitsoApi<T>(
+    client: AxiosInstance,
+    operation: string,
+    apiCall: () => Promise<T>
+  ): Promise<T> {
+    await this.checkCircuitBreaker();
+
+    const startTime = Date.now();
+
+    try {
+      const result = await withTimeout(apiCall, {
+        timeoutMs: BITSO_TIMEOUT_MS,
+        operationName: `bitso.${operation}`,
+      });
+
+      await this.recordSuccess(Date.now() - startTime);
+      return result;
+    } catch (error) {
+      await this.recordFailure(error instanceof Error ? error : new Error(String(error)));
+      throw this.mapBitsoError(error, operation);
+    }
   }
 
   private initializeBitsoClient() {
@@ -121,6 +217,7 @@ export class BitsoService {
     return this.updateBalances(spaceId, client, connection.providerUserId);
   }
 
+  @Retry('provider_sync')
   async connectAccount(
     spaceId: string,
     userId: string,
@@ -130,12 +227,14 @@ export class BitsoService {
       // Create temporary client with provided credentials
       const tempClient = this.createTempClient(dto.apiKey, dto.apiSecret);
 
-      // Verify credentials by fetching account info
-      const accountInfoResponse = await tempClient.get('/account_status');
+      // Verify credentials by fetching account info (with timeout and circuit breaker)
+      const accountInfoResponse = await this.callBitsoApi(tempClient, 'account_status', () =>
+        tempClient.get('/account_status')
+      );
       const accountInfo = accountInfoResponse.data.payload;
 
       if (!accountInfo) {
-        throw new BadRequestException('Invalid Bitso API credentials');
+        throw ProviderException.authFailed('bitso');
       }
 
       // Store encrypted credentials
@@ -163,8 +262,16 @@ export class BitsoService {
       // Fetch and create crypto accounts
       const accounts = await this.syncBalances(spaceId, tempClient, accountInfo.client_id);
 
-      // Initial trades sync for transaction history
-      await this.syncTrades(tempClient, accountInfo.client_id);
+      // Initial trades sync for transaction history (non-blocking)
+      try {
+        await this.syncTrades(tempClient, accountInfo.client_id);
+      } catch (tradeError) {
+        this.logger.warn(
+          `Initial trades sync failed for client ${accountInfo.client_id}:`,
+          tradeError
+        );
+        // Don't fail the connection - trades will sync on next scheduled job
+      }
 
       this.logger.log(`Successfully connected Bitso account for user ${userId}`);
       return {
@@ -172,11 +279,13 @@ export class BitsoService {
         message: `Successfully connected Bitso account with ${accounts.length} crypto holdings`,
       };
     } catch (error) {
-      this.logger.error('Failed to connect Bitso account:', error);
-      if (axios.isAxiosError(error) && error.response?.status === 401) {
-        throw new BadRequestException('Invalid Bitso API credentials');
+      // Re-throw domain exceptions
+      if (error instanceof ProviderException) {
+        throw error;
       }
-      throw new BadRequestException('Failed to connect Bitso account');
+
+      this.logger.error('Failed to connect Bitso account:', error);
+      throw this.mapBitsoError(error, 'connectAccount');
     }
   }
 

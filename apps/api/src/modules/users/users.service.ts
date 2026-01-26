@@ -1,6 +1,12 @@
 import { User, UserProfile } from '@dhanam/shared';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 
+import {
+  BusinessRuleException,
+  InfrastructureException,
+  ValidationException,
+} from '@core/exceptions/domain-exceptions';
 import { LoggerService } from '@core/logger/logger.service';
 import { PrismaService } from '@core/prisma/prisma.service';
 
@@ -13,86 +19,142 @@ export class UsersService {
     private logger: LoggerService
   ) {}
 
-  async getProfile(userId: string): Promise<UserProfile> {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      include: {
-        userSpaces: {
-          include: {
-            space: true,
-          },
-        },
-      },
-    });
-
-    if (!user) {
-      throw new NotFoundException('User not found');
+  /**
+   * Handle Prisma errors and map to domain exceptions
+   */
+  private handlePrismaError(error: unknown, operation: string): never {
+    if (error instanceof PrismaClientKnownRequestError) {
+      switch (error.code) {
+        case 'P2025':
+          throw BusinessRuleException.resourceNotFound('User', operation);
+        case 'P2002':
+          throw ValidationException.duplicateEntry(
+            (error.meta?.target as string[])?.join(', ') || 'field'
+          );
+        default:
+          throw InfrastructureException.databaseError(operation, error);
+      }
     }
 
-    const spaces = user.userSpaces.map((us) => ({
-      id: us.space.id,
-      name: us.space.name,
-      type: us.space.type,
-      role: us.role,
-    }));
+    if (error instanceof BusinessRuleException || error instanceof ValidationException) {
+      throw error;
+    }
 
-    return {
-      ...this.sanitizeUser(user),
-      spaces,
-    };
+    throw InfrastructureException.databaseError(
+      operation,
+      error instanceof Error ? error : new Error(String(error))
+    );
   }
 
-  async updateProfile(userId: string, dto: UpdateUserDto): Promise<User> {
-    const user = await this.prisma.user.update({
-      where: { id: userId },
-      data: {
-        name: dto.name,
-        locale: dto.locale,
-        timezone: dto.timezone,
-      },
-    });
-
-    this.logger.log(`Profile updated for user: ${userId}`, 'UsersService');
-
-    return this.sanitizeUser(user);
-  }
-
-  async deleteAccount(userId: string): Promise<void> {
-    await this.prisma.$transaction(async (tx) => {
-      // Delete user's spaces where they are the only owner
-      const ownedSpaces = await tx.userSpace.findMany({
-        where: {
-          userId,
-          role: 'owner',
-        },
+  async getProfile(userId: string): Promise<UserProfile> {
+    try {
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
         include: {
-          space: {
+          userSpaces: {
             include: {
-              userSpaces: true,
+              space: true,
             },
           },
         },
       });
 
-      for (const userSpace of ownedSpaces) {
-        const otherOwners = userSpace.space.userSpaces.filter(
-          (us) => us.userId !== userId && us.role === 'owner'
-        );
-
-        if (otherOwners.length === 0) {
-          await tx.space.delete({
-            where: { id: userSpace.spaceId },
-          });
-        }
+      if (!user) {
+        throw BusinessRuleException.resourceNotFound('User', userId);
       }
 
-      // Delete the user (cascades will handle related data)
-      await tx.user.delete({
-        where: { id: userId },
-      });
-    });
+      const spaces = user.userSpaces.map((us) => ({
+        id: us.space.id,
+        name: us.space.name,
+        type: us.space.type,
+        role: us.role,
+      }));
 
-    this.logger.log(`Account deleted for user: ${userId}`, 'UsersService');
+      return {
+        ...this.sanitizeUser(user),
+        spaces,
+      };
+    } catch (error) {
+      if (error instanceof BusinessRuleException) {
+        throw error;
+      }
+      this.handlePrismaError(error, 'getProfile');
+    }
+  }
+
+  async updateProfile(userId: string, dto: UpdateUserDto): Promise<User> {
+    try {
+      // Validate input
+      if (dto.name !== undefined && dto.name.trim().length === 0) {
+        throw ValidationException.invalidInput('name', 'Name cannot be empty');
+      }
+
+      const user = await this.prisma.user.update({
+        where: { id: userId },
+        data: {
+          name: dto.name,
+          locale: dto.locale,
+          timezone: dto.timezone,
+        },
+      });
+
+      this.logger.log(`Profile updated for user: ${userId}`, 'UsersService');
+
+      return this.sanitizeUser(user);
+    } catch (error) {
+      if (error instanceof ValidationException) {
+        throw error;
+      }
+      this.handlePrismaError(error, 'updateProfile');
+    }
+  }
+
+  async deleteAccount(userId: string): Promise<void> {
+    try {
+      await this.prisma.$transaction(
+        async (tx) => {
+          // Delete user's spaces where they are the only owner
+          const ownedSpaces = await tx.userSpace.findMany({
+            where: {
+              userId,
+              role: 'owner',
+            },
+            include: {
+              space: {
+                include: {
+                  userSpaces: true,
+                },
+              },
+            },
+          });
+
+          for (const userSpace of ownedSpaces) {
+            const otherOwners = userSpace.space.userSpaces.filter(
+              (us) => us.userId !== userId && us.role === 'owner'
+            );
+
+            if (otherOwners.length === 0) {
+              await tx.space.delete({
+                where: { id: userSpace.spaceId },
+              });
+            }
+          }
+
+          // Delete the user (cascades will handle related data)
+          await tx.user.delete({
+            where: { id: userId },
+          });
+        },
+        {
+          maxWait: 5000, // 5 seconds max wait for transaction slot
+          timeout: 30000, // 30 seconds transaction timeout
+        }
+      );
+
+      this.logger.log(`Account deleted for user: ${userId}`, 'UsersService');
+    } catch (error) {
+      this.handlePrismaError(error, 'deleteAccount');
+    }
   }
 
   private sanitizeUser(user: any): User {

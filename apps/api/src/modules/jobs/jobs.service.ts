@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import * as Sentry from '@sentry/node';
 
 import { PrismaService } from '@core/prisma/prisma.service';
 import { RulesService } from '@modules/categories/rules.service';
@@ -17,39 +18,98 @@ export class JobsService {
     private blockchainService: BlockchainService
   ) {}
 
+  /**
+   * Wrap cron job execution with error tracking
+   */
+  private async withJobTracking<T>(
+    jobName: string,
+    operation: () => Promise<T>
+  ): Promise<T | undefined> {
+    const startTime = Date.now();
+    const checkInId = Sentry.captureCheckIn(
+      { monitorSlug: jobName, status: 'in_progress' },
+      { schedule: { type: 'crontab', value: '* * * * *' } }
+    );
+
+    try {
+      const result = await operation();
+      const durationMs = Date.now() - startTime;
+
+      Sentry.captureCheckIn({
+        checkInId,
+        monitorSlug: jobName,
+        status: 'ok',
+        duration: durationMs / 1000,
+      });
+
+      return result;
+    } catch (error) {
+      const durationMs = Date.now() - startTime;
+      const err = error instanceof Error ? error : new Error(String(error));
+
+      Sentry.captureCheckIn({
+        checkInId,
+        monitorSlug: jobName,
+        status: 'error',
+        duration: durationMs / 1000,
+      });
+
+      Sentry.withScope((scope) => {
+        scope.setTag('job_name', jobName);
+        scope.setTag('job_type', 'cron');
+        scope.setContext('job', {
+          jobName,
+          durationMs,
+        });
+        Sentry.captureException(err);
+      });
+
+      this.logger.error(`Cron job ${jobName} failed after ${durationMs}ms: ${err.message}`);
+      return undefined;
+    }
+  }
+
   // Run every hour - categorize new transactions
   @Cron(CronExpression.EVERY_HOUR)
   async categorizeNewTransactions(): Promise<void> {
-    this.logger.log('Starting automatic transaction categorization');
+    await this.withJobTracking('categorize-transactions-hourly', async () => {
+      this.logger.log('Starting automatic transaction categorization');
 
-    try {
       const spaces = await this.prisma.space.findMany({
         select: { id: true },
       });
 
       let totalCategorized = 0;
       let totalProcessed = 0;
+      let errors = 0;
 
       for (const space of spaces) {
-        const result = await this.rulesService.batchCategorizeTransactions(space.id);
-        totalCategorized += result.categorized;
-        totalProcessed += result.total;
+        try {
+          const result = await this.rulesService.batchCategorizeTransactions(space.id);
+          totalCategorized += result.categorized;
+          totalProcessed += result.total;
+        } catch (spaceError) {
+          errors++;
+          this.logger.warn(
+            `Failed to categorize transactions for space ${space.id}: ${(spaceError as Error).message}`
+          );
+        }
       }
 
       this.logger.log(
-        `Auto-categorization complete: ${totalCategorized}/${totalProcessed} transactions categorized across ${spaces.length} spaces`
+        `Auto-categorization complete: ${totalCategorized}/${totalProcessed} transactions categorized across ${spaces.length} spaces (${errors} errors)`
       );
-    } catch (error) {
-      this.logger.error('Failed to auto-categorize transactions:', error);
-    }
+
+      return { totalCategorized, totalProcessed, spaces: spaces.length, errors };
+    });
   }
 
   // Run every 4 hours - sync crypto portfolios
   @Cron('0 */4 * * *')
   async syncCryptoPortfolios(): Promise<void> {
-    this.logger.log('Starting scheduled crypto portfolio sync');
+    await this.withJobTracking('sync-crypto-portfolios', async () => {
+      this.logger.log('Starting scheduled crypto portfolio sync');
 
-    try {
       const connections = await this.prisma.providerConnection.findMany({
         where: {
           provider: 'bitso',
@@ -58,27 +118,35 @@ export class JobsService {
         distinct: ['userId'],
       });
 
+      let synced = 0;
+      let errors = 0;
+
       for (const connection of connections) {
         try {
           await this.bitsoService.syncPortfolio(connection.userId);
+          synced++;
           this.logger.log(`Synced crypto portfolio for user ${connection.userId}`);
         } catch (error) {
-          this.logger.error(`Failed to sync crypto for user ${connection.userId}:`, error);
+          errors++;
+          this.logger.warn(
+            `Failed to sync crypto for user ${connection.userId}: ${(error as Error).message}`
+          );
         }
       }
 
-      this.logger.log(`Crypto sync complete for ${connections.length} users`);
-    } catch (error) {
-      this.logger.error('Failed to sync crypto portfolios:', error);
-    }
+      this.logger.log(
+        `Crypto sync complete: ${synced}/${connections.length} users synced (${errors} errors)`
+      );
+      return { synced, total: connections.length, errors };
+    });
   }
 
   // Run every 6 hours - sync blockchain wallets (ETH, BTC)
   @Cron('0 */6 * * *')
   async syncBlockchainWallets(): Promise<void> {
-    this.logger.log('Starting scheduled blockchain wallet sync');
+    await this.withJobTracking('sync-blockchain-wallets', async () => {
+      this.logger.log('Starting scheduled blockchain wallet sync');
 
-    try {
       const accounts = await this.prisma.account.findMany({
         where: {
           provider: 'manual',
@@ -106,27 +174,35 @@ export class JobsService {
           .filter((userId): userId is string => !!userId)
       );
 
+      let synced = 0;
+      let errors = 0;
+
       for (const userId of uniqueUserIds) {
         try {
           await this.blockchainService.syncWallets(userId);
+          synced++;
           this.logger.log(`Synced blockchain wallets for user ${userId}`);
         } catch (error) {
-          this.logger.error(`Failed to sync blockchain wallets for user ${userId}:`, error);
+          errors++;
+          this.logger.warn(
+            `Failed to sync blockchain wallets for user ${userId}: ${(error as Error).message}`
+          );
         }
       }
 
-      this.logger.log(`Blockchain wallet sync complete for ${uniqueUserIds.size} users`);
-    } catch (error) {
-      this.logger.error('Failed to sync blockchain wallets:', error);
-    }
+      this.logger.log(
+        `Blockchain wallet sync complete: ${synced}/${uniqueUserIds.size} users synced (${errors} errors)`
+      );
+      return { synced, total: uniqueUserIds.size, errors };
+    });
   }
 
   // Run daily at 2 AM - cleanup expired sessions
   @Cron('0 2 * * *')
   async cleanupExpiredSessions(): Promise<void> {
-    this.logger.log('Starting session cleanup');
+    await this.withJobTracking('cleanup-expired-sessions', async () => {
+      this.logger.log('Starting session cleanup');
 
-    try {
       // This would be handled by Redis TTL, but we can log metrics
       const activeConnections = await this.prisma.providerConnection.count();
       const oldConnections = await this.prisma.providerConnection.count({
@@ -140,58 +216,70 @@ export class JobsService {
       this.logger.log(
         `Session cleanup complete. Active connections: ${activeConnections}, Stale connections: ${oldConnections}`
       );
-    } catch (error) {
-      this.logger.error('Failed to cleanup sessions:', error);
-    }
+
+      return { activeConnections, staleConnections: oldConnections };
+    });
   }
 
   // Run daily at 3 AM - generate daily valuation snapshots
   @Cron('0 3 * * *')
   async generateValuationSnapshots(): Promise<void> {
-    this.logger.log('Starting daily valuation snapshot generation');
+    await this.withJobTracking('generate-valuation-snapshots', async () => {
+      this.logger.log('Starting daily valuation snapshot generation');
 
-    try {
       const spaces = await this.prisma.space.findMany({
         include: {
           accounts: true,
         },
       });
 
+      let snapshotsCreated = 0;
+      let errors = 0;
+
       for (const space of spaces) {
-        // Calculate total assets and liabilities
-        const totalAssets = space.accounts
-          .filter((account: any) =>
-            ['checking', 'savings', 'investment', 'crypto'].includes(account.type)
-          )
-          .reduce((sum: number, account: any) => sum + account.balance.toNumber(), 0);
+        try {
+          // Calculate total assets and liabilities
+          const totalAssets = space.accounts
+            .filter((account: any) =>
+              ['checking', 'savings', 'investment', 'crypto'].includes(account.type)
+            )
+            .reduce((sum: number, account: any) => sum + account.balance.toNumber(), 0);
 
-        const totalLiabilities = space.accounts
-          .filter((account: any) => account.type === 'credit')
-          .reduce((sum: number, account: any) => sum + Math.abs(account.balance.toNumber()), 0);
+          const totalLiabilities = space.accounts
+            .filter((account: any) => account.type === 'credit')
+            .reduce((sum: number, account: any) => sum + Math.abs(account.balance.toNumber()), 0);
 
-        const netWorth = totalAssets - totalLiabilities;
+          const netWorth = totalAssets - totalLiabilities;
 
-        // Create asset valuation snapshot for each account
-        for (const account of space.accounts) {
-          await this.prisma.assetValuation.create({
-            data: {
-              accountId: account.id,
-              date: new Date(),
-              value: account.balance,
-              currency: account.currency,
-            },
-          });
+          // Create asset valuation snapshot for each account
+          for (const account of space.accounts) {
+            await this.prisma.assetValuation.create({
+              data: {
+                accountId: account.id,
+                date: new Date(),
+                value: account.balance,
+                currency: account.currency,
+              },
+            });
+            snapshotsCreated++;
+          }
+
+          this.logger.log(
+            `Created valuation snapshot for space ${space.id}: $${netWorth.toFixed(2)}`
+          );
+        } catch (spaceError) {
+          errors++;
+          this.logger.warn(
+            `Failed to create snapshot for space ${space.id}: ${(spaceError as Error).message}`
+          );
         }
-
-        this.logger.log(
-          `Created valuation snapshot for space ${space.id}: $${netWorth.toFixed(2)}`
-        );
       }
 
-      this.logger.log(`Daily snapshots created for ${spaces.length} spaces`);
-    } catch (error) {
-      this.logger.error('Failed to generate valuation snapshots:', error);
-    }
+      this.logger.log(
+        `Daily snapshots complete: ${snapshotsCreated} snapshots for ${spaces.length} spaces (${errors} errors)`
+      );
+      return { snapshotsCreated, spaces: spaces.length, errors };
+    });
   }
 
   // Manual trigger for immediate categorization

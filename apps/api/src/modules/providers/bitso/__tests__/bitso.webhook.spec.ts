@@ -6,6 +6,7 @@ import { BitsoService } from '../bitso.service';
 import { BitsoWebhookDto } from '../dto/webhook.dto';
 import { PrismaService } from '@core/prisma/prisma.service';
 import { CryptoService } from '@core/crypto/crypto.service';
+import { CircuitBreakerService } from '@modules/providers/orchestrator/circuit-breaker.service';
 import { ConfigService } from '@nestjs/config';
 
 describe('BitsoService - Webhook Contract Tests', () => {
@@ -68,6 +69,14 @@ describe('BitsoService - Webhook Contract Tests', () => {
           useValue: {
             encrypt: jest.fn((data) => `encrypted-${data}`),
             decrypt: jest.fn((data) => data.replace('encrypted-', '')),
+          },
+        },
+        {
+          provide: CircuitBreakerService,
+          useValue: {
+            isCircuitOpen: jest.fn().mockResolvedValue(false),
+            recordSuccess: jest.fn().mockResolvedValue(undefined),
+            recordFailure: jest.fn().mockResolvedValue(undefined),
           },
         },
       ],
@@ -188,6 +197,14 @@ describe('BitsoService - Webhook Contract Tests', () => {
           {
             provide: CryptoService,
             useValue: { encrypt: jest.fn(), decrypt: jest.fn() },
+          },
+          {
+            provide: CircuitBreakerService,
+            useValue: {
+              isCircuitOpen: jest.fn().mockResolvedValue(false),
+              recordSuccess: jest.fn().mockResolvedValue(undefined),
+              recordFailure: jest.fn().mockResolvedValue(undefined),
+            },
           },
         ],
       }).compile();

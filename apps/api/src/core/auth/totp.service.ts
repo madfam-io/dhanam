@@ -1,9 +1,16 @@
 import { randomBytes, createHash } from 'crypto';
 
 import { Injectable } from '@nestjs/common';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import * as qrcode from 'qrcode';
 import * as speakeasy from 'speakeasy';
 
+import {
+  SecurityException,
+  InfrastructureException,
+  ValidationException,
+  BusinessRuleException,
+} from '@core/exceptions/domain-exceptions';
 import { LoggerService } from '@core/logger/logger.service';
 import { PrismaService } from '@core/prisma/prisma.service';
 
@@ -20,97 +27,154 @@ export class TotpService {
     private logger: LoggerService
   ) {}
 
+  /**
+   * Handle errors in TOTP operations with proper exception mapping
+   */
+  private handleError(error: unknown, operation: string): never {
+    // Re-throw domain exceptions
+    if (
+      error instanceof SecurityException ||
+      error instanceof ValidationException ||
+      error instanceof BusinessRuleException
+    ) {
+      throw error;
+    }
+
+    // Handle Prisma errors
+    if (error instanceof PrismaClientKnownRequestError) {
+      if (error.code === 'P2025') {
+        throw BusinessRuleException.resourceNotFound('User', operation);
+      }
+      throw InfrastructureException.databaseError(operation, error);
+    }
+
+    // Log and wrap unknown errors
+    this.logger.error(`TOTP operation failed: ${operation}`, String(error), 'TotpService');
+    throw InfrastructureException.encryptionError(
+      operation,
+      error instanceof Error ? error : new Error(String(error))
+    );
+  }
+
   async setupTotp(userId: string, userEmail: string): Promise<TotpSetupResponse> {
-    const secret = speakeasy.generateSecret({
-      name: `Dhanam (${userEmail})`,
-      issuer: 'Dhanam Ledger',
-      length: 32,
-    });
+    try {
+      const secret = speakeasy.generateSecret({
+        name: `Dhanam (${userEmail})`,
+        issuer: 'Dhanam Ledger',
+        length: 32,
+      });
 
-    // Generate QR code
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const qrCodeUrl = await qrcode.toDataURL(secret.otpauth_url!);
+      // Generate QR code (wrap in try-catch for QR generation errors)
+      let qrCodeUrl: string;
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        qrCodeUrl = await qrcode.toDataURL(secret.otpauth_url!);
+      } catch (qrError) {
+        this.logger.error('Failed to generate QR code', String(qrError), 'TotpService');
+        throw InfrastructureException.encryptionError('qr_generation', qrError as Error);
+      }
 
-    // Store temporary secret (not activated until verified)
-    await this.prisma.user.update({
-      where: { id: userId },
-      data: { totpTempSecret: secret.base32 },
-    });
+      // Store temporary secret (not activated until verified)
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: { totpTempSecret: secret.base32 },
+      });
 
-    this.logger.log(`TOTP setup initiated for user: ${userId}`, 'TotpService');
+      this.logger.log(`TOTP setup initiated for user: ${userId}`, 'TotpService');
 
-    // speakeasy always generates these values
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const base32Secret = secret.base32!;
+      // speakeasy always generates these values
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      const base32Secret = secret.base32!;
 
-    return {
-      qrCodeUrl,
-      secret: base32Secret,
-      manualEntryKey: base32Secret,
-    };
+      return {
+        qrCodeUrl,
+        secret: base32Secret,
+        manualEntryKey: base32Secret,
+      };
+    } catch (error) {
+      this.handleError(error, 'setupTotp');
+    }
   }
 
   async enableTotp(userId: string, token: string): Promise<void> {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: { totpTempSecret: true },
-    });
+    try {
+      // Validate token format
+      if (!token || !/^\d{6}$/.test(token)) {
+        throw ValidationException.invalidInput('token', 'TOTP token must be 6 digits');
+      }
 
-    if (!user?.totpTempSecret) {
-      throw new Error('No TOTP setup in progress');
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { totpTempSecret: true },
+      });
+
+      if (!user?.totpTempSecret) {
+        throw ValidationException.invalidState('No TOTP setup in progress');
+      }
+
+      const isValid = speakeasy.totp.verify({
+        secret: user.totpTempSecret,
+        encoding: 'base32',
+        token,
+        window: 2, // Allow 2 time steps for clock drift
+      });
+
+      if (!isValid) {
+        throw SecurityException.totpInvalid();
+      }
+
+      // Activate TOTP
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: {
+          totpSecret: user.totpTempSecret,
+          totpTempSecret: null,
+          totpEnabled: true,
+        },
+      });
+
+      this.logger.log(`TOTP enabled for user: ${userId}`, 'TotpService');
+    } catch (error) {
+      this.handleError(error, 'enableTotp');
     }
-
-    const isValid = speakeasy.totp.verify({
-      secret: user.totpTempSecret,
-      encoding: 'base32',
-      token,
-      window: 2, // Allow 2 time steps for clock drift
-    });
-
-    if (!isValid) {
-      throw new Error('Invalid TOTP token');
-    }
-
-    // Activate TOTP
-    await this.prisma.user.update({
-      where: { id: userId },
-      data: {
-        totpSecret: user.totpTempSecret,
-        totpTempSecret: null,
-        totpEnabled: true,
-      },
-    });
-
-    this.logger.log(`TOTP enabled for user: ${userId}`, 'TotpService');
   }
 
   async disableTotp(userId: string, token: string): Promise<void> {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: { totpSecret: true },
-    });
+    try {
+      // Validate token format
+      if (!token || !/^\d{6}$/.test(token)) {
+        throw ValidationException.invalidInput('token', 'TOTP token must be 6 digits');
+      }
 
-    if (!user?.totpSecret) {
-      throw new Error('TOTP not enabled');
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { totpSecret: true },
+      });
+
+      if (!user?.totpSecret) {
+        throw ValidationException.invalidState('TOTP not enabled');
+      }
+
+      const isValid = this.verifyToken(user.totpSecret, token);
+
+      if (!isValid) {
+        throw SecurityException.totpInvalid();
+      }
+
+      // Disable TOTP
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: {
+          totpSecret: null,
+          totpTempSecret: null,
+          totpEnabled: false,
+        },
+      });
+
+      this.logger.log(`TOTP disabled for user: ${userId}`, 'TotpService');
+    } catch (error) {
+      this.handleError(error, 'disableTotp');
     }
-
-    const isValid = this.verifyToken(user.totpSecret, token);
-
-    if (!isValid) {
-      throw new Error('Invalid TOTP token');
-    }
-
-    // Disable TOTP
-    await this.prisma.user.update({
-      where: { id: userId },
-      data: {
-        totpSecret: null,
-        totpTempSecret: null,
-        totpEnabled: false,
-      },
-    });
-
-    this.logger.log(`TOTP disabled for user: ${userId}`, 'TotpService');
   }
 
   verifyToken(secret: string, token: string): boolean {
@@ -133,44 +197,63 @@ export class TotpService {
   }
 
   async storeBackupCodes(userId: string, codes: string[]): Promise<void> {
-    // Hash backup codes before storing
-    const hashedCodes = codes.map((code) => createHash('sha256').update(code).digest('hex'));
+    try {
+      // Hash backup codes before storing
+      const hashedCodes = codes.map((code) => createHash('sha256').update(code).digest('hex'));
 
-    await this.prisma.user.update({
-      where: { id: userId },
-      data: { totpBackupCodes: hashedCodes },
-    });
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: { totpBackupCodes: hashedCodes },
+      });
 
-    this.logger.log(`Backup codes generated for user: ${userId}`, 'TotpService');
+      this.logger.log(`Backup codes generated for user: ${userId}`, 'TotpService');
+    } catch (error) {
+      this.handleError(error, 'storeBackupCodes');
+    }
   }
 
   async verifyBackupCode(userId: string, code: string): Promise<boolean> {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: { totpBackupCodes: true },
-    });
+    try {
+      // Validate code format
+      if (!code || !/^[A-F0-9]{8}$/i.test(code)) {
+        return false;
+      }
 
-    if (!user?.totpBackupCodes) {
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { totpBackupCodes: true },
+      });
+
+      if (!user?.totpBackupCodes || user.totpBackupCodes.length === 0) {
+        return false;
+      }
+
+      const hashedCode = createHash('sha256').update(code.toUpperCase()).digest('hex');
+      const codeIndex = user.totpBackupCodes.indexOf(hashedCode);
+
+      if (codeIndex === -1) {
+        return false;
+      }
+
+      // Remove used backup code
+      const updatedCodes = [...user.totpBackupCodes];
+      updatedCodes.splice(codeIndex, 1);
+
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: { totpBackupCodes: updatedCodes },
+      });
+
+      this.logger.log(`Backup code used for user: ${userId}`, 'TotpService');
+      return true;
+    } catch (error) {
+      // For verification, log but return false rather than throwing
+      this.logger.error(
+        `Failed to verify backup code for user ${userId}`,
+        String(error),
+        'TotpService'
+      );
       return false;
     }
-
-    const hashedCode = createHash('sha256').update(code).digest('hex');
-    const codeIndex = user.totpBackupCodes.indexOf(hashedCode);
-
-    if (codeIndex === -1) {
-      return false;
-    }
-
-    // Remove used backup code
-    const updatedCodes = [...user.totpBackupCodes];
-    updatedCodes.splice(codeIndex, 1);
-
-    await this.prisma.user.update({
-      where: { id: userId },
-      data: { totpBackupCodes: updatedCodes },
-    });
-
-    this.logger.log(`Backup code used for user: ${userId}`, 'TotpService');
-    return true;
   }
 }

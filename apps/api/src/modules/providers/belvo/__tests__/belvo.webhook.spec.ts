@@ -7,6 +7,7 @@ import { BelvoWebhookDto, BelvoWebhookEvent } from '../dto/webhook.dto';
 import { PrismaService } from '@core/prisma/prisma.service';
 import { CryptoService } from '@core/crypto/crypto.service';
 import { AuditService } from '@core/audit/audit.service';
+import { CircuitBreakerService } from '@modules/providers/orchestrator/circuit-breaker.service';
 import { ConfigService } from '@nestjs/config';
 
 describe('BelvoService - Webhook Contract Tests', () => {
@@ -77,6 +78,14 @@ describe('BelvoService - Webhook Contract Tests', () => {
           provide: AuditService,
           useValue: {
             logProviderConnection: jest.fn(),
+          },
+        },
+        {
+          provide: CircuitBreakerService,
+          useValue: {
+            isCircuitOpen: jest.fn().mockResolvedValue(false),
+            recordSuccess: jest.fn().mockResolvedValue(undefined),
+            recordFailure: jest.fn().mockResolvedValue(undefined),
           },
         },
       ],
@@ -189,6 +198,14 @@ describe('BelvoService - Webhook Contract Tests', () => {
           {
             provide: AuditService,
             useValue: auditService,
+          },
+          {
+            provide: CircuitBreakerService,
+            useValue: {
+              isCircuitOpen: jest.fn().mockResolvedValue(false),
+              recordSuccess: jest.fn().mockResolvedValue(undefined),
+              recordFailure: jest.fn().mockResolvedValue(undefined),
+            },
           },
         ],
       }).compile();

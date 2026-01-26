@@ -7,7 +7,10 @@ import {
   UseGuards,
   Headers,
   BadRequestException,
+  Logger,
+  Req,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import {
   ApiTags,
   ApiOperation,
@@ -20,9 +23,12 @@ import {
   ApiBadRequestResponse,
   ApiParam,
 } from '@nestjs/swagger';
+import { FastifyRequest } from 'fastify';
+import { Redis } from 'ioredis';
 
 import { CurrentUser, AuthenticatedUser } from '@core/auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
+import { processWebhook, createWebhookResponse } from '@core/utils/webhook.util';
 
 import { BelvoService } from './belvo.service';
 import { CreateBelvoLinkDto, BelvoWebhookDto } from './dto';
@@ -30,7 +36,30 @@ import { CreateBelvoLinkDto, BelvoWebhookDto } from './dto';
 @ApiTags('providers/belvo')
 @Controller('providers/belvo')
 export class BelvoController {
-  constructor(private readonly belvoService: BelvoService) {}
+  private readonly logger = new Logger(BelvoController.name);
+  private readonly webhookSecret: string;
+  private redis: Redis | null = null;
+
+  constructor(
+    private readonly belvoService: BelvoService,
+    private readonly configService: ConfigService
+  ) {
+    this.webhookSecret = this.configService.get('BELVO_WEBHOOK_SECRET', '');
+
+    // Initialize Redis for idempotency (optional)
+    const redisUrl = this.configService.get('REDIS_URL');
+    if (redisUrl) {
+      try {
+        this.redis = new Redis(redisUrl, { lazyConnect: true });
+        this.redis.connect().catch(() => {
+          this.logger.warn('Redis not available for webhook idempotency');
+          this.redis = null;
+        });
+      } catch {
+        this.logger.warn('Failed to initialize Redis for webhook idempotency');
+      }
+    }
+  }
 
   @Post('spaces/:spaceId/link')
   @UseGuards(JwtAuthGuard)
@@ -93,14 +122,34 @@ export class BelvoController {
   @ApiOperation({ summary: 'Handle Belvo webhooks' })
   @ApiOkResponse({ description: 'Webhook processed successfully' })
   @ApiBadRequestResponse({ description: 'Invalid request body or missing webhook signature' })
-  async handleWebhook(@Body() dto: BelvoWebhookDto, @Headers('belvo-signature') signature: string) {
+  async handleWebhook(
+    @Body() dto: BelvoWebhookDto,
+    @Headers('belvo-signature') signature: string,
+    @Req() request: FastifyRequest
+  ) {
+    // Get raw body for signature verification if available
+    const rawBody = (request as any).rawBody || JSON.stringify(dto);
+
     if (!signature) {
+      this.logger.warn('Belvo webhook received without signature');
       throw new BadRequestException('Missing webhook signature');
     }
 
-    await this.belvoService.handleWebhook(dto, signature);
-    return {
-      message: 'Webhook processed successfully',
-    };
+    const result = await processWebhook(
+      rawBody,
+      signature,
+      {
+        provider: 'belvo',
+        secret: this.webhookSecret,
+        redis: this.redis || undefined,
+        logger: this.logger,
+      },
+      async () => {
+        await this.belvoService.handleWebhook(dto, signature);
+      }
+    );
+
+    // Always return 200 OK after signature verification to prevent retries
+    return createWebhookResponse(result);
   }
 }

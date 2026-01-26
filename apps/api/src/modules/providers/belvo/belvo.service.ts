@@ -7,13 +7,20 @@ import type { InputJsonValue } from '@prisma/client/runtime/library';
 import { AuditService } from '@core/audit/audit.service';
 import { CryptoService } from '@core/crypto/crypto.service';
 import { MonitorPerformance } from '@core/decorators/monitor-performance.decorator';
+import { Retry } from '@core/decorators/retry.decorator';
+import { ProviderException } from '@core/exceptions/domain-exceptions';
 import { PrismaService } from '@core/prisma/prisma.service';
+import { withTimeout, TIMEOUT_PRESETS } from '@core/utils/timeout.util';
 import { Account, Transaction, Prisma as _Prisma, Currency, AccountType } from '@db';
+
+import { CircuitBreakerService } from '../orchestrator/circuit-breaker.service';
 
 import { CreateBelvoLinkDto, BelvoWebhookDto, BelvoWebhookEvent } from './dto';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { default: Belvo } = require('belvo');
+
+const BELVO_TIMEOUT_MS = TIMEOUT_PRESETS.provider_api;
 
 @Injectable()
 export class BelvoService {
@@ -25,7 +32,8 @@ export class BelvoService {
     private configService: ConfigService,
     private prisma: PrismaService,
     private cryptoService: CryptoService,
-    private auditService: AuditService
+    private auditService: AuditService,
+    private circuitBreaker: CircuitBreakerService
   ) {
     const secretKeyId = this.configService.get<string>('BELVO_SECRET_KEY_ID');
     const secretKeyPassword = this.configService.get<string>('BELVO_SECRET_KEY_PASSWORD');
@@ -40,25 +48,91 @@ export class BelvoService {
     }
   }
 
+  /**
+   * Check circuit breaker and throw if open
+   */
+  private async checkCircuitBreaker(): Promise<void> {
+    const isOpen = await this.circuitBreaker.isCircuitOpen('belvo', 'MX');
+    if (isOpen) {
+      throw ProviderException.circuitOpen('belvo');
+    }
+  }
+
+  /**
+   * Record success with circuit breaker
+   */
+  private async recordSuccess(responseTimeMs: number): Promise<void> {
+    await this.circuitBreaker.recordSuccess('belvo', 'MX', responseTimeMs);
+  }
+
+  /**
+   * Record failure with circuit breaker
+   */
+  private async recordFailure(error: Error): Promise<void> {
+    await this.circuitBreaker.recordFailure('belvo', 'MX', error.message);
+  }
+
+  /**
+   * Wrap Belvo API call with timeout, circuit breaker, and error handling
+   */
+  private async callBelvoApi<T>(operation: string, apiCall: () => Promise<T>): Promise<T> {
+    await this.checkCircuitBreaker();
+
+    const startTime = Date.now();
+
+    try {
+      const result = await withTimeout(apiCall, {
+        timeoutMs: BELVO_TIMEOUT_MS,
+        operationName: `belvo.${operation}`,
+      });
+
+      await this.recordSuccess(Date.now() - startTime);
+      return result;
+    } catch (error) {
+      await this.recordFailure(error instanceof Error ? error : new Error(String(error)));
+
+      // Map errors to domain exceptions
+      if (error instanceof ProviderException) {
+        throw error;
+      }
+
+      const err = error instanceof Error ? error : new Error(String(error));
+
+      // Check for specific Belvo error patterns
+      if (err.message.includes('timeout') || err.message.includes('ETIMEDOUT')) {
+        throw ProviderException.timeout('belvo', operation);
+      }
+
+      if (err.message.includes('401') || err.message.includes('unauthorized')) {
+        throw ProviderException.authFailed('belvo', err);
+      }
+
+      if (err.message.includes('429') || err.message.includes('rate limit')) {
+        throw ProviderException.rateLimited('belvo', 60000);
+      }
+
+      throw ProviderException.syncFailed('belvo', operation, err);
+    }
+  }
+
+  @Retry('provider_sync')
   async createLink(
     spaceId: string,
     userId: string,
     dto: CreateBelvoLinkDto
   ): Promise<{ linkId: string; accounts: Account[] }> {
     if (!this.belvoClient) {
-      throw new BadRequestException('Belvo integration not configured');
+      // Configuration error - not retryable
+      throw new BadRequestException('Belvo integration is not configured');
     }
 
     try {
-      // Create link in Belvo
-      const link = await this.belvoClient.links.register(
-        dto.institution,
-        dto.username,
-        dto.password,
-        {
+      // Create link in Belvo with timeout and circuit breaker
+      const link = await this.callBelvoApi('links.register', () =>
+        this.belvoClient.links.register(dto.institution, dto.username, dto.password, {
           external_id: dto.externalId,
           access_mode: 'recurrent',
-        }
+        })
       );
 
       // Store encrypted link with spaceId in metadata for proper routing
@@ -77,14 +151,21 @@ export class BelvoService {
         },
       });
 
-      // Fetch accounts immediately
-      const belvoAccounts = await this.belvoClient.accounts.retrieve(link.id);
+      // Fetch accounts immediately with circuit breaker
+      const belvoAccounts = await this.callBelvoApi('accounts.retrieve', () =>
+        this.belvoClient.accounts.retrieve(link.id)
+      );
 
       // Convert and store accounts
       const accounts = await this.syncAccounts(spaceId, userId, link.id, belvoAccounts);
 
-      // Fetch initial transactions
-      await this.syncTransactions(spaceId, userId, link.id);
+      // Fetch initial transactions (non-blocking - log errors but don't fail)
+      try {
+        await this.syncTransactions(spaceId, userId, link.id);
+      } catch (txError) {
+        this.logger.warn(`Initial transaction sync failed for link ${link.id}:`, txError);
+        // Don't fail the link creation - transactions will sync on next scheduled job
+      }
 
       // Log successful connection
       await this.auditService.logProviderConnection('belvo', userId, spaceId, true);
@@ -94,11 +175,21 @@ export class BelvoService {
       // Log failed connection
       await this.auditService.logProviderConnection('belvo', userId, spaceId, false);
 
+      // Re-throw if already a domain exception
+      if (error instanceof ProviderException) {
+        throw error;
+      }
+
       this.logger.error('Failed to create Belvo link', error);
-      throw new BadRequestException('Failed to connect to financial institution');
+      throw ProviderException.syncFailed(
+        'belvo',
+        'createLink',
+        error instanceof Error ? error : new Error(String(error))
+      );
     }
   }
 
+  @Retry('provider_sync')
   async syncAccounts(
     spaceId: string,
     _userId: string,
@@ -106,13 +197,16 @@ export class BelvoService {
     belvoAccounts?: any[]
   ): Promise<Account[]> {
     if (!this.belvoClient) {
-      throw new BadRequestException('Belvo integration not configured');
+      // Configuration error - not retryable
+      throw new BadRequestException('Belvo integration is not configured');
     }
 
     try {
-      // Fetch accounts if not provided
+      // Fetch accounts if not provided (with circuit breaker and timeout)
       if (!belvoAccounts) {
-        belvoAccounts = await this.belvoClient.accounts.retrieve(linkId);
+        belvoAccounts = await this.callBelvoApi('accounts.retrieve', () =>
+          this.belvoClient.accounts.retrieve(linkId)
+        );
       }
 
       const accounts: Account[] = [];
@@ -170,10 +264,20 @@ export class BelvoService {
         }
       }
 
+      this.logger.log(`Synced ${accounts.length} accounts for link ${linkId}`);
       return accounts;
     } catch (error) {
+      // Re-throw domain exceptions
+      if (error instanceof ProviderException) {
+        throw error;
+      }
+
       this.logger.error('Failed to sync Belvo accounts', error);
-      throw new BadRequestException('Failed to sync accounts');
+      throw ProviderException.syncFailed(
+        'belvo',
+        'syncAccounts',
+        error instanceof Error ? error : new Error(String(error))
+      );
     }
   }
 

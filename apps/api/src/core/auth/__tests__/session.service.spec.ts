@@ -141,7 +141,7 @@ describe('SessionService', () => {
       expect(result).toBeNull();
     });
 
-    it('should return null for expired token', async () => {
+    it('should throw SecurityException for expired token', async () => {
       const expiredSessionData = {
         userId: mockUserId,
         email: mockEmail,
@@ -151,9 +151,7 @@ describe('SessionService', () => {
 
       redis.get = jest.fn().mockResolvedValue(JSON.stringify(expiredSessionData));
 
-      const result = await service.validateRefreshToken(token);
-
-      expect(result).toBeNull();
+      await expect(service.validateRefreshToken(token)).rejects.toThrow('Token has expired');
       expect(redis.del).toHaveBeenCalled(); // Should clean up expired token
     });
 

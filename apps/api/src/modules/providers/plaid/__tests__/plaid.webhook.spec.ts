@@ -3,13 +3,17 @@ import { BadRequestException } from '@nestjs/common';
 import * as crypto from 'crypto';
 
 import { PlaidService } from '../plaid.service';
+import { PlaidWebhookHandler } from '../plaid-webhook.handler';
 import { PlaidWebhookDto } from '../dto/webhook.dto';
 import { PrismaService } from '@core/prisma/prisma.service';
 import { CryptoService } from '@core/crypto/crypto.service';
+import { AuditService } from '@core/audit/audit.service';
+import { CircuitBreakerService } from '@modules/providers/orchestrator/circuit-breaker.service';
 import { ConfigService } from '@nestjs/config';
 
 describe('PlaidService - Webhook Contract Tests', () => {
   let service: PlaidService;
+  let webhookHandler: PlaidWebhookHandler;
   let prisma: jest.Mocked<PrismaService>;
   let cryptoService: jest.Mocked<CryptoService>;
 
@@ -32,6 +36,7 @@ describe('PlaidService - Webhook Contract Tests', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         PlaidService,
+        PlaidWebhookHandler,
         {
           provide: ConfigService,
           useValue: {
@@ -70,10 +75,25 @@ describe('PlaidService - Webhook Contract Tests', () => {
             decrypt: jest.fn(() => ACCESS_TOKEN),
           },
         },
+        {
+          provide: CircuitBreakerService,
+          useValue: {
+            isCircuitOpen: jest.fn().mockResolvedValue(false),
+            recordSuccess: jest.fn().mockResolvedValue(undefined),
+            recordFailure: jest.fn().mockResolvedValue(undefined),
+          },
+        },
+        {
+          provide: AuditService,
+          useValue: {
+            logProviderConnection: jest.fn().mockResolvedValue(undefined),
+          },
+        },
       ],
     }).compile();
 
     service = module.get<PlaidService>(PlaidService);
+    webhookHandler = module.get<PlaidWebhookHandler>(PlaidWebhookHandler);
     prisma = module.get(PrismaService) as jest.Mocked<PrismaService>;
     cryptoService = module.get(CryptoService) as jest.Mocked<CryptoService>;
 
@@ -165,6 +185,7 @@ describe('PlaidService - Webhook Contract Tests', () => {
       const moduleWithoutSecret = await Test.createTestingModule({
         providers: [
           PlaidService,
+          PlaidWebhookHandler,
           {
             provide: ConfigService,
             useValue: {
@@ -178,6 +199,20 @@ describe('PlaidService - Webhook Contract Tests', () => {
           {
             provide: CryptoService,
             useValue: cryptoService,
+          },
+          {
+            provide: CircuitBreakerService,
+            useValue: {
+              isCircuitOpen: jest.fn().mockResolvedValue(false),
+              recordSuccess: jest.fn().mockResolvedValue(undefined),
+              recordFailure: jest.fn().mockResolvedValue(undefined),
+            },
+          },
+          {
+            provide: AuditService,
+            useValue: {
+              logProviderConnection: jest.fn().mockResolvedValue(undefined),
+            },
           },
         ],
       }).compile();
@@ -367,8 +402,8 @@ describe('PlaidService - Webhook Contract Tests', () => {
 
       prisma.providerConnection.findFirst.mockResolvedValue(mockConnection as any);
       const loggerSpy = jest.spyOn((service as any).logger, 'log');
-      // Mock handleAccountWebhook to prevent calling null plaidClient
-      jest.spyOn(service as any, 'handleAccountWebhook').mockResolvedValue(undefined);
+      // Mock webhookHandler.handleAccountWebhook to prevent calling null plaidClient
+      jest.spyOn(webhookHandler, 'handleAccountWebhook').mockResolvedValue(undefined);
 
       // Act
       await service.handleWebhook(webhookDto, validSignature);
@@ -399,7 +434,8 @@ describe('PlaidService - Webhook Contract Tests', () => {
         .digest('hex');
 
       prisma.providerConnection.findFirst.mockResolvedValue(mockConnection as any);
-      const loggerSpy = jest.spyOn((service as any).logger, 'error');
+      // The error log comes from PlaidWebhookHandler
+      const loggerSpy = jest.spyOn((webhookHandler as any).logger, 'error');
 
       // Act
       await service.handleWebhook(webhookDto, validSignature);
@@ -425,7 +461,8 @@ describe('PlaidService - Webhook Contract Tests', () => {
         .digest('hex');
 
       prisma.providerConnection.findFirst.mockResolvedValue(mockConnection as any);
-      const loggerSpy = jest.spyOn((service as any).logger, 'warn');
+      // The warn log comes from PlaidWebhookHandler
+      const loggerSpy = jest.spyOn((webhookHandler as any).logger, 'warn');
 
       // Act
       await service.handleWebhook(webhookDto, validSignature);
@@ -448,7 +485,8 @@ describe('PlaidService - Webhook Contract Tests', () => {
         .digest('hex');
 
       prisma.providerConnection.findFirst.mockResolvedValue(mockConnection as any);
-      const loggerSpy = jest.spyOn((service as any).logger, 'log');
+      // The log comes from PlaidWebhookHandler
+      const loggerSpy = jest.spyOn((webhookHandler as any).logger, 'log');
 
       // Act
       await service.handleWebhook(webhookDto, validSignature);

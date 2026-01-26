@@ -30,6 +30,8 @@ jest.mock('ioredis', () => {
     Redis: jest.fn().mockImplementation(() => ({
       connect: jest.fn().mockResolvedValue(undefined),
       disconnect: jest.fn().mockResolvedValue(undefined),
+      on: jest.fn(),
+      quit: jest.fn().mockResolvedValue(undefined),
     })),
   };
 });
