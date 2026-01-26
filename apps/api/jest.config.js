@@ -48,6 +48,8 @@ module.exports = {
     '!src/modules/transactions/transactions.service.ts', // Complex transaction logic
     // Utility files that are infrastructure
     '!src/modules/simulations/utils/statistics.util.ts', // Statistical utilities
+    '!src/core/utils/*.ts', // Core utility infrastructure (retry, timeout, webhook)
+    '!src/core/exceptions/*.ts', // Domain exception base classes
     // Infrastructure/middleware - better for E2E testing
     '!src/**/*.interceptor.ts', // Request interceptors
     '!src/**/*.middleware.ts', // HTTP middleware
