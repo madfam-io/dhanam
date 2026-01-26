@@ -113,7 +113,7 @@
     "@nestjs/testing": "^11.1.0",
     "@types/express": "^5.0.5",
     "@types/jest": "^30.0.0",
-    "@types/node": "^20.11.0",
+    "@types/node": "^25.0.10",
     "@types/passport-jwt": "^4.0.1",
     "@types/supertest": "^6.0.3",
     "eslint": "^8.56.0",
