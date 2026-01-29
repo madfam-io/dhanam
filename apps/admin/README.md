@@ -1,6 +1,8 @@
 # Dhanam Admin Dashboard
 
-> Administrative dashboard for Dhanam platform management, user operations, and system monitoring.
+> **⚠️ DEPRECATED**: This app is a scaffold only. All admin functionality has been implemented in the web app at `apps/web/src/app/(admin)/admin/`. This app should not receive new development. See `apps/web` for the active admin dashboard.
+
+> ~~Administrative dashboard for Dhanam platform management, user operations, and system monitoring.~~
 
 ## Overview
 
@@ -151,5 +153,5 @@ Admin dashboard is deployed via Enclii PaaS:
 ---
 
 **Port**: 3400
-**Status**: Active development
-**Last Updated**: January 2025
+**Status**: DEPRECATED — All admin features live in `apps/web/(admin)/admin/`
+**Last Updated**: January 2026

@@ -107,12 +107,15 @@ module.exports = {
   ],
   coverageThreshold: {
     global: {
-      branches: 88, // Phase 17: Temporarily lowered while improving coverage
+      branches: 90, // Phase 18: Restored target coverage threshold
       functions: 96, // Phase 8: +4% from Phase 7
       lines: 95, // Phase 8: +4% from Phase 7
       statements: 95, // Phase 8: +4% from Phase 7
     },
   },
+  transformIgnorePatterns: [
+    'node_modules/(?!(uuid)/)',
+  ],
   moduleNameMapper: {
     '^@db/(.*)$': '<rootDir>/generated/prisma/$1',
     '^@db$': '<rootDir>/generated/prisma',

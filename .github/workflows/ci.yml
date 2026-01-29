@@ -15,8 +15,44 @@ env:
   TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
 
 jobs:
+  validate:
+    name: Validate Lockfile
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9
+          run_install: false
+
+      - name: Configure npm registry
+        run: |
+          echo "@madfam:registry=https://npm.madfam.io" >> ~/.npmrc
+          echo "@dhanam:registry=https://npm.madfam.io" >> ~/.npmrc
+          echo "@janua:registry=https://npm.madfam.io" >> ~/.npmrc
+          echo "//npm.madfam.io/:_authToken=${{ secrets.NPM_MADFAM_TOKEN }}" >> ~/.npmrc
+
+      - name: Validate lockfile is up to date
+        run: |
+          pnpm install --frozen-lockfile || {
+            echo "❌ pnpm-lock.yaml is out of sync with package.json files."
+            echo "Run 'pnpm install' locally and commit the updated lockfile."
+            exit 1
+          }
+
   lint:
     name: Lint
+    needs: [validate]
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
@@ -63,6 +99,7 @@ jobs:
 
   typecheck:
     name: Type Check
+    needs: [validate]
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
@@ -117,6 +154,7 @@ jobs:
 
   test:
     name: Test
+    needs: [validate]
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -230,6 +268,7 @@ jobs:
 
   build:
     name: Build
+    needs: [validate]
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -287,12 +326,10 @@ jobs:
 
   e2e-tests:
     name: E2E Tests
+    needs: [validate]
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    # TEMPORARILY DISABLED: E2E tests are hanging in CI and causing timeout cancellations
-    # TODO: Investigate and fix E2E test hanging issues, then re-enable by changing to:
-    # if: github.ref == 'refs/heads/main'
-    if: false
+    if: github.ref == 'refs/heads/main'
     # Allow E2E tests to fail without blocking CI (tests have known issues)
     continue-on-error: true
 

@@ -4,13 +4,6 @@ const nextConfig = {
   reactStrictMode: true,
   transpilePackages: ['@dhanam/shared', '@dhanam/ui'],
 
-  // Runtime config for values that should be read from environment at runtime
-  // Note: publicRuntimeConfig requires getInitialProps to be called
-  publicRuntimeConfig: {
-    apiUrl: process.env.NEXT_PUBLIC_API_URL || 'https://api.dhan.am/v1',
-    baseUrl: process.env.NEXT_PUBLIC_BASE_URL || 'https://app.dhan.am',
-  },
-
   env: {
     // Use production URLs as defaults (these are baked at build time)
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'https://api.dhan.am/v1',
@@ -22,11 +15,6 @@ const nextConfig = {
     NEXT_PUBLIC_DEFAULT_LOCALE: process.env.NEXT_PUBLIC_DEFAULT_LOCALE || 'en',
   },
 
-  eslint: {
-    // Disable ESLint during builds as it's configured with monorepo-level linting
-    ignoreDuringBuilds: true,
-  },
-
   experimental: {
     serverActions: {
       bodySizeLimit: '2mb',
@@ -34,7 +22,12 @@ const nextConfig = {
   },
 
   images: {
-    domains: ['localhost'],
+    remotePatterns: [
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+      },
+    ],
   },
 
   headers: async () => {

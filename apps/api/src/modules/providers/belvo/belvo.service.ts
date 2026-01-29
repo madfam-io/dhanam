@@ -548,8 +548,28 @@ export class BelvoService {
         await this.syncTransactions(spaceId, connection.userId, dto.link_id);
         break;
       case BelvoWebhookEvent.LINK_FAILED:
-        // TODO: Handle link failure
         this.logger.error(`Link failed: ${dto.link_id}`, dto.data);
+        await this.prisma.providerConnection.updateMany({
+          where: {
+            provider: 'belvo',
+            providerUserId: dto.link_id,
+          },
+          data: {
+            metadata: {
+              ...((connection.metadata as Record<string, unknown>) || {}),
+              status: 'failed',
+              failedAt: new Date().toISOString(),
+              failureData: dto.data,
+            } as InputJsonValue,
+          },
+        });
+        await this.auditService.log({
+          userId: connection.userId,
+          action: 'provider.link_failed',
+          resource: 'provider_connection',
+          resourceId: connection.id,
+          metadata: { provider: 'belvo', linkId: dto.link_id, event: dto.data },
+        });
         break;
       default:
         this.logger.log(`Unhandled webhook event: ${dto.event}`);
@@ -574,7 +594,28 @@ export class BelvoService {
         },
       });
 
-      // TODO: Handle account/transaction cleanup
+      // Clean up associated accounts and their transactions
+      // Accounts store the linkId in metadata when created by syncAccounts
+      const accounts = await this.prisma.account.findMany({
+        where: {
+          provider: 'belvo',
+          metadata: { path: ['linkId'], equals: linkId },
+        },
+        select: { id: true },
+      });
+
+      if (accounts.length > 0) {
+        const accountIds = accounts.map((a) => a.id);
+        await this.prisma.transaction.deleteMany({
+          where: { accountId: { in: accountIds } },
+        });
+        await this.prisma.account.deleteMany({
+          where: { id: { in: accountIds } },
+        });
+        this.logger.log(
+          `Cleaned up ${accounts.length} accounts and their transactions for Belvo link ${linkId}`
+        );
+      }
     } catch (error) {
       this.logger.error('Failed to delete Belvo link', error);
       throw new BadRequestException('Failed to disconnect account');
