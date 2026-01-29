@@ -186,8 +186,15 @@ export async function seedMetadata(prisma: PrismaClient, ctx: SeedContext) {
       { userId: ctx.adminUser.id, type: 'sync_complete', title: 'Enterprise Sync Complete', message: 'All enterprise accounts have been synced. 3 new transactions detected.', read: true, readAt: new Date(), createdAt: new Date() },
       { userId: ctx.diegoUser.id, type: 'budget_alert', title: 'Budget Alert: Crypto Investments', message: 'Your crypto investment allocation for this month has been fully used.', createdAt: subDays(new Date(), 1) },
       { userId: ctx.diegoUser.id, type: 'security_alert', title: 'TOTP Reminder', message: 'Enable two-factor authentication for enhanced account security.', createdAt: subDays(new Date(), 14) },
+      { userId: ctx.diegoUser.id, type: 'defi_alert', title: 'DeFi Yield Change', message: 'Your Aave ETH supply APY dropped from 3.8% to 3.2%. Consider rebalancing.', createdAt: subDays(new Date(), 3) },
+      { userId: ctx.diegoUser.id, type: 'esg_update', title: 'ESG Score Update', message: 'Ethereum ESG score improved to 85/100 after Shanghai upgrade analysis.', createdAt: subDays(new Date(), 6) },
+      { userId: ctx.guestUser.id, type: 'life_beat', title: 'Life Beat Check-In', message: 'Your monthly Life Beat check-in is due. Confirm your status to maintain estate plan access controls.', createdAt: subDays(new Date(), 1) },
+      { userId: ctx.mariaUser.id, type: 'executor_access', title: 'Executor Access Notification', message: 'You have been designated as primary executor for Guest User\'s estate plan. Review your responsibilities.', createdAt: subDays(new Date(), 10) },
+      { userId: ctx.mariaUser.id, type: 'goal_milestone', title: 'Goal Milestone Reached', message: 'Congratulations! Your Family Trip to Europe goal is now 62.5% funded.', createdAt: subDays(new Date(), 4) },
+      { userId: ctx.carlosUser.id, type: 'exchange_rate', title: 'Exchange Rate Alert', message: 'MXN/USD rate moved above 17.50. Your USD holdings are now worth more in pesos.', createdAt: subDays(new Date(), 2) },
+      { userId: ctx.carlosUser.id, type: 'subscription_renewal', title: 'Subscription Renewal Warning', message: 'Adobe Creative Cloud ($55/mo) renews in 3 days. Annual plan saves $24/yr.', createdAt: subDays(new Date(), 1) },
     ],
   });
 
-  console.log('  ✓ Created 8 notifications');
+  console.log('  ✓ Created 16 notifications');
 }

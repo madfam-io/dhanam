@@ -114,8 +114,64 @@ export async function seedFeatures(prisma: PrismaClient, ctx: SeedContext) {
       }),
     ]);
 
+  // Additional manual assets for missing ManualAssetType coverage
+  const [patriciaAngel, patriciaJewelry, carlosJewelry, diegoSandboxPortfolio] = await Promise.all([
+    prisma.manualAsset.create({
+      data: {
+        spaceId: ctx.enterpriseSpace.id,
+        name: 'Fintech Startup Series A',
+        type: 'angel_investment',
+        description: 'Angel investment in LATAM fintech startup - Series A round',
+        currentValue: 50000,
+        currency: Currency.USD,
+        acquisitionDate: new Date('2023-03-15'),
+        acquisitionCost: 50000,
+        metadata: { companyName: 'PayLatam', round: 'Series A', equity: '0.5%', sector: 'fintech', stage: 'growth' },
+      },
+    }),
+    prisma.manualAsset.create({
+      data: {
+        spaceId: ctx.enterpriseSpace.id,
+        name: 'Estate Jewelry Collection',
+        type: 'jewelry',
+        description: 'Inherited estate jewelry collection - appraised value',
+        currentValue: 25000,
+        currency: Currency.USD,
+        acquisitionDate: new Date('2018-06-01'),
+        acquisitionCost: 15000,
+        metadata: { items: 8, lastAppraisal: '2024-11-15', appraiser: 'Christie\'s México', insured: true },
+      },
+    }),
+    prisma.manualAsset.create({
+      data: {
+        spaceId: ctx.carlosPersonal.id,
+        name: 'Watch Collection',
+        type: 'jewelry',
+        description: 'Luxury watch collection (Rolex Submariner, Omega Speedmaster, TAG Heuer)',
+        currentValue: 15000,
+        currency: Currency.USD,
+        acquisitionDate: new Date('2019-12-25'),
+        acquisitionCost: 12000,
+        metadata: { items: 3, watches: ['Rolex Submariner', 'Omega Speedmaster', 'TAG Heuer Carrera'], insured: true },
+      },
+    }),
+    prisma.manualAsset.create({
+      data: {
+        spaceId: ctx.diegoSpace.id,
+        name: 'Sandbox LAND Portfolio (Virtual RE)',
+        type: 'other',
+        description: 'Portfolio of Sandbox metaverse LAND parcels tracked as virtual real estate',
+        currentValue: 7800,
+        currency: Currency.USD,
+        acquisitionDate: new Date('2022-01-15'),
+        acquisitionCost: 12000,
+        metadata: { category: 'virtual_real_estate', platform: 'The Sandbox', totalParcels: 5, totalSize: '7 plots' },
+      },
+    }),
+  ]);
+
   // Batch valuation history for all manual assets
-  const allManualAssets = [carlosCondo, carlosTesla, patriciaPE, patriciaArt, diegoLand, diegoBayc, diegoWearables, diegoDomain];
+  const allManualAssets = [carlosCondo, carlosTesla, patriciaPE, patriciaArt, diegoLand, diegoBayc, diegoWearables, diegoDomain, patriciaAngel, patriciaJewelry, carlosJewelry, diegoSandboxPortfolio];
   const valuationRows: Array<{
     assetId: string;
     date: Date;
@@ -153,7 +209,7 @@ export async function seedFeatures(prisma: PrismaClient, ctx: SeedContext) {
     ],
   });
 
-  console.log('  ✓ Created 8 manual assets with valuation history');
+  console.log('  ✓ Created 12 manual assets with valuation history');
   console.log('  ✓ Created 8 PE cash flows for Sequoia fund');
 
   // 2. RECURRING TRANSACTIONS (batch)

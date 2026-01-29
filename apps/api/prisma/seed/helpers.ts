@@ -8,7 +8,7 @@ export const randomAmount = (min: number, max: number) =>
 export const randomDate = (start: Date, end: Date) =>
   new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
 
-// Transaction templates for realistic data
+// Transaction templates for realistic data (includes LATAM merchants)
 export const transactionTemplates = {
   income: [
     { name: 'Salary', category: 'Salary', range: [45000, 85000] as const },
@@ -20,16 +20,21 @@ export const transactionTemplates = {
     personal: [
       { name: 'Oxxo', category: 'Groceries', range: [150, 500] as const },
       { name: 'Soriana', category: 'Groceries', range: [1200, 3500] as const },
-      { name: 'Netflix', category: 'Entertainment', range: [149, 299] as const },
-      { name: 'Spotify', category: 'Entertainment', range: [115, 169] as const },
+      { name: 'Netflix MX', category: 'Entertainment', range: [149, 299] as const },
+      { name: 'Spotify MX', category: 'Entertainment', range: [115, 169] as const },
       { name: 'CFE', category: 'Utilities', range: [500, 2500] as const },
       { name: 'Telmex', category: 'Utilities', range: [599, 1299] as const },
       { name: 'Pemex', category: 'Transportation', range: [500, 1500] as const },
       { name: 'Uber', category: 'Transportation', range: [80, 350] as const },
+      { name: 'Cabify', category: 'Transportation', range: [90, 320] as const },
       { name: 'Starbucks', category: 'Food & Dining', range: [85, 180] as const },
       { name: 'Restaurant', category: 'Food & Dining', range: [350, 1500] as const },
-      { name: 'Amazon', category: 'Shopping', range: [299, 2500] as const },
+      { name: 'Rappi', category: 'Food & Dining', range: [150, 650] as const },
+      { name: 'Uber Eats MX', category: 'Food & Dining', range: [120, 500] as const },
+      { name: 'Amazon MX', category: 'Shopping', range: [299, 2500] as const },
       { name: 'Liverpool', category: 'Shopping', range: [1500, 8000] as const },
+      { name: 'MercadoLibre', category: 'Shopping', range: [200, 5000] as const },
+      { name: 'Coppel', category: 'Shopping', range: [500, 4000] as const },
     ],
     business: [
       { name: 'Office Rent', category: 'Rent', range: [15000, 35000] as const },
@@ -58,6 +63,22 @@ export const cryptoESGData = [
     notes: 'On-chain governance, parachain architecture' },
   { symbol: 'AVAX', name: 'Avalanche', env: 84, social: 75, gov: 82,
     notes: 'Subnets allow for efficient scaling' },
+  { symbol: 'AAVE', name: 'Aave', env: 76, social: 82, gov: 90,
+    notes: 'DeFi lending protocol with strong governance' },
+  { symbol: 'UNI', name: 'Uniswap', env: 74, social: 78, gov: 88,
+    notes: 'Leading DEX with decentralized governance' },
+  { symbol: 'CRV', name: 'Curve', env: 72, social: 70, gov: 85,
+    notes: 'Stablecoin DEX with veCRV governance model' },
+  { symbol: 'LIDO', name: 'Lido', env: 78, social: 76, gov: 72,
+    notes: 'Liquid staking protocol - some centralization concerns' },
+  { symbol: 'SAND', name: 'The Sandbox', env: 45, social: 72, gov: 58,
+    notes: 'Ethereum L1 - moderate energy impact from gaming' },
+  { symbol: 'MANA', name: 'Decentraland', env: 42, social: 68, gov: 55,
+    notes: 'Ethereum-based virtual world with DAO governance' },
+  { symbol: 'OP', name: 'Optimism', env: 82, social: 80, gov: 86,
+    notes: 'L2 rollup with retroactive public goods funding' },
+  { symbol: 'ARB', name: 'Arbitrum', env: 81, social: 77, gov: 83,
+    notes: 'L2 rollup with DAO governance and grants program' },
 ];
 
 export interface SeedContext {
@@ -74,4 +95,10 @@ export interface SeedContext {
   carlosBusiness: { id: string; type: SpaceType };
   enterpriseSpace: { id: string; type: SpaceType };
   diegoSpace: { id: string; type: SpaceType };
+
+  // Diego's DeFi/Web3 account IDs (populated after user creation)
+  diegoDefiEthAccountId?: string;
+  diegoDefiPolygonAccountId?: string;
+  diegoSandboxLandAccountId?: string;
+  diegoDaoGovernanceAccountId?: string;
 }

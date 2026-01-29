@@ -615,6 +615,99 @@ export async function seedUsers(prisma: PrismaClient): Promise<SeedContext> {
     },
   });
 
+  // Add Diego's DeFi/Web3 accounts (separate creates for ID capture)
+  const [diegoDefiEth, diegoDefiPolygon, diegoSandboxLand, diegoDaoGov] = await Promise.all([
+    prisma.account.create({
+      data: {
+        spaceId: diegoSpace.id,
+        provider: Provider.blockchain,
+        providerAccountId: 'diego-defi-ethereum',
+        name: 'Ethereum DeFi Wallet',
+        type: 'crypto',
+        subtype: 'defi',
+        currency: Currency.USD,
+        balance: 28500,
+        metadata: {
+          network: 'ethereum',
+          protocols: ['uniswap', 'aave', 'curve', 'lido'],
+          positions: {
+            uniswap: { type: 'lp', pool: 'ETH/USDC', shareUsd: 8200 },
+            aave: { type: 'lending', supplied: 'ETH', supplyUsd: 9500, apy: 3.2 },
+            curve: { type: 'lp', pool: '3pool', shareUsd: 5800 },
+            lido: { type: 'staking', staked: '2.1 ETH', stETHUsd: 5000, apy: 3.8 },
+          },
+        },
+        lastSyncedAt: new Date(),
+      },
+    }),
+    prisma.account.create({
+      data: {
+        spaceId: diegoSpace.id,
+        provider: Provider.blockchain,
+        providerAccountId: 'diego-defi-polygon',
+        name: 'Polygon DeFi Wallet',
+        type: 'crypto',
+        subtype: 'defi',
+        currency: Currency.USD,
+        balance: 6200,
+        metadata: {
+          network: 'polygon',
+          protocols: ['quickswap', 'aave-polygon'],
+          positions: {
+            quickswap: { type: 'lp', pool: 'MATIC/USDC', shareUsd: 3200 },
+            aavePolygon: { type: 'lending', supplied: 'USDC', supplyUsd: 3000, apy: 4.1 },
+          },
+        },
+        lastSyncedAt: new Date(),
+      },
+    }),
+    prisma.account.create({
+      data: {
+        spaceId: diegoSpace.id,
+        provider: Provider.manual,
+        providerAccountId: 'diego-sandbox-land',
+        name: 'Sandbox LAND Portfolio',
+        type: 'crypto',
+        subtype: 'gaming',
+        currency: Currency.USD,
+        balance: 7800,
+        metadata: {
+          platform: 'The Sandbox',
+          parcels: [
+            { coordinates: '(-12, 45)', size: '3x3', acquiredDate: '2022-01-15' },
+            { coordinates: '(8, -22)', size: '1x1', acquiredDate: '2022-06-10' },
+            { coordinates: '(31, 17)', size: '1x1', acquiredDate: '2023-03-01' },
+          ],
+          stakedSAND: 15000,
+          stakingApy: 8.5,
+        },
+        lastSyncedAt: new Date(),
+      },
+    }),
+    prisma.account.create({
+      data: {
+        spaceId: diegoSpace.id,
+        provider: Provider.blockchain,
+        providerAccountId: 'diego-dao-governance',
+        name: 'DAO Governance Tokens',
+        type: 'crypto',
+        subtype: 'wallet',
+        currency: Currency.USD,
+        balance: 9400,
+        metadata: {
+          tokens: {
+            ENS: { balance: 120, delegatedTo: 'self', votingPower: 120, valueUsd: 2400 },
+            UNI: { balance: 450, delegatedTo: 'self', votingPower: 450, valueUsd: 3600 },
+            AAVE: { balance: 35, delegatedTo: 'aave-governance.eth', votingPower: 35, valueUsd: 3400 },
+          },
+          proposals_voted: 14,
+          last_vote_date: '2025-12-15',
+        },
+        lastSyncedAt: new Date(),
+      },
+    }),
+  ]);
+
   // Set creditLimit on credit accounts (not available in nested create)
   await Promise.all([
     prisma.account.updateMany({
@@ -648,5 +741,9 @@ export async function seedUsers(prisma: PrismaClient): Promise<SeedContext> {
     carlosBusiness,
     enterpriseSpace,
     diegoSpace,
+    diegoDefiEthAccountId: diegoDefiEth.id,
+    diegoDefiPolygonAccountId: diegoDefiPolygon.id,
+    diegoSandboxLandAccountId: diegoSandboxLand.id,
+    diegoDaoGovernanceAccountId: diegoDaoGov.id,
   };
 }
