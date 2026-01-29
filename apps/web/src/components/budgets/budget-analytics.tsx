@@ -166,7 +166,7 @@ export function BudgetAnalytics({ spaceId, budgetId, currency }: BudgetAnalytics
                   />
                   <YAxis tick={{ fontSize: 12 }} />
                   <Tooltip
-                    formatter={(value: string | number | (string | number)[]) => {
+                    formatter={(value: any) => {
                       const numValue =
                         typeof value === 'number' ? value : parseFloat(String(value));
                       return [formatCurrency(numValue, currency), ''];
@@ -196,7 +196,7 @@ export function BudgetAnalytics({ spaceId, budgetId, currency }: BudgetAnalytics
                     ))}
                   </Pie>
                   <Tooltip
-                    formatter={(value: string | number | (string | number)[]) => [
+                    formatter={(value: any) => [
                       formatCurrency(Number(value), currency),
                       '',
                     ]}
@@ -233,7 +233,7 @@ export function BudgetAnalytics({ spaceId, budgetId, currency }: BudgetAnalytics
                   <XAxis dataKey="week" tick={{ fontSize: 12 }} />
                   <YAxis tick={{ fontSize: 12 }} />
                   <Tooltip
-                    formatter={(value: string | number | (string | number)[]) => [
+                    formatter={(value: any) => [
                       formatCurrency(Number(value), currency),
                       '',
                     ]}
