@@ -24,7 +24,7 @@
   "dependencies": {
     "@dhanam/shared": "workspace:*",
     "@expo/vector-icons": "^15.0.3",
-    "@react-native-async-storage/async-storage": "^1.23.1",
+    "@react-native-async-storage/async-storage": "^2.2.0",
     "@react-native-community/netinfo": "^11.4.1",
     "@react-navigation/bottom-tabs": "^6.5.20",
     "@react-navigation/native": "^6.1.17",
