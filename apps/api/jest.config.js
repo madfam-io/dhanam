@@ -114,7 +114,7 @@ module.exports = {
     },
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(uuid)/)',
+    '/node_modules/(?!.*uuid)',
   ],
   moduleNameMapper: {
     '^@db/(.*)$': '<rootDir>/generated/prisma/$1',
