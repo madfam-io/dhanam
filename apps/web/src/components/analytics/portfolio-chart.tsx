@@ -167,7 +167,7 @@ export function PortfolioChart({ data, currency, isLoading }: PortfolioChartProp
               <PieChart>
                 <Pie
                   activeIndex={activeIndex}
-                  activeShape={renderActiveShape as any}
+                  activeShape={renderActiveShape}
                   data={chartData}
                   cx="50%"
                   cy="50%"

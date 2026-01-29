@@ -183,7 +183,7 @@ export function SpendingCategoryChart({ data, currency, isLoading }: SpendingCat
             <PieChart>
               <Pie
                 activeIndex={activeIndex}
-                activeShape={renderActiveShape as any}
+                activeShape={renderActiveShape}
                 data={chartData}
                 cx="50%"
                 cy="50%"
