@@ -1,0 +1,77 @@
+import { Currency, SpaceType } from '../../generated/prisma';
+
+// Helper to generate realistic transaction amounts
+export const randomAmount = (min: number, max: number) =>
+  Math.floor(Math.random() * (max - min + 1) + min);
+
+// Helper to generate dates within a range
+export const randomDate = (start: Date, end: Date) =>
+  new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
+
+// Transaction templates for realistic data
+export const transactionTemplates = {
+  income: [
+    { name: 'Salary', category: 'Salary', range: [45000, 85000] as const },
+    { name: 'Freelance Payment', category: 'Freelance', range: [5000, 25000] as const },
+    { name: 'Investment Returns', category: 'Investment', range: [1000, 10000] as const },
+    { name: 'Rental Income', category: 'Rental', range: [8000, 15000] as const },
+  ],
+  expenses: {
+    personal: [
+      { name: 'Oxxo', category: 'Groceries', range: [150, 500] as const },
+      { name: 'Soriana', category: 'Groceries', range: [1200, 3500] as const },
+      { name: 'Netflix', category: 'Entertainment', range: [149, 299] as const },
+      { name: 'Spotify', category: 'Entertainment', range: [115, 169] as const },
+      { name: 'CFE', category: 'Utilities', range: [500, 2500] as const },
+      { name: 'Telmex', category: 'Utilities', range: [599, 1299] as const },
+      { name: 'Pemex', category: 'Transportation', range: [500, 1500] as const },
+      { name: 'Uber', category: 'Transportation', range: [80, 350] as const },
+      { name: 'Starbucks', category: 'Food & Dining', range: [85, 180] as const },
+      { name: 'Restaurant', category: 'Food & Dining', range: [350, 1500] as const },
+      { name: 'Amazon', category: 'Shopping', range: [299, 2500] as const },
+      { name: 'Liverpool', category: 'Shopping', range: [1500, 8000] as const },
+    ],
+    business: [
+      { name: 'Office Rent', category: 'Rent', range: [15000, 35000] as const },
+      { name: 'Payroll', category: 'Payroll', range: [50000, 150000] as const },
+      { name: 'Software Licenses', category: 'Software', range: [2000, 10000] as const },
+      { name: 'Marketing Ads', category: 'Marketing', range: [5000, 25000] as const },
+      { name: 'Office Supplies', category: 'Supplies', range: [1000, 5000] as const },
+      { name: 'Professional Services', category: 'Services', range: [8000, 30000] as const },
+    ],
+  },
+};
+
+// Comprehensive ESG data for varied crypto assets
+export const cryptoESGData = [
+  { symbol: 'BTC', name: 'Bitcoin', env: 35, social: 65, gov: 70,
+    notes: 'Proof-of-work consensus - significant energy footprint' },
+  { symbol: 'ETH', name: 'Ethereum', env: 75, social: 80, gov: 85,
+    notes: 'Proof-of-stake since 2022 - 99.95% energy reduction' },
+  { symbol: 'SOL', name: 'Solana', env: 82, social: 72, gov: 65,
+    notes: 'High throughput with low energy - some centralization concerns' },
+  { symbol: 'ADA', name: 'Cardano', env: 88, social: 85, gov: 90,
+    notes: 'Peer-reviewed development, proof-of-stake, academic approach' },
+  { symbol: 'XRP', name: 'XRP', env: 85, social: 60, gov: 55,
+    notes: 'Energy efficient but facing regulatory scrutiny' },
+  { symbol: 'DOT', name: 'Polkadot', env: 80, social: 78, gov: 88,
+    notes: 'On-chain governance, parachain architecture' },
+  { symbol: 'AVAX', name: 'Avalanche', env: 84, social: 75, gov: 82,
+    notes: 'Subnets allow for efficient scaling' },
+];
+
+export interface SeedContext {
+  guestUser: { id: string };
+  mariaUser: { id: string };
+  carlosUser: { id: string };
+  adminUser: { id: string };
+  platformAdmin: { id: string };
+  diegoUser: { id: string };
+
+  guestSpace: { id: string; type: SpaceType };
+  mariaSpace: { id: string; type: SpaceType };
+  carlosPersonal: { id: string; type: SpaceType };
+  carlosBusiness: { id: string; type: SpaceType };
+  enterpriseSpace: { id: string; type: SpaceType };
+  diegoSpace: { id: string; type: SpaceType };
+}
