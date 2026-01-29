@@ -22,6 +22,7 @@ describe('BelvoService - Webhook Contract Tests', () => {
     provider: 'belvo',
     providerUserId: 'link-123',
     userId: 'user-123',
+    metadata: {},
     user: {
       userSpaces: [
         {
@@ -55,6 +56,7 @@ describe('BelvoService - Webhook Contract Tests', () => {
             providerConnection: {
               findFirst: jest.fn(),
               create: jest.fn(),
+              updateMany: jest.fn(),
             },
             account: {
               findFirst: jest.fn(),
@@ -78,6 +80,7 @@ describe('BelvoService - Webhook Contract Tests', () => {
           provide: AuditService,
           useValue: {
             logProviderConnection: jest.fn(),
+            log: jest.fn(),
           },
         },
         {

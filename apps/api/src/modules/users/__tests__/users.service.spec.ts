@@ -1,10 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException } from '@nestjs/common';
 
 import { PrismaService } from '@core/prisma/prisma.service';
 import { LoggerService } from '@core/logger/logger.service';
 import { UsersService } from '../users.service';
 import { UpdateUserDto } from '../dto/update-user.dto';
+import { BusinessRuleException } from '@core/exceptions/domain-exceptions';
 
 describe('UsersService', () => {
   let service: UsersService;
@@ -161,11 +161,14 @@ describe('UsersService', () => {
       expect(result.spaces).toEqual([]);
     });
 
-    it('should throw NotFoundException if user does not exist', async () => {
+    it('should throw BusinessRuleException if user does not exist', async () => {
       prisma.user.findUnique.mockResolvedValue(null);
 
       await expect(service.getProfile('nonexistent-user')).rejects.toThrow(
-        new NotFoundException('User not found')
+        BusinessRuleException
+      );
+      await expect(service.getProfile('nonexistent-user')).rejects.toThrow(
+        'User not found'
       );
     });
 

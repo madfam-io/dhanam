@@ -77,9 +77,9 @@ export function useBiometric(): BiometricHook {
           error = 'Authentication was cancelled';
         } else if (result.error === 'user_fallback') {
           error = 'User chose to use passcode';
-        } else if (result.error === 'biometric_not_available') {
+        } else if (result.error === 'not_available') {
           error = 'Biometric authentication is not available';
-        } else if (result.error === 'biometric_not_enrolled') {
+        } else if (result.error === 'not_enrolled') {
           error = 'No biometric credentials are enrolled';
         }
         return { success: false, error };
