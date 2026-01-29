@@ -240,8 +240,6 @@ Failed to upload coverage
 |--------|-------------|-------------|
 | `SENTRY_DSN` | Sentry error tracking | Production |
 | `POSTHOG_KEY` | PostHog analytics | Production |
-| `AWS_ACCESS_KEY_ID` | AWS deployment | Production |
-| `AWS_SECRET_ACCESS_KEY` | AWS deployment | Production |
 
 **How to add:**
 1. Go to GitHub repo → Settings → Secrets and variables → Actions

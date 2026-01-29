@@ -70,21 +70,11 @@ Implement Enclii Database Provisioning API:
 
 ### TD-003: CI/CD Platform Migration
 
-**Status**: IN_PROGRESS
+**Status**: RESOLVED
 **Severity**: HIGH
 
-**Problem**:
-Dhanam was originally designed for AWS ECS/Fargate but is being deployed to the Galaxy ecosystem (K8s on Hetzner). The infrastructure code needs alignment.
-
-**Current State**:
-- `infra/terraform/` - AWS ECS configuration (OBSOLETE)
-- `infra/k8s/production/` - Galaxy K8s manifests (CURRENT)
-- `.github/workflows/deploy.yml` - AWS ECR deployment (OBSOLETE)
-
-**Required Action**:
-1. Create new GHCR workflow (see TD-001)
-2. Mark AWS Terraform as deprecated
-3. Update documentation to reflect Galaxy deployment
+**Resolution**:
+AWS ECS/Fargate infrastructure has been fully removed. Deployment is exclusively via Enclii PaaS (bare metal K8s). Removed: `infra/terraform/`, `.github/workflows/deploy.yml`, `scripts/setup-aws.sh`, `scripts/deploy.sh`, `scripts/monitor.sh`, `scripts/backup.sh`, and the unused `KmsService`.
 
 **Ticket**: DHANAM-002
 

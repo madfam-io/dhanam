@@ -21,11 +21,6 @@ export class EnvValidationService implements OnModuleInit {
       name: 'REDIS_HOST',
       description: 'Redis host for session storage',
     },
-    {
-      name: 'KMS_KEY_ID',
-      description: 'AWS KMS key ID for encrypting provider tokens',
-      productionOnly: true,
-    },
   ];
 
   onModuleInit() {

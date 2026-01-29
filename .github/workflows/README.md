@@ -13,7 +13,6 @@ This directory contains GitHub Actions workflows for CI/CD, quality checks, and 
 | `deploy-enclii.yml` | Manual | Trigger Enclii deployment (fallback) |
 | `deploy-k8s.yml` | Manual | Deploy to Kubernetes (fallback) |
 | `deploy-web-k8s.yml` | Manual | Deploy web app only (fallback) |
-| `deploy.yml` | Manual | Legacy AWS ECS deployment |
 
 ## Primary Deployment
 
@@ -103,12 +102,6 @@ Manual Kubernetes deployment workflows.
 - Staging environment deployments
 - Rollback procedures
 
-### deploy.yml
-
-Legacy AWS ECS deployment (deprecated).
-
-**Note:** Prefer Enclii for all deployments.
-
 ## Environment Secrets
 
 Required secrets in GitHub repository settings:
@@ -118,8 +111,6 @@ Required secrets in GitHub repository settings:
 | `NPM_MADFAM_TOKEN` | MADFAM npm registry access |
 | `CODECOV_TOKEN` | Coverage reporting |
 | `ENCLII_API_KEY` | Enclii deployment trigger |
-| `AWS_ACCESS_KEY_ID` | AWS deployment (fallback) |
-| `AWS_SECRET_ACCESS_KEY` | AWS deployment (fallback) |
 | `KUBECONFIG` | K8s deployment (fallback) |
 
 ## Branch Protection

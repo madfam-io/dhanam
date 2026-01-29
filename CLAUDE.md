@@ -74,14 +74,13 @@ packages/
 ├─ simulations/   # Monte Carlo & scenario analysis engines
 └─ ui/            # Reusable UI components (shadcn-ui)
 infra/
-├─ docker/        # Local dev docker-compose
-└─ terraform/     # AWS ECS/Fargate infrastructure
+└─ docker/        # Local dev docker-compose
 ```
 
 **Tech Stack:**
 - Frontend: Next.js (React), React Native + Expo
 - Backend: NestJS (Fastify), Prisma + PostgreSQL, Redis (BullMQ)
-- Infrastructure: AWS ECS/Fargate, Terraform
+- Infrastructure: Enclii (bare metal K8s)
 - Analytics: PostHog
 - ESG: Dhanam package integration
 
@@ -111,7 +110,7 @@ turbo test        # Turborepo test
 ## Key Implementation Guidelines
 
 **Security First:**
-- All provider tokens (Belvo, Plaid, Bitso) must be encrypted at rest using AWS KMS
+- All provider tokens (Belvo, Plaid, Bitso) must be encrypted at rest using AES-256-GCM
 - Implement Argon2id for password hashing with breach checks
 - Use short-lived JWT (≤15m) with rotating refresh tokens (≤30d)
 - TOTP 2FA required for admin operations, optional for users

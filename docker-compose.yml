@@ -35,11 +35,6 @@ services:
       - SMTP_HOST=dhanam-mailhog
       - SMTP_PORT=1025
       - SMTP_SECURE=false
-      # AWS LocalStack
-      - AWS_ENDPOINT=http://dhanam-localstack:4566
-      - AWS_ACCESS_KEY_ID=test
-      - AWS_SECRET_ACCESS_KEY=test
-      - AWS_REGION=us-east-1
       # App Config
       - LOG_LEVEL=debug
       - CORS_ORIGINS=http://localhost:3030,http://localhost:8500
@@ -47,7 +42,6 @@ services:
       - madfam-shared-network
     depends_on:
       - mailhog
-      - localstack
     healthcheck:
       test: ['CMD', 'curl', '-f', 'http://localhost:3000/health']
       interval: 30s
@@ -96,28 +90,7 @@ services:
     networks:
       - madfam-shared-network
 
-  # LocalStack for AWS services simulation (Dhanam-specific)
-  localstack:
-    image: localstack/localstack:latest
-    container_name: dhanam-localstack
-    ports:
-      - '4566:4566' # LocalStack Gateway
-    environment:
-      - SERVICES=s3,kms,secretsmanager
-      - DEBUG=0
-      - DATA_DIR=/tmp/localstack/data
-      - AWS_ACCESS_KEY_ID=test
-      - AWS_SECRET_ACCESS_KEY=test
-      - AWS_DEFAULT_REGION=us-east-1
-    volumes:
-      - localstack_data:/tmp/localstack
-      - /var/run/docker.sock:/var/run/docker.sock
-    networks:
-      - madfam-shared-network
-
-volumes:
-  localstack_data:
-    driver: local
+volumes: {}
 
 # =============================================================================
 # SHARED INFRASTRUCTURE NOTE:

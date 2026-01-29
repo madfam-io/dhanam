@@ -143,13 +143,6 @@ SMTP_HOST="localhost"
 SMTP_PORT="1025"
 SMTP_FROM="noreply@dhanam.local"
 
-# AWS LocalStack
-AWS_REGION="us-east-1"
-AWS_ACCESS_KEY_ID="test"
-AWS_SECRET_ACCESS_KEY="test"
-AWS_S3_BUCKET="dhanam-uploads"
-LOCALSTACK_ENDPOINT="http://localhost:4566"
-
 # Providers (Sandbox Mode)
 BELVO_SECRET_ID="sandbox"
 BELVO_SECRET_PASSWORD="sandbox"

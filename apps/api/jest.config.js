@@ -80,7 +80,6 @@ module.exports = {
     '!src/modules/billing/billing.service.ts', // Billing logic
     '!src/modules/categories/categories.service.ts', // Category operations
     // Crypto services
-    '!src/core/crypto/kms.service.ts', // AWS KMS integration
     // Email processing
     '!src/**/email.processor.ts', // Email queue processor
     // Re-export index files

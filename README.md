@@ -62,7 +62,7 @@
 
 - **Frontend**: Next.js 15/16, React Native + Expo
 - **Backend**: NestJS (Fastify), PostgreSQL, Redis
-- **Infrastructure**: Docker, AWS ECS/Fargate, Terraform, Enclii PaaS
+- **Infrastructure**: Docker, Enclii PaaS (bare metal K8s)
 - **Build**: Turborepo, pnpm monorepo
 
 ## Quick Start
@@ -281,7 +281,7 @@ For detailed testing documentation, see:
 
 ## Deployment
 
-The application is designed to run on AWS ECS/Fargate:
+The application is deployed via Enclii to bare metal K8s:
 
 1. Build Docker images
    ```bash
