@@ -15,6 +15,7 @@ import { CategoriesModule } from '@modules/categories/categories.module';
 import { EmailModule } from '@modules/email/email.module';
 import { EstatePlanningModule } from '@modules/estate-planning/estate-planning.module';
 import { FxRatesModule } from '@modules/fx-rates/fx-rates.module';
+import { GamingModule } from '@modules/gaming/gaming.module';
 import { GoalsModule } from '@modules/goals/goals.module';
 import { HouseholdsModule } from '@modules/households/households.module';
 import { IntegrationsModule } from '@modules/integrations/integrations.module';
@@ -64,6 +65,7 @@ import { validationSchema } from './config/validation';
     EmailModule,
     AdminModule,
     BillingModule,
+    GamingModule,
     GoalsModule,
     HouseholdsModule,
     EstatePlanningModule,

@@ -21,6 +21,7 @@ import {
   Receipt,
   Building2,
   Loader2,
+  Gamepad2,
 } from 'lucide-react';
 import { SyncStatus } from '@/components/sync/sync-status';
 import { HelpTooltip } from '@/components/demo/help-tooltip';
@@ -421,6 +422,58 @@ export default function DashboardPage() {
           </div>
         </PremiumGate>
       ) : null}
+
+      {/* Gaming Assets Widget */}
+      <Card
+        className="cursor-pointer hover:shadow-md transition-shadow"
+        onClick={() => router.push('/gaming')}
+      >
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Gamepad2 className="h-5 w-5" />
+                Gaming Assets
+              </CardTitle>
+              <CardDescription>Metaverse holdings, NFTs, and staking</CardDescription>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                router.push('/gaming');
+              }}
+            >
+              View Dashboard
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div>
+              <p className="text-sm text-muted-foreground">SAND Staked</p>
+              <p className="text-lg font-semibold">15,000</p>
+              <p className="text-xs text-green-600">8.5% APY</p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">LAND Parcels</p>
+              <p className="text-lg font-semibold">5</p>
+              <p className="text-xs text-muted-foreground">2 rented</p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">NFTs</p>
+              <p className="text-lg font-semibold">14</p>
+              <p className="text-xs text-muted-foreground">$22.5K value</p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Monthly Income</p>
+              <p className="text-lg font-semibold text-green-600">$597</p>
+              <p className="text-xs text-muted-foreground">All sources</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Budget Overview */}
       {currentBudgetSummary && (

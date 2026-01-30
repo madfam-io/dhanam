@@ -15,13 +15,33 @@ export async function seedConnections(prisma: PrismaClient, ctx: SeedContext) {
     prisma.account.findFirst({ where: { spaceId: ctx.diegoSpace.id, providerAccountId: 'diego-defi-ethereum' } }),
   ]);
 
+  const [mariaBanking, mariaCrypto, enterpriseChase, carlosBusiness, diegoBitso, diegoDefi] = keyAccounts;
+
   const connectionRows = keyAccounts
     .filter((a): a is NonNullable<typeof a> => a !== null)
-    .map(account => ({
-      accountId: account.id,
-      status: ConnectionStatus.active,
-      metadata: { lastSync: new Date().toISOString(), syncCount: Math.floor(Math.random() * 50) + 10 },
-    }));
+    .map(account => {
+      // Guest crypto connection → error state for failover demo
+      if (account.id === mariaCrypto?.id) {
+        return {
+          accountId: account.id,
+          status: ConnectionStatus.error,
+          metadata: { lastSync: subDays(new Date(), 2).toISOString(), syncCount: 18, errorMessage: 'API key expired - re-authentication required', errorCode: 'AUTH_EXPIRED', lastErrorAt: new Date().toISOString() },
+        };
+      }
+      // Diego's Polygon DeFi → disconnected for failover demo
+      if (account.id === diegoDefi?.id) {
+        return {
+          accountId: account.id,
+          status: ConnectionStatus.disconnected,
+          metadata: { lastSync: subDays(new Date(), 5).toISOString(), syncCount: 12, disconnectedReason: 'Zapper API rate limit exceeded', disconnectedAt: subDays(new Date(), 1).toISOString() },
+        };
+      }
+      return {
+        accountId: account.id,
+        status: ConnectionStatus.active,
+        metadata: { lastSync: new Date().toISOString(), syncCount: Math.floor(Math.random() * 50) + 10 },
+      };
+    });
 
   for (const conn of connectionRows) {
     await prisma.connection.upsert({

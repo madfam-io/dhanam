@@ -9,7 +9,7 @@ import {
   AdvancedOrderType,
   RecurrencePattern,
 } from '../../generated/prisma';
-import { subDays } from 'date-fns';
+import { subDays, addDays } from 'date-fns';
 import { SeedContext } from './helpers';
 
 export async function seedAdvanced(prisma: PrismaClient, ctx: SeedContext) {
@@ -51,6 +51,31 @@ export async function seedAdvanced(prisma: PrismaClient, ctx: SeedContext) {
         result: { bull: { final: 1680000, probability: 0.25 }, base: { final: 1420000, probability: 0.50 }, bear: { final: 1100000, probability: 0.25 }, weighted_probability: 65.7 },
         status: 'completed',
         executionTimeMs: 3120,
+      },
+      {
+        userId: ctx.diegoUser.id,
+        spaceId: ctx.diegoSpace.id,
+        type: SimulationType.scenario_analysis,
+        config: {
+          label: 'Metaverse Earnings Projection',
+          scenarios: ['bull', 'base', 'bear'],
+          horizon_years: 3,
+          income_streams: {
+            land_rental: { monthly: 300, growth_rate: 0.10, volatility: 0.35 },
+            staking_rewards: { monthly: 127.5, apy: 0.085, volatility: 0.20 },
+            p2e_earnings: { monthly: 200, growth_rate: 0.15, volatility: 0.50 },
+            creator_revenue: { monthly: 320, growth_rate: 0.20, volatility: 0.40 },
+          },
+          land_appreciation: { annual_rate: 0.12, volatility: 0.45 },
+        },
+        result: {
+          bull: { total_income_3y: 68400, land_value: 15600, probability: 0.20 },
+          base: { total_income_3y: 42000, land_value: 9800, probability: 0.55 },
+          bear: { total_income_3y: 18000, land_value: 4200, probability: 0.25 },
+          weighted_monthly_income: 1167,
+        },
+        status: 'completed',
+        executionTimeMs: 2890,
       },
       {
         userId: ctx.adminUser.id,
@@ -364,4 +389,82 @@ export async function seedAdvanced(prisma: PrismaClient, ctx: SeedContext) {
   }
 
   console.log(`  ✓ Created ${correctionRows.length} category corrections`);
+
+  // 7. INACTIVITY ALERTS (Life Beat escalation demo)
+  console.log('\n⏰ Creating inactivity alerts...');
+
+  await prisma.inactivityAlert.createMany({
+    data: [
+      {
+        userId: ctx.guestUser.id,
+        alertLevel: 30,
+        sentAt: subDays(new Date(), 35),
+        channel: 'email',
+        responded: true,
+        respondedAt: subDays(new Date(), 34),
+      },
+      {
+        userId: ctx.guestUser.id,
+        alertLevel: 60,
+        sentAt: subDays(new Date(), 5),
+        channel: 'email',
+        responded: false,
+      },
+      {
+        userId: ctx.guestUser.id,
+        alertLevel: 90,
+        sentAt: new Date(),
+        channel: 'sms',
+        responded: false,
+      },
+    ],
+  });
+
+  console.log('  ✓ Created 3 inactivity alerts (30/60/90 day escalation)');
+
+  // 8. ORDER LIMITS (Diego's crypto rate limits)
+  console.log('\n🚦 Creating order limits...');
+
+  await prisma.orderLimit.createMany({
+    data: [
+      {
+        userId: ctx.diegoUser.id,
+        spaceId: ctx.diegoSpace.id,
+        limitType: 'daily',
+        orderType: OrderType.buy,
+        maxAmount: 5000,
+        currency: Currency.USD,
+        usedAmount: 1200,
+        resetAt: addDays(new Date(), 1),
+        notes: 'Daily buy limit for crypto purchases',
+        enforced: true,
+      },
+      {
+        userId: ctx.diegoUser.id,
+        spaceId: ctx.diegoSpace.id,
+        limitType: 'daily',
+        orderType: OrderType.sell,
+        maxAmount: 10000,
+        currency: Currency.USD,
+        usedAmount: 0,
+        resetAt: addDays(new Date(), 1),
+        notes: 'Daily sell limit for crypto sales',
+        enforced: true,
+      },
+      {
+        userId: ctx.diegoUser.id,
+        spaceId: null,
+        limitType: 'monthly',
+        orderType: null,
+        maxAmount: 50000,
+        currency: Currency.USD,
+        usedAmount: 8500,
+        resetAt: addDays(new Date(), 15),
+        notes: 'Global monthly trading limit across all spaces',
+        enforced: true,
+      },
+    ],
+  });
+
+  console.log('  ✓ Created 3 order limits (daily buy/sell + monthly total)');
 }

@@ -1,4 +1,4 @@
-import { PrismaClient, Currency } from '../../generated/prisma';
+import { PrismaClient, Currency, AccountOwnership } from '../../generated/prisma';
 import { subDays, addDays } from 'date-fns';
 import { SeedContext } from './helpers';
 
@@ -189,7 +189,7 @@ export async function seedFeatures(prisma: PrismaClient, ctx: SeedContext) {
         date,
         value: Number(asset.currentValue) * (1 + variation),
         currency: asset.currency,
-        source: asset.type === 'real_estate' ? 'Zillow API' : 'Manual Entry',
+        source: asset.type === 'real_estate' ? 'zillow_api' : 'Manual Entry',
       });
     }
   }
@@ -227,6 +227,9 @@ export async function seedFeatures(prisma: PrismaClient, ctx: SeedContext) {
       { spaceId: ctx.diegoSpace.id, merchantName: 'Rent Payment', expectedAmount: 12000, currency: Currency.MXN, frequency: 'monthly', status: 'confirmed', occurrenceCount: 6, confidence: 0.99, lastOccurrence: subDays(new Date(), Math.floor(Math.random() * 30)), nextExpected: addDays(new Date(), Math.floor(Math.random() * 30) + 1), confirmedAt: subDays(new Date(), 60) },
       { spaceId: ctx.diegoSpace.id, merchantName: 'Cloud Hosting', expectedAmount: 49, currency: Currency.USD, frequency: 'monthly', status: 'confirmed', occurrenceCount: 8, confidence: 0.92, lastOccurrence: subDays(new Date(), Math.floor(Math.random() * 30)), nextExpected: addDays(new Date(), Math.floor(Math.random() * 30) + 1), confirmedAt: subDays(new Date(), 60) },
       { spaceId: ctx.diegoSpace.id, merchantName: 'Salary Deposit', expectedAmount: 38000, currency: Currency.MXN, frequency: 'weekly', status: 'confirmed', occurrenceCount: 18, confidence: 0.70, lastOccurrence: subDays(new Date(), Math.floor(Math.random() * 30)), nextExpected: addDays(new Date(), Math.floor(Math.random() * 30) + 1), confirmedAt: subDays(new Date(), 60) },
+      { spaceId: ctx.diegoSpace.id, merchantName: 'LAND Rental - Parcel (-12, 45)', expectedAmount: 150, currency: Currency.USD, frequency: 'monthly', status: 'confirmed', occurrenceCount: 6, confidence: 0.88, lastOccurrence: subDays(new Date(), Math.floor(Math.random() * 30)), nextExpected: addDays(new Date(), Math.floor(Math.random() * 30) + 1), confirmedAt: subDays(new Date(), 45) },
+      { spaceId: ctx.diegoSpace.id, merchantName: 'LAND Rental - Parcel (8, -22)', expectedAmount: 150, currency: Currency.USD, frequency: 'monthly', status: 'confirmed', occurrenceCount: 4, confidence: 0.85, lastOccurrence: subDays(new Date(), Math.floor(Math.random() * 30)), nextExpected: addDays(new Date(), Math.floor(Math.random() * 30) + 1), confirmedAt: subDays(new Date(), 30) },
+      { spaceId: ctx.diegoSpace.id, merchantName: 'Sandbox Game Maker Revenue', expectedAmount: 320, currency: Currency.USD, frequency: 'monthly', status: 'confirmed', occurrenceCount: 3, confidence: 0.72, lastOccurrence: subDays(new Date(), Math.floor(Math.random() * 30)), nextExpected: addDays(new Date(), Math.floor(Math.random() * 30) + 1), confirmedAt: subDays(new Date(), 30) },
     ],
   });
 
@@ -248,7 +251,27 @@ export async function seedFeatures(prisma: PrismaClient, ctx: SeedContext) {
     ],
   });
 
-  console.log('  ✓ Created 8 subscriptions');
+  console.log('  ✓ Created 8 active subscriptions');
+
+  // 3b. CANCELLED & PAUSED SUBSCRIPTIONS (lifecycle demo)
+  await prisma.subscription.createMany({
+    data: [
+      { spaceId: ctx.mariaSpace.id, serviceName: 'Gym - Sports World', category: 'fitness', amount: 1299, currency: Currency.MXN, billingCycle: 'monthly', status: 'cancelled', startDate: subDays(new Date(), 240), endDate: subDays(new Date(), 15), cancelledAt: subDays(new Date(), 15), cancellationReason: 'Switched to outdoor running and home workouts', annualCost: 15588, usageFrequency: 'low', lastBillingDate: subDays(new Date(), 45) },
+      { spaceId: ctx.diegoSpace.id, serviceName: 'Discord Nitro', category: 'software', amount: 10, currency: Currency.USD, billingCycle: 'monthly', status: 'paused', startDate: subDays(new Date(), 180), annualCost: 120, usageFrequency: 'low', lastBillingDate: subDays(new Date(), 30), savingsRecommendation: 'Usage dropped to low — paused to evaluate need' },
+    ],
+  });
+
+  console.log('  ✓ Created 2 cancelled/paused subscriptions');
+
+  // 3c. JOINT ACCOUNT OWNERSHIP (Carlos + Patricia household)
+  const carlosJointChecking = await prisma.account.findFirst({ where: { spaceId: ctx.carlosPersonal.id, type: 'checking' } });
+  if (carlosJointChecking) {
+    await prisma.account.update({
+      where: { id: carlosJointChecking.id },
+      data: { ownership: AccountOwnership.joint },
+    });
+    console.log('  ✓ Updated Carlos checking to joint ownership');
+  }
 
   // 4. TRANSACTION SPLITS
   console.log('\n✂️ Creating transaction splits...');

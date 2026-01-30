@@ -59,13 +59,13 @@ async function main() {
   console.log('  - 4 Category goals');
   console.log('  - 3 Billing events');
   console.log('  - 20 Usage metrics');
-  console.log('  - 16 Notifications (DeFi, ESG, Life Beat, executor)');
+  console.log('  - 20 Notifications (DeFi, ESG, Life Beat, executor, gaming)');
   console.log('  - 15 ESG tokens for all crypto accounts');
   console.log('  - 2,000+ Transactions (incl. DeFi swaps, staking, governance)');
   console.log('  - 1,500+ Asset valuations');
   console.log('  - 6 Connections + 12 attempts + 4 health statuses');
   console.log('  - 8 Institution-provider mappings');
-  console.log('  - 4 Simulations (Monte Carlo, scenario, safe withdrawal)');
+  console.log('  - 5 Simulations (Monte Carlo, scenario, safe withdrawal, metaverse earnings)');
   console.log('  - 4 Account sharing permissions (Yours/Mine/Ours)');
   console.log('  - 6 Transaction orders + 4 executions');
   console.log('  - 2 Executor assignments (Life Beat)');

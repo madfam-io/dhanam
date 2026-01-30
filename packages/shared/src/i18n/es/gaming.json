@@ -1,0 +1,31 @@
+{
+  "gaming": {
+    "dashboard": "Panel de Juegos",
+    "sand_staked": "SAND en Staking",
+    "sand_liquid": "SAND Líquido",
+    "land_parcels": "Parcelas LAND",
+    "rental_income": "Ingresos por Renta",
+    "p2e_earnings": "Jugar para Ganar",
+    "floor_price": "Precio Mínimo",
+    "governance": "Gobernanza",
+    "nft_gallery": "Galería NFT",
+    "staking_rewards": "Recompensas de Staking",
+    "creator_earnings": "Ganancias de Creador",
+    "total_gaming_assets": "Activos de Juego Totales",
+    "monthly_gaming_income": "Ingreso Mensual de Juegos",
+    "active_land_parcels": "Parcelas LAND Activas",
+    "gaming_purchases": "Compras de Juegos",
+    "gas_fees": "Comisiones de Gas",
+    "nft_sales": "Ventas NFT",
+    "rented": "Rentada",
+    "vacant": "Vacante",
+    "voting_power": "Poder de Voto",
+    "votes_cast": "Votos Emitidos",
+    "active_proposals": "Propuestas Activas",
+    "metaverse_earnings_projection": "Proyección de Ganancias del Metaverso",
+    "sand_overview": "Resumen de SAND",
+    "land_portfolio": "Portafolio LAND",
+    "governance_activity": "Actividad de Gobernanza",
+    "gaming_earnings": "Ganancias de Juegos"
+  }
+}

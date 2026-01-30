@@ -117,6 +117,28 @@ const DHANAM_ESG_DATA = {
       consensusMechanism: 'Avalanche Consensus',
       description: 'Good environmental profile with unique consensus',
     },
+    SAND: {
+      environmental: 62, // Polygon PoS sidechain, moderate energy
+      social: 75, // Creator economy, community governance, gaming accessibility
+      governance: 68, // DAO governance, transparent tokenomics
+      overall: 68,
+      grade: 'C+',
+      energyIntensity: 0.001, // kWh per transaction (Polygon PoS)
+      carbonFootprint: 0.0005, // kg CO2 per transaction
+      consensusMechanism: 'Polygon Proof of Stake',
+      description: 'Gaming metaverse with creator economy on Polygon L2, DAO-governed',
+    },
+    MANA: {
+      environmental: 60, // Ethereum L1, higher energy than L2
+      social: 72, // Virtual world with social features, DAO governance
+      governance: 64, // Decentraland DAO, community-driven
+      overall: 65,
+      grade: 'C+',
+      energyIntensity: 62.6, // kWh per transaction (Ethereum L1)
+      carbonFootprint: 31.3, // kg CO2 per transaction
+      consensusMechanism: 'Ethereum Proof of Stake',
+      description: 'Decentraland virtual world with DAO governance on Ethereum',
+    },
   },
 
   // ESG grading scale

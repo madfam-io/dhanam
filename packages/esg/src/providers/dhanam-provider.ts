@@ -105,6 +105,8 @@ export class DhanamESGProvider implements ESGProvider {
       'DOT': { overall: 70, environmental: 80, social: 65, governance: 65, confidence: 70 },
       'SOL': { overall: 68, environmental: 75, social: 65, governance: 65, confidence: 70 },
       'ALGO': { overall: 80, environmental: 90, social: 75, governance: 75, confidence: 75 },
+      'SAND': { overall: 68, environmental: 62, social: 75, governance: 68, confidence: 70 },
+      'MANA': { overall: 65, environmental: 60, social: 72, governance: 64, confidence: 70 },
     };
 
     const scoreData = fallbackScores[symbol.toUpperCase()] || {
