@@ -172,6 +172,47 @@ export async function seedTransactions(prisma: PrismaClient, ctx: SeedContext) {
       { userId: ctx.adminUser.id, action: 'user.invite_sent', metadata: JSON.stringify({ email: 'cfo@techcorp.com' }), ipAddress: '192.168.1.100', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', timestamp: randomDate(subDays(new Date(), 30), new Date()) },
       { userId: ctx.platformAdmin.id, action: 'admin.user_view', metadata: JSON.stringify({ viewedUserId: ctx.mariaUser.id }), ipAddress: '192.168.1.100', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', timestamp: randomDate(subDays(new Date(), 30), new Date()) },
       { userId: ctx.platformAdmin.id, action: 'admin.feature_flag_toggle', metadata: JSON.stringify({ flag: 'ai_categorization', enabled: true }), ipAddress: '192.168.1.100', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', timestamp: randomDate(subDays(new Date(), 30), new Date()) },
+      // Diego audit logs
+      { userId: ctx.diegoUser.id, action: 'account.connected', metadata: JSON.stringify({ provider: 'blockchain', accountId: 'diego-btc-wallet' }), ipAddress: '10.0.1.50', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', timestamp: randomDate(subDays(new Date(), 30), new Date()) },
+      { userId: ctx.diegoUser.id, action: 'account.connected', metadata: JSON.stringify({ provider: 'blockchain', accountId: 'diego-defi-arbitrum' }), ipAddress: '10.0.1.50', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', timestamp: randomDate(subDays(new Date(), 30), new Date()) },
+      { userId: ctx.diegoUser.id, action: 'order.created', metadata: JSON.stringify({ assetSymbol: 'BTC', type: 'stop_loss', targetPrice: 55000 }), ipAddress: '10.0.1.50', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', timestamp: randomDate(subDays(new Date(), 30), new Date()) },
+      { userId: ctx.diegoUser.id, action: 'order.executed', metadata: JSON.stringify({ assetSymbol: 'BTC', type: 'dca', amount: 1000, currency: 'MXN' }), ipAddress: '10.0.1.50', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', timestamp: randomDate(subDays(new Date(), 30), new Date()) },
+      { userId: ctx.diegoUser.id, action: 'esg.viewed', metadata: JSON.stringify({ tokens: ['ETH', 'SOL', 'AXS', 'SAND'] }), ipAddress: '10.0.1.50', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', timestamp: randomDate(subDays(new Date(), 30), new Date()) },
+      { userId: ctx.diegoUser.id, action: 'user.login', metadata: JSON.stringify({ ip: '10.0.1.50', userAgent: 'Chrome' }), ipAddress: '10.0.1.50', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', timestamp: randomDate(subDays(new Date(), 30), new Date()) },
+      { userId: ctx.diegoUser.id, action: 'order.created', metadata: JSON.stringify({ assetSymbol: 'SAND', type: 'oco' }), ipAddress: '10.0.1.50', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', timestamp: randomDate(subDays(new Date(), 30), new Date()) },
+      { userId: ctx.diegoUser.id, action: 'account.connected', metadata: JSON.stringify({ provider: 'blockchain', accountId: 'diego-defi-base' }), ipAddress: '10.0.1.50', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', timestamp: randomDate(subDays(new Date(), 30), new Date()) },
+      // Patricia audit logs
+      { userId: ctx.adminUser.id, action: 'report.generated', metadata: JSON.stringify({ reportType: 'monthly_summary', period: '2026-01' }), ipAddress: '192.168.1.200', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', timestamp: randomDate(subDays(new Date(), 30), new Date()) },
+      { userId: ctx.adminUser.id, action: 'space.settings_changed', metadata: JSON.stringify({ spaceName: 'TechCorp México', changed: ['currency', 'timezone'] }), ipAddress: '192.168.1.200', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', timestamp: randomDate(subDays(new Date(), 30), new Date()) },
+      { userId: ctx.adminUser.id, action: 'budget.updated', metadata: JSON.stringify({ budgetName: 'Annual 2024', changes: ['R&D +200K', 'Travel -50K'] }), ipAddress: '192.168.1.200', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', timestamp: randomDate(subDays(new Date(), 30), new Date()) },
+      { userId: ctx.adminUser.id, action: 'user.login', metadata: JSON.stringify({ ip: '192.168.1.200', userAgent: 'Safari', device: 'iPad Pro' }), ipAddress: '192.168.1.200', userAgent: 'Mozilla/5.0 (iPad; CPU OS 17_0)', timestamp: randomDate(subDays(new Date(), 30), new Date()) },
+      { userId: ctx.adminUser.id, action: 'report.generated', metadata: JSON.stringify({ reportType: 'tax_summary', year: 2025 }), ipAddress: '192.168.1.200', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', timestamp: randomDate(subDays(new Date(), 30), new Date()) },
+      { userId: ctx.adminUser.id, action: 'account.connected', metadata: JSON.stringify({ provider: 'plaid', accountId: 'enterprise-chase' }), ipAddress: '192.168.1.200', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', timestamp: randomDate(subDays(new Date(), 30), new Date()) },
+      // Carlos audit logs
+      { userId: ctx.carlosUser.id, action: 'asset.added', metadata: JSON.stringify({ assetName: '1967 VW Beetle', type: 'vehicle' }), ipAddress: '192.168.1.150', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', timestamp: randomDate(subDays(new Date(), 30), new Date()) },
+      { userId: ctx.carlosUser.id, action: 'goal.created', metadata: JSON.stringify({ goalName: 'Second Restaurant Location', target: 1500000 }), ipAddress: '192.168.1.150', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', timestamp: randomDate(subDays(new Date(), 30), new Date()) },
+      { userId: ctx.carlosUser.id, action: 'transaction.split', metadata: JSON.stringify({ description: 'Costco Groceries', splitWith: 'Patricia' }), ipAddress: '192.168.1.150', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', timestamp: randomDate(subDays(new Date(), 30), new Date()) },
+      { userId: ctx.carlosUser.id, action: 'user.login', metadata: JSON.stringify({ ip: '192.168.1.150', userAgent: 'Chrome' }), ipAddress: '192.168.1.150', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', timestamp: randomDate(subDays(new Date(), 30), new Date()) },
+      { userId: ctx.carlosUser.id, action: 'budget.created', metadata: JSON.stringify({ budgetName: 'Q2 2024 Business' }), ipAddress: '192.168.1.150', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', timestamp: randomDate(subDays(new Date(), 30), new Date()) },
+      { userId: ctx.carlosUser.id, action: 'asset.added', metadata: JSON.stringify({ assetName: 'Wine Collection', type: 'collectible' }), ipAddress: '192.168.1.150', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', timestamp: randomDate(subDays(new Date(), 30), new Date()) },
+      // Maria audit logs
+      { userId: ctx.mariaUser.id, action: 'goal.shared', metadata: JSON.stringify({ goalName: 'Family Trip to Europe', sharedWith: 'Guest User' }), ipAddress: '192.168.1.100', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', timestamp: randomDate(subDays(new Date(), 30), new Date()) },
+      { userId: ctx.mariaUser.id, action: 'category.corrected', metadata: JSON.stringify({ merchant: 'Uber Eats', from: 'Transport', to: 'Food & Dining' }), ipAddress: '192.168.1.100', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', timestamp: randomDate(subDays(new Date(), 30), new Date()) },
+      { userId: ctx.mariaUser.id, action: 'subscription.cancelled', metadata: JSON.stringify({ service: 'Gym - Sports World', reason: 'Switched to outdoor running' }), ipAddress: '192.168.1.100', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', timestamp: randomDate(subDays(new Date(), 30), new Date()) },
+      { userId: ctx.mariaUser.id, action: 'user.login', metadata: JSON.stringify({ ip: '192.168.1.100', userAgent: 'Safari', device: 'iPhone 15' }), ipAddress: '192.168.1.100', userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0)', timestamp: randomDate(subDays(new Date(), 30), new Date()) },
+      { userId: ctx.mariaUser.id, action: 'budget.updated', metadata: JSON.stringify({ changes: ['Entertainment +500', 'Savings -500'] }), ipAddress: '192.168.1.100', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', timestamp: randomDate(subDays(new Date(), 30), new Date()) },
+      // Guest (Life Beat) audit logs
+      { userId: ctx.guestUser.id, action: 'life_beat.responded', metadata: JSON.stringify({ alertLevel: 30, channel: 'email' }), ipAddress: '192.168.1.50', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', timestamp: randomDate(subDays(new Date(), 30), new Date()) },
+      { userId: ctx.guestUser.id, action: 'executor.assigned', metadata: JSON.stringify({ executor: 'Maria González', priority: 1 }), ipAddress: '192.168.1.50', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', timestamp: randomDate(subDays(new Date(), 30), new Date()) },
+      { userId: ctx.guestUser.id, action: 'will.reviewed', metadata: JSON.stringify({ lastReview: '2025-12-01' }), ipAddress: '192.168.1.50', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', timestamp: randomDate(subDays(new Date(), 30), new Date()) },
+      { userId: ctx.guestUser.id, action: 'user.login', metadata: JSON.stringify({ ip: '192.168.1.50', userAgent: 'Chrome' }), ipAddress: '192.168.1.50', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', timestamp: randomDate(subDays(new Date(), 30), new Date()) },
+      // Platform Admin audit logs
+      { userId: ctx.platformAdmin.id, action: 'admin.impersonation', metadata: JSON.stringify({ impersonatedUser: ctx.mariaUser.id, reason: 'Support ticket #4521' }), ipAddress: '10.0.0.1', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', timestamp: randomDate(subDays(new Date(), 30), new Date()) },
+      { userId: ctx.platformAdmin.id, action: 'admin.user_search', metadata: JSON.stringify({ query: 'carlos@business.com' }), ipAddress: '10.0.0.1', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', timestamp: randomDate(subDays(new Date(), 30), new Date()) },
+      { userId: ctx.platformAdmin.id, action: 'admin.audit_export', metadata: JSON.stringify({ dateRange: '2025-12-01 to 2026-01-01', format: 'csv' }), ipAddress: '10.0.0.1', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', timestamp: randomDate(subDays(new Date(), 30), new Date()) },
+      { userId: ctx.platformAdmin.id, action: 'admin.user_view', metadata: JSON.stringify({ viewedUserId: ctx.diegoUser.id }), ipAddress: '10.0.0.1', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', timestamp: randomDate(subDays(new Date(), 30), new Date()) },
+      { userId: ctx.platformAdmin.id, action: 'admin.feature_flag_toggle', metadata: JSON.stringify({ flag: 'gaming_dashboard', enabled: true }), ipAddress: '10.0.0.1', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', timestamp: randomDate(subDays(new Date(), 30), new Date()) },
+      { userId: ctx.platformAdmin.id, action: 'admin.user_search', metadata: JSON.stringify({ query: 'diego@web3.com' }), ipAddress: '10.0.0.1', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', timestamp: randomDate(subDays(new Date(), 30), new Date()) },
     ],
   });
 
@@ -237,8 +278,71 @@ export async function seedTransactions(prisma: PrismaClient, ctx: SeedContext) {
     );
   }
 
+  // L2 DeFi transactions (Arbitrum & Base)
+  const diegoDefiArbAccount = ctx.diegoDefiArbitrumAccountId
+    ? await prisma.account.findUnique({ where: { id: ctx.diegoDefiArbitrumAccountId } })
+    : null;
+  const diegoDefiBaseAccount = ctx.diegoDefiBaseAccountId
+    ? await prisma.account.findUnique({ where: { id: ctx.diegoDefiBaseAccountId } })
+    : null;
+  const diegoDecentralandAccount = ctx.diegoDecentralandAccountId
+    ? await prisma.account.findUnique({ where: { id: ctx.diegoDecentralandAccountId } })
+    : null;
+  const diegoBtcAccount = ctx.diegoBtcAccountId
+    ? await prisma.account.findUnique({ where: { id: ctx.diegoBtcAccountId } })
+    : null;
+
+  if (diegoDefiArbAccount) {
+    defiTxns.push(
+      { accountId: diegoDefiArbAccount.id, amount: -2500, currency: Currency.USD, description: 'GMX: Open ETH/USD Long 2x', merchant: 'GMX', date: subDays(new Date(), 20), pending: false, metadata: { protocol: 'gmx', type: 'perpetual_open', leverage: 2 } },
+      { accountId: diegoDefiArbAccount.id, amount: 180, currency: Currency.USD, description: 'GMX: Unrealized PnL ETH/USD', merchant: 'GMX', date: subDays(new Date(), 2), pending: false, metadata: { protocol: 'gmx', type: 'pnl' } },
+      { accountId: diegoDefiArbAccount.id, amount: -2000, currency: Currency.USD, description: 'Radiant: Supply USDC', merchant: 'Radiant Capital', date: subDays(new Date(), 18), pending: false, metadata: { protocol: 'radiant', type: 'supply' } },
+      { accountId: diegoDefiArbAccount.id, amount: 32, currency: Currency.USD, description: 'Radiant: USDC lending interest', merchant: 'Radiant Capital', date: subDays(new Date(), 1), pending: false, metadata: { protocol: 'radiant', type: 'yield' } },
+      { accountId: diegoDefiArbAccount.id, amount: -15, currency: Currency.USD, description: 'Arbitrum: Bridge from ETH mainnet', merchant: 'Arbitrum Bridge', date: subDays(new Date(), 22), pending: false, metadata: { type: 'bridge', from: 'ethereum', to: 'arbitrum' } },
+    );
+  }
+
+  if (diegoDefiBaseAccount) {
+    defiTxns.push(
+      { accountId: diegoDefiBaseAccount.id, amount: -1800, currency: Currency.USD, description: 'Aerodrome: Add ETH/USDC LP', merchant: 'Aerodrome', date: subDays(new Date(), 15), pending: false, metadata: { protocol: 'aerodrome', type: 'lp_deposit' } },
+      { accountId: diegoDefiBaseAccount.id, amount: 45, currency: Currency.USD, description: 'Aerodrome: LP rewards (AERO)', merchant: 'Aerodrome', date: subDays(new Date(), 2), pending: false, metadata: { protocol: 'aerodrome', type: 'farming_reward' } },
+      { accountId: diegoDefiBaseAccount.id, amount: -1000, currency: Currency.USD, description: 'Uniswap Base: Add cbETH/WETH LP', merchant: 'Uniswap', date: subDays(new Date(), 12), pending: false, metadata: { protocol: 'uniswap-base', type: 'lp_deposit' } },
+      { accountId: diegoDefiBaseAccount.id, amount: 12, currency: Currency.USD, description: 'Uniswap Base: LP fees earned', merchant: 'Uniswap', date: subDays(new Date(), 1), pending: false, metadata: { protocol: 'uniswap-base', type: 'lp_fees' } },
+      { accountId: diegoDefiBaseAccount.id, amount: -8, currency: Currency.USD, description: 'Base: Bridge from ETH mainnet', merchant: 'Base Bridge', date: subDays(new Date(), 16), pending: false, metadata: { type: 'bridge', from: 'ethereum', to: 'base' } },
+    );
+  }
+
+  // NFT Royalty income
+  if (diegoSandboxAccount) {
+    defiTxns.push(
+      { accountId: diegoSandboxAccount.id, amount: 45, currency: Currency.USD, description: 'Sandbox: Marketplace royalty payment', merchant: 'The Sandbox', date: subDays(new Date(), 8), pending: false, metadata: { protocol: 'sandbox', type: 'royalty' } },
+    );
+  }
+  if (diegoDefiEthAccount) {
+    defiTxns.push(
+      { accountId: diegoDefiEthAccount.id, amount: 120, currency: Currency.USD, description: 'OpenSea: Creator royalty (BAYC derivative)', merchant: 'OpenSea', date: subDays(new Date(), 12), pending: false, metadata: { protocol: 'opensea', type: 'royalty', collection: 'BAYC Derivatives' } },
+    );
+  }
+  if (diegoDecentralandAccount) {
+    defiTxns.push(
+      { accountId: diegoDecentralandAccount.id, amount: 85, currency: Currency.USD, description: 'Decentraland: Wearable sale', merchant: 'Decentraland Marketplace', date: subDays(new Date(), 6), pending: false, metadata: { protocol: 'decentraland', type: 'nft_sale', item: 'Rare Cyberpunk Jacket' } },
+    );
+  }
+
+  // Cross-chain bridge transactions
+  if (diegoDefiEthAccount && diegoDefiArbAccount) {
+    defiTxns.push(
+      { accountId: diegoDefiEthAccount.id, amount: -1000, currency: Currency.USD, description: 'Bridge: ETH → Arbitrum (1000 USDC)', merchant: 'Arbitrum Bridge', date: subDays(new Date(), 22), pending: false, metadata: { type: 'bridge_out', destination: 'arbitrum', amount: 1000, token: 'USDC' } },
+    );
+  }
+  if (diegoDefiEthAccount && diegoDefiBaseAccount) {
+    defiTxns.push(
+      { accountId: diegoDefiEthAccount.id, amount: -500, currency: Currency.USD, description: 'Bridge: ETH → Base (0.25 ETH)', merchant: 'Base Bridge', date: subDays(new Date(), 16), pending: false, metadata: { type: 'bridge_out', destination: 'base', amount: 0.25, token: 'ETH' } },
+    );
+  }
+
   if (defiTxns.length > 0) {
     await prisma.transaction.createMany({ data: defiTxns });
-    console.log(`  ✓ Created ${defiTxns.length} DeFi transactions for Diego`);
+    console.log(`  ✓ Created ${defiTxns.length} DeFi/L2/bridge transactions for Diego`);
   }
 }

@@ -27,6 +27,7 @@
 ### Advanced Wealth Tracking
 - 🌐 **DeFi/Web3 Portfolios** - Zapper integration for Uniswap, Aave, Compound, Curve, Lido, and more
 - 🏠 **Zillow Real Estate** - Automated property valuations via Zestimate
+- 👟 **Collectibles Valuation** - Automated market pricing for sneakers, watches, art, wine, coins, cards, and cars
 - 📈 **10-30 Year Projections** - Retirement planning with Monte Carlo simulations
 - 👥 **Yours/Mine/Ours Views** - Household ownership filtering and breakdown
 

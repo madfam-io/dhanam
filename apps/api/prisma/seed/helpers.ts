@@ -35,6 +35,23 @@ export const transactionTemplates = {
       { name: 'Liverpool', category: 'Shopping', range: [1500, 8000] as const },
       { name: 'MercadoLibre', category: 'Shopping', range: [200, 5000] as const },
       { name: 'Coppel', category: 'Shopping', range: [500, 4000] as const },
+      { name: 'Walmart', category: 'Groceries', range: [800, 4000] as const },
+      { name: 'Costco', category: 'Groceries', range: [2000, 6000] as const },
+      { name: "Sam's Club", category: 'Groceries', range: [1500, 5000] as const },
+      { name: 'Bodega Aurrera', category: 'Groceries', range: [400, 2500] as const },
+      { name: 'La Comer', category: 'Groceries', range: [600, 3000] as const },
+      { name: 'Cinepolis', category: 'Entertainment', range: [180, 600] as const },
+      { name: 'Disney+', category: 'Entertainment', range: [159, 219] as const },
+      { name: 'HBO Max', category: 'Entertainment', range: [149, 199] as const },
+      { name: 'Totalplay', category: 'Utilities', range: [699, 1299] as const },
+      { name: 'Izzi', category: 'Utilities', range: [499, 999] as const },
+      { name: 'DiDi', category: 'Transportation', range: [60, 300] as const },
+      { name: 'OXXO Gas', category: 'Transportation', range: [600, 1800] as const },
+      { name: 'Farmacias del Ahorro', category: 'Shopping', range: [150, 1200] as const },
+      { name: 'Farmacia Guadalajara', category: 'Shopping', range: [100, 800] as const },
+      { name: 'VIPs', category: 'Food & Dining', range: [250, 800] as const },
+      { name: 'Sanborns', category: 'Food & Dining', range: [200, 900] as const },
+      { name: 'Dominos', category: 'Food & Dining', range: [150, 450] as const },
     ],
     business: [
       { name: 'Office Rent', category: 'Rent', range: [15000, 35000] as const },
@@ -79,6 +96,28 @@ export const cryptoESGData = [
     notes: 'L2 rollup with retroactive public goods funding' },
   { symbol: 'ARB', name: 'Arbitrum', env: 81, social: 77, gov: 83,
     notes: 'L2 rollup with DAO governance and grants program' },
+  { symbol: 'AXS', name: 'Axie Infinity', env: 50, social: 78, gov: 62,
+    notes: 'Play-to-earn gaming on Ronin sidechain' },
+  { symbol: 'SLP', name: 'Smooth Love Potion', env: 48, social: 65, gov: 40,
+    notes: 'In-game reward token with high inflation' },
+  { symbol: 'GALA', name: 'Gala Games', env: 55, social: 70, gov: 58,
+    notes: 'Gaming ecosystem with node-based distribution' },
+  { symbol: 'ILV', name: 'Illuvium', env: 60, social: 74, gov: 68,
+    notes: 'AAA gaming on Immutable zkEVM' },
+  { symbol: 'IMX', name: 'Immutable X', env: 78, social: 76, gov: 72,
+    notes: 'L2 for NFTs with zero gas fees' },
+  { symbol: 'ENJ', name: 'Enjin', env: 62, social: 72, gov: 65,
+    notes: 'NFT minting and gaming infrastructure' },
+  { symbol: 'ATLAS', name: 'Star Atlas', env: 58, social: 68, gov: 55,
+    notes: 'Solana-based space exploration metaverse' },
+  { symbol: 'POLIS', name: 'Star Atlas DAO', env: 58, social: 70, gov: 72,
+    notes: 'Governance token for Star Atlas DAO' },
+  { symbol: 'APE', name: 'ApeCoin', env: 44, social: 82, gov: 60,
+    notes: 'BAYC ecosystem governance and utility token' },
+  { symbol: 'YGG', name: 'Yield Guild Games', env: 52, social: 80, gov: 70,
+    notes: 'Gaming guild DAO with scholarship programs' },
+  { symbol: 'RON', name: 'Ronin', env: 56, social: 74, gov: 60,
+    notes: 'Axie Infinity sidechain - improved after bridge hack' },
 ];
 
 export interface SeedContext {
@@ -101,4 +140,9 @@ export interface SeedContext {
   diegoDefiPolygonAccountId?: string;
   diegoSandboxLandAccountId?: string;
   diegoDaoGovernanceAccountId?: string;
+  diegoBtcAccountId?: string;
+  diegoDecentralandAccountId?: string;
+  diegoYggAccountId?: string;
+  diegoDefiArbitrumAccountId?: string;
+  diegoDefiBaseAccountId?: string;
 }

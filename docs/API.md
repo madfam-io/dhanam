@@ -909,6 +909,83 @@ Sync current Zestimate to asset valuation.
 
 ---
 
+## Collectibles Valuation
+
+Automated market valuations for collectible assets (sneakers, watches, art, wine, coins, trading cards, classic cars).
+
+### GET /manual-assets/collectibles/categories
+Get available collectible categories and provider status.
+
+**Response:**
+```json
+[
+  { "category": "sneaker", "provider": "sneaks", "available": true },
+  { "category": "watch", "provider": "watchcharts", "available": false },
+  { "category": "art", "provider": "artsy", "available": false },
+  { "category": "wine", "provider": "wine-searcher", "available": false },
+  { "category": "coin", "provider": "pcgs", "available": false },
+  { "category": "trading_card", "provider": "psa", "available": false },
+  { "category": "classic_car", "provider": "hagerty", "available": false },
+  { "category": "sneaker", "provider": "kicksdb", "available": false }
+]
+```
+
+### GET /manual-assets/collectibles/search
+Search collectible catalog by category.
+
+**Query Parameters:**
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| category | string | Yes | e.g. `sneaker` |
+| q | string | Yes | Search query |
+| limit | number | No | Max results (default 10) |
+
+**Response:**
+```json
+[
+  {
+    "externalId": "CW2288-111",
+    "provider": "sneaks",
+    "category": "sneaker",
+    "name": "Nike Air Jordan 1 Retro High OG Chicago",
+    "brand": "Nike",
+    "referenceNumber": "CW2288-111",
+    "imageUrl": "https://...",
+    "currentMarketValue": 320,
+    "currency": "USD"
+  }
+]
+```
+
+### POST /manual-assets/:id/collectible/link
+Link a manual asset to a collectible catalog item for automatic valuations.
+
+**Body:**
+```json
+{
+  "externalId": "CW2288-111",
+  "provider": "sneaks",
+  "category": "sneaker"
+}
+```
+
+### POST /manual-assets/:id/collectible/unlink
+Remove collectible provider link from an asset.
+
+### POST /manual-assets/:id/collectible/refresh
+Manually refresh the valuation from the linked provider.
+
+**Response:**
+```json
+{
+  "success": true,
+  "previousValue": 300,
+  "newValue": 320
+}
+```
+
+---
+
 ## Long-Term Projections
 
 10-30 year cashflow forecasting with Monte Carlo simulation.

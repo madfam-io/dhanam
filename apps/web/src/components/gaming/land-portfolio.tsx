@@ -6,11 +6,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
 interface LandParcel {
-  coordinates: string;
-  size: string;
-  acquiredDate: string;
-  rentalStatus?: 'rented' | 'vacant';
+  coordinates?: string;
+  size?: string;
+  acquiredDate?: string;
+  rentalStatus?: 'rented' | 'vacant' | 'self-use';
   monthlyRental?: number;
+  platform?: string;
+  tier?: string;
 }
 
 interface LandPortfolioProps {
@@ -64,8 +66,13 @@ export function LandPortfolio({ parcels, floorPriceUsd, totalValueUsd }: LandPor
               <div className="flex items-center gap-2">
                 <Home className="h-4 w-4 text-muted-foreground" />
                 <div>
-                  <p className="text-sm font-medium">{parcel.coordinates}</p>
-                  <p className="text-xs text-muted-foreground">{parcel.size} plot</p>
+                  <p className="text-sm font-medium">
+                    {parcel.coordinates || parcel.tier || 'Land'}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {parcel.size ? `${parcel.size} plot` : ''}
+                    {parcel.platform ? ` · ${parcel.platform}` : ''}
+                  </p>
                 </div>
               </div>
               <div className="text-right">

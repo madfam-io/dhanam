@@ -143,6 +143,7 @@ turbo test        # Turborepo test
 - **Blockchain** (on-chain): ETH/BTC/xPub address tracking (non-custodial, no secrets)
 - **Zapper** (DeFi): API integration → protocol positions across 7 networks (Ethereum, Polygon, Arbitrum, Optimism, Base, Avalanche, BSC)
 - **Zillow** (Real Estate): Property valuation API → automated Zestimate updates for manual assets
+- **Collectibles** (sneakers/watches/art/wine/coins/cards/cars): Adapter-based valuation → sneaks-api (free, sneakers), scaffolded for WatchCharts, Artsy, Wine-Searcher, PCGS, PSA, Hagerty, KicksDB
 
 The provider orchestrator (`apps/api/src/modules/providers/orchestrator/`) handles failover and multi-provider redundancy.
 

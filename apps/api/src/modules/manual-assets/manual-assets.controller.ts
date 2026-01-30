@@ -28,6 +28,9 @@ import { Request } from 'express';
 
 import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
 
+import { CollectiblesValuationService } from '../collectibles-valuation/collectibles-valuation.service';
+import type { CollectibleCategory } from '../collectibles-valuation/interfaces/collectible-provider.interface';
+
 import { DocumentService, ConfirmUploadDto } from './document.service';
 import {
   CreateManualAssetDto,
@@ -52,7 +55,8 @@ export class ManualAssetsController {
     private readonly manualAssetsService: ManualAssetsService,
     private readonly peAnalyticsService: PEAnalyticsService,
     private readonly documentService: DocumentService,
-    private readonly realEstateValuationService: RealEstateValuationService
+    private readonly realEstateValuationService: RealEstateValuationService,
+    private readonly collectiblesValuationService: CollectiblesValuationService
   ) {}
 
   @Get()
@@ -456,5 +460,111 @@ export class ManualAssetsController {
   refreshAllZillowValuations(@Param('spaceId') spaceId: string, @Req() req: Request) {
     void req.user!.id;
     return this.realEstateValuationService.refreshAllInSpace(spaceId);
+  }
+
+  // ==================== Collectibles Valuation Endpoints ====================
+
+  @Get('collectibles/categories')
+  @ApiOperation({
+    summary: 'Get available collectible categories',
+    description: 'Returns all supported collectible categories with provider availability status',
+  })
+  @ApiResponse({ status: 200, description: 'List of categories with availability' })
+  getCollectibleCategories() {
+    return this.collectiblesValuationService.getAvailableCategories();
+  }
+
+  @Get('collectibles/search')
+  @ApiOperation({
+    summary: 'Search collectibles catalog',
+    description: 'Search for collectible items by category and query string',
+  })
+  @ApiQuery({
+    name: 'category',
+    required: true,
+    description: 'Collectible category (e.g. sneaker)',
+  })
+  @ApiQuery({ name: 'q', required: true, description: 'Search query' })
+  @ApiQuery({ name: 'limit', required: false, description: 'Max results (default 10)' })
+  @ApiResponse({ status: 200, description: 'Matching collectible items' })
+  searchCollectibles(
+    @Query('category') category: CollectibleCategory,
+    @Query('q') query: string,
+    @Query('limit') limit?: string
+  ) {
+    return this.collectiblesValuationService.search(
+      category,
+      query,
+      limit ? parseInt(limit, 10) : undefined
+    );
+  }
+
+  @Post(':id/collectible/link')
+  @ApiOperation({
+    summary: 'Link asset to collectible provider',
+    description: 'Link a manual asset to a collectible catalog item for automatic valuations',
+  })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['externalId', 'provider', 'category'],
+      properties: {
+        externalId: { type: 'string', description: 'Provider-specific item ID' },
+        provider: { type: 'string', description: 'Provider name (e.g. sneaks)' },
+        category: { type: 'string', description: 'Collectible category (e.g. sneaker)' },
+      },
+    },
+  })
+  @ApiResponse({ status: 200, description: 'Asset linked and initial valuation fetched' })
+  @ApiNotFoundResponse({ description: 'Manual asset not found' })
+  @ApiParam({ name: 'id', description: 'Manual asset ID' })
+  linkCollectible(
+    @Param('spaceId') spaceId: string,
+    @Param('id') id: string,
+    @Body() body: { externalId: string; provider: string; category: CollectibleCategory },
+    @Req() req: Request
+  ) {
+    void req.user!.id;
+    return this.collectiblesValuationService.linkAsset(
+      spaceId,
+      id,
+      body.externalId,
+      body.provider,
+      body.category
+    );
+  }
+
+  @Post(':id/collectible/unlink')
+  @ApiOperation({
+    summary: 'Unlink asset from collectible provider',
+    description: 'Stop automatic collectible valuations for this asset',
+  })
+  @ApiResponse({ status: 200, description: 'Asset unlinked' })
+  @ApiNotFoundResponse({ description: 'Manual asset not found' })
+  @ApiParam({ name: 'id', description: 'Manual asset ID' })
+  unlinkCollectible(
+    @Param('spaceId') spaceId: string,
+    @Param('id') id: string,
+    @Req() req: Request
+  ) {
+    void req.user!.id;
+    return this.collectiblesValuationService.unlinkAsset(spaceId, id);
+  }
+
+  @Post(':id/collectible/refresh')
+  @ApiOperation({
+    summary: 'Refresh collectible valuation',
+    description: 'Manually trigger a valuation refresh from the linked collectible provider',
+  })
+  @ApiResponse({ status: 200, description: 'Valuation refreshed' })
+  @ApiNotFoundResponse({ description: 'Manual asset not found' })
+  @ApiParam({ name: 'id', description: 'Manual asset ID' })
+  refreshCollectibleValuation(
+    @Param('spaceId') spaceId: string,
+    @Param('id') id: string,
+    @Req() req: Request
+  ) {
+    void req.user!.id;
+    return this.collectiblesValuationService.refreshAsset(spaceId, id);
   }
 }

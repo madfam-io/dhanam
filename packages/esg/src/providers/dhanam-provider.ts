@@ -107,6 +107,17 @@ export class DhanamESGProvider implements ESGProvider {
       'ALGO': { overall: 80, environmental: 90, social: 75, governance: 75, confidence: 75 },
       'SAND': { overall: 68, environmental: 62, social: 75, governance: 68, confidence: 70 },
       'MANA': { overall: 65, environmental: 60, social: 72, governance: 64, confidence: 70 },
+      'AXS': { overall: 62, environmental: 55, social: 78, governance: 60, confidence: 65 },
+      'SLP': { overall: 55, environmental: 50, social: 72, governance: 48, confidence: 60 },
+      'GALA': { overall: 58, environmental: 52, social: 70, governance: 55, confidence: 60 },
+      'ILV': { overall: 64, environmental: 58, social: 74, governance: 62, confidence: 65 },
+      'IMX': { overall: 72, environmental: 78, social: 72, governance: 68, confidence: 70 },
+      'ENJ': { overall: 60, environmental: 55, social: 73, governance: 56, confidence: 65 },
+      'ATLAS': { overall: 58, environmental: 65, social: 68, governance: 48, confidence: 60 },
+      'POLIS': { overall: 60, environmental: 65, social: 66, governance: 52, confidence: 60 },
+      'APE': { overall: 56, environmental: 48, social: 76, governance: 50, confidence: 65 },
+      'YGG': { overall: 63, environmental: 55, social: 80, governance: 58, confidence: 60 },
+      'RONIN': { overall: 66, environmental: 60, social: 75, governance: 64, confidence: 65 },
     };
 
     const scoreData = fallbackScores[symbol.toUpperCase()] || {

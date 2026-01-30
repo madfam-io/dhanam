@@ -170,8 +170,107 @@ export async function seedFeatures(prisma: PrismaClient, ctx: SeedContext) {
     }),
   ]);
 
+  // Patricia's HNW assets
+  const [patriciaPenthouse, patriciaLifeInsurance, patricia529, patriciaAnnuity] = await Promise.all([
+    prisma.manualAsset.create({
+      data: {
+        spaceId: ctx.enterpriseSpace.id,
+        name: 'Polanco Penthouse',
+        type: 'real_estate',
+        description: '3BR/3BA penthouse in Polanco, CDMX — Zillow-tracked',
+        currentValue: 450000,
+        currency: Currency.USD,
+        acquisitionDate: new Date('2019-04-10'),
+        acquisitionCost: 380000,
+        metadata: { address: 'Av. Presidente Masaryk 320 PH', city: 'CDMX', state: 'CDMX', sqft: 220, propertyType: 'penthouse', bedrooms: 3, bathrooms: 3, zillowId: 'zpid-9876543' },
+      },
+    }),
+    prisma.manualAsset.create({
+      data: {
+        spaceId: ctx.enterpriseSpace.id,
+        name: 'Term Life Insurance — MetLife',
+        type: 'other',
+        description: 'MetLife 20-year term life insurance policy — $500K face value',
+        currentValue: 500000,
+        currency: Currency.USD,
+        acquisitionDate: new Date('2020-01-15'),
+        acquisitionCost: 0,
+        metadata: { provider: 'MetLife', policyType: 'term_life', termYears: 20, faceValue: 500000, annualPremium: 1200, beneficiary: 'Carlos Mendoza' },
+      },
+    }),
+    prisma.manualAsset.create({
+      data: {
+        spaceId: ctx.enterpriseSpace.id,
+        name: '529 Education Savings — Vanguard',
+        type: 'other',
+        description: 'Vanguard 529 College Savings Plan',
+        currentValue: 85000,
+        currency: Currency.USD,
+        acquisitionDate: new Date('2018-09-01'),
+        acquisitionCost: 60000,
+        metadata: { provider: 'Vanguard', planType: '529', beneficiary: 'Sofia Ruiz', state: 'Nevada', portfolio: 'Age-Based Aggressive' },
+      },
+    }),
+    prisma.manualAsset.create({
+      data: {
+        spaceId: ctx.enterpriseSpace.id,
+        name: 'TIAA Fixed Annuity',
+        type: 'other',
+        description: 'TIAA Traditional fixed annuity — guaranteed income',
+        currentValue: 200000,
+        currency: Currency.USD,
+        acquisitionDate: new Date('2017-06-01'),
+        acquisitionCost: 150000,
+        metadata: { provider: 'TIAA', annuityType: 'fixed', guaranteedRate: 3.5, payoutStart: '2035-01-01' },
+      },
+    }),
+  ]);
+
+  // Carlos alternative assets
+  const [carlosBeetle, carlosWine, carlosRolex] = await Promise.all([
+    prisma.manualAsset.create({
+      data: {
+        spaceId: ctx.carlosPersonal.id,
+        name: '1967 VW Beetle (Classic)',
+        type: 'vehicle',
+        description: 'Restored 1967 Volkswagen Beetle — classic/vintage collector car',
+        currentValue: 280000,
+        currency: Currency.MXN,
+        acquisitionDate: new Date('2021-03-20'),
+        acquisitionCost: 180000,
+        metadata: { make: 'Volkswagen', model: 'Beetle', year: 1967, condition: 'restored', mileage: 42000, color: 'Lotus White' },
+      },
+    }),
+    prisma.manualAsset.create({
+      data: {
+        spaceId: ctx.carlosPersonal.id,
+        name: 'Wine Collection',
+        type: 'collectible',
+        description: '24-bottle curated collection — Napa Valley & Rioja vintages',
+        currentValue: 45000,
+        currency: Currency.MXN,
+        acquisitionDate: new Date('2020-08-15'),
+        acquisitionCost: 32000,
+        metadata: { bottles: 24, regions: ['Napa Valley', 'Rioja'], topBottles: ['Opus One 2018', 'Vega Sicilia Unico 2012'], insured: true, storageLocation: 'Climate-controlled cellar' },
+      },
+    }),
+    prisma.manualAsset.create({
+      data: {
+        spaceId: ctx.carlosPersonal.id,
+        name: 'Rolex Submariner',
+        type: 'jewelry',
+        description: 'Rolex Submariner Date 126610LN — purchased new',
+        currentValue: 8500,
+        currency: Currency.USD,
+        acquisitionDate: new Date('2022-04-10'),
+        acquisitionCost: 9100,
+        metadata: { brand: 'Rolex', model: 'Submariner Date', reference: '126610LN', serialPrefix: '3YK', purchasedFrom: 'AD México', boxAndPapers: true },
+      },
+    }),
+  ]);
+
   // Batch valuation history for all manual assets
-  const allManualAssets = [carlosCondo, carlosTesla, patriciaPE, patriciaArt, diegoLand, diegoBayc, diegoWearables, diegoDomain, patriciaAngel, patriciaJewelry, carlosJewelry, diegoSandboxPortfolio];
+  const allManualAssets = [carlosCondo, carlosTesla, patriciaPE, patriciaArt, diegoLand, diegoBayc, diegoWearables, diegoDomain, patriciaAngel, patriciaJewelry, carlosJewelry, diegoSandboxPortfolio, patriciaPenthouse, patriciaLifeInsurance, patricia529, patriciaAnnuity, carlosBeetle, carlosWine, carlosRolex];
   const valuationRows: Array<{
     assetId: string;
     date: Date;
@@ -209,7 +308,7 @@ export async function seedFeatures(prisma: PrismaClient, ctx: SeedContext) {
     ],
   });
 
-  console.log('  ✓ Created 12 manual assets with valuation history');
+  console.log('  ✓ Created 19 manual assets with valuation history');
   console.log('  ✓ Created 8 PE cash flows for Sequoia fund');
 
   // 2. RECURRING TRANSACTIONS (batch)
@@ -230,6 +329,9 @@ export async function seedFeatures(prisma: PrismaClient, ctx: SeedContext) {
       { spaceId: ctx.diegoSpace.id, merchantName: 'LAND Rental - Parcel (-12, 45)', expectedAmount: 150, currency: Currency.USD, frequency: 'monthly', status: 'confirmed', occurrenceCount: 6, confidence: 0.88, lastOccurrence: subDays(new Date(), Math.floor(Math.random() * 30)), nextExpected: addDays(new Date(), Math.floor(Math.random() * 30) + 1), confirmedAt: subDays(new Date(), 45) },
       { spaceId: ctx.diegoSpace.id, merchantName: 'LAND Rental - Parcel (8, -22)', expectedAmount: 150, currency: Currency.USD, frequency: 'monthly', status: 'confirmed', occurrenceCount: 4, confidence: 0.85, lastOccurrence: subDays(new Date(), Math.floor(Math.random() * 30)), nextExpected: addDays(new Date(), Math.floor(Math.random() * 30) + 1), confirmedAt: subDays(new Date(), 30) },
       { spaceId: ctx.diegoSpace.id, merchantName: 'Sandbox Game Maker Revenue', expectedAmount: 320, currency: Currency.USD, frequency: 'monthly', status: 'confirmed', occurrenceCount: 3, confidence: 0.72, lastOccurrence: subDays(new Date(), Math.floor(Math.random() * 30)), nextExpected: addDays(new Date(), Math.floor(Math.random() * 30) + 1), confirmedAt: subDays(new Date(), 30) },
+      { spaceId: ctx.diegoSpace.id, merchantName: 'Axie Scholarship Revenue', expectedAmount: 200, currency: Currency.USD, frequency: 'monthly', status: 'confirmed', occurrenceCount: 8, confidence: 0.82, lastOccurrence: subDays(new Date(), Math.floor(Math.random() * 30)), nextExpected: addDays(new Date(), Math.floor(Math.random() * 30) + 1), confirmedAt: subDays(new Date(), 60) },
+      { spaceId: ctx.diegoSpace.id, merchantName: 'Gala Node Rewards', expectedAmount: 150, currency: Currency.USD, frequency: 'monthly', status: 'confirmed', occurrenceCount: 10, confidence: 0.90, lastOccurrence: subDays(new Date(), Math.floor(Math.random() * 30)), nextExpected: addDays(new Date(), Math.floor(Math.random() * 30) + 1), confirmedAt: subDays(new Date(), 90) },
+      { spaceId: ctx.diegoSpace.id, merchantName: 'Illuvium Revenue Distribution', expectedAmount: 180, currency: Currency.USD, frequency: 'monthly', status: 'confirmed', occurrenceCount: 5, confidence: 0.78, lastOccurrence: subDays(new Date(), Math.floor(Math.random() * 30)), nextExpected: addDays(new Date(), Math.floor(Math.random() * 30) + 1), confirmedAt: subDays(new Date(), 45) },
     ],
   });
 
@@ -271,6 +373,16 @@ export async function seedFeatures(prisma: PrismaClient, ctx: SeedContext) {
       data: { ownership: AccountOwnership.joint },
     });
     console.log('  ✓ Updated Carlos checking to joint ownership');
+  }
+
+  // Set Patricia's Vanguard Investment to trust ownership
+  const patriciaVanguard = await prisma.account.findFirst({ where: { spaceId: ctx.enterpriseSpace.id, providerAccountId: 'enterprise-investment' } });
+  if (patriciaVanguard) {
+    await prisma.account.update({
+      where: { id: patriciaVanguard.id },
+      data: { ownership: AccountOwnership.trust },
+    });
+    console.log('  ✓ Updated Patricia Vanguard to trust ownership');
   }
 
   // 4. TRANSACTION SPLITS

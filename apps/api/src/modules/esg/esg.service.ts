@@ -139,6 +139,127 @@ const DHANAM_ESG_DATA = {
       consensusMechanism: 'Ethereum Proof of Stake',
       description: 'Decentraland virtual world with DAO governance on Ethereum',
     },
+    AXS: {
+      environmental: 55, // Ronin sidechain, lower energy than L1
+      social: 78, // P2E pioneer, scholarship economy, emerging market access
+      governance: 60, // Sky Mavis controlled, transitioning to community governance
+      overall: 62,
+      grade: 'C',
+      energyIntensity: 0.003, // kWh per transaction (Ronin PoA)
+      carbonFootprint: 0.0015, // kg CO2 per transaction
+      consensusMechanism: 'Ronin Proof of Authority',
+      description: 'Axie Infinity governance token on Ronin sidechain, P2E pioneer',
+    },
+    SLP: {
+      environmental: 50, // Ronin sidechain, high transaction volume
+      social: 72, // Earnings token for players in emerging markets
+      governance: 48, // Utility token, limited governance role
+      overall: 55,
+      grade: 'C-',
+      energyIntensity: 0.003, // kWh per transaction (Ronin)
+      carbonFootprint: 0.0015, // kg CO2 per transaction
+      consensusMechanism: 'Ronin Proof of Authority',
+      description: 'Smooth Love Potion — Axie Infinity in-game earnings token',
+    },
+    GALA: {
+      environmental: 52, // GalaChain, node-based architecture
+      social: 70, // Multi-game ecosystem, node operators rewarded
+      governance: 55, // Gala Games centralized control, node voting
+      overall: 58,
+      grade: 'C',
+      energyIntensity: 0.02, // kWh per transaction (GalaChain)
+      carbonFootprint: 0.01, // kg CO2 per transaction
+      consensusMechanism: 'GalaChain Proof of Work/Stake Hybrid',
+      description: 'Gala Games multi-title ecosystem with node reward structure',
+    },
+    ILV: {
+      environmental: 58, // Ethereum L1 + Immutable X L2
+      social: 74, // AAA gaming, revenue distribution staking
+      governance: 62, // Illuvium DAO governance, council-based
+      overall: 64,
+      grade: 'C+',
+      energyIntensity: 0.005, // kWh per transaction (Immutable X)
+      carbonFootprint: 0.0025, // kg CO2 per transaction
+      consensusMechanism: 'Ethereum PoS + Immutable X zk-rollup',
+      description: 'Illuvium AAA gaming with revenue distribution staking and DAO governance',
+    },
+    IMX: {
+      environmental: 78, // zkEVM rollup, carbon-neutral commitment
+      social: 72, // NFT gaming infrastructure, zero gas fees for users
+      governance: 68, // Immutable council governance, ecosystem grants
+      overall: 72,
+      grade: 'B-',
+      energyIntensity: 0.001, // kWh per transaction (zk-rollup)
+      carbonFootprint: 0.0005, // kg CO2 per transaction
+      consensusMechanism: 'zkEVM Rollup on Ethereum',
+      description: 'Immutable zkEVM for carbon-neutral NFT gaming with zero gas fees',
+    },
+    ENJ: {
+      environmental: 55, // Enjin Matrixchain, Polkadot parachain
+      social: 73, // Cross-game NFT items, melt value guarantee
+      governance: 56, // Enjin team controlled, community input limited
+      overall: 60,
+      grade: 'C',
+      energyIntensity: 0.008, // kWh per transaction (Matrixchain)
+      carbonFootprint: 0.004, // kg CO2 per transaction
+      consensusMechanism: 'Polkadot Nominated Proof of Stake',
+      description: 'Enjin cross-game NFT ecosystem with melt value and Matrixchain',
+    },
+    ATLAS: {
+      environmental: 65, // Solana PoH+PoS, energy efficient
+      social: 68, // Space-themed P2E, fleet management
+      governance: 48, // Star Atlas team controlled, early governance
+      overall: 58,
+      grade: 'C',
+      energyIntensity: 1.837, // kWh per transaction (Solana)
+      carbonFootprint: 0.918, // kg CO2 per transaction
+      consensusMechanism: 'Solana Proof of History + Proof of Stake',
+      description: 'Star Atlas in-game currency for space metaverse on Solana',
+    },
+    POLIS: {
+      environmental: 65, // Solana chain, same as ATLAS
+      social: 66, // Governance and staking token for Star Atlas DAO
+      governance: 52, // DAO governance, fleet staking mechanics
+      overall: 60,
+      grade: 'C',
+      energyIntensity: 1.837, // kWh per transaction (Solana)
+      carbonFootprint: 0.918, // kg CO2 per transaction
+      consensusMechanism: 'Solana Proof of History + Proof of Stake',
+      description: 'Star Atlas governance token for DAO voting and fleet staking',
+    },
+    APE: {
+      environmental: 48, // ApeChain L2, but high-volume NFT transactions
+      social: 76, // Strong community, Otherside metaverse, cultural impact
+      governance: 50, // ApeCoin DAO, evolving governance structure
+      overall: 56,
+      grade: 'C-',
+      energyIntensity: 0.01, // kWh per transaction (ApeChain)
+      carbonFootprint: 0.005, // kg CO2 per transaction
+      consensusMechanism: 'ApeChain Layer 2',
+      description: 'ApeCoin for Bored Ape ecosystem and Otherside metaverse',
+    },
+    YGG: {
+      environmental: 55, // Multi-chain guild operations
+      social: 80, // Guild scholarships, emerging market player onboarding
+      governance: 58, // SubDAO structure, guild management governance
+      overall: 63,
+      grade: 'C+',
+      energyIntensity: 0.005, // kWh per transaction (varies by chain)
+      carbonFootprint: 0.0025, // kg CO2 per transaction
+      consensusMechanism: 'Multi-chain (Ethereum PoS primary)',
+      description: 'Yield Guild Games — P2E guild with scholarship economy for emerging markets',
+    },
+    RONIN: {
+      environmental: 60, // Ronin PoA chain, validator-based
+      social: 75, // Gaming-focused chain, Axie ecosystem backbone
+      governance: 64, // Transitioning from PoA to DPoS, community validators
+      overall: 66,
+      grade: 'C+',
+      energyIntensity: 0.003, // kWh per transaction
+      carbonFootprint: 0.0015, // kg CO2 per transaction
+      consensusMechanism: 'Ronin Delegated Proof of Stake',
+      description: 'Ronin Network — gaming-focused chain powering Axie Infinity ecosystem',
+    },
   },
 
   // ESG grading scale

@@ -11,6 +11,8 @@ interface NftItem {
   currentValue: number;
   acquisitionCost: number;
   imageUrl?: string;
+  platform?: string;
+  chain?: string;
 }
 
 interface NftGalleryProps {
@@ -61,9 +63,16 @@ export function NftGallery({ items, totalValueUsd }: NftGalleryProps) {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{item.name}</p>
-                    <Badge variant="outline" className="text-xs">
-                      {item.collection}
-                    </Badge>
+                    <div className="flex gap-1 flex-wrap">
+                      <Badge variant="outline" className="text-xs">
+                        {item.collection}
+                      </Badge>
+                      {item.platform && (
+                        <Badge variant="secondary" className="text-xs">
+                          {item.platform}
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                 </div>
                 <div className="flex items-center justify-between">

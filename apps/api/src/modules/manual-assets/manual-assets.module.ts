@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 
 import { PrismaModule } from '../../core/prisma/prisma.module';
+import { CollectiblesValuationModule } from '../collectibles-valuation/collectibles-valuation.module';
 import { ZillowModule } from '../integrations/zillow/zillow.module';
 import { SpacesModule } from '../spaces/spaces.module';
 import { StorageModule } from '../storage/storage.module';
@@ -12,7 +13,7 @@ import { PEAnalyticsService } from './pe-analytics.service';
 import { RealEstateValuationService } from './real-estate-valuation.service';
 
 @Module({
-  imports: [PrismaModule, SpacesModule, StorageModule, ZillowModule],
+  imports: [PrismaModule, SpacesModule, StorageModule, ZillowModule, CollectiblesValuationModule],
   controllers: [ManualAssetsController],
   providers: [ManualAssetsService, PEAnalyticsService, DocumentService, RealEstateValuationService],
   exports: [ManualAssetsService, PEAnalyticsService, DocumentService, RealEstateValuationService],

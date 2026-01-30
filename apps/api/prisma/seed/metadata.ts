@@ -197,8 +197,35 @@ export async function seedMetadata(prisma: PrismaClient, ctx: SeedContext) {
       { userId: ctx.mariaUser.id, type: 'goal_milestone', title: 'Goal Milestone Reached', message: 'Congratulations! Your Family Trip to Europe goal is now 62.5% funded.', createdAt: subDays(new Date(), 4) },
       { userId: ctx.carlosUser.id, type: 'exchange_rate', title: 'Exchange Rate Alert', message: 'MXN/USD rate moved above 17.50. Your USD holdings are now worth more in pesos.', createdAt: subDays(new Date(), 2) },
       { userId: ctx.carlosUser.id, type: 'subscription_renewal', title: 'Subscription Renewal Warning', message: 'Adobe Creative Cloud ($55/mo) renews in 3 days. Annual plan saves $24/yr.', createdAt: subDays(new Date(), 1) },
+      { userId: ctx.diegoUser.id, type: 'staking_reward', title: 'AXS Staking Unlock', message: 'Your 200 AXS staking unlock is scheduled in 14 days. Current APY: 42%. Consider restaking.', createdAt: subDays(new Date(), 1) },
+      { userId: ctx.diegoUser.id, type: 'staking_reward', title: 'ILV Revenue Distribution', message: 'Illuvium Q1 revenue distribution: 1.2 sILV earned from 30 ILV staked (18% APY).', createdAt: subDays(new Date(), 3) },
+      { userId: ctx.diegoUser.id, type: 'staking_reward', title: 'Gala Node Payout', message: 'Monthly Gala Node rewards: 7,500 GALA ($150). Node uptime: 99.8%.', createdAt: subDays(new Date(), 2) },
+      { userId: ctx.diegoUser.id, type: 'nft_price_alert', title: 'IMX Marketplace Sale', message: 'Your Gods Unchained Genesis Card sold for 900 IMX ($450) on Immutable Marketplace.', createdAt: subDays(new Date(), 5) },
+      // Patricia additional
+      { userId: ctx.adminUser.id, type: 'budget_alert', title: 'Budget Alert: R&D', message: 'R&D spending at 78% with 3 months remaining in annual budget.', createdAt: subDays(new Date(), 3) },
+      { userId: ctx.adminUser.id, type: 'sync_complete', title: 'Chase Sync Complete', message: 'Chase Business Checking synced — 12 new transactions detected.', read: true, readAt: subDays(new Date(), 1), createdAt: subDays(new Date(), 1) },
+      { userId: ctx.adminUser.id, type: 'goal_milestone', title: 'Portfolio Milestone', message: 'Your total portfolio has exceeded $5M. Review asset allocation recommendations.', createdAt: subDays(new Date(), 7) },
+      { userId: ctx.adminUser.id, type: 'security_alert', title: 'New Device Login', message: 'New login from iPad Pro in CDMX. Verify this was you.', createdAt: subDays(new Date(), 2) },
+      // Guest additional
+      { userId: ctx.guestUser.id, type: 'budget_alert', title: 'Budget Alert: Rent', message: 'Rent category at 95% of monthly budget — $600 remaining.', createdAt: subDays(new Date(), 1) },
+      { userId: ctx.guestUser.id, type: 'exchange_rate', title: 'Exchange Rate Alert', message: 'MXN/USD moved from 17.15 to 17.85 (+4.1%) this week. Your USD assets gained value.', createdAt: subDays(new Date(), 2) },
+      // Maria additional
+      { userId: ctx.mariaUser.id, type: 'subscription_renewal', title: 'Netflix Renewal', message: 'Netflix ($199 MXN/mo) renews tomorrow. Manage subscriptions to review.', createdAt: subDays(new Date(), 1) },
+      { userId: ctx.mariaUser.id, type: 'budget_alert', title: 'Budget Alert: Groceries', message: 'Groceries spending at 90% ($5,400 of $6,000) with 8 days remaining.', createdAt: subDays(new Date(), 3) },
+      // Carlos additional
+      { userId: ctx.carlosUser.id, type: 'goal_milestone', title: 'Restaurant Fund 50%', message: 'Your "Second Restaurant Location" fund has reached 50% ($750K of $1.5M).', createdAt: subDays(new Date(), 5) },
+      { userId: ctx.carlosUser.id, type: 'sync_complete', title: 'Business Accounts Synced', message: 'All 3 Tacos El Patrón business accounts synced. 28 new transactions.', read: true, readAt: subDays(new Date(), 1), createdAt: subDays(new Date(), 1) },
+      // Diego DeFi/L2 alerts
+      { userId: ctx.diegoUser.id, type: 'defi_alert', title: 'Arbitrum GMX Position', message: 'Your GMX ETH/USD perp is up +$180 (+7.2%). Consider taking partial profit.', createdAt: subDays(new Date(), 1) },
+      { userId: ctx.diegoUser.id, type: 'defi_alert', title: 'Aerodrome LP Yield', message: 'Aerodrome ETH/USDC LP on Base earning 12.5% APY — above your 10% target.', createdAt: subDays(new Date(), 2) },
+      { userId: ctx.diegoUser.id, type: 'defi_alert', title: 'Radiant Lending Rate', message: 'Radiant USDC lending rate on Arbitrum dropped to 5.8% from 7.2%. Review position.', createdAt: subDays(new Date(), 4) },
+      // Diego bridge/cross-chain
+      { userId: ctx.diegoUser.id, type: 'defi_alert', title: 'Bridge Complete', message: 'ETH → Arbitrum bridge complete. 0.5 ETH arrived on Arbitrum.', read: true, readAt: subDays(new Date(), 6), createdAt: subDays(new Date(), 6) },
+      { userId: ctx.diegoUser.id, type: 'defi_alert', title: 'YGG Guild Update', message: 'YGG scholarship program Q1 earnings: $420. Guild rank improved to Silver.', createdAt: subDays(new Date(), 8) },
+      // Patricia report
+      { userId: ctx.adminUser.id, type: 'sync_complete', title: 'Monthly Report Ready', message: 'Your January 2026 financial report is ready. View net worth trends and spending analysis.', createdAt: subDays(new Date(), 1) },
     ],
   });
 
-  console.log('  ✓ Created 16 notifications');
+  console.log('  ✓ Created 39 notifications');
 }

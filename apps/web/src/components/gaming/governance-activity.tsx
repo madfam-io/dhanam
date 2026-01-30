@@ -11,6 +11,7 @@ interface Proposal {
   status: 'active' | 'passed' | 'rejected';
   votedAt?: string;
   userVote?: 'for' | 'against' | 'abstain';
+  dao?: string;
 }
 
 interface GovernanceActivityProps {
@@ -65,6 +66,7 @@ export function GovernanceActivity({
             <div key={proposal.id} className="flex items-center justify-between p-2 rounded border">
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate">{proposal.title}</p>
+                {proposal.dao && <p className="text-xs text-muted-foreground">{proposal.dao}</p>}
                 {proposal.votedAt && (
                   <p className="text-xs text-muted-foreground">Voted: {proposal.userVote}</p>
                 )}

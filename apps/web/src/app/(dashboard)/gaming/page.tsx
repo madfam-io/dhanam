@@ -1,25 +1,158 @@
 'use client';
 
+import { useState } from 'react';
 import { Gamepad2 } from 'lucide-react';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@dhanam/ui';
 import { Currency } from '@dhanam/shared';
 import { formatCurrency } from '~/lib/utils';
 
-import { SandOverview } from '@/components/gaming/sand-overview';
+import { PlatformSelector, type MetaversePlatform } from '@/components/gaming/platform-selector';
+import { MultiPlatformOverview } from '@/components/gaming/multi-platform-overview';
+import { EarningsByPlatform } from '@/components/gaming/earnings-by-platform';
+import { GuildTracker } from '@/components/gaming/guild-tracker';
+import { CrossChainView } from '@/components/gaming/cross-chain-view';
 import { LandPortfolio } from '@/components/gaming/land-portfolio';
 import { NftGallery } from '@/components/gaming/nft-gallery';
-import { GamingEarningsChart } from '@/components/gaming/gaming-earnings-chart';
 import { GovernanceActivity } from '@/components/gaming/governance-activity';
 
-// Mock data — in production these would come from the gaming API
-const MOCK_PARCELS = [
+// Mock data — in production these would come from GET /gaming/portfolio
+const PLATFORM_DATA = [
+  {
+    platform: 'sandbox',
+    label: 'The Sandbox',
+    chain: 'polygon',
+    totalValueUsd: 14550,
+    tokensCount: 1,
+    stakingValueUsd: 6750,
+    stakingApy: 8.5,
+    landCount: 3,
+    nftCount: 0,
+    monthlyEarningsUsd: 503,
+  },
+  {
+    platform: 'axie',
+    label: 'Axie Infinity',
+    chain: 'ronin',
+    totalValueUsd: 4850,
+    tokensCount: 2,
+    stakingValueUsd: 1400,
+    stakingApy: 42,
+    landCount: 0,
+    nftCount: 3,
+    monthlyEarningsUsd: 284,
+  },
+  {
+    platform: 'illuvium',
+    label: 'Illuvium',
+    chain: 'immutable-zkevm',
+    totalValueUsd: 6200,
+    tokensCount: 1,
+    stakingValueUsd: 2100,
+    stakingApy: 18,
+    landCount: 1,
+    nftCount: 1,
+    monthlyEarningsUsd: 180,
+  },
+  {
+    platform: 'star-atlas',
+    label: 'Star Atlas',
+    chain: 'solana',
+    totalValueUsd: 2800,
+    tokensCount: 2,
+    stakingValueUsd: 320,
+    stakingApy: 15,
+    landCount: 0,
+    nftCount: 2,
+    monthlyEarningsUsd: 29,
+  },
+  {
+    platform: 'gala',
+    label: 'Gala Games',
+    chain: 'galachain',
+    totalValueUsd: 3400,
+    tokensCount: 1,
+    stakingValueUsd: 0,
+    landCount: 1,
+    nftCount: 1,
+    monthlyEarningsUsd: 190,
+  },
+  {
+    platform: 'enjin',
+    label: 'Enjin',
+    chain: 'ethereum',
+    totalValueUsd: 1850,
+    tokensCount: 1,
+    stakingValueUsd: 0,
+    landCount: 0,
+    nftCount: 2,
+    monthlyEarningsUsd: 45,
+  },
+  {
+    platform: 'immutable',
+    label: 'Immutable',
+    chain: 'immutable-zkevm',
+    totalValueUsd: 2100,
+    tokensCount: 1,
+    stakingValueUsd: 1000,
+    stakingApy: 12,
+    landCount: 0,
+    nftCount: 2,
+    monthlyEarningsUsd: 75,
+  },
+];
+
+const EARNINGS_DATA = [
+  { platform: 'sandbox', source: 'staking', amountUsd: 48, color: '#F1C40F' },
+  { platform: 'sandbox', source: 'rental', amountUsd: 135, color: '#E67E22' },
+  { platform: 'sandbox', source: 'creator', amountUsd: 320, color: '#9B59B6' },
+  { platform: 'axie', source: 'scholarship', amountUsd: 200, color: '#3498DB' },
+  { platform: 'axie', source: 'staking', amountUsd: 49, color: '#2980B9' },
+  { platform: 'axie', source: 'p2e', amountUsd: 35, color: '#1ABC9C' },
+  { platform: 'illuvium', source: 'staking', amountUsd: 32, color: '#8E44AD' },
+  { platform: 'illuvium', source: 'p2e', amountUsd: 148, color: '#9B59B6' },
+  { platform: 'star-atlas', source: 'staking', amountUsd: 4, color: '#34495E' },
+  { platform: 'star-atlas', source: 'p2e', amountUsd: 25, color: '#2C3E50' },
+  { platform: 'gala', source: 'node_rewards', amountUsd: 150, color: '#E74C3C' },
+  { platform: 'gala', source: 'p2e', amountUsd: 40, color: '#C0392B' },
+  { platform: 'enjin', source: 'marketplace', amountUsd: 45, color: '#1ABC9C' },
+  { platform: 'immutable', source: 'staking', amountUsd: 10, color: '#2ECC71' },
+  { platform: 'immutable', source: 'marketplace', amountUsd: 65, color: '#27AE60' },
+];
+
+const GUILD_DATA = [
+  {
+    platform: 'axie',
+    guildName: 'Ronin Raiders',
+    role: 'manager' as const,
+    scholarCount: 5,
+    revenueSharePercent: 30,
+    monthlyIncomeUsd: 200,
+  },
+];
+
+const CHAIN_DATA = [
+  { chain: 'polygon', totalValueUsd: 14550, platformCount: 1, platforms: ['sandbox'] },
+  {
+    chain: 'immutable-zkevm',
+    totalValueUsd: 8300,
+    platformCount: 2,
+    platforms: ['illuvium', 'immutable'],
+  },
+  { chain: 'ronin', totalValueUsd: 4850, platformCount: 1, platforms: ['axie'] },
+  { chain: 'galachain', totalValueUsd: 3400, platformCount: 1, platforms: ['gala'] },
+  { chain: 'solana', totalValueUsd: 2800, platformCount: 1, platforms: ['star-atlas'] },
+  { chain: 'ethereum', totalValueUsd: 1850, platformCount: 1, platforms: ['enjin'] },
+];
+
+const ALL_PARCELS = [
   {
     coordinates: '(-12, 45)',
     size: '3x3',
     acquiredDate: '2022-01-15',
     rentalStatus: 'rented' as const,
     monthlyRental: 150,
+    platform: 'The Sandbox',
   },
   {
     coordinates: '(8, -22)',
@@ -27,28 +160,20 @@ const MOCK_PARCELS = [
     acquiredDate: '2022-06-10',
     rentalStatus: 'rented' as const,
     monthlyRental: 150,
+    platform: 'The Sandbox',
   },
   {
     coordinates: '(31, 17)',
     size: '1x1',
     acquiredDate: '2023-03-01',
     rentalStatus: 'vacant' as const,
+    platform: 'The Sandbox',
   },
-  {
-    coordinates: '(5, 60)',
-    size: '1x1',
-    acquiredDate: '2023-06-15',
-    rentalStatus: 'vacant' as const,
-  },
-  {
-    coordinates: '(-3, -8)',
-    size: '1x1',
-    acquiredDate: '2023-09-01',
-    rentalStatus: 'vacant' as const,
-  },
+  { tier: 'Tier 3', rentalStatus: 'self-use' as const, platform: 'Illuvium' },
+  { rentalStatus: 'self-use' as const, platform: 'Gala Games' },
 ];
 
-const MOCK_NFTS = [
+const ALL_NFTS = [
   {
     name: 'BAYC #7291',
     collection: 'Bored Ape Yacht Club',
@@ -62,43 +187,106 @@ const MOCK_NFTS = [
     acquisitionCost: 1200,
   },
   { name: 'diegonavarro.eth', collection: 'ENS', currentValue: 3200, acquisitionCost: 800 },
+  {
+    name: 'Axie #12451 (Aqua)',
+    collection: 'Axie Infinity',
+    currentValue: 120,
+    acquisitionCost: 250,
+    platform: 'Axie',
+    chain: 'ronin',
+  },
+  {
+    name: 'Axie #31020 (Beast)',
+    collection: 'Axie Infinity',
+    currentValue: 750,
+    acquisitionCost: 400,
+    platform: 'Axie',
+    chain: 'ronin',
+  },
+  {
+    name: 'Illuvial #2847',
+    collection: 'Illuvium',
+    currentValue: 280,
+    acquisitionCost: 150,
+    platform: 'Illuvium',
+    chain: 'immutable-zkevm',
+  },
+  {
+    name: 'Pearce X5 Fighter',
+    collection: 'Star Atlas Ships',
+    currentValue: 650,
+    acquisitionCost: 400,
+    platform: 'Star Atlas',
+    chain: 'solana',
+  },
+  {
+    name: 'Gods Unchained Genesis',
+    collection: 'Gods Unchained',
+    currentValue: 450,
+    acquisitionCost: 200,
+    platform: 'Immutable',
+    chain: 'immutable-zkevm',
+  },
+  {
+    name: 'Enjin Legendary Sword',
+    collection: 'Lost Relics',
+    currentValue: 320,
+    acquisitionCost: 200,
+    platform: 'Enjin',
+    chain: 'ethereum',
+  },
 ];
 
-const MOCK_EARNINGS = [
-  { label: 'Staking Rewards', amount: 57, color: '#F1C40F' },
-  { label: 'LAND Rental', amount: 135, color: '#E67E22' },
-  { label: 'Creator Revenue', amount: 320, color: '#9B59B6' },
-  { label: 'P2E Earnings', amount: 85, color: '#2ECC71' },
-];
-
-const MOCK_PROPOSALS = [
-  { id: 'SIP-42', title: 'SIP-42: Creator Fund Allocation Q1 2026', status: 'active' as const },
+const ALL_PROPOSALS = [
+  {
+    id: 'SIP-42',
+    title: 'SIP-42: Creator Fund Allocation Q1 2026',
+    status: 'active' as const,
+    dao: 'Sandbox DAO',
+  },
   {
     id: 'SIP-41',
     title: 'SIP-41: LAND Staking Rewards Increase',
     status: 'passed' as const,
     votedAt: '2025-12-15',
     userVote: 'for' as const,
+    dao: 'Sandbox DAO',
   },
   {
-    id: 'SIP-40',
-    title: 'SIP-40: Marketplace Fee Reduction',
+    id: 'AXS-12',
+    title: 'AXS-12: Ronin Bridge Security Upgrade',
+    status: 'active' as const,
+    dao: 'Axie DAO',
+  },
+  {
+    id: 'ILV-7',
+    title: 'ILV-7: Revenue Distribution Increase',
     status: 'passed' as const,
-    votedAt: '2025-11-20',
+    votedAt: '2025-11-01',
     userVote: 'for' as const,
-  },
-  {
-    id: 'SIP-39',
-    title: 'SIP-39: Cross-chain Bridge Proposal',
-    status: 'rejected' as const,
-    votedAt: '2025-10-01',
-    userVote: 'against' as const,
+    dao: 'Illuvium DAO',
   },
 ];
 
 export default function GamingPage() {
-  const totalGamingAssets = 7800 + 18500 + 850 + 3200 + 15000 * 0.45;
-  const monthlyIncome = MOCK_EARNINGS.reduce((sum, e) => sum + e.amount, 0);
+  const [selectedPlatform, setSelectedPlatform] = useState<MetaversePlatform>('all');
+
+  const totalGamingAssets = PLATFORM_DATA.reduce((s, p) => s + p.totalValueUsd, 0);
+  const totalMonthlyIncome = EARNINGS_DATA.reduce((s, e) => s + e.amountUsd, 0);
+  const totalNfts = ALL_NFTS.length;
+  const platformTotals = Object.fromEntries(
+    PLATFORM_DATA.map((p) => [p.platform, p.totalValueUsd])
+  );
+
+  const filteredPlatforms =
+    selectedPlatform === 'all'
+      ? PLATFORM_DATA
+      : PLATFORM_DATA.filter((p) => p.platform === selectedPlatform);
+
+  const filteredEarnings =
+    selectedPlatform === 'all'
+      ? EARNINGS_DATA
+      : EARNINGS_DATA.filter((e) => e.platform === selectedPlatform);
 
   return (
     <div className="space-y-6">
@@ -108,9 +296,16 @@ export default function GamingPage() {
           Gaming Dashboard
         </h2>
         <p className="text-muted-foreground">
-          Track your metaverse assets, earnings, and governance activity
+          Track your multi-platform metaverse assets, earnings, and governance
         </p>
       </div>
+
+      {/* Platform Selector */}
+      <PlatformSelector
+        selected={selectedPlatform}
+        onSelect={setSelectedPlatform}
+        platformTotals={platformTotals}
+      />
 
       {/* Summary Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -122,7 +317,7 @@ export default function GamingPage() {
             <div className="text-2xl font-bold">
               {formatCurrency(totalGamingAssets, Currency.USD)}
             </div>
-            <p className="text-xs text-muted-foreground">Across LAND, NFTs, and staked SAND</p>
+            <p className="text-xs text-muted-foreground">Across {PLATFORM_DATA.length} platforms</p>
           </CardContent>
         </Card>
 
@@ -132,47 +327,56 @@ export default function GamingPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {formatCurrency(monthlyIncome, Currency.USD)}
+              {formatCurrency(totalMonthlyIncome, Currency.USD)}
             </div>
-            <p className="text-xs text-muted-foreground">Rental + Staking + Creator + P2E</p>
+            <p className="text-xs text-muted-foreground">Staking + P2E + Scholarships + Nodes</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">SAND Staked</CardTitle>
+            <CardTitle className="text-sm font-medium">Platforms Connected</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">15,000</div>
-            <p className="text-xs text-muted-foreground">8.5% APY</p>
+            <div className="text-2xl font-bold">{PLATFORM_DATA.length}</div>
+            <p className="text-xs text-muted-foreground">{CHAIN_DATA.length} chains</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Active LAND Parcels</CardTitle>
+            <CardTitle className="text-sm font-medium">NFTs Owned</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">5</div>
-            <p className="text-xs text-muted-foreground">2 rented, 3 vacant</p>
+            <div className="text-2xl font-bold">{totalNfts}</div>
+            <p className="text-xs text-muted-foreground">Across all platforms</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Main Content Grid */}
       <div className="grid gap-6 lg:grid-cols-2">
-        <SandOverview sandStaked={15000} stakingApy={8.5} monthlyReward={106.25} />
-
-        <LandPortfolio parcels={MOCK_PARCELS} floorPriceUsd={1450} totalValueUsd={7800} />
-
-        <NftGallery items={MOCK_NFTS} totalValueUsd={22550} />
-
-        <GamingEarningsChart earnings={MOCK_EARNINGS} totalMonthly={monthlyIncome} />
+        <MultiPlatformOverview platforms={filteredPlatforms} />
+        <EarningsByPlatform
+          earnings={filteredEarnings}
+          totalMonthlyUsd={filteredEarnings.reduce((s, e) => s + e.amountUsd, 0)}
+        />
+        <CrossChainView chains={CHAIN_DATA} totalValueUsd={totalGamingAssets} />
+        <GuildTracker guilds={GUILD_DATA} />
+        <LandPortfolio
+          parcels={ALL_PARCELS}
+          floorPriceUsd={1450}
+          totalValueUsd={ALL_PARCELS.length * 1450}
+        />
+        <NftGallery
+          items={ALL_NFTS}
+          totalValueUsd={ALL_NFTS.reduce((s, n) => s + n.currentValue, 0)}
+        />
       </div>
 
       {/* Governance Activity */}
       <GovernanceActivity
-        proposals={MOCK_PROPOSALS}
+        proposals={ALL_PROPOSALS}
         totalVotesCast={14}
         votingPower={15000}
         votingPowerToken="SAND"

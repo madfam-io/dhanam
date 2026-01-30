@@ -102,6 +102,9 @@ module.exports = {
     // document.service.ts moved to Phase 2 completed
     '!src/modules/manual-assets/pe-analytics.service.ts', // PE analytics
     '!src/modules/manual-assets/real-estate-valuation.service.ts', // Real estate valuation
+    '!src/modules/collectibles-valuation/collectibles-valuation.service.ts', // Collectibles valuation orchestrator
+    '!src/modules/collectibles-valuation/adapters/*.ts', // Collectible provider adapters (external APIs)
+    '!src/modules/collectibles-valuation/collectibles-valuation.processor.ts', // BullMQ processor
     '!src/modules/users/activity-tracker.service.ts', // User activity tracking
   ],
   coverageThreshold: {

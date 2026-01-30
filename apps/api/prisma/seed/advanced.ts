@@ -86,10 +86,56 @@ export async function seedAdvanced(prisma: PrismaClient, ctx: SeedContext) {
         status: 'completed',
         executionTimeMs: 4560,
       },
+      {
+        userId: ctx.diegoUser.id,
+        spaceId: ctx.diegoSpace.id,
+        type: SimulationType.scenario_analysis,
+        config: {
+          label: 'Multi-Platform P2E Income Projection',
+          scenarios: ['bull', 'base', 'bear'],
+          horizon_years: 3,
+          platforms: {
+            sandbox: { monthly: 503, growth: 0.12, volatility: 0.35 },
+            axie: { monthly: 284, growth: 0.08, volatility: 0.45 },
+            illuvium: { monthly: 180, growth: 0.15, volatility: 0.40 },
+            gala: { monthly: 190, growth: 0.10, volatility: 0.50 },
+            star_atlas: { monthly: 29, growth: 0.20, volatility: 0.55 },
+          },
+        },
+        result: {
+          bull: { total_income_3y: 128000, portfolio_value: 52000, probability: 0.20 },
+          base: { total_income_3y: 85000, portfolio_value: 38000, probability: 0.55 },
+          bear: { total_income_3y: 32000, portfolio_value: 18000, probability: 0.25 },
+          weighted_monthly_income: 2361,
+        },
+        status: 'completed',
+        executionTimeMs: 3450,
+      },
+      {
+        userId: ctx.diegoUser.id,
+        spaceId: ctx.diegoSpace.id,
+        type: SimulationType.scenario_analysis,
+        config: {
+          label: 'Cross-Chain Portfolio Risk',
+          scenarios: ['chain_hack', 'market_crash', 'regulatory'],
+          chains: ['ethereum', 'polygon', 'ronin', 'solana', 'galachain', 'immutable-zkevm'],
+          total_value: 35750,
+          correlation_matrix: 'high-correlation gaming tokens',
+        },
+        result: {
+          chain_hack: { max_loss: 8200, affected_chains: ['ronin'], probability: 0.05 },
+          market_crash: { max_loss: 21450, drawdown_pct: 60, probability: 0.15 },
+          regulatory: { max_loss: 14300, affected_pct: 40, probability: 0.10 },
+          risk_score: 72,
+          diversification_score: 68,
+        },
+        status: 'completed',
+        executionTimeMs: 4120,
+      },
     ],
   });
 
-  console.log('  ✓ Created 4 simulations');
+  console.log('  ✓ Created 6 simulations');
 
   // 2. ACCOUNT SHARING PERMISSIONS (Yours/Mine/Ours)
   console.log('\n🔐 Creating account sharing permissions...');
@@ -382,6 +428,109 @@ export async function seedAdvanced(prisma: PrismaClient, ctx: SeedContext) {
       { spaceId: ctx.guestSpace.id, transactionId: guestTxns[4].id, originalCategoryId: transportCat.id, correctedCategoryId: utilitiesCat.id, merchantPattern: 'cabify', descriptionPattern: null, confidence: 0.80, createdBy: ctx.guestUser.id, appliedToFuture: true },
       { spaceId: ctx.guestSpace.id, transactionId: guestTxns[5].id, originalCategoryId: shoppingCat.id, correctedCategoryId: entertainmentCat.id, merchantPattern: 'coppel', descriptionPattern: 'coppel gaming', confidence: 0.55, createdBy: ctx.guestUser.id, appliedToFuture: false },
     );
+  }
+
+  // Maria corrections
+  const mariaCategories = await prisma.category.findMany({ where: { budget: { spaceId: ctx.mariaSpace.id } } });
+  const mariaTxns = await prisma.transaction.findMany({
+    where: { account: { spaceId: ctx.mariaSpace.id } },
+    take: 10,
+    orderBy: { date: 'desc' },
+  });
+  const mariaTransportCat = mariaCategories.find(c => c.name === 'Transportation');
+  const mariaFoodCat = mariaCategories.find(c => c.name === 'Food & Dining');
+  const mariaShoppingCat = mariaCategories.find(c => c.name === 'Shopping' || c.name === 'Groceries');
+  const mariaEntertainmentCat = mariaCategories.find(c => c.name === 'Entertainment');
+  const mariaGroceryCat = mariaCategories.find(c => c.name === 'Groceries');
+
+  if (mariaTxns.length >= 4 && mariaTransportCat && mariaFoodCat) {
+    correctionRows.push(
+      { spaceId: ctx.mariaSpace.id, transactionId: mariaTxns[0].id, originalCategoryId: mariaTransportCat.id, correctedCategoryId: mariaFoodCat.id, merchantPattern: 'uber eats', descriptionPattern: 'uber eats mx', confidence: 0.70, createdBy: ctx.mariaUser.id, appliedToFuture: true },
+      { spaceId: ctx.mariaSpace.id, transactionId: mariaTxns[1].id, originalCategoryId: mariaShoppingCat?.id ?? mariaFoodCat.id, correctedCategoryId: mariaFoodCat.id, merchantPattern: 'rappi', descriptionPattern: 'rappi', confidence: 0.62, createdBy: ctx.mariaUser.id, appliedToFuture: true },
+    );
+    if (mariaEntertainmentCat && mariaGroceryCat && mariaTxns.length >= 6) {
+      correctionRows.push(
+        { spaceId: ctx.mariaSpace.id, transactionId: mariaTxns[2].id, originalCategoryId: mariaEntertainmentCat.id, correctedCategoryId: mariaGroceryCat.id, merchantPattern: 'costco', descriptionPattern: 'costco', confidence: 0.55, createdBy: ctx.mariaUser.id, appliedToFuture: true },
+        { spaceId: ctx.mariaSpace.id, transactionId: mariaTxns[3].id, originalCategoryId: mariaGroceryCat.id, correctedCategoryId: mariaEntertainmentCat.id, merchantPattern: 'cinepolis', descriptionPattern: 'cinepolis', confidence: 0.78, createdBy: ctx.mariaUser.id, appliedToFuture: true },
+      );
+    }
+  }
+
+  // Carlos corrections
+  const carlosPersonalCategories = await prisma.category.findMany({ where: { budget: { spaceId: ctx.carlosPersonal.id } } });
+  const carlosBusinessCategories = await prisma.category.findMany({ where: { budget: { spaceId: ctx.carlosBusiness.id } } });
+  const carlosPersonalTxns = await prisma.transaction.findMany({
+    where: { account: { spaceId: ctx.carlosPersonal.id } },
+    take: 6,
+    orderBy: { date: 'desc' },
+  });
+  const carlosBusinessTxns = await prisma.transaction.findMany({
+    where: { account: { spaceId: ctx.carlosBusiness.id } },
+    take: 6,
+    orderBy: { date: 'desc' },
+  });
+
+  const carlosPersonalShopping = carlosPersonalCategories.find(c => c.name === 'Shopping');
+  const carlosBusinessSupplies = carlosBusinessCategories.find(c => c.name === 'Supplies' || c.name === 'Equipment');
+  const carlosBusinessMarketing = carlosBusinessCategories.find(c => c.name === 'Marketing');
+  const carlosBusinessRent = carlosBusinessCategories.find(c => c.name === 'Rent');
+
+  if (carlosBusinessTxns.length >= 4 && carlosBusinessSupplies && carlosBusinessMarketing) {
+    correctionRows.push(
+      { spaceId: ctx.carlosBusiness.id, transactionId: carlosBusinessTxns[0].id, originalCategoryId: carlosBusinessMarketing.id, correctedCategoryId: carlosBusinessSupplies.id, merchantPattern: 'office depot', descriptionPattern: 'office depot', confidence: 0.68, createdBy: ctx.carlosUser.id, appliedToFuture: true },
+    );
+    if (carlosBusinessRent) {
+      correctionRows.push(
+        { spaceId: ctx.carlosBusiness.id, transactionId: carlosBusinessTxns[1].id, originalCategoryId: carlosBusinessRent.id, correctedCategoryId: carlosBusinessSupplies.id, merchantPattern: 'home depot', descriptionPattern: 'home depot business', confidence: 0.60, createdBy: ctx.carlosUser.id, appliedToFuture: false },
+      );
+    }
+  }
+
+  // Diego corrections
+  const diegoCategories = await prisma.category.findMany({ where: { budget: { spaceId: ctx.diegoSpace.id } } });
+  const diegoTxns = await prisma.transaction.findMany({
+    where: { account: { spaceId: ctx.diegoSpace.id } },
+    take: 10,
+    orderBy: { date: 'desc' },
+  });
+  const diegoTransportCat = diegoCategories.find(c => c.name === 'Transportation');
+  const diegoGasFeeCat = diegoCategories.find(c => c.name === 'Gas Fees');
+  const diegoCryptoCat = diegoCategories.find(c => c.name === 'Crypto Investments');
+  const diegoEntertainmentCat = diegoCategories.find(c => c.name === 'Entertainment');
+
+  if (diegoTxns.length >= 4 && diegoTransportCat && diegoGasFeeCat) {
+    correctionRows.push(
+      { spaceId: ctx.diegoSpace.id, transactionId: diegoTxns[0].id, originalCategoryId: diegoTransportCat.id, correctedCategoryId: diegoGasFeeCat.id, merchantPattern: 'ethereum gas', descriptionPattern: 'gas fee', confidence: 0.82, createdBy: ctx.diegoUser.id, appliedToFuture: true },
+    );
+    if (diegoCryptoCat && diegoEntertainmentCat) {
+      correctionRows.push(
+        { spaceId: ctx.diegoSpace.id, transactionId: diegoTxns[1].id, originalCategoryId: diegoEntertainmentCat.id, correctedCategoryId: diegoCryptoCat.id, merchantPattern: 'sandbox', descriptionPattern: 'sandbox land', confidence: 0.75, createdBy: ctx.diegoUser.id, appliedToFuture: true },
+        { spaceId: ctx.diegoSpace.id, transactionId: diegoTxns[2].id, originalCategoryId: diegoTransportCat.id, correctedCategoryId: diegoGasFeeCat.id, merchantPattern: 'polygon gas', descriptionPattern: 'polygon bridge fee', confidence: 0.80, createdBy: ctx.diegoUser.id, appliedToFuture: true },
+      );
+    }
+  }
+
+  // Patricia corrections
+  const patriciaCategories = await prisma.category.findMany({ where: { budget: { spaceId: ctx.enterpriseSpace.id } } });
+  const patriciaTxns = await prisma.transaction.findMany({
+    where: { account: { spaceId: ctx.enterpriseSpace.id } },
+    take: 6,
+    orderBy: { date: 'desc' },
+  });
+  const patriciaMarketing = patriciaCategories.find(c => c.name === 'Marketing');
+  const patriciaInfra = patriciaCategories.find(c => c.name === 'Infrastructure');
+  const patriciaOps = patriciaCategories.find(c => c.name === 'Operations');
+  const patriciaTravel = patriciaCategories.find(c => c.name === 'Travel');
+
+  if (patriciaTxns.length >= 4 && patriciaMarketing && patriciaInfra) {
+    correctionRows.push(
+      { spaceId: ctx.enterpriseSpace.id, transactionId: patriciaTxns[0].id, originalCategoryId: patriciaMarketing.id, correctedCategoryId: patriciaInfra.id, merchantPattern: 'aws', descriptionPattern: 'aws', confidence: 0.85, createdBy: ctx.adminUser.id, appliedToFuture: true },
+    );
+    if (patriciaOps && patriciaTravel) {
+      correctionRows.push(
+        { spaceId: ctx.enterpriseSpace.id, transactionId: patriciaTxns[1].id, originalCategoryId: patriciaOps.id, correctedCategoryId: patriciaTravel.id, merchantPattern: 'uber business', descriptionPattern: 'uber business travel', confidence: 0.72, createdBy: ctx.adminUser.id, appliedToFuture: true },
+      );
+    }
   }
 
   if (correctionRows.length > 0) {
