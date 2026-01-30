@@ -491,6 +491,8 @@ model Space {
   connectionAttempts ConnectionAttempt[]
   subscriptions      Subscription[]
   incomeEvents       IncomeEvent[]
+  savedReports       SavedReport[]
+  cashflowForecasts  CashflowForecast[]
 
   @@index([householdId])
   @@map("spaces")
@@ -1722,4 +1724,39 @@ model AccountSharingPermission {
   @@index([sharedWithId])
   @@index([accountId, canView])
   @@map("account_sharing_permissions")
+}
+
+model SavedReport {
+  id        String    @id @default(cuid())
+  spaceId   String    @map("space_id")
+  name      String
+  type      String    // monthly_spending, quarterly_net_worth, annual_tax, custom
+  schedule  String?   // cron expression or null for on-demand
+  format    String    @default("pdf") // pdf, csv
+  filters   Json?     // date range, categories, accounts
+  lastRunAt DateTime? @map("last_run_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  space Space @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+
+  @@index([spaceId])
+  @@map("saved_reports")
+}
+
+model CashflowForecast {
+  id          String   @id @default(cuid())
+  spaceId     String   @map("space_id")
+  startDate   DateTime @map("start_date") @db.Date
+  endDate     DateTime @map("end_date") @db.Date
+  weeks       Json     // Array of { weekStart, income, expenses, net, balance }
+  confidence  Float    @default(0.85)
+  generatedAt DateTime @default(now()) @map("generated_at")
+
+  // Relations
+  space Space @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+
+  @@index([spaceId])
+  @@map("cashflow_forecasts")
 }

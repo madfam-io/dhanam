@@ -355,4 +355,66 @@ export async function seedMetadata(prisma: PrismaClient, ctx: SeedContext) {
   });
 
   console.log('  ✓ Created 39 notifications');
+
+  // 6. SAVED REPORTS
+  console.log('\n📄 Creating saved reports...');
+
+  await prisma.savedReport.createMany({
+    data: [
+      { spaceId: ctx.guestSpace.id, name: 'Monthly Spending Summary', type: 'monthly_spending', schedule: '0 9 1 * *', format: 'pdf', filters: { dateRange: 'last_month', categories: 'all' }, lastRunAt: subDays(new Date(), 7) },
+      { spaceId: ctx.mariaSpace.id, name: 'Zero-Based Budget Report', type: 'monthly_spending', schedule: '0 9 1 * *', format: 'pdf', filters: { dateRange: 'last_month', includeAllocations: true } },
+      { spaceId: ctx.enterpriseSpace.id, name: 'Quarterly Net Worth', type: 'quarterly_net_worth', schedule: '0 9 1 */3 *', format: 'pdf', filters: { dateRange: 'last_quarter', includeAssets: true } },
+      { spaceId: ctx.carlosBusiness.id, name: 'Annual Tax Summary', type: 'annual_tax', schedule: '0 9 15 1 *', format: 'csv', filters: { dateRange: 'last_year', categories: 'all', includeDeductions: true } },
+    ],
+  });
+
+  console.log('  ✓ Created 4 saved reports');
+
+  // 7. CASHFLOW FORECASTS
+  console.log('\n📈 Creating cashflow forecasts...');
+
+  const forecastStart = new Date();
+  forecastStart.setHours(0, 0, 0, 0);
+
+  function generateWeeks(weeklyIncome: number, weeklyExpenses: number, startBalance: number, variance: number) {
+    const weeks = [];
+    let balance = startBalance;
+    for (let w = 0; w < 8; w++) {
+      const weekStart = addDays(forecastStart, w * 7);
+      const inc = weeklyIncome * (1 + (Math.random() - 0.5) * variance);
+      const exp = weeklyExpenses * (1 + (Math.random() - 0.5) * variance);
+      const net = inc - exp;
+      balance += net;
+      weeks.push({ weekStart: weekStart.toISOString(), income: Math.round(inc), expenses: Math.round(exp), net: Math.round(net), balance: Math.round(balance) });
+    }
+    return weeks;
+  }
+
+  await prisma.cashflowForecast.createMany({
+    data: [
+      {
+        spaceId: ctx.guestSpace.id,
+        startDate: forecastStart,
+        endDate: addDays(forecastStart, 56),
+        weeks: generateWeeks(11250, 9500, 85000, 0.1),
+        confidence: 0.85,
+      },
+      {
+        spaceId: ctx.mariaSpace.id,
+        startDate: forecastStart,
+        endDate: addDays(forecastStart, 56),
+        weeks: generateWeeks(10500, 10000, 42000, 0.12),
+        confidence: 0.82,
+      },
+      {
+        spaceId: ctx.carlosBusiness.id,
+        startDate: forecastStart,
+        endDate: addDays(forecastStart, 56),
+        weeks: generateWeeks(46250, 38000, 320000, 0.18),
+        confidence: 0.78,
+      },
+    ],
+  });
+
+  console.log('  ✓ Created 3 cashflow forecasts (8-week projections)');
 }

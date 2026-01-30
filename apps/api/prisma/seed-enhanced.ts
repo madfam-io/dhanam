@@ -49,7 +49,7 @@ async function main() {
   console.log('  - 1 Platform admin');
   console.log('  - 6 Spaces with budgets');
   console.log('  - 34 Connected accounts (incl. BTC, Decentraland, YGG, Arbitrum, Base)');
-  console.log('  - 19 Manual assets (real estate, insurance, 529, annuity, wine, classic car)');
+  console.log('  - 23 Manual assets (real estate, insurance, 529, annuity, wine, classic car, PCGS coin, PSA card)');
   console.log('  - 8 PE cash flows');
   console.log('  - 16 Recurring transactions');
   console.log('  - 10 Subscriptions');
@@ -73,6 +73,8 @@ async function main() {
   console.log('  - 50+ Audit logs (all personas + admin operations)');
   console.log('  - Trust ownership (Patricia Vanguard)');
   console.log('  - Token vesting metadata (Diego UNI)');
+  console.log('  - 4 Saved reports (monthly, quarterly, annual)');
+  console.log('  - 3 Cashflow forecasts (8-week projections)');
   console.log('  - Household, estate planning, goals, rules');
   console.log('\n🎉 Demo environment ready!');
 }
