@@ -4,7 +4,6 @@ import { NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../core/prisma/prisma.service';
 import { RedisService } from '../../core/redis/redis.service';
 import { CollectiblesValuationService } from './collectibles-valuation.service';
-import { SneaksAdapter } from './adapters/sneaks.adapter';
 import { ArtsyAdapter } from './adapters/artsy.adapter';
 import { WatchChartsAdapter } from './adapters/watchcharts.adapter';
 import { WineSearcherAdapter } from './adapters/wine-searcher.adapter';
@@ -42,7 +41,6 @@ describe('CollectiblesValuationService', () => {
     healthCheck: jest.fn(),
   });
 
-  const mockSneaks = makeMockAdapter('sneaks', 'sneaker');
   const mockArtsy = makeMockAdapter('artsy', 'art');
   const mockWatchCharts = makeMockAdapter('watchcharts', 'watch');
   const mockWineSearcher = makeMockAdapter('wine-searcher', 'wine');
@@ -57,7 +55,6 @@ describe('CollectiblesValuationService', () => {
         CollectiblesValuationService,
         { provide: PrismaService, useValue: mockPrisma },
         { provide: RedisService, useValue: mockRedis },
-        { provide: SneaksAdapter, useValue: mockSneaks },
         { provide: ArtsyAdapter, useValue: mockArtsy },
         { provide: WatchChartsAdapter, useValue: mockWatchCharts },
         { provide: WineSearcherAdapter, useValue: mockWineSearcher },
@@ -76,7 +73,7 @@ describe('CollectiblesValuationService', () => {
     const mockResults: CatalogItem[] = [
       {
         externalId: 'CW2288-111',
-        provider: 'sneaks',
+        provider: 'kicksdb',
         category: 'sneaker',
         name: 'Air Jordan 1 Chicago',
         currency: 'USD',
@@ -86,11 +83,11 @@ describe('CollectiblesValuationService', () => {
 
     it('should delegate to the correct adapter by category', async () => {
       mockRedis.get.mockResolvedValue(null);
-      mockSneaks.search.mockResolvedValue(mockResults);
+      mockKicksDb.search.mockResolvedValue(mockResults);
 
       const result = await service.search('sneaker', 'jordan', 10);
 
-      expect(mockSneaks.search).toHaveBeenCalledWith('jordan', 10);
+      expect(mockKicksDb.search).toHaveBeenCalledWith('jordan', 10);
       expect(result).toEqual(mockResults);
     });
 
@@ -100,7 +97,7 @@ describe('CollectiblesValuationService', () => {
       const result = await service.search('sneaker', 'jordan', 10);
 
       expect(result).toEqual(mockResults);
-      expect(mockSneaks.search).not.toHaveBeenCalled();
+      expect(mockKicksDb.search).not.toHaveBeenCalled();
     });
 
     it('should throw NotFoundException for unknown category', async () => {
@@ -114,17 +111,17 @@ describe('CollectiblesValuationService', () => {
     it('should delegate to the correct adapter', async () => {
       const mockVal: ValuationResult = {
         externalId: 'CW2288-111',
-        provider: 'sneaks',
+        provider: 'kicksdb',
         marketValue: 320,
         currency: 'USD',
-        source: 'sneaks',
+        source: 'kicksdb',
         fetchedAt: new Date(),
       };
-      mockSneaks.getValuation.mockResolvedValue(mockVal);
+      mockKicksDb.getValuation.mockResolvedValue(mockVal);
 
       const result = await service.getValuation('sneaker', 'CW2288-111');
 
-      expect(mockSneaks.getValuation).toHaveBeenCalledWith('CW2288-111');
+      expect(mockKicksDb.getValuation).toHaveBeenCalledWith('CW2288-111');
       expect(result).toEqual(mockVal);
     });
   });
@@ -148,9 +145,9 @@ describe('CollectiblesValuationService', () => {
         spaceId,
         metadata: {},
       });
-      mockSneaks.getValuation.mockResolvedValue(null);
+      mockKicksDb.getValuation.mockResolvedValue(null);
 
-      await service.linkAsset(spaceId, assetId, 'CW2288-111', 'sneaks', 'sneaker');
+      await service.linkAsset(spaceId, assetId, 'CW2288-111', 'kicksdb', 'sneaker');
 
       expect(mockPrisma.manualAsset.update).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -159,7 +156,7 @@ describe('CollectiblesValuationService', () => {
             metadata: expect.objectContaining({
               collectible: expect.objectContaining({
                 category: 'sneaker',
-                provider: 'sneaks',
+                provider: 'kicksdb',
                 externalId: 'CW2288-111',
                 valuationEnabled: true,
               }),
@@ -173,7 +170,7 @@ describe('CollectiblesValuationService', () => {
       mockPrisma.manualAsset.findFirst.mockResolvedValue(null);
 
       await expect(
-        service.linkAsset(spaceId, assetId, 'CW2288-111', 'sneaks', 'sneaker'),
+        service.linkAsset(spaceId, assetId, 'CW2288-111', 'kicksdb', 'sneaker'),
       ).rejects.toThrow(NotFoundException);
     });
   });
@@ -187,7 +184,7 @@ describe('CollectiblesValuationService', () => {
         id: assetId,
         spaceId,
         metadata: {
-          collectible: { category: 'sneaker', provider: 'sneaks', externalId: 'X', valuationEnabled: true },
+          collectible: { category: 'sneaker', provider: 'kicksdb', externalId: 'X', valuationEnabled: true },
           otherField: 'keep',
         },
       });
@@ -228,18 +225,18 @@ describe('CollectiblesValuationService', () => {
         metadata: {
           collectible: {
             category: 'sneaker',
-            provider: 'sneaks',
+            provider: 'kicksdb',
             externalId: 'CW2288-111',
             valuationEnabled: true,
           },
         },
       });
-      mockSneaks.getValuation.mockResolvedValue({
+      mockKicksDb.getValuation.mockResolvedValue({
         externalId: 'CW2288-111',
-        provider: 'sneaks',
+        provider: 'kicksdb',
         marketValue: 350,
         currency: 'USD',
-        source: 'sneaks',
+        source: 'kicksdb',
         fetchedAt: new Date(),
       });
       mockPrisma.manualAsset.update.mockResolvedValue({});
@@ -281,13 +278,13 @@ describe('CollectiblesValuationService', () => {
         metadata: {
           collectible: {
             category: 'sneaker',
-            provider: 'sneaks',
+            provider: 'kicksdb',
             externalId: 'CW2288-111',
             valuationEnabled: true,
           },
         },
       });
-      mockSneaks.getValuation.mockResolvedValue(null);
+      mockKicksDb.getValuation.mockResolvedValue(null);
 
       const result = await service.refreshAsset(spaceId, assetId);
 
@@ -304,13 +301,13 @@ describe('CollectiblesValuationService', () => {
         metadata: {
           collectible: {
             category: 'sneaker',
-            provider: 'sneaks',
+            provider: 'kicksdb',
             externalId: 'CW2288-111',
             valuationEnabled: true,
           },
         },
       });
-      mockSneaks.getValuation.mockRejectedValue(new Error('API timeout'));
+      mockKicksDb.getValuation.mockRejectedValue(new Error('API timeout'));
 
       const result = await service.refreshAsset(spaceId, assetId);
 
@@ -339,11 +336,11 @@ describe('CollectiblesValuationService', () => {
     it('should return all adapters with correct availability', () => {
       const result = service.getAvailableCategories();
 
-      expect(result.length).toBeGreaterThanOrEqual(8);
+      expect(result.length).toBeGreaterThanOrEqual(7);
 
-      const sneaks = result.find((c) => c.provider === 'sneaks');
-      expect(sneaks).toBeDefined();
-      expect(sneaks!.available).toBe(true);
+      const kicksdb = result.find((c) => c.provider === 'kicksdb');
+      expect(kicksdb).toBeDefined();
+      expect(kicksdb!.available).toBe(true);
 
       const artsy = result.find((c) => c.provider === 'artsy');
       expect(artsy).toBeDefined();

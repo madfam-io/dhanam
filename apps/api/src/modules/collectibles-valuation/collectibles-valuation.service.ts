@@ -8,7 +8,7 @@ import { HagertyAdapter } from './adapters/hagerty.adapter';
 import { KicksDbAdapter } from './adapters/kicksdb.adapter';
 import { PcgsAdapter } from './adapters/pcgs.adapter';
 import { PsaAdapter } from './adapters/psa.adapter';
-import { SneaksAdapter } from './adapters/sneaks.adapter';
+
 import { WatchChartsAdapter } from './adapters/watchcharts.adapter';
 import { WineSearcherAdapter } from './adapters/wine-searcher.adapter';
 import type {
@@ -39,7 +39,6 @@ export class CollectiblesValuationService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly redis: RedisService,
-    private readonly sneaksAdapter: SneaksAdapter,
     private readonly artsyAdapter: ArtsyAdapter,
     private readonly watchChartsAdapter: WatchChartsAdapter,
     private readonly wineSearcherAdapter: WineSearcherAdapter,
@@ -49,7 +48,6 @@ export class CollectiblesValuationService {
     private readonly kicksDbAdapter: KicksDbAdapter
   ) {
     const allAdapters: CollectibleProviderAdapter[] = [
-      sneaksAdapter,
       artsyAdapter,
       watchChartsAdapter,
       wineSearcherAdapter,
@@ -243,8 +241,7 @@ export class CollectiblesValuationService {
       categories.push({
         category: adapter.category,
         provider: adapter.provider,
-        // sneaks is the only working adapter
-        available: adapter.provider === 'sneaks',
+        available: adapter.provider === 'kicksdb',
       });
     }
 

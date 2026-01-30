@@ -510,7 +510,7 @@ export class ManualAssetsController {
       required: ['externalId', 'provider', 'category'],
       properties: {
         externalId: { type: 'string', description: 'Provider-specific item ID' },
-        provider: { type: 'string', description: 'Provider name (e.g. sneaks)' },
+        provider: { type: 'string', description: 'Provider name (e.g. kicksdb)' },
         category: { type: 'string', description: 'Collectible category (e.g. sneaker)' },
       },
     },

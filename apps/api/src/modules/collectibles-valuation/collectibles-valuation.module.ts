@@ -8,7 +8,7 @@ import { HagertyAdapter } from './adapters/hagerty.adapter';
 import { KicksDbAdapter } from './adapters/kicksdb.adapter';
 import { PcgsAdapter } from './adapters/pcgs.adapter';
 import { PsaAdapter } from './adapters/psa.adapter';
-import { SneaksAdapter } from './adapters/sneaks.adapter';
+
 import { WatchChartsAdapter } from './adapters/watchcharts.adapter';
 import { WineSearcherAdapter } from './adapters/wine-searcher.adapter';
 import { CollectiblesValuationProcessor } from './collectibles-valuation.processor';
@@ -18,7 +18,6 @@ import { CollectiblesValuationService } from './collectibles-valuation.service';
   imports: [PrismaModule, RedisModule],
   providers: [
     // Adapters
-    SneaksAdapter,
     ArtsyAdapter,
     WatchChartsAdapter,
     WineSearcherAdapter,
