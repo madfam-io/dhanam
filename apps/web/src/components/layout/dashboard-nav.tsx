@@ -17,6 +17,7 @@ import {
   Users,
   ScrollText,
   Landmark,
+  Gamepad2,
 } from 'lucide-react';
 
 const navigation = [
@@ -69,6 +70,11 @@ const navigation = [
     name: 'ESG Insights',
     href: '/esg',
     icon: Leaf,
+  },
+  {
+    name: 'Gaming',
+    href: '/gaming',
+    icon: Gamepad2,
   },
   {
     name: 'Retirement',

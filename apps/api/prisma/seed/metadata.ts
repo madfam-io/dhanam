@@ -104,6 +104,133 @@ export async function seedMetadata(prisma: PrismaClient, ctx: SeedContext) {
     await prisma.incomeAllocation.createMany({ data: freelanceAllocRows });
   }
 
+  // Carlos Business space zero-based budgeting
+  console.log('\n💵 Creating Carlos & Patricia income events...');
+
+  const carlosCategories = await prisma.category.findMany({
+    where: { budget: { spaceId: ctx.carlosBusiness.id } },
+  });
+
+  for (let month = 2; month >= 0; month--) {
+    const consultingDate = subMonths(new Date(), month);
+    const revenueDate = addDays(consultingDate, 10);
+
+    const consultingEvent = await prisma.incomeEvent.create({
+      data: {
+        spaceId: ctx.carlosBusiness.id,
+        amount: 65000,
+        currency: Currency.MXN,
+        source: 'consulting',
+        description: 'IT consulting retainer - monthly',
+        receivedAt: consultingDate,
+        isAllocated: true,
+      },
+    });
+
+    const revenueEvent = await prisma.incomeEvent.create({
+      data: {
+        spaceId: ctx.carlosBusiness.id,
+        amount: 120000,
+        currency: Currency.MXN,
+        source: 'business_revenue',
+        description: 'Tacos El Patrón - monthly revenue',
+        receivedAt: revenueDate,
+        isAllocated: true,
+      },
+    });
+
+    const consultingAllocs = [
+      { name: 'Office Rent', amount: 35000 },
+      { name: 'Inventory', amount: 15000 },
+      { name: 'Savings', amount: 15000 },
+    ];
+    const consultingRows: Array<{ incomeEventId: string; categoryId: string; amount: number }> = [];
+    for (const alloc of consultingAllocs) {
+      const cat = carlosCategories.find(c => c.name === alloc.name);
+      if (cat) consultingRows.push({ incomeEventId: consultingEvent.id, categoryId: cat.id, amount: alloc.amount });
+    }
+    if (consultingRows.length) await prisma.incomeAllocation.createMany({ data: consultingRows });
+
+    const revenueAllocs = [
+      { name: 'Inventory', amount: 40000 },
+      { name: 'Payroll', amount: 50000 },
+      { name: 'Savings', amount: 30000 },
+    ];
+    const revenueRows: Array<{ incomeEventId: string; categoryId: string; amount: number }> = [];
+    for (const alloc of revenueAllocs) {
+      const cat = carlosCategories.find(c => c.name === alloc.name);
+      if (cat) revenueRows.push({ incomeEventId: revenueEvent.id, categoryId: cat.id, amount: alloc.amount });
+    }
+    if (revenueRows.length) await prisma.incomeAllocation.createMany({ data: revenueRows });
+  }
+
+  // Patricia enterprise space zero-based budgeting
+  const patriciaCategories = await prisma.category.findMany({
+    where: { budget: { spaceId: ctx.enterpriseSpace.id } },
+  });
+
+  for (let month = 2; month >= 0; month--) {
+    const salaryDate = subMonths(new Date(), month);
+    const bonusDate = month === 0 ? addDays(salaryDate, 20) : null;
+
+    const salaryEvent = await prisma.incomeEvent.create({
+      data: {
+        spaceId: ctx.enterpriseSpace.id,
+        amount: 180000,
+        currency: Currency.MXN,
+        source: 'salary',
+        description: 'Monthly salary - VP Engineering',
+        receivedAt: salaryDate,
+        isAllocated: true,
+      },
+    });
+
+    const salaryAllocs = [
+      { name: 'Rent', amount: 45000 },
+      { name: 'Savings', amount: 60000 },
+      { name: 'Groceries', amount: 20000 },
+      { name: 'R&D', amount: 25000 },
+      { name: 'Entertainment', amount: 15000 },
+      { name: 'Utilities', amount: 15000 },
+    ];
+    const salaryRows: Array<{ incomeEventId: string; categoryId: string; amount: number }> = [];
+    for (const alloc of salaryAllocs) {
+      const cat = patriciaCategories.find(c => c.name === alloc.name);
+      if (cat) salaryRows.push({ incomeEventId: salaryEvent.id, categoryId: cat.id, amount: alloc.amount });
+    }
+    if (salaryRows.length) await prisma.incomeAllocation.createMany({ data: salaryRows });
+
+    // Bonus for current month only
+    if (bonusDate) {
+      const bonusEvent = await prisma.incomeEvent.create({
+        data: {
+          spaceId: ctx.enterpriseSpace.id,
+          amount: 500000,
+          currency: Currency.MXN,
+          source: 'bonus',
+          description: 'Annual performance bonus + RSU vesting',
+          receivedAt: bonusDate,
+          isAllocated: true,
+        },
+      });
+
+      const bonusAllocs = [
+        { name: 'Savings', amount: 350000 },
+        { name: 'Entertainment', amount: 50000 },
+        { name: 'R&D', amount: 100000 },
+      ];
+      const bonusRows: Array<{ incomeEventId: string; categoryId: string; amount: number }> = [];
+      for (const alloc of bonusAllocs) {
+        const cat = patriciaCategories.find(c => c.name === alloc.name);
+        if (cat) bonusRows.push({ incomeEventId: bonusEvent.id, categoryId: cat.id, amount: alloc.amount });
+      }
+      if (bonusRows.length) await prisma.incomeAllocation.createMany({ data: bonusRows });
+    }
+  }
+
+  console.log('  ✓ Created Carlos business income events (consulting + revenue × 3 months)');
+  console.log('  ✓ Created Patricia enterprise income events (salary × 3 + bonus)');
+
   // Category goals
   const categoryGoalData = [
     { name: 'Rent', goalType: 'monthly_spending' as const, targetAmount: 15000, monthlyFunding: 15000 },

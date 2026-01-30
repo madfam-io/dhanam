@@ -18,7 +18,7 @@ export async function seedFeatures(prisma: PrismaClient, ctx: SeedContext) {
           currency: Currency.MXN,
           acquisitionDate: new Date('2020-03-15'),
           acquisitionCost: 3500000,
-          metadata: { address: 'Av. Amsterdam 245', city: 'CDMX', state: 'CDMX', sqft: 95, propertyType: 'condo', bedrooms: 2, bathrooms: 2 },
+          metadata: { address: 'Av. Amsterdam 245', city: 'CDMX', state: 'CDMX', sqft: 95, propertyType: 'condo', bedrooms: 2, bathrooms: 2, documents: [{ key: 'property-deed-condo.pdf', name: 'Property Deed', type: 'application/pdf', size: 245000, uploadedAt: '2024-01-15' }, { key: 'appraisal-2024.pdf', name: '2024 Appraisal', type: 'application/pdf', size: 180000, uploadedAt: '2024-06-01' }] },
         },
       }),
       prisma.manualAsset.create({
@@ -31,7 +31,7 @@ export async function seedFeatures(prisma: PrismaClient, ctx: SeedContext) {
           currency: Currency.MXN,
           acquisitionDate: new Date('2022-06-01'),
           acquisitionCost: 890000,
-          metadata: { make: 'Tesla', model: 'Model 3', year: 2022, mileage: 35000, vin: '5YJ3E1EA1NF000001' },
+          metadata: { make: 'Tesla', model: 'Model 3', year: 2022, mileage: 35000, vin: '5YJ3E1EA1NF000001', documents: [{ key: 'tesla-title.pdf', name: 'Vehicle Title', type: 'application/pdf', size: 120000, uploadedAt: '2022-06-15' }] },
         },
       }),
       prisma.manualAsset.create({
@@ -44,7 +44,7 @@ export async function seedFeatures(prisma: PrismaClient, ctx: SeedContext) {
           currency: Currency.USD,
           acquisitionDate: new Date('2021-09-01'),
           acquisitionCost: 50000,
-          metadata: { companyName: 'Sequoia Capital', investmentDate: '2021-09-01', ownershipPercentage: 0.001, shares: 50, shareClass: 'LP' },
+          metadata: { companyName: 'Sequoia Capital', investmentDate: '2021-09-01', ownershipPercentage: 0.001, shares: 50, shareClass: 'LP', documents: [{ key: 'sequoia-lpa.pdf', name: 'LP Agreement', type: 'application/pdf', size: 520000, uploadedAt: '2021-09-15' }, { key: 'sequoia-k1-2023.pdf', name: '2023 K-1', type: 'application/pdf', size: 95000, uploadedAt: '2024-03-15' }] },
         },
       }),
       prisma.manualAsset.create({
@@ -57,7 +57,7 @@ export async function seedFeatures(prisma: PrismaClient, ctx: SeedContext) {
           currency: Currency.MXN,
           acquisitionDate: new Date('2019-11-20'),
           acquisitionCost: 120000,
-          metadata: { category: 'lithograph', year: 1944, condition: 'excellent', authenticity: 'verified' },
+          metadata: { category: 'lithograph', year: 1944, condition: 'excellent', authenticity: 'verified', collectible: { category: 'art', provider: 'artsy', externalId: 'frida-kahlo-self-portrait-litho-23', valuationEnabled: false }, documents: [{ key: 'frida-certificate.pdf', name: 'Certificate of Authenticity', type: 'application/pdf', size: 310000, uploadedAt: '2019-12-01' }] },
         },
       }),
       prisma.manualAsset.create({
@@ -182,7 +182,7 @@ export async function seedFeatures(prisma: PrismaClient, ctx: SeedContext) {
         currency: Currency.USD,
         acquisitionDate: new Date('2019-04-10'),
         acquisitionCost: 380000,
-        metadata: { address: 'Av. Presidente Masaryk 320 PH', city: 'CDMX', state: 'CDMX', sqft: 220, propertyType: 'penthouse', bedrooms: 3, bathrooms: 3, zillowId: 'zpid-9876543' },
+        metadata: { address: 'Av. Presidente Masaryk 320 PH', city: 'CDMX', state: 'CDMX', sqft: 220, propertyType: 'penthouse', bedrooms: 3, bathrooms: 3, zillowId: 'zpid-9876543', documents: [{ key: 'penthouse-deed.pdf', name: 'Property Deed', type: 'application/pdf', size: 310000, uploadedAt: '2019-05-01' }, { key: 'penthouse-appraisal-2024.pdf', name: '2024 Appraisal', type: 'application/pdf', size: 200000, uploadedAt: '2024-08-15' }] },
       },
     }),
     prisma.manualAsset.create({
@@ -238,7 +238,7 @@ export async function seedFeatures(prisma: PrismaClient, ctx: SeedContext) {
         currency: Currency.MXN,
         acquisitionDate: new Date('2021-03-20'),
         acquisitionCost: 180000,
-        metadata: { make: 'Volkswagen', model: 'Beetle', year: 1967, condition: 'restored', mileage: 42000, color: 'Lotus White' },
+        metadata: { make: 'Volkswagen', model: 'Beetle', year: 1967, condition: 'restored', mileage: 42000, color: 'Lotus White', collectible: { category: 'car', provider: 'hagerty', externalId: 'vw-beetle-1967', valuationEnabled: false }, documents: [{ key: 'beetle-title.pdf', name: 'Vehicle Title', type: 'application/pdf', size: 98000, uploadedAt: '2021-04-01' }, { key: 'beetle-restoration.pdf', name: 'Restoration Certificate', type: 'application/pdf', size: 220000, uploadedAt: '2021-03-20' }] },
       },
     }),
     prisma.manualAsset.create({
@@ -251,7 +251,7 @@ export async function seedFeatures(prisma: PrismaClient, ctx: SeedContext) {
         currency: Currency.MXN,
         acquisitionDate: new Date('2020-08-15'),
         acquisitionCost: 32000,
-        metadata: { bottles: 24, regions: ['Napa Valley', 'Rioja'], topBottles: ['Opus One 2018', 'Vega Sicilia Unico 2012'], insured: true, storageLocation: 'Climate-controlled cellar' },
+        metadata: { bottles: 24, regions: ['Napa Valley', 'Rioja'], topBottles: ['Opus One 2018', 'Vega Sicilia Unico 2012'], insured: true, storageLocation: 'Climate-controlled cellar', collectible: { category: 'wine', provider: 'wine-searcher', externalId: 'collection-carlos-24', valuationEnabled: false, lastProviderSync: null }, documents: [{ key: 'wine-insurance.pdf', name: 'Insurance Certificate', type: 'application/pdf', size: 150000, uploadedAt: '2024-02-10' }] },
       },
     }),
     prisma.manualAsset.create({
@@ -264,13 +264,45 @@ export async function seedFeatures(prisma: PrismaClient, ctx: SeedContext) {
         currency: Currency.USD,
         acquisitionDate: new Date('2022-04-10'),
         acquisitionCost: 9100,
-        metadata: { brand: 'Rolex', model: 'Submariner Date', reference: '126610LN', serialPrefix: '3YK', purchasedFrom: 'AD México', boxAndPapers: true },
+        metadata: { brand: 'Rolex', model: 'Submariner Date', reference: '126610LN', serialPrefix: '3YK', purchasedFrom: 'AD México', boxAndPapers: true, collectible: { category: 'watch', provider: 'watchcharts', externalId: 'rolex-126610ln', valuationEnabled: false }, documents: [{ key: 'rolex-warranty.pdf', name: 'Warranty Card', type: 'application/pdf', size: 85000, uploadedAt: '2022-04-10' }] },
       },
     }),
   ]);
 
+  // Sneaker collectible assets (sneaks adapter is the only working adapter)
+  const [mariaSneaker, carlosSneaker] = await Promise.all([
+    prisma.manualAsset.create({
+      data: {
+        spaceId: ctx.mariaSpace.id,
+        name: 'Nike Air Force 1 Low White',
+        type: 'collectible',
+        description: 'Nike Air Force 1 Low White — DS, size 8W',
+        currentValue: 120,
+        currency: Currency.USD,
+        acquisitionDate: new Date('2024-06-01'),
+        acquisitionCost: 110,
+        metadata: { collectible: { category: 'sneaker', provider: 'sneaks', externalId: 'CW2288-111', valuationEnabled: true, lastProviderSync: new Date().toISOString() } },
+      },
+    }),
+    prisma.manualAsset.create({
+      data: {
+        spaceId: ctx.carlosPersonal.id,
+        name: 'Jordan 1 Retro High OG Chicago',
+        type: 'collectible',
+        description: 'Air Jordan 1 Retro High OG "Chicago" 2015 — size 10, VNDS',
+        currentValue: 1850,
+        currency: Currency.USD,
+        acquisitionDate: new Date('2023-09-15'),
+        acquisitionCost: 1200,
+        metadata: { collectible: { category: 'sneaker', provider: 'sneaks', externalId: '555088-101', valuationEnabled: true, lastProviderSync: new Date().toISOString() }, documents: [{ key: 'jordan-receipt.pdf', name: 'Purchase Receipt', type: 'application/pdf', size: 45000, uploadedAt: '2023-09-15' }] },
+      },
+    }),
+  ]);
+
+  console.log('  ✓ Created 2 sneaker collectible assets (sneaks adapter)');
+
   // Batch valuation history for all manual assets
-  const allManualAssets = [carlosCondo, carlosTesla, patriciaPE, patriciaArt, diegoLand, diegoBayc, diegoWearables, diegoDomain, patriciaAngel, patriciaJewelry, carlosJewelry, diegoSandboxPortfolio, patriciaPenthouse, patriciaLifeInsurance, patricia529, patriciaAnnuity, carlosBeetle, carlosWine, carlosRolex];
+  const allManualAssets = [carlosCondo, carlosTesla, patriciaPE, patriciaArt, diegoLand, diegoBayc, diegoWearables, diegoDomain, patriciaAngel, patriciaJewelry, carlosJewelry, diegoSandboxPortfolio, patriciaPenthouse, patriciaLifeInsurance, patricia529, patriciaAnnuity, carlosBeetle, carlosWine, carlosRolex, mariaSneaker, carlosSneaker];
   const valuationRows: Array<{
     assetId: string;
     date: Date;
@@ -308,7 +340,7 @@ export async function seedFeatures(prisma: PrismaClient, ctx: SeedContext) {
     ],
   });
 
-  console.log('  ✓ Created 19 manual assets with valuation history');
+  console.log('  ✓ Created 21 manual assets with valuation history');
   console.log('  ✓ Created 8 PE cash flows for Sequoia fund');
 
   // 2. RECURRING TRANSACTIONS (batch)

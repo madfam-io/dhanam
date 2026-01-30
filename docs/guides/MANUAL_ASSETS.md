@@ -17,7 +17,7 @@ Manual Asset Entry enables tracking of illiquid and alternative assets that cann
   - Square footage
   - Property type (single-family, condo, commercial)
   - Bedrooms, bathrooms
-- **Valuation Integration:** Future integration with Zillow/Redfin APIs
+- **Valuation Integration:** Zillow Zestimate API (implemented — link, refresh, unlink via `property-detail.tsx`)
 
 ### 2. Vehicles
 - **Use Case:** Cars, boats, aircraft, RVs
@@ -61,6 +61,19 @@ Manual Asset Entry enables tracking of illiquid and alternative assets that cann
   - Condition rating
   - Authenticity certification
 - **Appraisal Tracking:** Store appraisal reports
+- **Provider Integration:** Automated valuations via adapter-based system
+  - `sneaks` (sneakers) — **active**, free API
+  - `watchcharts` (watches) — scaffolded
+  - `artsy` (art) — scaffolded
+  - `wine-searcher` (wine) — scaffolded
+  - `pcgs` (coins) — scaffolded
+  - `psa` (trading cards) — scaffolded
+  - `hagerty` (classic cars) — scaffolded
+  - `kicksdb` (sneakers, secondary) — scaffolded
+- **Linking Flow:** Search catalog → select item → link to asset → auto-refresh valuations
+- **UI Components:**
+  - `collectible-link-modal.tsx` — Search & link dialog (category selector, debounced search, results grid)
+  - `collectible-detail.tsx` — Provider status, refresh/link/unlink actions, valuation range display
 
 ### 7. Art
 - **Use Case:** Fine art, sculptures, photography
@@ -347,6 +360,8 @@ ZILLOW_API_KEY=your_zillow_api_key
 ---
 
 ## Document Management
+
+Seed data includes document metadata on real estate (deeds, appraisals), vehicles (titles), collectibles (certificates, receipts), and PE assets (LP agreements, K-1s).
 
 ### Document Storage (Cloudflare R2)
 

@@ -34,6 +34,7 @@ jest.mock('lucide-react', () => {
     Users: icon('Users'),
     ScrollText: icon('ScrollText'),
     Landmark: icon('Landmark'),
+    Gamepad2: icon('Gamepad2'),
   };
 });
 
@@ -52,6 +53,7 @@ const expectedLinks = [
   { name: 'Estate Planning', href: '/estate-planning' },
   { name: 'Analytics', href: '/analytics' },
   { name: 'ESG Insights', href: '/esg' },
+  { name: 'Gaming', href: '/gaming' },
   { name: 'Retirement', href: '/retirement' },
   { name: 'Scenarios', href: '/scenarios' },
   { name: 'Reports', href: '/reports' },

@@ -986,6 +986,86 @@ Manually refresh the valuation from the linked provider.
 
 ---
 
+## Gaming / Metaverse Economy
+
+Multi-platform gaming asset tracking with staking, P2E earnings, guild management, and governance.
+
+### GET /gaming/portfolio
+Get aggregated gaming portfolio for a space.
+
+**Query Parameters:**
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| spaceId | string | Yes | Space identifier |
+
+**Response:**
+```json
+{
+  "platforms": [
+    {
+      "platform": "sandbox",
+      "label": "The Sandbox",
+      "chain": "polygon",
+      "totalValueUsd": 14550,
+      "tokensCount": 1,
+      "stakingValueUsd": 6750,
+      "stakingApy": 8.5,
+      "landCount": 3,
+      "nftCount": 0,
+      "monthlyEarningsUsd": 503
+    }
+  ],
+  "earnings": [
+    { "platform": "sandbox", "source": "staking", "amountUsd": 48, "color": "#F1C40F" }
+  ],
+  "guilds": [
+    {
+      "platform": "axie",
+      "guildName": "Ronin Raiders",
+      "role": "manager",
+      "scholarCount": 5,
+      "revenueSharePercent": 30,
+      "monthlyIncomeUsd": 200
+    }
+  ],
+  "chains": [
+    { "chain": "polygon", "totalValueUsd": 14550, "platformCount": 1, "platforms": ["sandbox"] }
+  ],
+  "parcels": [
+    { "coordinates": "(-12, 45)", "size": "3x3", "rentalStatus": "rented", "monthlyRental": 150, "platform": "The Sandbox" }
+  ],
+  "nfts": [
+    { "name": "BAYC #7291", "collection": "Bored Ape Yacht Club", "currentValue": 18500, "acquisitionCost": 32000 }
+  ],
+  "proposals": [
+    { "id": "SIP-42", "title": "Creator Fund Allocation Q1 2026", "status": "active", "dao": "Sandbox DAO" }
+  ],
+  "totalVotesCast": 14,
+  "votingPower": 15000,
+  "votingPowerToken": "SAND"
+}
+```
+
+### GET /gaming/platforms
+List supported gaming platforms.
+
+### GET /gaming/earnings
+Get earnings streams by platform and source.
+
+**Query Parameters:**
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| spaceId | string | Yes | Space identifier |
+| period | string | No | Time period (e.g. `30d`, `90d`) |
+
+### GET /gaming/nfts
+Get all gaming NFTs for a space.
+
+### GET /gaming/:platform/positions
+Get positions for a specific gaming platform.
+
+---
+
 ## Long-Term Projections
 
 10-30 year cashflow forecasting with Monte Carlo simulation.

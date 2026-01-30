@@ -2,8 +2,10 @@
 
 import { useState } from 'react';
 import { Gamepad2 } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@dhanam/ui';
+import { Skeleton } from '@dhanam/ui';
 import { Currency } from '@dhanam/shared';
 import { formatCurrency } from '~/lib/utils';
 
@@ -15,9 +17,10 @@ import { CrossChainView } from '@/components/gaming/cross-chain-view';
 import { LandPortfolio } from '@/components/gaming/land-portfolio';
 import { NftGallery } from '@/components/gaming/nft-gallery';
 import { GovernanceActivity } from '@/components/gaming/governance-activity';
+import { gamingApi } from '@/lib/api/gaming';
 
-// Mock data — in production these would come from GET /gaming/portfolio
-const PLATFORM_DATA = [
+// Fallback data for development mode
+const FALLBACK_PLATFORM_DATA = [
   {
     platform: 'sandbox',
     label: 'The Sandbox',
@@ -102,7 +105,7 @@ const PLATFORM_DATA = [
   },
 ];
 
-const EARNINGS_DATA = [
+const FALLBACK_EARNINGS_DATA = [
   { platform: 'sandbox', source: 'staking', amountUsd: 48, color: '#F1C40F' },
   { platform: 'sandbox', source: 'rental', amountUsd: 135, color: '#E67E22' },
   { platform: 'sandbox', source: 'creator', amountUsd: 320, color: '#9B59B6' },
@@ -120,7 +123,7 @@ const EARNINGS_DATA = [
   { platform: 'immutable', source: 'marketplace', amountUsd: 65, color: '#27AE60' },
 ];
 
-const GUILD_DATA = [
+const FALLBACK_GUILD_DATA = [
   {
     platform: 'axie',
     guildName: 'Ronin Raiders',
@@ -131,7 +134,7 @@ const GUILD_DATA = [
   },
 ];
 
-const CHAIN_DATA = [
+const FALLBACK_CHAIN_DATA = [
   { chain: 'polygon', totalValueUsd: 14550, platformCount: 1, platforms: ['sandbox'] },
   {
     chain: 'immutable-zkevm',
@@ -145,7 +148,7 @@ const CHAIN_DATA = [
   { chain: 'ethereum', totalValueUsd: 1850, platformCount: 1, platforms: ['enjin'] },
 ];
 
-const ALL_PARCELS = [
+const FALLBACK_PARCELS = [
   {
     coordinates: '(-12, 45)',
     size: '3x3',
@@ -173,7 +176,7 @@ const ALL_PARCELS = [
   { rentalStatus: 'self-use' as const, platform: 'Gala Games' },
 ];
 
-const ALL_NFTS = [
+const FALLBACK_NFTS = [
   {
     name: 'BAYC #7291',
     collection: 'Bored Ape Yacht Club',
@@ -237,7 +240,7 @@ const ALL_NFTS = [
   },
 ];
 
-const ALL_PROPOSALS = [
+const FALLBACK_PROPOSALS = [
   {
     id: 'SIP-42',
     title: 'SIP-42: Creator Fund Allocation Q1 2026',
@@ -271,6 +274,24 @@ const ALL_PROPOSALS = [
 export default function GamingPage() {
   const [selectedPlatform, setSelectedPlatform] = useState<MetaversePlatform>('all');
 
+  // TODO: Replace 'demo-space' with actual spaceId from auth context
+  const spaceId = 'demo-space';
+
+  const { data: portfolio, isLoading, error } = useQuery({
+    queryKey: ['gaming-portfolio', spaceId],
+    queryFn: () => gamingApi.getPortfolio(spaceId),
+    retry: false,
+  });
+
+  // Use API data or fallback to hardcoded dev data
+  const PLATFORM_DATA = portfolio?.platforms ?? FALLBACK_PLATFORM_DATA;
+  const EARNINGS_DATA = portfolio?.earnings ?? FALLBACK_EARNINGS_DATA;
+  const GUILD_DATA = portfolio?.guilds ?? FALLBACK_GUILD_DATA;
+  const CHAIN_DATA = portfolio?.chains ?? FALLBACK_CHAIN_DATA;
+  const ALL_PARCELS = portfolio?.parcels ?? FALLBACK_PARCELS;
+  const ALL_NFTS = portfolio?.nfts ?? FALLBACK_NFTS;
+  const ALL_PROPOSALS = portfolio?.proposals ?? FALLBACK_PROPOSALS;
+
   const totalGamingAssets = PLATFORM_DATA.reduce((s, p) => s + p.totalValueUsd, 0);
   const totalMonthlyIncome = EARNINGS_DATA.reduce((s, e) => s + e.amountUsd, 0);
   const totalNfts = ALL_NFTS.length;
@@ -288,6 +309,33 @@ export default function GamingPage() {
       ? EARNINGS_DATA
       : EARNINGS_DATA.filter((e) => e.platform === selectedPlatform);
 
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight flex items-center gap-2">
+            <Gamepad2 className="h-8 w-8" />
+            Gaming Dashboard
+          </h2>
+          <p className="text-muted-foreground">Loading your gaming portfolio...</p>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Card key={i}>
+              <CardHeader className="pb-2">
+                <Skeleton className="h-4 w-32" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-8 w-24" />
+                <Skeleton className="h-3 w-20 mt-2" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -297,6 +345,9 @@ export default function GamingPage() {
         </h2>
         <p className="text-muted-foreground">
           Track your multi-platform metaverse assets, earnings, and governance
+          {error && !portfolio && (
+            <span className="text-xs text-amber-600 ml-2">(showing demo data)</span>
+          )}
         </p>
       </div>
 
@@ -377,9 +428,9 @@ export default function GamingPage() {
       {/* Governance Activity */}
       <GovernanceActivity
         proposals={ALL_PROPOSALS}
-        totalVotesCast={14}
-        votingPower={15000}
-        votingPowerToken="SAND"
+        totalVotesCast={portfolio?.totalVotesCast ?? 14}
+        votingPower={portfolio?.votingPower ?? 15000}
+        votingPowerToken={portfolio?.votingPowerToken ?? 'SAND'}
       />
     </div>
   );

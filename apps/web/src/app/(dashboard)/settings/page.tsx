@@ -8,6 +8,7 @@ import { Switch } from '@dhanam/ui';
 import { Label } from '@dhanam/ui';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@dhanam/ui';
 import { Separator } from '@dhanam/ui';
+import { Badge } from '@dhanam/ui';
 import {
   Loader2,
   Bell,
@@ -18,14 +19,29 @@ import {
   HardDrive,
   RotateCcw,
   Gauge,
+  CreditCard,
+  ExternalLink,
 } from 'lucide-react';
 import { preferencesApi, UserPreferences } from '@/lib/api/preferences';
+import { billingApi } from '@/lib/api/billing';
 import { UsageOverview } from '~/components/billing/UsageIndicator';
+import { PremiumUpsell } from '~/components/billing/PremiumUpsell';
 import { toast } from 'sonner';
 
 export default function SettingsPage() {
   const queryClient = useQueryClient();
   const [isResetting, setIsResetting] = useState(false);
+  const [isOpeningPortal, setIsOpeningPortal] = useState(false);
+
+  const { data: subscriptionStatus } = useQuery({
+    queryKey: ['billing-status'],
+    queryFn: () => billingApi.getStatus(),
+  });
+
+  const { data: billingHistory } = useQuery({
+    queryKey: ['billing-history'],
+    queryFn: () => billingApi.getHistory(10),
+  });
 
   const {
     data: preferences,
@@ -151,6 +167,99 @@ export default function SettingsPage() {
         </CardHeader>
         <CardContent>
           <UsageOverview />
+        </CardContent>
+      </Card>
+
+      {/* Subscription & Billing */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <CreditCard className="h-5 w-5" />
+            Subscription & Billing
+          </CardTitle>
+          <CardDescription>Manage your subscription plan and billing</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Current Plan */}
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label>Current Plan</Label>
+              <p className="text-sm text-muted-foreground">
+                {subscriptionStatus?.tier === 'premium' ? 'Premium — $9.99/month' : 'Free Plan'}
+              </p>
+            </div>
+            <Badge variant={subscriptionStatus?.tier === 'premium' ? 'default' : 'secondary'}>
+              {subscriptionStatus?.tier === 'premium' ? 'Premium' : 'Free'}
+            </Badge>
+          </div>
+
+          {subscriptionStatus?.tier !== 'premium' && (
+            <>
+              <Separator />
+              <PremiumUpsell context="generic" />
+            </>
+          )}
+
+          {subscriptionStatus?.tier === 'premium' && (
+            <>
+              <Separator />
+              <Button
+                variant="outline"
+                disabled={isOpeningPortal}
+                onClick={async () => {
+                  setIsOpeningPortal(true);
+                  try {
+                    const { portalUrl } = await billingApi.createPortalSession();
+                    window.location.href = portalUrl;
+                  } catch {
+                    toast.error('Failed to open billing portal');
+                    setIsOpeningPortal(false);
+                  }
+                }}
+              >
+                {isOpeningPortal ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <ExternalLink className="mr-2 h-4 w-4" />
+                )}
+                Manage Subscription
+              </Button>
+            </>
+          )}
+
+          {/* Billing History */}
+          {billingHistory && billingHistory.length > 0 && (
+            <>
+              <Separator />
+              <div className="space-y-2">
+                <Label>Recent Billing History</Label>
+                <div className="space-y-1">
+                  {billingHistory.slice(0, 5).map((event) => (
+                    <div
+                      key={event.id}
+                      className="flex items-center justify-between text-sm py-1"
+                    >
+                      <div>
+                        <span className="font-medium">{event.type.replace(/_/g, ' ')}</span>
+                        <span className="text-muted-foreground ml-2">
+                          {new Date(event.createdAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span>${event.amount.toFixed(2)}</span>
+                        <Badge
+                          variant={event.status === 'succeeded' ? 'default' : 'destructive'}
+                          className="text-xs"
+                        >
+                          {event.status}
+                        </Badge>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
         </CardContent>
       </Card>
 
