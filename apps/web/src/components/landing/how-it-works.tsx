@@ -24,9 +24,7 @@ export function HowItWorks() {
     <section className="container mx-auto px-6 py-16">
       <div className="text-center mb-12">
         <h2 className="text-3xl font-bold mb-4">{t('howItWorks.title')}</h2>
-        <p className="text-muted-foreground">
-          {t('howItWorks.subtitle')}
-        </p>
+        <p className="text-muted-foreground">{t('howItWorks.subtitle')}</p>
       </div>
 
       <div className="max-w-5xl mx-auto grid md:grid-cols-4 gap-8">
@@ -45,7 +43,9 @@ export function HowItWorks() {
                 </span>
               </div>
               <h3 className="text-lg font-semibold">{t(`howItWorks.${step.key}.title`)}</h3>
-              <p className="text-sm text-muted-foreground">{t(`howItWorks.${step.key}.description`)}</p>
+              <p className="text-sm text-muted-foreground">
+                {t(`howItWorks.${step.key}.description`)}
+              </p>
             </div>
           );
         })}

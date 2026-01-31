@@ -1,11 +1,12 @@
+import { getGeoDefaults } from '@dhanam/shared';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { getGeoDefaults } from '@dhanam/shared';
 
 import { User } from '@db';
 
 import { PrismaService } from '../prisma/prisma.service';
+
 import { DemoDataBuilder } from './demo-data.builder';
 
 export interface PersonaInfo {
@@ -75,7 +76,7 @@ export class DemoAuthService {
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
-    private configService: ConfigService,
+    private configService: ConfigService
   ) {
     this.demoDataBuilder = new DemoDataBuilder(prisma);
   }
@@ -157,7 +158,7 @@ export class DemoAuthService {
 
   private createDemoTokens(
     user: User,
-    personaKey: string,
+    personaKey: string
   ): { accessToken: string; refreshToken: string; expiresIn: number } {
     const payload = {
       sub: user.id,
@@ -174,7 +175,7 @@ export class DemoAuthService {
       {
         secret: this.configService.get('JWT_REFRESH_SECRET'),
         expiresIn: '4h',
-      },
+      }
     );
 
     return { accessToken, refreshToken, expiresIn: 7200 };

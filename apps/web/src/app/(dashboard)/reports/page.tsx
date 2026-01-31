@@ -180,9 +180,7 @@ export default function ReportsPage() {
             <Download className="h-5 w-5" />
             {t('quickExport.title')}
           </CardTitle>
-          <CardDescription>
-            {t('quickExport.description')}
-          </CardDescription>
+          <CardDescription>{t('quickExport.description')}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap items-end gap-4">
@@ -283,9 +281,7 @@ export default function ReportsPage() {
             <Calendar className="h-5 w-5" />
             {t('custom.title')}
           </CardTitle>
-          <CardDescription>
-            {t('custom.description')}
-          </CardDescription>
+          <CardDescription>{t('custom.description')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-3">

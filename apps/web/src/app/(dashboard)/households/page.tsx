@@ -169,9 +169,7 @@ export default function HouseholdsPage() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">{t('page.title')}</h1>
-          <p className="text-muted-foreground">
-            {t('page.description')}
-          </p>
+          <p className="text-muted-foreground">{t('page.description')}</p>
         </div>
 
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
@@ -184,9 +182,7 @@ export default function HouseholdsPage() {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>{t('dialog.createTitle')}</DialogTitle>
-              <DialogDescription>
-                {t('dialog.createDescription')}
-              </DialogDescription>
+              <DialogDescription>{t('dialog.createDescription')}</DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div>
@@ -284,9 +280,7 @@ export default function HouseholdsPage() {
           <CardContent className="py-12 text-center">
             <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
             <h3 className="text-lg font-semibold mb-2">{t('empty.title')}</h3>
-            <p className="text-muted-foreground mb-4">
-              {t('empty.description')}
-            </p>
+            <p className="text-muted-foreground mb-4">{t('empty.description')}</p>
             <Button onClick={() => setIsCreateDialogOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
               {t('page.createHousehold')}
@@ -449,9 +443,7 @@ export default function HouseholdsPage() {
                 <Heart className="h-6 w-6 text-primary" />
                 <h3 className="text-xl font-semibold">{t('detail.yoursMineOurs')}</h3>
               </div>
-              <p className="text-muted-foreground">
-                {t('detail.ownershipDescription')}
-              </p>
+              <p className="text-muted-foreground">{t('detail.ownershipDescription')}</p>
 
               {ownershipLoading ? (
                 <div className="flex justify-center py-8">

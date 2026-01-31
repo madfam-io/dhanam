@@ -159,9 +159,7 @@ export default function AccountsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{t('page.title')}</h1>
-          <p className="text-muted-foreground">
-            {t('page.description')}
-          </p>
+          <p className="text-muted-foreground">{t('page.description')}</p>
         </div>
         <Dialog open={isConnectOpen} onOpenChange={setIsConnectOpen}>
           <DialogTrigger asChild>
@@ -202,7 +200,9 @@ export default function AccountsPage() {
                   <span className="w-full border-t" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-2 text-muted-foreground">{t('dialog.addAccount.or')}</span>
+                  <span className="bg-background px-2 text-muted-foreground">
+                    {t('dialog.addAccount.or')}
+                  </span>
                 </div>
               </div>
               <Button
@@ -228,9 +228,7 @@ export default function AccountsPage() {
           <CardContent className="flex flex-col items-center justify-center py-8">
             <Building2 className="h-12 w-12 text-muted-foreground mb-4" />
             <h3 className="font-semibold text-lg mb-2">{t('empty.title')}</h3>
-            <p className="text-muted-foreground text-center mb-4">
-              {t('empty.description')}
-            </p>
+            <p className="text-muted-foreground text-center mb-4">{t('empty.description')}</p>
             <Button onClick={() => setIsConnectOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
               {t('empty.addFirst')}
@@ -297,7 +295,12 @@ export default function AccountsPage() {
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
                 <Label htmlFor="name">{t('form.accountName')}</Label>
-                <Input id="name" name="name" placeholder={t('form.accountNamePlaceholder')} required />
+                <Input
+                  id="name"
+                  name="name"
+                  placeholder={t('form.accountNamePlaceholder')}
+                  required
+                />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="type">{t('form.accountType')}</Label>

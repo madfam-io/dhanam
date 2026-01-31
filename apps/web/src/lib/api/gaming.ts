@@ -81,8 +81,7 @@ export const gamingApi = {
   getPortfolio: (spaceId: string): Promise<AggregatedGamingPortfolio> =>
     apiClient.get<AggregatedGamingPortfolio>('/gaming/portfolio', { spaceId }),
 
-  getPlatforms: (): Promise<PlatformData[]> =>
-    apiClient.get<PlatformData[]>('/gaming/platforms'),
+  getPlatforms: (): Promise<PlatformData[]> => apiClient.get<PlatformData[]>('/gaming/platforms'),
 
   getEarnings: (spaceId: string, period?: string): Promise<EarningsStream[]> =>
     apiClient.get<EarningsStream[]>('/gaming/earnings', { spaceId, period }),

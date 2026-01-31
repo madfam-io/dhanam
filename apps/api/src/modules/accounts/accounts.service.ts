@@ -50,7 +50,7 @@ export class AccountsService {
         name: dto.name,
         type: dto.type,
         subtype: dto.subtype,
-        currency: dto.currency,
+        currency: dto.currency as unknown as import('@db').Currency,
         balance: dto.balance,
         provider: 'manual',
       },

@@ -70,7 +70,12 @@ export function BelvoConnect({ open, onOpenChange, spaceId, onSuccess }: BelvoCo
     onSuccess: (data) => {
       const selectedBank = BELVO_INSTITUTIONS.find((bank) => bank.code === institution);
       toast.success(
-        t(data.accountsCount > 1 ? 'providers.belvo.linkedSuccess_plural' : 'providers.belvo.linkedSuccess', { count: data.accountsCount, bank: selectedBank?.name || institution })
+        t(
+          data.accountsCount > 1
+            ? 'providers.belvo.linkedSuccess_plural'
+            : 'providers.belvo.linkedSuccess',
+          { count: data.accountsCount, bank: selectedBank?.name || institution }
+        )
       );
       onSuccess();
       onOpenChange(false);
@@ -109,9 +114,7 @@ export function BelvoConnect({ open, onOpenChange, spaceId, onSuccess }: BelvoCo
             <MapPin className="h-5 w-5 text-green-600" />
             {t('providers.belvo.title')}
           </DialogTitle>
-          <DialogDescription>
-            {t('providers.belvo.description')}
-          </DialogDescription>
+          <DialogDescription>{t('providers.belvo.description')}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">
@@ -198,9 +201,7 @@ export function BelvoConnect({ open, onOpenChange, spaceId, onSuccess }: BelvoCo
 
             <Alert>
               <Globe className="h-4 w-4" />
-              <AlertDescription>
-                {t('providers.belvo.readOnlyNotice')}
-              </AlertDescription>
+              <AlertDescription>{t('providers.belvo.readOnlyNotice')}</AlertDescription>
             </Alert>
 
             <Button

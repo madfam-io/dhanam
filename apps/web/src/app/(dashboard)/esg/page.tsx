@@ -44,9 +44,7 @@ export default function EsgPage() {
             <Leaf className="h-8 w-8 text-green-600" />
             {t('page.title')}
           </h1>
-          <p className="text-muted-foreground mt-2">
-            {t('page.description')}
-          </p>
+          <p className="text-muted-foreground mt-2">{t('page.description')}</p>
         </div>
         <Button onClick={handleRefresh} disabled={refreshing} variant="outline" size="lg">
           {refreshing ? (

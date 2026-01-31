@@ -5,25 +5,43 @@ import type { PortfolioEsgAnalysis, EsgTrends } from '@/hooks/useEsg';
 
 // Mock UI components
 jest.mock('@/components/ui/card', () => ({
-  Card: ({ children, className }: any) => <div data-testid="card" className={className}>{children}</div>,
+  Card: ({ children, className }: any) => (
+    <div data-testid="card" className={className}>
+      {children}
+    </div>
+  ),
   CardHeader: ({ children }: any) => <div data-testid="card-header">{children}</div>,
-  CardTitle: ({ children, className }: any) => <h3 data-testid="card-title" className={className}>{children}</h3>,
+  CardTitle: ({ children, className }: any) => (
+    <h3 data-testid="card-title" className={className}>
+      {children}
+    </h3>
+  ),
   CardDescription: ({ children }: any) => <p data-testid="card-description">{children}</p>,
-  CardContent: ({ children, className }: any) => <div data-testid="card-content" className={className}>{children}</div>,
+  CardContent: ({ children, className }: any) => (
+    <div data-testid="card-content" className={className}>
+      {children}
+    </div>
+  ),
 }));
 
 jest.mock('@/components/ui/alert', () => ({
   Alert: ({ children, variant, className }: any) => (
-    <div data-testid="alert" data-variant={variant} className={className}>{children}</div>
+    <div data-testid="alert" data-variant={variant} className={className}>
+      {children}
+    </div>
   ),
   AlertDescription: ({ children, className }: any) => (
-    <span data-testid="alert-description" className={className}>{children}</span>
+    <span data-testid="alert-description" className={className}>
+      {children}
+    </span>
   ),
 }));
 
 jest.mock('@/components/ui/badge', () => ({
   Badge: ({ children, className, variant }: any) => (
-    <span data-testid="badge" className={className} data-variant={variant}>{children}</span>
+    <span data-testid="badge" className={className} data-variant={variant}>
+      {children}
+    </span>
   ),
 }));
 
@@ -75,15 +93,23 @@ describe('EsgInsights', () => {
       render(<EsgInsights analysis={mockAnalysis} />);
 
       expect(screen.getByText('Portfolio Insights')).toBeInTheDocument();
-      expect(screen.getByText('Personalized recommendations based on your holdings')).toBeInTheDocument();
+      expect(
+        screen.getByText('Personalized recommendations based on your holdings')
+      ).toBeInTheDocument();
     });
 
     it('should display all insights', () => {
       render(<EsgInsights analysis={mockAnalysis} />);
 
-      expect(screen.getByText('Your portfolio has excellent governance scores')).toBeInTheDocument();
-      expect(screen.getByText('Consider diversifying into more sustainable assets')).toBeInTheDocument();
-      expect(screen.getByText('High environmental impact detected in some holdings')).toBeInTheDocument();
+      expect(
+        screen.getByText('Your portfolio has excellent governance scores')
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText('Consider diversifying into more sustainable assets')
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText('High environmental impact detected in some holdings')
+      ).toBeInTheDocument();
     });
 
     it('should show empty state when no insights', () => {
@@ -118,7 +144,7 @@ describe('EsgInsights', () => {
       render(<EsgInsights analysis={mockAnalysis} />);
 
       const alerts = screen.getAllByTestId('alert');
-      const destructiveAlert = alerts.find(a => a.getAttribute('data-variant') === 'destructive');
+      const destructiveAlert = alerts.find((a) => a.getAttribute('data-variant') === 'destructive');
       expect(destructiveAlert).toBeDefined();
     });
   });
@@ -128,7 +154,9 @@ describe('EsgInsights', () => {
       render(<EsgInsights analysis={mockAnalysis} trends={mockTrends} />);
 
       expect(screen.getByText('ESG Market Trends')).toBeInTheDocument();
-      expect(screen.getByText('Current trends in cryptocurrency ESG performance')).toBeInTheDocument();
+      expect(
+        screen.getByText('Current trends in cryptocurrency ESG performance')
+      ).toBeInTheDocument();
     });
 
     it('should not render market trends when trends not provided', () => {
@@ -158,7 +186,7 @@ describe('EsgInsights', () => {
       render(<EsgInsights analysis={mockAnalysis} trends={mockTrends} />);
 
       const badges = screen.getAllByTestId('badge');
-      const greenBadges = badges.filter(b => b.className?.includes('bg-green-600'));
+      const greenBadges = badges.filter((b) => b.className?.includes('bg-green-600'));
       expect(greenBadges.length).toBe(3); // ETH, ADA, DOT
     });
 
@@ -166,7 +194,9 @@ describe('EsgInsights', () => {
       render(<EsgInsights analysis={mockAnalysis} trends={mockTrends} />);
 
       const badges = screen.getAllByTestId('badge');
-      const destructiveBadges = badges.filter(b => b.getAttribute('data-variant') === 'destructive');
+      const destructiveBadges = badges.filter(
+        (b) => b.getAttribute('data-variant') === 'destructive'
+      );
       expect(destructiveBadges.length).toBe(2); // BTC, XRP
     });
 
@@ -175,7 +205,9 @@ describe('EsgInsights', () => {
 
       expect(screen.getByText('Market Insights')).toBeInTheDocument();
       expect(screen.getByText('Proof-of-Stake assets showing improved scores')).toBeInTheDocument();
-      expect(screen.getByText('Regulatory pressure improving governance metrics')).toBeInTheDocument();
+      expect(
+        screen.getByText('Regulatory pressure improving governance metrics')
+      ).toBeInTheDocument();
     });
 
     it('should not display improving section when empty', () => {
@@ -204,7 +236,9 @@ describe('EsgInsights', () => {
       render(<EsgInsights analysis={mockAnalysis} trends={mockTrends} />);
 
       expect(screen.getByText('ESG Recommendations')).toBeInTheDocument();
-      expect(screen.getByText('Assets with strong ESG profiles worth considering')).toBeInTheDocument();
+      expect(
+        screen.getByText('Assets with strong ESG profiles worth considering')
+      ).toBeInTheDocument();
     });
 
     it('should display all recommendations', () => {

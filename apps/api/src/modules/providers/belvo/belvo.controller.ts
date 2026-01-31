@@ -29,6 +29,7 @@ import { Redis } from 'ioredis';
 import { CurrentUser, AuthenticatedUser } from '@core/auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
 import { processWebhook, createWebhookResponse } from '@core/utils/webhook.util';
+
 import { ProviderConnectionGuard } from '../../billing/guards/provider-connection.guard';
 
 import { BelvoService } from './belvo.service';

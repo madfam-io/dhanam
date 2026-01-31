@@ -1,21 +1,7 @@
 'use client';
 
 import { useTranslation } from '@dhanam/shared';
-import {
-  Landmark,
-  Coins,
-  Home,
-  Gamepad2,
-  Cpu,
-  TrendingUp as Forecast,
-  Repeat,
-  BarChart3,
-  AlertTriangle,
-  Target,
-  HeartPulse,
-  Users,
-  Shield,
-} from 'lucide-react';
+import { Landmark, Coins, Home, Gamepad2, Cpu, HeartPulse } from 'lucide-react';
 
 // Feature configuration with icons and colors
 const featureConfig = [

@@ -664,7 +664,7 @@ export class BillingService {
    * Get feature limits for a specific tier
    */
   getTierLimits(tier: string) {
-    return this.tierLimits[(tier as keyof typeof this.tierLimits)] || this.tierLimits.community;
+    return this.tierLimits[tier as keyof typeof this.tierLimits] || this.tierLimits.community;
   }
 
   /**

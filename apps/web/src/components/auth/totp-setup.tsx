@@ -125,15 +125,11 @@ export function TotpSetup({ open, onOpenChange, onSuccess }: TotpSetupProps) {
           <div className="space-y-4">
             <Alert>
               <Smartphone className="h-4 w-4" />
-              <AlertDescription>
-                {t('totp.authenticatorAppNotice')}
-              </AlertDescription>
+              <AlertDescription>{t('totp.authenticatorAppNotice')}</AlertDescription>
             </Alert>
 
             <div className="space-y-3">
-              <p className="text-sm text-muted-foreground">
-                {t('totp.setupExplanation')}
-              </p>
+              <p className="text-sm text-muted-foreground">{t('totp.setupExplanation')}</p>
 
               <Button onClick={handleStart} disabled={setupMutation.isPending} className="w-full">
                 {setupMutation.isPending ? (
@@ -264,9 +260,7 @@ export function TotpSetup({ open, onOpenChange, onSuccess }: TotpSetupProps) {
                 )}
               </Button>
 
-              <p className="text-xs text-center text-muted-foreground">
-                {t('totp.keepCodesSafe')}
-              </p>
+              <p className="text-xs text-center text-muted-foreground">{t('totp.keepCodesSafe')}</p>
             </div>
           </div>
         )}

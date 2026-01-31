@@ -18,9 +18,22 @@ const adminPages = ['/dashboard', '/users', '/audit-logs', '/analytics', '/featu
 
 // Inline geo-to-locale mapping (avoid importing from shared in edge middleware)
 const COUNTRY_LOCALE: Record<string, string> = {
-  MX: 'es', CO: 'es', ES: 'es', AR: 'es', CL: 'es', PE: 'es',
-  US: 'en', CA: 'en', GB: 'en', AU: 'en', FR: 'en', DE: 'en', IT: 'en', NL: 'en',
-  BR: 'pt-BR', PT: 'pt-BR',
+  MX: 'es',
+  CO: 'es',
+  ES: 'es',
+  AR: 'es',
+  CL: 'es',
+  PE: 'es',
+  US: 'en',
+  CA: 'en',
+  GB: 'en',
+  AU: 'en',
+  FR: 'en',
+  DE: 'en',
+  IT: 'en',
+  NL: 'en',
+  BR: 'pt-BR',
+  PT: 'pt-BR',
 };
 
 function getLocaleFromCountry(country: string | null): string {
@@ -110,16 +123,14 @@ export function middleware(request: NextRequest) {
   if (isLandingSite && path === '/') {
     // Root landing page → redirect to locale prefix
     const savedLocale = request.cookies.get('dhanam_locale')?.value;
-    const geoLocale = getLocaleFromCountry(
-      request.cookies.get('dhanam_geo')?.value || countryCode
-    );
+    const geoLocale = getLocaleFromCountry(request.cookies.get('dhanam_geo')?.value || countryCode);
     const locale = savedLocale && SUPPORTED_LOCALES.includes(savedLocale) ? savedLocale : geoLocale;
 
     return NextResponse.redirect(new URL(`/${locale}`, request.url));
   }
 
   if (isLandingSite && localeMatch) {
-    const locale = localeMatch[1];
+    const locale = localeMatch[1] ?? 'en';
     const subPath = localeMatch[2] || '';
 
     // Only handle landing-specific routes under locale prefix

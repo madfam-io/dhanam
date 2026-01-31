@@ -35,9 +35,13 @@ export default function HomePage() {
   const handleLiveDemoClick = async () => {
     analytics.track('live_demo_clicked', { source: 'hero_cta' });
 
-    const geoCookie = typeof document !== 'undefined'
-      ? document.cookie.split('; ').find((c) => c.startsWith('dhanam_geo='))?.split('=')[1]
-      : undefined;
+    const geoCookie =
+      typeof document !== 'undefined'
+        ? document.cookie
+            .split('; ')
+            .find((c) => c.startsWith('dhanam_geo='))
+            ?.split('=')[1]
+        : undefined;
 
     try {
       const { authApi } = await import('@/lib/api/auth');

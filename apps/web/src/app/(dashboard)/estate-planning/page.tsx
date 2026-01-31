@@ -183,9 +183,7 @@ export default function EstatePlanningPage() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">{t('page.title')}</h1>
-          <p className="text-muted-foreground">
-            {t('page.description')}
-          </p>
+          <p className="text-muted-foreground">{t('page.description')}</p>
         </div>
 
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
@@ -198,9 +196,7 @@ export default function EstatePlanningPage() {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>{t('dialog.createWill.title')}</DialogTitle>
-              <DialogDescription>
-                {t('dialog.createWill.description')}
-              </DialogDescription>
+              <DialogDescription>{t('dialog.createWill.description')}</DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div>
@@ -289,9 +285,7 @@ export default function EstatePlanningPage() {
           <CardContent className="py-12 text-center">
             <ScrollText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
             <h3 className="text-lg font-semibold mb-2">{t('page.noWills')}</h3>
-            <p className="text-muted-foreground mb-4">
-              {t('page.noWillsDescription')}
-            </p>
+            <p className="text-muted-foreground mb-4">{t('page.noWillsDescription')}</p>
             <Button onClick={() => setIsCreateDialogOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
               {t('page.createWill')}
@@ -443,7 +437,9 @@ export default function EstatePlanningPage() {
                           </div>
                         </div>
                         <div className="flex gap-2">
-                          {executor.isPrimary && <Badge variant="default">{t('fields.primary')}</Badge>}
+                          {executor.isPrimary && (
+                            <Badge variant="default">{t('fields.primary')}</Badge>
+                          )}
                           <Badge variant="outline" className="capitalize">
                             {executor.executor?.relationship}
                           </Badge>

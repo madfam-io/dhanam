@@ -57,7 +57,12 @@ export function BitsoConnect({ open, onOpenChange, spaceId, onSuccess }: BitsoCo
     mutationFn: () => bitsoApi.connectAccount(spaceId, formData),
     onSuccess: (data) => {
       toast.success(
-        t(data.accountsCount !== 1 ? 'providers.bitso.linkedSuccess_plural' : 'providers.bitso.linkedSuccess', { count: data.accountsCount })
+        t(
+          data.accountsCount !== 1
+            ? 'providers.bitso.linkedSuccess_plural'
+            : 'providers.bitso.linkedSuccess',
+          { count: data.accountsCount }
+        )
       );
       onSuccess();
       onOpenChange(false);
@@ -105,9 +110,7 @@ export function BitsoConnect({ open, onOpenChange, spaceId, onSuccess }: BitsoCo
             <Coins className="h-5 w-5 text-orange-600" />
             {t('providers.bitso.title')}
           </DialogTitle>
-          <DialogDescription>
-            {t('providers.bitso.description')}
-          </DialogDescription>
+          <DialogDescription>{t('providers.bitso.description')}</DialogDescription>
         </DialogHeader>
 
         {step === 'instructions' ? (
@@ -156,9 +159,7 @@ export function BitsoConnect({ open, onOpenChange, spaceId, onSuccess }: BitsoCo
                   </Badge>
                   <div>
                     <p className="font-medium">{t('providers.bitso.step2Title')}</p>
-                    <p className="text-muted-foreground">
-                      {t('providers.bitso.step2Description')}
-                    </p>
+                    <p className="text-muted-foreground">{t('providers.bitso.step2Description')}</p>
                   </div>
                 </div>
 
@@ -168,9 +169,7 @@ export function BitsoConnect({ open, onOpenChange, spaceId, onSuccess }: BitsoCo
                   </Badge>
                   <div>
                     <p className="font-medium">{t('providers.bitso.step3Title')}</p>
-                    <p className="text-muted-foreground">
-                      {t('providers.bitso.step3Description')}
-                    </p>
+                    <p className="text-muted-foreground">{t('providers.bitso.step3Description')}</p>
                   </div>
                 </div>
 
@@ -180,18 +179,14 @@ export function BitsoConnect({ open, onOpenChange, spaceId, onSuccess }: BitsoCo
                   </Badge>
                   <div>
                     <p className="font-medium">{t('providers.bitso.step4Title')}</p>
-                    <p className="text-muted-foreground">
-                      {t('providers.bitso.step4Description')}
-                    </p>
+                    <p className="text-muted-foreground">{t('providers.bitso.step4Description')}</p>
                   </div>
                 </div>
               </div>
 
               <Alert>
                 <AlertTriangle className="h-4 w-4" />
-                <AlertDescription>
-                  {t('providers.bitso.permissionsWarning')}
-                </AlertDescription>
+                <AlertDescription>{t('providers.bitso.permissionsWarning')}</AlertDescription>
               </Alert>
             </div>
 
@@ -307,9 +302,7 @@ export function BitsoConnect({ open, onOpenChange, spaceId, onSuccess }: BitsoCo
 
             <Alert>
               <CheckCircle className="h-4 w-4" />
-              <AlertDescription>
-                {t('providers.bitso.encryptionNotice')}
-              </AlertDescription>
+              <AlertDescription>{t('providers.bitso.encryptionNotice')}</AlertDescription>
             </Alert>
 
             <div className="flex gap-3">

@@ -142,7 +142,12 @@ export default function BudgetsPage() {
                 <div className="grid gap-4 py-4">
                   <div className="grid gap-2">
                     <Label htmlFor="name">{t('fields.budgetName')}</Label>
-                    <Input id="name" name="name" placeholder={t('fields.budgetNamePlaceholder')} required />
+                    <Input
+                      id="name"
+                      name="name"
+                      placeholder={t('fields.budgetNamePlaceholder')}
+                      required
+                    />
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="period">{t('fields.period')}</Label>
@@ -192,9 +197,7 @@ export default function BudgetsPage() {
           <CardContent className="flex flex-col items-center justify-center py-8">
             <PiggyBank className="h-12 w-12 text-muted-foreground mb-4" />
             <h3 className="font-semibold text-lg mb-2">{t('empty.title')}</h3>
-            <p className="text-muted-foreground text-center mb-4">
-              {t('empty.description')}
-            </p>
+            <p className="text-muted-foreground text-center mb-4">{t('empty.description')}</p>
             <Button onClick={() => setIsCreateOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
               {t('empty.cta')}
@@ -250,7 +253,9 @@ export default function BudgetsPage() {
                 <DialogTitle>{selectedBudget.name}</DialogTitle>
                 <DialogDescription>
                   {formatDate(selectedBudget.startDate)} -{' '}
-                  {selectedBudget.endDate ? formatDate(selectedBudget.endDate) : t('fields.ongoing')}
+                  {selectedBudget.endDate
+                    ? formatDate(selectedBudget.endDate)
+                    : t('fields.ongoing')}
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-6">
@@ -323,9 +328,13 @@ export default function BudgetsPage() {
                         </div>
                         <Progress value={category.percentUsed} className="mb-2" />
                         <div className="flex justify-between text-sm text-muted-foreground">
-                          <span>{formatCurrency(category.spent, currentSpace.currency)} {t('summary.spent')}</span>
                           <span>
-                            {formatCurrency(category.remaining, currentSpace.currency)} {t('summary.remaining')}
+                            {formatCurrency(category.spent, currentSpace.currency)}{' '}
+                            {t('summary.spent')}
+                          </span>
+                          <span>
+                            {formatCurrency(category.remaining, currentSpace.currency)}{' '}
+                            {t('summary.remaining')}
                           </span>
                         </div>
                       </CardContent>
@@ -348,7 +357,12 @@ export default function BudgetsPage() {
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
                 <Label htmlFor="category-name">{t('fields.categoryName')}</Label>
-                <Input id="category-name" name="name" placeholder={t('fields.categoryNamePlaceholder')} required />
+                <Input
+                  id="category-name"
+                  name="name"
+                  placeholder={t('fields.categoryNamePlaceholder')}
+                  required
+                />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="budgetedAmount">{t('fields.budgetAmount')}</Label>

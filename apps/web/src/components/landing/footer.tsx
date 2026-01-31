@@ -20,9 +20,7 @@ export function Footer() {
           <p className="text-sm text-muted-foreground">
             {t('footer.copyright', { year: currentYear })}
           </p>
-          <p className="text-xs text-muted-foreground">
-            {t('footer.subtitle')}
-          </p>
+          <p className="text-xs text-muted-foreground">{t('footer.subtitle')}</p>
         </div>
 
         <div className="flex items-center gap-6">

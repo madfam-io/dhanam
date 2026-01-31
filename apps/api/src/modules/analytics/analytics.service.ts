@@ -5,10 +5,11 @@ import {
   IncomeVsExpenses,
   AccountBalanceAnalytics,
   PortfolioAllocation,
-  Currency,
 } from '@dhanam/shared';
 import { Injectable } from '@nestjs/common';
 import { subDays, startOfDay, eachDayOfInterval, format } from 'date-fns';
+
+import { Currency } from '@db';
 
 import { PrismaService } from '../../core/prisma/prisma.service';
 import { FxRatesService } from '../fx-rates/fx-rates.service';
@@ -189,7 +190,7 @@ export class AnalyticsService {
       totalAssets: Math.round(totalAssets * 100) / 100,
       totalLiabilities: Math.round(totalLiabilities * 100) / 100,
       netWorth: Math.round(netWorth * 100) / 100,
-      currency: displayCurrency,
+      currency: displayCurrency as unknown as import('@dhanam/shared').Currency,
       lastUpdated: new Date().toISOString(),
       trend,
       changePercent: Math.round(changePercent * 100) / 100,
@@ -517,7 +518,7 @@ export class AnalyticsService {
         projectedBalance: runningBalance,
         totalIncome: totalProjectedIncome,
         totalExpenses: totalProjectedExpenses,
-        currency: Currency.MXN,
+        currency: Currency.MXN as unknown as import('@dhanam/shared').Currency,
       },
     };
   }
@@ -677,7 +678,7 @@ export class AnalyticsService {
       accountName: account.name,
       accountType: account.type,
       balance: account.balance.toNumber(),
-      currency: account.currency as Currency,
+      currency: account.currency as unknown as import('@dhanam/shared').Currency,
       lastSynced: account.lastSyncedAt?.toISOString(),
     }));
   }

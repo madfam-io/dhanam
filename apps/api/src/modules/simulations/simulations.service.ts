@@ -50,8 +50,12 @@ export class SimulationsService {
     try {
       // Clamp iterations to tier limit
       const tierLimits = this.billing.getTierLimits(
-        (await this.prisma.user.findUnique({ where: { id: userId }, select: { subscriptionTier: true } }))
-          ?.subscriptionTier || 'community'
+        (
+          await this.prisma.user.findUnique({
+            where: { id: userId },
+            select: { subscriptionTier: true },
+          })
+        )?.subscriptionTier || 'community'
       );
       const maxIterations = tierLimits.monteCarloMaxIterations;
 
@@ -123,8 +127,12 @@ export class SimulationsService {
     try {
       // Clamp iterations to tier limit
       const retTierLimits = this.billing.getTierLimits(
-        (await this.prisma.user.findUnique({ where: { id: userId }, select: { subscriptionTier: true } }))
-          ?.subscriptionTier || 'community'
+        (
+          await this.prisma.user.findUnique({
+            where: { id: userId },
+            select: { subscriptionTier: true },
+          })
+        )?.subscriptionTier || 'community'
       );
 
       const config: RetirementSimulationConfig = {
@@ -285,8 +293,12 @@ export class SimulationsService {
 
       // Clamp iterations to tier limit
       const scenarioTierLimits = this.billing.getTierLimits(
-        (await this.prisma.user.findUnique({ where: { id: userId }, select: { subscriptionTier: true } }))
-          ?.subscriptionTier || 'community'
+        (
+          await this.prisma.user.findUnique({
+            where: { id: userId },
+            select: { subscriptionTier: true },
+          })
+        )?.subscriptionTier || 'community'
       );
 
       const baselineConfig: SimulationConfig = {

@@ -1,4 +1,3 @@
-import { Currency } from '@dhanam/shared';
 import {
   longTermCashflowEngine,
   type LongTermProjectionConfig,
@@ -13,6 +12,8 @@ import {
   type WhatIfScenario,
 } from '@dhanam/simulations';
 import { Injectable, BadRequestException } from '@nestjs/common';
+
+import { Currency } from '@db';
 
 import { PrismaService } from '../../core/prisma/prisma.service';
 import { FxRatesService } from '../fx-rates/fx-rates.service';

@@ -39,7 +39,7 @@ import { useSpaceStore } from '@/stores/space';
 import { recurringApi, RecurringTransactionResponse } from '@/lib/api/recurring';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { toast } from 'sonner';
-import { RecurrenceFrequency, RecurringStatus, useTranslation } from '@dhanam/shared';
+import { RecurringStatus, useTranslation } from '@dhanam/shared';
 
 const statusColors: Record<RecurringStatus, string> = {
   detected: 'bg-yellow-100 text-yellow-800',
@@ -172,9 +172,7 @@ export default function RecurringTransactionsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{t('recurring.title')}</h1>
-          <p className="text-muted-foreground">
-            {t('recurring.description')}
-          </p>
+          <p className="text-muted-foreground">{t('recurring.description')}</p>
         </div>
         <Button onClick={() => detectMutation.mutate()} disabled={isDetecting}>
           {isDetecting ? (
@@ -199,7 +197,9 @@ export default function RecurringTransactionsPage() {
                 {formatCurrency(summary.totalMonthly, summary.currency)}
               </div>
               <p className="text-xs text-muted-foreground">
-                {t('recurring.perYear', { amount: formatCurrency(summary.totalAnnual, summary.currency) })}
+                {t('recurring.perYear', {
+                  amount: formatCurrency(summary.totalAnnual, summary.currency),
+                })}
               </p>
             </CardContent>
           </Card>
@@ -244,9 +244,15 @@ export default function RecurringTransactionsPage() {
       ) : (
         <Tabs defaultValue="confirmed" className="space-y-4">
           <TabsList>
-            <TabsTrigger value="confirmed">{t('recurring.tabs.active', { count: confirmed.length })}</TabsTrigger>
-            <TabsTrigger value="detected">{t('recurring.tabs.detected', { count: detected.length })}</TabsTrigger>
-            <TabsTrigger value="paused">{t('recurring.tabs.paused', { count: paused.length })}</TabsTrigger>
+            <TabsTrigger value="confirmed">
+              {t('recurring.tabs.active', { count: confirmed.length })}
+            </TabsTrigger>
+            <TabsTrigger value="detected">
+              {t('recurring.tabs.detected', { count: detected.length })}
+            </TabsTrigger>
+            <TabsTrigger value="paused">
+              {t('recurring.tabs.paused', { count: paused.length })}
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="confirmed" className="space-y-4">
@@ -282,7 +288,9 @@ export default function RecurringTransactionsPage() {
               <Card>
                 <CardContent className="flex flex-col items-center justify-center py-8">
                   <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
-                  <h3 className="font-semibold text-lg mb-2">{t('recurring.emptyDetected.title')}</h3>
+                  <h3 className="font-semibold text-lg mb-2">
+                    {t('recurring.emptyDetected.title')}
+                  </h3>
                   <p className="text-muted-foreground text-center mb-4">
                     {t('recurring.emptyDetected.description')}
                   </p>
@@ -348,7 +356,9 @@ export default function RecurringTransactionsPage() {
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-muted-foreground">{t('recurring.dialog.lastOccurrence')}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {t('recurring.dialog.lastOccurrence')}
+                    </p>
                     <p className="font-medium">
                       {selectedRecurring.lastOccurrence
                         ? formatDate(selectedRecurring.lastOccurrence)
@@ -356,7 +366,9 @@ export default function RecurringTransactionsPage() {
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">{t('recurring.dialog.nextExpected')}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {t('recurring.dialog.nextExpected')}
+                    </p>
                     <p className="font-medium">
                       {selectedRecurring.nextExpected
                         ? formatDate(selectedRecurring.nextExpected)
@@ -364,18 +376,24 @@ export default function RecurringTransactionsPage() {
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">{t('recurring.dialog.occurrences')}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {t('recurring.dialog.occurrences')}
+                    </p>
                     <p className="font-medium">{selectedRecurring.occurrenceCount}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">{t('recurring.dialog.confidence')}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {t('recurring.dialog.confidence')}
+                    </p>
                     <p className="font-medium">{Math.round(selectedRecurring.confidence * 100)}%</p>
                   </div>
                 </div>
 
                 {selectedRecurring.recentTransactions?.length > 0 && (
                   <div>
-                    <p className="text-sm font-medium mb-2">{t('recurring.dialog.recentTransactions')}</p>
+                    <p className="text-sm font-medium mb-2">
+                      {t('recurring.dialog.recentTransactions')}
+                    </p>
                     <div className="space-y-2">
                       {selectedRecurring.recentTransactions.slice(0, 5).map((txn) => (
                         <div
@@ -435,7 +453,11 @@ function RecurringCard({
               <span>{t(`recurring.frequency.${recurring.frequency}` as const)}</span>
               <span>•</span>
               <span>
-                {t('recurring.card.next', { date: recurring.nextExpected ? formatDate(recurring.nextExpected) : t('recurring.na') })}
+                {t('recurring.card.next', {
+                  date: recurring.nextExpected
+                    ? formatDate(recurring.nextExpected)
+                    : t('recurring.na'),
+                })}
               </span>
             </div>
           </div>
@@ -454,7 +476,9 @@ function RecurringCard({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={onViewDetails}>{t('recurring.card.viewDetails')}</DropdownMenuItem>
+              <DropdownMenuItem onClick={onViewDetails}>
+                {t('recurring.card.viewDetails')}
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={onTogglePause}>
                 {recurring.status === 'paused' ? (
                   <>
@@ -503,11 +527,19 @@ function DetectedCard({
           <div>
             <p className="font-medium">{recurring.merchantName}</p>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span>{t('recurring.card.detectedLabel', { frequency: t(`recurring.frequency.${recurring.frequency}` as const) })}</span>
+              <span>
+                {t('recurring.card.detectedLabel', {
+                  frequency: t(`recurring.frequency.${recurring.frequency}` as const),
+                })}
+              </span>
               <span>•</span>
               <span>{t('recurring.card.occurrences', { count: recurring.occurrenceCount })}</span>
               <span>•</span>
-              <span>{t('recurring.card.confidence', { percent: Math.round(recurring.confidence * 100) })}</span>
+              <span>
+                {t('recurring.card.confidence', {
+                  percent: Math.round(recurring.confidence * 100),
+                })}
+              </span>
             </div>
           </div>
         </div>

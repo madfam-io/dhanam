@@ -12,7 +12,7 @@ import {
   SyncTransactionsParams,
   SyncTransactionsResult,
   WebhookHandlerResult,
-} from '../../modules/providers/orchestrator/provider.interface';
+} from '../../../modules/providers/orchestrator/provider.interface';
 
 export type MockBehavior = 'succeed' | 'fail' | 'timeout';
 

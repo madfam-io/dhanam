@@ -105,9 +105,7 @@ describe('RegisterForm', () => {
     await user.click(screen.getByRole('button', { name: 'Create account' }));
 
     await waitFor(() => {
-      expect(
-        screen.getByText('Password must be at least 8 characters')
-      ).toBeInTheDocument();
+      expect(screen.getByText('Password must be at least 8 characters')).toBeInTheDocument();
     });
   });
 
@@ -137,9 +135,7 @@ describe('RegisterForm', () => {
     await user.click(screen.getByRole('button', { name: 'Create account' }));
 
     await waitFor(() => {
-      expect(
-        screen.getByText('Password must contain at least one number')
-      ).toBeInTheDocument();
+      expect(screen.getByText('Password must contain at least one number')).toBeInTheDocument();
     });
   });
 

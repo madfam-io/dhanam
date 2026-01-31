@@ -152,7 +152,7 @@ export default function LoginPage() {
             className="w-full"
             onClick={() => {
               setError(null);
-              guestLoginMutation.mutate();
+              guestLoginMutation.mutate({});
             }}
             disabled={guestLoginMutation.isPending}
           >

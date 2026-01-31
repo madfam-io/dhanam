@@ -20,17 +20,13 @@ export function Hero({ onLiveDemoClick, onSignUpClick }: HeroProps) {
           <span className="text-sm font-medium">{t('hero.badge')}</span>
         </div>
 
-        <h1 className="text-4xl md:text-6xl font-bold tracking-tight">
-          {t('hero.title')}
-        </h1>
+        <h1 className="text-4xl md:text-6xl font-bold tracking-tight">{t('hero.title')}</h1>
 
         <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
           {t('hero.subtitle')}
         </p>
 
-        <p className="text-sm text-muted-foreground max-w-xl mx-auto">
-          {t('hero.subDescription')}
-        </p>
+        <p className="text-sm text-muted-foreground max-w-xl mx-auto">{t('hero.subDescription')}</p>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
           <Button
@@ -46,9 +42,7 @@ export function Hero({ onLiveDemoClick, onSignUpClick }: HeroProps) {
           </Button>
         </div>
 
-        <p className="text-sm text-muted-foreground">
-          {t('hero.demoNote')}
-        </p>
+        <p className="text-sm text-muted-foreground">{t('hero.demoNote')}</p>
       </div>
 
       {/* Stats Cards */}

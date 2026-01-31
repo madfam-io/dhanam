@@ -161,7 +161,12 @@ export function PlaidConnect({ open, onOpenChange, spaceId, onSuccess }: PlaidCo
     mutationFn: (publicToken: string) => plaidApi.linkAccount(spaceId, { publicToken }),
     onSuccess: (data) => {
       toast.success(
-        t(data.accountsCount > 1 ? 'providers.plaid.linkedSuccess_plural' : 'providers.plaid.linkedSuccess', { count: data.accountsCount })
+        t(
+          data.accountsCount > 1
+            ? 'providers.plaid.linkedSuccess_plural'
+            : 'providers.plaid.linkedSuccess',
+          { count: data.accountsCount }
+        )
       );
       onSuccess();
       onOpenChange(false);
@@ -222,9 +227,7 @@ export function PlaidConnect({ open, onOpenChange, spaceId, onSuccess }: PlaidCo
             <CreditCard className="h-5 w-5 text-blue-600" />
             {t('providers.plaid.title')}
           </DialogTitle>
-          <DialogDescription>
-            {t('providers.plaid.description')}
-          </DialogDescription>
+          <DialogDescription>{t('providers.plaid.description')}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">

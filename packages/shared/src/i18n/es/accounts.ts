@@ -27,7 +27,7 @@ export const accounts = {
   other: 'Otro',
 
   // Providers
-  provider: 'Proveedor',
+  providerLabel: 'Proveedor',
   manual: 'Manual',
   belvo: 'Belvo',
   plaid: 'Plaid',
@@ -37,7 +37,7 @@ export const accounts = {
 
   // Fields
   accountName: 'Nombre de cuenta',
-  accountType: 'Tipo de cuenta',
+  accountTypeLabel: 'Tipo de cuenta',
   accountNumber: 'Número de cuenta',
   lastFourDigits: 'Últimos 4 dígitos',
   routingNumber: 'Número de routing',

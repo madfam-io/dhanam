@@ -36,20 +36,41 @@ export interface CollectibleValuation {
 
 export const collectiblesApi = {
   getCategories: (spaceId: string): Promise<CollectibleCategory[]> =>
-    apiClient.get<CollectibleCategory[]>(`/spaces/${spaceId}/manual-assets/collectibles/categories`),
+    apiClient.get<CollectibleCategory[]>(
+      `/spaces/${spaceId}/manual-assets/collectibles/categories`
+    ),
 
-  search: (spaceId: string, category: string, q: string, limit = 20): Promise<CollectibleSearchResult[]> =>
-    apiClient.get<CollectibleSearchResult[]>(`/spaces/${spaceId}/manual-assets/collectibles/search`, { category, q, limit }),
+  search: (
+    spaceId: string,
+    category: string,
+    q: string,
+    limit = 20
+  ): Promise<CollectibleSearchResult[]> =>
+    apiClient.get<CollectibleSearchResult[]>(
+      `/spaces/${spaceId}/manual-assets/collectibles/search`,
+      { category, q, limit }
+    ),
 
-  link: (spaceId: string, assetId: string, data: LinkCollectibleDto): Promise<CollectibleValuation> =>
-    apiClient.post<CollectibleValuation>(`/spaces/${spaceId}/manual-assets/${assetId}/collectible/link`, data),
+  link: (
+    spaceId: string,
+    assetId: string,
+    data: LinkCollectibleDto
+  ): Promise<CollectibleValuation> =>
+    apiClient.post<CollectibleValuation>(
+      `/spaces/${spaceId}/manual-assets/${assetId}/collectible/link`,
+      data
+    ),
 
   unlink: (spaceId: string, assetId: string): Promise<void> =>
     apiClient.post(`/spaces/${spaceId}/manual-assets/${assetId}/collectible/unlink`),
 
   refresh: (spaceId: string, assetId: string): Promise<CollectibleValuation> =>
-    apiClient.post<CollectibleValuation>(`/spaces/${spaceId}/manual-assets/${assetId}/collectible/refresh`),
+    apiClient.post<CollectibleValuation>(
+      `/spaces/${spaceId}/manual-assets/${assetId}/collectible/refresh`
+    ),
 
   getValuation: (spaceId: string, assetId: string): Promise<CollectibleValuation | null> =>
-    apiClient.get<CollectibleValuation | null>(`/spaces/${spaceId}/manual-assets/${assetId}/collectible/valuation`),
+    apiClient.get<CollectibleValuation | null>(
+      `/spaces/${spaceId}/manual-assets/${assetId}/collectible/valuation`
+    ),
 };

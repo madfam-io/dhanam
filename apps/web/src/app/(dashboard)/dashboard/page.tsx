@@ -85,7 +85,9 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight">{t('overview.welcomeBack', { name: user?.name })}</h2>
+        <h2 className="text-3xl font-bold tracking-tight">
+          {t('overview.welcomeBack', { name: user?.name ?? '' })}
+        </h2>
         <p className="text-muted-foreground">{t('overview.financialOverview')}</p>
       </div>
 
@@ -95,10 +97,7 @@ export default function DashboardPage() {
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <div className="flex items-center gap-2">
               <CardTitle className="text-sm font-medium">{t('overview.netWorth')}</CardTitle>
-              <HelpTooltip
-                title={t('overview.netWorth')}
-                content={t('overview.netWorthTooltip')}
-              />
+              <HelpTooltip title={t('overview.netWorth')} content={t('overview.netWorthTooltip')} />
             </div>
             <Wallet className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -142,7 +141,9 @@ export default function DashboardPage() {
               )}
             </div>
             <p className="text-xs text-muted-foreground">
-              {t('overview.acrossAccounts', { count: accounts?.filter((a) => a.balance > 0).length || 0 })}
+              {t('overview.acrossAccounts', {
+                count: accounts?.filter((a) => a.balance > 0).length || 0,
+              })}
             </p>
           </CardContent>
         </Card>
@@ -161,7 +162,9 @@ export default function DashboardPage() {
               )}
             </div>
             <p className="text-xs text-muted-foreground">
-              {t('overview.acrossAccounts', { count: accounts?.filter((a) => a.balance < 0).length || 0 })}
+              {t('overview.acrossAccounts', {
+                count: accounts?.filter((a) => a.balance < 0).length || 0,
+              })}
             </p>
           </CardContent>
         </Card>
@@ -189,7 +192,12 @@ export default function DashboardPage() {
             </div>
             <p className="text-xs text-muted-foreground">
               {currentBudgetSummary
-                ? t('overview.remaining', { amount: formatCurrency(currentBudgetSummary.summary.totalRemaining, currentSpace.currency) })
+                ? t('overview.remaining', {
+                    amount: formatCurrency(
+                      currentBudgetSummary.summary.totalRemaining,
+                      currentSpace.currency
+                    ),
+                  })
                 : t('overview.createBudgetToTrack')}
             </p>
           </CardContent>
@@ -254,7 +262,9 @@ export default function DashboardPage() {
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
               </div>
             ) : recentTransactions?.data.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-8">{t('overview.noTransactions')}</p>
+              <p className="text-sm text-muted-foreground text-center py-8">
+                {t('overview.noTransactions')}
+              </p>
             ) : (
               <div className="space-y-4">
                 {recentTransactions?.data.map((transaction) => (
@@ -393,7 +403,9 @@ export default function DashboardPage() {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-2xl font-bold tracking-tight">{t('overview.financialGoals')}</h3>
+                <h3 className="text-2xl font-bold tracking-tight">
+                  {t('overview.financialGoals')}
+                </h3>
                 <p className="text-sm text-muted-foreground flex items-center gap-2">
                   {t('overview.goalsDescription')}
                   <HelpTooltip content={t('overview.goalsTooltip')} />
@@ -460,7 +472,9 @@ export default function DashboardPage() {
             <div>
               <p className="text-sm text-muted-foreground">{t('overview.nfts')}</p>
               <p className="text-lg font-semibold">14</p>
-              <p className="text-xs text-muted-foreground">{t('overview.nftValue', { value: '$22.5K' })}</p>
+              <p className="text-xs text-muted-foreground">
+                {t('overview.nftValue', { value: '$22.5K' })}
+              </p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">{t('overview.monthlyIncomeLabel')}</p>
@@ -475,7 +489,9 @@ export default function DashboardPage() {
       {currentBudgetSummary && (
         <Card>
           <CardHeader>
-            <CardTitle>{t('overview.currentBudget', { name: budgets?.[0]?.name || 'N/A' })}</CardTitle>
+            <CardTitle>
+              {t('overview.currentBudget', { name: budgets?.[0]?.name || 'N/A' })}
+            </CardTitle>
             <CardDescription>{t('overview.trackSpending')}</CardDescription>
           </CardHeader>
           <CardContent>
@@ -521,7 +537,9 @@ function EmptyState() {
         <p className="text-sm text-muted-foreground text-center mb-4">
           {t('emptyState.createSpaceDescription')}
         </p>
-        <Button onClick={() => router.push('/spaces/new')}>{t('emptyState.createFirstSpace')}</Button>
+        <Button onClick={() => router.push('/spaces/new')}>
+          {t('emptyState.createFirstSpace')}
+        </Button>
       </CardContent>
     </Card>
   );

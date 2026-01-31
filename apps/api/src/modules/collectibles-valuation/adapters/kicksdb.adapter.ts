@@ -115,7 +115,7 @@ export class KicksDbAdapter implements CollectibleProviderAdapter {
       };
     } catch (error) {
       this.logger.warn(
-        `KicksDB valuation error for ${externalId}: ${error instanceof Error ? error.message : error}`,
+        `KicksDB valuation error for ${externalId}: ${error instanceof Error ? error.message : error}`
       );
       return null;
     }

@@ -289,7 +289,9 @@ export default function AssetDetailPage() {
                 {formatCurrency(unrealizedGain, asset.currency)}
               </div>
               <p className="text-sm text-muted-foreground mt-1">
-                {t('detail.return', { percent: ((unrealizedGain / (asset.acquisitionCost ?? 1)) * 100).toFixed(1) })}
+                {t('detail.return', {
+                  percent: ((unrealizedGain / (asset.acquisitionCost ?? 1)) * 100).toFixed(1),
+                })}
               </p>
             </CardContent>
           </Card>
@@ -365,9 +367,7 @@ export default function AssetDetailPage() {
             <Card>
               <CardHeader>
                 <CardTitle>{t('detail.uploadDocuments')}</CardTitle>
-                <CardDescription>
-                  {t('detail.uploadDescription')}
-                </CardDescription>
+                <CardDescription>{t('detail.uploadDescription')}</CardDescription>
               </CardHeader>
               <CardContent>
                 <DocumentUpload

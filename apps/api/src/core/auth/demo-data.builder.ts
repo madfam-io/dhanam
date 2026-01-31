@@ -1,5 +1,6 @@
-import { Currency, SpaceType, BudgetPeriod, Provider, User } from '@db';
 import { startOfMonth, endOfMonth } from 'date-fns';
+
+import { Currency, SpaceType, BudgetPeriod, Provider, User } from '@db';
 
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -56,10 +57,46 @@ export class DemoDataBuilder {
         userSpaces: { create: { userId: user.id, role: 'viewer' } },
         accounts: {
           create: [
-            { provider: Provider.manual, providerAccountId: 'guest-checking', name: 'BBVA Checking', type: 'checking', subtype: 'checking', currency: Currency.MXN, balance: 45320.5, lastSyncedAt: new Date() },
-            { provider: Provider.manual, providerAccountId: 'guest-savings', name: 'Santander Savings', type: 'savings', subtype: 'savings', currency: Currency.MXN, balance: 125000, lastSyncedAt: new Date() },
-            { provider: Provider.manual, providerAccountId: 'guest-credit', name: 'Banamex Credit Card', type: 'credit', subtype: 'credit_card', currency: Currency.MXN, balance: -8500, lastSyncedAt: new Date() },
-            { provider: Provider.manual, providerAccountId: 'guest-crypto', name: 'Demo Crypto Wallet', type: 'crypto', subtype: 'exchange', currency: Currency.MXN, balance: 32000, lastSyncedAt: new Date() },
+            {
+              provider: Provider.manual,
+              providerAccountId: 'guest-checking',
+              name: 'BBVA Checking',
+              type: 'checking',
+              subtype: 'checking',
+              currency: Currency.MXN,
+              balance: 45320.5,
+              lastSyncedAt: new Date(),
+            },
+            {
+              provider: Provider.manual,
+              providerAccountId: 'guest-savings',
+              name: 'Santander Savings',
+              type: 'savings',
+              subtype: 'savings',
+              currency: Currency.MXN,
+              balance: 125000,
+              lastSyncedAt: new Date(),
+            },
+            {
+              provider: Provider.manual,
+              providerAccountId: 'guest-credit',
+              name: 'Banamex Credit Card',
+              type: 'credit',
+              subtype: 'credit_card',
+              currency: Currency.MXN,
+              balance: -8500,
+              lastSyncedAt: new Date(),
+            },
+            {
+              provider: Provider.manual,
+              providerAccountId: 'guest-crypto',
+              name: 'Demo Crypto Wallet',
+              type: 'crypto',
+              subtype: 'exchange',
+              currency: Currency.MXN,
+              balance: 32000,
+              lastSyncedAt: new Date(),
+            },
           ],
         },
         budgets: {
@@ -87,7 +124,7 @@ export class DemoDataBuilder {
     return user;
   }
 
-  private async buildMariaPersona(geo: GeoDefaults): Promise<User> {
+  private async buildMariaPersona(_geo: GeoDefaults): Promise<User> {
     const user = await this.prisma.user.create({
       data: {
         email: 'maria@dhanam.demo',
@@ -110,9 +147,39 @@ export class DemoDataBuilder {
         userSpaces: { create: { userId: user.id, role: 'owner' } },
         accounts: {
           create: [
-            { provider: Provider.belvo, providerAccountId: 'maria-bbva-checking', name: 'BBVA Nómina', type: 'checking', subtype: 'checking', currency: Currency.MXN, balance: 28750.3, metadata: { institutionName: 'BBVA México' }, lastSyncedAt: new Date() },
-            { provider: Provider.belvo, providerAccountId: 'maria-nu-savings', name: 'Nu Cuenta', type: 'savings', subtype: 'savings', currency: Currency.MXN, balance: 45000, metadata: { institutionName: 'Nu México' }, lastSyncedAt: new Date() },
-            { provider: Provider.bitso, providerAccountId: 'maria-bitso', name: 'Bitso Wallet', type: 'crypto', subtype: 'exchange', currency: Currency.MXN, balance: 15000, metadata: { institutionName: 'Bitso' }, lastSyncedAt: new Date() },
+            {
+              provider: Provider.belvo,
+              providerAccountId: 'maria-bbva-checking',
+              name: 'BBVA Nómina',
+              type: 'checking',
+              subtype: 'checking',
+              currency: Currency.MXN,
+              balance: 28750.3,
+              metadata: { institutionName: 'BBVA México' },
+              lastSyncedAt: new Date(),
+            },
+            {
+              provider: Provider.belvo,
+              providerAccountId: 'maria-nu-savings',
+              name: 'Nu Cuenta',
+              type: 'savings',
+              subtype: 'savings',
+              currency: Currency.MXN,
+              balance: 45000,
+              metadata: { institutionName: 'Nu México' },
+              lastSyncedAt: new Date(),
+            },
+            {
+              provider: Provider.bitso,
+              providerAccountId: 'maria-bitso',
+              name: 'Bitso Wallet',
+              type: 'crypto',
+              subtype: 'exchange',
+              currency: Currency.MXN,
+              balance: 15000,
+              metadata: { institutionName: 'Bitso' },
+              lastSyncedAt: new Date(),
+            },
           ],
         },
         budgets: {
@@ -138,7 +205,7 @@ export class DemoDataBuilder {
     return user;
   }
 
-  private async buildCarlosPersona(geo: GeoDefaults): Promise<User> {
+  private async buildCarlosPersona(_geo: GeoDefaults): Promise<User> {
     const user = await this.prisma.user.create({
       data: {
         email: 'carlos@dhanam.demo',
@@ -162,8 +229,26 @@ export class DemoDataBuilder {
         userSpaces: { create: { userId: user.id, role: 'owner' } },
         accounts: {
           create: [
-            { provider: Provider.manual, providerAccountId: 'carlos-personal-checking', name: 'Santander Personal', type: 'checking', subtype: 'checking', currency: Currency.MXN, balance: 156000, lastSyncedAt: new Date() },
-            { provider: Provider.manual, providerAccountId: 'carlos-investment', name: 'GBM+ Investment', type: 'investment', subtype: 'brokerage', currency: Currency.MXN, balance: 450000, lastSyncedAt: new Date() },
+            {
+              provider: Provider.manual,
+              providerAccountId: 'carlos-personal-checking',
+              name: 'Santander Personal',
+              type: 'checking',
+              subtype: 'checking',
+              currency: Currency.MXN,
+              balance: 156000,
+              lastSyncedAt: new Date(),
+            },
+            {
+              provider: Provider.manual,
+              providerAccountId: 'carlos-investment',
+              name: 'GBM+ Investment',
+              type: 'investment',
+              subtype: 'brokerage',
+              currency: Currency.MXN,
+              balance: 450000,
+              lastSyncedAt: new Date(),
+            },
           ],
         },
       },
@@ -179,8 +264,27 @@ export class DemoDataBuilder {
         userSpaces: { create: { userId: user.id, role: 'owner' } },
         accounts: {
           create: [
-            { provider: Provider.belvo, providerAccountId: 'business-main', name: 'BBVA Business', type: 'checking', subtype: 'business_checking', currency: Currency.MXN, balance: 285000, metadata: { institutionName: 'BBVA México' }, lastSyncedAt: new Date() },
-            { provider: Provider.manual, providerAccountId: 'business-savings', name: 'Banorte Business Savings', type: 'savings', subtype: 'business_savings', currency: Currency.MXN, balance: 520000, lastSyncedAt: new Date() },
+            {
+              provider: Provider.belvo,
+              providerAccountId: 'business-main',
+              name: 'BBVA Business',
+              type: 'checking',
+              subtype: 'business_checking',
+              currency: Currency.MXN,
+              balance: 285000,
+              metadata: { institutionName: 'BBVA México' },
+              lastSyncedAt: new Date(),
+            },
+            {
+              provider: Provider.manual,
+              providerAccountId: 'business-savings',
+              name: 'Banorte Business Savings',
+              type: 'savings',
+              subtype: 'business_savings',
+              currency: Currency.MXN,
+              balance: 520000,
+              lastSyncedAt: new Date(),
+            },
           ],
         },
         budgets: {
@@ -205,7 +309,7 @@ export class DemoDataBuilder {
     return user;
   }
 
-  private async buildPatriciaPersona(geo: GeoDefaults): Promise<User> {
+  private async buildPatriciaPersona(_geo: GeoDefaults): Promise<User> {
     const user = await this.prisma.user.create({
       data: {
         email: 'patricia@dhanam.demo',
@@ -228,9 +332,38 @@ export class DemoDataBuilder {
         userSpaces: { create: [{ userId: user.id, role: 'owner' }] },
         accounts: {
           create: [
-            { provider: Provider.plaid, providerAccountId: 'enterprise-chase', name: 'Chase Business Checking', type: 'checking', subtype: 'business_checking', currency: Currency.USD, balance: 2500000, metadata: { institutionName: 'Chase Bank' }, lastSyncedAt: new Date() },
-            { provider: Provider.plaid, providerAccountId: 'enterprise-amex', name: 'Amex Corporate Platinum', type: 'credit', subtype: 'corporate_card', currency: Currency.USD, balance: -125000, metadata: { institutionName: 'American Express' }, lastSyncedAt: new Date() },
-            { provider: Provider.manual, providerAccountId: 'enterprise-investment', name: 'Vanguard Investment', type: 'investment', subtype: 'retirement', currency: Currency.USD, balance: 5000000, lastSyncedAt: new Date() },
+            {
+              provider: Provider.plaid,
+              providerAccountId: 'enterprise-chase',
+              name: 'Chase Business Checking',
+              type: 'checking',
+              subtype: 'business_checking',
+              currency: Currency.USD,
+              balance: 2500000,
+              metadata: { institutionName: 'Chase Bank' },
+              lastSyncedAt: new Date(),
+            },
+            {
+              provider: Provider.plaid,
+              providerAccountId: 'enterprise-amex',
+              name: 'Amex Corporate Platinum',
+              type: 'credit',
+              subtype: 'corporate_card',
+              currency: Currency.USD,
+              balance: -125000,
+              metadata: { institutionName: 'American Express' },
+              lastSyncedAt: new Date(),
+            },
+            {
+              provider: Provider.manual,
+              providerAccountId: 'enterprise-investment',
+              name: 'Vanguard Investment',
+              type: 'investment',
+              subtype: 'retirement',
+              currency: Currency.USD,
+              balance: 5000000,
+              lastSyncedAt: new Date(),
+            },
           ],
         },
         budgets: {
@@ -255,7 +388,7 @@ export class DemoDataBuilder {
     return user;
   }
 
-  private async buildDiegoPersona(geo: GeoDefaults): Promise<User> {
+  private async buildDiegoPersona(_geo: GeoDefaults): Promise<User> {
     const user = await this.prisma.user.create({
       data: {
         email: 'diego@dhanam.demo',
@@ -278,13 +411,82 @@ export class DemoDataBuilder {
         userSpaces: { create: { userId: user.id, role: 'owner' } },
         accounts: {
           create: [
-            { provider: Provider.belvo, providerAccountId: 'diego-bbva-checking', name: 'BBVA Nómina', type: 'checking', subtype: 'checking', currency: Currency.MXN, balance: 42500, metadata: { institutionName: 'BBVA México' }, lastSyncedAt: new Date() },
-            { provider: Provider.bitso, providerAccountId: 'diego-bitso', name: 'Bitso Exchange', type: 'crypto', subtype: 'exchange', currency: Currency.MXN, balance: 95000, metadata: { institutionName: 'Bitso' }, lastSyncedAt: new Date() },
-            { provider: Provider.blockchain, providerAccountId: 'diego-eth-wallet', name: 'ETH Wallet', type: 'crypto', subtype: 'wallet', currency: Currency.USD, balance: 12500, lastSyncedAt: new Date() },
-            { provider: Provider.blockchain, providerAccountId: 'diego-defi-ethereum', name: 'Ethereum DeFi Wallet', type: 'crypto', subtype: 'defi', currency: Currency.USD, balance: 28500, metadata: { network: 'ethereum', protocols: ['uniswap', 'aave', 'curve', 'lido'] }, lastSyncedAt: new Date() },
-            { provider: Provider.blockchain, providerAccountId: 'diego-defi-polygon', name: 'Polygon DeFi Wallet', type: 'crypto', subtype: 'defi', currency: Currency.USD, balance: 6200, metadata: { network: 'polygon', protocols: ['quickswap', 'aave-polygon'] }, lastSyncedAt: new Date() },
-            { provider: Provider.manual, providerAccountId: 'diego-sandbox-land', name: 'Sandbox LAND Portfolio', type: 'crypto', subtype: 'gaming', currency: Currency.USD, balance: 7800, metadata: { platform: 'The Sandbox' }, lastSyncedAt: new Date() },
-            { provider: Provider.blockchain, providerAccountId: 'diego-dao-governance', name: 'DAO Governance Tokens', type: 'crypto', subtype: 'wallet', currency: Currency.USD, balance: 9400, metadata: { tokens: { ENS: 2400, UNI: 3600, AAVE: 3400 } }, lastSyncedAt: new Date() },
+            {
+              provider: Provider.belvo,
+              providerAccountId: 'diego-bbva-checking',
+              name: 'BBVA Nómina',
+              type: 'checking',
+              subtype: 'checking',
+              currency: Currency.MXN,
+              balance: 42500,
+              metadata: { institutionName: 'BBVA México' },
+              lastSyncedAt: new Date(),
+            },
+            {
+              provider: Provider.bitso,
+              providerAccountId: 'diego-bitso',
+              name: 'Bitso Exchange',
+              type: 'crypto',
+              subtype: 'exchange',
+              currency: Currency.MXN,
+              balance: 95000,
+              metadata: { institutionName: 'Bitso' },
+              lastSyncedAt: new Date(),
+            },
+            {
+              provider: Provider.blockchain,
+              providerAccountId: 'diego-eth-wallet',
+              name: 'ETH Wallet',
+              type: 'crypto',
+              subtype: 'wallet',
+              currency: Currency.USD,
+              balance: 12500,
+              lastSyncedAt: new Date(),
+            },
+            {
+              provider: Provider.blockchain,
+              providerAccountId: 'diego-defi-ethereum',
+              name: 'Ethereum DeFi Wallet',
+              type: 'crypto',
+              subtype: 'defi',
+              currency: Currency.USD,
+              balance: 28500,
+              metadata: { network: 'ethereum', protocols: ['uniswap', 'aave', 'curve', 'lido'] },
+              lastSyncedAt: new Date(),
+            },
+            {
+              provider: Provider.blockchain,
+              providerAccountId: 'diego-defi-polygon',
+              name: 'Polygon DeFi Wallet',
+              type: 'crypto',
+              subtype: 'defi',
+              currency: Currency.USD,
+              balance: 6200,
+              metadata: { network: 'polygon', protocols: ['quickswap', 'aave-polygon'] },
+              lastSyncedAt: new Date(),
+            },
+            {
+              provider: Provider.manual,
+              providerAccountId: 'diego-sandbox-land',
+              name: 'Sandbox LAND Portfolio',
+              type: 'crypto',
+              subtype: 'gaming',
+              currency: Currency.USD,
+              balance: 7800,
+              metadata: { platform: 'The Sandbox' },
+              lastSyncedAt: new Date(),
+            },
+            {
+              provider: Provider.blockchain,
+              providerAccountId: 'diego-dao-governance',
+              name: 'DAO Governance Tokens',
+              type: 'crypto',
+              subtype: 'wallet',
+              currency: Currency.USD,
+              balance: 9400,
+              metadata: { tokens: { ENS: 2400, UNI: 3600, AAVE: 3400 } },
+              lastSyncedAt: new Date(),
+            },
           ],
         },
         budgets: {

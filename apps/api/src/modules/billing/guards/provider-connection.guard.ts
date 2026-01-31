@@ -59,7 +59,9 @@ export class ProviderConnectionGuard implements CanActivate {
     if (tierLimits.allowedProviders !== 'all') {
       // Determine provider from route or body
       const provider =
-        request.params?.provider || request.body?.provider || this.inferProviderFromPath(request.path);
+        request.params?.provider ||
+        request.body?.provider ||
+        this.inferProviderFromPath(request.path);
 
       if (provider && !(tierLimits.allowedProviders as string[]).includes(provider)) {
         this.logger.log(

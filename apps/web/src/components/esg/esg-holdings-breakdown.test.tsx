@@ -5,20 +5,41 @@ import type { PortfolioEsgAnalysis } from '@/hooks/useEsg';
 
 // Mock UI components
 jest.mock('@/components/ui/card', () => ({
-  Card: ({ children, className }: any) => <div data-testid="card" className={className}>{children}</div>,
+  Card: ({ children, className }: any) => (
+    <div data-testid="card" className={className}>
+      {children}
+    </div>
+  ),
   CardHeader: ({ children }: any) => <div data-testid="card-header">{children}</div>,
-  CardTitle: ({ children, className }: any) => <h3 data-testid="card-title" className={className}>{children}</h3>,
+  CardTitle: ({ children, className }: any) => (
+    <h3 data-testid="card-title" className={className}>
+      {children}
+    </h3>
+  ),
   CardDescription: ({ children }: any) => <p data-testid="card-description">{children}</p>,
-  CardContent: ({ children, className }: any) => <div data-testid="card-content" className={className}>{children}</div>,
+  CardContent: ({ children, className }: any) => (
+    <div data-testid="card-content" className={className}>
+      {children}
+    </div>
+  ),
 }));
 
 jest.mock('@/components/ui/badge', () => ({
-  Badge: ({ children, className }: any) => <span data-testid="badge" className={className}>{children}</span>,
+  Badge: ({ children, className }: any) => (
+    <span data-testid="badge" className={className}>
+      {children}
+    </span>
+  ),
 }));
 
 jest.mock('@/components/ui/progress', () => ({
   Progress: ({ value, className, indicatorClassName }: any) => (
-    <div data-testid="progress" data-value={value} className={className} data-indicator={indicatorClassName} />
+    <div
+      data-testid="progress"
+      data-value={value}
+      className={className}
+      data-indicator={indicatorClassName}
+    />
   ),
 }));
 
@@ -96,7 +117,9 @@ describe('EsgHoldingsBreakdown', () => {
     render(<EsgHoldingsBreakdown analysis={mockAnalysis} />);
 
     expect(screen.getByText('Holdings ESG Breakdown')).toBeInTheDocument();
-    expect(screen.getByText('Individual ESG scores for each asset in your portfolio')).toBeInTheDocument();
+    expect(
+      screen.getByText('Individual ESG scores for each asset in your portfolio')
+    ).toBeInTheDocument();
   });
 
   it('should display all holdings', () => {

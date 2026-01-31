@@ -5,7 +5,6 @@ import {
   IncomeVsExpenses,
   AccountBalanceAnalytics,
   PortfolioAllocation,
-  Currency,
 } from '@dhanam/shared';
 import { Controller, Get, Post, Query, Body, UseGuards, Request, Param } from '@nestjs/common';
 import {
@@ -22,6 +21,7 @@ import {
 } from '@nestjs/swagger';
 
 import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
+import { Currency } from '@db';
 
 import {
   NetWorthHistoryPoint,

@@ -141,9 +141,7 @@ export default function LifeBeatPage() {
             <HeartPulse className="h-8 w-8 text-red-500" />
             {t('lifeBeat.title')}
           </h1>
-          <p className="text-muted-foreground">
-            {t('lifeBeat.description')}
-          </p>
+          <p className="text-muted-foreground">{t('lifeBeat.description')}</p>
         </div>
       </div>
 
@@ -156,9 +154,7 @@ export default function LifeBeatPage() {
                 <Shield className="h-5 w-5" />
                 {t('lifeBeat.protectionStatus')}
               </CardTitle>
-              <CardDescription>
-                {t('lifeBeat.statusDescription')}
-              </CardDescription>
+              <CardDescription>{t('lifeBeat.statusDescription')}</CardDescription>
             </div>
             <Switch
               checked={status?.enabled ?? false}
@@ -173,14 +169,20 @@ export default function LifeBeatPage() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="p-4 bg-muted rounded-lg">
                   <div className="text-sm text-muted-foreground">{t('lifeBeat.lastActivity')}</div>
-                  <div className="text-2xl font-bold">{t('lifeBeat.daysAgo', { days: status.daysSinceActivity ?? 0 })}</div>
+                  <div className="text-2xl font-bold">
+                    {t('lifeBeat.daysAgo', { days: status.daysSinceActivity ?? 0 })}
+                  </div>
                 </div>
                 <div className="p-4 bg-muted rounded-lg">
-                  <div className="text-sm text-muted-foreground">{t('lifeBeat.alertThresholds')}</div>
+                  <div className="text-sm text-muted-foreground">
+                    {t('lifeBeat.alertThresholds')}
+                  </div>
                   <div className="text-2xl font-bold">{status.alertDays.join(', ')} days</div>
                 </div>
                 <div className="p-4 bg-muted rounded-lg">
-                  <div className="text-sm text-muted-foreground">{t('lifeBeat.trustedExecutors')}</div>
+                  <div className="text-sm text-muted-foreground">
+                    {t('lifeBeat.trustedExecutors')}
+                  </div>
                   <div className="text-2xl font-bold">{status.executorCount}</div>
                 </div>
               </div>
@@ -234,9 +236,7 @@ export default function LifeBeatPage() {
                 <UserCheck className="h-5 w-5" />
                 {t('lifeBeat.executors.title')}
               </CardTitle>
-              <CardDescription>
-                {t('lifeBeat.executors.description')}
-              </CardDescription>
+              <CardDescription>{t('lifeBeat.executors.description')}</CardDescription>
             </div>
             <Dialog open={isAddExecutorDialogOpen} onOpenChange={setIsAddExecutorDialogOpen}>
               <DialogTrigger asChild>
@@ -248,9 +248,7 @@ export default function LifeBeatPage() {
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>{t('lifeBeat.addDialog.title')}</DialogTitle>
-                  <DialogDescription>
-                    {t('lifeBeat.addDialog.description')}
-                  </DialogDescription>
+                  <DialogDescription>{t('lifeBeat.addDialog.description')}</DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
                   <div>
@@ -273,7 +271,9 @@ export default function LifeBeatPage() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="executor-relationship">{t('lifeBeat.addDialog.relationship')}</Label>
+                    <Label htmlFor="executor-relationship">
+                      {t('lifeBeat.addDialog.relationship')}
+                    </Label>
                     <Select
                       value={newExecutor.relationship}
                       onValueChange={(value) =>
@@ -284,13 +284,27 @@ export default function LifeBeatPage() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="spouse">{t('lifeBeat.addDialog.relationships.spouse')}</SelectItem>
-                        <SelectItem value="child">{t('lifeBeat.addDialog.relationships.child')}</SelectItem>
-                        <SelectItem value="sibling">{t('lifeBeat.addDialog.relationships.sibling')}</SelectItem>
-                        <SelectItem value="parent">{t('lifeBeat.addDialog.relationships.parent')}</SelectItem>
-                        <SelectItem value="attorney">{t('lifeBeat.addDialog.relationships.attorney')}</SelectItem>
-                        <SelectItem value="financial_advisor">{t('lifeBeat.addDialog.relationships.financialAdvisor')}</SelectItem>
-                        <SelectItem value="other">{t('lifeBeat.addDialog.relationships.other')}</SelectItem>
+                        <SelectItem value="spouse">
+                          {t('lifeBeat.addDialog.relationships.spouse')}
+                        </SelectItem>
+                        <SelectItem value="child">
+                          {t('lifeBeat.addDialog.relationships.child')}
+                        </SelectItem>
+                        <SelectItem value="sibling">
+                          {t('lifeBeat.addDialog.relationships.sibling')}
+                        </SelectItem>
+                        <SelectItem value="parent">
+                          {t('lifeBeat.addDialog.relationships.parent')}
+                        </SelectItem>
+                        <SelectItem value="attorney">
+                          {t('lifeBeat.addDialog.relationships.attorney')}
+                        </SelectItem>
+                        <SelectItem value="financial_advisor">
+                          {t('lifeBeat.addDialog.relationships.financialAdvisor')}
+                        </SelectItem>
+                        <SelectItem value="other">
+                          {t('lifeBeat.addDialog.relationships.other')}
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -360,7 +374,9 @@ export default function LifeBeatPage() {
                     <Badge variant="outline" className="capitalize">
                       {executor.relationship.replace('_', ' ')}
                     </Badge>
-                    {executor.accessGranted && <Badge variant="destructive">{t('lifeBeat.executors.accessGranted')}</Badge>}
+                    {executor.accessGranted && (
+                      <Badge variant="destructive">{t('lifeBeat.executors.accessGranted')}</Badge>
+                    )}
                     <Button
                       variant="ghost"
                       size="icon"
@@ -423,9 +439,7 @@ export default function LifeBeatPage() {
               <Shield className="h-5 w-5" />
               {t('lifeBeat.enableDialog.title')}
             </DialogTitle>
-            <DialogDescription>
-              {t('lifeBeat.enableDialog.description')}
-            </DialogDescription>
+            <DialogDescription>{t('lifeBeat.enableDialog.description')}</DialogDescription>
           </DialogHeader>
           <div className="space-y-6">
             <div>

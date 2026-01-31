@@ -47,7 +47,7 @@ export const authApi = {
 
   async loginAsPersona(
     persona: string,
-    countryCode?: string,
+    countryCode?: string
   ): Promise<{
     tokens: AuthResponse['tokens'];
     user: AuthResponse['user'] & { isDemo: boolean; persona: string };

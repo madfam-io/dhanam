@@ -175,9 +175,7 @@ export default function GoalsPage() {
     <div className="container mx-auto py-8 space-y-8">
       <div>
         <h1 className="text-4xl font-bold tracking-tight">{t('main.financialGoals')}</h1>
-        <p className="text-muted-foreground mt-2">
-          {t('page.description')}
-        </p>
+        <p className="text-muted-foreground mt-2">{t('page.description')}</p>
       </div>
 
       {/* Summary Cards */}
@@ -190,7 +188,9 @@ export default function GoalsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{summary.totalGoals}</div>
-              <p className="text-xs text-muted-foreground">{summary.activeGoals} {t('status.active')}</p>
+              <p className="text-xs text-muted-foreground">
+                {summary.activeGoals} {t('status.active')}
+              </p>
             </CardContent>
           </Card>
 
@@ -286,7 +286,9 @@ export default function GoalsPage() {
                           {getGoalTypeLabel(goal.type)}
                         </p>
                       </div>
-                      <Badge className={getStatusColor(goal.status)}>{getStatusLabel(goal.status)}</Badge>
+                      <Badge className={getStatusColor(goal.status)}>
+                        {getStatusLabel(goal.status)}
+                      </Badge>
                     </div>
                     <div className="space-y-1">
                       <div className="flex justify-between text-sm">
@@ -393,7 +395,9 @@ export default function GoalsPage() {
                     {/* Allocations */}
                     {goalProgress.allocations && goalProgress.allocations.length > 0 && (
                       <div>
-                        <h4 className="text-sm font-semibold mb-3">{t('page.accountAllocations')}</h4>
+                        <h4 className="text-sm font-semibold mb-3">
+                          {t('page.accountAllocations')}
+                        </h4>
                         <div className="space-y-2">
                           {goalProgress.allocations.map((alloc) => (
                             <div
@@ -431,9 +435,7 @@ export default function GoalsPage() {
                         <Calculator className="h-5 w-5" />
                         {t('probability.title')}
                       </CardTitle>
-                      <CardDescription>
-                        {t('probability.description')}
-                      </CardDescription>
+                      <CardDescription>{t('probability.description')}</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       {!probability ? (
@@ -486,7 +488,9 @@ export default function GoalsPage() {
                               </p>
                             </div>
                             <div>
-                              <p className="text-sm text-muted-foreground">{t('probability.expectedShortfall')}</p>
+                              <p className="text-sm text-muted-foreground">
+                                {t('probability.expectedShortfall')}
+                              </p>
                               <p className="text-2xl font-semibold">
                                 $
                                 {probability.expectedShortfall.toLocaleString(undefined, {
@@ -498,10 +502,14 @@ export default function GoalsPage() {
 
                           {/* 90% Confidence Range */}
                           <div>
-                            <p className="text-sm font-semibold mb-2">{t('probability.confidenceRange')}</p>
+                            <p className="text-sm font-semibold mb-2">
+                              {t('probability.confidenceRange')}
+                            </p>
                             <div className="flex justify-between items-center">
                               <div>
-                                <p className="text-xs text-muted-foreground">{t('probability.worst10')}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {t('probability.worst10')}
+                                </p>
                                 <p className="text-lg font-semibold">
                                   $
                                   {probability.confidence90Range.low.toLocaleString(undefined, {
@@ -511,7 +519,9 @@ export default function GoalsPage() {
                               </div>
                               <TrendingUp className="h-6 w-6 text-muted-foreground" />
                               <div className="text-right">
-                                <p className="text-xs text-muted-foreground">{t('probability.best10')}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {t('probability.best10')}
+                                </p>
                                 <p className="text-lg font-semibold">
                                   $
                                   {probability.confidence90Range.high.toLocaleString(undefined, {
@@ -533,8 +543,10 @@ export default function GoalsPage() {
                                 </p>
                                 <p className="text-sm">
                                   {t('probability.recommendedContribution', {
-                                    recommended: probability.recommendedMonthlyContribution.toLocaleString(),
-                                    current: probability.currentMonthlyContribution.toLocaleString(),
+                                    recommended:
+                                      probability.recommendedMonthlyContribution.toLocaleString(),
+                                    current:
+                                      probability.currentMonthlyContribution.toLocaleString(),
                                   })}
                                 </p>
                               </AlertDescription>
@@ -566,9 +578,7 @@ export default function GoalsPage() {
               <div className="text-center">
                 <Target className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-50" />
                 <p className="text-muted-foreground mb-2">{t('page.noGoalSelected')}</p>
-                <p className="text-sm text-muted-foreground">
-                  {t('page.selectGoalPrompt')}
-                </p>
+                <p className="text-sm text-muted-foreground">{t('page.selectGoalPrompt')}</p>
               </div>
             </div>
           )}

@@ -50,11 +50,7 @@ export function PersonaSwitcher({ currentPersona }: { currentPersona?: string })
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="sm" className="gap-2" disabled={switching}>
-          {switching ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <span>{current.emoji}</span>
-          )}
+          {switching ? <Loader2 className="h-4 w-4 animate-spin" /> : <span>{current.emoji}</span>}
           <span className="hidden sm:inline">{t(current.nameKey as any)}</span>
           <ChevronDown className="h-3 w-3" />
         </Button>

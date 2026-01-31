@@ -37,7 +37,8 @@ export function ProblemSolution() {
             <ul className="space-y-2 text-sm">
               {([1, 2, 3, 4, 5, 6] as const).map((n) => (
                 <li key={n} className="flex gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-600 shrink-0 mt-0.5" /> {t(`problemSolution.solution${n}`)}
+                  <CheckCircle className="h-4 w-4 text-green-600 shrink-0 mt-0.5" />{' '}
+                  {t(`problemSolution.solution${n}`)}
                 </li>
               ))}
             </ul>

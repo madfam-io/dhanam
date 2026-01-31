@@ -58,11 +58,23 @@ const DEFAULT_ASSET_STATIC: AssetTypeStaticConfig = {
 };
 
 const ASSET_TYPE_STATIC: Record<string, AssetTypeStaticConfig> = {
-  real_estate: { icon: Building2, color: 'text-blue-600 bg-blue-100', labelKey: 'page.typeRealEstate' },
+  real_estate: {
+    icon: Building2,
+    color: 'text-blue-600 bg-blue-100',
+    labelKey: 'page.typeRealEstate',
+  },
   vehicle: { icon: Car, color: 'text-green-600 bg-green-100', labelKey: 'page.typeVehicle' },
   domain: { icon: Globe, color: 'text-purple-600 bg-purple-100', labelKey: 'page.typeDomain' },
-  private_equity: { icon: TrendingUp, color: 'text-orange-600 bg-orange-100', labelKey: 'page.typePrivateEquity' },
-  angel_investment: { icon: TrendingUp, color: 'text-red-600 bg-red-100', labelKey: 'page.typeAngelInvestment' },
+  private_equity: {
+    icon: TrendingUp,
+    color: 'text-orange-600 bg-orange-100',
+    labelKey: 'page.typePrivateEquity',
+  },
+  angel_investment: {
+    icon: TrendingUp,
+    color: 'text-red-600 bg-red-100',
+    labelKey: 'page.typeAngelInvestment',
+  },
   collectible: { icon: Gem, color: 'text-pink-600 bg-pink-100', labelKey: 'page.typeCollectible' },
   art: { icon: Palette, color: 'text-indigo-600 bg-indigo-100', labelKey: 'page.typeArt' },
   jewelry: { icon: Coins, color: 'text-yellow-600 bg-yellow-100', labelKey: 'page.typeJewelry' },
@@ -138,9 +150,7 @@ export default function AssetsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">{t('page.title')}</h1>
-          <p className="text-muted-foreground">
-            {t('page.description')}
-          </p>
+          <p className="text-muted-foreground">{t('page.description')}</p>
         </div>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
@@ -152,9 +162,7 @@ export default function AssetsPage() {
           <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{t('page.addManualAsset')}</DialogTitle>
-              <DialogDescription>
-                {t('page.trackIlliquid')}
-              </DialogDescription>
+              <DialogDescription>{t('page.trackIlliquid')}</DialogDescription>
             </DialogHeader>
             <ManualAssetForm
               onSubmit={handleCreateAsset}
@@ -172,7 +180,9 @@ export default function AssetsPage() {
         </CardHeader>
         <CardContent>
           <div className="text-3xl font-bold">{formatCurrency(totalValue, 'USD')}</div>
-          <p className="text-sm text-muted-foreground mt-1">{t('page.assetsTracked', { count: assets.length })}</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            {t('page.assetsTracked', { count: assets.length })}
+          </p>
         </CardContent>
       </Card>
 
@@ -182,9 +192,7 @@ export default function AssetsPage() {
           <CardContent className="py-12 text-center">
             <Building2 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
             <h3 className="text-lg font-medium mb-2">{t('empty.title')}</h3>
-            <p className="text-muted-foreground mb-4">
-              {t('empty.description')}
-            </p>
+            <p className="text-muted-foreground mb-4">{t('empty.description')}</p>
             <Button onClick={() => setIsCreateDialogOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
               {t('empty.addFirst')}
@@ -225,7 +233,9 @@ export default function AssetsPage() {
                       <div className="flex items-center gap-1">
                         <FileText className="h-4 w-4" />
                         <span>
-                          {documentCount !== 1 ? t('page.documents', { count: documentCount }) : t('page.document', { count: documentCount })}
+                          {documentCount !== 1
+                            ? t('page.documents', { count: documentCount })
+                            : t('page.document', { count: documentCount })}
                         </span>
                       </div>
                       <ChevronRight className="h-4 w-4" />

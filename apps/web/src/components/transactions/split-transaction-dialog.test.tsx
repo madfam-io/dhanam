@@ -8,18 +8,28 @@ global.fetch = jest.fn();
 // Mock UI components
 jest.mock('@dhanam/ui', () => ({
   Button: ({ children, onClick, disabled, variant, size }: any) => (
-    <button onClick={onClick} disabled={disabled} data-variant={variant} data-size={size}>{children}</button>
+    <button onClick={onClick} disabled={disabled} data-variant={variant} data-size={size}>
+      {children}
+    </button>
   ),
   Dialog: ({ children, open, onOpenChange }: any) => (
-    <div data-testid="dialog" data-open={open}>{children}</div>
+    <div data-testid="dialog" data-open={open}>
+      {children}
+    </div>
   ),
-  DialogContent: ({ children, className }: any) => <div data-testid="dialog-content" className={className}>{children}</div>,
+  DialogContent: ({ children, className }: any) => (
+    <div data-testid="dialog-content" className={className}>
+      {children}
+    </div>
+  ),
   DialogDescription: ({ children }: any) => <p data-testid="dialog-description">{children}</p>,
   DialogFooter: ({ children }: any) => <div data-testid="dialog-footer">{children}</div>,
   DialogHeader: ({ children }: any) => <div data-testid="dialog-header">{children}</div>,
   DialogTitle: ({ children }: any) => <h2 data-testid="dialog-title">{children}</h2>,
   DialogTrigger: ({ children, asChild }: any) => (
-    <div data-testid="dialog-trigger" onClick={() => {}}>{children}</div>
+    <div data-testid="dialog-trigger" onClick={() => {}}>
+      {children}
+    </div>
   ),
   Input: ({ value, onChange, type, placeholder, id, readOnly, className }: any) => (
     <input
@@ -35,11 +45,7 @@ jest.mock('@dhanam/ui', () => ({
   ),
   Label: ({ children, htmlFor }: any) => <label htmlFor={htmlFor}>{children}</label>,
   Select: ({ children, value, onValueChange }: any) => (
-    <select
-      value={value}
-      onChange={(e) => onValueChange?.(e.target.value)}
-      data-testid="select"
-    >
+    <select value={value} onChange={(e) => onValueChange?.(e.target.value)} data-testid="select">
       {children}
     </select>
   ),
@@ -130,7 +136,7 @@ describe('SplitTransactionDialog', () => {
 
   describe('Currency Formatting', () => {
     it('should format positive amounts correctly', () => {
-      render(<SplitTransactionDialog {...defaultProps} transactionAmount={150.50} />);
+      render(<SplitTransactionDialog {...defaultProps} transactionAmount={150.5} />);
 
       // Amount appears in description
       expect(screen.getByText(/\$150\.50 expense/)).toBeInTheDocument();
@@ -162,7 +168,7 @@ describe('SplitTransactionDialog', () => {
       render(<SplitTransactionDialog {...defaultProps} />);
 
       const buttons = screen.getAllByRole('button');
-      const submitButton = buttons.find(b => b.textContent?.includes('Split Transaction'));
+      const submitButton = buttons.find((b) => b.textContent?.includes('Split Transaction'));
       expect(submitButton).toBeInTheDocument();
     });
 
@@ -170,7 +176,7 @@ describe('SplitTransactionDialog', () => {
       render(<SplitTransactionDialog {...defaultProps} />);
 
       const buttons = screen.getAllByRole('button');
-      const submitButton = buttons.find(b => b.textContent?.includes('Split Transaction'));
+      const submitButton = buttons.find((b) => b.textContent?.includes('Split Transaction'));
       expect(submitButton).toBeDisabled();
     });
   });
@@ -211,7 +217,9 @@ describe('SplitTransactionDialog', () => {
     });
 
     it('should handle single household member', () => {
-      render(<SplitTransactionDialog {...defaultProps} householdMembers={[mockHouseholdMembers[0]]} />);
+      render(
+        <SplitTransactionDialog {...defaultProps} householdMembers={[mockHouseholdMembers[0]]} />
+      );
 
       expect(screen.getByText('Add Person')).toBeInTheDocument();
     });

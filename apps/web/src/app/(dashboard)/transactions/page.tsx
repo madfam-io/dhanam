@@ -236,7 +236,11 @@ export default function TransactionsPage() {
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="merchant">{t('form.merchantOptional')}</Label>
-                  <Input id="merchant" name="merchant" placeholder={t('form.merchantPlaceholder')} />
+                  <Input
+                    id="merchant"
+                    name="merchant"
+                    placeholder={t('form.merchantPlaceholder')}
+                  />
                 </div>
               </div>
               <DialogFooter>
@@ -259,9 +263,7 @@ export default function TransactionsPage() {
           <CardContent className="flex flex-col items-center justify-center py-8">
             <Receipt className="h-12 w-12 text-muted-foreground mb-4" />
             <h3 className="font-semibold text-lg mb-2">{t('empty.title')}</h3>
-            <p className="text-muted-foreground text-center mb-4">
-              {t('empty.description')}
-            </p>
+            <p className="text-muted-foreground text-center mb-4">{t('empty.description')}</p>
             <Button onClick={() => setIsCreateOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
               {t('empty.addFirst')}
@@ -272,7 +274,9 @@ export default function TransactionsPage() {
         <Card>
           <CardHeader>
             <CardTitle>{t('list.title')}</CardTitle>
-            <CardDescription>{transactionsData?.total} {t('list.found')}</CardDescription>
+            <CardDescription>
+              {transactionsData?.total} {t('list.found')}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             {/* Virtualized list container */}

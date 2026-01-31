@@ -1,4 +1,4 @@
-import { User, Currency } from '@dhanam/shared';
+import { User } from '@dhanam/shared';
 import { Controller, Get, Post, Put, Body, Param, Query, UseGuards } from '@nestjs/common';
 import {
   ApiTags,
@@ -11,6 +11,7 @@ import {
 
 import { CurrentUser } from '@core/auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
+import { Currency } from '@db';
 
 import { SpaceGuard } from '../spaces/guards/space.guard';
 

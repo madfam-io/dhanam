@@ -2,6 +2,7 @@ import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 
 import { PrismaService } from '../prisma/prisma.service';
+
 import { DemoAuthService } from './demo-auth.service';
 
 @Injectable()
@@ -10,7 +11,7 @@ export class GuestAuthService {
     private prisma: PrismaService,
     private jwtService: JwtService,
     @Inject(forwardRef(() => DemoAuthService))
-    private demoAuthService: DemoAuthService,
+    private demoAuthService: DemoAuthService
   ) {}
 
   /**

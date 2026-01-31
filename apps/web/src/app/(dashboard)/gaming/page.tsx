@@ -278,7 +278,11 @@ export default function GamingPage() {
   // TODO: Replace 'demo-space' with actual spaceId from auth context
   const spaceId = 'demo-space';
 
-  const { data: portfolio, isLoading, error } = useQuery({
+  const {
+    data: portfolio,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ['gaming-portfolio', spaceId],
     queryFn: () => gamingApi.getPortfolio(spaceId),
     retry: false,
@@ -369,13 +373,17 @@ export default function GamingPage() {
             <div className="text-2xl font-bold">
               {formatCurrency(totalGamingAssets, Currency.USD)}
             </div>
-            <p className="text-xs text-muted-foreground">{t('summary.acrossPlatforms', { count: PLATFORM_DATA.length })}</p>
+            <p className="text-xs text-muted-foreground">
+              {t('summary.acrossPlatforms', { count: PLATFORM_DATA.length })}
+            </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">{t('summary.monthlyGamingIncome')}</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t('summary.monthlyGamingIncome')}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
@@ -391,7 +399,9 @@ export default function GamingPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{PLATFORM_DATA.length}</div>
-            <p className="text-xs text-muted-foreground">{t('summary.chains', { count: CHAIN_DATA.length })}</p>
+            <p className="text-xs text-muted-foreground">
+              {t('summary.chains', { count: CHAIN_DATA.length })}
+            </p>
           </CardContent>
         </Card>
 

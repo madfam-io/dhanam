@@ -81,7 +81,7 @@ export function UsageIndicator({
   const [error, setError] = useState<string | null>(null);
 
   // Don't show for premium users
-  const isPremium = user?.subscriptionTier === 'premium';
+  const isPremium = user?.subscriptionTier === 'pro';
 
   useEffect(() => {
     if (isPremium || !user) {
@@ -204,7 +204,7 @@ export function UsageOverview({ className = '' }: { className?: string }) {
   const [usage, setUsage] = useState<UsageMetrics | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const isPremium = user?.subscriptionTier === 'premium';
+  const isPremium = user?.subscriptionTier === 'pro';
 
   useEffect(() => {
     if (!user) {

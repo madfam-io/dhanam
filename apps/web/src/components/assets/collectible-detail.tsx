@@ -125,7 +125,8 @@ export function CollectibleDetail({
                 {name}
               </CardTitle>
               <CardDescription className="mt-1">
-                {collectibleMeta?.category || 'Collectible'} · {collectibleMeta?.provider || 'No provider'}
+                {collectibleMeta?.category || 'Collectible'} ·{' '}
+                {collectibleMeta?.provider || 'No provider'}
               </CardDescription>
             </div>
             <Badge variant={isLinked ? 'default' : 'secondary'}>
@@ -154,9 +155,7 @@ export function CollectibleDetail({
               <p className="text-sm text-muted-foreground">Current Value</p>
               <p className="text-2xl font-bold">{formatCurrency(currentValue, currency)}</p>
               {isLinked && (
-                <p className="text-xs text-muted-foreground">
-                  Source: {collectibleMeta?.provider}
-                </p>
+                <p className="text-xs text-muted-foreground">Source: {collectibleMeta?.provider}</p>
               )}
             </div>
 
@@ -164,7 +163,8 @@ export function CollectibleDetail({
               <div className="space-y-1">
                 <p className="text-sm text-muted-foreground">Valuation Range</p>
                 <p className="text-lg font-semibold">
-                  {formatCurrency(valuation.marketValueLow, currency)} — {formatCurrency(valuation.marketValueHigh, currency)}
+                  {formatCurrency(valuation.marketValueLow, currency)} —{' '}
+                  {formatCurrency(valuation.marketValueHigh, currency)}
                 </p>
               </div>
             )}
@@ -175,12 +175,7 @@ export function CollectibleDetail({
           <div className="flex flex-wrap gap-3">
             {isLinked ? (
               <>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleRefresh}
-                  disabled={isRefreshing}
-                >
+                <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isRefreshing}>
                   {isRefreshing ? (
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                   ) : (
@@ -188,12 +183,7 @@ export function CollectibleDetail({
                   )}
                   Refresh Valuation
                 </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleUnlink}
-                  disabled={isUnlinking}
-                >
+                <Button variant="ghost" size="sm" onClick={handleUnlink} disabled={isUnlinking}>
                   {isUnlinking ? (
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                   ) : (
@@ -203,11 +193,7 @@ export function CollectibleDetail({
                 </Button>
               </>
             ) : (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowLinkModal(true)}
-              >
+              <Button variant="outline" size="sm" onClick={() => setShowLinkModal(true)}>
                 <LinkIcon className="h-4 w-4 mr-2" />
                 Link to Provider
               </Button>

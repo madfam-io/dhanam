@@ -12,6 +12,7 @@ import {
 import { Request } from 'express';
 
 import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
+
 import { ProviderConnectionGuard } from '../../billing/guards/provider-connection.guard';
 
 import { DeFiService } from './defi.service';

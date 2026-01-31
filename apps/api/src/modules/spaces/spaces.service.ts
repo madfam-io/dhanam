@@ -8,6 +8,7 @@ import {
 
 import { LoggerService } from '@core/logger/logger.service';
 import { PrismaService } from '@core/prisma/prisma.service';
+import { Currency as PrismaCurrency } from '@db';
 
 import { CreateSpaceDto } from './dto/create-space.dto';
 import { InviteMemberDto } from './dto/invite-member.dto';
@@ -29,7 +30,7 @@ export class SpacesService {
 
     return userSpaces.map((us) => ({
       ...us.space,
-      currency: us.space.currency as Currency,
+      currency: us.space.currency as unknown as Currency,
       role: us.role,
       createdAt: us.space.createdAt.toISOString(),
       updatedAt: us.space.updatedAt.toISOString(),
@@ -41,7 +42,7 @@ export class SpacesService {
       data: {
         name: dto.name,
         type: dto.type,
-        currency: dto.currency || 'MXN',
+        currency: (dto.currency as unknown as PrismaCurrency) || 'MXN',
         userSpaces: {
           create: {
             userId,
@@ -55,7 +56,7 @@ export class SpacesService {
 
     return {
       ...space,
-      currency: space.currency as Currency,
+      currency: space.currency as unknown as Currency,
       createdAt: space.createdAt.toISOString(),
       updatedAt: space.updatedAt.toISOString(),
       role: 'owner' as SpaceRole,
@@ -73,7 +74,7 @@ export class SpacesService {
 
     return {
       ...space,
-      currency: space.currency as Currency,
+      currency: space.currency as unknown as Currency,
       createdAt: space.createdAt.toISOString(),
       updatedAt: space.updatedAt.toISOString(),
     };
@@ -84,7 +85,7 @@ export class SpacesService {
       where: { id: spaceId },
       data: {
         name: dto.name,
-        currency: dto.currency,
+        currency: dto.currency as unknown as PrismaCurrency,
       },
     });
 
@@ -92,7 +93,7 @@ export class SpacesService {
 
     return {
       ...space,
-      currency: space.currency as Currency,
+      currency: space.currency as unknown as Currency,
       createdAt: space.createdAt.toISOString(),
       updatedAt: space.updatedAt.toISOString(),
     };

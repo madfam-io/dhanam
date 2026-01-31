@@ -1,8 +1,8 @@
 import { Injectable, CanActivate, ExecutionContext, Logger } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 
-import { FEATURE_KEY, GateableFeature } from '../decorators/requires-feature.decorator';
 import { BillingService } from '../billing.service';
+import { FEATURE_KEY, GateableFeature } from '../decorators/requires-feature.decorator';
 import { PaymentRequiredException } from '../exceptions';
 
 /**

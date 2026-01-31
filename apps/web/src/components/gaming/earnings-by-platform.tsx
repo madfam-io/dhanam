@@ -28,8 +28,8 @@ export function EarningsByPlatform({ earnings, totalMonthlyUsd }: EarningsByPlat
   const byPlatform = earnings.reduce<Record<string, { total: number; sources: EarningEntry[] }>>(
     (acc, e) => {
       if (!acc[e.platform]) acc[e.platform] = { total: 0, sources: [] };
-      acc[e.platform].total += e.amountUsd;
-      acc[e.platform].sources.push(e);
+      acc[e.platform]!.total += e.amountUsd;
+      acc[e.platform]!.sources.push(e);
       return acc;
     },
     {}

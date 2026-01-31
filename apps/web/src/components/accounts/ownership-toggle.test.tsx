@@ -6,7 +6,9 @@ import { OwnershipToggle } from './ownership-toggle';
 // Mock @dhanam/ui components as simple HTML elements
 jest.mock('@dhanam/ui', () => ({
   Card: ({ children, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-    <div data-testid="card" {...props}>{children}</div>
+    <div data-testid="card" {...props}>
+      {children}
+    </div>
   ),
   CardContent: ({ children, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
     <div {...props}>{children}</div>
@@ -34,7 +36,9 @@ jest.mock('@dhanam/ui', () => ({
     </div>
   ),
   TabsList: ({ children, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-    <div data-testid="tabs-list" role="tablist" {...props}>{children}</div>
+    <div data-testid="tabs-list" role="tablist" {...props}>
+      {children}
+    </div>
   ),
   TabsTrigger: ({
     children,
@@ -125,13 +129,7 @@ describe('OwnershipToggle', () => {
     const user = userEvent.setup();
     const onChange = jest.fn();
 
-    render(
-      <OwnershipToggle
-        {...defaultProps}
-        netWorth={netWorthData}
-        onFilterChange={onChange}
-      />
-    );
+    render(<OwnershipToggle {...defaultProps} netWorth={netWorthData} onFilterChange={onChange} />);
 
     const cards = screen.getAllByTestId('card');
     // Click the "mine" card (second clickable card)
@@ -144,13 +142,7 @@ describe('OwnershipToggle', () => {
     const user = userEvent.setup();
     const onChange = jest.fn();
 
-    render(
-      <OwnershipToggle
-        {...defaultProps}
-        netWorth={netWorthData}
-        onFilterChange={onChange}
-      />
-    );
+    render(<OwnershipToggle {...defaultProps} netWorth={netWorthData} onFilterChange={onChange} />);
 
     const cards = screen.getAllByTestId('card');
     // Click the "ours" card (third clickable card)
@@ -162,9 +154,7 @@ describe('OwnershipToggle', () => {
   it('shows correct active state via ring class on the active card', async () => {
     const user = userEvent.setup();
 
-    render(
-      <OwnershipToggle {...defaultProps} netWorth={netWorthData} />
-    );
+    render(<OwnershipToggle {...defaultProps} netWorth={netWorthData} />);
 
     const cards = screen.getAllByTestId('card');
 
@@ -180,9 +170,7 @@ describe('OwnershipToggle', () => {
   });
 
   it('renders net worth amounts when netWorth prop is provided', () => {
-    render(
-      <OwnershipToggle {...defaultProps} netWorth={netWorthData} />
-    );
+    render(<OwnershipToggle {...defaultProps} netWorth={netWorthData} />);
 
     expect(screen.getByText('$50,000')).toBeInTheDocument();
     expect(screen.getByText('$30,000')).toBeInTheDocument();
@@ -197,21 +185,13 @@ describe('OwnershipToggle', () => {
   });
 
   it('renders partner name in mine card description', () => {
-    render(
-      <OwnershipToggle
-        {...defaultProps}
-        netWorth={netWorthData}
-        partnerName="Alex"
-      />
-    );
+    render(<OwnershipToggle {...defaultProps} netWorth={netWorthData} partnerName="Alex" />);
 
     expect(screen.getByText("Alex's accounts")).toBeInTheDocument();
   });
 
   it('uses default partner name "Partner" when not specified', () => {
-    render(
-      <OwnershipToggle {...defaultProps} netWorth={netWorthData} />
-    );
+    render(<OwnershipToggle {...defaultProps} netWorth={netWorthData} />);
 
     expect(screen.getByText("Partner's accounts")).toBeInTheDocument();
   });
@@ -225,17 +205,13 @@ describe('OwnershipToggle', () => {
   });
 
   it('renders Users icon in the total net worth card', () => {
-    render(
-      <OwnershipToggle {...defaultProps} netWorth={netWorthData} />
-    );
+    render(<OwnershipToggle {...defaultProps} netWorth={netWorthData} />);
 
     expect(screen.getByTestId('icon-users')).toBeInTheDocument();
   });
 
   it('renders Heart icon in the ours net worth card header', () => {
-    render(
-      <OwnershipToggle {...defaultProps} netWorth={netWorthData} />
-    );
+    render(<OwnershipToggle {...defaultProps} netWorth={netWorthData} />);
 
     const heartIcons = screen.getAllByTestId('icon-heart');
     // At least one from the card, one from the tab

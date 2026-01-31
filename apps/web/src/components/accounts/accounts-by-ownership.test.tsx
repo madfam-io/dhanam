@@ -18,23 +18,49 @@ jest.mock('lucide-react', () => ({
 jest.mock('./ownership-toggle', () => ({
   OwnershipToggle: ({ onFilterChange }: any) => (
     <div data-testid="ownership-toggle">
-      <button data-testid="filter-yours" onClick={() => onFilterChange('yours')}>Yours</button>
-      <button data-testid="filter-mine" onClick={() => onFilterChange('mine')}>Mine</button>
-      <button data-testid="filter-ours" onClick={() => onFilterChange('ours')}>Ours</button>
+      <button data-testid="filter-yours" onClick={() => onFilterChange('yours')}>
+        Yours
+      </button>
+      <button data-testid="filter-mine" onClick={() => onFilterChange('mine')}>
+        Mine
+      </button>
+      <button data-testid="filter-ours" onClick={() => onFilterChange('ours')}>
+        Ours
+      </button>
     </div>
   ),
 }));
 
 // Mock @/components/ui/card and badge
 jest.mock('@/components/ui/card', () => ({
-  Card: ({ children, className }: any) => <div data-testid="card" className={className}>{children}</div>,
-  CardContent: ({ children, className }: any) => <div data-testid="card-content" className={className}>{children}</div>,
-  CardHeader: ({ children, className }: any) => <div data-testid="card-header" className={className}>{children}</div>,
-  CardTitle: ({ children, className }: any) => <div data-testid="card-title" className={className}>{children}</div>,
+  Card: ({ children, className }: any) => (
+    <div data-testid="card" className={className}>
+      {children}
+    </div>
+  ),
+  CardContent: ({ children, className }: any) => (
+    <div data-testid="card-content" className={className}>
+      {children}
+    </div>
+  ),
+  CardHeader: ({ children, className }: any) => (
+    <div data-testid="card-header" className={className}>
+      {children}
+    </div>
+  ),
+  CardTitle: ({ children, className }: any) => (
+    <div data-testid="card-title" className={className}>
+      {children}
+    </div>
+  ),
 }));
 
 jest.mock('@/components/ui/badge', () => ({
-  Badge: ({ children, variant }: any) => <span data-testid="badge" data-variant={variant}>{children}</span>,
+  Badge: ({ children, variant }: any) => (
+    <span data-testid="badge" data-variant={variant}>
+      {children}
+    </span>
+  ),
 }));
 
 const mockAccounts = [

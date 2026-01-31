@@ -11,13 +11,13 @@ jest.mock('next/navigation', () => ({
 
 // Mock @dhanam/ui components
 jest.mock('@dhanam/ui', () => ({
-  Button: ({ children, ...props }: any) => (
-    <button {...props}>{children}</button>
-  ),
+  Button: ({ children, ...props }: any) => <button {...props}>{children}</button>,
   DropdownMenu: ({ children }: any) => <div data-testid="dropdown-menu">{children}</div>,
   DropdownMenuContent: ({ children }: any) => <div>{children}</div>,
   DropdownMenuItem: ({ children, onClick }: any) => (
-    <div role="menuitem" onClick={onClick}>{children}</div>
+    <div role="menuitem" onClick={onClick}>
+      {children}
+    </div>
   ),
   DropdownMenuLabel: ({ children }: any) => <div>{children}</div>,
   DropdownMenuSeparator: () => <hr />,

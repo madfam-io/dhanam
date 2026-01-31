@@ -8,9 +8,7 @@ export function SocialProof() {
   return (
     <section className="container mx-auto px-6 py-16 bg-muted/30">
       <div className="max-w-4xl mx-auto text-center space-y-8">
-        <h2 className="text-3xl font-bold">
-          {t('socialProof.title')}
-        </h2>
+        <h2 className="text-3xl font-bold">{t('socialProof.title')}</h2>
 
         <div className="grid md:grid-cols-3 gap-6">
           <div className="flex flex-col items-center">

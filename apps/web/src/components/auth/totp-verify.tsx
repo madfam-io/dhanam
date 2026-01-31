@@ -71,17 +71,13 @@ export function TotpVerify({ open, onOpenChange, onSuccess, tempTokens }: TotpVe
             <Shield className="h-5 w-5 text-green-600" />
             {t('totp.verifyTitle')}
           </DialogTitle>
-          <DialogDescription>
-            {t('totp.verifyDescription')}
-          </DialogDescription>
+          <DialogDescription>{t('totp.verifyDescription')}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           <Alert>
             <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              {t('totp.verifyNotice')}
-            </AlertDescription>
+            <AlertDescription>{t('totp.verifyNotice')}</AlertDescription>
           </Alert>
 
           <div className="space-y-3">

@@ -32,8 +32,8 @@ import { Redis } from 'ioredis';
 import { CurrentUser } from '@core/auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
 import { processWebhook, createWebhookResponse } from '@core/utils/webhook.util';
-import { ProviderConnectionGuard } from '../../billing/guards/provider-connection.guard';
 
+import { ProviderConnectionGuard } from '../../billing/guards/provider-connection.guard';
 import { SpaceGuard } from '../../spaces/guards/space.guard';
 
 import { CreatePlaidLinkDto, PlaidWebhookDto } from './dto';

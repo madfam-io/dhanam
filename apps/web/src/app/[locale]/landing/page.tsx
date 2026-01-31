@@ -86,7 +86,10 @@ export default function LocaleLandingPage() {
         <link rel="alternate" hrefLang="en" href="https://dhan.am/en" />
         <link rel="alternate" hrefLang="pt-BR" href="https://dhan.am/pt-BR" />
         <link rel="alternate" hrefLang="x-default" href="https://dhan.am/es" />
-        <meta property="og:locale" content={locale === 'en' ? 'en_US' : locale === 'pt-BR' ? 'pt_BR' : 'es_MX'} />
+        <meta
+          property="og:locale"
+          content={locale === 'en' ? 'en_US' : locale === 'pt-BR' ? 'pt_BR' : 'es_MX'}
+        />
         <meta property="og:locale:alternate" content="en_US" />
         <meta property="og:locale:alternate" content="es_MX" />
         <meta property="og:locale:alternate" content="pt_BR" />

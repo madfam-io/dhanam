@@ -5,10 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Search, Loader2, ArrowRight, Receipt, BarChart3 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-} from '@dhanam/ui';
+import { Dialog, DialogContent } from '@dhanam/ui';
 import { Badge } from '@/components/ui/badge';
 import { apiClient } from '@/lib/api/client';
 
@@ -57,7 +54,9 @@ export function SearchCommand({ spaceId }: SearchCommandProps) {
     if (!query.trim() || !spaceId) return;
     setIsSearching(true);
     try {
-      const data = await apiClient.get<SearchResult>(`/spaces/${spaceId}/search`, { q: query.trim() });
+      const data = await apiClient.get<SearchResult>(`/spaces/${spaceId}/search`, {
+        q: query.trim(),
+      });
       setResults(data);
     } catch {
       setResults(null);
@@ -82,7 +81,11 @@ export function SearchCommand({ spaceId }: SearchCommandProps) {
   };
 
   const formatCurrency = (value: number) =>
-    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(value);
+    new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      maximumFractionDigits: 0,
+    }).format(value);
 
   return (
     <>
@@ -111,6 +114,7 @@ export function SearchCommand({ spaceId }: SearchCommandProps) {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               className="flex h-12 w-full bg-transparent py-3 px-3 text-sm outline-none placeholder:text-muted-foreground"
+              // eslint-disable-next-line jsx-a11y/no-autofocus
               autoFocus
             />
             {isSearching && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
@@ -140,9 +144,10 @@ export function SearchCommand({ spaceId }: SearchCommandProps) {
                       Transactions
                     </h4>
                     {results.transactions.slice(0, 5).map((txn) => (
-                      <div
+                      <button
+                        type="button"
                         key={txn.id}
-                        className="flex items-center justify-between p-2 rounded hover:bg-accent cursor-pointer"
+                        className="flex w-full items-center justify-between p-2 rounded hover:bg-accent cursor-pointer text-left"
                         onClick={() => {
                           handleClose();
                           router.push(`/transactions?highlight=${txn.id}`);
@@ -151,13 +156,16 @@ export function SearchCommand({ spaceId }: SearchCommandProps) {
                         <div>
                           <p className="text-sm font-medium">{txn.description}</p>
                           <p className="text-xs text-muted-foreground">
-                            {new Date(txn.date).toLocaleDateString()} · {txn.category || 'Uncategorized'}
+                            {new Date(txn.date).toLocaleDateString()} ·{' '}
+                            {txn.category || 'Uncategorized'}
                           </p>
                         </div>
-                        <span className={`text-sm font-medium ${txn.amount < 0 ? 'text-red-600' : 'text-green-600'}`}>
+                        <span
+                          className={`text-sm font-medium ${txn.amount < 0 ? 'text-red-600' : 'text-green-600'}`}
+                        >
                           {formatCurrency(txn.amount)}
                         </span>
-                      </div>
+                      </button>
                     ))}
                   </div>
                 )}
@@ -170,7 +178,10 @@ export function SearchCommand({ spaceId }: SearchCommandProps) {
                       By Category
                     </h4>
                     {results.categoryBreakdown.map((cat) => (
-                      <div key={cat.category} className="flex items-center justify-between text-sm p-2">
+                      <div
+                        key={cat.category}
+                        className="flex items-center justify-between text-sm p-2"
+                      >
                         <span>{cat.category}</span>
                         <span className="font-medium">
                           {formatCurrency(cat.total)} ({cat.count})

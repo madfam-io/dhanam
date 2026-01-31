@@ -157,7 +157,7 @@ export const settings = {
     esg: { title: 'Configuración ESG', description: 'Preferencias ambientales, sociales y de gobernanza' },
     backup: { title: 'Respaldo y Exportación', description: 'Preferencias de respaldo y exportación de datos' },
   },
-  billing: {
+  billingPage: {
     currentPlan: 'Plan Actual',
     premiumPrice: 'Premium — $9.99/mes',
     freePlan: 'Plan Gratuito',
@@ -167,7 +167,7 @@ export const settings = {
     premium: 'Premium',
     free: 'Gratuito',
   },
-  notifications: {
+  notificationsPage: {
     email: { label: 'Notificaciones por Email', description: 'Recibe notificaciones por correo electrónico' },
     transactions: { label: 'Alertas de Transacciones', description: 'Recibe notificaciones sobre nuevas transacciones' },
     budget: { label: 'Alertas de Presupuesto', description: 'Alertas al acercarte a los límites de presupuesto' },

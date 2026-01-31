@@ -38,7 +38,7 @@ export class AuthController {
     private totpService: TotpService,
     private auditService: AuditService,
     private guestAuthService: GuestAuthService,
-    private demoAuthService: DemoAuthService,
+    private demoAuthService: DemoAuthService
   ) {}
 
   @Post('register')
@@ -145,7 +145,7 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'Demo persona session created' })
   async demoLogin(
     @Body() body: { persona: string; countryCode?: string },
-    @Headers('cf-ipcountry') cfCountry: string,
+    @Headers('cf-ipcountry') cfCountry: string
   ): Promise<{
     tokens: AuthTokens;
     user: any;
@@ -181,7 +181,7 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'Switched to new persona' })
   async demoSwitch(
     @CurrentUser() user: AuthenticatedUser,
-    @Body() body: { persona: string },
+    @Body() body: { persona: string }
   ): Promise<{
     tokens: AuthTokens;
     user: any;

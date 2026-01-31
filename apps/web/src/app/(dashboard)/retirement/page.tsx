@@ -20,17 +20,13 @@ export default function RetirementPage() {
       <div className="container mx-auto py-8 space-y-8">
         <div>
           <h1 className="text-4xl font-bold tracking-tight">{t('main.retirementPlanning')}</h1>
-          <p className="text-muted-foreground mt-2">
-            {t('retirement.pageDescription')}
-          </p>
+          <p className="text-muted-foreground mt-2">{t('retirement.pageDescription')}</p>
         </div>
 
         <Alert>
           <Info className="h-4 w-4" />
           <AlertTitle>{t('retirement.howItWorks')}</AlertTitle>
-          <AlertDescription>
-            {t('retirement.howItWorksBody')}
-          </AlertDescription>
+          <AlertDescription>{t('retirement.howItWorksBody')}</AlertDescription>
         </Alert>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -61,7 +57,9 @@ export default function RetirementPage() {
 
                   <div className="grid grid-cols-3 gap-4 mt-6">
                     <div className="text-center">
-                      <p className="text-sm text-muted-foreground">{t('retirement.finalBalance')}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {t('retirement.finalBalance')}
+                      </p>
                       <p className="text-lg font-semibold">
                         $
                         {results.simulation.median.toLocaleString(undefined, {
@@ -78,7 +76,9 @@ export default function RetirementPage() {
                           maximumFractionDigits: 0,
                         })}
                       </p>
-                      <p className="text-xs text-muted-foreground">{t('retirement.10thPercentile')}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {t('retirement.10thPercentile')}
+                      </p>
                     </div>
                     <div className="text-center">
                       <p className="text-sm text-muted-foreground">{t('retirement.best10')}</p>
@@ -88,7 +88,9 @@ export default function RetirementPage() {
                           maximumFractionDigits: 0,
                         })}
                       </p>
-                      <p className="text-xs text-muted-foreground">{t('retirement.90thPercentile')}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {t('retirement.90thPercentile')}
+                      </p>
                     </div>
                   </div>
                 </TabsContent>

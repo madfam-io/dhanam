@@ -23,7 +23,7 @@ interface PremiumGateProps {
  */
 export function PremiumGate({ children, feature, fallback }: PremiumGateProps) {
   const { user } = useAuth();
-  const isPremium = user?.subscriptionTier === 'premium';
+  const isPremium = user?.subscriptionTier === 'pro';
 
   if (!isPremium) {
     return fallback ? (

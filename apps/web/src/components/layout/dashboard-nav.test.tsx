@@ -9,14 +9,26 @@ jest.mock('next/navigation', () => ({
 
 jest.mock('next/link', () => ({
   __esModule: true,
-  default: ({ href, children, className }: { href: string; children: React.ReactNode; className?: string }) => (
-    <a href={href} className={className}>{children}</a>
+  default: ({
+    href,
+    children,
+    className,
+  }: {
+    href: string;
+    children: React.ReactNode;
+    className?: string;
+  }) => (
+    <a href={href} className={className}>
+      {children}
+    </a>
   ),
 }));
 
 jest.mock('lucide-react', () => {
   const icon = (name: string) => {
-    const Icon = (props: Record<string, unknown>) => <span data-testid={`icon-${name}`} {...props} />;
+    const Icon = (props: Record<string, unknown>) => (
+      <span data-testid={`icon-${name}`} {...props} />
+    );
     Icon.displayName = name;
     return Icon;
   };

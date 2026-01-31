@@ -185,19 +185,23 @@ export default function DemoPage() {
       config.currentSavings,
       config.monthlyContribution,
       config.expectedReturn / 12,
-      monthsToRetirement,
+      monthsToRetirement
     );
 
     const retirementMonths = 30 * 12;
     const annualExpenses = config.retirementExpenses * 12;
-    const successProbability = calculateSuccessProbability(futureValue, annualExpenses, retirementMonths);
+    const successProbability = calculateSuccessProbability(
+      futureValue,
+      annualExpenses,
+      retirementMonths
+    );
 
     const timeSeries = generateMockTimeSeries(
       config.currentSavings,
       config.monthlyContribution,
       config.expectedReturn / 12,
       config.volatility / Math.sqrt(12),
-      monthsToRetirement,
+      monthsToRetirement
     );
 
     const mockResult: SimulationResult = {
@@ -231,7 +235,7 @@ export default function DemoPage() {
       config.age,
       config.retirementAge,
       successProbability,
-      futureValue,
+      futureValue
     );
 
     if (simulationsRun + 1 >= MAX_DEMO_SIMULATIONS) {
@@ -259,12 +263,10 @@ export default function DemoPage() {
       <div className="container mx-auto px-4 py-8 space-y-12">
         {/* Persona Picker Section */}
         <div className="text-center space-y-4">
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-            Experience Dhanam
-          </h1>
+          <h1 className="text-4xl md:text-5xl font-bold tracking-tight">Experience Dhanam</h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Pick a financial life to explore. Each persona showcases different features.
-            Switch between them anytime from the dashboard.
+            Pick a financial life to explore. Each persona showcases different features. Switch
+            between them anytime from the dashboard.
           </p>
         </div>
 
@@ -349,7 +351,9 @@ export default function DemoPage() {
                 <CardContent className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Current Savings:</span>
-                    <span className="font-semibold">${profile.currentSavings.toLocaleString()}</span>
+                    <span className="font-semibold">
+                      ${profile.currentSavings.toLocaleString()}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Monthly Contribution:</span>
@@ -544,8 +548,8 @@ export default function DemoPage() {
                             Strong Retirement Plan
                           </AlertTitle>
                           <AlertDescription className="text-green-800 dark:text-green-200">
-                            You have a {(result.metadata?.successProbability as number)?.toFixed(1)}%
-                            chance of a secure retirement based on these assumptions.
+                            You have a {(result.metadata?.successProbability as number)?.toFixed(1)}
+                            % chance of a secure retirement based on these assumptions.
                           </AlertDescription>
                         </Alert>
                       ) : ((result.metadata?.successProbability as number) || 0) >= 50 ? (
@@ -721,7 +725,7 @@ function calculateFutureValue(
   present: number,
   monthlyPayment: number,
   monthlyRate: number,
-  months: number,
+  months: number
 ): number {
   const pvFuture = present * Math.pow(1 + monthlyRate, months);
   const pmtFuture = monthlyPayment * ((Math.pow(1 + monthlyRate, months) - 1) / monthlyRate);
@@ -731,7 +735,7 @@ function calculateFutureValue(
 function calculateSuccessProbability(
   nestEgg: number,
   annualExpenses: number,
-  _retirementMonths: number,
+  _retirementMonths: number
 ): number {
   const safeWithdrawalRate = 0.04;
   const sustainableAnnualExpenses = nestEgg * safeWithdrawalRate;
@@ -749,7 +753,7 @@ function generateMockTimeSeries(
   monthlyContribution: number,
   monthlyReturn: number,
   monthlyVolatility: number,
-  months: number,
+  months: number
 ): Array<{ month: number; median: number; mean: number; p10: number; p90: number }> {
   const timeSeries = [];
 
@@ -758,7 +762,7 @@ function generateMockTimeSeries(
       initialBalance,
       monthlyContribution,
       monthlyReturn,
-      month,
+      month
     );
 
     const variance = expectedValue * monthlyVolatility * Math.sqrt(month);

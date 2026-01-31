@@ -96,9 +96,7 @@ export function DemoModeBanner() {
                   </>
                 )}
               </p>
-              <p className="text-xs opacity-90 hidden sm:block">
-                {t('demoDescription')}
-              </p>
+              <p className="text-xs opacity-90 hidden sm:block">{t('demoDescription')}</p>
             </div>
           </div>
 

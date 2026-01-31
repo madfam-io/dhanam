@@ -59,18 +59,29 @@ jest.mock('@/lib/utils', () => ({
 // Mock UI components
 jest.mock('@dhanam/ui', () => ({
   Button: ({ children, onClick, disabled, variant, size }: any) => (
-    <button onClick={onClick} disabled={disabled} data-variant={variant} data-size={size}>{children}</button>
+    <button onClick={onClick} disabled={disabled} data-variant={variant} data-size={size}>
+      {children}
+    </button>
   ),
-  Dialog: ({ children, open, onOpenChange }: any) => (
-    open ? <div data-testid="dialog" data-open={open}>{children}</div> : null
+  Dialog: ({ children, open, onOpenChange }: any) =>
+    open ? (
+      <div data-testid="dialog" data-open={open}>
+        {children}
+      </div>
+    ) : null,
+  DialogContent: ({ children, className }: any) => (
+    <div data-testid="dialog-content" className={className}>
+      {children}
+    </div>
   ),
-  DialogContent: ({ children, className }: any) => <div data-testid="dialog-content" className={className}>{children}</div>,
   DialogDescription: ({ children }: any) => <p data-testid="dialog-description">{children}</p>,
   DialogFooter: ({ children }: any) => <div data-testid="dialog-footer">{children}</div>,
   DialogHeader: ({ children }: any) => <div data-testid="dialog-header">{children}</div>,
   DialogTitle: ({ children }: any) => <h2 data-testid="dialog-title">{children}</h2>,
   Badge: ({ children, variant, className }: any) => (
-    <span data-testid="badge" data-variant={variant} className={className}>{children}</span>
+    <span data-testid="badge" data-variant={variant} className={className}>
+      {children}
+    </span>
   ),
   Checkbox: ({ id, checked, onCheckedChange }: any) => (
     <input
@@ -81,7 +92,11 @@ jest.mock('@dhanam/ui', () => ({
       data-testid={`checkbox-${id || 'generic'}`}
     />
   ),
-  Label: ({ children, htmlFor, className }: any) => <label htmlFor={htmlFor} className={className}>{children}</label>,
+  Label: ({ children, htmlFor, className }: any) => (
+    <label htmlFor={htmlFor} className={className}>
+      {children}
+    </label>
+  ),
 }));
 
 jest.mock('lucide-react', () => ({

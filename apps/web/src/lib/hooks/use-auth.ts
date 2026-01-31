@@ -137,7 +137,7 @@ export const useAuth = create<AuthState>()(
             totpEnabled: januaUser.mfa_enabled || false,
             emailVerified: januaUser.email_verified || false,
             onboardingCompleted: true, // SSO users are considered onboarded
-            subscriptionTier: 'free', // Default for Janua-only users
+            subscriptionTier: 'community', // Default for Janua-only users
             createdAt: januaUser.created_at || new Date().toISOString(),
             updatedAt: januaUser.updated_at || new Date().toISOString(),
             spaces: [], // Spaces will be loaded separately

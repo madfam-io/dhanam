@@ -3,16 +3,14 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Search, Loader2, Package } from 'lucide-react';
 
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@dhanam/ui';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@dhanam/ui';
 import { Input } from '@dhanam/ui';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@dhanam/ui';
-import { collectiblesApi, type CollectibleCategory, type CollectibleSearchResult } from '@/lib/api/collectibles';
+import {
+  collectiblesApi,
+  type CollectibleCategory,
+  type CollectibleSearchResult,
+} from '@/lib/api/collectibles';
 
 interface CollectibleLinkModalProps {
   open: boolean;
@@ -92,7 +90,11 @@ export function CollectibleLinkModal({
 
   const formatCurrency = (value?: number) => {
     if (value == null) return 'N/A';
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(value);
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      maximumFractionDigits: 0,
+    }).format(value);
   };
 
   return (
@@ -110,7 +112,11 @@ export function CollectibleLinkModal({
 
         <div className="space-y-4">
           {/* Category Selector */}
-          <Select value={selectedCategory} onValueChange={setSelectedCategory} disabled={loadingCategories}>
+          <Select
+            value={selectedCategory}
+            onValueChange={setSelectedCategory}
+            disabled={loadingCategories}
+          >
             <SelectTrigger>
               <SelectValue placeholder={loadingCategories ? 'Loading...' : 'Select category'} />
             </SelectTrigger>
@@ -161,7 +167,11 @@ export function CollectibleLinkModal({
                   className="w-full flex items-center gap-3 p-3 rounded-lg border hover:bg-accent transition-colors text-left"
                 >
                   {item.image ? (
-                    <img src={item.image} alt={item.name} className="h-12 w-12 rounded object-cover" />
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      className="h-12 w-12 rounded object-cover"
+                    />
                   ) : (
                     <div className="h-12 w-12 rounded bg-muted flex items-center justify-center">
                       <Package className="h-6 w-6 text-muted-foreground" />

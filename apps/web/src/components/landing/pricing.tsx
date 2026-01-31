@@ -1,7 +1,8 @@
 'use client';
 
 import { Button } from '@dhanam/ui';
-import { useTranslation } from '@dhanam/shared';
+import { useTranslation, I18nContext } from '@dhanam/shared';
+import { useContext } from 'react';
 import { CheckCircle } from 'lucide-react';
 
 interface PricingProps {
@@ -10,10 +11,12 @@ interface PricingProps {
 
 export function Pricing({ onSignUpClick }: PricingProps) {
   const { t } = useTranslation('landing');
+  const i18n = useContext(I18nContext);
 
-  // Get feature arrays from translations
-  const freeFeatures = t('pricing.free.features', { returnObjects: true }) as string[];
-  const proFeatures = t('pricing.pro.features', { returnObjects: true }) as string[];
+  // Access feature arrays from raw translation data
+  const lang = (i18n?.translations as any)?.[i18n?.locale ?? 'en']?.landing?.pricing;
+  const freeFeatures: string[] = lang?.free?.features ?? [];
+  const proFeatures: string[] = lang?.pro?.features ?? [];
 
   return (
     <section className="container mx-auto px-6 py-16">
@@ -69,7 +72,9 @@ export function Pricing({ onSignUpClick }: PricingProps) {
             >
               {t('pricing.pro.ctaText')}
             </Button>
-            <p className="text-xs text-center text-muted-foreground mt-2">{t('pricing.cancelAnytime')}</p>
+            <p className="text-xs text-center text-muted-foreground mt-2">
+              {t('pricing.cancelAnytime')}
+            </p>
           </div>
         </div>
       </div>

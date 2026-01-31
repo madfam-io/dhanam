@@ -102,17 +102,13 @@ export default function ScenariosPage() {
       <div className="container mx-auto py-8 space-y-8">
         <div>
           <h1 className="text-4xl font-bold tracking-tight">{t('scenarios.page.title')}</h1>
-          <p className="text-muted-foreground mt-2">
-            {t('scenarios.page.description')}
-          </p>
+          <p className="text-muted-foreground mt-2">{t('scenarios.page.description')}</p>
         </div>
 
         <Alert>
           <Info className="h-4 w-4" />
           <AlertTitle>{t('scenarios.page.howItWorksTitle')}</AlertTitle>
-          <AlertDescription>
-            {t('scenarios.page.howItWorksDescription')}
-          </AlertDescription>
+          <AlertDescription>{t('scenarios.page.howItWorksDescription')}</AlertDescription>
         </Alert>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -143,7 +139,9 @@ export default function ScenariosPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="monthlyContribution">{t('scenarios.page.monthlyContribution')}</Label>
+                    <Label htmlFor="monthlyContribution">
+                      {t('scenarios.page.monthlyContribution')}
+                    </Label>
                     <Input
                       id="monthlyContribution"
                       type="number"
@@ -155,7 +153,8 @@ export default function ScenariosPage() {
                       step={100}
                     />
                     <p className="text-sm text-muted-foreground">
-                      ${config.monthlyContribution.toLocaleString()}{t('scenarios.page.perMonth')}
+                      ${config.monthlyContribution.toLocaleString()}
+                      {t('scenarios.page.perMonth')}
                     </p>
                   </div>
 
@@ -178,7 +177,9 @@ export default function ScenariosPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="expectedReturn">{t('scenarios.page.expectedReturnPercent')}</Label>
+                    <Label htmlFor="expectedReturn">
+                      {t('scenarios.page.expectedReturnPercent')}
+                    </Label>
                     <Input
                       id="expectedReturn"
                       type="number"
@@ -284,7 +285,9 @@ export default function ScenariosPage() {
                     {/* Comparison Stats */}
                     <div className="grid grid-cols-2 gap-4">
                       <div className="border rounded-lg p-4">
-                        <p className="text-sm text-muted-foreground mb-2">{t('scenarios.page.baselineNormal')}</p>
+                        <p className="text-sm text-muted-foreground mb-2">
+                          {t('scenarios.page.baselineNormal')}
+                        </p>
                         <div className="space-y-1">
                           <div className="flex justify-between text-sm">
                             <span>Median:</span>
@@ -399,7 +402,9 @@ export default function ScenariosPage() {
                   <div className="rounded-full bg-muted p-4 mb-4">
                     <TrendingDown className="h-8 w-8 text-muted-foreground" />
                   </div>
-                  <h3 className="font-semibold text-lg mb-2">{t('scenarios.page.noAnalysisYet')}</h3>
+                  <h3 className="font-semibold text-lg mb-2">
+                    {t('scenarios.page.noAnalysisYet')}
+                  </h3>
                   <p className="text-sm text-muted-foreground max-w-sm mb-6">
                     {t('scenarios.page.noAnalysisDescription')}
                   </p>

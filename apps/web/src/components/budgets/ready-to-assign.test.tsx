@@ -4,13 +4,23 @@ import { ReadyToAssign } from './ready-to-assign';
 
 // Mock UI components
 jest.mock('@dhanam/ui', () => ({
-  Card: ({ children, className }: any) => <div data-testid="card" className={className}>{children}</div>,
+  Card: ({ children, className }: any) => (
+    <div data-testid="card" className={className}>
+      {children}
+    </div>
+  ),
   CardHeader: ({ children }: any) => <div data-testid="card-header">{children}</div>,
   CardTitle: ({ children }: any) => <h3 data-testid="card-title">{children}</h3>,
   CardDescription: ({ children }: any) => <p data-testid="card-description">{children}</p>,
-  CardContent: ({ children, className }: any) => <div data-testid="card-content" className={className}>{children}</div>,
+  CardContent: ({ children, className }: any) => (
+    <div data-testid="card-content" className={className}>
+      {children}
+    </div>
+  ),
   Button: ({ children, onClick, disabled, variant, size }: any) => (
-    <button onClick={onClick} disabled={disabled} data-variant={variant} data-size={size}>{children}</button>
+    <button onClick={onClick} disabled={disabled} data-variant={variant} data-size={size}>
+      {children}
+    </button>
   ),
   Input: ({ value, onChange, type, placeholder, className, max }: any) => (
     <input
@@ -24,7 +34,11 @@ jest.mock('@dhanam/ui', () => ({
     />
   ),
   Label: ({ children, className }: any) => <label className={className}>{children}</label>,
-  Alert: ({ children, variant }: any) => <div data-testid="alert" data-variant={variant}>{children}</div>,
+  Alert: ({ children, variant }: any) => (
+    <div data-testid="alert" data-variant={variant}>
+      {children}
+    </div>
+  ),
   AlertDescription: ({ children }: any) => <span data-testid="alert-description">{children}</span>,
 }));
 
@@ -61,7 +75,9 @@ describe('ReadyToAssign', () => {
       render(<ReadyToAssign {...defaultProps} />);
 
       expect(screen.getByText('Ready to Assign')).toBeInTheDocument();
-      expect(screen.getByText('Zero-Based Budgeting - Assign every dollar a job')).toBeInTheDocument();
+      expect(
+        screen.getByText('Zero-Based Budgeting - Assign every dollar a job')
+      ).toBeInTheDocument();
     });
 
     it('should display the ready to assign amount', () => {
@@ -216,7 +232,7 @@ describe('ReadyToAssign', () => {
 
       // Enter amount
       const inputs = screen.getAllByTestId('input');
-      const amountInput = inputs.find(input => input.getAttribute('placeholder') === 'Amount');
+      const amountInput = inputs.find((input) => input.getAttribute('placeholder') === 'Amount');
       if (amountInput) {
         fireEvent.change(amountInput, { target: { value: '100' } });
       }
@@ -276,7 +292,7 @@ describe('ReadyToAssign', () => {
       fireEvent.change(select, { target: { value: 'cat-1' } });
 
       const inputs = screen.getAllByTestId('input');
-      const amountInput = inputs.find(input => input.getAttribute('placeholder') === 'Amount');
+      const amountInput = inputs.find((input) => input.getAttribute('placeholder') === 'Amount');
       if (amountInput) {
         fireEvent.change(amountInput, { target: { value: '100' } });
       }

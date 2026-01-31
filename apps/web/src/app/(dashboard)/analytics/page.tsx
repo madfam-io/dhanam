@@ -176,7 +176,9 @@ export default function AnalyticsPage() {
                 <div className="text-2xl font-bold text-green-600">
                   {formatCurrency(netWorthData?.totalAssets || 0, currentSpace.currency)}
                 </div>
-                <p className="text-xs text-muted-foreground">{t('descriptions.savingsInvestmentsCrypto')}</p>
+                <p className="text-xs text-muted-foreground">
+                  {t('descriptions.savingsInvestmentsCrypto')}
+                </p>
               </>
             )}
           </CardContent>
@@ -195,7 +197,9 @@ export default function AnalyticsPage() {
                 <div className="text-2xl font-bold text-red-600">
                   {formatCurrency(netWorthData?.totalLiabilities || 0, currentSpace.currency)}
                 </div>
-                <p className="text-xs text-muted-foreground">{t('descriptions.creditCardsLoans')}</p>
+                <p className="text-xs text-muted-foreground">
+                  {t('descriptions.creditCardsLoans')}
+                </p>
               </>
             )}
           </CardContent>
@@ -217,7 +221,9 @@ export default function AnalyticsPage() {
                     : 0}
                   %
                 </div>
-                <p className="text-xs text-muted-foreground">{t('descriptions.liabilitiesToAssets')}</p>
+                <p className="text-xs text-muted-foreground">
+                  {t('descriptions.liabilitiesToAssets')}
+                </p>
               </>
             )}
           </CardContent>
@@ -321,7 +327,9 @@ export default function AnalyticsPage() {
                         className="p-3 border rounded-lg hover:bg-muted/50 transition-colors"
                       >
                         <div className="flex justify-between items-center mb-2">
-                          <p className="text-sm font-medium">{t('cashflow.week', { number: index + 1 })}</p>
+                          <p className="text-sm font-medium">
+                            {t('cashflow.week', { number: index + 1 })}
+                          </p>
                           <p className="text-xs text-muted-foreground">
                             {new Date(point.date).toLocaleDateString()}
                           </p>

@@ -3,9 +3,7 @@ import { getGeoDefaults, type GeoDefaults } from '@dhanam/shared';
 
 function getGeoCookie(): string | null {
   if (typeof document === 'undefined') return null;
-  const match = document.cookie
-    .split('; ')
-    .find((c) => c.startsWith('dhanam_geo='));
+  const match = document.cookie.split('; ').find((c) => c.startsWith('dhanam_geo='));
   return match?.split('=')[1] ?? null;
 }
 

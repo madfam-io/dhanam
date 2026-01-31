@@ -2,7 +2,7 @@ import { apiClient } from './client';
 
 export interface UsageMetrics {
   date: string;
-  tier: 'free' | 'premium';
+  tier: 'community' | 'essentials' | 'pro';
   usage: {
     esg_calculation: { used: number; limit: number };
     monte_carlo_simulation: { used: number; limit: number };
@@ -23,7 +23,7 @@ export interface BillingEvent {
 }
 
 export interface SubscriptionStatus {
-  tier: 'free' | 'premium';
+  tier: 'community' | 'essentials' | 'pro';
   startedAt: string | null;
   expiresAt: string | null;
   isActive: boolean;

@@ -95,9 +95,7 @@ export function RetryWithTimeout(config: RetryConfig & { timeoutMs: number }): M
         let timeoutHandle: ReturnType<typeof setTimeout>;
         const timeoutPromise = new Promise((_, reject) => {
           timeoutHandle = setTimeout(() => {
-            const error = new Error(
-              `Operation '${operationName}' timed out after ${timeoutMs}ms`
-            );
+            const error = new Error(`Operation '${operationName}' timed out after ${timeoutMs}ms`);
             (error as any).code = 'TIMEOUT';
             reject(error);
           }, timeoutMs);

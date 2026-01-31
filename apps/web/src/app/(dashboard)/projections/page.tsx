@@ -150,9 +150,7 @@ export default function ProjectionsPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">{t('page.longTermProjections')}</h1>
-            <p className="text-muted-foreground">
-              {t('page.description')}
-            </p>
+            <p className="text-muted-foreground">{t('page.description')}</p>
           </div>
           <Button onClick={generateProjection} disabled={isLoading || !currentSpaceId}>
             {isLoading ? (
@@ -327,9 +325,7 @@ export default function ProjectionsPage() {
                 <CardContent className="text-center">
                   <TrendingUp className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
                   <h3 className="text-lg font-medium mb-2">{t('page.noProjection')}</h3>
-                  <p className="text-muted-foreground mb-4">
-                    {t('page.noProjectionDescription')}
-                  </p>
+                  <p className="text-muted-foreground mb-4">{t('page.noProjectionDescription')}</p>
                   <Button onClick={generateProjection} disabled={isLoading || !currentSpaceId}>
                     {isLoading ? t('page.calculating') : t('page.generateProjection')}
                   </Button>
@@ -477,13 +473,17 @@ export default function ProjectionsPage() {
                           </span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">{t('stats.socialSecurityReceived')}</span>
+                          <span className="text-muted-foreground">
+                            {t('stats.socialSecurityReceived')}
+                          </span>
                           <span className="font-medium text-green-600">
                             {formatCurrency(projection.summary.totalSocialSecurity)}
                           </span>
                         </div>
                         <div className="flex justify-between pt-2 border-t">
-                          <span className="text-muted-foreground">{t('stats.averageSavingsRate')}</span>
+                          <span className="text-muted-foreground">
+                            {t('stats.averageSavingsRate')}
+                          </span>
                           <span className="font-medium">
                             {formatPercent(projection.summary.averageSavingsRate)}
                           </span>
@@ -499,13 +499,17 @@ export default function ProjectionsPage() {
                     <CardContent>
                       <div className="space-y-3">
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">{t('stats.yearsUntilRetirement')}</span>
+                          <span className="text-muted-foreground">
+                            {t('stats.yearsUntilRetirement')}
+                          </span>
                           <span className="font-medium">
                             {projection.summary.yearsUntilRetirement} years
                           </span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">{t('stats.monthlyRetirementIncome')}</span>
+                          <span className="text-muted-foreground">
+                            {t('stats.monthlyRetirementIncome')}
+                          </span>
                           <span className="font-medium">
                             {formatCurrency(projection.summary.projectedRetirementIncome / 12)}
                           </span>
@@ -517,7 +521,9 @@ export default function ProjectionsPage() {
                           </span>
                         </div>
                         <div className="flex justify-between pt-2 border-t">
-                          <span className="text-muted-foreground">{t('stats.minimumNetWorth')}</span>
+                          <span className="text-muted-foreground">
+                            {t('stats.minimumNetWorth')}
+                          </span>
                           <span
                             className={`font-medium ${projection.summary.minNetWorth.amount < 0 ? 'text-red-600' : ''}`}
                           >

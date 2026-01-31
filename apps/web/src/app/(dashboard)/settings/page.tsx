@@ -185,24 +185,26 @@ export default function SettingsPage() {
           {/* Current Plan */}
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label>{t('billing.currentPlan')}</Label>
+              <Label>{t('billingPage.currentPlan')}</Label>
               <p className="text-sm text-muted-foreground">
-                {subscriptionStatus?.tier === 'premium' ? t('billing.premiumPrice') : t('billing.freePlan')}
+                {subscriptionStatus?.tier === 'pro'
+                  ? t('billingPage.premiumPrice')
+                  : t('billingPage.freePlan')}
               </p>
             </div>
-            <Badge variant={subscriptionStatus?.tier === 'premium' ? 'default' : 'secondary'}>
-              {subscriptionStatus?.tier === 'premium' ? t('tier.premium') : t('tier.free')}
+            <Badge variant={subscriptionStatus?.tier === 'pro' ? 'default' : 'secondary'}>
+              {subscriptionStatus?.tier === 'pro' ? t('tier.premium') : t('tier.free')}
             </Badge>
           </div>
 
-          {subscriptionStatus?.tier !== 'premium' && (
+          {subscriptionStatus?.tier !== 'pro' && (
             <>
               <Separator />
               <PremiumUpsell context="generic" />
             </>
           )}
 
-          {subscriptionStatus?.tier === 'premium' && (
+          {subscriptionStatus?.tier === 'pro' && (
             <>
               <Separator />
               <Button
@@ -234,13 +236,10 @@ export default function SettingsPage() {
             <>
               <Separator />
               <div className="space-y-2">
-                <Label>{t('billing.recentHistory')}</Label>
+                <Label>{t('billingPage.recentHistory')}</Label>
                 <div className="space-y-1">
                   {billingHistory.slice(0, 5).map((event) => (
-                    <div
-                      key={event.id}
-                      className="flex items-center justify-between text-sm py-1"
-                    >
+                    <div key={event.id} className="flex items-center justify-between text-sm py-1">
                       <div>
                         <span className="font-medium">{event.type.replace(/_/g, ' ')}</span>
                         <span className="text-muted-foreground ml-2">
@@ -277,8 +276,10 @@ export default function SettingsPage() {
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label>{t('notifications.email.label')}</Label>
-              <p className="text-sm text-muted-foreground">{t('notifications.email.description')}</p>
+              <Label>{t('notificationsPage.email.label')}</Label>
+              <p className="text-sm text-muted-foreground">
+                {t('notificationsPage.email.description')}
+              </p>
             </div>
             <Switch
               checked={preferences.emailNotifications}
@@ -288,8 +289,10 @@ export default function SettingsPage() {
           <Separator />
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label>{t('notifications.transactions.label')}</Label>
-              <p className="text-sm text-muted-foreground">{t('notifications.transactions.description')}</p>
+              <Label>{t('notificationsPage.transactions.label')}</Label>
+              <p className="text-sm text-muted-foreground">
+                {t('notificationsPage.transactions.description')}
+              </p>
             </div>
             <Switch
               checked={preferences.transactionAlerts}
@@ -299,8 +302,10 @@ export default function SettingsPage() {
           <Separator />
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label>{t('notifications.budget.label')}</Label>
-              <p className="text-sm text-muted-foreground">{t('notifications.budget.description')}</p>
+              <Label>{t('notificationsPage.budget.label')}</Label>
+              <p className="text-sm text-muted-foreground">
+                {t('notificationsPage.budget.description')}
+              </p>
             </div>
             <Switch
               checked={preferences.budgetAlerts}
@@ -310,8 +315,10 @@ export default function SettingsPage() {
           <Separator />
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label>{t('notifications.weeklyReports.label')}</Label>
-              <p className="text-sm text-muted-foreground">{t('notifications.weeklyReports.description')}</p>
+              <Label>{t('notificationsPage.weeklyReports.label')}</Label>
+              <p className="text-sm text-muted-foreground">
+                {t('notificationsPage.weeklyReports.description')}
+              </p>
             </div>
             <Switch
               checked={preferences.weeklyReports}
@@ -321,9 +328,9 @@ export default function SettingsPage() {
           <Separator />
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label>{t('notifications.security.label')}</Label>
+              <Label>{t('notificationsPage.security.label')}</Label>
               <p className="text-sm text-muted-foreground">
-                {t('notifications.security.description')}
+                {t('notificationsPage.security.description')}
               </p>
             </div>
             <Switch
@@ -347,9 +354,7 @@ export default function SettingsPage() {
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <Label>{t('privacy.analytics.label')}</Label>
-              <p className="text-sm text-muted-foreground">
-                {t('privacy.analytics.description')}
-              </p>
+              <p className="text-sm text-muted-foreground">{t('privacy.analytics.description')}</p>
             </div>
             <Switch
               checked={preferences.analyticsTracking}
@@ -360,7 +365,9 @@ export default function SettingsPage() {
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <Label>{t('privacy.hideSensitive.label')}</Label>
-              <p className="text-sm text-muted-foreground">{t('privacy.hideSensitive.description')}</p>
+              <p className="text-sm text-muted-foreground">
+                {t('privacy.hideSensitive.description')}
+              </p>
             </div>
             <Switch
               checked={preferences.hideSensitiveData}
@@ -403,7 +410,9 @@ export default function SettingsPage() {
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <Label>{t('display.compactView.label')}</Label>
-              <p className="text-sm text-muted-foreground">{t('display.compactView.description')}</p>
+              <p className="text-sm text-muted-foreground">
+                {t('display.compactView.description')}
+              </p>
             </div>
             <Switch
               checked={preferences.compactView}
@@ -414,7 +423,9 @@ export default function SettingsPage() {
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <Label>{t('display.showBalances.label')}</Label>
-              <p className="text-sm text-muted-foreground">{t('display.showBalances.description')}</p>
+              <p className="text-sm text-muted-foreground">
+                {t('display.showBalances.description')}
+              </p>
             </div>
             <Switch
               checked={preferences.showBalances}
@@ -484,9 +495,7 @@ export default function SettingsPage() {
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <Label>{t('esg.showScores.label')}</Label>
-              <p className="text-sm text-muted-foreground">
-                {t('esg.showScores.description')}
-              </p>
+              <p className="text-sm text-muted-foreground">{t('esg.showScores.description')}</p>
             </div>
             <Switch
               checked={preferences.esgScoreVisibility}
@@ -497,7 +506,9 @@ export default function SettingsPage() {
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <Label>{t('esg.sustainabilityAlerts.label')}</Label>
-              <p className="text-sm text-muted-foreground">{t('esg.sustainabilityAlerts.description')}</p>
+              <p className="text-sm text-muted-foreground">
+                {t('esg.sustainabilityAlerts.description')}
+              </p>
             </div>
             <Switch
               checked={preferences.sustainabilityAlerts}
@@ -533,9 +544,7 @@ export default function SettingsPage() {
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <Label>{t('backup.autoBackup.label')}</Label>
-              <p className="text-sm text-muted-foreground">
-                {t('backup.autoBackup.description')}
-              </p>
+              <p className="text-sm text-muted-foreground">{t('backup.autoBackup.description')}</p>
             </div>
             <Switch
               checked={preferences.autoBackup}
@@ -546,7 +555,9 @@ export default function SettingsPage() {
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <Label>{t('backup.exportFormat.label')}</Label>
-              <p className="text-sm text-muted-foreground">{t('backup.exportFormat.description')}</p>
+              <p className="text-sm text-muted-foreground">
+                {t('backup.exportFormat.description')}
+              </p>
             </div>
             <Select
               value={preferences.exportFormat}
