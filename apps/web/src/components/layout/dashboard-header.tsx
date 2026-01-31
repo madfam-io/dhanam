@@ -17,6 +17,9 @@ import { useSpaceStore } from '~/stores/space';
 import { useTranslation } from '@dhanam/shared';
 import { PersonaSwitcher } from '~/components/demo/persona-switcher';
 import { NotificationDropdown } from '~/components/layout/notification-dropdown';
+import { SearchCommand } from '~/components/search/search-command';
+import { ThemeToggle } from '~/components/theme-toggle';
+import { LocaleSwitcher } from '~/components/locale-switcher/LocaleSwitcher';
 import type { Space } from '@dhanam/shared';
 
 export function DashboardHeader() {
@@ -93,7 +96,20 @@ export function DashboardHeader() {
         </div>
 
         <div className="ml-auto flex items-center gap-4">
-          {isDemo && <PersonaSwitcher currentPersona={currentPersona} />}
+          {currentSpace && (
+            <div data-tour="search-button">
+              <SearchCommand spaceId={currentSpace.id} />
+            </div>
+          )}
+
+          {isDemo && (
+            <div data-tour="persona-switcher">
+              <PersonaSwitcher currentPersona={currentPersona} />
+            </div>
+          )}
+
+          <LocaleSwitcher />
+          <ThemeToggle />
 
           <NotificationDropdown />
 

@@ -23,6 +23,7 @@ export interface UpdateTransactionDto {
 export interface TransactionsFilterDto {
   accountId?: string;
   categoryId?: string;
+  search?: string;
   startDate?: Date;
   endDate?: Date;
   minAmount?: number;

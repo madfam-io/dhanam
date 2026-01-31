@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation';
 import { DashboardNav } from '~/components/layout/dashboard-nav';
 import { DashboardHeader } from '~/components/layout/dashboard-header';
 import { DemoModeBanner } from '~/components/demo/demo-mode-banner';
+import { DemoTour } from '~/components/demo/demo-tour';
+import { KeyboardShortcuts } from '~/components/keyboard-shortcuts';
+import { PageTransition } from '~/components/motion/page-transition';
 import { useAuth } from '~/lib/hooks/use-auth';
 
 /**
@@ -75,10 +78,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <div className="min-h-screen bg-background">
       <DashboardHeader />
       <DemoModeBanner />
+      <DemoTour />
+      <KeyboardShortcuts />
       <div className="flex">
         <DashboardNav />
         <main className="flex-1 p-6">
-          <div className="mx-auto max-w-7xl">{children}</div>
+          <div className="mx-auto max-w-7xl">
+            <PageTransition>{children}</PageTransition>
+          </div>
         </main>
       </div>
     </div>

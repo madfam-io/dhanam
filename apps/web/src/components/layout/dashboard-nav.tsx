@@ -52,7 +52,7 @@ export function DashboardNav() {
               {navigation.map((item) => {
                 const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
                 return (
-                  <li key={item.key}>
+                  <li key={item.key} data-tour={`sidebar-${item.key}`}>
                     <Link
                       href={item.href}
                       className={cn(

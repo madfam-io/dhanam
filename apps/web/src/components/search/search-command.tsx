@@ -1,8 +1,25 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, Loader2, ArrowRight, Receipt, BarChart3 } from 'lucide-react';
+import {
+  Search,
+  Loader2,
+  ArrowRight,
+  Receipt,
+  BarChart3,
+  LayoutDashboard,
+  Wallet,
+  PiggyBank,
+  Target,
+  TrendingUp,
+  Settings,
+  Plus,
+  Download,
+  Users,
+  Leaf,
+  Gamepad2,
+} from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@dhanam/ui';
@@ -31,12 +48,181 @@ interface SearchCommandProps {
   spaceId: string;
 }
 
+interface CommandItem {
+  id: string;
+  label: string;
+  icon: React.ElementType;
+  group: 'navigate' | 'actions';
+  action: () => void;
+}
+
 export function SearchCommand({ spaceId }: SearchCommandProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult | null>(null);
   const [isSearching, setIsSearching] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(0);
   const router = useRouter();
+
+  const handleClose = useCallback(() => {
+    setOpen(false);
+    setQuery('');
+    setResults(null);
+  }, []);
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const commands: CommandItem[] = useMemo(
+    () => [
+      // Navigate
+      {
+        id: 'nav-dashboard',
+        label: 'Go to Dashboard',
+        icon: LayoutDashboard,
+        group: 'navigate',
+        action: () => {
+          handleClose();
+          router.push('/dashboard');
+        },
+      },
+      {
+        id: 'nav-transactions',
+        label: 'Go to Transactions',
+        icon: Receipt,
+        group: 'navigate',
+        action: () => {
+          handleClose();
+          router.push('/transactions');
+        },
+      },
+      {
+        id: 'nav-budgets',
+        label: 'Go to Budgets',
+        icon: PiggyBank,
+        group: 'navigate',
+        action: () => {
+          handleClose();
+          router.push('/budgets');
+        },
+      },
+      {
+        id: 'nav-accounts',
+        label: 'Go to Accounts',
+        icon: Wallet,
+        group: 'navigate',
+        action: () => {
+          handleClose();
+          router.push('/accounts');
+        },
+      },
+      {
+        id: 'nav-analytics',
+        label: 'Go to Analytics',
+        icon: TrendingUp,
+        group: 'navigate',
+        action: () => {
+          handleClose();
+          router.push('/analytics');
+        },
+      },
+      {
+        id: 'nav-goals',
+        label: 'Go to Goals',
+        icon: Target,
+        group: 'navigate',
+        action: () => {
+          handleClose();
+          router.push('/goals');
+        },
+      },
+      {
+        id: 'nav-esg',
+        label: 'Go to ESG Insights',
+        icon: Leaf,
+        group: 'navigate',
+        action: () => {
+          handleClose();
+          router.push('/esg');
+        },
+      },
+      {
+        id: 'nav-gaming',
+        label: 'Go to DeFi Gaming',
+        icon: Gamepad2,
+        group: 'navigate',
+        action: () => {
+          handleClose();
+          router.push('/gaming');
+        },
+      },
+      {
+        id: 'nav-households',
+        label: 'Go to Households',
+        icon: Users,
+        group: 'navigate',
+        action: () => {
+          handleClose();
+          router.push('/households');
+        },
+      },
+      {
+        id: 'nav-settings',
+        label: 'Go to Settings',
+        icon: Settings,
+        group: 'navigate',
+        action: () => {
+          handleClose();
+          router.push('/settings');
+        },
+      },
+      // Actions
+      {
+        id: 'action-new-txn',
+        label: 'New Transaction',
+        icon: Plus,
+        group: 'actions',
+        action: () => {
+          handleClose();
+          router.push('/transactions?create=true');
+        },
+      },
+      {
+        id: 'action-new-budget',
+        label: 'New Budget',
+        icon: Plus,
+        group: 'actions',
+        action: () => {
+          handleClose();
+          router.push('/budgets?create=true');
+        },
+      },
+      {
+        id: 'action-export',
+        label: 'Export CSV',
+        icon: Download,
+        group: 'actions',
+        action: () => {
+          handleClose();
+          router.push('/reports');
+        },
+      },
+    ],
+    [handleClose, router]
+  );
+
+  // Filter commands by query
+  const filteredCommands = useMemo(
+    () =>
+      query.startsWith('>')
+        ? commands.filter((c) =>
+            c.label.toLowerCase().includes(query.slice(1).trim().toLowerCase())
+          )
+        : query.length === 0
+          ? commands
+          : [],
+    [query, commands]
+  );
+
+  const showCommands = query.length === 0 || query.startsWith('>');
 
   // Cmd+K listener
   useEffect(() => {
@@ -51,7 +237,7 @@ export function SearchCommand({ spaceId }: SearchCommandProps) {
   }, []);
 
   const handleSearch = useCallback(async () => {
-    if (!query.trim() || !spaceId) return;
+    if (!query.trim() || !spaceId || query.startsWith('>')) return;
     setIsSearching(true);
     try {
       const data = await apiClient.get<SearchResult>(`/spaces/${spaceId}/search`, {
@@ -66,7 +252,7 @@ export function SearchCommand({ spaceId }: SearchCommandProps) {
   }, [query, spaceId]);
 
   useEffect(() => {
-    if (query.length < 3) {
+    if (query.length < 3 || query.startsWith('>')) {
       setResults(null);
       return;
     }
@@ -74,11 +260,30 @@ export function SearchCommand({ spaceId }: SearchCommandProps) {
     return () => clearTimeout(timer);
   }, [query, handleSearch]);
 
-  const handleClose = () => {
-    setOpen(false);
-    setQuery('');
-    setResults(null);
-  };
+  // Keyboard navigation for commands
+  useEffect(() => {
+    if (!open || !showCommands) return;
+    const items = filteredCommands;
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setSelectedIndex((i) => Math.min(i + 1, items.length - 1));
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setSelectedIndex((i) => Math.max(i - 1, 0));
+      } else if (e.key === 'Enter' && items[selectedIndex]) {
+        e.preventDefault();
+        items[selectedIndex].action();
+      }
+    };
+    document.addEventListener('keydown', handleKey);
+    return () => document.removeEventListener('keydown', handleKey);
+  }, [open, showCommands, filteredCommands, selectedIndex]);
+
+  // Reset index when query changes
+  useEffect(() => {
+    setSelectedIndex(0);
+  }, [query]);
 
   const formatCurrency = (value: number) =>
     new Intl.NumberFormat('en-US', {
@@ -86,6 +291,9 @@ export function SearchCommand({ spaceId }: SearchCommandProps) {
       currency: 'USD',
       maximumFractionDigits: 0,
     }).format(value);
+
+  const navigateGroup = filteredCommands.filter((c) => c.group === 'navigate');
+  const actionGroup = filteredCommands.filter((c) => c.group === 'actions');
 
   return (
     <>
@@ -110,7 +318,7 @@ export function SearchCommand({ spaceId }: SearchCommandProps) {
           <div className="flex items-center border-b px-3">
             <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
             <input
-              placeholder="Search transactions... (e.g., 'coffee last month')"
+              placeholder="Search transactions, or type > for commands..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               className="flex h-12 w-full bg-transparent py-3 px-3 text-sm outline-none placeholder:text-muted-foreground"
@@ -122,6 +330,65 @@ export function SearchCommand({ spaceId }: SearchCommandProps) {
 
           {/* Results */}
           <div className="max-h-[400px] overflow-y-auto">
+            {/* Command palette (when empty or > prefix) */}
+            {showCommands && filteredCommands.length > 0 && (
+              <div className="p-2">
+                {navigateGroup.length > 0 && (
+                  <div className="mb-2">
+                    <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-1">
+                      Navigate
+                    </h4>
+                    {navigateGroup.map((cmd) => {
+                      const Icon = cmd.icon;
+                      const globalIdx = filteredCommands.indexOf(cmd);
+                      return (
+                        <button
+                          key={cmd.id}
+                          onClick={cmd.action}
+                          className={`flex w-full items-center gap-3 p-2 rounded text-sm text-left transition-colors ${
+                            globalIdx === selectedIndex ? 'bg-accent' : 'hover:bg-accent/50'
+                          }`}
+                        >
+                          <Icon className="h-4 w-4 text-muted-foreground" />
+                          {cmd.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+                {actionGroup.length > 0 && (
+                  <div>
+                    <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-1">
+                      Actions
+                    </h4>
+                    {actionGroup.map((cmd) => {
+                      const Icon = cmd.icon;
+                      const globalIdx = filteredCommands.indexOf(cmd);
+                      return (
+                        <button
+                          key={cmd.id}
+                          onClick={cmd.action}
+                          className={`flex w-full items-center gap-3 p-2 rounded text-sm text-left transition-colors ${
+                            globalIdx === selectedIndex ? 'bg-accent' : 'hover:bg-accent/50'
+                          }`}
+                        >
+                          <Icon className="h-4 w-4 text-muted-foreground" />
+                          {cmd.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+                {query.length === 0 && (
+                  <p className="text-xs text-muted-foreground px-2 pt-2">
+                    Type to search transactions, or{' '}
+                    <kbd className="rounded border px-1 text-[10px]">&gt;</kbd> for commands
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Search results */}
             {results && (
               <div className="p-4 space-y-4">
                 {/* Answer Summary */}
@@ -228,15 +495,9 @@ export function SearchCommand({ spaceId }: SearchCommandProps) {
               </div>
             )}
 
-            {!results && !isSearching && query.length >= 3 && (
+            {!results && !isSearching && !showCommands && query.length >= 3 && (
               <div className="p-8 text-center text-sm text-muted-foreground">
                 No results found for &ldquo;{query}&rdquo;
-              </div>
-            )}
-
-            {!results && !isSearching && query.length < 3 && (
-              <div className="p-8 text-center text-sm text-muted-foreground">
-                Type at least 3 characters to search
               </div>
             )}
           </div>

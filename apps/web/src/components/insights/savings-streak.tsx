@@ -1,8 +1,11 @@
 'use client';
 
+import { useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@dhanam/ui';
 import { Flame, Target, Leaf } from 'lucide-react';
 import { useAuth } from '~/lib/hooks/use-auth';
+import { fireStreakCelebration } from '~/lib/celebrations';
+import { toast } from 'sonner';
 
 interface Badge {
   label: string;
@@ -10,6 +13,8 @@ interface Badge {
   color: string;
   earned: boolean;
 }
+
+const MILESTONE_WEEKS = [4, 8, 12, 24, 52];
 
 const personaData: Record<
   string,
@@ -60,9 +65,26 @@ const personaData: Record<
 export function SavingsStreak() {
   const { user } = useAuth();
   const data = user?.email ? personaData[user.email] : null;
+  const celebratedRef = useRef(false);
+
+  useEffect(() => {
+    if (!data || celebratedRef.current) return undefined;
+    // Check if current streak hits a milestone — celebrate once per mount
+    if (MILESTONE_WEEKS.includes(data.weeks)) {
+      celebratedRef.current = true;
+      const timer = setTimeout(() => {
+        fireStreakCelebration(data.weeks);
+        toast.success(`🔥 ${data.weeks}-week savings streak! Keep it going!`);
+      }, 800);
+      return () => clearTimeout(timer);
+    }
+    return undefined;
+  }, [data]);
+
   if (!data) return null;
 
   const pct = Math.min((data.rate / data.target) * 100, 100);
+  const onTarget = data.rate >= data.target;
 
   return (
     <Card>
@@ -80,7 +102,7 @@ export function SavingsStreak() {
             <p className="text-xs text-muted-foreground">weeks of positive savings</p>
           </div>
 
-          {/* Progress ring (simplified as bar) */}
+          {/* Progress bar */}
           <div className="flex-1">
             <div className="flex justify-between text-xs mb-1">
               <span className="text-muted-foreground">Savings rate</span>
@@ -90,27 +112,40 @@ export function SavingsStreak() {
             </div>
             <div className="h-2 rounded-full bg-muted overflow-hidden">
               <div
-                className={`h-full rounded-full transition-all ${
-                  data.rate >= data.target ? 'bg-green-500' : 'bg-amber-500'
+                className={`h-full rounded-full transition-all duration-1000 ease-out ${
+                  onTarget ? 'bg-green-500' : 'bg-amber-500'
                 }`}
                 style={{ width: `${pct}%` }}
               />
             </div>
+            {onTarget && (
+              <p className="text-xs text-green-600 mt-1 font-medium">
+                ✓ Above target — great work!
+              </p>
+            )}
           </div>
 
-          {/* Badges */}
+          {/* Badges with animation */}
           <div className="flex gap-2">
             {data.badges.map((badge) => {
               const Icon = badge.icon;
               return (
                 <div
                   key={badge.label}
-                  className={`flex flex-col items-center gap-0.5 ${
-                    badge.earned ? '' : 'opacity-30'
+                  className={`flex flex-col items-center gap-0.5 transition-all duration-500 ${
+                    badge.earned ? 'animate-in zoom-in-50' : 'opacity-30 grayscale'
                   }`}
                   title={badge.label}
                 >
-                  <Icon className={`h-5 w-5 ${badge.color}`} />
+                  <div
+                    className={`relative ${
+                      badge.earned
+                        ? 'after:absolute after:inset-0 after:rounded-full after:ring-2 after:ring-offset-1 after:ring-current after:opacity-30'
+                        : ''
+                    }`}
+                  >
+                    <Icon className={`h-5 w-5 ${badge.color}`} />
+                  </div>
                   <span className="text-[10px] text-muted-foreground">{badge.label}</span>
                 </div>
               );

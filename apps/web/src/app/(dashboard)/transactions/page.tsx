@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@dhanam/ui';
@@ -23,6 +23,7 @@ import {
   DropdownMenuTrigger,
 } from '@dhanam/ui';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@dhanam/ui';
+import { Badge } from '@/components/ui/badge';
 import {
   Plus,
   MoreVertical,
@@ -31,17 +32,85 @@ import {
   Calendar,
   ChevronLeft,
   ChevronRight,
+  Sparkles,
 } from 'lucide-react';
 import { useSpaceStore } from '@/stores/space';
 import { transactionsApi } from '@/lib/api/transactions';
 import { accountsApi } from '@/lib/api/accounts';
+import { categoriesApi } from '@/lib/api/categories';
 import { Transaction, useTranslation } from '@dhanam/shared';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { toast } from 'sonner';
+import { MerchantIcon } from '@/components/transactions/merchant-icon';
+import {
+  TransactionFilters,
+  EMPTY_FILTERS,
+  type TransactionFilterValues,
+} from '@/components/transactions/transaction-filters';
+import { CategoryCorrectionDialog } from '@/components/transactions/category-correction-dialog';
 
 const ITEMS_PER_PAGE = 25;
+const TRANSACTION_ROW_HEIGHT = 80;
 
-const TRANSACTION_ROW_HEIGHT = 80; // Estimated height of each transaction row
+// Category color map for badges
+const CATEGORY_COLORS: Record<string, string> = {
+  food: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+  dining: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+  groceries: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200',
+  transport: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+  transportation: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+  entertainment: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
+  shopping: 'bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200',
+  utilities: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
+  health: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+  healthcare: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+  income: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200',
+  salary: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200',
+  education: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200',
+  subscriptions: 'bg-violet-100 text-violet-800 dark:bg-violet-900 dark:text-violet-200',
+  rent: 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200',
+  housing: 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200',
+  travel: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200',
+  insurance: 'bg-slate-100 text-slate-800 dark:bg-slate-900 dark:text-slate-200',
+  investments: 'bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200',
+  crypto: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+  defi: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+  personal: 'bg-sky-100 text-sky-800 dark:bg-sky-900 dark:text-sky-200',
+  business: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200',
+};
+
+function getCategoryBadgeClass(categoryName: string): string {
+  const key = categoryName.toLowerCase();
+  for (const [k, v] of Object.entries(CATEGORY_COLORS)) {
+    if (key.includes(k)) return v;
+  }
+  return 'bg-muted text-muted-foreground';
+}
+
+function getDateRange(range: TransactionFilterValues['dateRange']): {
+  startDate?: Date;
+  endDate?: Date;
+} {
+  const now = new Date();
+  switch (range) {
+    case 'this-month': {
+      const start = new Date(now.getFullYear(), now.getMonth(), 1);
+      return { startDate: start };
+    }
+    case 'last-month': {
+      const start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const end = new Date(now.getFullYear(), now.getMonth(), 0);
+      return { startDate: start, endDate: end };
+    }
+    case 'last-90': {
+      const start = new Date(now);
+      start.setDate(start.getDate() - 90);
+      return { startDate: start };
+    }
+    default:
+      return {};
+  }
+}
 
 export default function TransactionsPage() {
   const { t } = useTranslation('transactions');
@@ -49,19 +118,33 @@ export default function TransactionsPage() {
   const queryClient = useQueryClient();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+  const [correctionTransaction, setCorrectionTransaction] = useState<Transaction | null>(null);
   const [page, setPage] = useState(1);
+  const [filters, setFilters] = useState<TransactionFilterValues>(EMPTY_FILTERS);
   const parentRef = useRef<HTMLDivElement>(null);
 
+  // Build API filter from UI filter state
+  const apiFilter = useMemo(() => {
+    const dateRange = getDateRange(filters.dateRange);
+    return {
+      page,
+      limit: ITEMS_PER_PAGE,
+      sortBy: 'date' as const,
+      sortOrder: 'desc' as const,
+      search: filters.search || undefined,
+      categoryId: filters.categoryId,
+      accountId: filters.accountId,
+      ...dateRange,
+      ...(filters.type === 'income' ? { minAmount: 0 } : {}),
+      ...(filters.type === 'expense' ? { maxAmount: -0.01 } : {}),
+    };
+  }, [page, filters]);
+
   const { data: transactionsData, isLoading: isLoadingTransactions } = useQuery({
-    queryKey: ['transactions', currentSpace?.id, page],
+    queryKey: ['transactions', currentSpace?.id, apiFilter],
     queryFn: () => {
       if (!currentSpace) throw new Error('No current space');
-      return transactionsApi.getTransactions(currentSpace.id, {
-        page,
-        limit: ITEMS_PER_PAGE,
-        sortBy: 'date',
-        sortOrder: 'desc',
-      });
+      return transactionsApi.getTransactions(currentSpace.id, apiFilter);
     },
     enabled: !!currentSpace,
   });
@@ -71,6 +154,15 @@ export default function TransactionsPage() {
     queryFn: () => {
       if (!currentSpace) throw new Error('No current space');
       return accountsApi.getAccounts(currentSpace.id);
+    },
+    enabled: !!currentSpace,
+  });
+
+  const { data: categories } = useQuery({
+    queryKey: ['categories', currentSpace?.id],
+    queryFn: () => {
+      if (!currentSpace) throw new Error('No current space');
+      return categoriesApi.getCategories(currentSpace.id);
     },
     enabled: !!currentSpace,
   });
@@ -156,12 +248,16 @@ export default function TransactionsPage() {
     });
   };
 
-  // Virtualization setup for smooth scrolling with large lists
+  const handleFilterChange = useCallback((newFilters: TransactionFilterValues) => {
+    setFilters(newFilters);
+    setPage(1); // Reset to page 1 on filter change
+  }, []);
+
   const rowVirtualizer = useVirtualizer({
     count: transactionsData?.data.length ?? 0,
     getScrollElement: () => parentRef.current,
     estimateSize: () => TRANSACTION_ROW_HEIGHT,
-    overscan: 5, // Render 5 extra items outside visible area for smooth scrolling
+    overscan: 5,
   });
 
   if (!currentSpace) {
@@ -254,6 +350,14 @@ export default function TransactionsPage() {
         </Dialog>
       </div>
 
+      {/* Filter Bar */}
+      <TransactionFilters
+        categories={categories}
+        accounts={accounts}
+        value={filters}
+        onChange={handleFilterChange}
+      />
+
       {isLoadingTransactions ? (
         <div className="flex items-center justify-center py-8">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -292,6 +396,11 @@ export default function TransactionsPage() {
                   const transaction = transactionsData?.data[virtualItem.index];
                   if (!transaction) return null;
                   const account = accounts?.find((a) => a.id === transaction.accountId);
+                  const merchant =
+                    (transaction.metadata as Record<string, string> | undefined)?.merchant ?? null;
+                  const isAICategorized = !!(
+                    transaction.metadata as Record<string, string> | undefined
+                  )?.categorizedBy;
 
                   return (
                     <div
@@ -304,9 +413,12 @@ export default function TransactionsPage() {
                     >
                       <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors mx-1 my-1">
                         <div className="flex items-center gap-4">
-                          <div className="p-2 bg-muted rounded-full">
-                            <Receipt className="h-4 w-4" />
-                          </div>
+                          {/* Merchant Icon instead of generic Receipt */}
+                          <MerchantIcon
+                            merchant={merchant}
+                            description={transaction.description}
+                            size={36}
+                          />
                           <div>
                             <p className="font-medium">{transaction.description}</p>
                             <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -314,14 +426,42 @@ export default function TransactionsPage() {
                               {formatDate(transaction.date)}
                               {account && (
                                 <>
-                                  <span>•</span>
+                                  <span>·</span>
                                   <span>{account.name}</span>
                                 </>
                               )}
                             </div>
                           </div>
                         </div>
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-3">
+                          {/* Category Badge */}
+                          {transaction.category ? (
+                            <button
+                              onClick={() => setCorrectionTransaction(transaction)}
+                              className="cursor-pointer"
+                            >
+                              <Badge
+                                variant="secondary"
+                                className={`text-xs flex items-center gap-1 ${getCategoryBadgeClass(transaction.category.name)}`}
+                              >
+                                {isAICategorized && <Sparkles className="h-3 w-3" />}
+                                {transaction.category.icon && (
+                                  <span>{transaction.category.icon}</span>
+                                )}
+                                {transaction.category.name}
+                              </Badge>
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => setCorrectionTransaction(transaction)}
+                              className="cursor-pointer"
+                            >
+                              <Badge variant="outline" className="text-xs text-muted-foreground">
+                                + Categorize
+                              </Badge>
+                            </button>
+                          )}
+
                           <div className="text-right">
                             <p
                               className={`font-medium ${transaction.amount < 0 ? 'text-red-600' : 'text-green-600'}`}
@@ -344,6 +484,11 @@ export default function TransactionsPage() {
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem onClick={() => setSelectedTransaction(transaction)}>
                                 {t('action.edit')}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => setCorrectionTransaction(transaction)}
+                              >
+                                {t('action.categorize') || 'Categorize'}
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={() => deleteMutation.mutate(transaction.id)}
@@ -398,6 +543,7 @@ export default function TransactionsPage() {
         </Card>
       )}
 
+      {/* Edit Dialog */}
       <Dialog
         open={!!selectedTransaction}
         onOpenChange={(open: boolean) => !open && setSelectedTransaction(null)}
@@ -455,6 +601,24 @@ export default function TransactionsPage() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Category Correction Dialog */}
+      {correctionTransaction && (
+        <CategoryCorrectionDialog
+          open={!!correctionTransaction}
+          onOpenChange={(open) => !open && setCorrectionTransaction(null)}
+          transaction={{
+            id: correctionTransaction.id,
+            description: correctionTransaction.description,
+            merchant:
+              (correctionTransaction.metadata as Record<string, string> | undefined)?.merchant ??
+              null,
+            amount: correctionTransaction.amount,
+            categoryId: correctionTransaction.categoryId ?? null,
+          }}
+          onCorrectionComplete={() => setCorrectionTransaction(null)}
+        />
+      )}
     </div>
   );
 }
