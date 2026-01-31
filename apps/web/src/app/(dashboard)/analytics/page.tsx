@@ -25,6 +25,7 @@ import {
   PortfolioChart,
 } from '@/components/analytics';
 import { ScheduleReportModal } from '@/components/reports/schedule-report-modal';
+import { MlInsightsDashboard } from '@/components/ml/ml-insights-dashboard';
 import { useTranslation } from '@dhanam/shared';
 
 export default function AnalyticsPage() {
@@ -380,6 +381,9 @@ export default function AnalyticsPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* ML Insights */}
+      {currentSpace && <MlInsightsDashboard spaceId={currentSpace.id} />}
 
       {/* Schedule Report Modal */}
       <ScheduleReportModal

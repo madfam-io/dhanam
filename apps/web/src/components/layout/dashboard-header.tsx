@@ -10,12 +10,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@dhanam/ui';
-import { Bell, Settings, User, LogOut, ChevronDown, Shield } from 'lucide-react';
+import { Settings, User, LogOut, ChevronDown, Shield } from 'lucide-react';
 import { useAuth } from '~/lib/hooks/use-auth';
 import { useSpaces } from '~/lib/hooks/use-spaces';
 import { useSpaceStore } from '~/stores/space';
 import { useTranslation } from '@dhanam/shared';
 import { PersonaSwitcher } from '~/components/demo/persona-switcher';
+import { NotificationDropdown } from '~/components/layout/notification-dropdown';
 import type { Space } from '@dhanam/shared';
 
 export function DashboardHeader() {
@@ -94,9 +95,7 @@ export function DashboardHeader() {
         <div className="ml-auto flex items-center gap-4">
           {isDemo && <PersonaSwitcher currentPersona={currentPersona} />}
 
-          <Button variant="ghost" size="icon">
-            <Bell className="h-5 w-5" />
-          </Button>
+          <NotificationDropdown />
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

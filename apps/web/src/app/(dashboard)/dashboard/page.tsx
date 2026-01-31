@@ -31,6 +31,9 @@ import { ProbabilisticGoalCard } from '@/components/goals/probabilistic-goal-car
 import { GoalHealthScore } from '@/components/goals/goal-health-score';
 import { GoalProbabilityTimeline } from '@/components/goals/goal-probability-timeline';
 import { PremiumGate } from '@/components/billing/PremiumGate';
+import { DemoTour } from '@/components/demo/demo-tour';
+import { SavingsStreak } from '@/components/insights/savings-streak';
+import { InsightCards } from '@/components/insights/insight-cards';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -82,14 +85,28 @@ export default function DashboardPage() {
     other: Building2,
   };
 
+  const isDemo = user?.email?.endsWith('@dhanam.demo') ?? false;
+  const isNonGuestDemo = isDemo && !isGuestDemo;
+
   return (
     <div className="space-y-6">
+      {isDemo && <DemoTour />}
+
       <div>
         <h2 className="text-3xl font-bold tracking-tight">
           {t('overview.welcomeBack', { name: user?.name ?? '' })}
         </h2>
         <p className="text-muted-foreground">{t('overview.financialOverview')}</p>
       </div>
+
+      {/* Proactive Insights for demo personas */}
+      {isNonGuestDemo && <InsightCards />}
+
+      {/* Savings Streak for non-guest demo personas */}
+      {isNonGuestDemo && <SavingsStreak />}
+
+      {/* Meet the Personas for guest users */}
+      {isGuestDemo && <MeetThePersonas />}
 
       {/* Key Metrics */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -431,59 +448,180 @@ export default function DashboardPage() {
         </PremiumGate>
       ) : null}
 
-      {/* Gaming Assets Widget */}
-      <Card
-        className="cursor-pointer hover:shadow-md transition-shadow"
-        onClick={() => router.push('/gaming')}
-      >
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <Gamepad2 className="h-5 w-5" />
-                {t('overview.gamingAssets')}
-              </CardTitle>
-              <CardDescription>{t('overview.gamingDescription')}</CardDescription>
+      {/* Persona-Aware Feature Widget */}
+      {(user?.email === 'diego@dhanam.demo' || isGuestDemo) && (
+        <Card
+          className="cursor-pointer hover:shadow-md transition-shadow"
+          onClick={() => router.push('/gaming')}
+        >
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Gamepad2 className="h-5 w-5" />
+                  {t('overview.gamingAssets')}
+                </CardTitle>
+                <CardDescription>{t('overview.gamingDescription')}</CardDescription>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  router.push('/gaming');
+                }}
+              >
+                {t('overview.viewDashboard')}
+              </Button>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                router.push('/gaming');
-              }}
-            >
-              {t('overview.viewDashboard')}
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div>
-              <p className="text-sm text-muted-foreground">{t('overview.sandStaked')}</p>
-              <p className="text-lg font-semibold">15,000</p>
-              <p className="text-xs text-green-600">8.5% APY</p>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div>
+                <p className="text-sm text-muted-foreground">{t('overview.sandStaked')}</p>
+                <p className="text-lg font-semibold">15,000</p>
+                <p className="text-xs text-green-600">8.5% APY</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">{t('overview.landParcels')}</p>
+                <p className="text-lg font-semibold">3</p>
+                <p className="text-xs text-muted-foreground">
+                  {t('overview.rented', { count: 2 })}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">{t('overview.nfts')}</p>
+                <p className="text-lg font-semibold">2</p>
+                <p className="text-xs text-muted-foreground">
+                  {t('overview.nftValue', { value: '$21.7K' })}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">{t('overview.monthlyIncomeLabel')}</p>
+                <p className="text-lg font-semibold text-green-600">$597</p>
+                <p className="text-xs text-muted-foreground">{t('overview.allSources')}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm text-muted-foreground">{t('overview.landParcels')}</p>
-              <p className="text-lg font-semibold">5</p>
-              <p className="text-xs text-muted-foreground">{t('overview.rented', { count: 2 })}</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {user?.email === 'maria@dhanam.demo' && (
+        <Card
+          className="cursor-pointer hover:shadow-md transition-shadow"
+          onClick={() => router.push('/budgets/zero-based')}
+        >
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <PiggyBank className="h-5 w-5" />
+              ESG & Savings Highlights
+            </CardTitle>
+            <CardDescription>Your sustainable finance overview</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div>
+                <p className="text-sm text-muted-foreground">ESG Portfolio Score</p>
+                <p className="text-lg font-semibold text-green-600">72/100</p>
+                <p className="text-xs text-muted-foreground">Above average</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Monthly Savings Rate</p>
+                <p className="text-lg font-semibold">29%</p>
+                <p className="text-xs text-green-600">On track</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Budget Allocated</p>
+                <p className="text-lg font-semibold">100%</p>
+                <p className="text-xs text-muted-foreground">Zero-based</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Subscriptions Detected</p>
+                <p className="text-lg font-semibold text-amber-600">6</p>
+                <p className="text-xs text-muted-foreground">1 needs review</p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm text-muted-foreground">{t('overview.nfts')}</p>
-              <p className="text-lg font-semibold">14</p>
-              <p className="text-xs text-muted-foreground">
-                {t('overview.nftValue', { value: '$22.5K' })}
-              </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {user?.email === 'carlos@dhanam.demo' && (
+        <Card
+          className="cursor-pointer hover:shadow-md transition-shadow"
+          onClick={() => router.push('/households')}
+        >
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Building2 className="h-5 w-5" />
+              Business & Household
+            </CardTitle>
+            <CardDescription>Tacos El Patrón + Mendoza Family</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div>
+                <p className="text-sm text-muted-foreground">Monthly Revenue</p>
+                <p className="text-lg font-semibold text-green-600">MXN 250K</p>
+                <p className="text-xs text-green-600">+12% vs last month</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Shared Expenses</p>
+                <p className="text-lg font-semibold">15</p>
+                <p className="text-xs text-muted-foreground">Yours/Mine/Ours</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Business Margin</p>
+                <p className="text-lg font-semibold">22%</p>
+                <p className="text-xs text-muted-foreground">Net operating</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Payroll Next</p>
+                <p className="text-lg font-semibold">MXN 120K</p>
+                <p className="text-xs text-muted-foreground">In 8 days</p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm text-muted-foreground">{t('overview.monthlyIncomeLabel')}</p>
-              <p className="text-lg font-semibold text-green-600">$597</p>
-              <p className="text-xs text-muted-foreground">{t('overview.allSources')}</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {user?.email === 'patricia@dhanam.demo' && (
+        <Card
+          className="cursor-pointer hover:shadow-md transition-shadow"
+          onClick={() => router.push('/estate-planning/life-beat')}
+        >
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Target className="h-5 w-5" />
+              Estate Planning Summary
+            </CardTitle>
+            <CardDescription>Ruiz Family estate — Life Beat active</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div>
+                <p className="text-sm text-muted-foreground">Estate Value</p>
+                <p className="text-lg font-semibold">$7.5M+</p>
+                <p className="text-xs text-muted-foreground">Across all assets</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Beneficiaries</p>
+                <p className="text-lg font-semibold">3</p>
+                <p className="text-xs text-muted-foreground">Spouse + 2 children</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Life Beat</p>
+                <p className="text-lg font-semibold text-green-600">Active</p>
+                <p className="text-xs text-muted-foreground">Last check-in: 5d ago</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Will Status</p>
+                <p className="text-lg font-semibold text-green-600">Current</p>
+                <p className="text-xs text-muted-foreground">Reviewed 30d ago</p>
+              </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Budget Overview */}
       {currentBudgetSummary && (
@@ -522,6 +660,78 @@ export default function DashboardPage() {
       {/* Sync Status */}
       <SyncStatus spaceId={currentSpace.id} />
     </div>
+  );
+}
+
+function MeetThePersonas() {
+  const personas = [
+    {
+      key: 'maria',
+      emoji: '🧑‍💼',
+      name: 'Maria Gonzalez',
+      archetype: 'Young Professional',
+      stat: '29% savings rate, ESG-conscious',
+    },
+    {
+      key: 'carlos',
+      emoji: '🏪',
+      name: 'Carlos Mendoza',
+      archetype: 'Business Owner',
+      stat: 'MXN 250K/mo revenue, household splits',
+    },
+    {
+      key: 'patricia',
+      emoji: '💎',
+      name: 'Patricia Ruiz',
+      archetype: 'Enterprise CFO',
+      stat: '$7.5M+ estate, Life Beat active',
+    },
+    {
+      key: 'diego',
+      emoji: '🎮',
+      name: 'Diego Navarro',
+      archetype: 'DeFi & Gaming',
+      stat: '$28.5K DeFi, NFT portfolio',
+    },
+  ];
+
+  const switchPersona = async (key: string) => {
+    try {
+      const res = await fetch('/api/auth/switch-persona', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ persona: key }),
+      });
+      if (res.ok) window.location.reload();
+    } catch {}
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-lg">Meet the Personas</CardTitle>
+        <CardDescription>
+          Each persona showcases different Dhanam features. Click to explore.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {personas.map((p) => (
+            <button
+              key={p.key}
+              onClick={() => switchPersona(p.key)}
+              className="text-left p-3 rounded-lg border hover:bg-muted/50 hover:border-primary/30 transition-colors"
+            >
+              <span className="text-2xl">{p.emoji}</span>
+              <p className="font-medium text-sm mt-1">{p.name}</p>
+              <p className="text-xs text-muted-foreground">{p.archetype}</p>
+              <p className="text-xs text-primary mt-1">{p.stat}</p>
+            </button>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 

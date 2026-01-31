@@ -1,8 +1,24 @@
+import { Currency, SpaceType, BudgetPeriod, Provider, User } from '@db';
 import { startOfMonth, endOfMonth } from 'date-fns';
 
-import { Currency, SpaceType, BudgetPeriod, Provider, User } from '@db';
-
 import { PrismaService } from '../prisma/prisma.service';
+
+import { AnalyticsBuilder } from './demo-data/analytics.builder';
+import { AssetsBuilder } from './demo-data/assets.builder';
+import { CashflowBuilder } from './demo-data/cashflow.builder';
+import { ConnectionsBuilder } from './demo-data/connections.builder';
+import { ESGBuilder } from './demo-data/esg.builder';
+import { EstateBuilder } from './demo-data/estate.builder';
+import { GoalsBuilder } from './demo-data/goals.builder';
+import { HouseholdBuilder } from './demo-data/household.builder';
+import { RecurringBuilder } from './demo-data/recurring.builder';
+import { ReportsBuilder } from './demo-data/reports.builder';
+import { SimulationsBuilder } from './demo-data/simulations.builder';
+import { TransactionsBuilder } from './demo-data/transactions.builder';
+import { DemoContext } from './demo-data/types';
+import { NotificationsBuilder } from './demo-data/notifications.builder';
+import { RulesBuilder } from './demo-data/rules.builder';
+import { ZeroBasedBuilder } from './demo-data/zero-based.builder';
 
 interface GeoDefaults {
   locale: string;
@@ -13,6 +29,8 @@ interface GeoDefaults {
 /**
  * Builds demo persona data at runtime when seed hasn't been run.
  * Each builder method is idempotent — skips creation if the user already has accounts.
+ * After base user/space/account/budget creation, runs enrichment pipeline
+ * to fill transactions, goals, assets, ESG scores, estate planning, etc.
  */
 export class DemoDataBuilder {
   constructor(private prisma: PrismaService) {}
@@ -31,7 +49,131 @@ export class DemoDataBuilder {
       throw new Error(`Unknown persona: ${personaKey}`);
     }
 
-    return builder();
+    const user = await builder();
+
+    // Run enrichment pipeline (idempotent — skips if transactions already exist)
+    await this.enrichPersona(user, personaKey);
+
+    return user;
+  }
+
+  /**
+   * Enrichment pipeline: generates transactions, valuations, goals, assets, ESG,
+   * estate planning, recurring patterns, connections, reports, and notifications.
+   * Idempotent: checks transaction count before running.
+   */
+  private async enrichPersona(user: User, personaKey: string): Promise<void> {
+    const txnCount = await this.prisma.transaction.count({
+      where: { account: { space: { userSpaces: { some: { userId: user.id } } } } },
+    });
+    if (txnCount > 0) return;
+
+    const ctx = await this.buildContext(user, personaKey);
+
+    // Phase 1: Transactions + Valuations
+    const txnBuilder = new TransactionsBuilder(this.prisma);
+    const analyticsBuilder = new AnalyticsBuilder(this.prisma);
+    await Promise.all([txnBuilder.build(ctx), analyticsBuilder.build(ctx)]);
+
+    // Phase 2: Goals + Simulations
+    const goalsBuilder = new GoalsBuilder(this.prisma);
+    const simsBuilder = new SimulationsBuilder(this.prisma);
+    await Promise.all([goalsBuilder.build(ctx), simsBuilder.build(ctx)]);
+
+    // Phase 3: Assets + ESG
+    const assetsBuilder = new AssetsBuilder(this.prisma);
+    const esgBuilder = new ESGBuilder(this.prisma);
+    await Promise.all([assetsBuilder.build(ctx), esgBuilder.build(ctx)]);
+
+    // Phase 4: Estate + Recurring + Connections + Reports
+    const estateBuilder = new EstateBuilder(this.prisma);
+    const recurringBuilder = new RecurringBuilder(this.prisma);
+    const connectionsBuilder = new ConnectionsBuilder(this.prisma);
+    const reportsBuilder = new ReportsBuilder(this.prisma);
+    await Promise.all([
+      estateBuilder.build(ctx),
+      recurringBuilder.build(ctx),
+      connectionsBuilder.build(ctx),
+      reportsBuilder.build(ctx),
+    ]);
+
+    // Phase 5: Intelligence layer (cashflow, zero-based budgeting, household)
+    const cashflowBuilder = new CashflowBuilder(this.prisma);
+    const zeroBasedBuilder = new ZeroBasedBuilder(this.prisma);
+    const householdBuilder = new HouseholdBuilder(this.prisma);
+    await Promise.all([
+      cashflowBuilder.build(ctx),
+      zeroBasedBuilder.build(ctx),
+      householdBuilder.build(ctx),
+    ]);
+
+    // Phase 6: Engagement layer (notifications, rules)
+    const notificationsBuilder = new NotificationsBuilder(this.prisma);
+    const rulesBuilder = new RulesBuilder(this.prisma);
+    await Promise.all([notificationsBuilder.build(ctx), rulesBuilder.build(ctx)]);
+  }
+
+  private async buildContext(user: User, personaKey: string): Promise<DemoContext> {
+    const userSpaces = await this.prisma.userSpace.findMany({
+      where: { userId: user.id },
+      include: {
+        space: {
+          include: {
+            accounts: true,
+            budgets: { include: { categories: true } },
+          },
+        },
+      },
+    });
+
+    const spaces = userSpaces.map((us) => ({
+      id: us.space.id,
+      type: us.space.type,
+      name: us.space.name,
+      currency: us.space.currency,
+    }));
+
+    const accounts = userSpaces.flatMap((us) =>
+      us.space.accounts.map((a) => ({
+        id: a.id,
+        spaceId: a.spaceId,
+        name: a.name,
+        type: a.type,
+        subtype: a.subtype,
+        currency: a.currency,
+        balance: Number(a.balance),
+        provider: a.provider,
+        providerAccountId: a.providerAccountId,
+      }))
+    );
+
+    const categories = userSpaces.flatMap((us) =>
+      us.space.budgets.flatMap((b) =>
+        b.categories.map((c) => ({
+          id: c.id,
+          budgetId: c.budgetId,
+          name: c.name,
+          spaceId: us.space.id,
+        }))
+      )
+    );
+
+    const budgets = userSpaces.flatMap((us) =>
+      us.space.budgets.map((b) => ({
+        id: b.id,
+        spaceId: us.space.id,
+        name: b.name,
+      }))
+    );
+
+    return {
+      user: { id: user.id, email: user.email },
+      personaKey,
+      spaces,
+      accounts,
+      categories,
+      budgets,
+    };
   }
 
   private async buildGuestPersona(geo: GeoDefaults): Promise<User> {
@@ -45,6 +187,7 @@ export class DemoDataBuilder {
         emailVerified: true,
         onboardingCompleted: true,
         onboardingCompletedAt: new Date(),
+        subscriptionTier: 'pro',
       },
     });
 
@@ -135,6 +278,7 @@ export class DemoDataBuilder {
         emailVerified: true,
         onboardingCompleted: true,
         onboardingCompletedAt: new Date(),
+        subscriptionTier: 'pro',
       },
     });
 
@@ -216,6 +360,7 @@ export class DemoDataBuilder {
         emailVerified: true,
         onboardingCompleted: true,
         onboardingCompletedAt: new Date(),
+        subscriptionTier: 'pro',
       },
     });
 
@@ -320,6 +465,7 @@ export class DemoDataBuilder {
         emailVerified: true,
         onboardingCompleted: true,
         onboardingCompletedAt: new Date(),
+        subscriptionTier: 'pro',
       },
     });
 
@@ -399,6 +545,7 @@ export class DemoDataBuilder {
         emailVerified: true,
         onboardingCompleted: true,
         onboardingCompletedAt: new Date(),
+        subscriptionTier: 'pro',
       },
     });
 

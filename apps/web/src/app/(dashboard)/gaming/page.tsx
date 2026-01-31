@@ -18,8 +18,11 @@ import { LandPortfolio } from '@/components/gaming/land-portfolio';
 import { NftGallery } from '@/components/gaming/nft-gallery';
 import { GovernanceActivity } from '@/components/gaming/governance-activity';
 import { gamingApi } from '@/lib/api/gaming';
+import { useAuth } from '~/lib/hooks/use-auth';
+import { Button } from '@dhanam/ui';
+import { useRouter } from 'next/navigation';
 
-// Fallback data for development mode
+// Fallback data for development mode (used for Diego + Guest only)
 const FALLBACK_PLATFORM_DATA = [
   {
     platform: 'sandbox',
@@ -273,7 +276,12 @@ const FALLBACK_PROPOSALS = [
 
 export default function GamingPage() {
   const { t } = useTranslation('gaming');
+  const { user } = useAuth();
+  const router = useRouter();
   const [selectedPlatform, setSelectedPlatform] = useState<MetaversePlatform>('all');
+
+  const isGamingPersona =
+    user?.email === 'diego@dhanam.demo' || user?.email === 'guest@dhanam.demo';
 
   // TODO: Replace 'demo-space' with actual spaceId from auth context
   const spaceId = 'demo-space';
@@ -286,7 +294,33 @@ export default function GamingPage() {
     queryKey: ['gaming-portfolio', spaceId],
     queryFn: () => gamingApi.getPortfolio(spaceId),
     retry: false,
+    enabled: isGamingPersona,
   });
+
+  // Show connect CTA for non-gaming personas
+  if (user && !isGamingPersona) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight flex items-center gap-2">
+            <Gamepad2 className="h-8 w-8" />
+            {t('page.title')}
+          </h2>
+        </div>
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-16">
+            <Gamepad2 className="h-16 w-16 text-muted-foreground mb-4" />
+            <h3 className="text-xl font-semibold mb-2">Connect Your Gaming Accounts</h3>
+            <p className="text-sm text-muted-foreground text-center mb-6 max-w-md">
+              Track your metaverse assets, gaming earnings, land parcels, and NFTs across platforms
+              like The Sandbox, Axie Infinity, Illuvium, and more.
+            </p>
+            <Button onClick={() => router.push('/connections')}>Connect Gaming Wallet</Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   // Use API data or fallback to hardcoded dev data
   const PLATFORM_DATA = portfolio?.platforms ?? FALLBACK_PLATFORM_DATA;
