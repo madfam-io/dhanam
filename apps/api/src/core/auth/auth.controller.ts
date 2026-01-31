@@ -25,6 +25,7 @@ import { ThrottleAuthGuard } from '@core/security/guards/throttle-auth.guard';
 
 import { AuthService } from './auth.service';
 import { CurrentUser, AuthenticatedUser } from './decorators/current-user.decorator';
+import { DemoAuthService } from './demo-auth.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { GuestAuthService } from './guest-auth.service';
 import { TotpService } from './totp.service';
@@ -36,7 +37,8 @@ export class AuthController {
     private authService: AuthService,
     private totpService: TotpService,
     private auditService: AuditService,
-    private guestAuthService: GuestAuthService
+    private guestAuthService: GuestAuthService,
+    private demoAuthService: DemoAuthService,
   ) {}
 
   @Post('register')
@@ -133,6 +135,84 @@ export class AuthController {
       },
       message: 'Welcome to Dhanam demo! This is a read-only guest session.',
     };
+  }
+
+  @Post('demo/login')
+  @UseGuards(ThrottleAuthGuard)
+  @Throttle({ default: { limit: 20, ttl: 60000 } })
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Login as a demo persona' })
+  @ApiResponse({ status: 200, description: 'Demo persona session created' })
+  async demoLogin(
+    @Body() body: { persona: string; countryCode?: string },
+    @Headers('cf-ipcountry') cfCountry: string,
+  ): Promise<{
+    tokens: AuthTokens;
+    user: any;
+    persona: string;
+    message: string;
+  }> {
+    const countryCode = body?.countryCode || cfCountry || undefined;
+    const result = await this.demoAuthService.loginAsPersona(body.persona, countryCode);
+
+    return {
+      tokens: {
+        accessToken: result.accessToken,
+        refreshToken: result.refreshToken,
+        expiresIn: result.expiresIn,
+      },
+      user: {
+        id: result.user.id,
+        email: result.user.email,
+        name: result.user.name,
+        isDemo: true,
+        persona: result.persona,
+      },
+      persona: result.persona,
+      message: `Welcome! You're exploring Dhanam as ${result.user.name}.`,
+    };
+  }
+
+  @Post('demo/switch')
+  @UseGuards(JwtAuthGuard, ThrottleAuthGuard)
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Switch demo persona (requires existing demo JWT)' })
+  @ApiResponse({ status: 200, description: 'Switched to new persona' })
+  async demoSwitch(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() body: { persona: string },
+  ): Promise<{
+    tokens: AuthTokens;
+    user: any;
+    persona: string;
+    message: string;
+  }> {
+    const result = await this.demoAuthService.switchPersona(user.userId, body.persona);
+
+    return {
+      tokens: {
+        accessToken: result.accessToken,
+        refreshToken: result.refreshToken,
+        expiresIn: result.expiresIn,
+      },
+      user: {
+        id: result.user.id,
+        email: result.user.email,
+        name: result.user.name,
+        isDemo: true,
+        persona: result.persona,
+      },
+      persona: result.persona,
+      message: `Switched to ${result.user.name}.`,
+    };
+  }
+
+  @Get('demo/personas')
+  @ApiOperation({ summary: 'List available demo personas' })
+  @ApiResponse({ status: 200, description: 'Available personas' })
+  async getPersonas() {
+    return { personas: this.demoAuthService.getAvailablePersonas() };
   }
 
   @Post('refresh')

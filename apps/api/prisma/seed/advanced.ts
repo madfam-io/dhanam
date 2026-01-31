@@ -365,7 +365,7 @@ export async function seedAdvanced(prisma: PrismaClient, ctx: SeedContext) {
     data: [
       {
         userId: ctx.guestUser.id,
-        executorEmail: 'maria@demo.com',
+        executorEmail: 'maria@dhanam.demo',
         executorName: 'Maria González',
         executorUserId: ctx.mariaUser.id,
         relationship: 'spouse',
@@ -376,7 +376,7 @@ export async function seedAdvanced(prisma: PrismaClient, ctx: SeedContext) {
       },
       {
         userId: ctx.guestUser.id,
-        executorEmail: 'carlos@business.com',
+        executorEmail: 'carlos@dhanam.demo',
         executorName: 'Carlos Mendoza',
         executorUserId: ctx.carlosUser.id,
         relationship: 'child',

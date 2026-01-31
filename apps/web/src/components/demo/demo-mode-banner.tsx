@@ -7,6 +7,7 @@ import { Button } from '@dhanam/ui';
 import { X, Clock, Sparkles } from 'lucide-react';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { useTranslation } from '@dhanam/shared';
+import { PersonaSwitcher } from './persona-switcher';
 
 export function DemoModeBanner() {
   const { user } = useAuth();
@@ -16,10 +17,15 @@ export function DemoModeBanner() {
   const [isVisible, setIsVisible] = useState(true);
   const [timeLeft, setTimeLeft] = useState<string>('');
 
+  // Detect demo mode: check for @dhanam.demo email pattern
+  const isDemo = user?.email?.endsWith('@dhanam.demo') ?? false;
   const isGuest = user?.email === 'guest@dhanam.demo';
 
+  // Derive persona from email
+  const persona = isDemo ? user?.email?.split('@')[0] : undefined;
+
   useEffect(() => {
-    if (!isGuest) return;
+    if (!isDemo) return;
 
     const updateTimeLeft = () => {
       const now = new Date().getTime();
@@ -30,7 +36,7 @@ export function DemoModeBanner() {
       }
 
       const start = parseInt(sessionStart || now.toString(), 10);
-      const endTime = start + 60 * 60 * 1000;
+      const endTime = start + 2 * 60 * 60 * 1000; // 2 hours
       const remaining = endTime - now;
 
       if (remaining <= 0) {
@@ -38,21 +44,23 @@ export function DemoModeBanner() {
         return;
       }
 
-      const minutes = Math.floor(remaining / 60000);
+      const hours = Math.floor(remaining / 3600000);
+      const minutes = Math.floor((remaining % 3600000) / 60000);
       const seconds = Math.floor((remaining % 60000) / 1000);
 
-      setTimeLeft(`${minutes}m ${seconds}s`);
+      setTimeLeft(hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m ${seconds}s`);
     };
 
     updateTimeLeft();
     const interval = setInterval(updateTimeLeft, 1000);
 
     return () => clearInterval(interval);
-  }, [isGuest]);
+  }, [isDemo]);
 
   const handleSignUp = () => {
     analytics.track('demo_convert_clicked', {
       timeRemaining: timeLeft,
+      persona,
       source: 'banner',
     });
     router.push('/register');
@@ -62,10 +70,11 @@ export function DemoModeBanner() {
     setIsVisible(false);
     analytics.track('demo_banner_dismissed', {
       timeRemaining: timeLeft,
+      persona,
     });
   };
 
-  if (!isGuest || !isVisible) {
+  if (!isDemo || !isVisible) {
     return null;
   }
 
@@ -77,7 +86,15 @@ export function DemoModeBanner() {
             <Sparkles className="h-5 w-5 flex-shrink-0" />
             <div className="flex-1">
               <p className="text-sm font-medium">
-                {t('demoExploring')} <strong>{t('demoMode')}</strong>
+                {isGuest ? (
+                  <>
+                    {t('demoExploring')} <strong>{t('demoMode')}</strong>
+                  </>
+                ) : (
+                  <>
+                    {t('demoExploringAs')} <strong>{user?.name}</strong>
+                  </>
+                )}
               </p>
               <p className="text-xs opacity-90 hidden sm:block">
                 {t('demoDescription')}
@@ -85,7 +102,9 @@ export function DemoModeBanner() {
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            <PersonaSwitcher currentPersona={persona} />
+
             {timeLeft !== 'expired' && (
               <div className="flex items-center gap-2 bg-white/10 rounded-full px-3 py-1">
                 <Clock className="h-4 w-4" />

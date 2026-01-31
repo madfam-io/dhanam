@@ -10,6 +10,7 @@ import { EmailModule } from '@modules/email/email.module';
 
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { DemoAuthService } from './demo-auth.service';
 import { GuestAuthService } from './guest-auth.service';
 import { SessionService } from './session.service';
 import { JanuaStrategy } from './strategies/janua.strategy';
@@ -62,11 +63,12 @@ import { TotpService } from './totp.service';
     TotpService,
     SessionService,
     GuestAuthService,
+    DemoAuthService,
     // Register both strategies - guard will select based on config
     JanuaStrategy,
     JwtStrategy,
     LocalStrategy,
   ],
-  exports: [AuthService, TotpService, SessionService, GuestAuthService],
+  exports: [AuthService, TotpService, SessionService, GuestAuthService, DemoAuthService],
 })
 export class AuthModule {}

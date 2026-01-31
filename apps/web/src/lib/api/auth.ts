@@ -44,4 +44,38 @@ export const authApi = {
   async verifyTwoFactor(data: VerifyTwoFactorDto): Promise<void> {
     return apiClient.post('/auth/2fa/verify', data);
   },
+
+  async loginAsPersona(
+    persona: string,
+    countryCode?: string,
+  ): Promise<{
+    tokens: AuthResponse['tokens'];
+    user: AuthResponse['user'] & { isDemo: boolean; persona: string };
+    persona: string;
+    message: string;
+  }> {
+    return apiClient.post('/auth/demo/login', { persona, countryCode });
+  },
+
+  async switchPersona(persona: string): Promise<{
+    tokens: AuthResponse['tokens'];
+    user: AuthResponse['user'] & { isDemo: boolean; persona: string };
+    persona: string;
+    message: string;
+  }> {
+    return apiClient.post('/auth/demo/switch', { persona });
+  },
+
+  async getPersonas(): Promise<{
+    personas: Array<{
+      key: string;
+      email: string;
+      name: string;
+      archetype: string;
+      features: string[];
+      emoji: string;
+    }>;
+  }> {
+    return apiClient.get('/auth/demo/personas');
+  },
 };

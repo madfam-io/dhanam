@@ -31,6 +31,17 @@
 #     originRequest:
 #       noTLSVerify: true
 #
+#   # Landing / SEO domain (apex + www)
+#   - hostname: dhan.am
+#     service: http://dhanam-web.dhanam.svc.cluster.local:80
+#     originRequest:
+#       noTLSVerify: true
+#
+#   - hostname: www.dhan.am
+#     service: http://dhanam-web.dhanam.svc.cluster.local:80
+#     originRequest:
+#       noTLSVerify: true
+#
 # -----------------------------------------------------------------------------
 
 ---
@@ -44,6 +55,8 @@
 # | CNAME | app   | <tunnel-id>.cfargotunnel.com     | Yes   |
 # | CNAME | api   | <tunnel-id>.cfargotunnel.com     | Yes   |
 # | CNAME | admin | <tunnel-id>.cfargotunnel.com     | Yes   |
+# | CNAME | @     | <tunnel-id>.cfargotunnel.com     | Yes   |
+# | CNAME | www   | <tunnel-id>.cfargotunnel.com     | Yes   |
 #
 # Domain: dhan.am
 # =============================================================================
@@ -105,6 +118,30 @@ spec:
 
     # Admin Dashboard (same service as app - subdomain routing handled by middleware)
     - host: admin.dhan.am
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: dhanam-web
+                port:
+                  number: 80
+
+    # Landing / SEO domain (apex)
+    - host: dhan.am
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: dhanam-web
+                port:
+                  number: 80
+
+    # Landing / SEO domain (www → middleware redirects to apex)
+    - host: www.dhan.am
       http:
         paths:
           - path: /

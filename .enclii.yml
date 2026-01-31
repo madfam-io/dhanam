@@ -131,6 +131,15 @@ spec:
     - domain: dhanam.madfam.io
       tls: true
       tlsIssuer: cloudflare
+    # Landing / SEO domain (apex)
+    - domain: dhan.am
+      tls: true
+      tlsIssuer: cloudflare
+    # Landing / SEO domain (www → 301 redirect to apex via middleware)
+    - domain: www.dhan.am
+      tls: true
+      tlsIssuer: cloudflare
+      redirectTo: dhan.am
 
   autoscaling:
     enabled: true

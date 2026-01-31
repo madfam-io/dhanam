@@ -208,11 +208,11 @@ export async function seedTransactions(prisma: PrismaClient, ctx: SeedContext) {
       { userId: ctx.guestUser.id, action: 'user.login', metadata: JSON.stringify({ ip: '192.168.1.50', userAgent: 'Chrome' }), ipAddress: '192.168.1.50', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', timestamp: randomDate(subDays(new Date(), 30), new Date()) },
       // Platform Admin audit logs
       { userId: ctx.platformAdmin.id, action: 'admin.impersonation', metadata: JSON.stringify({ impersonatedUser: ctx.mariaUser.id, reason: 'Support ticket #4521' }), ipAddress: '10.0.0.1', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', timestamp: randomDate(subDays(new Date(), 30), new Date()) },
-      { userId: ctx.platformAdmin.id, action: 'admin.user_search', metadata: JSON.stringify({ query: 'carlos@business.com' }), ipAddress: '10.0.0.1', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', timestamp: randomDate(subDays(new Date(), 30), new Date()) },
+      { userId: ctx.platformAdmin.id, action: 'admin.user_search', metadata: JSON.stringify({ query: 'carlos@dhanam.demo' }), ipAddress: '10.0.0.1', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', timestamp: randomDate(subDays(new Date(), 30), new Date()) },
       { userId: ctx.platformAdmin.id, action: 'admin.audit_export', metadata: JSON.stringify({ dateRange: '2025-12-01 to 2026-01-01', format: 'csv' }), ipAddress: '10.0.0.1', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', timestamp: randomDate(subDays(new Date(), 30), new Date()) },
       { userId: ctx.platformAdmin.id, action: 'admin.user_view', metadata: JSON.stringify({ viewedUserId: ctx.diegoUser.id }), ipAddress: '10.0.0.1', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', timestamp: randomDate(subDays(new Date(), 30), new Date()) },
       { userId: ctx.platformAdmin.id, action: 'admin.feature_flag_toggle', metadata: JSON.stringify({ flag: 'gaming_dashboard', enabled: true }), ipAddress: '10.0.0.1', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', timestamp: randomDate(subDays(new Date(), 30), new Date()) },
-      { userId: ctx.platformAdmin.id, action: 'admin.user_search', metadata: JSON.stringify({ query: 'diego@web3.com' }), ipAddress: '10.0.0.1', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', timestamp: randomDate(subDays(new Date(), 30), new Date()) },
+      { userId: ctx.platformAdmin.id, action: 'admin.user_search', metadata: JSON.stringify({ query: 'diego@dhanam.demo' }), ipAddress: '10.0.0.1', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', timestamp: randomDate(subDays(new Date(), 30), new Date()) },
     ],
   });
 

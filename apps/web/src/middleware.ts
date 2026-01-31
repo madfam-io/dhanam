@@ -33,6 +33,14 @@ export function middleware(request: NextRequest) {
   const hostname = request.headers.get('host') || '';
   const token = request.cookies.get('auth-storage');
 
+  // === WWW → APEX REDIRECT ===
+  if (hostname.startsWith('www.')) {
+    const apex = hostname.replace(/^www\./, '');
+    const url = new URL(request.url);
+    url.host = apex;
+    return NextResponse.redirect(url, 301);
+  }
+
   // === ADMIN SUBDOMAIN HANDLING ===
   const isAdminSubdomain = hostname.includes('admin.dhan.am');
 

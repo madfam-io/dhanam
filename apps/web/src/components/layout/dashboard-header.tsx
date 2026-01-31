@@ -15,10 +15,13 @@ import { useAuth } from '~/lib/hooks/use-auth';
 import { useSpaces } from '~/lib/hooks/use-spaces';
 import { useSpaceStore } from '~/stores/space';
 import { useTranslation } from '@dhanam/shared';
+import { PersonaSwitcher } from '~/components/demo/persona-switcher';
 import type { Space } from '@dhanam/shared';
 
 export function DashboardHeader() {
   const { user, logout } = useAuth();
+  const isDemo = user?.email?.endsWith('@dhanam.demo') ?? false;
+  const currentPersona = isDemo ? user?.email?.split('@')[0] : undefined;
   const spacesQuery = useSpaces();
   const spaces = spacesQuery.data as Space[] | undefined;
   const spacesLoading = spacesQuery.isLoading;
@@ -89,6 +92,8 @@ export function DashboardHeader() {
         </div>
 
         <div className="ml-auto flex items-center gap-4">
+          {isDemo && <PersonaSwitcher currentPersona={currentPersona} />}
+
           <Button variant="ghost" size="icon">
             <Bell className="h-5 w-5" />
           </Button>

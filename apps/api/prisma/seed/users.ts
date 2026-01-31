@@ -114,10 +114,10 @@ export async function seedUsers(prisma: PrismaClient): Promise<SeedContext> {
   // 2. MARIA (Young Professional)
   console.log('\n👤 Creating Individual User (Maria)...');
   const mariaUser = await prisma.user.upsert({
-    where: { email: 'maria@demo.com' },
+    where: { email: 'maria@dhanam.demo' },
     update: {},
     create: {
-      email: 'maria@demo.com',
+      email: 'maria@dhanam.demo',
       passwordHash: await hash('demo123'),
       name: 'Maria González',
       locale: 'es',
@@ -221,10 +221,10 @@ export async function seedUsers(prisma: PrismaClient): Promise<SeedContext> {
   // 3. CARLOS (Small Business Owner)
   console.log('\n👤 Creating Small Business Owner (Carlos)...');
   const carlosUser = await prisma.user.upsert({
-    where: { email: 'carlos@business.com' },
+    where: { email: 'carlos@dhanam.demo' },
     update: {},
     create: {
-      email: 'carlos@business.com',
+      email: 'carlos@dhanam.demo',
       passwordHash: await hash(process.env.DEMO_USER_PASSWORD || 'ChangeMeInProduction123!'),
       name: 'Carlos Mendoza',
       locale: 'es',
@@ -354,10 +354,10 @@ export async function seedUsers(prisma: PrismaClient): Promise<SeedContext> {
   // 4. ENTERPRISE USER (Patricia)
   console.log('\n👤 Creating Enterprise Admin User...');
   const adminUser = await prisma.user.upsert({
-    where: { email: 'admin@enterprise.com' },
+    where: { email: 'patricia@dhanam.demo' },
     update: {},
     create: {
-      email: 'admin@enterprise.com',
+      email: 'patricia@dhanam.demo',
       passwordHash: await hash(process.env.DEMO_USER_PASSWORD || 'ChangeMeInProduction123!'),
       name: 'Patricia Ruiz',
       locale: 'en',
@@ -494,10 +494,10 @@ export async function seedUsers(prisma: PrismaClient): Promise<SeedContext> {
   // 6. DIEGO (Web3/Metaverse)
   console.log('\n👤 Creating Web3 User (Diego)...');
   const diegoUser = await prisma.user.upsert({
-    where: { email: 'diego@web3.com' },
+    where: { email: 'diego@dhanam.demo' },
     update: {},
     create: {
-      email: 'diego@web3.com',
+      email: 'diego@dhanam.demo',
       passwordHash: await hash(process.env.DEMO_USER_PASSWORD || 'ChangeMeInProduction123!'),
       name: 'Diego Navarro',
       locale: 'es',
