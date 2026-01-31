@@ -19,6 +19,7 @@ import {
   CheckCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslation } from '@dhanam/shared';
 import { bitsoApi } from '@/lib/api/bitso';
 
 const SUPPORTED_CRYPTOCURRENCIES = [
@@ -40,6 +41,7 @@ interface BitsoConnectProps {
 }
 
 export function BitsoConnect({ open, onOpenChange, spaceId, onSuccess }: BitsoConnectProps) {
+  const { t } = useTranslation('accounts');
   const [formData, setFormData] = useState({
     apiKey: '',
     apiSecret: '',
@@ -55,7 +57,7 @@ export function BitsoConnect({ open, onOpenChange, spaceId, onSuccess }: BitsoCo
     mutationFn: () => bitsoApi.connectAccount(spaceId, formData),
     onSuccess: (data) => {
       toast.success(
-        `Successfully connected Bitso account with ${data.accountsCount} crypto holding${data.accountsCount !== 1 ? 's' : ''}`
+        t(data.accountsCount !== 1 ? 'providers.bitso.linkedSuccess_plural' : 'providers.bitso.linkedSuccess', { count: data.accountsCount })
       );
       onSuccess();
       onOpenChange(false);
@@ -75,7 +77,7 @@ export function BitsoConnect({ open, onOpenChange, spaceId, onSuccess }: BitsoCo
         'message' in error.response.data &&
         typeof error.response.data.message === 'string'
           ? error.response.data.message
-          : 'Failed to connect Bitso account';
+          : t('providers.bitso.connectFailed');
       toast.error(message);
     },
   });
@@ -83,7 +85,7 @@ export function BitsoConnect({ open, onOpenChange, spaceId, onSuccess }: BitsoCo
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.apiKey || !formData.apiSecret) {
-      toast.error('Please provide both API Key and Secret');
+      toast.error(t('providers.bitso.missingCredentials'));
       return;
     }
     connectMutation.mutate();
@@ -101,10 +103,10 @@ export function BitsoConnect({ open, onOpenChange, spaceId, onSuccess }: BitsoCo
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Coins className="h-5 w-5 text-orange-600" />
-            Connect Bitso Crypto Account
+            {t('providers.bitso.title')}
           </DialogTitle>
           <DialogDescription>
-            Connect your Bitso account to automatically track your cryptocurrency portfolio
+            {t('providers.bitso.description')}
           </DialogDescription>
         </DialogHeader>
 
@@ -114,16 +116,16 @@ export function BitsoConnect({ open, onOpenChange, spaceId, onSuccess }: BitsoCo
             <Alert>
               <Shield className="h-4 w-4" />
               <AlertDescription>
-                <strong>Your API credentials are encrypted and secure.</strong>
+                <strong>{t('providers.bitso.securityNotice')}</strong>
                 <br />
-                We use bank-level encryption and never store your credentials in plain text.
+                {t('providers.bitso.securityDetail')}
               </AlertDescription>
             </Alert>
 
             {/* Instructions */}
             <div className="space-y-4">
               <h4 className="font-medium flex items-center gap-2">
-                🔑 How to get your Bitso API credentials
+                {t('providers.bitso.howToGetCredentials')}
               </h4>
 
               <div className="space-y-3 text-sm">
@@ -132,7 +134,7 @@ export function BitsoConnect({ open, onOpenChange, spaceId, onSuccess }: BitsoCo
                     1
                   </Badge>
                   <div>
-                    <p className="font-medium">Log in to Bitso</p>
+                    <p className="font-medium">{t('providers.bitso.step1Title')}</p>
                     <p className="text-muted-foreground">
                       Go to{' '}
                       <a
@@ -143,7 +145,7 @@ export function BitsoConnect({ open, onOpenChange, spaceId, onSuccess }: BitsoCo
                       >
                         bitso.com <ExternalLink className="h-3 w-3" />
                       </a>{' '}
-                      and log in to your account
+                      {t('providers.bitso.step1Description')}
                     </p>
                   </div>
                 </div>
@@ -153,9 +155,9 @@ export function BitsoConnect({ open, onOpenChange, spaceId, onSuccess }: BitsoCo
                     2
                   </Badge>
                   <div>
-                    <p className="font-medium">Navigate to API Settings</p>
+                    <p className="font-medium">{t('providers.bitso.step2Title')}</p>
                     <p className="text-muted-foreground">
-                      Go to Settings → API → Create New API Key
+                      {t('providers.bitso.step2Description')}
                     </p>
                   </div>
                 </div>
@@ -165,9 +167,9 @@ export function BitsoConnect({ open, onOpenChange, spaceId, onSuccess }: BitsoCo
                     3
                   </Badge>
                   <div>
-                    <p className="font-medium">Set Permissions</p>
+                    <p className="font-medium">{t('providers.bitso.step3Title')}</p>
                     <p className="text-muted-foreground">
-                      Enable <strong>View</strong> permission only (read-only access)
+                      {t('providers.bitso.step3Description')}
                     </p>
                   </div>
                 </div>
@@ -177,9 +179,9 @@ export function BitsoConnect({ open, onOpenChange, spaceId, onSuccess }: BitsoCo
                     4
                   </Badge>
                   <div>
-                    <p className="font-medium">Copy Your Credentials</p>
+                    <p className="font-medium">{t('providers.bitso.step4Title')}</p>
                     <p className="text-muted-foreground">
-                      Copy your API Key and Secret (you&apos;ll only see the secret once!)
+                      {t('providers.bitso.step4Description')}
                     </p>
                   </div>
                 </div>
@@ -188,8 +190,7 @@ export function BitsoConnect({ open, onOpenChange, spaceId, onSuccess }: BitsoCo
               <Alert>
                 <AlertTriangle className="h-4 w-4" />
                 <AlertDescription>
-                  <strong>Important:</strong> Only enable &quot;View&quot; permissions. Never give
-                  trading permissions to third-party applications.
+                  {t('providers.bitso.permissionsWarning')}
                 </AlertDescription>
               </Alert>
             </div>
@@ -198,7 +199,7 @@ export function BitsoConnect({ open, onOpenChange, spaceId, onSuccess }: BitsoCo
             <div>
               <h4 className="font-medium mb-3 flex items-center gap-2">
                 <Coins className="h-4 w-4" />
-                Supported Cryptocurrencies
+                {t('providers.bitso.supportedCryptos')}
               </h4>
               <div className="grid grid-cols-2 gap-2">
                 {SUPPORTED_CRYPTOCURRENCIES.map((crypto) => (
@@ -218,10 +219,10 @@ export function BitsoConnect({ open, onOpenChange, spaceId, onSuccess }: BitsoCo
 
             <div className="flex gap-3">
               <Button onClick={() => setStep('form')} className="flex-1">
-                I Have My API Credentials
+                {t('providers.bitso.haveCredentials')}
               </Button>
               <Button variant="outline" onClick={handleClose}>
-                Cancel
+                {t('providers.bitso.cancel')}
               </Button>
             </div>
           </div>
@@ -229,7 +230,7 @@ export function BitsoConnect({ open, onOpenChange, spaceId, onSuccess }: BitsoCo
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="apiKey">API Key</Label>
+                <Label htmlFor="apiKey">{t('providers.bitso.apiKeyLabel')}</Label>
                 <div className="relative">
                   <Input
                     id="apiKey"
@@ -238,7 +239,7 @@ export function BitsoConnect({ open, onOpenChange, spaceId, onSuccess }: BitsoCo
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                       setFormData({ ...formData, apiKey: e.target.value })
                     }
-                    placeholder="Your Bitso API Key"
+                    placeholder={t('providers.bitso.apiKeyPlaceholder')}
                     required
                   />
                   <Button
@@ -258,7 +259,7 @@ export function BitsoConnect({ open, onOpenChange, spaceId, onSuccess }: BitsoCo
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="apiSecret">API Secret</Label>
+                <Label htmlFor="apiSecret">{t('providers.bitso.apiSecretLabel')}</Label>
                 <div className="relative">
                   <Input
                     id="apiSecret"
@@ -267,7 +268,7 @@ export function BitsoConnect({ open, onOpenChange, spaceId, onSuccess }: BitsoCo
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                       setFormData({ ...formData, apiSecret: e.target.value })
                     }
-                    placeholder="Your Bitso API Secret"
+                    placeholder={t('providers.bitso.apiSecretPlaceholder')}
                     required
                   />
                   <Button
@@ -299,7 +300,7 @@ export function BitsoConnect({ open, onOpenChange, spaceId, onSuccess }: BitsoCo
                   className="rounded"
                 />
                 <Label htmlFor="autoSync" className="text-sm">
-                  Enable automatic portfolio sync
+                  {t('providers.bitso.enableAutoSync')}
                 </Label>
               </div>
             </div>
@@ -307,7 +308,7 @@ export function BitsoConnect({ open, onOpenChange, spaceId, onSuccess }: BitsoCo
             <Alert>
               <CheckCircle className="h-4 w-4" />
               <AlertDescription>
-                Your credentials will be encrypted with AES-256 encryption before being stored.
+                {t('providers.bitso.encryptionNotice')}
               </AlertDescription>
             </Alert>
 
@@ -316,14 +317,14 @@ export function BitsoConnect({ open, onOpenChange, spaceId, onSuccess }: BitsoCo
                 {connectMutation.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Connecting...
+                    {t('providers.bitso.connecting')}
                   </>
                 ) : (
-                  'Connect Bitso Account'
+                  t('providers.bitso.connectButton')
                 )}
               </Button>
               <Button type="button" variant="outline" onClick={() => setStep('instructions')}>
-                Back
+                {t('providers.bitso.back')}
               </Button>
             </div>
           </form>

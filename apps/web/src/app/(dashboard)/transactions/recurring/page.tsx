@@ -39,16 +39,7 @@ import { useSpaceStore } from '@/stores/space';
 import { recurringApi, RecurringTransactionResponse } from '@/lib/api/recurring';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { toast } from 'sonner';
-import { RecurrenceFrequency, RecurringStatus } from '@dhanam/shared';
-
-const frequencyLabels: Record<RecurrenceFrequency, string> = {
-  daily: 'Daily',
-  weekly: 'Weekly',
-  biweekly: 'Bi-weekly',
-  monthly: 'Monthly',
-  quarterly: 'Quarterly',
-  yearly: 'Yearly',
-};
+import { RecurrenceFrequency, RecurringStatus, useTranslation } from '@dhanam/shared';
 
 const statusColors: Record<RecurringStatus, string> = {
   detected: 'bg-yellow-100 text-yellow-800',
@@ -58,6 +49,7 @@ const statusColors: Record<RecurringStatus, string> = {
 };
 
 export default function RecurringTransactionsPage() {
+  const { t } = useTranslation('transactions');
   const { currentSpace } = useSpaceStore();
   const queryClient = useQueryClient();
   const [selectedRecurring, setSelectedRecurring] = useState<RecurringTransactionResponse | null>(
@@ -95,11 +87,11 @@ export default function RecurringTransactionsPage() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['recurring', currentSpace?.id] });
       queryClient.invalidateQueries({ queryKey: ['recurring-summary', currentSpace?.id] });
-      toast.success(`Detected ${data.detected.length} new recurring patterns`);
+      toast.success(t('recurring.toast.detected', { count: data.detected.length }));
       setIsDetecting(false);
     },
     onError: () => {
-      toast.error('Failed to detect patterns');
+      toast.error(t('recurring.toast.detectFailed'));
       setIsDetecting(false);
     },
   });
@@ -113,10 +105,10 @@ export default function RecurringTransactionsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['recurring', currentSpace?.id] });
       queryClient.invalidateQueries({ queryKey: ['recurring-summary', currentSpace?.id] });
-      toast.success('Recurring pattern confirmed');
+      toast.success(t('recurring.toast.confirmed'));
     },
     onError: () => {
-      toast.error('Failed to confirm pattern');
+      toast.error(t('recurring.toast.confirmFailed'));
     },
   });
 
@@ -128,10 +120,10 @@ export default function RecurringTransactionsPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['recurring', currentSpace?.id] });
-      toast.success('Pattern dismissed');
+      toast.success(t('recurring.toast.dismissed'));
     },
     onError: () => {
-      toast.error('Failed to dismiss pattern');
+      toast.error(t('recurring.toast.dismissFailed'));
     },
   });
 
@@ -143,10 +135,10 @@ export default function RecurringTransactionsPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['recurring', currentSpace?.id] });
-      toast.success('Status updated');
+      toast.success(t('recurring.toast.statusUpdated'));
     },
     onError: () => {
-      toast.error('Failed to update status');
+      toast.error(t('recurring.toast.statusFailed'));
     },
   });
 
@@ -159,10 +151,10 @@ export default function RecurringTransactionsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['recurring', currentSpace?.id] });
       queryClient.invalidateQueries({ queryKey: ['recurring-summary', currentSpace?.id] });
-      toast.success('Pattern deleted');
+      toast.success(t('recurring.toast.deleted'));
     },
     onError: () => {
-      toast.error('Failed to delete pattern');
+      toast.error(t('recurring.toast.deleteFailed'));
     },
   });
 
@@ -179,9 +171,9 @@ export default function RecurringTransactionsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Recurring Transactions</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{t('recurring.title')}</h1>
           <p className="text-muted-foreground">
-            Track and manage your subscriptions and regular payments
+            {t('recurring.description')}
           </p>
         </div>
         <Button onClick={() => detectMutation.mutate()} disabled={isDetecting}>
@@ -190,7 +182,7 @@ export default function RecurringTransactionsPage() {
           ) : (
             <RefreshCw className="mr-2 h-4 w-4" />
           )}
-          Detect Patterns
+          {t('recurring.detectPatterns')}
         </Button>
       </div>
 
@@ -199,7 +191,7 @@ export default function RecurringTransactionsPage() {
         <div className="grid gap-4 md:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Monthly Total</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('recurring.monthlyTotal')}</CardTitle>
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -207,38 +199,38 @@ export default function RecurringTransactionsPage() {
                 {formatCurrency(summary.totalMonthly, summary.currency)}
               </div>
               <p className="text-xs text-muted-foreground">
-                {formatCurrency(summary.totalAnnual, summary.currency)}/year
+                {t('recurring.perYear', { amount: formatCurrency(summary.totalAnnual, summary.currency) })}
               </p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('recurring.active')}</CardTitle>
               <Repeat className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{summary.activeCount}</div>
-              <p className="text-xs text-muted-foreground">Confirmed recurring</p>
+              <p className="text-xs text-muted-foreground">{t('recurring.confirmedRecurring')}</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Detected</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('recurring.detected')}</CardTitle>
               <AlertCircle className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{summary.detectedCount}</div>
-              <p className="text-xs text-muted-foreground">Awaiting confirmation</p>
+              <p className="text-xs text-muted-foreground">{t('recurring.awaitingConfirmation')}</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Upcoming</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('recurring.upcoming')}</CardTitle>
               <Calendar className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{summary.upcomingThisMonth?.length || 0}</div>
-              <p className="text-xs text-muted-foreground">This month</p>
+              <p className="text-xs text-muted-foreground">{t('recurring.thisMonth')}</p>
             </CardContent>
           </Card>
         </div>
@@ -252,9 +244,9 @@ export default function RecurringTransactionsPage() {
       ) : (
         <Tabs defaultValue="confirmed" className="space-y-4">
           <TabsList>
-            <TabsTrigger value="confirmed">Active ({confirmed.length})</TabsTrigger>
-            <TabsTrigger value="detected">Detected ({detected.length})</TabsTrigger>
-            <TabsTrigger value="paused">Paused ({paused.length})</TabsTrigger>
+            <TabsTrigger value="confirmed">{t('recurring.tabs.active', { count: confirmed.length })}</TabsTrigger>
+            <TabsTrigger value="detected">{t('recurring.tabs.detected', { count: detected.length })}</TabsTrigger>
+            <TabsTrigger value="paused">{t('recurring.tabs.paused', { count: paused.length })}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="confirmed" className="space-y-4">
@@ -263,10 +255,10 @@ export default function RecurringTransactionsPage() {
                 <CardContent className="flex flex-col items-center justify-center py-8">
                   <Repeat className="h-12 w-12 text-muted-foreground mb-4" />
                   <h3 className="font-semibold text-lg mb-2">
-                    No confirmed recurring transactions
+                    {t('recurring.emptyConfirmed.title')}
                   </h3>
                   <p className="text-muted-foreground text-center mb-4">
-                    Click "Detect Patterns" to find recurring transactions
+                    {t('recurring.emptyConfirmed.description')}
                   </p>
                 </CardContent>
               </Card>
@@ -290,9 +282,9 @@ export default function RecurringTransactionsPage() {
               <Card>
                 <CardContent className="flex flex-col items-center justify-center py-8">
                   <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
-                  <h3 className="font-semibold text-lg mb-2">No patterns detected</h3>
+                  <h3 className="font-semibold text-lg mb-2">{t('recurring.emptyDetected.title')}</h3>
                   <p className="text-muted-foreground text-center mb-4">
-                    Your transaction history will be analyzed for recurring patterns
+                    {t('recurring.emptyDetected.description')}
                   </p>
                 </CardContent>
               </Card>
@@ -315,9 +307,9 @@ export default function RecurringTransactionsPage() {
               <Card>
                 <CardContent className="flex flex-col items-center justify-center py-8">
                   <Pause className="h-12 w-12 text-muted-foreground mb-4" />
-                  <h3 className="font-semibold text-lg mb-2">No paused patterns</h3>
+                  <h3 className="font-semibold text-lg mb-2">{t('recurring.emptyPaused.title')}</h3>
                   <p className="text-muted-foreground text-center">
-                    Paused patterns will appear here
+                    {t('recurring.emptyPaused.description')}
                   </p>
                 </CardContent>
               </Card>
@@ -349,41 +341,41 @@ export default function RecurringTransactionsPage() {
               <DialogHeader>
                 <DialogTitle>{selectedRecurring.merchantName}</DialogTitle>
                 <DialogDescription>
-                  {frequencyLabels[selectedRecurring.frequency]} •{' '}
+                  {t(`recurring.frequency.${selectedRecurring.frequency}` as const)} •{' '}
                   {formatCurrency(selectedRecurring.expectedAmount, selectedRecurring.currency)}
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-muted-foreground">Last Occurrence</p>
+                    <p className="text-sm text-muted-foreground">{t('recurring.dialog.lastOccurrence')}</p>
                     <p className="font-medium">
                       {selectedRecurring.lastOccurrence
                         ? formatDate(selectedRecurring.lastOccurrence)
-                        : 'N/A'}
+                        : t('recurring.na')}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Next Expected</p>
+                    <p className="text-sm text-muted-foreground">{t('recurring.dialog.nextExpected')}</p>
                     <p className="font-medium">
                       {selectedRecurring.nextExpected
                         ? formatDate(selectedRecurring.nextExpected)
-                        : 'N/A'}
+                        : t('recurring.na')}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Occurrences</p>
+                    <p className="text-sm text-muted-foreground">{t('recurring.dialog.occurrences')}</p>
                     <p className="font-medium">{selectedRecurring.occurrenceCount}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Confidence</p>
+                    <p className="text-sm text-muted-foreground">{t('recurring.dialog.confidence')}</p>
                     <p className="font-medium">{Math.round(selectedRecurring.confidence * 100)}%</p>
                   </div>
                 </div>
 
                 {selectedRecurring.recentTransactions?.length > 0 && (
                   <div>
-                    <p className="text-sm font-medium mb-2">Recent Transactions</p>
+                    <p className="text-sm font-medium mb-2">{t('recurring.dialog.recentTransactions')}</p>
                     <div className="space-y-2">
                       {selectedRecurring.recentTransactions.slice(0, 5).map((txn) => (
                         <div
@@ -405,7 +397,7 @@ export default function RecurringTransactionsPage() {
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setSelectedRecurring(null)}>
-                  Close
+                  {t('recurring.dialog.close')}
                 </Button>
               </DialogFooter>
             </>
@@ -428,6 +420,8 @@ function RecurringCard({
   onDelete: () => void;
   onViewDetails: () => void;
 }) {
+  const { t } = useTranslation('transactions');
+
   return (
     <Card>
       <CardContent className="flex items-center justify-between p-4">
@@ -438,10 +432,10 @@ function RecurringCard({
           <div>
             <p className="font-medium">{recurring.merchantName}</p>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span>{frequencyLabels[recurring.frequency]}</span>
+              <span>{t(`recurring.frequency.${recurring.frequency}` as const)}</span>
               <span>•</span>
               <span>
-                Next: {recurring.nextExpected ? formatDate(recurring.nextExpected) : 'N/A'}
+                {t('recurring.card.next', { date: recurring.nextExpected ? formatDate(recurring.nextExpected) : t('recurring.na') })}
               </span>
             </div>
           </div>
@@ -460,24 +454,24 @@ function RecurringCard({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={onViewDetails}>View Details</DropdownMenuItem>
+              <DropdownMenuItem onClick={onViewDetails}>{t('recurring.card.viewDetails')}</DropdownMenuItem>
               <DropdownMenuItem onClick={onTogglePause}>
                 {recurring.status === 'paused' ? (
                   <>
                     <Play className="mr-2 h-4 w-4" />
-                    Resume
+                    {t('recurring.card.resume')}
                   </>
                 ) : (
                   <>
                     <Pause className="mr-2 h-4 w-4" />
-                    Pause
+                    {t('recurring.card.pause')}
                   </>
                 )}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={onDelete} className="text-destructive">
                 <Trash2 className="mr-2 h-4 w-4" />
-                Delete
+                {t('recurring.card.delete')}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -497,6 +491,8 @@ function DetectedCard({
   onConfirm: () => void;
   onDismiss: () => void;
 }) {
+  const { t } = useTranslation('transactions');
+
   return (
     <Card className="border-yellow-200 bg-yellow-50/50">
       <CardContent className="flex items-center justify-between p-4">
@@ -507,11 +503,11 @@ function DetectedCard({
           <div>
             <p className="font-medium">{recurring.merchantName}</p>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span>Detected: {frequencyLabels[recurring.frequency]}</span>
+              <span>{t('recurring.card.detectedLabel', { frequency: t(`recurring.frequency.${recurring.frequency}` as const) })}</span>
               <span>•</span>
-              <span>{recurring.occurrenceCount} occurrences</span>
+              <span>{t('recurring.card.occurrences', { count: recurring.occurrenceCount })}</span>
               <span>•</span>
-              <span>{Math.round(recurring.confidence * 100)}% confidence</span>
+              <span>{t('recurring.card.confidence', { percent: Math.round(recurring.confidence * 100) })}</span>
             </div>
           </div>
         </div>
@@ -526,7 +522,7 @@ function DetectedCard({
           </Button>
           <Button size="sm" onClick={onConfirm}>
             <Check className="h-4 w-4 mr-1" />
-            Confirm
+            {t('recurring.card.confirm')}
           </Button>
         </div>
       </CardContent>

@@ -7,6 +7,7 @@ import {
   type ScenarioComparisonResult,
 } from '@/hooks/useSimulations';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { useTranslation } from '@dhanam/shared';
 import { PremiumGate } from '~/components/billing/PremiumGate';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -25,21 +26,22 @@ import { Loader2, TrendingDown, AlertTriangle, Info } from 'lucide-react';
 import { SimulationChart } from '@/components/simulations/SimulationChart';
 
 const SCENARIOS = [
-  { value: 'BEAR_MARKET', label: 'Bear Market', severity: 'medium' },
-  { value: 'GREAT_RECESSION', label: 'Great Recession (2008)', severity: 'high' },
-  { value: 'DOT_COM_BUST', label: 'Dot-com Bust (2000)', severity: 'high' },
-  { value: 'MILD_RECESSION', label: 'Mild Recession', severity: 'low' },
-  { value: 'MARKET_CORRECTION', label: 'Market Correction', severity: 'low' },
-  { value: 'STAGFLATION', label: 'Stagflation (1970s)', severity: 'high' },
-  { value: 'DOUBLE_DIP_RECESSION', label: 'Double-Dip Recession', severity: 'high' },
-  { value: 'LOST_DECADE', label: 'Lost Decade (Japan 1990s)', severity: 'extreme' },
-  { value: 'FLASH_CRASH', label: 'Flash Crash', severity: 'medium' },
-  { value: 'BOOM_CYCLE', label: 'Boom Cycle', severity: 'positive' },
-  { value: 'TECH_BUBBLE', label: 'Tech Bubble', severity: 'extreme' },
-  { value: 'COVID_SHOCK', label: 'COVID-19 Style Shock', severity: 'medium' },
+  { value: 'BEAR_MARKET', severity: 'medium' },
+  { value: 'GREAT_RECESSION', severity: 'high' },
+  { value: 'DOT_COM_BUST', severity: 'high' },
+  { value: 'MILD_RECESSION', severity: 'low' },
+  { value: 'MARKET_CORRECTION', severity: 'low' },
+  { value: 'STAGFLATION', severity: 'high' },
+  { value: 'DOUBLE_DIP_RECESSION', severity: 'high' },
+  { value: 'LOST_DECADE', severity: 'extreme' },
+  { value: 'FLASH_CRASH', severity: 'medium' },
+  { value: 'BOOM_CYCLE', severity: 'positive' },
+  { value: 'TECH_BUBBLE', severity: 'extreme' },
+  { value: 'COVID_SHOCK', severity: 'medium' },
 ];
 
 export default function ScenariosPage() {
+  const { t } = useTranslation('projections');
   const { compareScenarios, loading, error } = useSimulations();
   const analytics = useAnalytics();
 
@@ -99,19 +101,17 @@ export default function ScenariosPage() {
     <PremiumGate feature="Scenario Analysis">
       <div className="container mx-auto py-8 space-y-8">
         <div>
-          <h1 className="text-4xl font-bold tracking-tight">Scenario Analysis</h1>
+          <h1 className="text-4xl font-bold tracking-tight">{t('scenarios.page.title')}</h1>
           <p className="text-muted-foreground mt-2">
-            Stress test your portfolio against historical market events
+            {t('scenarios.page.description')}
           </p>
         </div>
 
         <Alert>
           <Info className="h-4 w-4" />
-          <AlertTitle>How Scenario Analysis Works</AlertTitle>
+          <AlertTitle>{t('scenarios.page.howItWorksTitle')}</AlertTitle>
           <AlertDescription>
-            This tool compares your baseline portfolio projection against historical market
-            scenarios. It runs two simulations: one under normal conditions and one with the
-            selected market shock, then shows the impact on your portfolio value.
+            {t('scenarios.page.howItWorksDescription')}
           </AlertDescription>
         </Alert>
 
@@ -120,13 +120,13 @@ export default function ScenariosPage() {
           <div className="lg:col-span-1">
             <Card>
               <CardHeader>
-                <CardTitle>Portfolio Configuration</CardTitle>
-                <CardDescription>Set your baseline portfolio parameters</CardDescription>
+                <CardTitle>{t('scenarios.page.portfolioConfiguration')}</CardTitle>
+                <CardDescription>{t('scenarios.page.configureDescription')}</CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="initialBalance">Initial Balance</Label>
+                    <Label htmlFor="initialBalance">{t('scenarios.page.initialBalance')}</Label>
                     <Input
                       id="initialBalance"
                       type="number"
@@ -143,7 +143,7 @@ export default function ScenariosPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="monthlyContribution">Monthly Contribution</Label>
+                    <Label htmlFor="monthlyContribution">{t('scenarios.page.monthlyContribution')}</Label>
                     <Input
                       id="monthlyContribution"
                       type="number"
@@ -155,12 +155,12 @@ export default function ScenariosPage() {
                       step={100}
                     />
                     <p className="text-sm text-muted-foreground">
-                      ${config.monthlyContribution.toLocaleString()}/month
+                      ${config.monthlyContribution.toLocaleString()}{t('scenarios.page.perMonth')}
                     </p>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="months">Time Horizon (months)</Label>
+                    <Label htmlFor="months">{t('scenarios.page.timeHorizonMonths')}</Label>
                     <Input
                       id="months"
                       type="number"
@@ -173,12 +173,12 @@ export default function ScenariosPage() {
                       step={12}
                     />
                     <p className="text-sm text-muted-foreground">
-                      {(config.months / 12).toFixed(1)} years
+                      {(config.months / 12).toFixed(1)} {t('scenarios.page.years')}
                     </p>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="expectedReturn">Expected Return (%)</Label>
+                    <Label htmlFor="expectedReturn">{t('scenarios.page.expectedReturnPercent')}</Label>
                     <Input
                       id="expectedReturn"
                       type="number"
@@ -193,7 +193,7 @@ export default function ScenariosPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="volatility">Volatility (%)</Label>
+                    <Label htmlFor="volatility">{t('scenarios.page.volatilityPercent')}</Label>
                     <Input
                       id="volatility"
                       type="number"
@@ -208,7 +208,7 @@ export default function ScenariosPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="scenario">Select Scenario</Label>
+                    <Label htmlFor="scenario">{t('scenarios.page.selectScenario')}</Label>
                     <Select value={selectedScenario} onValueChange={setSelectedScenario}>
                       <SelectTrigger id="scenario">
                         <SelectValue />
@@ -217,12 +217,12 @@ export default function ScenariosPage() {
                         {SCENARIOS.map((scenario) => (
                           <SelectItem key={scenario.value} value={scenario.value}>
                             <div className="flex items-center gap-2">
-                              {scenario.label}
+                              {t(`scenarios.scenarioLabels.${scenario.value}`)}
                               <Badge
                                 className={getSeverityColor(scenario.severity)}
                                 variant="secondary"
                               >
-                                {scenario.severity}
+                                {t(`scenarios.severityLabels.${scenario.severity}`)}
                               </Badge>
                             </div>
                           </SelectItem>
@@ -241,10 +241,10 @@ export default function ScenariosPage() {
                     {loading ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Running simulations...
+                        {t('scenarios.page.runningSimulations')}
                       </>
                     ) : (
-                      'Compare Scenarios'
+                      t('scenarios.page.compareScenarios')
                     )}
                   </Button>
                 </form>
@@ -270,9 +270,9 @@ export default function ScenariosPage() {
                     {comparison.comparison.worthStressTesting && (
                       <Alert variant="destructive">
                         <AlertTriangle className="h-4 w-4" />
-                        <AlertTitle>Significant Impact Detected</AlertTitle>
+                        <AlertTitle>{t('scenarios.page.significantImpact')}</AlertTitle>
                         <AlertDescription>
-                          This scenario would reduce your median outcome by{' '}
+                          {t('scenarios.page.significantImpactDescription')}{' '}
                           <strong>
                             ${Math.abs(comparison.comparison.medianDifference).toLocaleString()}
                           </strong>{' '}
@@ -284,7 +284,7 @@ export default function ScenariosPage() {
                     {/* Comparison Stats */}
                     <div className="grid grid-cols-2 gap-4">
                       <div className="border rounded-lg p-4">
-                        <p className="text-sm text-muted-foreground mb-2">Baseline (Normal)</p>
+                        <p className="text-sm text-muted-foreground mb-2">{t('scenarios.page.baselineNormal')}</p>
                         <div className="space-y-1">
                           <div className="flex justify-between text-sm">
                             <span>Median:</span>
@@ -318,7 +318,7 @@ export default function ScenariosPage() {
 
                       <div className="border rounded-lg p-4 bg-red-50 dark:bg-red-950/20">
                         <p className="text-sm text-muted-foreground mb-2">
-                          With {comparison.scenarioName}
+                          {t('scenarios.page.with')} {comparison.scenarioName}
                         </p>
                         <div className="space-y-1">
                           <div className="flex justify-between text-sm">
@@ -354,25 +354,25 @@ export default function ScenariosPage() {
 
                     {/* Difference Breakdown */}
                     <div className="border rounded-lg p-4">
-                      <h4 className="font-semibold mb-3">Impact Analysis</h4>
+                      <h4 className="font-semibold mb-3">{t('scenarios.page.impactAnalysis')}</h4>
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
-                          <span>Median Impact:</span>
+                          <span>{t('scenarios.page.medianImpact')}</span>
                           <span className="font-semibold text-red-600">
                             ${Math.abs(comparison.comparison.medianDifference).toLocaleString()}(
                             {comparison.comparison.medianDifferencePercent.toFixed(1)}%)
                           </span>
                         </div>
                         <div className="flex justify-between">
-                          <span>Worst Case Impact (P10):</span>
+                          <span>{t('scenarios.page.worstCaseImpact')}</span>
                           <span className="font-semibold text-red-600">
                             ${Math.abs(comparison.comparison.p10Difference).toLocaleString()}
                           </span>
                         </div>
                         <div className="flex justify-between">
-                          <span>Crisis Duration:</span>
+                          <span>{t('scenarios.page.crisisDuration')}</span>
                           <span className="font-semibold">
-                            {comparison.comparison.recoveryMonths ?? 0} months
+                            {comparison.comparison.recoveryMonths ?? 0} {t('scenarios.page.months')}
                           </span>
                         </div>
                       </div>
@@ -383,13 +383,13 @@ export default function ScenariosPage() {
                 {/* Charts */}
                 <SimulationChart
                   timeSeries={comparison.baseline.timeSeries}
-                  title="Baseline Projection"
-                  description="Portfolio growth under normal market conditions"
+                  title={t('scenarios.page.baselineProjection')}
+                  description={t('scenarios.page.baselineProjectionDescription')}
                 />
 
                 <SimulationChart
                   timeSeries={comparison.scenario.timeSeries ?? []}
-                  title={`${comparison.scenarioName} Projection`}
+                  title={`${comparison.scenarioName} ${t('scenarios.page.projection')}`}
                   description={comparison.scenarioDescription}
                 />
               </div>
@@ -399,10 +399,9 @@ export default function ScenariosPage() {
                   <div className="rounded-full bg-muted p-4 mb-4">
                     <TrendingDown className="h-8 w-8 text-muted-foreground" />
                   </div>
-                  <h3 className="font-semibold text-lg mb-2">No scenario analysis yet</h3>
+                  <h3 className="font-semibold text-lg mb-2">{t('scenarios.page.noAnalysisYet')}</h3>
                   <p className="text-sm text-muted-foreground max-w-sm mb-6">
-                    Configure your portfolio parameters and select a scenario to stress test your
-                    investments against historical market events.
+                    {t('scenarios.page.noAnalysisDescription')}
                   </p>
                   <Button
                     variant="outline"
@@ -410,7 +409,7 @@ export default function ScenariosPage() {
                       document.getElementById('initialBalance')?.focus();
                     }}
                   >
-                    Get Started
+                    {t('scenarios.page.getStarted')}
                   </Button>
                 </div>
               </div>

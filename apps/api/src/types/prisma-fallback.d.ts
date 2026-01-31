@@ -66,8 +66,9 @@ declare module '@prisma/client' {
   }
 
   export enum SubscriptionTier {
-    free = 'free',
-    premium = 'premium',
+    community = 'community',
+    essentials = 'essentials',
+    pro = 'pro',
   }
 
   export enum BillingEventType {

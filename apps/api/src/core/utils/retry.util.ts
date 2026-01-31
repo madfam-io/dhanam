@@ -395,15 +395,27 @@ export async function withRetryAndTimeout<T>(
   const { timeoutMs, ...retryConfig } = config;
 
   const wrappedOperation = async () => {
+    let timeoutHandle: ReturnType<typeof setTimeout>;
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      timeoutHandle = setTimeout(() => {
+        const error = new Error(`Operation timed out after ${timeoutMs}ms`);
+        (error as any).code = 'TIMEOUT';
+        reject(error);
+      }, timeoutMs);
+    });
+
     return Promise.race([
-      operation(),
-      new Promise<never>((_, reject) => {
-        setTimeout(() => {
-          const error = new Error(`Operation timed out after ${timeoutMs}ms`);
-          (error as any).code = 'TIMEOUT';
-          reject(error);
-        }, timeoutMs);
-      }),
+      operation().then(
+        (result) => {
+          clearTimeout(timeoutHandle!);
+          return result;
+        },
+        (err) => {
+          clearTimeout(timeoutHandle!);
+          throw err;
+        }
+      ),
+      timeoutPromise,
     ]);
   };
 

@@ -40,8 +40,10 @@ import {
   Mail,
   Trash2,
 } from 'lucide-react';
+import { useTranslation } from '@dhanam/shared';
 
 export default function LifeBeatPage() {
+  const { t } = useTranslation('estatePlanning');
   const queryClient = useQueryClient();
   const [isEnableDialogOpen, setIsEnableDialogOpen] = useState(false);
   const [isAddExecutorDialogOpen, setIsAddExecutorDialogOpen] = useState(false);
@@ -137,10 +139,10 @@ export default function LifeBeatPage() {
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-2">
             <HeartPulse className="h-8 w-8 text-red-500" />
-            Life Beat
+            {t('lifeBeat.title')}
           </h1>
           <p className="text-muted-foreground">
-            Your financial safety net for life's uncertainties
+            {t('lifeBeat.description')}
           </p>
         </div>
       </div>
@@ -152,10 +154,10 @@ export default function LifeBeatPage() {
             <div>
               <CardTitle className="flex items-center gap-2">
                 <Shield className="h-5 w-5" />
-                Protection Status
+                {t('lifeBeat.protectionStatus')}
               </CardTitle>
               <CardDescription>
-                Life Beat monitors your activity and alerts trusted contacts if needed
+                {t('lifeBeat.statusDescription')}
               </CardDescription>
             </div>
             <Switch
@@ -170,15 +172,15 @@ export default function LifeBeatPage() {
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="p-4 bg-muted rounded-lg">
-                  <div className="text-sm text-muted-foreground">Last Activity</div>
-                  <div className="text-2xl font-bold">{status.daysSinceActivity ?? 0} days ago</div>
+                  <div className="text-sm text-muted-foreground">{t('lifeBeat.lastActivity')}</div>
+                  <div className="text-2xl font-bold">{t('lifeBeat.daysAgo', { days: status.daysSinceActivity ?? 0 })}</div>
                 </div>
                 <div className="p-4 bg-muted rounded-lg">
-                  <div className="text-sm text-muted-foreground">Alert Thresholds</div>
+                  <div className="text-sm text-muted-foreground">{t('lifeBeat.alertThresholds')}</div>
                   <div className="text-2xl font-bold">{status.alertDays.join(', ')} days</div>
                 </div>
                 <div className="p-4 bg-muted rounded-lg">
-                  <div className="text-sm text-muted-foreground">Trusted Executors</div>
+                  <div className="text-sm text-muted-foreground">{t('lifeBeat.trustedExecutors')}</div>
                   <div className="text-2xl font-bold">{status.executorCount}</div>
                 </div>
               </div>
@@ -186,10 +188,9 @@ export default function LifeBeatPage() {
               {status.pendingAlerts.length > 0 && (
                 <Alert variant="destructive">
                   <AlertCircle className="h-4 w-4" />
-                  <AlertTitle>Pending Alerts</AlertTitle>
+                  <AlertTitle>{t('lifeBeat.pendingAlerts')}</AlertTitle>
                   <AlertDescription>
-                    You have {status.pendingAlerts.length} pending inactivity alert(s). Check in to
-                    reset your timer.
+                    {t('lifeBeat.pendingAlertsDescription', { count: status.pendingAlerts.length })}
                   </AlertDescription>
                 </Alert>
               )}
@@ -205,20 +206,19 @@ export default function LifeBeatPage() {
                 ) : (
                   <CheckCircle2 className="h-4 w-4 mr-2" />
                 )}
-                I'm Okay - Check In Now
+                {t('lifeBeat.checkIn')}
               </Button>
             </div>
           ) : (
             <div className="text-center py-8">
               <HeartPulse className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Life Beat is Disabled</h3>
+              <h3 className="text-lg font-semibold mb-2">{t('lifeBeat.disabled.title')}</h3>
               <p className="text-muted-foreground mb-4 max-w-md mx-auto">
-                Enable Life Beat to ensure your designated executors can access your financial
-                information if something happens to you.
+                {t('lifeBeat.disabled.description')}
               </p>
               <Button onClick={() => setIsEnableDialogOpen(true)}>
                 <Shield className="h-4 w-4 mr-2" />
-                Enable Life Beat
+                {t('lifeBeat.disabled.enable')}
               </Button>
             </div>
           )}
@@ -232,48 +232,48 @@ export default function LifeBeatPage() {
             <div>
               <CardTitle className="flex items-center gap-2">
                 <UserCheck className="h-5 w-5" />
-                Designated Executors
+                {t('lifeBeat.executors.title')}
               </CardTitle>
               <CardDescription>
-                Trusted individuals who can access your financial overview
+                {t('lifeBeat.executors.description')}
               </CardDescription>
             </div>
             <Dialog open={isAddExecutorDialogOpen} onOpenChange={setIsAddExecutorDialogOpen}>
               <DialogTrigger asChild>
                 <Button>
                   <Plus className="h-4 w-4 mr-2" />
-                  Add Executor
+                  {t('lifeBeat.executors.add')}
                 </Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Add Executor</DialogTitle>
+                  <DialogTitle>{t('lifeBeat.addDialog.title')}</DialogTitle>
                   <DialogDescription>
-                    Add a trusted person who can access your financial information.
+                    {t('lifeBeat.addDialog.description')}
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
                   <div>
-                    <Label htmlFor="executor-name">Full Name</Label>
+                    <Label htmlFor="executor-name">{t('lifeBeat.addDialog.fullName')}</Label>
                     <Input
                       id="executor-name"
                       value={newExecutor.name}
                       onChange={(e) => setNewExecutor({ ...newExecutor, name: e.target.value })}
-                      placeholder="John Doe"
+                      placeholder={t('lifeBeat.addDialog.namePlaceholder')}
                     />
                   </div>
                   <div>
-                    <Label htmlFor="executor-email">Email Address</Label>
+                    <Label htmlFor="executor-email">{t('lifeBeat.addDialog.email')}</Label>
                     <Input
                       id="executor-email"
                       type="email"
                       value={newExecutor.email}
                       onChange={(e) => setNewExecutor({ ...newExecutor, email: e.target.value })}
-                      placeholder="john@example.com"
+                      placeholder={t('lifeBeat.addDialog.emailPlaceholder')}
                     />
                   </div>
                   <div>
-                    <Label htmlFor="executor-relationship">Relationship</Label>
+                    <Label htmlFor="executor-relationship">{t('lifeBeat.addDialog.relationship')}</Label>
                     <Select
                       value={newExecutor.relationship}
                       onValueChange={(value) =>
@@ -284,20 +284,20 @@ export default function LifeBeatPage() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="spouse">Spouse</SelectItem>
-                        <SelectItem value="child">Child</SelectItem>
-                        <SelectItem value="sibling">Sibling</SelectItem>
-                        <SelectItem value="parent">Parent</SelectItem>
-                        <SelectItem value="attorney">Attorney</SelectItem>
-                        <SelectItem value="financial_advisor">Financial Advisor</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
+                        <SelectItem value="spouse">{t('lifeBeat.addDialog.relationships.spouse')}</SelectItem>
+                        <SelectItem value="child">{t('lifeBeat.addDialog.relationships.child')}</SelectItem>
+                        <SelectItem value="sibling">{t('lifeBeat.addDialog.relationships.sibling')}</SelectItem>
+                        <SelectItem value="parent">{t('lifeBeat.addDialog.relationships.parent')}</SelectItem>
+                        <SelectItem value="attorney">{t('lifeBeat.addDialog.relationships.attorney')}</SelectItem>
+                        <SelectItem value="financial_advisor">{t('lifeBeat.addDialog.relationships.financialAdvisor')}</SelectItem>
+                        <SelectItem value="other">{t('lifeBeat.addDialog.relationships.other')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
                 <DialogFooter>
                   <Button variant="outline" onClick={() => setIsAddExecutorDialogOpen(false)}>
-                    Cancel
+                    {t('lifeBeat.addDialog.cancel')}
                   </Button>
                   <Button
                     onClick={() => addExecutorMutation.mutate(newExecutor)}
@@ -308,7 +308,7 @@ export default function LifeBeatPage() {
                     {addExecutorMutation.isPending && (
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                     )}
-                    Add Executor
+                    {t('lifeBeat.addDialog.submit')}
                   </Button>
                 </DialogFooter>
               </DialogContent>
@@ -319,9 +319,9 @@ export default function LifeBeatPage() {
           {executors.length === 0 ? (
             <div className="text-center py-8">
               <UserCheck className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No Executors Yet</h3>
+              <h3 className="text-lg font-semibold mb-2">{t('lifeBeat.executors.empty.title')}</h3>
               <p className="text-muted-foreground mb-4">
-                Add trusted individuals who can access your financial information.
+                {t('lifeBeat.executors.empty.description')}
               </p>
             </div>
           ) : (
@@ -348,19 +348,19 @@ export default function LifeBeatPage() {
                       {executor.verified ? (
                         <>
                           <CheckCircle2 className="h-3 w-3 mr-1" />
-                          Verified
+                          {t('lifeBeat.executors.verified')}
                         </>
                       ) : (
                         <>
                           <Clock className="h-3 w-3 mr-1" />
-                          Pending
+                          {t('lifeBeat.executors.pending')}
                         </>
                       )}
                     </Badge>
                     <Badge variant="outline" className="capitalize">
                       {executor.relationship.replace('_', ' ')}
                     </Badge>
-                    {executor.accessGranted && <Badge variant="destructive">Access Granted</Badge>}
+                    {executor.accessGranted && <Badge variant="destructive">{t('lifeBeat.executors.accessGranted')}</Badge>}
                     <Button
                       variant="ghost"
                       size="icon"
@@ -380,7 +380,7 @@ export default function LifeBeatPage() {
       {/* How It Works */}
       <Card>
         <CardHeader>
-          <CardTitle>How Life Beat Works</CardTitle>
+          <CardTitle>{t('lifeBeat.howItWorks.title')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -388,27 +388,27 @@ export default function LifeBeatPage() {
               <div className="h-12 w-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mx-auto mb-3">
                 1
               </div>
-              <h4 className="font-semibold mb-2">Activity Monitoring</h4>
+              <h4 className="font-semibold mb-2">{t('lifeBeat.howItWorks.step1.title')}</h4>
               <p className="text-sm text-muted-foreground">
-                We track your logins and activity. If you're active, nothing happens.
+                {t('lifeBeat.howItWorks.step1.description')}
               </p>
             </div>
             <div className="text-center">
               <div className="h-12 w-12 rounded-full bg-yellow-100 text-yellow-600 flex items-center justify-center mx-auto mb-3">
                 2
               </div>
-              <h4 className="font-semibold mb-2">Escalating Alerts</h4>
+              <h4 className="font-semibold mb-2">{t('lifeBeat.howItWorks.step2.title')}</h4>
               <p className="text-sm text-muted-foreground">
-                After 30, 60, 90 days of inactivity, we send you check-in reminders.
+                {t('lifeBeat.howItWorks.step2.description')}
               </p>
             </div>
             <div className="text-center">
               <div className="h-12 w-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center mx-auto mb-3">
                 3
               </div>
-              <h4 className="font-semibold mb-2">Executor Access</h4>
+              <h4 className="font-semibold mb-2">{t('lifeBeat.howItWorks.step3.title')}</h4>
               <p className="text-sm text-muted-foreground">
-                If you don't respond, your executors can request read-only access.
+                {t('lifeBeat.howItWorks.step3.description')}
               </p>
             </div>
           </div>
@@ -421,15 +421,15 @@ export default function LifeBeatPage() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Shield className="h-5 w-5" />
-              Enable Life Beat Protection
+              {t('lifeBeat.enableDialog.title')}
             </DialogTitle>
             <DialogDescription>
-              Configure your inactivity thresholds and accept the legal disclaimer.
+              {t('lifeBeat.enableDialog.description')}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-6">
             <div>
-              <Label>Alert Thresholds (days of inactivity)</Label>
+              <Label>{t('lifeBeat.enableDialog.thresholdLabel')}</Label>
               <div className="flex gap-2 mt-2">
                 {[30, 60, 90].map((days) => (
                   <Button
@@ -444,24 +444,20 @@ export default function LifeBeatPage() {
                       }
                     }}
                   >
-                    {days} days
+                    {t('lifeBeat.enableDialog.days', { days })}
                   </Button>
                 ))}
               </div>
               <p className="text-xs text-muted-foreground mt-2">
-                You'll receive reminders at each threshold. Executors are notified at the final
-                threshold.
+                {t('lifeBeat.enableDialog.thresholdHint')}
               </p>
             </div>
 
             <Alert>
               <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Important Legal Notice</AlertTitle>
+              <AlertTitle>{t('lifeBeat.enableDialog.legalTitle')}</AlertTitle>
               <AlertDescription className="text-sm">
-                Life Beat provides read-only access to financial summaries. It does not grant
-                transaction authority, account access, or legal power of attorney. This feature is
-                designed for informational purposes only and should complement, not replace, proper
-                estate planning with legal counsel.
+                {t('lifeBeat.enableDialog.legalDescription')}
               </AlertDescription>
             </Alert>
 
@@ -472,22 +468,20 @@ export default function LifeBeatPage() {
                 onCheckedChange={(checked) => setLegalAgreed(checked as boolean)}
               />
               <label htmlFor="legal-agree" className="text-sm">
-                I understand that Life Beat provides read-only financial visibility and does not
-                constitute legal power of attorney or account access authority. I agree to the Terms
-                of Service for this feature.
+                {t('lifeBeat.enableDialog.legalCheckbox')}
               </label>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEnableDialogOpen(false)}>
-              Cancel
+              {t('lifeBeat.enableDialog.cancel')}
             </Button>
             <Button
               onClick={handleEnable}
               disabled={!legalAgreed || alertDays.length === 0 || enableMutation.isPending}
             >
               {enableMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Enable Life Beat
+              {t('lifeBeat.enableDialog.enable')}
             </Button>
           </DialogFooter>
         </DialogContent>

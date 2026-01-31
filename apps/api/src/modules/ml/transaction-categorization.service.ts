@@ -111,9 +111,13 @@ export class TransactionCategorizationService {
     spaceId: string,
     description: string,
     merchant: string | null,
-    amount: number
+    amount: number,
+    options?: { mlEnabled?: boolean }
   ): Promise<CategoryPrediction | null> {
+    const mlEnabled = options?.mlEnabled !== false; // default true for backward compat
+
     // Strategy 0: Check learned patterns from user corrections (highest priority)
+    // Always available — this is rule-based, not ML
     const correctionMatch = await this.correctionAggregator.findBestMatch(
       spaceId,
       merchant,
@@ -130,6 +134,7 @@ export class TransactionCategorizationService {
     }
 
     // Strategy 1: Exact merchant match (high confidence)
+    // Always available — this is rule-based pattern matching
     if (merchant) {
       const normalizedMerchant = this.merchantNormalizer.normalize(merchant);
       const merchantMatch = await this.findMerchantPattern(spaceId, normalizedMerchant);
@@ -142,6 +147,11 @@ export class TransactionCategorizationService {
           source: 'merchant',
         };
       }
+    }
+
+    // ML strategies below require mlCategorization to be enabled for the user's tier
+    if (!mlEnabled) {
+      return null;
     }
 
     // Strategy 2: Enhanced fuzzy merchant match using Levenshtein
@@ -281,9 +291,10 @@ export class TransactionCategorizationService {
     spaceId: string,
     description: string,
     merchant: string | null,
-    amount: number
+    amount: number,
+    options?: { mlEnabled?: boolean }
   ): Promise<{ categorized: boolean; categoryId?: string; confidence?: number }> {
-    const prediction = await this.predictCategory(spaceId, description, merchant, amount);
+    const prediction = await this.predictCategory(spaceId, description, merchant, amount, options);
 
     if (!prediction) {
       return { categorized: false };

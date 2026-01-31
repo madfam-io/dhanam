@@ -6,22 +6,21 @@ import { useAuth } from '@/lib/hooks/use-auth';
 import { Button } from '@dhanam/ui';
 import { X, Clock, Sparkles } from 'lucide-react';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { useTranslation } from '@dhanam/shared';
 
 export function DemoModeBanner() {
   const { user } = useAuth();
   const router = useRouter();
   const analytics = useAnalytics();
+  const { t } = useTranslation('common');
   const [isVisible, setIsVisible] = useState(true);
   const [timeLeft, setTimeLeft] = useState<string>('');
 
-  // Check if user is guest
   const isGuest = user?.email === 'guest@dhanam.demo';
 
   useEffect(() => {
     if (!isGuest) return;
 
-    // Calculate time remaining (1 hour from now as default)
-    // In production, this should come from the JWT exp claim
     const updateTimeLeft = () => {
       const now = new Date().getTime();
       const sessionStart = localStorage.getItem('demo_session_start');
@@ -31,7 +30,7 @@ export function DemoModeBanner() {
       }
 
       const start = parseInt(sessionStart || now.toString(), 10);
-      const endTime = start + 60 * 60 * 1000; // 1 hour
+      const endTime = start + 60 * 60 * 1000;
       const remaining = endTime - now;
 
       if (remaining <= 0) {
@@ -78,10 +77,10 @@ export function DemoModeBanner() {
             <Sparkles className="h-5 w-5 flex-shrink-0" />
             <div className="flex-1">
               <p className="text-sm font-medium">
-                You're exploring Dhanam in <strong>Demo Mode</strong>
+                {t('demoExploring')} <strong>{t('demoMode')}</strong>
               </p>
               <p className="text-xs opacity-90 hidden sm:block">
-                Read-only access • Sample data • Full features preview
+                {t('demoDescription')}
               </p>
             </div>
           </div>
@@ -100,13 +99,13 @@ export function DemoModeBanner() {
               onClick={handleSignUp}
               className="bg-white text-primary hover:bg-gray-100 font-semibold whitespace-nowrap"
             >
-              {timeLeft === 'expired' ? 'Sign Up to Continue' : 'Sign Up Free'}
+              {timeLeft === 'expired' ? t('signUpToContinue') : t('signUpFree')}
             </Button>
 
             <button
               onClick={handleDismiss}
               className="text-white/80 hover:text-white transition-colors"
-              aria-label="Dismiss banner"
+              aria-label={t('dismissBanner')}
             >
               <X className="h-5 w-5" />
             </button>

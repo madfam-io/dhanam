@@ -35,7 +35,7 @@ import {
 import { useSpaceStore } from '@/stores/space';
 import { transactionsApi } from '@/lib/api/transactions';
 import { accountsApi } from '@/lib/api/accounts';
-import { Transaction } from '@dhanam/shared';
+import { Transaction, useTranslation } from '@dhanam/shared';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -44,6 +44,7 @@ const ITEMS_PER_PAGE = 25;
 const TRANSACTION_ROW_HEIGHT = 80; // Estimated height of each transaction row
 
 export default function TransactionsPage() {
+  const { t } = useTranslation('transactions');
   const { currentSpace } = useSpaceStore();
   const queryClient = useQueryClient();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -83,10 +84,10 @@ export default function TransactionsPage() {
       queryClient.invalidateQueries({ queryKey: ['transactions', currentSpace?.id] });
       queryClient.invalidateQueries({ queryKey: ['accounts', currentSpace?.id] });
       setIsCreateOpen(false);
-      toast.success('Transaction created successfully');
+      toast.success(t('toast.createSuccess'));
     },
     onError: () => {
-      toast.error('Failed to create transaction');
+      toast.error(t('toast.createFailed'));
     },
   });
 
@@ -105,10 +106,10 @@ export default function TransactionsPage() {
       queryClient.invalidateQueries({ queryKey: ['transactions', currentSpace?.id] });
       queryClient.invalidateQueries({ queryKey: ['accounts', currentSpace?.id] });
       setSelectedTransaction(null);
-      toast.success('Transaction updated successfully');
+      toast.success(t('toast.updateSuccess'));
     },
     onError: () => {
-      toast.error('Failed to update transaction');
+      toast.error(t('toast.updateFailed'));
     },
   });
 
@@ -120,10 +121,10 @@ export default function TransactionsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions', currentSpace?.id] });
       queryClient.invalidateQueries({ queryKey: ['accounts', currentSpace?.id] });
-      toast.success('Transaction deleted successfully');
+      toast.success(t('toast.deleteSuccess'));
     },
     onError: () => {
-      toast.error('Failed to delete transaction');
+      toast.error(t('toast.deleteFailed'));
     },
   });
 
@@ -171,28 +172,28 @@ export default function TransactionsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Transactions</h1>
-          <p className="text-muted-foreground">View and manage all your transactions</p>
+          <h1 className="text-3xl font-bold tracking-tight">{t('page.title')}</h1>
+          <p className="text-muted-foreground">{t('page.description')}</p>
         </div>
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="mr-2 h-4 w-4" />
-              Add Transaction
+              {t('button.addTransaction')}
             </Button>
           </DialogTrigger>
           <DialogContent>
             <form onSubmit={handleCreateSubmit}>
               <DialogHeader>
-                <DialogTitle>Create Transaction</DialogTitle>
-                <DialogDescription>Add a new transaction to your account</DialogDescription>
+                <DialogTitle>{t('dialog.create.title')}</DialogTitle>
+                <DialogDescription>{t('dialog.create.description')}</DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="accountId">Account</Label>
+                  <Label htmlFor="accountId">{t('form.account')}</Label>
                   <Select name="accountId" required>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select account" />
+                      <SelectValue placeholder={t('form.selectAccount')} />
                     </SelectTrigger>
                     <SelectContent>
                       {accounts?.map((account) => (
@@ -204,7 +205,7 @@ export default function TransactionsPage() {
                   </Select>
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="amount">Amount</Label>
+                  <Label htmlFor="amount">{t('form.amount')}</Label>
                   <Input
                     id="amount"
                     name="amount"
@@ -215,7 +216,7 @@ export default function TransactionsPage() {
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="date">Date</Label>
+                  <Label htmlFor="date">{t('form.date')}</Label>
                   <Input
                     id="date"
                     name="date"
@@ -225,23 +226,23 @@ export default function TransactionsPage() {
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="description">Description</Label>
+                  <Label htmlFor="description">{t('form.description')}</Label>
                   <Input
                     id="description"
                     name="description"
-                    placeholder="e.g., Grocery shopping"
+                    placeholder={t('form.descriptionPlaceholder')}
                     required
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="merchant">Merchant (Optional)</Label>
-                  <Input id="merchant" name="merchant" placeholder="e.g., Walmart" />
+                  <Label htmlFor="merchant">{t('form.merchantOptional')}</Label>
+                  <Input id="merchant" name="merchant" placeholder={t('form.merchantPlaceholder')} />
                 </div>
               </div>
               <DialogFooter>
                 <Button type="submit" disabled={createMutation.isPending}>
                   {createMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Create Transaction
+                  {t('button.createTransaction')}
                 </Button>
               </DialogFooter>
             </form>
@@ -257,21 +258,21 @@ export default function TransactionsPage() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-8">
             <Receipt className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="font-semibold text-lg mb-2">No transactions yet</h3>
+            <h3 className="font-semibold text-lg mb-2">{t('empty.title')}</h3>
             <p className="text-muted-foreground text-center mb-4">
-              Start adding transactions to track your spending
+              {t('empty.description')}
             </p>
             <Button onClick={() => setIsCreateOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
-              Add Your First Transaction
+              {t('empty.addFirst')}
             </Button>
           </CardContent>
         </Card>
       ) : (
         <Card>
           <CardHeader>
-            <CardTitle>Recent Transactions</CardTitle>
-            <CardDescription>{transactionsData?.total} transactions found</CardDescription>
+            <CardTitle>{t('list.title')}</CardTitle>
+            <CardDescription>{transactionsData?.total} {t('list.found')}</CardDescription>
           </CardHeader>
           <CardContent>
             {/* Virtualized list container */}
@@ -327,7 +328,7 @@ export default function TransactionsPage() {
                               )}
                             </p>
                             <p className="text-xs text-muted-foreground">
-                              {account?.name || 'Unknown'}
+                              {account?.name || t('list.unknownAccount')}
                             </p>
                           </div>
                           <DropdownMenu>
@@ -338,13 +339,13 @@ export default function TransactionsPage() {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem onClick={() => setSelectedTransaction(transaction)}>
-                                Edit
+                                {t('action.edit')}
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={() => deleteMutation.mutate(transaction.id)}
                                 className="text-destructive"
                               >
-                                Delete
+                                {t('action.delete')}
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -372,7 +373,7 @@ export default function TransactionsPage() {
                     disabled={page === 1}
                   >
                     <ChevronLeft className="h-4 w-4 mr-1" />
-                    Previous
+                    {t('pagination.previous')}
                   </Button>
                   <span className="text-sm text-muted-foreground px-2">
                     Page {page} of {Math.ceil(transactionsData.total / ITEMS_PER_PAGE)}
@@ -383,7 +384,7 @@ export default function TransactionsPage() {
                     onClick={() => setPage((p) => p + 1)}
                     disabled={page * ITEMS_PER_PAGE >= transactionsData.total}
                   >
-                    Next
+                    {t('pagination.next')}
                     <ChevronRight className="h-4 w-4 ml-1" />
                   </Button>
                 </div>
@@ -401,12 +402,12 @@ export default function TransactionsPage() {
           {selectedTransaction && (
             <form onSubmit={handleUpdateSubmit}>
               <DialogHeader>
-                <DialogTitle>Edit Transaction</DialogTitle>
-                <DialogDescription>Update transaction details</DialogDescription>
+                <DialogTitle>{t('dialog.edit.title')}</DialogTitle>
+                <DialogDescription>{t('dialog.edit.description')}</DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="edit-amount">Amount</Label>
+                  <Label htmlFor="edit-amount">{t('form.amount')}</Label>
                   <Input
                     id="edit-amount"
                     name="amount"
@@ -417,7 +418,7 @@ export default function TransactionsPage() {
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="edit-date">Date</Label>
+                  <Label htmlFor="edit-date">{t('form.date')}</Label>
                   <Input
                     id="edit-date"
                     name="date"
@@ -427,7 +428,7 @@ export default function TransactionsPage() {
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="edit-description">Description</Label>
+                  <Label htmlFor="edit-description">{t('form.description')}</Label>
                   <Input
                     id="edit-description"
                     name="description"
@@ -436,14 +437,14 @@ export default function TransactionsPage() {
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="edit-merchant">Merchant (Optional)</Label>
+                  <Label htmlFor="edit-merchant">{t('form.merchantOptional')}</Label>
                   <Input id="edit-merchant" name="merchant" defaultValue="" />
                 </div>
               </div>
               <DialogFooter>
                 <Button type="submit" disabled={updateMutation.isPending}>
                   {updateMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Update Transaction
+                  {t('button.updateTransaction')}
                 </Button>
               </DialogFooter>
             </form>

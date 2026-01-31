@@ -115,7 +115,7 @@ export class BillingController {
       startedAt: user.subscriptionStartedAt,
       expiresAt: user.subscriptionExpiresAt,
       isActive:
-        user.subscriptionTier === 'premium' &&
+        user.subscriptionTier !== 'community' &&
         (!user.subscriptionExpiresAt || new Date(user.subscriptionExpiresAt) > new Date()),
     };
   }

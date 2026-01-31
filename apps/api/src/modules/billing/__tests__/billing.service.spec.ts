@@ -21,20 +21,20 @@ describe('BillingService', () => {
     email: 'test@example.com',
     name: 'Test User',
     stripeCustomerId: null,
-    subscriptionTier: 'free' as const,
+    subscriptionTier: 'community' as const,
     subscriptionStartedAt: null,
     subscriptionExpiresAt: null,
     stripeSubscriptionId: null,
   };
 
-  const mockPremiumUser = {
+  const mockProUser = {
     ...mockUser,
-    id: 'user-premium',
-    stripeCustomerId: 'cus_premium123',
-    subscriptionTier: 'premium' as const,
+    id: 'user-pro',
+    stripeCustomerId: 'cus_pro123',
+    subscriptionTier: 'pro' as const,
     subscriptionStartedAt: new Date('2024-01-01'),
     subscriptionExpiresAt: new Date('2025-01-01'),
-    stripeSubscriptionId: 'sub_premium123',
+    stripeSubscriptionId: 'sub_pro123',
   };
 
   beforeEach(async () => {
@@ -180,11 +180,11 @@ describe('BillingService', () => {
 
     it('should throw error if user is already premium', async () => {
       prisma.user.findUnique
-        .mockResolvedValueOnce(mockPremiumUser as any)
-        .mockResolvedValueOnce(mockPremiumUser as any);
+        .mockResolvedValueOnce(mockProUser as any)
+        .mockResolvedValueOnce(mockProUser as any);
 
-      await expect(service.upgradeToPremium('user-premium')).rejects.toThrow(
-        'User is already on premium tier'
+      await expect(service.upgradeToPremium('user-pro')).rejects.toThrow(
+        'User is already on pro tier'
       );
     });
   });
@@ -219,7 +219,7 @@ describe('BillingService', () => {
   });
 
   describe('handleSubscriptionCreated', () => {
-    it('should update user to premium tier and create billing event', async () => {
+    it('should update user to pro tier and create billing event', async () => {
       const mockSubscription = {
         id: 'sub_new123',
         customer: 'cus_test123',
@@ -245,7 +245,7 @@ describe('BillingService', () => {
 
       const userWithStripe = { ...mockUser, stripeCustomerId: 'cus_test123' };
       prisma.user.findUnique.mockResolvedValue(userWithStripe as any);
-      prisma.user.update.mockResolvedValue({ ...userWithStripe, subscriptionTier: 'premium' } as any);
+      prisma.user.update.mockResolvedValue({ ...userWithStripe, subscriptionTier: 'pro' } as any);
       prisma.billingEvent.create.mockResolvedValue({} as any);
 
       await service.handleSubscriptionCreated(mockEvent);
@@ -253,7 +253,7 @@ describe('BillingService', () => {
       expect(prisma.user.update).toHaveBeenCalledWith({
         where: { id: 'user-123' },
         data: {
-          subscriptionTier: 'premium',
+          subscriptionTier: 'pro',
           subscriptionStartedAt: new Date(1609459200 * 1000),
           subscriptionExpiresAt: new Date(1640995200 * 1000),
           stripeSubscriptionId: 'sub_new123',
@@ -274,7 +274,7 @@ describe('BillingService', () => {
         userId: 'user-123',
         action: 'SUBSCRIPTION_ACTIVATED',
         severity: 'high',
-        metadata: { tier: 'premium', subscriptionId: 'sub_new123' },
+        metadata: { tier: 'pro', subscriptionId: 'sub_new123' },
       });
     });
 
@@ -299,7 +299,7 @@ describe('BillingService', () => {
   });
 
   describe('handleSubscriptionCancelled', () => {
-    it('should downgrade user to free tier and create billing event', async () => {
+    it('should downgrade user to community tier and create billing event', async () => {
       const mockSubscription = {
         id: 'sub_cancelled123',
         customer: 'cus_test123',
@@ -311,24 +311,24 @@ describe('BillingService', () => {
         data: { object: mockSubscription },
       } as Stripe.Event;
 
-      const userWithStripe = { ...mockPremiumUser, stripeCustomerId: 'cus_test123' };
+      const userWithStripe = { ...mockProUser, stripeCustomerId: 'cus_test123' };
       prisma.user.findUnique.mockResolvedValue(userWithStripe as any);
-      prisma.user.update.mockResolvedValue({ ...userWithStripe, subscriptionTier: 'free' } as any);
+      prisma.user.update.mockResolvedValue({ ...userWithStripe, subscriptionTier: 'community' } as any);
       prisma.billingEvent.create.mockResolvedValue({} as any);
 
       await service.handleSubscriptionCancelled(mockEvent);
 
       expect(prisma.user.update).toHaveBeenCalledWith({
-        where: { id: 'user-premium' },
+        where: { id: 'user-pro' },
         data: {
-          subscriptionTier: 'free',
+          subscriptionTier: 'community',
           subscriptionExpiresAt: null,
           stripeSubscriptionId: null,
         },
       });
       expect(prisma.billingEvent.create).toHaveBeenCalledWith({
         data: {
-          userId: 'user-premium',
+          userId: 'user-pro',
           type: 'subscription_cancelled',
           amount: 0,
           currency: 'USD',
@@ -338,7 +338,7 @@ describe('BillingService', () => {
         },
       });
       expect(audit.log).toHaveBeenCalledWith({
-        userId: 'user-premium',
+        userId: 'user-pro',
         action: 'SUBSCRIPTION_CANCELLED',
         severity: 'medium',
         metadata: { subscriptionId: 'sub_cancelled123' },
@@ -385,15 +385,15 @@ describe('BillingService', () => {
   });
 
   describe('checkUsageLimit', () => {
-    it('should return true for premium users (unlimited)', async () => {
-      prisma.user.findUnique.mockResolvedValue(mockPremiumUser as any);
+    it('should return true for pro users (unlimited)', async () => {
+      prisma.user.findUnique.mockResolvedValue(mockProUser as any);
 
-      const result = await service.checkUsageLimit('user-premium', 'monte_carlo_simulation');
+      const result = await service.checkUsageLimit('user-pro', 'monte_carlo_simulation');
 
       expect(result).toBe(true);
     });
 
-    it('should return true for free users within limit', async () => {
+    it('should return true for community users within limit', async () => {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
@@ -403,7 +403,7 @@ describe('BillingService', () => {
         userId: 'user-123',
         metricType: 'esg_calculation',
         date: today,
-        count: 5, // Free tier limit is 10
+        count: 3, // Community tier limit is 5
         createdAt: new Date(),
         updatedAt: new Date(),
       });
@@ -413,7 +413,7 @@ describe('BillingService', () => {
       expect(result).toBe(true);
     });
 
-    it('should return false for free users at limit', async () => {
+    it('should return false for community users at limit', async () => {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
@@ -423,7 +423,7 @@ describe('BillingService', () => {
         userId: 'user-123',
         metricType: 'esg_calculation',
         date: today,
-        count: 10, // Free tier limit is 10
+        count: 5, // Community tier limit is 5
         createdAt: new Date(),
         updatedAt: new Date(),
       });
@@ -433,7 +433,7 @@ describe('BillingService', () => {
       expect(result).toBe(false);
     });
 
-    it('should return false for features not available in free tier', async () => {
+    it('should return false for features not available in community tier', async () => {
       prisma.user.findUnique.mockResolvedValue(mockUser as any);
 
       const result = await service.checkUsageLimit('user-123', 'portfolio_rebalance');
@@ -482,28 +482,28 @@ describe('BillingService', () => {
 
       expect(result).toEqual({
         date: today,
-        tier: 'free',
+        tier: 'community',
         usage: {
-          esg_calculation: { used: 5, limit: 10 },
-          monte_carlo_simulation: { used: 2, limit: 3 },
-          goal_probability: { used: 0, limit: 3 },
-          scenario_analysis: { used: 0, limit: 1 },
+          esg_calculation: { used: 5, limit: 5 },
+          monte_carlo_simulation: { used: 2, limit: 2 },
+          goal_probability: { used: 0, limit: 0 },
+          scenario_analysis: { used: 0, limit: 0 },
           portfolio_rebalance: { used: 0, limit: 0 },
-          api_request: { used: 0, limit: 1000 },
+          api_request: { used: 0, limit: 500 },
         },
       });
     });
 
-    it('should return unlimited (-1) for premium user', async () => {
+    it('should return unlimited (-1) for pro user', async () => {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
-      prisma.user.findUnique.mockResolvedValue(mockPremiumUser as any);
+      prisma.user.findUnique.mockResolvedValue(mockProUser as any);
       prisma.usageMetric.findMany.mockResolvedValue([]);
 
-      const result = await service.getUserUsage('user-premium');
+      const result = await service.getUserUsage('user-pro');
 
-      expect(result.tier).toBe('premium');
+      expect(result.tier).toBe('pro');
       expect(result.usage.esg_calculation).toEqual({ used: 0, limit: -1 });
       expect(result.usage.monte_carlo_simulation).toEqual({ used: 0, limit: -1 });
     });
@@ -566,15 +566,23 @@ describe('BillingService', () => {
       const limits = service.getUsageLimits();
 
       expect(limits).toEqual({
-        free: {
-          esg_calculation: 10,
-          monte_carlo_simulation: 3,
-          goal_probability: 3,
-          scenario_analysis: 1,
+        community: {
+          esg_calculation: 5,
+          monte_carlo_simulation: 2,
+          goal_probability: 0,
+          scenario_analysis: 0,
           portfolio_rebalance: 0,
-          api_request: 1000,
+          api_request: 500,
         },
-        premium: {
+        essentials: {
+          esg_calculation: 20,
+          monte_carlo_simulation: 10,
+          goal_probability: 5,
+          scenario_analysis: 3,
+          portfolio_rebalance: 0,
+          api_request: 5_000,
+        },
+        pro: {
           esg_calculation: Infinity,
           monte_carlo_simulation: Infinity,
           goal_probability: Infinity,

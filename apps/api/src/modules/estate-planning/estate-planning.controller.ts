@@ -26,8 +26,8 @@ import {
 import { Throttle } from '@nestjs/throttler';
 
 import { JwtAuthGuard } from '../../core/auth/guards/jwt-auth.guard';
-import { RequiresPremium } from '../billing/decorators/requires-tier.decorator';
-import { SubscriptionGuard } from '../billing/guards/subscription.guard';
+import { RequiresFeature } from '../billing/decorators/requires-feature.decorator';
+import { FeatureGateGuard } from '../billing/guards/feature-gate.guard';
 
 import {
   CreateWillDto,
@@ -42,10 +42,10 @@ import { EstatePlanningService } from './estate-planning.service';
 @ApiTags('Estate Planning')
 @ApiBearerAuth()
 @Controller('wills')
-@UseGuards(JwtAuthGuard, SubscriptionGuard)
-@RequiresPremium()
+@UseGuards(JwtAuthGuard, FeatureGateGuard)
+@RequiresFeature('lifeBeat')
 @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
-@ApiForbiddenResponse({ description: 'Premium subscription required' })
+@ApiForbiddenResponse({ description: 'Pro subscription required for Life Beat / estate planning' })
 export class EstatePlanningController {
   constructor(private estatePlanningService: EstatePlanningService) {}
 

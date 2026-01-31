@@ -107,14 +107,17 @@ export class AuthController {
     description: 'Guest session created successfully',
   })
   async guestLogin(
+    @Body() body: { countryCode?: string },
     @Ip() _ip: string,
-    @Headers('user-agent') _userAgent: string
+    @Headers('user-agent') _userAgent: string,
+    @Headers('cf-ipcountry') cfCountry: string
   ): Promise<{
     tokens: AuthTokens;
     user: any;
     message: string;
   }> {
-    const session = await this.guestAuthService.createGuestSession();
+    const countryCode = body?.countryCode || cfCountry || undefined;
+    const session = await this.guestAuthService.createGuestSession(countryCode);
 
     return {
       tokens: {

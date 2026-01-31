@@ -16,7 +16,7 @@ describe('BillingController', () => {
   const mockUser = {
     id: 'user-123',
     email: 'test@example.com',
-    subscriptionTier: 'free',
+    subscriptionTier: 'community',
     subscriptionStartedAt: null,
     subscriptionExpiresAt: null,
   };
@@ -81,7 +81,7 @@ describe('BillingController', () => {
   });
 
   describe('POST /billing/upgrade', () => {
-    it('should initiate upgrade to premium', async () => {
+    it('should initiate upgrade to pro', async () => {
       const mockRequest = { user: mockUser };
       const mockCheckoutUrl = 'https://checkout.stripe.com/pay/cs_test123';
 
@@ -144,7 +144,7 @@ describe('BillingController', () => {
       const mockRequest = { user: mockUser };
       const mockUsage = {
         date: new Date('2024-01-15'),
-        tier: 'free',
+        tier: 'community',
         usage: {
           esg_calculation: { used: 5, limit: 10 },
           monte_carlo_simulation: { used: 1, limit: 3 },
@@ -185,26 +185,26 @@ describe('BillingController', () => {
   });
 
   describe('GET /billing/status', () => {
-    it('should return subscription status for free user', async () => {
+    it('should return subscription status for community user', async () => {
       const mockRequest = { user: mockUser };
 
       const result = await controller.getSubscriptionStatus(mockRequest);
 
       expect(result).toEqual({
-        tier: 'free',
+        tier: 'community',
         startedAt: null,
         expiresAt: null,
         isActive: false,
       });
     });
 
-    it('should return subscription status for active premium user', async () => {
+    it('should return subscription status for active pro user', async () => {
       const futureDate = new Date();
       futureDate.setFullYear(futureDate.getFullYear() + 1);
 
       const premiumUser = {
         ...mockUser,
-        subscriptionTier: 'premium',
+        subscriptionTier: 'pro',
         subscriptionStartedAt: new Date('2024-01-01'),
         subscriptionExpiresAt: futureDate,
       };
@@ -214,20 +214,20 @@ describe('BillingController', () => {
       const result = await controller.getSubscriptionStatus(mockRequest);
 
       expect(result).toEqual({
-        tier: 'premium',
+        tier: 'pro',
         startedAt: premiumUser.subscriptionStartedAt,
         expiresAt: futureDate,
         isActive: true,
       });
     });
 
-    it('should return subscription status for expired premium user', async () => {
+    it('should return subscription status for expired pro user', async () => {
       const pastDate = new Date();
       pastDate.setFullYear(pastDate.getFullYear() - 1);
 
       const expiredUser = {
         ...mockUser,
-        subscriptionTier: 'premium',
+        subscriptionTier: 'pro',
         subscriptionStartedAt: new Date('2023-01-01'),
         subscriptionExpiresAt: pastDate,
       };

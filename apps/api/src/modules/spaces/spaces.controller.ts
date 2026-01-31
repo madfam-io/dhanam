@@ -26,6 +26,8 @@ import {
 import { CurrentUser } from '@core/auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
 
+import { SpaceLimitGuard } from '../billing/guards/space-limit.guard';
+
 import { RequireRole } from './decorators/require-role.decorator';
 import { CreateSpaceDto } from './dto/create-space.dto';
 import { InviteMemberDto } from './dto/invite-member.dto';
@@ -50,6 +52,7 @@ export class SpacesController {
   }
 
   @Post()
+  @UseGuards(SpaceLimitGuard)
   @ApiOperation({ summary: 'Create new space' })
   @ApiResponse({ status: 201, description: 'Space created' })
   @ApiBadRequestResponse({ description: 'Invalid request body' })

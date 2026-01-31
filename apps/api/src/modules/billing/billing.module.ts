@@ -23,6 +23,9 @@ import { PrismaModule } from '../../core/prisma/prisma.module';
 
 import { BillingController } from './billing.controller';
 import { BillingService } from './billing.service';
+import { FeatureGateGuard } from './guards/feature-gate.guard';
+import { ProviderConnectionGuard } from './guards/provider-connection.guard';
+import { SpaceLimitGuard } from './guards/space-limit.guard';
 import { SubscriptionGuard } from './guards/subscription.guard';
 import { UsageLimitGuard } from './guards/usage-limit.guard';
 import { UsageTrackingInterceptor } from './interceptors/usage-tracking.interceptor';
@@ -58,6 +61,9 @@ import { StripeService } from './stripe.service';
     // Guards and interceptors
     SubscriptionGuard,
     UsageLimitGuard,
+    SpaceLimitGuard,
+    ProviderConnectionGuard,
+    FeatureGateGuard,
     UsageTrackingInterceptor,
   ],
   exports: [
@@ -69,6 +75,9 @@ import { StripeService } from './stripe.service';
     PaddleService,
     SubscriptionGuard,
     UsageLimitGuard,
+    SpaceLimitGuard,
+    ProviderConnectionGuard,
+    FeatureGateGuard,
     UsageTrackingInterceptor,
   ],
 })

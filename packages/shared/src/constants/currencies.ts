@@ -24,6 +24,24 @@ export const CURRENCIES: Record<Currency, {
     name: 'Euro',
     decimals: 2,
   },
+  [Currency.BRL]: {
+    code: Currency.BRL,
+    symbol: 'R$',
+    name: 'Brazilian Real',
+    decimals: 2,
+  },
+  [Currency.COP]: {
+    code: Currency.COP,
+    symbol: '$',
+    name: 'Colombian Peso',
+    decimals: 0,
+  },
+  [Currency.CAD]: {
+    code: Currency.CAD,
+    symbol: '$',
+    name: 'Canadian Dollar',
+    decimals: 2,
+  },
 };
 
 export const DEFAULT_CURRENCY: Currency = Currency.MXN;

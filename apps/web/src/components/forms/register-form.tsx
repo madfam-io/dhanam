@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { Button, Input, Label } from '@dhanam/ui';
 import { RegisterDto } from '@dhanam/shared';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import { useGeoDefaults } from '@/lib/hooks/use-geo-defaults';
 
 const registerSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -17,7 +18,7 @@ const registerSchema = z.object({
     .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
     .regex(/[0-9]/, 'Password must contain at least one number'),
   name: z.string().min(2, 'Name must be at least 2 characters'),
-  locale: z.enum(['en', 'es']).optional(),
+  locale: z.enum(['en', 'es', 'pt-BR']).optional(),
   timezone: z.string().optional(),
 });
 
@@ -28,6 +29,7 @@ interface RegisterFormProps {
 
 export function RegisterForm({ onSubmit, isLoading }: RegisterFormProps) {
   const [showPassword, setShowPassword] = useState(false);
+  const geo = useGeoDefaults();
 
   const {
     register,
@@ -36,8 +38,8 @@ export function RegisterForm({ onSubmit, isLoading }: RegisterFormProps) {
   } = useForm<RegisterDto>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      locale: 'es',
-      timezone: 'America/Mexico_City',
+      locale: geo.locale === 'pt-BR' ? 'es' : geo.locale, // pt-BR falls back to es for registration locale
+      timezone: geo.timezone,
     },
   });
 

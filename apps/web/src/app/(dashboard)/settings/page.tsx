@@ -26,9 +26,11 @@ import { preferencesApi, UserPreferences } from '@/lib/api/preferences';
 import { billingApi } from '@/lib/api/billing';
 import { UsageOverview } from '~/components/billing/UsageIndicator';
 import { PremiumUpsell } from '~/components/billing/PremiumUpsell';
+import { useTranslation } from '@dhanam/shared';
 import { toast } from 'sonner';
 
 export default function SettingsPage() {
+  const { t } = useTranslation('settings');
   const queryClient = useQueryClient();
   const [isResetting, setIsResetting] = useState(false);
   const [isOpeningPortal, setIsOpeningPortal] = useState(false);
@@ -56,10 +58,10 @@ export default function SettingsPage() {
     mutationFn: (updates: Partial<UserPreferences>) => preferencesApi.updatePreferences(updates),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['preferences'] });
-      toast.success('Preferences updated');
+      toast.success(t('toast.preferencesUpdated'));
     },
     onError: () => {
-      toast.error('Failed to update preferences');
+      toast.error(t('toast.updateFailed'));
     },
   });
 
@@ -67,11 +69,11 @@ export default function SettingsPage() {
     mutationFn: () => preferencesApi.resetPreferences(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['preferences'] });
-      toast.success('Preferences reset to defaults');
+      toast.success(t('toast.resetSuccess'));
       setIsResetting(false);
     },
     onError: () => {
-      toast.error('Failed to reset preferences');
+      toast.error(t('toast.resetFailed'));
       setIsResetting(false);
     },
   });
@@ -96,9 +98,9 @@ export default function SettingsPage() {
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center py-16 gap-2">
-        <p className="text-destructive font-medium">Failed to load preferences</p>
+        <p className="text-destructive font-medium">{t('error.loadFailed')}</p>
         <p className="text-sm text-muted-foreground">
-          {error instanceof Error ? error.message : 'An unexpected error occurred'}
+          {error instanceof Error ? error.message : t('error.unexpected')}
         </p>
       </div>
     );
@@ -107,7 +109,7 @@ export default function SettingsPage() {
   if (!preferences) {
     return (
       <div className="flex items-center justify-center py-16">
-        <p className="text-muted-foreground">No preferences found</p>
+        <p className="text-muted-foreground">{t('error.noPreferences')}</p>
       </div>
     );
   }
@@ -116,8 +118,8 @@ export default function SettingsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
-          <p className="text-muted-foreground">Manage your account preferences and settings</p>
+          <h1 className="text-3xl font-bold tracking-tight">{t('page.title')}</h1>
+          <p className="text-muted-foreground">{t('page.description')}</p>
         </div>
         <Button
           variant="outline"
@@ -125,7 +127,7 @@ export default function SettingsPage() {
           disabled={resetMutation.isPending}
         >
           <RotateCcw className="mr-2 h-4 w-4" />
-          Reset to Defaults
+          {t('button.resetDefaults')}
         </Button>
       </div>
 
@@ -135,12 +137,12 @@ export default function SettingsPage() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-medium">Reset all preferences to defaults?</p>
-                <p className="text-sm text-muted-foreground">This action cannot be undone.</p>
+                <p className="font-medium">{t('reset.confirm')}</p>
+                <p className="text-sm text-muted-foreground">{t('reset.warning')}</p>
               </div>
               <div className="flex gap-2">
                 <Button variant="outline" onClick={() => setIsResetting(false)}>
-                  Cancel
+                  {t('button.cancel')}
                 </Button>
                 <Button
                   variant="destructive"
@@ -148,7 +150,7 @@ export default function SettingsPage() {
                   disabled={resetMutation.isPending}
                 >
                   {resetMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Reset
+                  {t('button.reset')}
                 </Button>
               </div>
             </div>
@@ -161,9 +163,9 @@ export default function SettingsPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Gauge className="h-5 w-5" />
-            Usage Limits
+            {t('section.usage.title')}
           </CardTitle>
-          <CardDescription>Track your daily usage of premium features</CardDescription>
+          <CardDescription>{t('section.usage.description')}</CardDescription>
         </CardHeader>
         <CardContent>
           <UsageOverview />
@@ -175,21 +177,21 @@ export default function SettingsPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <CreditCard className="h-5 w-5" />
-            Subscription & Billing
+            {t('section.billing.title')}
           </CardTitle>
-          <CardDescription>Manage your subscription plan and billing</CardDescription>
+          <CardDescription>{t('section.billing.description')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Current Plan */}
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label>Current Plan</Label>
+              <Label>{t('billing.currentPlan')}</Label>
               <p className="text-sm text-muted-foreground">
-                {subscriptionStatus?.tier === 'premium' ? 'Premium — $9.99/month' : 'Free Plan'}
+                {subscriptionStatus?.tier === 'premium' ? t('billing.premiumPrice') : t('billing.freePlan')}
               </p>
             </div>
             <Badge variant={subscriptionStatus?.tier === 'premium' ? 'default' : 'secondary'}>
-              {subscriptionStatus?.tier === 'premium' ? 'Premium' : 'Free'}
+              {subscriptionStatus?.tier === 'premium' ? t('tier.premium') : t('tier.free')}
             </Badge>
           </div>
 
@@ -212,7 +214,7 @@ export default function SettingsPage() {
                     const { portalUrl } = await billingApi.createPortalSession();
                     window.location.href = portalUrl;
                   } catch {
-                    toast.error('Failed to open billing portal');
+                    toast.error(t('toast.portalFailed'));
                     setIsOpeningPortal(false);
                   }
                 }}
@@ -222,7 +224,7 @@ export default function SettingsPage() {
                 ) : (
                   <ExternalLink className="mr-2 h-4 w-4" />
                 )}
-                Manage Subscription
+                {t('button.manageSubscription')}
               </Button>
             </>
           )}
@@ -232,7 +234,7 @@ export default function SettingsPage() {
             <>
               <Separator />
               <div className="space-y-2">
-                <Label>Recent Billing History</Label>
+                <Label>{t('billing.recentHistory')}</Label>
                 <div className="space-y-1">
                   {billingHistory.slice(0, 5).map((event) => (
                     <div
@@ -268,15 +270,15 @@ export default function SettingsPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Bell className="h-5 w-5" />
-            Notifications
+            {t('section.notifications.title')}
           </CardTitle>
-          <CardDescription>Configure how and when you receive notifications</CardDescription>
+          <CardDescription>{t('section.notifications.description')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label>Email Notifications</Label>
-              <p className="text-sm text-muted-foreground">Receive notifications via email</p>
+              <Label>{t('notifications.email.label')}</Label>
+              <p className="text-sm text-muted-foreground">{t('notifications.email.description')}</p>
             </div>
             <Switch
               checked={preferences.emailNotifications}
@@ -286,8 +288,8 @@ export default function SettingsPage() {
           <Separator />
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label>Transaction Alerts</Label>
-              <p className="text-sm text-muted-foreground">Get notified about new transactions</p>
+              <Label>{t('notifications.transactions.label')}</Label>
+              <p className="text-sm text-muted-foreground">{t('notifications.transactions.description')}</p>
             </div>
             <Switch
               checked={preferences.transactionAlerts}
@@ -297,8 +299,8 @@ export default function SettingsPage() {
           <Separator />
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label>Budget Alerts</Label>
-              <p className="text-sm text-muted-foreground">Alerts when approaching budget limits</p>
+              <Label>{t('notifications.budget.label')}</Label>
+              <p className="text-sm text-muted-foreground">{t('notifications.budget.description')}</p>
             </div>
             <Switch
               checked={preferences.budgetAlerts}
@@ -308,8 +310,8 @@ export default function SettingsPage() {
           <Separator />
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label>Weekly Reports</Label>
-              <p className="text-sm text-muted-foreground">Receive weekly financial summaries</p>
+              <Label>{t('notifications.weeklyReports.label')}</Label>
+              <p className="text-sm text-muted-foreground">{t('notifications.weeklyReports.description')}</p>
             </div>
             <Switch
               checked={preferences.weeklyReports}
@@ -319,9 +321,9 @@ export default function SettingsPage() {
           <Separator />
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label>Security Alerts</Label>
+              <Label>{t('notifications.security.label')}</Label>
               <p className="text-sm text-muted-foreground">
-                Get notified about security-related events
+                {t('notifications.security.description')}
               </p>
             </div>
             <Switch
@@ -337,16 +339,16 @@ export default function SettingsPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Shield className="h-5 w-5" />
-            Privacy
+            {t('section.privacy.title')}
           </CardTitle>
-          <CardDescription>Control your data and privacy settings</CardDescription>
+          <CardDescription>{t('section.privacy.description')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label>Analytics Tracking</Label>
+              <Label>{t('privacy.analytics.label')}</Label>
               <p className="text-sm text-muted-foreground">
-                Help improve Dhanam with usage analytics
+                {t('privacy.analytics.description')}
               </p>
             </div>
             <Switch
@@ -357,8 +359,8 @@ export default function SettingsPage() {
           <Separator />
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label>Hide Sensitive Data</Label>
-              <p className="text-sm text-muted-foreground">Mask balances and amounts by default</p>
+              <Label>{t('privacy.hideSensitive.label')}</Label>
+              <p className="text-sm text-muted-foreground">{t('privacy.hideSensitive.description')}</p>
             </div>
             <Switch
               checked={preferences.hideSensitiveData}
@@ -373,15 +375,15 @@ export default function SettingsPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Palette className="h-5 w-5" />
-            Display
+            {t('section.display.title')}
           </CardTitle>
-          <CardDescription>Customize how Dhanam looks and feels</CardDescription>
+          <CardDescription>{t('section.display.description')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label>Theme</Label>
-              <p className="text-sm text-muted-foreground">Choose your preferred color theme</p>
+              <Label>{t('display.theme.label')}</Label>
+              <p className="text-sm text-muted-foreground">{t('display.theme.description')}</p>
             </div>
             <Select
               value={preferences.themeMode}
@@ -391,17 +393,17 @@ export default function SettingsPage() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="light">Light</SelectItem>
-                <SelectItem value="dark">Dark</SelectItem>
-                <SelectItem value="system">System</SelectItem>
+                <SelectItem value="light">{t('display.theme.light')}</SelectItem>
+                <SelectItem value="dark">{t('display.theme.dark')}</SelectItem>
+                <SelectItem value="system">{t('display.theme.system')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <Separator />
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label>Compact View</Label>
-              <p className="text-sm text-muted-foreground">Use a more condensed layout</p>
+              <Label>{t('display.compactView.label')}</Label>
+              <p className="text-sm text-muted-foreground">{t('display.compactView.description')}</p>
             </div>
             <Switch
               checked={preferences.compactView}
@@ -411,8 +413,8 @@ export default function SettingsPage() {
           <Separator />
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label>Show Balances</Label>
-              <p className="text-sm text-muted-foreground">Display account balances by default</p>
+              <Label>{t('display.showBalances.label')}</Label>
+              <p className="text-sm text-muted-foreground">{t('display.showBalances.description')}</p>
             </div>
             <Switch
               checked={preferences.showBalances}
@@ -427,16 +429,16 @@ export default function SettingsPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <DollarSign className="h-5 w-5" />
-            Financial
+            {t('section.financial.title')}
           </CardTitle>
-          <CardDescription>Configure financial settings and preferences</CardDescription>
+          <CardDescription>{t('section.financial.description')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label>Default Currency</Label>
+              <Label>{t('financial.defaultCurrency.label')}</Label>
               <p className="text-sm text-muted-foreground">
-                Currency used for display and calculations
+                {t('financial.defaultCurrency.description')}
               </p>
             </div>
             <Select
@@ -456,9 +458,9 @@ export default function SettingsPage() {
           <Separator />
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label>Auto-Categorize Transactions</Label>
+              <Label>{t('financial.autoCategorize.label')}</Label>
               <p className="text-sm text-muted-foreground">
-                Automatically categorize new transactions
+                {t('financial.autoCategorize.description')}
               </p>
             </div>
             <Switch
@@ -474,16 +476,16 @@ export default function SettingsPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Leaf className="h-5 w-5" />
-            ESG Settings
+            {t('section.esg.title')}
           </CardTitle>
-          <CardDescription>Environmental, Social, and Governance preferences</CardDescription>
+          <CardDescription>{t('section.esg.description')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label>Show ESG Scores</Label>
+              <Label>{t('esg.showScores.label')}</Label>
               <p className="text-sm text-muted-foreground">
-                Display ESG scores for crypto holdings
+                {t('esg.showScores.description')}
               </p>
             </div>
             <Switch
@@ -494,8 +496,8 @@ export default function SettingsPage() {
           <Separator />
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label>Sustainability Alerts</Label>
-              <p className="text-sm text-muted-foreground">Get alerts about ESG score changes</p>
+              <Label>{t('esg.sustainabilityAlerts.label')}</Label>
+              <p className="text-sm text-muted-foreground">{t('esg.sustainabilityAlerts.description')}</p>
             </div>
             <Switch
               checked={preferences.sustainabilityAlerts}
@@ -505,9 +507,9 @@ export default function SettingsPage() {
           <Separator />
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label>Impact Reporting</Label>
+              <Label>{t('esg.impactReporting.label')}</Label>
               <p className="text-sm text-muted-foreground">
-                Include ESG impact in periodic reports
+                {t('esg.impactReporting.description')}
               </p>
             </div>
             <Switch
@@ -523,16 +525,16 @@ export default function SettingsPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <HardDrive className="h-5 w-5" />
-            Backup & Export
+            {t('section.backup.title')}
           </CardTitle>
-          <CardDescription>Data backup and export preferences</CardDescription>
+          <CardDescription>{t('section.backup.description')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label>Auto Backup</Label>
+              <Label>{t('backup.autoBackup.label')}</Label>
               <p className="text-sm text-muted-foreground">
-                Automatically backup your data periodically
+                {t('backup.autoBackup.description')}
               </p>
             </div>
             <Switch
@@ -543,8 +545,8 @@ export default function SettingsPage() {
           <Separator />
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label>Export Format</Label>
-              <p className="text-sm text-muted-foreground">Default format for data exports</p>
+              <Label>{t('backup.exportFormat.label')}</Label>
+              <p className="text-sm text-muted-foreground">{t('backup.exportFormat.description')}</p>
             </div>
             <Select
               value={preferences.exportFormat}

@@ -2,6 +2,7 @@
 
 import { useContext } from 'react';
 import { I18nContext, useTranslation } from '@dhanam/shared';
+import type { Locale } from '@dhanam/shared';
 import { usePostHog } from '~/providers/PostHogProvider';
 import { Globe } from 'lucide-react';
 import {
@@ -12,25 +13,12 @@ import {
   Button,
 } from '@dhanam/ui';
 
-/**
- * LocaleSwitcher Component
- *
- * Allows users to switch between English and Spanish.
- * Tracks locale changes with PostHog analytics.
- *
- * Usage:
- * ```tsx
- * import { LocaleSwitcher } from '~/components/locale-switcher';
- *
- * export function Header() {
- *   return (
- *     <header>
- *       <LocaleSwitcher />
- *     </header>
- *   );
- * }
- * ```
- */
+const locales: Array<{ code: Locale; name: string; flag: string }> = [
+  { code: 'es', name: 'Español', flag: '🇲🇽' },
+  { code: 'en', name: 'English', flag: '🇺🇸' },
+  { code: 'pt-BR', name: 'Português', flag: '🇧🇷' },
+];
+
 export function LocaleSwitcher() {
   const context = useContext(I18nContext);
   const { t } = useTranslation();
@@ -43,27 +31,22 @@ export function LocaleSwitcher() {
 
   const { locale, setLocale } = context;
 
-  const handleLocaleChange = (newLocale: 'en' | 'es') => {
+  const handleLocaleChange = (newLocale: Locale) => {
     if (newLocale === locale) return;
 
     setLocale(newLocale);
 
-    // Track locale change in PostHog
     posthog.capture('locale_changed', {
       from_locale: locale,
       to_locale: newLocale,
     });
 
-    // Update HTML lang attribute
     if (typeof document !== 'undefined') {
       document.documentElement.lang = newLocale;
+      // Also set cookie so server layout can read it
+      document.cookie = `dhanam_locale=${newLocale};path=/;max-age=31536000;SameSite=Lax`;
     }
   };
-
-  const locales = [
-    { code: 'es' as const, name: 'Español', flag: '🇲🇽' },
-    { code: 'en' as const, name: 'English', flag: '🇺🇸' },
-  ];
 
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const currentLocale = locales.find((l) => l.code === locale) || locales[0]!;

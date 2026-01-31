@@ -142,4 +142,68 @@ export const budgets = {
   categoryBudgetRequired: 'El presupuesto de la categoría es requerido',
   periodRequired: 'El período es requerido',
   startDateRequired: 'La fecha de inicio es requerida',
+
+  // Page-level keys (used by budgets page component)
+  page: {
+    title: 'Presupuestos',
+    description: 'Administra tus presupuestos y categorías de gasto',
+    manageRules: 'Administrar Reglas',
+    createBudget: 'Crear Presupuesto',
+    addCategory: 'Agregar Categoría',
+  },
+  dialog: {
+    create: {
+      description: 'Configura un nuevo presupuesto para controlar tus gastos',
+    },
+    addCategory: {
+      description: 'Agrega una categoría de gasto a este presupuesto',
+    },
+  },
+  fields: {
+    budgetName: 'Nombre del presupuesto',
+    budgetNamePlaceholder: 'ej. Gastos Mensuales',
+    period: 'Período',
+    selectPeriod: 'Selecciona un período',
+    startDate: 'Fecha de inicio',
+    ongoing: 'En curso',
+    categories: 'Categorías',
+    categoryName: 'Nombre de categoría',
+    categoryNamePlaceholder: 'ej. Supermercado',
+    budgetAmount: 'Monto presupuestado',
+  },
+  periods: {
+    monthly: 'Mensual',
+    weekly: 'Semanal',
+    quarterly: 'Trimestral',
+    yearly: 'Anual',
+  },
+  summary: {
+    totalBudget: 'Presupuesto Total',
+    spent: 'gastado',
+    remaining: 'restante',
+    used: 'utilizado',
+  },
+  empty: {
+    title: 'Sin presupuestos aún',
+    description: 'Crea tu primer presupuesto para comenzar a controlar tus gastos',
+    cta: 'Crea Tu Primer Presupuesto',
+  },
+  toast: {
+    budgetCreated: 'Presupuesto creado exitosamente',
+    budgetCreateFailed: 'Error al crear presupuesto',
+    categoryAdded: 'Categoría agregada exitosamente',
+    categoryAddFailed: 'Error al agregar categoría',
+  },
+  zeroBased: {
+    title: 'Presupuesto Base Cero',
+    description: 'Asigna cada peso a una tarea \u2022 Presupuesto por sobres para {{name}}',
+    addIncome: 'Agregar Ingreso',
+    rollover: 'Transferir',
+    howItWorks: 'Cómo funciona',
+    loading: 'Cargando tu presupuesto...',
+    errorTitle: 'Error al cargar los datos del presupuesto',
+    errorFallback: 'Por favor intenta de nuevo más tarde',
+    retry: 'Reintentar',
+    noSpace: 'Selecciona un espacio para ver tu presupuesto',
+  },
 } as const;

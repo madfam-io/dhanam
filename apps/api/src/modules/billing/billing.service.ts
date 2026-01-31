@@ -34,8 +34,9 @@ export interface UpgradeOptions {
  * - **Stripe**: Fallback/Direct integration
  *
  * ## Subscription Tiers
- * - **Free**: Limited usage (10 ESG calcs, 3 simulations/day)
- * - **Premium**: Unlimited usage, all features
+ * - **Community**: Self-hosted or free cloud trial (5 ESG calcs, 2 simulations/day)
+ * - **Essentials**: $4.99/mo — AI categorization, bank sync, 10 simulations/day
+ * - **Pro**: $11.99/mo — Unlimited usage, all features
  *
  * ## Usage Tracking
  * Daily usage metrics tracked per user:
@@ -78,21 +79,69 @@ export class BillingService {
 
   // Usage limits per tier
   private readonly usageLimits = {
-    free: {
-      esg_calculation: 10,
-      monte_carlo_simulation: 3,
-      goal_probability: 3,
-      scenario_analysis: 1,
-      portfolio_rebalance: 0, // Premium only
-      api_request: 1000,
+    community: {
+      esg_calculation: 5,
+      monte_carlo_simulation: 2,
+      goal_probability: 0,
+      scenario_analysis: 0,
+      portfolio_rebalance: 0,
+      api_request: 500,
     },
-    premium: {
+    essentials: {
+      esg_calculation: 20,
+      monte_carlo_simulation: 10,
+      goal_probability: 5,
+      scenario_analysis: 3,
+      portfolio_rebalance: 0,
+      api_request: 5_000,
+    },
+    pro: {
       esg_calculation: Infinity,
       monte_carlo_simulation: Infinity,
       goal_probability: Infinity,
       scenario_analysis: Infinity,
       portfolio_rebalance: Infinity,
       api_request: Infinity,
+    },
+  };
+
+  // Feature limits per tier
+  readonly tierLimits = {
+    community: {
+      maxSpaces: 1,
+      maxProviderConnections: 0, // cloud-hosted: 0. Self-hosted: unlimited (BYOK)
+      allowedProviders: [] as string[],
+      mlCategorization: false,
+      monteCarloMaxIterations: 1_000,
+      monteCarloMaxScenarios: 3,
+      storageBytes: 0,
+      lifeBeat: false,
+      householdViews: false,
+      collectiblesValuation: false,
+    },
+    essentials: {
+      maxSpaces: 2,
+      maxProviderConnections: 3, // 2 Belvo + 1 Bitso
+      allowedProviders: ['belvo', 'bitso'],
+      mlCategorization: true,
+      monteCarloMaxIterations: 5_000,
+      monteCarloMaxScenarios: 6,
+      storageBytes: 500 * 1024 * 1024, // 500 MB
+      lifeBeat: false,
+      householdViews: false,
+      collectiblesValuation: false,
+    },
+    pro: {
+      maxSpaces: 5,
+      maxProviderConnections: Infinity,
+      allowedProviders: 'all' as const,
+      mlCategorization: true,
+      monteCarloMaxIterations: 10_000,
+      monteCarloMaxScenarios: 12,
+      storageBytes: 5 * 1024 * 1024 * 1024, // 5 GB
+      lifeBeat: true,
+      householdViews: true,
+      collectiblesValuation: true,
     },
   };
 
@@ -139,8 +188,8 @@ export class BillingService {
       select: { subscriptionTier: true },
     });
 
-    if (currentUser?.subscriptionTier === 'premium') {
-      throw new Error('User is already on premium tier');
+    if (currentUser?.subscriptionTier === 'pro') {
+      throw new Error('User is already on pro tier');
     }
 
     const webUrl = this.config.get<string>('WEB_URL', 'http://localhost:3000');
@@ -196,7 +245,7 @@ export class BillingService {
     const result = await this.januaBilling.createCheckoutSession({
       customerId,
       customerEmail: user.email,
-      priceId: options.plan || 'premium',
+      priceId: options.plan || 'pro',
       countryCode,
       successUrl:
         options.successUrl || `${webUrl}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
@@ -320,7 +369,7 @@ export class BillingService {
     await this.prisma.user.update({
       where: { id: user.id },
       data: {
-        subscriptionTier: 'premium',
+        subscriptionTier: 'pro',
         subscriptionStartedAt: new Date((subscription as any).current_period_start * 1000),
         subscriptionExpiresAt: new Date((subscription as any).current_period_end * 1000),
         stripeSubscriptionId: subscription.id,
@@ -344,7 +393,7 @@ export class BillingService {
       action: 'SUBSCRIPTION_ACTIVATED',
       severity: 'high',
       metadata: {
-        tier: 'premium',
+        tier: 'pro',
         subscriptionId: subscription.id,
       },
     });
@@ -398,7 +447,7 @@ export class BillingService {
     await this.prisma.user.update({
       where: { id: user.id },
       data: {
-        subscriptionTier: 'free',
+        subscriptionTier: 'community',
         subscriptionExpiresAt: null,
         stripeSubscriptionId: null,
       },
@@ -569,12 +618,13 @@ export class BillingService {
       return false;
     }
 
-    // Premium users have unlimited usage
-    if (user.subscriptionTier === 'premium') {
+    // Pro users have unlimited usage
+    if (user.subscriptionTier === 'pro') {
       return true;
     }
 
-    const limit = this.usageLimits.free[metricType];
+    const tier = (user.subscriptionTier as keyof typeof this.usageLimits) || 'community';
+    const limit = this.usageLimits[tier]?.[metricType] ?? this.usageLimits.community[metricType];
 
     // Infinity limit means unlimited for this tier
     if (limit === Infinity) {
@@ -611,6 +661,13 @@ export class BillingService {
   }
 
   /**
+   * Get feature limits for a specific tier
+   */
+  getTierLimits(tier: string) {
+    return this.tierLimits[(tier as keyof typeof this.tierLimits)] || this.tierLimits.community;
+  }
+
+  /**
    * Get user's current usage metrics for today
    *
    * Returns usage counts and limits for all metric types.
@@ -643,9 +700,10 @@ export class BillingService {
 
     const usageByType: Record<string, { used: number; limit: number }> = {};
 
-    for (const metricType of Object.keys(this.usageLimits.free) as UsageMetricType[]) {
+    for (const metricType of Object.keys(this.usageLimits.community) as UsageMetricType[]) {
       const metric = metrics.find((m) => m.metricType === metricType);
-      const limit = this.usageLimits[user?.subscriptionTier || 'free'][metricType];
+      const tier = (user?.subscriptionTier as keyof typeof this.usageLimits) || 'community';
+      const limit = this.usageLimits[tier]?.[metricType] ?? this.usageLimits.community[metricType];
 
       usageByType[metricType] = {
         used: metric?.count || 0,
@@ -655,7 +713,7 @@ export class BillingService {
 
     return {
       date: today,
-      tier: user?.subscriptionTier || 'free',
+      tier: user?.subscriptionTier || 'community',
       usage: usageByType,
     };
   }
@@ -693,7 +751,7 @@ export class BillingService {
     await this.prisma.user.update({
       where: { id: user.id },
       data: {
-        subscriptionTier: 'premium',
+        subscriptionTier: 'pro',
         subscriptionStartedAt: new Date(),
         billingProvider: provider,
       },
@@ -735,7 +793,7 @@ export class BillingService {
       return;
     }
 
-    const tier = status === 'active' ? 'premium' : 'free';
+    const tier = status === 'active' ? 'pro' : 'community';
 
     await this.prisma.user.update({
       where: { id: user.id },
@@ -763,7 +821,7 @@ export class BillingService {
     await this.prisma.user.update({
       where: { id: user.id },
       data: {
-        subscriptionTier: 'free',
+        subscriptionTier: 'community',
         subscriptionExpiresAt: new Date(),
       },
     });
@@ -817,7 +875,7 @@ export class BillingService {
 
     await this.prisma.user.update({
       where: { id: user.id },
-      data: { subscriptionTier: 'premium' },
+      data: { subscriptionTier: 'pro' },
     });
 
     this.logger.log(`Janua subscription resumed for user ${user.id}`);
@@ -853,7 +911,7 @@ export class BillingService {
     // Ensure subscription is active
     await this.prisma.user.update({
       where: { id: user.id },
-      data: { subscriptionTier: 'premium' },
+      data: { subscriptionTier: 'pro' },
     });
 
     this.logger.log(`Janua payment succeeded for user ${user.id}: ${currency} ${amount}`);

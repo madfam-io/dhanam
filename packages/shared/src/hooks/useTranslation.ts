@@ -10,6 +10,16 @@
 import { useContext } from 'react';
 import { I18nContext } from '../contexts/I18nContext';
 import type { TranslationNamespace } from '../i18n';
+import { resolveICU } from '../i18n/icu';
+
+function lookupKey(obj: any, keys: string[]): string | undefined {
+  let value: any = obj;
+  for (const k of keys) {
+    value = value?.[k];
+    if (value === undefined) return undefined;
+  }
+  return typeof value === 'string' ? value : value?.toString();
+}
 
 export function useTranslation(namespace?: TranslationNamespace) {
   const context = useContext(I18nContext);
@@ -25,33 +35,35 @@ export function useTranslation(namespace?: TranslationNamespace) {
    * @param key - Translation key in dot notation (e.g., "save" or "common.save")
    * @param params - Optional parameters for interpolation
    *
-   * If a namespace was provided to useTranslation, keys without dots will be
-   * prefixed with the namespace (e.g., "loginTitle" becomes "auth.loginTitle").
-   * Keys with dots are used as-is for full path access.
+   * Fallback chain: requested locale → es (Spanish) → raw key
    */
   const t = (key: string, params?: Record<string, string | number>): string => {
-    // If namespace provided and key doesn't contain a dot, prepend namespace
     const fullKey = namespace && !key.includes('.') ? `${namespace}.${key}` : key;
     const keys = fullKey.split('.');
-    let value: any = translations[locale];
 
-    // Navigate through the nested object
-    for (const k of keys) {
-      value = value?.[k];
-      if (value === undefined) {
-        console.warn(`Translation key not found: ${fullKey} for locale: ${locale}`);
-        return key; // Return original key (without namespace) for display
-      }
+    // Try requested locale first, then fall back to Spanish, then raw key
+    let value = lookupKey(translations[locale], keys);
+    if (value === undefined && locale !== 'es') {
+      value = lookupKey((translations as any)['es'], keys);
+    }
+    if (value === undefined) {
+      console.warn(`Translation key not found: ${fullKey} for locale: ${locale}`);
+      return key;
     }
 
-    // If params provided, perform string interpolation
-    if (params && typeof value === 'string') {
-      return value.replace(/\{\{(\w+)\}\}/g, (match, paramKey) => {
-        return params[paramKey]?.toString() || match;
+    // {{param}} interpolation
+    if (params) {
+      value = value.replace(/\{\{(\w+)\}\}/g, (match, paramKey) => {
+        return params[paramKey]?.toString() ?? match;
       });
     }
 
-    return value?.toString() || key;
+    // ICU plural/select resolution
+    if (params && (value.includes(', plural,') || value.includes(', select,'))) {
+      value = resolveICU(value, params, locale);
+    }
+
+    return value;
   };
 
   /**
@@ -59,21 +71,13 @@ export function useTranslation(namespace?: TranslationNamespace) {
    */
   const hasKey = (key: string): boolean => {
     const keys = key.split('.');
-    let value: any = translations[locale];
-
-    for (const k of keys) {
-      value = value?.[k];
-      if (value === undefined) return false;
-    }
-
-    return true;
+    return lookupKey(translations[locale], keys) !== undefined;
   };
 
   /**
    * Get all translations for a namespace
    */
   const getNamespace = (ns: TranslationNamespace) => {
-    // Type assertion needed because en locale doesn't have all namespaces yet
     return (translations[locale] as any)[ns];
   };
 

@@ -145,6 +145,14 @@ export const common = {
   on: 'On',
   off: 'Off',
 
+  // Demo mode
+  demoMode: 'Demo Mode',
+  demoExploring: "You're exploring Dhanam in",
+  demoDescription: 'Read-only access \u2022 Sample data \u2022 Full features preview',
+  signUpToContinue: 'Sign Up to Continue',
+  signUpFree: 'Sign Up Free',
+  dismissBanner: 'Dismiss banner',
+
   // Misc
   or: 'or',
   and: 'and',

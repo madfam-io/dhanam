@@ -20,37 +20,7 @@ import {
 import { useSpaceStore } from '@/stores/space';
 import { reportsApi } from '@/lib/api/reports';
 import { toast } from 'sonner';
-
-const reportTemplates = [
-  {
-    id: 'financial-summary',
-    name: 'Financial Summary',
-    description: 'Complete financial overview including income, expenses, and net worth',
-    icon: FileText,
-    format: 'pdf',
-  },
-  {
-    id: 'transaction-export',
-    name: 'Transaction Export',
-    description: 'Export all transactions for the selected period',
-    icon: FileSpreadsheet,
-    format: 'csv',
-  },
-  {
-    id: 'budget-performance',
-    name: 'Budget Performance',
-    description: 'Detailed budget tracking and category analysis',
-    icon: PiggyBank,
-    format: 'pdf',
-  },
-  {
-    id: 'net-worth-trend',
-    name: 'Net Worth Trend',
-    description: 'Track your net worth changes over time',
-    icon: TrendingUp,
-    format: 'pdf',
-  },
-];
+import { useTranslation } from '@dhanam/shared';
 
 function getDefaultStartDate(): string {
   const date = new Date();
@@ -69,6 +39,38 @@ export default function ReportsPage() {
   const [endDate, setEndDate] = useState<string>(getDefaultEndDate);
   const [exportFormat, setExportFormat] = useState<'pdf' | 'csv'>('pdf');
   const [isGenerating, setIsGenerating] = useState(false);
+  const { t } = useTranslation('reports');
+
+  const reportTemplates = [
+    {
+      id: 'financial-summary',
+      name: t('templates.financialSummary'),
+      description: t('templates.financialSummaryDesc'),
+      icon: FileText,
+      format: 'pdf',
+    },
+    {
+      id: 'transaction-export',
+      name: t('templates.transactionExport'),
+      description: t('templates.transactionExportDesc'),
+      icon: FileSpreadsheet,
+      format: 'csv',
+    },
+    {
+      id: 'budget-performance',
+      name: t('templates.budgetPerformance'),
+      description: t('templates.budgetPerformanceDesc'),
+      icon: PiggyBank,
+      format: 'pdf',
+    },
+    {
+      id: 'net-worth-trend',
+      name: t('templates.netWorthTrend'),
+      description: t('templates.netWorthTrendDesc'),
+      icon: TrendingUp,
+      format: 'pdf',
+    },
+  ];
 
   const { data: availableReports, isLoading } = useQuery({
     queryKey: ['available-reports', currentSpace?.id],
@@ -81,7 +83,7 @@ export default function ReportsPage() {
 
   const handleGenerateReport = async () => {
     if (!currentSpace?.id) {
-      toast.error('Please select a space first');
+      toast.error(t('toast.selectSpaceFirst'));
       return;
     }
 
@@ -107,9 +109,9 @@ export default function ReportsPage() {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
 
-      toast.success('Report downloaded successfully');
+      toast.success(t('toast.reportDownloaded'));
     } catch {
-      toast.error('Failed to generate report');
+      toast.error(t('toast.failedToGenerate'));
     } finally {
       setIsGenerating(false);
     }
@@ -117,7 +119,7 @@ export default function ReportsPage() {
 
   const handleQuickExport = async (format: 'pdf' | 'csv') => {
     if (!currentSpace?.id) {
-      toast.error('Please select a space first');
+      toast.error(t('toast.selectSpaceFirst'));
       return;
     }
 
@@ -142,9 +144,9 @@ export default function ReportsPage() {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
 
-      toast.success(`${format.toUpperCase()} downloaded successfully`);
+      toast.success(t('toast.reportDownloaded'));
     } catch {
-      toast.error('Failed to download');
+      toast.error(t('toast.failedToDownload'));
     } finally {
       setIsGenerating(false);
     }
@@ -156,9 +158,9 @@ export default function ReportsPage() {
         <div className="rounded-full bg-muted p-4 mb-4">
           <FileText className="h-8 w-8 text-muted-foreground" />
         </div>
-        <h3 className="font-semibold text-lg mb-2">No space selected</h3>
+        <h3 className="font-semibold text-lg mb-2">{t('emptyState.noSpaceSelected')}</h3>
         <p className="text-muted-foreground text-sm max-w-sm">
-          Please select a space from the sidebar to generate reports
+          {t('emptyState.selectSpacePrompt')}
         </p>
       </div>
     );
@@ -167,8 +169,8 @@ export default function ReportsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Reports</h1>
-        <p className="text-muted-foreground">Generate and export financial reports and data</p>
+        <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
+        <p className="text-muted-foreground">{t('description')}</p>
       </div>
 
       {/* Quick Export */}
@@ -176,16 +178,16 @@ export default function ReportsPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Download className="h-5 w-5" />
-            Quick Export
+            {t('quickExport.title')}
           </CardTitle>
           <CardDescription>
-            Quickly export your financial data for the selected date range
+            {t('quickExport.description')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap items-end gap-4">
             <div className="space-y-2">
-              <Label htmlFor="start-date">Start Date</Label>
+              <Label htmlFor="start-date">{t('quickExport.startDate')}</Label>
               <Input
                 id="start-date"
                 type="date"
@@ -195,7 +197,7 @@ export default function ReportsPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="end-date">End Date</Label>
+              <Label htmlFor="end-date">{t('quickExport.endDate')}</Label>
               <Input
                 id="end-date"
                 type="date"
@@ -215,7 +217,7 @@ export default function ReportsPage() {
                 ) : (
                   <FileType className="mr-2 h-4 w-4" />
                 )}
-                PDF Report
+                {t('quickExport.pdfReport')}
               </Button>
               <Button
                 onClick={() => handleQuickExport('csv')}
@@ -227,7 +229,7 @@ export default function ReportsPage() {
                 ) : (
                   <FileSpreadsheet className="mr-2 h-4 w-4" />
                 )}
-                CSV Export
+                {t('quickExport.csvExport')}
               </Button>
             </div>
           </div>
@@ -236,7 +238,7 @@ export default function ReportsPage() {
 
       {/* Report Templates */}
       <div className="space-y-4">
-        <h2 className="text-xl font-semibold">Report Templates</h2>
+        <h2 className="text-xl font-semibold">{t('templates.heading')}</h2>
         <div className="grid gap-4 md:grid-cols-2">
           {reportTemplates.map((template) => {
             const Icon = template.icon;
@@ -279,16 +281,16 @@ export default function ReportsPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5" />
-            Custom Report
+            {t('custom.title')}
           </CardTitle>
           <CardDescription>
-            Configure and generate a custom report with specific parameters
+            {t('custom.description')}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-3">
             <div className="space-y-2">
-              <Label>Date Range</Label>
+              <Label>{t('custom.dateRange')}</Label>
               <div className="flex items-center gap-2">
                 <Input
                   type="date"
@@ -300,7 +302,7 @@ export default function ReportsPage() {
               </div>
             </div>
             <div className="space-y-2">
-              <Label>Format</Label>
+              <Label>{t('custom.format')}</Label>
               <Select
                 value={exportFormat}
                 onValueChange={(value: 'pdf' | 'csv') => setExportFormat(value)}
@@ -309,8 +311,8 @@ export default function ReportsPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="pdf">PDF Report</SelectItem>
-                  <SelectItem value="csv">CSV Export</SelectItem>
+                  <SelectItem value="pdf">{t('quickExport.pdfReport')}</SelectItem>
+                  <SelectItem value="csv">{t('quickExport.csvExport')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -320,12 +322,12 @@ export default function ReportsPage() {
                 {isGenerating ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Generating...
+                    {t('custom.generating')}
                   </>
                 ) : (
                   <>
                     <Download className="mr-2 h-4 w-4" />
-                    Generate Report
+                    {t('custom.generateReport')}
                   </>
                 )}
               </Button>
@@ -342,8 +344,8 @@ export default function ReportsPage() {
       ) : availableReports?.reports && availableReports.reports.length > 0 ? (
         <Card>
           <CardHeader>
-            <CardTitle>Available Reports</CardTitle>
-            <CardDescription>Pre-configured report types for your space</CardDescription>
+            <CardTitle>{t('available.title')}</CardTitle>
+            <CardDescription>{t('available.description')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">

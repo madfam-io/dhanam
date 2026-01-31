@@ -12,16 +12,17 @@ import {
 import { Request } from 'express';
 
 import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
+import { ProviderConnectionGuard } from '../../billing/guards/provider-connection.guard';
 
 import { DeFiService } from './defi.service';
 import { ZapperService } from './zapper.service';
 
 @ApiTags('DeFi')
 @Controller('spaces/:spaceId/defi')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, ProviderConnectionGuard)
 @ApiBearerAuth()
 @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
-@ApiForbiddenResponse({ description: 'User lacks access to this space' })
+@ApiForbiddenResponse({ description: 'User lacks access to this space or DeFi requires Pro plan' })
 export class DeFiController {
   constructor(
     private readonly defiService: DeFiService,

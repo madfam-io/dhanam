@@ -1,0 +1,37 @@
+export const analytics = {
+  title: 'Análisis',
+  description: 'Información detallada sobre tu salud financiera',
+  scheduleReports: 'Programar reportes',
+  exportExcel: 'Exportar Excel',
+  cards: {
+    netWorth: 'Patrimonio neto',
+    totalAssets: 'Activos totales',
+    totalLiabilities: 'Pasivos totales',
+    debtRatio: 'Ratio de deuda',
+  },
+  descriptions: {
+    vsLastMonth: 'vs mes anterior',
+    savingsInvestmentsCrypto: 'Ahorros, inversiones y cripto',
+    creditCardsLoans: 'Tarjetas de crédito y préstamos',
+    liabilitiesToAssets: 'Pasivos sobre activos',
+  },
+  emptyState: {
+    noSpaceSelected: 'No hay espacio seleccionado',
+    selectSpacePrompt: 'Selecciona un espacio desde la barra lateral para ver tus análisis',
+  },
+  cashflow: {
+    title: 'Pronóstico de flujo de caja (60 días)',
+    description: 'Ingresos, gastos y balance proyectados',
+    currentBalance: 'Balance actual',
+    projectedIncome: 'Ingresos proyectados',
+    projectedExpenses: 'Gastos proyectados',
+    projectedBalance: 'Balance proyectado',
+    weeklyForecast: 'Pronóstico semanal',
+    week: 'Semana {{number}}',
+    income: 'Ingresos',
+    expenses: 'Gastos',
+    balance: 'Balance',
+    noForecast: 'No hay pronóstico de flujo de caja disponible',
+    connectAccount: 'Conectar cuenta',
+  },
+} as const;

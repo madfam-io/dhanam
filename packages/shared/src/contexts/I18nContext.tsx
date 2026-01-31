@@ -21,6 +21,12 @@ export interface I18nProviderProps {
   storageKey?: string;
 }
 
+const SUPPORTED_LOCALES: Locale[] = ['en', 'es', 'pt-BR'];
+
+function isSupportedLocale(value: string): value is Locale {
+  return SUPPORTED_LOCALES.includes(value as Locale);
+}
+
 /**
  * I18nProvider
  * Provides i18n context to the application
@@ -43,8 +49,8 @@ export function I18nProvider({
   const [locale, setLocaleState] = useState<Locale>(() => {
     // 1. Check localStorage
     if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem(storageKey) as Locale | null;
-      if (stored === 'en' || stored === 'es') {
+      const stored = localStorage.getItem(storageKey);
+      if (stored && isSupportedLocale(stored)) {
         return stored;
       }
     }
@@ -57,6 +63,7 @@ export function I18nProvider({
     // 3. Auto-detect from browser
     if (typeof navigator !== 'undefined') {
       const browserLang = navigator.language.toLowerCase();
+      if (browserLang.startsWith('pt')) return 'pt-BR';
       if (browserLang.startsWith('en')) return 'en';
       // Default to Spanish for LATAM-first approach
     }

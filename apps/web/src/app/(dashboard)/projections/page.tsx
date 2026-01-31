@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
+import { useTranslation } from '@dhanam/shared';
 import {
   TrendingUp,
   Calendar,
@@ -49,13 +50,8 @@ function getRiskColor(score: number): string {
   return 'text-red-600';
 }
 
-function getRiskLabel(score: number): string {
-  if (score < 30) return 'Low Risk';
-  if (score < 60) return 'Moderate Risk';
-  return 'High Risk';
-}
-
 export default function ProjectionsPage() {
+  const { t } = useTranslation('projections');
   const currentSpaceId = useSpaceStore((state) => state.currentSpace?.id);
   const [isLoading, setIsLoading] = useState(false);
   const [isComparing, setIsComparing] = useState(false);
@@ -153,21 +149,21 @@ export default function ProjectionsPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Long-Term Projections</h1>
+            <h1 className="text-3xl font-bold">{t('page.longTermProjections')}</h1>
             <p className="text-muted-foreground">
-              Plan your financial future with 10-30 year cashflow projections
+              {t('page.description')}
             </p>
           </div>
           <Button onClick={generateProjection} disabled={isLoading || !currentSpaceId}>
             {isLoading ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Calculating...
+                {t('page.calculating')}
               </>
             ) : (
               <>
                 <TrendingUp className="h-4 w-4 mr-2" />
-                Generate Projection
+                {t('page.generateProjection')}
               </>
             )}
           </Button>
@@ -178,14 +174,14 @@ export default function ProjectionsPage() {
           <div className="lg:col-span-1 space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Projection Settings</CardTitle>
-                <CardDescription>Configure your financial assumptions</CardDescription>
+                <CardTitle>{t('page.projectionSettings')}</CardTitle>
+                <CardDescription>{t('page.configureAssumptions')}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* Age Settings */}
                 <div className="space-y-4">
                   <div>
-                    <Label htmlFor="currentAge">Current Age</Label>
+                    <Label htmlFor="currentAge">{t('page.currentAge')}</Label>
                     <Input
                       id="currentAge"
                       type="number"
@@ -203,7 +199,7 @@ export default function ProjectionsPage() {
 
                   <div>
                     <div className="flex justify-between mb-2">
-                      <Label>Retirement Age</Label>
+                      <Label>{t('page.retirementAge')}</Label>
                       <span className="text-sm text-muted-foreground">{config.retirementAge}</span>
                     </div>
                     <Slider
@@ -216,13 +212,13 @@ export default function ProjectionsPage() {
                       }
                     />
                     <p className="text-xs text-muted-foreground mt-1">
-                      {config.retirementAge - config.currentAge} years until retirement
+                      {config.retirementAge - config.currentAge} {t('page.yearsUntilRetirement')}
                     </p>
                   </div>
 
                   <div>
                     <div className="flex justify-between mb-2">
-                      <Label>Projection Length</Label>
+                      <Label>{t('page.projectionLength')}</Label>
                       <span className="text-sm text-muted-foreground">
                         {config.projectionYears} years
                       </span>
@@ -242,11 +238,11 @@ export default function ProjectionsPage() {
 
                 {/* Economic Assumptions */}
                 <div className="space-y-4 pt-4 border-t">
-                  <Label className="text-sm font-medium">Economic Assumptions</Label>
+                  <Label className="text-sm font-medium">{t('page.economicAssumptions')}</Label>
 
                   <div>
                     <div className="flex justify-between mb-2">
-                      <Label>Inflation Rate</Label>
+                      <Label>{t('page.inflationRate')}</Label>
                       <span className="text-sm text-muted-foreground">
                         {((config.inflationRate ?? 0.03) * 100).toFixed(1)}%
                       </span>
@@ -265,7 +261,7 @@ export default function ProjectionsPage() {
                   </div>
 
                   <div>
-                    <Label htmlFor="lifeExpectancy">Life Expectancy</Label>
+                    <Label htmlFor="lifeExpectancy">{t('page.lifeExpectancy')}</Label>
                     <Input
                       id="lifeExpectancy"
                       type="number"
@@ -284,7 +280,7 @@ export default function ProjectionsPage() {
 
                 {/* Data Sources */}
                 <div className="space-y-3 pt-4 border-t">
-                  <Label className="text-sm font-medium">Data Sources</Label>
+                  <Label className="text-sm font-medium">{t('page.dataSources')}</Label>
                   <div className="space-y-2">
                     <label className="flex items-center gap-2">
                       <input
@@ -295,7 +291,7 @@ export default function ProjectionsPage() {
                         }
                         className="rounded"
                       />
-                      <span className="text-sm">Include linked accounts</span>
+                      <span className="text-sm">{t('page.includeLinkedAccounts')}</span>
                     </label>
                     <label className="flex items-center gap-2">
                       <input
@@ -306,7 +302,7 @@ export default function ProjectionsPage() {
                         }
                         className="rounded"
                       />
-                      <span className="text-sm">Include recurring transactions</span>
+                      <span className="text-sm">{t('page.includeRecurringTransactions')}</span>
                     </label>
                   </div>
                 </div>
@@ -330,13 +326,12 @@ export default function ProjectionsPage() {
               <Card className="h-[500px] flex items-center justify-center">
                 <CardContent className="text-center">
                   <TrendingUp className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-medium mb-2">No Projection Yet</h3>
+                  <h3 className="text-lg font-medium mb-2">{t('page.noProjection')}</h3>
                   <p className="text-muted-foreground mb-4">
-                    Configure your settings and click &quot;Generate Projection&quot; to see your
-                    financial future
+                    {t('page.noProjectionDescription')}
                   </p>
                   <Button onClick={generateProjection} disabled={isLoading || !currentSpaceId}>
-                    {isLoading ? 'Calculating...' : 'Generate Projection'}
+                    {isLoading ? t('page.calculating') : t('page.generateProjection')}
                   </Button>
                 </CardContent>
               </Card>
@@ -348,7 +343,7 @@ export default function ProjectionsPage() {
                     <CardHeader className="pb-2">
                       <CardDescription className="flex items-center gap-1">
                         <DollarSign className="h-4 w-4" />
-                        Peak Net Worth
+                        {t('summary.peakNetWorth')}
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -365,7 +360,7 @@ export default function ProjectionsPage() {
                     <CardHeader className="pb-2">
                       <CardDescription className="flex items-center gap-1">
                         <Calendar className="h-4 w-4" />
-                        FI Year
+                        {t('summary.fiYear')}
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -375,7 +370,7 @@ export default function ProjectionsPage() {
                       <p className="text-xs text-muted-foreground">
                         {projection.summary.financialIndependenceYear
                           ? `Age ${projection.summary.financialIndependenceYear - currentYear + config.currentAge}`
-                          : 'Not projected'}
+                          : t('summary.notProjected')}
                       </p>
                     </CardContent>
                   </Card>
@@ -384,14 +379,14 @@ export default function ProjectionsPage() {
                     <CardHeader className="pb-2">
                       <CardDescription className="flex items-center gap-1">
                         <Percent className="h-4 w-4" />
-                        Income Replacement
+                        {t('summary.incomeReplacement')}
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
                       <div className="text-2xl font-bold">
                         {formatPercent(projection.summary.incomeReplacementRatio)}
                       </div>
-                      <p className="text-xs text-muted-foreground">at retirement</p>
+                      <p className="text-xs text-muted-foreground">{t('summary.atRetirement')}</p>
                     </CardContent>
                   </Card>
 
@@ -399,7 +394,7 @@ export default function ProjectionsPage() {
                     <CardHeader className="pb-2">
                       <CardDescription className="flex items-center gap-1">
                         <Shield className="h-4 w-4" />
-                        Risk Score
+                        {t('summary.riskScore')}
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -409,7 +404,11 @@ export default function ProjectionsPage() {
                         {projection.summary.riskScore}/100
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        {getRiskLabel(projection.summary.riskScore)}
+                        {projection.summary.riskScore < 30
+                          ? t('summary.lowRisk')
+                          : projection.summary.riskScore < 60
+                            ? t('summary.moderateRisk')
+                            : t('summary.highRisk')}
                       </p>
                     </CardContent>
                   </Card>
@@ -419,7 +418,7 @@ export default function ProjectionsPage() {
                 {projection.warnings.length > 0 && (
                   <Alert variant="destructive">
                     <AlertTriangle className="h-4 w-4" />
-                    <AlertTitle>Attention Required</AlertTitle>
+                    <AlertTitle>{t('page.attentionRequired')}</AlertTitle>
                     <AlertDescription>
                       <ul className="list-disc pl-4 mt-2 space-y-1">
                         {projection.warnings.map((warning, i) => (
@@ -433,9 +432,9 @@ export default function ProjectionsPage() {
                 {/* Charts */}
                 <Tabs defaultValue="networth" className="space-y-4">
                   <TabsList>
-                    <TabsTrigger value="networth">Net Worth</TabsTrigger>
-                    <TabsTrigger value="cashflow">Income & Expenses</TabsTrigger>
-                    <TabsTrigger value="events">Life Events</TabsTrigger>
+                    <TabsTrigger value="networth">{t('tabs.netWorth')}</TabsTrigger>
+                    <TabsTrigger value="cashflow">{t('tabs.incomeExpenses')}</TabsTrigger>
+                    <TabsTrigger value="events">{t('tabs.lifeEvents')}</TabsTrigger>
                   </TabsList>
 
                   <TabsContent value="networth">
@@ -461,30 +460,30 @@ export default function ProjectionsPage() {
                 <div className="grid gap-4 md:grid-cols-2">
                   <Card>
                     <CardHeader>
-                      <CardTitle className="text-lg">Lifetime Totals</CardTitle>
+                      <CardTitle className="text-lg">{t('stats.lifetimeTotals')}</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-3">
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">Total Earnings</span>
+                          <span className="text-muted-foreground">{t('stats.totalEarnings')}</span>
                           <span className="font-medium">
                             {formatCurrency(projection.summary.totalLifetimeEarnings)}
                           </span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">Total Taxes Paid</span>
+                          <span className="text-muted-foreground">{t('stats.totalTaxesPaid')}</span>
                           <span className="font-medium text-red-600">
                             {formatCurrency(projection.summary.totalLifetimeTaxes)}
                           </span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">Social Security Received</span>
+                          <span className="text-muted-foreground">{t('stats.socialSecurityReceived')}</span>
                           <span className="font-medium text-green-600">
                             {formatCurrency(projection.summary.totalSocialSecurity)}
                           </span>
                         </div>
                         <div className="flex justify-between pt-2 border-t">
-                          <span className="text-muted-foreground">Average Savings Rate</span>
+                          <span className="text-muted-foreground">{t('stats.averageSavingsRate')}</span>
                           <span className="font-medium">
                             {formatPercent(projection.summary.averageSavingsRate)}
                           </span>
@@ -495,30 +494,30 @@ export default function ProjectionsPage() {
 
                   <Card>
                     <CardHeader>
-                      <CardTitle className="text-lg">Retirement Snapshot</CardTitle>
+                      <CardTitle className="text-lg">{t('stats.retirementSnapshot')}</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-3">
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">Years Until Retirement</span>
+                          <span className="text-muted-foreground">{t('stats.yearsUntilRetirement')}</span>
                           <span className="font-medium">
                             {projection.summary.yearsUntilRetirement} years
                           </span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">Monthly Retirement Income</span>
+                          <span className="text-muted-foreground">{t('stats.monthlyRetirementIncome')}</span>
                           <span className="font-medium">
                             {formatCurrency(projection.summary.projectedRetirementIncome / 12)}
                           </span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">Debt-Free Year</span>
+                          <span className="text-muted-foreground">{t('stats.debtFreeYear')}</span>
                           <span className="font-medium">
                             {projection.summary.debtFreeYear || 'N/A'}
                           </span>
                         </div>
                         <div className="flex justify-between pt-2 border-t">
-                          <span className="text-muted-foreground">Minimum Net Worth</span>
+                          <span className="text-muted-foreground">{t('stats.minimumNetWorth')}</span>
                           <span
                             className={`font-medium ${projection.summary.minNetWorth.amount < 0 ? 'text-red-600' : ''}`}
                           >

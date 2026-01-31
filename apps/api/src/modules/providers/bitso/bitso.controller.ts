@@ -30,6 +30,7 @@ import { Redis } from 'ioredis';
 import { CurrentUser } from '@core/auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
 import { processWebhook, createWebhookResponse } from '@core/utils/webhook.util';
+import { ProviderConnectionGuard } from '../../billing/guards/provider-connection.guard';
 
 import { SpaceGuard } from '../../spaces/guards/space.guard';
 
@@ -65,7 +66,7 @@ export class BitsoController {
   }
 
   @Post('spaces/:spaceId/connect')
-  @UseGuards(JwtAuthGuard, SpaceGuard)
+  @UseGuards(JwtAuthGuard, SpaceGuard, ProviderConnectionGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Connect Bitso account to space' })
   @ApiParam({ name: 'spaceId', description: 'Space ID to connect the account to' })

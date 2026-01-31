@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { Button } from '@dhanam/ui';
-import { Currency } from '@dhanam/shared';
+import { Currency, useTranslation } from '@dhanam/shared';
 import { Loader2, Plus, RotateCcw, HelpCircle } from 'lucide-react';
 
 import { useSpaceStore } from '@/stores/space';
@@ -38,6 +38,7 @@ function getCurrentMonth(): string {
 }
 
 export default function ZeroBasedBudgetPage() {
+  const { t } = useTranslation('budgets');
   const { currentSpace } = useSpaceStore();
   const currency = currentSpace?.currency ?? Currency.USD;
 
@@ -145,7 +146,7 @@ export default function ZeroBasedBudgetPage() {
       <div className="flex h-[calc(100vh-200px)] items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-          <p className="text-muted-foreground">Loading your budget...</p>
+          <p className="text-muted-foreground">{t('zeroBased.loading')}</p>
         </div>
       </div>
     );
@@ -156,11 +157,11 @@ export default function ZeroBasedBudgetPage() {
     return (
       <div className="flex h-[calc(100vh-200px)] items-center justify-center">
         <div className="flex flex-col items-center gap-4 text-center">
-          <p className="text-lg font-medium text-red-600">Failed to load budget data</p>
+          <p className="text-lg font-medium text-red-600">{t('zeroBased.errorTitle')}</p>
           <p className="text-muted-foreground">
-            {error instanceof Error ? error.message : 'Please try again later'}
+            {error instanceof Error ? error.message : t('zeroBased.errorFallback')}
           </p>
-          <Button onClick={() => window.location.reload()}>Retry</Button>
+          <Button onClick={() => window.location.reload()}>{t('zeroBased.retry')}</Button>
         </div>
       </div>
     );
@@ -170,7 +171,7 @@ export default function ZeroBasedBudgetPage() {
   if (!currentSpace) {
     return (
       <div className="flex h-[calc(100vh-200px)] items-center justify-center">
-        <p className="text-muted-foreground">Please select a space to view your budget</p>
+        <p className="text-muted-foreground">{t('zeroBased.noSpace')}</p>
       </div>
     );
   }
@@ -180,19 +181,19 @@ export default function ZeroBasedBudgetPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Zero-Based Budget</h1>
+          <h1 className="text-2xl font-bold">{t('zeroBased.title')}</h1>
           <p className="text-muted-foreground">
-            Give every dollar a job • Envelope budgeting for {currentSpace.name}
+            {t('zeroBased.description', { name: currentSpace.name })}
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" onClick={() => setIsAddIncomeOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
-            Add Income
+            {t('zeroBased.addIncome')}
           </Button>
           <Button variant="outline" onClick={() => setIsRolloverOpen(true)}>
             <RotateCcw className="mr-2 h-4 w-4" />
-            Rollover
+            {t('zeroBased.rollover')}
           </Button>
         </div>
       </div>
@@ -202,7 +203,7 @@ export default function ZeroBasedBudgetPage() {
         <MonthSelector currentMonth={currentMonth} onMonthChange={setCurrentMonth} />
         <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground">
           <HelpCircle className="h-4 w-4" />
-          How it works
+          {t('zeroBased.howItWorks')}
         </Button>
       </div>
 

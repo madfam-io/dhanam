@@ -46,6 +46,7 @@ import { DocumentList } from '@/components/assets/document-list';
 import { documentsApi, type DocumentMetadata, type DocumentConfig } from '@/lib/api/documents';
 import { apiClient } from '@/lib/api/client';
 import { useSpaceStore } from '@/stores/space';
+import { useTranslation } from '@dhanam/shared';
 
 interface ManualAsset {
   id: string;
@@ -108,6 +109,7 @@ function formatCurrency(amount: number, currency: string): string {
 }
 
 export default function AssetDetailPage() {
+  const { t } = useTranslation('assets');
   const router = useRouter();
   const params = useParams();
   const assetId = params.id as string;
@@ -233,11 +235,11 @@ export default function AssetDetailPage() {
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => setIsEditDialogOpen(true)}>
             <Pencil className="h-4 w-4 mr-2" />
-            Edit
+            {t('detail.edit')}
           </Button>
           <Button variant="destructive" onClick={() => setIsDeleteDialogOpen(true)}>
             <Trash2 className="h-4 w-4 mr-2" />
-            Delete
+            {t('detail.delete')}
           </Button>
         </div>
       </div>
@@ -246,7 +248,7 @@ export default function AssetDetailPage() {
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>Current Value</CardDescription>
+            <CardDescription>{t('detail.currentValue')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">
@@ -258,7 +260,7 @@ export default function AssetDetailPage() {
         {asset.acquisitionCost !== undefined && asset.acquisitionCost !== null && (
           <Card>
             <CardHeader className="pb-2">
-              <CardDescription>Acquisition Cost</CardDescription>
+              <CardDescription>{t('detail.acquisitionCost')}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold">
@@ -277,7 +279,7 @@ export default function AssetDetailPage() {
         {unrealizedGain !== null && (
           <Card>
             <CardHeader className="pb-2">
-              <CardDescription>Unrealized Gain/Loss</CardDescription>
+              <CardDescription>{t('detail.unrealizedGainLoss')}</CardDescription>
             </CardHeader>
             <CardContent>
               <div
@@ -287,7 +289,7 @@ export default function AssetDetailPage() {
                 {formatCurrency(unrealizedGain, asset.currency)}
               </div>
               <p className="text-sm text-muted-foreground mt-1">
-                {((unrealizedGain / (asset.acquisitionCost ?? 1)) * 100).toFixed(1)}% return
+                {t('detail.return', { percent: ((unrealizedGain / (asset.acquisitionCost ?? 1)) * 100).toFixed(1) })}
               </p>
             </CardContent>
           </Card>
@@ -297,9 +299,9 @@ export default function AssetDetailPage() {
       {/* Tabs for Details and Documents */}
       <Tabs defaultValue="details" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="details">Details</TabsTrigger>
+          <TabsTrigger value="details">{t('detail.tabs.details')}</TabsTrigger>
           <TabsTrigger value="documents">
-            Documents {documents.length > 0 && `(${documents.length})`}
+            {t('detail.tabs.documents')} {documents.length > 0 && `(${documents.length})`}
           </TabsTrigger>
         </TabsList>
 
@@ -308,7 +310,7 @@ export default function AssetDetailPage() {
           {asset.metadata && Object.keys(asset.metadata).length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle>Asset Details</CardTitle>
+                <CardTitle>{t('detail.assetDetails')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid gap-4 md:grid-cols-2">
@@ -329,7 +331,7 @@ export default function AssetDetailPage() {
           {asset.notes && (
             <Card>
               <CardHeader>
-                <CardTitle>Notes</CardTitle>
+                <CardTitle>{t('detail.notes')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="whitespace-pre-wrap">{asset.notes}</p>
@@ -340,16 +342,16 @@ export default function AssetDetailPage() {
           {/* Activity */}
           <Card>
             <CardHeader>
-              <CardTitle>Activity</CardTitle>
+              <CardTitle>{t('detail.activity')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Created</span>
+                  <span className="text-muted-foreground">{t('detail.created')}</span>
                   <span>{formatDistanceToNow(new Date(asset.createdAt), { addSuffix: true })}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Last Updated</span>
+                  <span className="text-muted-foreground">{t('detail.lastUpdated')}</span>
                   <span>{formatDistanceToNow(new Date(asset.updatedAt), { addSuffix: true })}</span>
                 </div>
               </div>
@@ -362,9 +364,9 @@ export default function AssetDetailPage() {
           {documentConfig && currentSpaceId && (
             <Card>
               <CardHeader>
-                <CardTitle>Upload Documents</CardTitle>
+                <CardTitle>{t('detail.uploadDocuments')}</CardTitle>
                 <CardDescription>
-                  Attach deeds, appraisals, insurance policies, and other important documents
+                  {t('detail.uploadDescription')}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -382,7 +384,7 @@ export default function AssetDetailPage() {
           {currentSpaceId && (
             <Card>
               <CardHeader>
-                <CardTitle>Uploaded Documents</CardTitle>
+                <CardTitle>{t('detail.uploadedDocuments')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <DocumentList
@@ -401,8 +403,8 @@ export default function AssetDetailPage() {
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Edit Asset</DialogTitle>
-            <DialogDescription>Update the details of your asset</DialogDescription>
+            <DialogTitle>{t('detail.editDialog.title')}</DialogTitle>
+            <DialogDescription>{t('detail.editDialog.description')}</DialogDescription>
           </DialogHeader>
           <ManualAssetForm
             initialData={{
@@ -426,14 +428,13 @@ export default function AssetDetailPage() {
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Asset</AlertDialogTitle>
+            <AlertDialogTitle>{t('detail.deleteDialog.title')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete &quot;{asset.name}&quot;? This will also delete all
-              associated documents. This action cannot be undone.
+              {t('detail.deleteDialog.description', { name: asset.name })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t('detail.deleteDialog.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={handleDeleteAsset}
@@ -442,10 +443,10 @@ export default function AssetDetailPage() {
               {isDeleting ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Deleting...
+                  {t('detail.deleteDialog.deleting')}
                 </>
               ) : (
-                'Delete'
+                t('detail.deleteDialog.confirm')
               )}
             </AlertDialogAction>
           </AlertDialogFooter>

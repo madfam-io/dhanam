@@ -4,9 +4,12 @@ export enum Currency {
   MXN = 'MXN',
   USD = 'USD',
   EUR = 'EUR',
+  BRL = 'BRL',
+  COP = 'COP',
+  CAD = 'CAD',
 }
 
-export type Locale = 'en' | 'es';
+export type Locale = 'en' | 'es' | 'pt-BR';
 
 export interface PaginationParams {
   page?: number;

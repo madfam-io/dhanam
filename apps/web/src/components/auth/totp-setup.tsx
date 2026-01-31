@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@dhanam/ui';
 import { Alert, AlertDescription } from '@dhanam/ui';
 import { Loader2, Shield, Smartphone, AlertTriangle, Copy, Check } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslation } from '@dhanam/shared';
 import { authApi } from '~/lib/api/auth';
 import { QRCodeSVG } from 'qrcode.react';
 
@@ -19,6 +20,7 @@ interface TotpSetupProps {
 }
 
 export function TotpSetup({ open, onOpenChange, onSuccess }: TotpSetupProps) {
+  const { t } = useTranslation('auth');
   const [totpCode, setTotpCode] = useState('');
   const [backupCodes, setBackupCodes] = useState<string[]>([]);
   const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
@@ -35,7 +37,7 @@ export function TotpSetup({ open, onOpenChange, onSuccess }: TotpSetupProps) {
       setStep('verify');
     },
     onError: () => {
-      toast.error('Failed to setup 2FA');
+      toast.error(t('totp.setupFailed'));
     },
   });
 
@@ -50,7 +52,7 @@ export function TotpSetup({ open, onOpenChange, onSuccess }: TotpSetupProps) {
       setStep('backup');
     },
     onError: () => {
-      toast.error('Invalid verification code');
+      toast.error(t('totp.invalidCode'));
       setTotpCode('');
     },
   });
@@ -58,13 +60,13 @@ export function TotpSetup({ open, onOpenChange, onSuccess }: TotpSetupProps) {
   const completeMutation = useMutation({
     mutationFn: () => Promise.resolve(), // 2FA is enabled after successful verification
     onSuccess: () => {
-      toast.success('Two-factor authentication enabled successfully');
+      toast.success(t('totp.enabledSuccess'));
       onSuccess();
       onOpenChange(false);
       resetState();
     },
     onError: () => {
-      toast.error('Failed to enable 2FA');
+      toast.error(t('totp.enableFailed'));
     },
   });
 
@@ -88,9 +90,9 @@ export function TotpSetup({ open, onOpenChange, onSuccess }: TotpSetupProps) {
         setCopiedCodes((prev) => ({ ...prev, [type]: true }));
         setTimeout(() => setCopiedCodes((prev) => ({ ...prev, [type]: false })), 2000);
       }
-      toast.success('Copied to clipboard');
+      toast.success(t('totp.copiedToClipboard'));
     } catch {
-      toast.error('Failed to copy');
+      toast.error(t('totp.copyFailed'));
     }
   };
 
@@ -114,9 +116,9 @@ export function TotpSetup({ open, onOpenChange, onSuccess }: TotpSetupProps) {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Shield className="h-5 w-5 text-success" />
-            Setup Two-Factor Authentication
+            {t('totp.setupTitle')}
           </DialogTitle>
-          <DialogDescription>Add an extra layer of security to your account</DialogDescription>
+          <DialogDescription>{t('totp.setupDescription')}</DialogDescription>
         </DialogHeader>
 
         {step === 'setup' && (
@@ -124,25 +126,23 @@ export function TotpSetup({ open, onOpenChange, onSuccess }: TotpSetupProps) {
             <Alert>
               <Smartphone className="h-4 w-4" />
               <AlertDescription>
-                You&apos;ll need an authenticator app like Google Authenticator, Authy, or
-                1Password.
+                {t('totp.authenticatorAppNotice')}
               </AlertDescription>
             </Alert>
 
             <div className="space-y-3">
               <p className="text-sm text-muted-foreground">
-                Two-factor authentication adds an extra layer of security by requiring a time-based
-                code from your phone in addition to your password.
+                {t('totp.setupExplanation')}
               </p>
 
               <Button onClick={handleStart} disabled={setupMutation.isPending} className="w-full">
                 {setupMutation.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Setting up...
+                    {t('totp.settingUp')}
                   </>
                 ) : (
-                  'Start Setup'
+                  t('totp.startSetup')
                 )}
               </Button>
             </div>
@@ -153,14 +153,14 @@ export function TotpSetup({ open, onOpenChange, onSuccess }: TotpSetupProps) {
           <div className="space-y-4">
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm">Scan QR Code</CardTitle>
+                <CardTitle className="text-sm">{t('totp.scanQrCode')}</CardTitle>
               </CardHeader>
               <CardContent className="flex flex-col items-center space-y-3">
                 {qrCodeUrl && <QRCodeSVG value={qrCodeUrl} size={200} />}
 
                 <div className="w-full">
                   <p className="text-xs text-muted-foreground mb-2">
-                    Or enter this secret key manually:
+                    {t('totp.enterSecretManually')}
                   </p>
                   <div className="flex items-center gap-2">
                     <Input value={secret} readOnly className="font-mono text-xs" />
@@ -179,7 +179,7 @@ export function TotpSetup({ open, onOpenChange, onSuccess }: TotpSetupProps) {
             <div className="space-y-3">
               <div>
                 <label htmlFor="totp-code" className="text-sm font-medium">
-                  Enter 6-digit code from your app
+                  {t('totp.enterCodeLabel')}
                 </label>
                 <Input
                   id="totp-code"
@@ -202,10 +202,10 @@ export function TotpSetup({ open, onOpenChange, onSuccess }: TotpSetupProps) {
                 {verifyMutation.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Verifying...
+                    {t('totp.verifying')}
                   </>
                 ) : (
-                  'Verify Code'
+                  t('totp.verifyCode')
                 )}
               </Button>
             </div>
@@ -217,13 +217,13 @@ export function TotpSetup({ open, onOpenChange, onSuccess }: TotpSetupProps) {
             <Alert className="border-yellow-200 bg-yellow-50">
               <AlertTriangle className="h-4 w-4 text-yellow-600" />
               <AlertDescription className="text-yellow-800">
-                Save these backup codes in a secure location. Each code can only be used once.
+                {t('totp.backupCodesWarning')}
               </AlertDescription>
             </Alert>
 
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm">Backup Codes</CardTitle>
+                <CardTitle className="text-sm">{t('totp.backupCodesTitle')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 gap-2">
@@ -257,16 +257,15 @@ export function TotpSetup({ open, onOpenChange, onSuccess }: TotpSetupProps) {
                 {completeMutation.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Enabling 2FA...
+                    {t('totp.enabling2FA')}
                   </>
                 ) : (
-                  'Complete Setup'
+                  t('totp.completeSetup')
                 )}
               </Button>
 
               <p className="text-xs text-center text-muted-foreground">
-                Keep these backup codes safe. You&apos;ll need them if you lose access to your
-                authenticator app.
+                {t('totp.keepCodesSafe')}
               </p>
             </div>
           </div>

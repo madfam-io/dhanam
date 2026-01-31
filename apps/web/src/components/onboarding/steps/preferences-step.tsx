@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@dhanam/ui';
 import { Alert, AlertDescription } from '@dhanam/ui';
 import { SettingsIcon, GlobeIcon, DollarSignIcon, BellIcon } from 'lucide-react';
+import { useGeoDefaults } from '@/lib/hooks/use-geo-defaults';
 
 interface PreferencesFormData {
   locale: string;
@@ -25,21 +26,28 @@ interface PreferencesFormData {
 }
 
 const languages = [
-  { value: 'es', label: 'Español', flag: '🇪🇸' },
+  { value: 'es', label: 'Español', flag: '🇲🇽' },
   { value: 'en', label: 'English', flag: '🇺🇸' },
+  { value: 'pt-BR', label: 'Português', flag: '🇧🇷' },
 ];
 
 const timezones = [
   { value: 'America/Mexico_City', label: 'Ciudad de México (UTC-6)' },
   { value: 'America/New_York', label: 'Nueva York (UTC-5)' },
   { value: 'America/Los_Angeles', label: 'Los Ángeles (UTC-8)' },
+  { value: 'America/Toronto', label: 'Toronto (UTC-5)' },
+  { value: 'America/Sao_Paulo', label: 'São Paulo (UTC-3)' },
+  { value: 'America/Bogota', label: 'Bogotá (UTC-5)' },
   { value: 'Europe/Madrid', label: 'Madrid (UTC+1)' },
 ];
 
 const currencies = [
   { value: 'MXN', label: 'Peso Mexicano (MXN)', symbol: '$' },
-  { value: 'USD', label: 'Dólar Americano (USD)', symbol: '$' },
+  { value: 'USD', label: 'US Dollar (USD)', symbol: '$' },
   { value: 'EUR', label: 'Euro (EUR)', symbol: '€' },
+  { value: 'BRL', label: 'Real Brasileiro (BRL)', symbol: 'R$' },
+  { value: 'COP', label: 'Peso Colombiano (COP)', symbol: '$' },
+  { value: 'CAD', label: 'Canadian Dollar (CAD)', symbol: '$' },
 ];
 
 export function PreferencesStep() {
@@ -47,12 +55,13 @@ export function PreferencesStep() {
   const { updateStep } = useOnboarding();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const geo = useGeoDefaults();
 
   const { handleSubmit, watch, setValue } = useForm<PreferencesFormData>({
     defaultValues: {
-      locale: user?.locale || 'es',
-      timezone: user?.timezone || 'America/Mexico_City',
-      currency: 'MXN',
+      locale: user?.locale || geo.locale,
+      timezone: user?.timezone || geo.timezone,
+      currency: geo.currency,
       emailNotifications: true,
       transactionAlerts: true,
       budgetAlerts: true,

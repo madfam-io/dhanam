@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useTranslation } from '@dhanam/shared';
 import { useWills, type Will, type ValidationResult } from '@/hooks/useWills';
 import { useHouseholds } from '@/hooks/useHouseholds';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -33,6 +34,7 @@ import {
 } from 'lucide-react';
 
 export default function EstatePlanningPage() {
+  const { t } = useTranslation('estatePlanning');
   const {
     createWill,
     getWillsByHousehold,
@@ -180,9 +182,9 @@ export default function EstatePlanningPage() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Estate Planning</h1>
+          <h1 className="text-3xl font-bold">{t('page.title')}</h1>
           <p className="text-muted-foreground">
-            Manage wills, beneficiaries, and inheritance planning
+            {t('page.description')}
           </p>
         </div>
 
@@ -190,38 +192,37 @@ export default function EstatePlanningPage() {
           <DialogTrigger asChild>
             <Button disabled={!selectedHouseholdId}>
               <Plus className="h-4 w-4 mr-2" />
-              Create Will
+              {t('page.createWill')}
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Create New Will</DialogTitle>
+              <DialogTitle>{t('dialog.createWill.title')}</DialogTitle>
               <DialogDescription>
-                Create a draft will for your household. You can add beneficiaries and executors
-                before activating it.
+                {t('dialog.createWill.description')}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label htmlFor="name">Will Name</Label>
+                <Label htmlFor="name">{t('fields.willName')}</Label>
                 <Input
                   id="name"
                   value={newWill.name}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                     setNewWill({ ...newWill, name: e.target.value })
                   }
-                  placeholder="e.g., Smith Family Will 2025"
+                  placeholder={t('fields.willNamePlaceholder')}
                 />
               </div>
               <div>
-                <Label htmlFor="notes">Notes (Optional)</Label>
+                <Label htmlFor="notes">{t('fields.notesOptional')}</Label>
                 <Textarea
                   id="notes"
                   value={newWill.notes}
                   onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
                     setNewWill({ ...newWill, notes: e.target.value })
                   }
-                  placeholder="Additional notes or instructions"
+                  placeholder={t('fields.notesPlaceholder')}
                   rows={3}
                 />
               </div>
@@ -237,16 +238,16 @@ export default function EstatePlanningPage() {
                   htmlFor="disclaimer"
                   className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                 >
-                  I understand this is a digital will and should consult legal counsel
+                  {t('fields.legalDisclaimer')}
                 </label>
               </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-                Cancel
+                {t('actions.cancel')}
               </Button>
               <Button onClick={handleCreateWill} disabled={!newWill.name}>
-                Create Draft
+                {t('page.createDraft')}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -287,13 +288,13 @@ export default function EstatePlanningPage() {
         <Card>
           <CardContent className="py-12 text-center">
             <ScrollText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No Wills Yet</h3>
+            <h3 className="text-lg font-semibold mb-2">{t('page.noWills')}</h3>
             <p className="text-muted-foreground mb-4">
-              Create your first will to start estate planning for your household
+              {t('page.noWillsDescription')}
             </p>
             <Button onClick={() => setIsCreateDialogOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
-              Create Will
+              {t('page.createWill')}
             </Button>
           </CardContent>
         </Card>
@@ -325,16 +326,16 @@ export default function EstatePlanningPage() {
               <CardContent>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Beneficiaries:</span>
+                    <span className="text-muted-foreground">{t('fields.beneficiaries')}</span>
                     <span className="font-medium">{will._count?.beneficiaries || 0}</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Executors:</span>
+                    <span className="text-muted-foreground">{t('fields.executors')}</span>
                     <span className="font-medium">{will._count?.executors || 0}</span>
                   </div>
                   {will.activatedAt && (
                     <div className="text-sm text-muted-foreground">
-                      Activated: {new Date(will.activatedAt).toLocaleDateString()}
+                      {t('fields.activated')} {new Date(will.activatedAt).toLocaleDateString()}
                     </div>
                   )}
                 </div>
@@ -351,7 +352,7 @@ export default function EstatePlanningPage() {
             <div className="flex items-start justify-between">
               <div>
                 <CardTitle className="text-2xl">{selectedWill.name}</CardTitle>
-                <CardDescription>Will Details and Management</CardDescription>
+                <CardDescription>{t('page.willDetails')}</CardDescription>
               </div>
               <div className="flex gap-2">
                 {selectedWill.status === 'draft' && (
@@ -360,17 +361,17 @@ export default function EstatePlanningPage() {
                     disabled={!validationResult?.isValid}
                   >
                     <CheckCircle2 className="h-4 w-4 mr-2" />
-                    Activate Will
+                    {t('actions.activate')}
                   </Button>
                 )}
                 {selectedWill.status === 'active' && (
                   <Button variant="destructive" onClick={() => handleRevokeWill(selectedWill.id)}>
                     <XCircle className="h-4 w-4 mr-2" />
-                    Revoke Will
+                    {t('actions.revoke')}
                   </Button>
                 )}
                 <Button variant="outline" onClick={() => setSelectedWill(null)}>
-                  Close
+                  {t('actions.close')}
                 </Button>
               </div>
             </div>
@@ -382,7 +383,7 @@ export default function EstatePlanningPage() {
                 <Alert variant="destructive">
                   <AlertCircle className="h-4 w-4" />
                   <AlertDescription>
-                    <div className="font-semibold mb-2">Cannot activate will:</div>
+                    <div className="font-semibold mb-2">{t('validation.cannotActivate')}</div>
                     <ul className="list-disc list-inside space-y-1">
                       {validationResult.errors.map((error, index) => (
                         <li key={index}>{error}</li>
@@ -396,7 +397,7 @@ export default function EstatePlanningPage() {
               <div>
                 <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
                   <Users className="h-5 w-5" />
-                  Beneficiaries ({selectedWill.beneficiaries?.length || 0})
+                  {t('fields.beneficiaries')} ({selectedWill.beneficiaries?.length || 0})
                 </h3>
                 {selectedWill.beneficiaries && selectedWill.beneficiaries.length > 0 ? (
                   <div className="space-y-2">
@@ -418,7 +419,7 @@ export default function EstatePlanningPage() {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-muted-foreground">No beneficiaries added yet</p>
+                  <p className="text-muted-foreground">{t('page.noBeneficiaries')}</p>
                 )}
               </div>
 
@@ -426,7 +427,7 @@ export default function EstatePlanningPage() {
               <div>
                 <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
                   <ScrollText className="h-5 w-5" />
-                  Executors ({selectedWill.executors?.length || 0})
+                  {t('fields.executors')} ({selectedWill.executors?.length || 0})
                 </h3>
                 {selectedWill.executors && selectedWill.executors.length > 0 ? (
                   <div className="space-y-2">
@@ -438,11 +439,11 @@ export default function EstatePlanningPage() {
                         <div>
                           <div className="font-medium">{executor.executor?.user.name}</div>
                           <div className="text-sm text-muted-foreground">
-                            Order: {executor.order}
+                            {t('fields.order')} {executor.order}
                           </div>
                         </div>
                         <div className="flex gap-2">
-                          {executor.isPrimary && <Badge variant="default">Primary</Badge>}
+                          {executor.isPrimary && <Badge variant="default">{t('fields.primary')}</Badge>}
                           <Badge variant="outline" className="capitalize">
                             {executor.executor?.relationship}
                           </Badge>
@@ -451,7 +452,7 @@ export default function EstatePlanningPage() {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-muted-foreground">No executors assigned yet</p>
+                  <p className="text-muted-foreground">{t('page.noExecutors')}</p>
                 )}
               </div>
             </div>

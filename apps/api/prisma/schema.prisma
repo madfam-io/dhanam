@@ -63,8 +63,9 @@ enum Currency {
 }
 
 enum SubscriptionTier {
-  free
-  premium
+  community    // self-hosted or free cloud trial
+  essentials   // $4.99/mo
+  pro          // $11.99/mo
 }
 
 enum BillingEventType {
@@ -246,7 +247,7 @@ model User {
   lifeBeatLegalAgreedAt DateTime? @map("life_beat_legal_agreed_at")
 
   // Subscription fields
-  subscriptionTier      SubscriptionTier @default(free) @map("subscription_tier")
+  subscriptionTier      SubscriptionTier @default(community) @map("subscription_tier")
   subscriptionStartedAt DateTime?        @map("subscription_started_at")
   subscriptionExpiresAt DateTime?        @map("subscription_expires_at")
   stripeCustomerId      String?          @unique @map("stripe_customer_id")

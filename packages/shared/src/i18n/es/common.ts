@@ -145,6 +145,14 @@ export const common = {
   on: 'Activado',
   off: 'Desactivado',
 
+  // Demo mode
+  demoMode: 'Modo Demo',
+  demoExploring: 'Estás explorando Dhanam en',
+  demoDescription: 'Acceso de lectura \u2022 Datos de ejemplo \u2022 Vista previa completa',
+  signUpToContinue: 'Regístrate para Continuar',
+  signUpFree: 'Regístrate Gratis',
+  dismissBanner: 'Cerrar banner',
+
   // Misc
   or: 'o',
   and: 'y',

@@ -32,6 +32,7 @@ import { Redis } from 'ioredis';
 import { CurrentUser } from '@core/auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
 import { processWebhook, createWebhookResponse } from '@core/utils/webhook.util';
+import { ProviderConnectionGuard } from '../../billing/guards/provider-connection.guard';
 
 import { SpaceGuard } from '../../spaces/guards/space.guard';
 
@@ -67,7 +68,7 @@ export class PlaidController {
   }
 
   @Post('link-token')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ProviderConnectionGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create Plaid Link token' })
   @ApiCreatedResponse({ description: 'Link token created successfully' })

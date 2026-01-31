@@ -34,7 +34,7 @@ import {
 } from 'lucide-react';
 import { useSpaceStore } from '@/stores/space';
 import { accountsApi } from '@/lib/api/accounts';
-import { AccountType, Currency, Provider } from '@dhanam/shared';
+import { AccountType, Currency, Provider, useTranslation } from '@dhanam/shared';
 import { formatCurrency } from '@/lib/utils';
 import { toast } from 'sonner';
 import { BelvoConnect } from '@/components/providers/belvo-connect';
@@ -50,14 +50,8 @@ const accountTypeIcons: Record<AccountType, React.ElementType> = {
   other: Building2,
 };
 
-const providerLabels: Record<Provider, string> = {
-  belvo: 'Belvo (Mexico)',
-  plaid: 'Plaid (US)',
-  bitso: 'Bitso (Crypto)',
-  manual: 'Manual Entry',
-};
-
 export default function AccountsPage() {
+  const { t } = useTranslation('accounts');
   const { currentSpace } = useSpaceStore();
   const queryClient = useQueryClient();
   const [isConnectOpen, setIsConnectOpen] = useState(false);
@@ -66,6 +60,13 @@ export default function AccountsPage() {
   const [isBelvoOpen, setIsBelvoOpen] = useState(false);
   const [isPlaidOpen, setIsPlaidOpen] = useState(false);
   const [isBitsoOpen, setIsBitsoOpen] = useState(false);
+
+  const providerLabels: Record<Provider, string> = {
+    belvo: t('provider.belvo'),
+    plaid: t('provider.plaid'),
+    bitso: t('provider.bitso'),
+    manual: t('provider.manual'),
+  };
 
   const { data: accounts, isLoading } = useQuery({
     queryKey: ['accounts', currentSpace?.id],
@@ -84,10 +85,10 @@ export default function AccountsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['accounts', currentSpace?.id] });
       setIsConnectOpen(false);
-      toast.success('Account connected successfully');
+      toast.success(t('toast.connectSuccess'));
     },
     onError: () => {
-      toast.error('Failed to connect account');
+      toast.error(t('toast.connectFailed'));
     },
   });
 
@@ -99,10 +100,10 @@ export default function AccountsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['accounts', currentSpace?.id] });
       setIsCreateOpen(false);
-      toast.success('Account created successfully');
+      toast.success(t('toast.createSuccess'));
     },
     onError: () => {
-      toast.error('Failed to create account');
+      toast.error(t('toast.createFailed'));
     },
   });
 
@@ -113,10 +114,10 @@ export default function AccountsPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['accounts', currentSpace?.id] });
-      toast.success('Account deleted successfully');
+      toast.success(t('toast.deleteSuccess'));
     },
     onError: () => {
-      toast.error('Failed to delete account');
+      toast.error(t('toast.deleteFailed'));
     },
   });
 
@@ -157,26 +158,26 @@ export default function AccountsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Accounts</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{t('page.title')}</h1>
           <p className="text-muted-foreground">
-            Connect your bank accounts and manage your finances
+            {t('page.description')}
           </p>
         </div>
         <Dialog open={isConnectOpen} onOpenChange={setIsConnectOpen}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="mr-2 h-4 w-4" />
-              Add Account
+              {t('button.addAccount')}
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Add Account</DialogTitle>
-              <DialogDescription>Connect your bank account or add one manually</DialogDescription>
+              <DialogTitle>{t('dialog.addAccount.title')}</DialogTitle>
+              <DialogDescription>{t('dialog.addAccount.description')}</DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
-                <h4 className="font-medium">Connect with Provider</h4>
+                <h4 className="font-medium">{t('dialog.addAccount.connectProvider')}</h4>
                 <div className="grid gap-2">
                   {Object.entries(providerLabels)
                     .filter(([key]) => key !== 'manual')
@@ -201,7 +202,7 @@ export default function AccountsPage() {
                   <span className="w-full border-t" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-2 text-muted-foreground">Or</span>
+                  <span className="bg-background px-2 text-muted-foreground">{t('dialog.addAccount.or')}</span>
                 </div>
               </div>
               <Button
@@ -211,7 +212,7 @@ export default function AccountsPage() {
                   setIsCreateOpen(true);
                 }}
               >
-                Add Manually
+                {t('button.addManually')}
               </Button>
             </div>
           </DialogContent>
@@ -226,13 +227,13 @@ export default function AccountsPage() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-8">
             <Building2 className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="font-semibold text-lg mb-2">No accounts yet</h3>
+            <h3 className="font-semibold text-lg mb-2">{t('empty.title')}</h3>
             <p className="text-muted-foreground text-center mb-4">
-              Connect your bank accounts to start tracking your finances
+              {t('empty.description')}
             </p>
             <Button onClick={() => setIsConnectOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
-              Add Your First Account
+              {t('empty.addFirst')}
             </Button>
           </CardContent>
         </Card>
@@ -255,7 +256,7 @@ export default function AccountsPage() {
                         onClick={() => deleteMutation.mutate(account.id)}
                         className="text-destructive"
                       >
-                        Delete
+                        {t('action.delete')}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -275,7 +276,7 @@ export default function AccountsPage() {
                       {formatCurrency(account.balance, account.currency)}
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      Last updated:{' '}
+                      {t('card.lastUpdated')}{' '}
                       {new Date(account.lastSyncedAt || account.updatedAt).toLocaleDateString()}
                     </p>
                   </div>
@@ -290,35 +291,35 @@ export default function AccountsPage() {
         <DialogContent>
           <form onSubmit={handleCreateSubmit}>
             <DialogHeader>
-              <DialogTitle>Create Manual Account</DialogTitle>
-              <DialogDescription>Add an account that you&apos;ll update manually</DialogDescription>
+              <DialogTitle>{t('dialog.createManual.title')}</DialogTitle>
+              <DialogDescription>{t('dialog.createManual.description')}</DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
-                <Label htmlFor="name">Account Name</Label>
-                <Input id="name" name="name" placeholder="e.g., Chase Checking" required />
+                <Label htmlFor="name">{t('form.accountName')}</Label>
+                <Input id="name" name="name" placeholder={t('form.accountNamePlaceholder')} required />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="type">Account Type</Label>
+                <Label htmlFor="type">{t('form.accountType')}</Label>
                 <Select name="type" required>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select account type" />
+                    <SelectValue placeholder={t('form.selectAccountType')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="checking">Checking</SelectItem>
-                    <SelectItem value="savings">Savings</SelectItem>
-                    <SelectItem value="credit">Credit Card</SelectItem>
-                    <SelectItem value="investment">Investment</SelectItem>
-                    <SelectItem value="crypto">Crypto</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
+                    <SelectItem value="checking">{t('accountType.checking')}</SelectItem>
+                    <SelectItem value="savings">{t('accountType.savings')}</SelectItem>
+                    <SelectItem value="credit">{t('accountType.credit')}</SelectItem>
+                    <SelectItem value="investment">{t('accountType.investment')}</SelectItem>
+                    <SelectItem value="crypto">{t('accountType.crypto')}</SelectItem>
+                    <SelectItem value="other">{t('accountType.other')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="currency">Currency</Label>
+                <Label htmlFor="currency">{t('form.currency')}</Label>
                 <Select name="currency" required>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select currency" />
+                    <SelectValue placeholder={t('form.selectCurrency')} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="MXN">MXN</SelectItem>
@@ -328,7 +329,7 @@ export default function AccountsPage() {
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="balance">Current Balance</Label>
+                <Label htmlFor="balance">{t('form.currentBalance')}</Label>
                 <Input
                   id="balance"
                   name="balance"
@@ -342,7 +343,7 @@ export default function AccountsPage() {
             <DialogFooter>
               <Button type="submit" disabled={createMutation.isPending}>
                 {createMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Create Account
+                {t('button.createAccount')}
               </Button>
             </DialogFooter>
           </form>

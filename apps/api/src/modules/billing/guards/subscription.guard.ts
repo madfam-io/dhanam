@@ -41,8 +41,8 @@ export class SubscriptionGuard implements CanActivate {
       );
     }
 
-    // Check subscription expiration (for premium users)
-    if (user.subscriptionTier === 'premium' && user.subscriptionExpiresAt) {
+    // Check subscription expiration (for paid tier users)
+    if (user.subscriptionTier !== 'community' && user.subscriptionExpiresAt) {
       const now = new Date();
       const expiresAt = new Date(user.subscriptionExpiresAt);
 
@@ -59,14 +59,15 @@ export class SubscriptionGuard implements CanActivate {
 
   /**
    * Check if user's tier meets the required tier
-   * Tier hierarchy: free < premium
+   * Tier hierarchy: community < essentials < pro
    */
   private hasRequiredTier(userTier: SubscriptionTier, requiredTier: SubscriptionTier): boolean {
     const tierHierarchy: Record<SubscriptionTier, number> = {
-      free: 0,
-      premium: 1,
+      community: 0,
+      essentials: 1,
+      pro: 2,
     };
 
-    return tierHierarchy[userTier] >= tierHierarchy[requiredTier];
+    return (tierHierarchy[userTier] ?? 0) >= (tierHierarchy[requiredTier] ?? 0);
   }
 }

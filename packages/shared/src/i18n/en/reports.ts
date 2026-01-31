@@ -1,0 +1,45 @@
+export const reports = {
+  title: 'Reports',
+  description: 'Generate and export financial reports and data',
+  quickExport: {
+    title: 'Quick Export',
+    description: 'Quickly export your financial data for the selected date range',
+    startDate: 'Start Date',
+    endDate: 'End Date',
+    pdfReport: 'PDF Report',
+    csvExport: 'CSV Export',
+  },
+  templates: {
+    heading: 'Report Templates',
+    financialSummary: 'Financial Summary',
+    financialSummaryDesc: 'Complete financial overview including income, expenses, and net worth',
+    transactionExport: 'Transaction Export',
+    transactionExportDesc: 'Export all transactions for the selected period',
+    budgetPerformance: 'Budget Performance',
+    budgetPerformanceDesc: 'Detailed budget tracking and category analysis',
+    netWorthTrend: 'Net Worth Trend',
+    netWorthTrendDesc: 'Track your net worth changes over time',
+  },
+  custom: {
+    title: 'Custom Report',
+    description: 'Configure and generate a custom report with specific parameters',
+    dateRange: 'Date Range',
+    format: 'Format',
+    generateReport: 'Generate Report',
+    generating: 'Generating...',
+  },
+  available: {
+    title: 'Available Reports',
+    description: 'Pre-configured report types for your space',
+  },
+  emptyState: {
+    noSpaceSelected: 'No space selected',
+    selectSpacePrompt: 'Please select a space from the sidebar to generate reports',
+  },
+  toast: {
+    reportDownloaded: 'Report downloaded successfully',
+    failedToGenerate: 'Failed to generate report',
+    selectSpaceFirst: 'Please select a space first',
+    failedToDownload: 'Failed to download',
+  },
+} as const;

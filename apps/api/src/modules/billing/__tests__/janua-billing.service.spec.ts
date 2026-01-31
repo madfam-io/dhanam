@@ -234,7 +234,7 @@ describe('JanuaBillingService', () => {
       const result = await service.createCheckoutSession({
         customerId: 'cus_123',
         customerEmail: 'test@ejemplo.mx',
-        priceId: 'premium',
+        priceId: 'pro',
         countryCode: 'MX',
         successUrl: 'https://app.dhanam.com/success',
         cancelUrl: 'https://app.dhanam.com/cancel',
@@ -252,7 +252,7 @@ describe('JanuaBillingService', () => {
           body: JSON.stringify({
             customer_id: 'cus_123',
             customer_email: 'test@ejemplo.mx',
-            plan_id: 'dhanam_premium',
+            plan_id: 'dhanam_pro',
             country_code: 'MX',
             provider: 'conekta',
             success_url: 'https://app.dhanam.com/success',
@@ -289,7 +289,7 @@ describe('JanuaBillingService', () => {
         disabledService.createCheckoutSession({
           customerId: 'cus_123',
           customerEmail: 'test@example.com',
-          priceId: 'premium',
+          priceId: 'pro',
           countryCode: 'MX',
           successUrl: 'https://example.com/success',
           cancelUrl: 'https://example.com/cancel',
@@ -473,17 +473,17 @@ describe('JanuaBillingService', () => {
     it('should return MXN plans for Mexico', async () => {
       const plans = await service.getPlans('MX');
 
-      expect(plans).toHaveLength(2);
+      expect(plans).toHaveLength(3);
 
-      const freePlan = plans.find((p) => p.id === 'free');
+      const freePlan = plans.find((p) => p.id === 'community');
       expect(freePlan).toMatchObject({
         price: 0,
         currency: 'MXN',
       });
 
-      const premiumPlan = plans.find((p) => p.id === 'premium');
+      const premiumPlan = plans.find((p) => p.id === 'pro');
       expect(premiumPlan).toMatchObject({
-        price: 499,
+        price: 199,
         currency: 'MXN',
       });
     });
@@ -491,37 +491,37 @@ describe('JanuaBillingService', () => {
     it('should return USD plans for other countries', async () => {
       const plans = await service.getPlans('US');
 
-      expect(plans).toHaveLength(2);
+      expect(plans).toHaveLength(3);
 
-      const freePlan = plans.find((p) => p.id === 'free');
+      const freePlan = plans.find((p) => p.id === 'community');
       expect(freePlan).toMatchObject({
         price: 0,
         currency: 'USD',
       });
 
-      const premiumPlan = plans.find((p) => p.id === 'premium');
+      const premiumPlan = plans.find((p) => p.id === 'pro');
       expect(premiumPlan).toMatchObject({
-        price: 29,
+        price: 11.99,
         currency: 'USD',
       });
     });
 
-    it('should include correct features for free plan', async () => {
+    it('should include correct features for community plan', async () => {
       const plans = await service.getPlans('US');
-      const freePlan = plans.find((p) => p.id === 'free');
+      const freePlan = plans.find((p) => p.id === 'community');
 
-      expect(freePlan?.features).toContain('10 ESG calculations/day');
-      expect(freePlan?.features).toContain('3 Monte Carlo simulations/day');
-      expect(freePlan?.features).toContain('1,000 API requests/day');
+      expect(freePlan?.features).toContain('5 ESG calculations/day');
+      expect(freePlan?.features).toContain('2 Monte Carlo simulations/day');
+      expect(freePlan?.features).toContain('500 API requests/day');
     });
 
-    it('should include correct features for premium plan', async () => {
+    it('should include correct features for pro plan', async () => {
       const plans = await service.getPlans('US');
-      const premiumPlan = plans.find((p) => p.id === 'premium');
+      const premiumPlan = plans.find((p) => p.id === 'pro');
 
       expect(premiumPlan?.features).toContain('Unlimited ESG calculations');
-      expect(premiumPlan?.features).toContain('Portfolio rebalancing');
-      expect(premiumPlan?.features).toContain('Priority support');
+      expect(premiumPlan?.features).toContain('Life Beat / estate planning');
+      expect(premiumPlan?.features).toContain('Priority support (24hr SLA)');
     });
   });
 

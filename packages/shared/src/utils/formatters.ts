@@ -1,12 +1,26 @@
 /**
  * Formatters
  * Locale-aware formatting for currency, dates, numbers
- * Supports MXN, USD, EUR with proper locale formatting
+ * Supports MXN, USD, EUR, BRL, COP, CAD with proper locale formatting
  */
 
 import type { Locale } from '../types';
 
-export type Currency = 'MXN' | 'USD' | 'EUR' | 'BTC' | 'ETH';
+export type Currency = 'MXN' | 'USD' | 'EUR' | 'BRL' | 'COP' | 'CAD' | 'BTC' | 'ETH';
+
+const FIAT_CURRENCIES = new Set(['MXN', 'USD', 'EUR', 'BRL', 'COP', 'CAD']);
+
+/**
+ * Map application locale to BCP-47 Intl locale string
+ */
+export function toIntlLocale(locale: Locale): string {
+  const map: Record<Locale, string> = {
+    es: 'es-MX',
+    en: 'en-US',
+    'pt-BR': 'pt-BR',
+  };
+  return map[locale] || 'es-MX';
+}
 
 /**
  * Format currency with locale-specific formatting
@@ -17,7 +31,7 @@ export function formatCurrency(
   currency: Currency = 'MXN',
   locale: Locale = 'es'
 ): string {
-  const localeString = locale === 'es' ? 'es-MX' : 'en-US';
+  const localeString = toIntlLocale(locale);
 
   // Crypto currencies use different formatting
   if (currency === 'BTC' || currency === 'ETH') {
@@ -29,7 +43,7 @@ export function formatCurrency(
 
   return new Intl.NumberFormat(localeString, {
     style: 'currency',
-    currency: currency === 'MXN' || currency === 'USD' || currency === 'EUR' ? currency : 'USD',
+    currency: FIAT_CURRENCIES.has(currency) ? currency : 'USD',
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(amount);
@@ -45,7 +59,7 @@ export function formatDate(
   options?: Intl.DateTimeFormatOptions
 ): string {
   const dateObj = typeof date === 'string' ? new Date(date) : date;
-  const localeString = locale === 'es' ? 'es-MX' : 'en-US';
+  const localeString = toIntlLocale(locale);
 
   const defaultOptions: Intl.DateTimeFormatOptions = {
     year: 'numeric',
@@ -62,7 +76,7 @@ export function formatDate(
  */
 export function formatDateShort(date: Date | string, locale: Locale = 'es'): string {
   const dateObj = typeof date === 'string' ? new Date(date) : date;
-  const localeString = locale === 'es' ? 'es-MX' : 'en-US';
+  const localeString = toIntlLocale(locale);
 
   return new Intl.DateTimeFormat(localeString, {
     year: 'numeric',
@@ -77,7 +91,7 @@ export function formatDateShort(date: Date | string, locale: Locale = 'es'): str
  */
 export function formatDateTime(date: Date | string, locale: Locale = 'es'): string {
   const dateObj = typeof date === 'string' ? new Date(date) : date;
-  const localeString = locale === 'es' ? 'es-MX' : 'en-US';
+  const localeString = toIntlLocale(locale);
 
   return new Intl.DateTimeFormat(localeString, {
     year: 'numeric',
@@ -97,7 +111,7 @@ export function formatRelativeTime(
   unit: Intl.RelativeTimeFormatUnit,
   locale: Locale = 'es'
 ): string {
-  const localeString = locale === 'es' ? 'es-MX' : 'en-US';
+  const localeString = toIntlLocale(locale);
 
   return new Intl.RelativeTimeFormat(localeString, {
     numeric: 'auto',
@@ -113,7 +127,7 @@ export function formatNumber(
   locale: Locale = 'es',
   options?: Intl.NumberFormatOptions
 ): string {
-  const localeString = locale === 'es' ? 'es-MX' : 'en-US';
+  const localeString = toIntlLocale(locale);
 
   return new Intl.NumberFormat(localeString, options).format(value);
 }
@@ -127,7 +141,7 @@ export function formatPercentage(
   locale: Locale = 'es',
   decimals: number = 2
 ): string {
-  const localeString = locale === 'es' ? 'es-MX' : 'en-US';
+  const localeString = toIntlLocale(locale);
 
   return new Intl.NumberFormat(localeString, {
     style: 'percent',
@@ -141,7 +155,7 @@ export function formatPercentage(
  * @example formatCompactNumber(1234567, 'es') => "1.2 M"
  */
 export function formatCompactNumber(value: number, locale: Locale = 'es'): string {
-  const localeString = locale === 'es' ? 'es-MX' : 'en-US';
+  const localeString = toIntlLocale(locale);
 
   return new Intl.NumberFormat(localeString, {
     notation: 'compact',
@@ -152,16 +166,15 @@ export function formatCompactNumber(value: number, locale: Locale = 'es'): strin
 /**
  * Format timespan (e.g., "2h 30m")
  */
-export function formatTimespan(seconds: number, locale: Locale = 'es'): string {
+export function formatTimespan(seconds: number, _locale: Locale = 'es'): string {
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
   const secs = seconds % 60;
 
   const parts: string[] = [];
-  if (hours > 0) parts.push(`${hours}${locale === 'es' ? 'h' : 'h'}`);
-  if (minutes > 0) parts.push(`${minutes}${locale === 'es' ? 'm' : 'm'}`);
-  if (secs > 0 || parts.length === 0)
-    parts.push(`${secs}${locale === 'es' ? 's' : 's'}`);
+  if (hours > 0) parts.push(`${hours}h`);
+  if (minutes > 0) parts.push(`${minutes}m`);
+  if (secs > 0 || parts.length === 0) parts.push(`${secs}s`);
 
   return parts.join(' ');
 }
@@ -171,9 +184,7 @@ export function formatTimespan(seconds: number, locale: Locale = 'es'): string {
  * @example formatFileSize(1536, 'es') => "1.5 KB"
  */
 export function formatFileSize(bytes: number, locale: Locale = 'es'): string {
-  const units = locale === 'es'
-    ? ['B', 'KB', 'MB', 'GB', 'TB']
-    : ['B', 'KB', 'MB', 'GB', 'TB'];
+  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
 
   let size = bytes;
   let unitIndex = 0;
@@ -201,7 +212,7 @@ export function parseCurrency(value: string): number {
  * @example getCurrencySymbol('MXN', 'es') => "$"
  */
 export function getCurrencySymbol(currency: Currency, locale: Locale = 'es'): string {
-  const localeString = locale === 'es' ? 'es-MX' : 'en-US';
+  const localeString = toIntlLocale(locale);
 
   if (currency === 'BTC' || currency === 'ETH') {
     return currency;
@@ -209,7 +220,7 @@ export function getCurrencySymbol(currency: Currency, locale: Locale = 'es'): st
 
   return new Intl.NumberFormat(localeString, {
     style: 'currency',
-    currency: currency === 'MXN' || currency === 'USD' || currency === 'EUR' ? currency : 'USD',
+    currency: FIAT_CURRENCIES.has(currency) ? currency : 'USD',
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   })

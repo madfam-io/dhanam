@@ -29,7 +29,7 @@ import { UsageMetricType } from '@db';
 import { CurrentUser } from '../../core/auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../../core/auth/guards/jwt-auth.guard';
 import { MonitorPerformance } from '../../core/decorators/monitor-performance.decorator';
-import { RequiresPremium } from '../billing/decorators/requires-tier.decorator';
+import { RequiresEssentials } from '../billing/decorators/requires-tier.decorator';
 import { TrackUsage } from '../billing/decorators/track-usage.decorator';
 import { SubscriptionGuard } from '../billing/guards/subscription.guard';
 import { UsageLimitGuard } from '../billing/guards/usage-limit.guard';
@@ -50,7 +50,7 @@ export class SimulationsController {
   constructor(private readonly simulationsService: SimulationsService) {}
 
   @Post('monte-carlo')
-  @RequiresPremium()
+  @RequiresEssentials()
   @UseGuards(SubscriptionGuard, UsageLimitGuard)
   @TrackUsage(UsageMetricType.monte_carlo_simulation)
   @MonitorPerformance(15000)
@@ -65,7 +65,7 @@ export class SimulationsController {
   }
 
   @Post('retirement')
-  @RequiresPremium()
+  @RequiresEssentials()
   @UseGuards(SubscriptionGuard, UsageLimitGuard)
   @TrackUsage(UsageMetricType.monte_carlo_simulation)
   @MonitorPerformance(20000)
@@ -83,7 +83,7 @@ export class SimulationsController {
   }
 
   @Post('safe-withdrawal-rate')
-  @RequiresPremium()
+  @RequiresEssentials()
   @UseGuards(SubscriptionGuard, UsageLimitGuard)
   @TrackUsage(UsageMetricType.monte_carlo_simulation)
   @MonitorPerformance(15000)
@@ -101,7 +101,7 @@ export class SimulationsController {
   }
 
   @Post('scenario-analysis')
-  @RequiresPremium()
+  @RequiresEssentials()
   @UseGuards(SubscriptionGuard, UsageLimitGuard)
   @MonitorPerformance(30000) // Longer timeout for stress testing
   @HttpCode(HttpStatus.OK)

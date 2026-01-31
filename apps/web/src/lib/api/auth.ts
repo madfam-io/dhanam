@@ -17,12 +17,12 @@ export const authApi = {
     return apiClient.post<AuthResponse>('/auth/login', data);
   },
 
-  async loginAsGuest(): Promise<{
+  async loginAsGuest(options?: { countryCode?: string }): Promise<{
     tokens: AuthResponse['tokens'];
     user: AuthResponse['user'];
     message: string;
   }> {
-    return apiClient.post('/auth/guest');
+    return apiClient.post('/auth/guest', { countryCode: options?.countryCode });
   },
 
   async logout(refreshToken: string): Promise<void> {

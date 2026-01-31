@@ -10,5 +10,8 @@ export * from './constants';
 // i18n
 export * from './i18n';
 
+// Geo
+export * from './geo';
+
 // Test utilities
 export * from './test-utils';

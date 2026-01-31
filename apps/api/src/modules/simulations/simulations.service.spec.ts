@@ -52,10 +52,17 @@ describe('SimulationsService', () => {
       findMany: jest.fn(),
       delete: jest.fn(),
     },
+    user: {
+      findUnique: jest.fn().mockResolvedValue({ subscriptionTier: 'pro' }),
+    },
   };
 
   const mockBillingService = {
     recordUsage: jest.fn(),
+    getTierLimits: jest.fn().mockReturnValue({
+      monteCarloMaxIterations: 10_000,
+      monteCarloMaxScenarios: 12,
+    }),
   };
 
   beforeAll(() => {

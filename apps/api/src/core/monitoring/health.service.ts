@@ -48,6 +48,7 @@ export class HealthService {
   private readonly logger = new Logger(HealthService.name);
   private readonly startTime = Date.now();
   private isShuttingDown = false;
+  private redisClient: Redis | null = null;
 
   constructor(
     private readonly prisma: PrismaService,
@@ -178,9 +179,16 @@ export class HealthService {
     }
 
     try {
-      const redis = new Redis(redisUrl);
-      await redis.ping();
-      redis.disconnect();
+      // Reuse shared Redis connection instead of creating a new one per health check
+      if (!this.redisClient || this.redisClient.status === 'end') {
+        this.redisClient = new Redis(redisUrl, {
+          maxRetriesPerRequest: 1,
+          connectTimeout: 5000,
+          lazyConnect: true,
+        });
+        await this.redisClient.connect();
+      }
+      await this.redisClient.ping();
 
       return {
         status: 'up',
@@ -190,6 +198,15 @@ export class HealthService {
         },
       };
     } catch (error) {
+      // Reset client on failure so next check creates a fresh connection
+      if (this.redisClient) {
+        try {
+          this.redisClient.disconnect();
+        } catch {
+          // ignore disconnect errors
+        }
+        this.redisClient = null;
+      }
       return {
         status: 'down',
         responseTime: Date.now() - start,
@@ -205,9 +222,15 @@ export class HealthService {
       const queueStats = await this.queueService.getAllQueueStats();
 
       const hasFailedQueues = queueStats.some((queue: any) => queue.failed > 0);
+      const BACKPRESSURE_THRESHOLD = 1000;
+      const hasBackpressure = queueStats.some(
+        (queue: any) => queue.waiting > BACKPRESSURE_THRESHOLD
+      );
+
+      const status = hasFailedQueues || hasBackpressure ? 'down' : 'up';
 
       return {
-        status: hasFailedQueues ? 'down' : 'up',
+        status,
         responseTime: Date.now() - start,
         details: {
           queues: queueStats.length,
@@ -216,6 +239,8 @@ export class HealthService {
             0
           ),
           failedJobs: queueStats.reduce((sum: number, q: any) => sum + q.failed, 0),
+          waitingJobs: queueStats.reduce((sum: number, q: any) => sum + q.waiting, 0),
+          backpressure: hasBackpressure,
         },
       };
     } catch (error) {

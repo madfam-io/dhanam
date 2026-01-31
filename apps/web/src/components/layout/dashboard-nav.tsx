@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@dhanam/ui';
+import { useTranslation } from '@dhanam/shared';
 import {
   LayoutDashboard,
   Wallet,
@@ -21,85 +22,26 @@ import {
 } from 'lucide-react';
 
 const navigation = [
-  {
-    name: 'Dashboard',
-    href: '/dashboard',
-    icon: LayoutDashboard,
-  },
-  {
-    name: 'Accounts',
-    href: '/accounts',
-    icon: Wallet,
-  },
-  {
-    name: 'Transactions',
-    href: '/transactions',
-    icon: Receipt,
-  },
-  {
-    name: 'Budgets',
-    href: '/budgets',
-    icon: PiggyBank,
-  },
-  {
-    name: 'Zero-Based',
-    href: '/budgets/zero-based',
-    icon: Landmark,
-  },
-  {
-    name: 'Goals',
-    href: '/goals',
-    icon: Target,
-  },
-  {
-    name: 'Households',
-    href: '/households',
-    icon: Users,
-  },
-  {
-    name: 'Estate Planning',
-    href: '/estate-planning',
-    icon: ScrollText,
-  },
-  {
-    name: 'Analytics',
-    href: '/analytics',
-    icon: TrendingUp,
-  },
-  {
-    name: 'ESG Insights',
-    href: '/esg',
-    icon: Leaf,
-  },
-  {
-    name: 'Gaming',
-    href: '/gaming',
-    icon: Gamepad2,
-  },
-  {
-    name: 'Retirement',
-    href: '/retirement',
-    icon: Target,
-  },
-  {
-    name: 'Scenarios',
-    href: '/scenarios',
-    icon: AlertTriangle,
-  },
-  {
-    name: 'Reports',
-    href: '/reports',
-    icon: FileText,
-  },
-  {
-    name: 'Settings',
-    href: '/settings',
-    icon: Settings,
-  },
+  { key: 'dashboard' as const, href: '/dashboard', icon: LayoutDashboard },
+  { key: 'accounts' as const, href: '/accounts', icon: Wallet },
+  { key: 'transactions' as const, href: '/transactions', icon: Receipt },
+  { key: 'budgets' as const, href: '/budgets', icon: PiggyBank },
+  { key: 'zeroBased' as const, href: '/budgets/zero-based', icon: Landmark },
+  { key: 'goals' as const, href: '/goals', icon: Target },
+  { key: 'households' as const, href: '/households', icon: Users },
+  { key: 'estatePlanning' as const, href: '/estate-planning', icon: ScrollText },
+  { key: 'analytics' as const, href: '/analytics', icon: TrendingUp },
+  { key: 'esgInsights' as const, href: '/esg', icon: Leaf },
+  { key: 'gaming' as const, href: '/gaming', icon: Gamepad2 },
+  { key: 'retirement' as const, href: '/retirement', icon: Target },
+  { key: 'scenarios' as const, href: '/scenarios', icon: AlertTriangle },
+  { key: 'reports' as const, href: '/reports', icon: FileText },
+  { key: 'settings' as const, href: '/settings', icon: Settings },
 ];
 
 export function DashboardNav() {
   const pathname = usePathname();
+  const { t } = useTranslation('dashboard');
 
   return (
     <nav className="w-64 border-r bg-background">
@@ -110,7 +52,7 @@ export function DashboardNav() {
               {navigation.map((item) => {
                 const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
                 return (
-                  <li key={item.name}>
+                  <li key={item.key}>
                     <Link
                       href={item.href}
                       className={cn(
@@ -129,7 +71,7 @@ export function DashboardNav() {
                         )}
                         aria-hidden="true"
                       />
-                      {item.name}
+                      {t(`sidebar.${item.key}`)}
                     </Link>
                   </li>
                 );

@@ -1,6 +1,6 @@
 import { UUID, Locale } from './common.types';
 
-export type SubscriptionTier = 'free' | 'premium';
+export type SubscriptionTier = 'community' | 'essentials' | 'pro';
 
 export interface User {
   id: UUID;

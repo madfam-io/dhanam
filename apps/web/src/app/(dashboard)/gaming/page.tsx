@@ -6,7 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@dhanam/ui';
 import { Skeleton } from '@dhanam/ui';
-import { Currency } from '@dhanam/shared';
+import { Currency, useTranslation } from '@dhanam/shared';
 import { formatCurrency } from '~/lib/utils';
 
 import { PlatformSelector, type MetaversePlatform } from '@/components/gaming/platform-selector';
@@ -272,6 +272,7 @@ const FALLBACK_PROPOSALS = [
 ];
 
 export default function GamingPage() {
+  const { t } = useTranslation('gaming');
   const [selectedPlatform, setSelectedPlatform] = useState<MetaversePlatform>('all');
 
   // TODO: Replace 'demo-space' with actual spaceId from auth context
@@ -315,9 +316,9 @@ export default function GamingPage() {
         <div>
           <h2 className="text-3xl font-bold tracking-tight flex items-center gap-2">
             <Gamepad2 className="h-8 w-8" />
-            Gaming Dashboard
+            {t('page.title')}
           </h2>
-          <p className="text-muted-foreground">Loading your gaming portfolio...</p>
+          <p className="text-muted-foreground">{t('page.loading')}</p>
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {[1, 2, 3, 4].map((i) => (
@@ -341,12 +342,12 @@ export default function GamingPage() {
       <div>
         <h2 className="text-3xl font-bold tracking-tight flex items-center gap-2">
           <Gamepad2 className="h-8 w-8" />
-          Gaming Dashboard
+          {t('page.title')}
         </h2>
         <p className="text-muted-foreground">
-          Track your multi-platform metaverse assets, earnings, and governance
+          {t('page.description')}
           {error && !portfolio && (
-            <span className="text-xs text-amber-600 ml-2">(showing demo data)</span>
+            <span className="text-xs text-amber-600 ml-2">{t('page.demoData')}</span>
           )}
         </p>
       </div>
@@ -362,45 +363,45 @@ export default function GamingPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Gaming Assets</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('summary.totalGamingAssets')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
               {formatCurrency(totalGamingAssets, Currency.USD)}
             </div>
-            <p className="text-xs text-muted-foreground">Across {PLATFORM_DATA.length} platforms</p>
+            <p className="text-xs text-muted-foreground">{t('summary.acrossPlatforms', { count: PLATFORM_DATA.length })}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Monthly Gaming Income</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('summary.monthlyGamingIncome')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
               {formatCurrency(totalMonthlyIncome, Currency.USD)}
             </div>
-            <p className="text-xs text-muted-foreground">Staking + P2E + Scholarships + Nodes</p>
+            <p className="text-xs text-muted-foreground">{t('summary.incomeBreakdown')}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Platforms Connected</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('summary.platformsConnected')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{PLATFORM_DATA.length}</div>
-            <p className="text-xs text-muted-foreground">{CHAIN_DATA.length} chains</p>
+            <p className="text-xs text-muted-foreground">{t('summary.chains', { count: CHAIN_DATA.length })}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">NFTs Owned</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('summary.nftsOwned')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalNfts}</div>
-            <p className="text-xs text-muted-foreground">Across all platforms</p>
+            <p className="text-xs text-muted-foreground">{t('summary.acrossAllPlatforms')}</p>
           </CardContent>
         </Card>
       </div>

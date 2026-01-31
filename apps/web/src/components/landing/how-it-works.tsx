@@ -1,38 +1,13 @@
+'use client';
+
+import { useTranslation } from '@dhanam/shared';
 import { Link2, Cpu, BarChart3, Target } from 'lucide-react';
 
 const steps = [
-  {
-    number: 1,
-    title: 'Connect',
-    description:
-      'Link bank accounts, crypto wallets, or add manual assets like real estate and collectibles.',
-    icon: Link2,
-    color: 'blue',
-  },
-  {
-    number: 2,
-    title: 'Automate',
-    description:
-      'AI categorizes transactions, detects recurring patterns, and builds your 60-day cashflow forecast.',
-    icon: Cpu,
-    color: 'purple',
-  },
-  {
-    number: 3,
-    title: 'Simulate',
-    description:
-      'Run 10,000 Monte Carlo iterations on your goals and stress-test against 12 historical scenarios.',
-    icon: BarChart3,
-    color: 'orange',
-  },
-  {
-    number: 4,
-    title: 'Plan',
-    description:
-      'See the probability of reaching each goal and get actionable steps to improve your odds.',
-    icon: Target,
-    color: 'green',
-  },
+  { number: 1, key: 'step1' as const, icon: Link2, color: 'blue' as const },
+  { number: 2, key: 'step2' as const, icon: Cpu, color: 'purple' as const },
+  { number: 3, key: 'step3' as const, icon: BarChart3, color: 'orange' as const },
+  { number: 4, key: 'step4' as const, icon: Target, color: 'green' as const },
 ] as const;
 
 const colorMap = {
@@ -43,12 +18,14 @@ const colorMap = {
 } as const;
 
 export function HowItWorks() {
+  const { t } = useTranslation('landing');
+
   return (
     <section className="container mx-auto px-6 py-16">
       <div className="text-center mb-12">
-        <h2 className="text-3xl font-bold mb-4">How It Works</h2>
+        <h2 className="text-3xl font-bold mb-4">{t('howItWorks.title')}</h2>
         <p className="text-muted-foreground">
-          From connected accounts to confident decisions in four steps
+          {t('howItWorks.subtitle')}
         </p>
       </div>
 
@@ -67,8 +44,8 @@ export function HowItWorks() {
                   {step.number}
                 </span>
               </div>
-              <h3 className="text-lg font-semibold">{step.title}</h3>
-              <p className="text-sm text-muted-foreground">{step.description}</p>
+              <h3 className="text-lg font-semibold">{t(`howItWorks.${step.key}.title`)}</h3>
+              <p className="text-sm text-muted-foreground">{t(`howItWorks.${step.key}.description`)}</p>
             </div>
           );
         })}

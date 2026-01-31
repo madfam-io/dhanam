@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslation } from '@dhanam/shared';
 import { RetirementCalculatorForm } from '@/components/simulations/RetirementCalculatorForm';
 import { RetirementResults } from '@/components/simulations/RetirementResults';
 import { SimulationChart } from '@/components/simulations/SimulationChart';
@@ -11,26 +12,24 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Info } from 'lucide-react';
 
 export default function RetirementPage() {
+  const { t } = useTranslation('projections');
   const [results, setResults] = useState<RetirementSimulationResult | null>(null);
 
   return (
     <PremiumGate feature="Retirement Planning Tools">
       <div className="container mx-auto py-8 space-y-8">
         <div>
-          <h1 className="text-4xl font-bold tracking-tight">Retirement Planning</h1>
+          <h1 className="text-4xl font-bold tracking-tight">{t('main.retirementPlanning')}</h1>
           <p className="text-muted-foreground mt-2">
-            Use Monte Carlo simulation to plan for a secure retirement
+            {t('retirement.pageDescription')}
           </p>
         </div>
 
         <Alert>
           <Info className="h-4 w-4" />
-          <AlertTitle>How it works</AlertTitle>
+          <AlertTitle>{t('retirement.howItWorks')}</AlertTitle>
           <AlertDescription>
-            This calculator runs 10,000 simulations of your financial future using Monte Carlo
-            methods. It models two phases: <strong>accumulation</strong> (saving until retirement)
-            and <strong>withdrawal</strong> (spending during retirement). The results show the
-            probability of your money lasting through your expected lifespan.
+            {t('retirement.howItWorksBody')}
           </AlertDescription>
         </Alert>
 
@@ -45,8 +44,8 @@ export default function RetirementPage() {
             {results ? (
               <Tabs defaultValue="summary" className="w-full">
                 <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="summary">Summary</TabsTrigger>
-                  <TabsTrigger value="projections">Projections</TabsTrigger>
+                  <TabsTrigger value="summary">{t('retirement.tabs.summary')}</TabsTrigger>
+                  <TabsTrigger value="projections">{t('retirement.tabs.projections')}</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="summary" className="space-y-6">
@@ -56,40 +55,40 @@ export default function RetirementPage() {
                 <TabsContent value="projections" className="space-y-6">
                   <SimulationChart
                     timeSeries={results.simulation.timeSeries}
-                    title="Retirement Portfolio Projections"
-                    description="Two-phase simulation: accumulation until retirement, then withdrawal"
+                    title={t('retirement.portfolioProjections')}
+                    description={t('retirement.twoPhaseSimulation')}
                   />
 
                   <div className="grid grid-cols-3 gap-4 mt-6">
                     <div className="text-center">
-                      <p className="text-sm text-muted-foreground">Final Balance</p>
+                      <p className="text-sm text-muted-foreground">{t('retirement.finalBalance')}</p>
                       <p className="text-lg font-semibold">
                         $
                         {results.simulation.median.toLocaleString(undefined, {
                           maximumFractionDigits: 0,
                         })}
                       </p>
-                      <p className="text-xs text-muted-foreground">Median</p>
+                      <p className="text-xs text-muted-foreground">{t('retirement.median')}</p>
                     </div>
                     <div className="text-center">
-                      <p className="text-sm text-muted-foreground">Worst 10%</p>
+                      <p className="text-sm text-muted-foreground">{t('retirement.worst10')}</p>
                       <p className="text-lg font-semibold text-red-600">
                         $
                         {results.simulation.p10.toLocaleString(undefined, {
                           maximumFractionDigits: 0,
                         })}
                       </p>
-                      <p className="text-xs text-muted-foreground">10th Percentile</p>
+                      <p className="text-xs text-muted-foreground">{t('retirement.10thPercentile')}</p>
                     </div>
                     <div className="text-center">
-                      <p className="text-sm text-muted-foreground">Best 10%</p>
+                      <p className="text-sm text-muted-foreground">{t('retirement.best10')}</p>
                       <p className="text-lg font-semibold text-green-600">
                         $
                         {results.simulation.p90.toLocaleString(undefined, {
                           maximumFractionDigits: 0,
                         })}
                       </p>
-                      <p className="text-xs text-muted-foreground">90th Percentile</p>
+                      <p className="text-xs text-muted-foreground">{t('retirement.90thPercentile')}</p>
                     </div>
                   </div>
                 </TabsContent>
@@ -100,10 +99,9 @@ export default function RetirementPage() {
                   <div className="rounded-full bg-muted p-4 mb-4">
                     <Info className="h-8 w-8 text-muted-foreground" />
                   </div>
-                  <h3 className="font-semibold text-lg mb-2">No retirement projection yet</h3>
+                  <h3 className="font-semibold text-lg mb-2">{t('retirement.noProjectionYet')}</h3>
                   <p className="text-sm text-muted-foreground max-w-sm">
-                    Enter your details in the form and click &quot;Calculate Retirement Plan&quot;
-                    to see your projected timeline
+                    {t('retirement.enterDetailsPrompt')}
                   </p>
                 </div>
               </div>
@@ -113,27 +111,24 @@ export default function RetirementPage() {
 
         {/* Educational Content */}
         <div className="mt-12 border-t pt-8">
-          <h2 className="text-2xl font-bold mb-4">Understanding Your Results</h2>
+          <h2 className="text-2xl font-bold mb-4">{t('retirement.understandingResults')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
-              <h3 className="font-semibold mb-2">Success Rate</h3>
+              <h3 className="font-semibold mb-2">{t('retirement.successRate')}</h3>
               <p className="text-sm text-muted-foreground">
-                The probability that your retirement savings will last through your expected
-                lifespan. 75% or higher is generally considered good.
+                {t('retirement.successRateDescription')}
               </p>
             </div>
             <div>
-              <h3 className="font-semibold mb-2">Percentiles</h3>
+              <h3 className="font-semibold mb-2">{t('retirement.percentiles')}</h3>
               <p className="text-sm text-muted-foreground">
-                The 10th percentile shows the "worst 10%" outcome, while 90th shows the "best 10%".
-                The median (50th percentile) is the most likely outcome.
+                {t('retirement.percentilesDescription')}
               </p>
             </div>
             <div>
-              <h3 className="font-semibold mb-2">Safe Withdrawal Rate</h3>
+              <h3 className="font-semibold mb-2">{t('retirement.safeWithdrawalRate')}</h3>
               <p className="text-sm text-muted-foreground">
-                The monthly amount you can safely withdraw during retirement with 75% confidence of
-                not running out of money.
+                {t('retirement.safeWithdrawalRateDescription')}
               </p>
             </div>
           </div>

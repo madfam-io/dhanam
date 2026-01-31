@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useTranslation } from '@dhanam/shared';
 import { useGoals, type Goal, type GoalProgress, type GoalSummary } from '@/hooks/useGoals';
 import { useSimulations } from '@/hooks/useSimulations';
 import { useAnalytics } from '@/hooks/useAnalytics';
@@ -28,6 +29,7 @@ import { GoalActivityFeed } from '@/components/goals/goal-activity-feed';
 import { ShareManagementPanel } from '@/components/goals/share-management-panel';
 
 export default function GoalsPage() {
+  const { t } = useTranslation('goals');
   const {
     getGoalsBySpace,
     getGoalSummary,
@@ -120,18 +122,18 @@ export default function GoalsPage() {
   };
 
   const getGoalTypeLabel = (type: Goal['type']): string => {
-    const labels: Record<Goal['type'], string> = {
-      retirement: 'Retirement',
-      education: 'Education',
-      house_purchase: 'House Purchase',
-      emergency_fund: 'Emergency Fund',
-      legacy: 'Legacy',
-      travel: 'Travel',
-      business: 'Business',
-      debt_payoff: 'Debt Payoff',
-      other: 'Other',
+    const keys: Record<Goal['type'], string> = {
+      retirement: 'types.retirement',
+      education: 'types.education',
+      house_purchase: 'types.home',
+      emergency_fund: 'types.emergency',
+      legacy: 'types.legacy',
+      travel: 'types.travel',
+      business: 'types.business',
+      debt_payoff: 'types.debtPayoff',
+      other: 'types.custom',
     };
-    return labels[type];
+    return t(keys[type]);
   };
 
   const getStatusColor = (status: Goal['status']) => {
@@ -144,13 +146,23 @@ export default function GoalsPage() {
     return colors[status];
   };
 
+  const getStatusLabel = (status: Goal['status']): string => {
+    const keys: Record<Goal['status'], string> = {
+      active: 'status.active',
+      paused: 'status.paused',
+      achieved: 'status.achieved',
+      abandoned: 'status.abandoned',
+    };
+    return t(keys[status]);
+  };
+
   // Show loading state while waiting for space context
   if (!currentSpace) {
     return (
       <div className="container mx-auto py-8 space-y-8">
         <div>
-          <h1 className="text-4xl font-bold tracking-tight">Financial Goals</h1>
-          <p className="text-muted-foreground mt-2">Loading your space...</p>
+          <h1 className="text-4xl font-bold tracking-tight">{t('main.financialGoals')}</h1>
+          <p className="text-muted-foreground mt-2">{t('page.loadingSpace')}</p>
         </div>
         <div className="flex items-center justify-center h-[400px]">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -162,9 +174,9 @@ export default function GoalsPage() {
   return (
     <div className="container mx-auto py-8 space-y-8">
       <div>
-        <h1 className="text-4xl font-bold tracking-tight">Financial Goals</h1>
+        <h1 className="text-4xl font-bold tracking-tight">{t('main.financialGoals')}</h1>
         <p className="text-muted-foreground mt-2">
-          Track your progress and calculate probability of success
+          {t('page.description')}
         </p>
       </div>
 
@@ -173,44 +185,44 @@ export default function GoalsPage() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Goals</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('page.totalGoals')}</CardTitle>
               <Target className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{summary.totalGoals}</div>
-              <p className="text-xs text-muted-foreground">{summary.activeGoals} active</p>
+              <p className="text-xs text-muted-foreground">{summary.activeGoals} {t('status.active')}</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Target Amount</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('page.targetAmount')}</CardTitle>
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
                 ${summary.totalTargetAmount.toLocaleString(undefined, { maximumFractionDigits: 0 })}
               </div>
-              <p className="text-xs text-muted-foreground">Across all goals</p>
+              <p className="text-xs text-muted-foreground">{t('page.acrossAllGoals')}</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Current Value</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('page.currentValue')}</CardTitle>
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
                 ${summary.totalCurrentValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}
               </div>
-              <p className="text-xs text-muted-foreground">Total saved</p>
+              <p className="text-xs text-muted-foreground">{t('page.totalSaved')}</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Overall Progress</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('page.overallProgress')}</CardTitle>
               <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -236,10 +248,10 @@ export default function GoalsPage() {
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle>Your Goals</CardTitle>
+                <CardTitle>{t('page.yourGoals')}</CardTitle>
                 <Button size="sm">
                   <Plus className="h-4 w-4 mr-2" />
-                  Add Goal
+                  {t('page.addGoal')}
                 </Button>
               </div>
             </CardHeader>
@@ -247,8 +259,8 @@ export default function GoalsPage() {
               {goals.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <Target className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>No goals yet</p>
-                  <p className="text-sm">Create your first financial goal to get started</p>
+                  <p>{t('messages.noGoals')}</p>
+                  <p className="text-sm">{t('messages.createFirstGoal')}</p>
                 </div>
               ) : (
                 goals.map((goal) => (
@@ -274,11 +286,11 @@ export default function GoalsPage() {
                           {getGoalTypeLabel(goal.type)}
                         </p>
                       </div>
-                      <Badge className={getStatusColor(goal.status)}>{goal.status}</Badge>
+                      <Badge className={getStatusColor(goal.status)}>{getStatusLabel(goal.status)}</Badge>
                     </div>
                     <div className="space-y-1">
                       <div className="flex justify-between text-sm">
-                        <span>Target:</span>
+                        <span>{t('page.targetLabel')}</span>
                         <span className="font-semibold">
                           $
                           {parseFloat(goal.targetAmount.toString()).toLocaleString(undefined, {
@@ -287,7 +299,7 @@ export default function GoalsPage() {
                         </span>
                       </div>
                       <div className="flex justify-between text-sm text-muted-foreground">
-                        <span>Due:</span>
+                        <span>{t('page.dueLabel')}</span>
                         <span>{new Date(goal.targetDate).toLocaleDateString()}</span>
                       </div>
                     </div>
@@ -303,13 +315,13 @@ export default function GoalsPage() {
           {selectedGoal && goalProgress ? (
             <Tabs defaultValue="progress" className="w-full">
               <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="progress">Progress</TabsTrigger>
-                <TabsTrigger value="probability">Probability</TabsTrigger>
+                <TabsTrigger value="progress">{t('tabs.progress')}</TabsTrigger>
+                <TabsTrigger value="probability">{t('tabs.probability')}</TabsTrigger>
                 <TabsTrigger value="collaboration">
                   <Users className="h-4 w-4 mr-2" />
-                  Collaboration
+                  {t('tabs.collaboration')}
                 </TabsTrigger>
-                <TabsTrigger value="activity">Activity</TabsTrigger>
+                <TabsTrigger value="activity">{t('tabs.activity')}</TabsTrigger>
               </TabsList>
 
               <TabsContent value="progress" className="space-y-6">
@@ -322,7 +334,7 @@ export default function GoalsPage() {
                       </div>
                       <Button variant="outline" size="sm" onClick={() => setShareDialogOpen(true)}>
                         <Users className="h-4 w-4 mr-2" />
-                        Share
+                        {t('page.share')}
                       </Button>
                     </div>
                   </CardHeader>
@@ -330,7 +342,7 @@ export default function GoalsPage() {
                     {/* Progress Bar */}
                     <div>
                       <div className="flex justify-between mb-2">
-                        <span className="text-sm font-medium">Goal Progress</span>
+                        <span className="text-sm font-medium">{t('page.goalProgress')}</span>
                         <span className="text-sm font-bold">
                           {goalProgress.percentComplete.toFixed(1)}%
                         </span>
@@ -353,14 +365,14 @@ export default function GoalsPage() {
                       )}
                       <AlertDescription>
                         {goalProgress.onTrack ? (
-                          <p>You're on track to reach this goal!</p>
+                          <p>{t('page.onTrackMessage')}</p>
                         ) : (
                           <div>
-                            <p className="font-semibold mb-1">You're behind schedule</p>
+                            <p className="font-semibold mb-1">{t('page.behindSchedule')}</p>
                             <p className="text-sm">
-                              Increase monthly contribution to $
-                              {goalProgress.monthlyContributionNeeded.toLocaleString()} to stay on
-                              track
+                              {t('page.increaseContribution', {
+                                amount: goalProgress.monthlyContributionNeeded.toLocaleString(),
+                              })}
                             </p>
                           </div>
                         )}
@@ -370,7 +382,7 @@ export default function GoalsPage() {
                     {/* Time Progress */}
                     <div>
                       <div className="flex justify-between mb-2">
-                        <span className="text-sm font-medium">Time Progress</span>
+                        <span className="text-sm font-medium">{t('page.timeProgress')}</span>
                         <span className="text-sm font-bold">
                           {goalProgress.timeProgress.toFixed(1)}%
                         </span>
@@ -381,7 +393,7 @@ export default function GoalsPage() {
                     {/* Allocations */}
                     {goalProgress.allocations && goalProgress.allocations.length > 0 && (
                       <div>
-                        <h4 className="text-sm font-semibold mb-3">Account Allocations</h4>
+                        <h4 className="text-sm font-semibold mb-3">{t('page.accountAllocations')}</h4>
                         <div className="space-y-2">
                           {goalProgress.allocations.map((alloc) => (
                             <div
@@ -391,7 +403,7 @@ export default function GoalsPage() {
                               <div>
                                 <p className="font-medium">{alloc.accountName}</p>
                                 <p className="text-sm text-muted-foreground">
-                                  {alloc.percentage}% allocated
+                                  {alloc.percentage}% {t('page.allocated')}
                                 </p>
                               </div>
                               <div className="text-right">
@@ -417,10 +429,10 @@ export default function GoalsPage() {
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         <Calculator className="h-5 w-5" />
-                        Success Probability Analysis
+                        {t('probability.title')}
                       </CardTitle>
                       <CardDescription>
-                        Monte Carlo simulation to calculate likelihood of achieving this goal
+                        {t('probability.description')}
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
@@ -434,12 +446,12 @@ export default function GoalsPage() {
                             {loadingProbability ? (
                               <>
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                Running simulation...
+                                {t('probability.runningSimulation')}
                               </>
                             ) : (
                               <>
                                 <Calculator className="mr-2 h-4 w-4" />
-                                Calculate Probability
+                                {t('probability.calculateButton')}
                               </>
                             )}
                           </Button>
@@ -449,7 +461,7 @@ export default function GoalsPage() {
                           {/* Success Rate */}
                           <div>
                             <p className="text-sm text-muted-foreground mb-2">
-                              Probability of Success
+                              {t('probability.probabilityOfSuccess')}
                             </p>
                             <p className="text-4xl font-bold">
                               {(probability.probabilityOfSuccess * 100).toFixed(1)}%
@@ -464,7 +476,7 @@ export default function GoalsPage() {
                           <div className="grid grid-cols-2 gap-4">
                             <div>
                               <p className="text-sm text-muted-foreground">
-                                Expected Outcome (Median)
+                                {t('probability.expectedOutcome')}
                               </p>
                               <p className="text-2xl font-semibold">
                                 $
@@ -474,7 +486,7 @@ export default function GoalsPage() {
                               </p>
                             </div>
                             <div>
-                              <p className="text-sm text-muted-foreground">Expected Shortfall</p>
+                              <p className="text-sm text-muted-foreground">{t('probability.expectedShortfall')}</p>
                               <p className="text-2xl font-semibold">
                                 $
                                 {probability.expectedShortfall.toLocaleString(undefined, {
@@ -486,10 +498,10 @@ export default function GoalsPage() {
 
                           {/* 90% Confidence Range */}
                           <div>
-                            <p className="text-sm font-semibold mb-2">90% Confidence Range</p>
+                            <p className="text-sm font-semibold mb-2">{t('probability.confidenceRange')}</p>
                             <div className="flex justify-between items-center">
                               <div>
-                                <p className="text-xs text-muted-foreground">Worst 10%</p>
+                                <p className="text-xs text-muted-foreground">{t('probability.worst10')}</p>
                                 <p className="text-lg font-semibold">
                                   $
                                   {probability.confidence90Range.low.toLocaleString(undefined, {
@@ -499,7 +511,7 @@ export default function GoalsPage() {
                               </div>
                               <TrendingUp className="h-6 w-6 text-muted-foreground" />
                               <div className="text-right">
-                                <p className="text-xs text-muted-foreground">Best 10%</p>
+                                <p className="text-xs text-muted-foreground">{t('probability.best10')}</p>
                                 <p className="text-lg font-semibold">
                                   $
                                   {probability.confidence90Range.high.toLocaleString(undefined, {
@@ -517,13 +529,13 @@ export default function GoalsPage() {
                               <AlertCircle className="h-4 w-4" />
                               <AlertDescription>
                                 <p className="font-semibold mb-1">
-                                  Increase savings to improve odds
+                                  {t('probability.increaseSavings')}
                                 </p>
                                 <p className="text-sm">
-                                  Recommended monthly contribution: $
-                                  {probability.recommendedMonthlyContribution.toLocaleString()}
-                                  (current: $
-                                  {probability.currentMonthlyContribution.toLocaleString()})
+                                  {t('probability.recommendedContribution', {
+                                    recommended: probability.recommendedMonthlyContribution.toLocaleString(),
+                                    current: probability.currentMonthlyContribution.toLocaleString(),
+                                  })}
                                 </p>
                               </AlertDescription>
                             </Alert>
@@ -553,9 +565,9 @@ export default function GoalsPage() {
             <div className="flex items-center justify-center h-[600px] border border-dashed rounded-lg">
               <div className="text-center">
                 <Target className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-50" />
-                <p className="text-muted-foreground mb-2">No goal selected</p>
+                <p className="text-muted-foreground mb-2">{t('page.noGoalSelected')}</p>
                 <p className="text-sm text-muted-foreground">
-                  Select a goal from the list to view progress and probability
+                  {t('page.selectGoalPrompt')}
                 </p>
               </div>
             </div>

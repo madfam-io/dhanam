@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { getGeoDefaults } from '@dhanam/shared';
 
 import { User } from '@db';
 
@@ -18,14 +19,14 @@ export class GuestAuthService {
    * Create a guest session with limited read-only access
    * Guest sessions are temporary and expire after 1 hour
    */
-  async createGuestSession(): Promise<{
+  async createGuestSession(countryCode?: string): Promise<{
     user: User;
     accessToken: string;
     refreshToken: string;
     expiresIn: number;
   }> {
-    // Get or create guest user
-    const guestUser = await this.getOrCreateGuestUser();
+    // Get or create guest user with geo-aware defaults
+    const guestUser = await this.getOrCreateGuestUser(countryCode);
 
     // Create limited JWT tokens for guest
     const payload = {
@@ -72,8 +73,9 @@ export class GuestAuthService {
   /**
    * Get or create the guest user
    */
-  private async getOrCreateGuestUser(): Promise<User> {
+  private async getOrCreateGuestUser(countryCode?: string): Promise<User> {
     const guestEmail = 'guest@dhanam.demo';
+    const geo = getGeoDefaults(countryCode ?? null);
 
     // Check if guest user already exists
     let guestUser = await this.prisma.user.findUnique({
@@ -81,22 +83,22 @@ export class GuestAuthService {
     });
 
     if (!guestUser) {
-      // Create guest user
+      // Create guest user with geo-aware defaults
       guestUser = await this.prisma.user.create({
         data: {
           email: guestEmail,
           passwordHash: 'GUEST_NO_PASSWORD', // Guest users don't need passwords
           name: 'Guest User',
-          locale: 'en',
-          timezone: 'America/Mexico_City',
+          locale: geo.locale,
+          timezone: geo.timezone,
           emailVerified: true,
           onboardingCompleted: true,
           onboardingCompletedAt: new Date(),
         },
       });
 
-      // Create demo space for guest
-      await this.createGuestDemoSpace(guestUser.id);
+      // Create demo space for guest with geo-aware currency
+      await this.createGuestDemoSpace(guestUser.id, geo.currency, geo.timezone);
     }
 
     return guestUser;
@@ -105,13 +107,13 @@ export class GuestAuthService {
   /**
    * Create demo space with minimal data for guest users
    */
-  private async createGuestDemoSpace(userId: string) {
+  private async createGuestDemoSpace(userId: string, currency = 'MXN', timezone = 'America/Mexico_City') {
     const space = await this.prisma.space.create({
       data: {
         name: 'Demo Personal Finance',
         type: 'personal',
-        currency: 'MXN',
-        timezone: 'America/Mexico_City',
+        currency,
+        timezone,
         userSpaces: {
           create: {
             userId: userId,

@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useAuth } from '@/lib/hooks/use-auth';
 import { Button } from '@dhanam/ui';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { useTranslation } from '@dhanam/shared';
 import { Globe } from 'lucide-react';
 
 import { Hero } from '@/components/landing/hero';
@@ -18,6 +19,7 @@ import { Footer } from '@/components/landing/footer';
 export default function HomePage() {
   const { isAuthenticated } = useAuth();
   const analytics = useAnalytics();
+  const { t } = useTranslation('landing');
 
   const appUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://app.dhan.am';
 
@@ -32,11 +34,16 @@ export default function HomePage() {
 
   const handleLiveDemoClick = async () => {
     analytics.track('live_demo_clicked', { source: 'hero_cta' });
+
+    const geoCookie = typeof document !== 'undefined'
+      ? document.cookie.split('; ').find((c) => c.startsWith('dhanam_geo='))?.split('=')[1]
+      : undefined;
+
     try {
       const { authApi } = await import('@/lib/api/auth');
       const { useAuth } = await import('@/lib/hooks/use-auth');
 
-      const response = await authApi.loginAsGuest();
+      const response = await authApi.loginAsGuest({ countryCode: geoCookie });
       useAuth.getState().setAuth(response.user, response.tokens);
 
       analytics.track('demo_session_started', {
@@ -68,10 +75,10 @@ export default function HomePage() {
           </div>
           <div className="flex items-center gap-4">
             <a href={`${appUrl}/login`}>
-              <Button variant="ghost">Sign In</Button>
+              <Button variant="ghost">{t('nav.login')}</Button>
             </a>
             <a href={`${appUrl}/register`}>
-              <Button>Get Started</Button>
+              <Button>{t('nav.getStarted')}</Button>
             </a>
           </div>
         </div>

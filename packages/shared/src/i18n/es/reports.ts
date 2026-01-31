@@ -1,0 +1,45 @@
+export const reports = {
+  title: 'Reportes',
+  description: 'Genera y exporta reportes e información financiera',
+  quickExport: {
+    title: 'Exportación rápida',
+    description: 'Exporta rápidamente tus datos financieros para el rango de fechas seleccionado',
+    startDate: 'Fecha de inicio',
+    endDate: 'Fecha de fin',
+    pdfReport: 'Reporte PDF',
+    csvExport: 'Exportar CSV',
+  },
+  templates: {
+    heading: 'Plantillas de reportes',
+    financialSummary: 'Resumen financiero',
+    financialSummaryDesc: 'Panorama financiero completo incluyendo ingresos, gastos y patrimonio neto',
+    transactionExport: 'Exportar transacciones',
+    transactionExportDesc: 'Exporta todas las transacciones del período seleccionado',
+    budgetPerformance: 'Rendimiento del presupuesto',
+    budgetPerformanceDesc: 'Seguimiento detallado de presupuesto y análisis por categoría',
+    netWorthTrend: 'Tendencia del patrimonio',
+    netWorthTrendDesc: 'Seguimiento de los cambios en tu patrimonio a lo largo del tiempo',
+  },
+  custom: {
+    title: 'Reporte personalizado',
+    description: 'Configura y genera un reporte personalizado con parámetros específicos',
+    dateRange: 'Rango de fechas',
+    format: 'Formato',
+    generateReport: 'Generar reporte',
+    generating: 'Generando...',
+  },
+  available: {
+    title: 'Reportes disponibles',
+    description: 'Tipos de reportes preconfigurados para tu espacio',
+  },
+  emptyState: {
+    noSpaceSelected: 'No hay espacio seleccionado',
+    selectSpacePrompt: 'Selecciona un espacio desde la barra lateral para generar reportes',
+  },
+  toast: {
+    reportDownloaded: 'Reporte descargado exitosamente',
+    failedToGenerate: 'Error al generar el reporte',
+    selectSpaceFirst: 'Selecciona un espacio primero',
+    failedToDownload: 'Error al descargar',
+  },
+} as const;

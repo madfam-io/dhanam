@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Leaf, RefreshCw, Loader2 } from 'lucide-react';
+import { useTranslation } from '@dhanam/shared';
 import { useEsg } from '@/hooks/useEsg';
 import { EsgPortfolioSummary } from '@/components/esg/esg-portfolio-summary';
 import { EsgHoldingsBreakdown } from '@/components/esg/esg-holdings-breakdown';
@@ -11,6 +12,7 @@ import { EsgInsights } from '@/components/esg/esg-insights';
 import type { PortfolioEsgAnalysis, EsgTrends } from '@/hooks/useEsg';
 
 export default function EsgPage() {
+  const { t } = useTranslation('esg');
   const { getPortfolioAnalysis, getTrends, loading } = useEsg();
   const [portfolioAnalysis, setPortfolioAnalysis] = useState<PortfolioEsgAnalysis | null>(null);
   const [trends, setTrends] = useState<EsgTrends | null>(null);
@@ -40,22 +42,22 @@ export default function EsgPage() {
         <div>
           <h1 className="text-4xl font-bold tracking-tight flex items-center gap-2">
             <Leaf className="h-8 w-8 text-green-600" />
-            ESG Portfolio Analysis
+            {t('page.title')}
           </h1>
           <p className="text-muted-foreground mt-2">
-            Environmental, Social, and Governance scoring for your crypto portfolio
+            {t('page.description')}
           </p>
         </div>
         <Button onClick={handleRefresh} disabled={refreshing} variant="outline" size="lg">
           {refreshing ? (
             <>
               <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-              Refreshing...
+              {t('page.refreshing')}
             </>
           ) : (
             <>
               <RefreshCw className="mr-2 h-4 w-4" />
-              Refresh
+              {t('page.refresh')}
             </>
           )}
         </Button>
@@ -65,7 +67,7 @@ export default function EsgPage() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-16">
             <Loader2 className="h-12 w-12 animate-spin text-muted-foreground mb-4" />
-            <p className="text-muted-foreground">Loading ESG analysis...</p>
+            <p className="text-muted-foreground">{t('page.loading')}</p>
           </CardContent>
         </Card>
       ) : portfolioAnalysis ? (
@@ -90,10 +92,9 @@ export default function EsgPage() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-16">
             <Leaf className="h-16 w-16 text-muted-foreground mb-4 opacity-50" />
-            <h3 className="font-semibold text-lg mb-2">No crypto holdings found</h3>
+            <h3 className="font-semibold text-lg mb-2">{t('empty.title')}</h3>
             <p className="text-muted-foreground text-center mb-4 max-w-md">
-              Connect your crypto accounts to see ESG analysis of your portfolio. The system will
-              automatically analyze your holdings using the Dhanam ESG Framework.
+              {t('empty.description')}
             </p>
           </CardContent>
         </Card>

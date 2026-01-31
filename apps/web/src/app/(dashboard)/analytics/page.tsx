@@ -25,10 +25,12 @@ import {
   PortfolioChart,
 } from '@/components/analytics';
 import { ScheduleReportModal } from '@/components/reports/schedule-report-modal';
+import { useTranslation } from '@dhanam/shared';
 
 export default function AnalyticsPage() {
   const { currentSpace } = useSpaceStore();
   const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const { t } = useTranslation('analytics');
 
   const { data: netWorthData, isLoading: isLoadingNetWorth } = useQuery({
     queryKey: ['net-worth', currentSpace?.id],
@@ -92,9 +94,9 @@ export default function AnalyticsPage() {
         <div className="rounded-full bg-muted p-4 mb-4">
           <TrendingUp className="h-8 w-8 text-muted-foreground" />
         </div>
-        <h3 className="font-semibold text-lg mb-2">No space selected</h3>
+        <h3 className="font-semibold text-lg mb-2">{t('emptyState.noSpaceSelected')}</h3>
         <p className="text-muted-foreground text-sm max-w-sm">
-          Please select a space from the sidebar to view your analytics
+          {t('emptyState.selectSpacePrompt')}
         </p>
       </div>
     );
@@ -104,18 +106,18 @@ export default function AnalyticsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Analytics</h1>
-          <p className="text-muted-foreground">Comprehensive insights into your financial health</p>
+          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
+          <p className="text-muted-foreground">{t('description')}</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => setShowScheduleModal(true)}>
             <Clock className="mr-2 h-4 w-4" />
-            Schedule Reports
+            {t('scheduleReports')}
           </Button>
           <Button variant="outline" asChild>
             <a href={`/api/analytics/${currentSpace.id}/export?format=excel`} download>
               <Download className="mr-2 h-4 w-4" />
-              Export Excel
+              {t('exportExcel')}
             </a>
           </Button>
         </div>
@@ -125,7 +127,7 @@ export default function AnalyticsPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Net Worth</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('cards.netWorth')}</CardTitle>
             <Wallet className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -154,7 +156,7 @@ export default function AnalyticsPage() {
                         </span>
                       </>
                     )}
-                  vs last month
+                  {t('descriptions.vsLastMonth')}
                 </p>
               </>
             )}
@@ -163,7 +165,7 @@ export default function AnalyticsPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Assets</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('cards.totalAssets')}</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -174,7 +176,7 @@ export default function AnalyticsPage() {
                 <div className="text-2xl font-bold text-green-600">
                   {formatCurrency(netWorthData?.totalAssets || 0, currentSpace.currency)}
                 </div>
-                <p className="text-xs text-muted-foreground">Savings, investments, and crypto</p>
+                <p className="text-xs text-muted-foreground">{t('descriptions.savingsInvestmentsCrypto')}</p>
               </>
             )}
           </CardContent>
@@ -182,7 +184,7 @@ export default function AnalyticsPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Liabilities</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('cards.totalLiabilities')}</CardTitle>
             <TrendingDown className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -193,7 +195,7 @@ export default function AnalyticsPage() {
                 <div className="text-2xl font-bold text-red-600">
                   {formatCurrency(netWorthData?.totalLiabilities || 0, currentSpace.currency)}
                 </div>
-                <p className="text-xs text-muted-foreground">Credit cards and loans</p>
+                <p className="text-xs text-muted-foreground">{t('descriptions.creditCardsLoans')}</p>
               </>
             )}
           </CardContent>
@@ -201,7 +203,7 @@ export default function AnalyticsPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Debt Ratio</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('cards.debtRatio')}</CardTitle>
             <Wallet className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -215,7 +217,7 @@ export default function AnalyticsPage() {
                     : 0}
                   %
                 </div>
-                <p className="text-xs text-muted-foreground">Liabilities to assets</p>
+                <p className="text-xs text-muted-foreground">{t('descriptions.liabilitiesToAssets')}</p>
               </>
             )}
           </CardContent>
@@ -256,9 +258,9 @@ export default function AnalyticsPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5" />
-            60-Day Cashflow Forecast
+            {t('cashflow.title')}
           </CardTitle>
-          <CardDescription>Projected income, expenses, and balance</CardDescription>
+          <CardDescription>{t('cashflow.description')}</CardDescription>
         </CardHeader>
         <CardContent>
           {isLoadingCashflow ? (
@@ -269,19 +271,19 @@ export default function AnalyticsPage() {
             <div className="space-y-6">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="text-center p-4 bg-muted/50 rounded-lg">
-                  <p className="text-sm text-muted-foreground">Current Balance</p>
+                  <p className="text-sm text-muted-foreground">{t('cashflow.currentBalance')}</p>
                   <p className="text-lg font-semibold">
                     {formatCurrency(cashflowForecast.summary.currentBalance, currentSpace.currency)}
                   </p>
                 </div>
                 <div className="text-center p-4 bg-green-50 dark:bg-green-950/20 rounded-lg">
-                  <p className="text-sm text-muted-foreground">Projected Income</p>
+                  <p className="text-sm text-muted-foreground">{t('cashflow.projectedIncome')}</p>
                   <p className="text-lg font-semibold text-green-600">
                     {formatCurrency(cashflowForecast.summary.totalIncome, currentSpace.currency)}
                   </p>
                 </div>
                 <div className="text-center p-4 bg-red-50 dark:bg-red-950/20 rounded-lg">
-                  <p className="text-sm text-muted-foreground">Projected Expenses</p>
+                  <p className="text-sm text-muted-foreground">{t('cashflow.projectedExpenses')}</p>
                   <p className="text-lg font-semibold text-red-600">
                     {formatCurrency(cashflowForecast.summary.totalExpenses, currentSpace.currency)}
                   </p>
@@ -293,7 +295,7 @@ export default function AnalyticsPage() {
                       : 'bg-red-50 dark:bg-red-950/20'
                   }`}
                 >
-                  <p className="text-sm text-muted-foreground">Projected Balance</p>
+                  <p className="text-sm text-muted-foreground">{t('cashflow.projectedBalance')}</p>
                   <p
                     className={`text-lg font-semibold ${
                       cashflowForecast.summary.projectedBalance >= 0
@@ -311,7 +313,7 @@ export default function AnalyticsPage() {
 
               {cashflowForecast.forecast && cashflowForecast.forecast.length > 0 && (
                 <div className="space-y-3">
-                  <h4 className="font-medium">Weekly Forecast</h4>
+                  <h4 className="font-medium">{t('cashflow.weeklyForecast')}</h4>
                   <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-4">
                     {cashflowForecast.forecast.slice(0, 8).map((point, index) => (
                       <div
@@ -319,26 +321,26 @@ export default function AnalyticsPage() {
                         className="p-3 border rounded-lg hover:bg-muted/50 transition-colors"
                       >
                         <div className="flex justify-between items-center mb-2">
-                          <p className="text-sm font-medium">Week {index + 1}</p>
+                          <p className="text-sm font-medium">{t('cashflow.week', { number: index + 1 })}</p>
                           <p className="text-xs text-muted-foreground">
                             {new Date(point.date).toLocaleDateString()}
                           </p>
                         </div>
                         <div className="space-y-1 text-sm">
                           <div className="flex justify-between">
-                            <span className="text-muted-foreground">Income</span>
+                            <span className="text-muted-foreground">{t('cashflow.income')}</span>
                             <span className="text-green-600">
                               +{formatCurrency(point.income, currentSpace.currency)}
                             </span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-muted-foreground">Expenses</span>
+                            <span className="text-muted-foreground">{t('cashflow.expenses')}</span>
                             <span className="text-red-600">
                               -{formatCurrency(point.expenses, currentSpace.currency)}
                             </span>
                           </div>
                           <div className="flex justify-between border-t pt-1 mt-1">
-                            <span className="font-medium">Balance</span>
+                            <span className="font-medium">{t('cashflow.balance')}</span>
                             <span
                               className={`font-medium ${
                                 point.balance >= 0 ? 'text-green-600' : 'text-red-600'
@@ -359,11 +361,11 @@ export default function AnalyticsPage() {
               <div className="rounded-full bg-muted p-3 mb-3">
                 <Calendar className="h-6 w-6 text-muted-foreground" />
               </div>
-              <p className="text-sm text-muted-foreground mb-3">No cashflow forecast available</p>
+              <p className="text-sm text-muted-foreground mb-3">{t('cashflow.noForecast')}</p>
               <Button asChild variant="outline" size="sm">
                 <Link href="/accounts">
                   <Plus className="mr-2 h-4 w-4" />
-                  Connect Account
+                  {t('cashflow.connectAccount')}
                 </Link>
               </Button>
             </div>

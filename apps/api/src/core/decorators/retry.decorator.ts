@@ -90,20 +90,33 @@ export function RetryWithTimeout(config: RetryConfig & { timeoutMs: number }): M
 
       const { timeoutMs, ...retryConfig } = config;
 
-      // Wrap the method call with timeout
-      const timedOperation = () =>
-        Promise.race([
-          method.apply(this, args),
-          new Promise((_, reject) => {
-            setTimeout(() => {
-              const error = new Error(
-                `Operation '${operationName}' timed out after ${timeoutMs}ms`
-              );
-              (error as any).code = 'TIMEOUT';
-              reject(error);
-            }, timeoutMs);
-          }),
+      // Wrap the method call with timeout (clearing timer to prevent leaks)
+      const timedOperation = () => {
+        let timeoutHandle: ReturnType<typeof setTimeout>;
+        const timeoutPromise = new Promise((_, reject) => {
+          timeoutHandle = setTimeout(() => {
+            const error = new Error(
+              `Operation '${operationName}' timed out after ${timeoutMs}ms`
+            );
+            (error as any).code = 'TIMEOUT';
+            reject(error);
+          }, timeoutMs);
+        });
+
+        return Promise.race([
+          method.apply(this, args).then(
+            (result: any) => {
+              clearTimeout(timeoutHandle);
+              return result;
+            },
+            (err: any) => {
+              clearTimeout(timeoutHandle);
+              throw err;
+            }
+          ),
+          timeoutPromise,
         ]);
+      };
 
       return withRetry(timedOperation, {
         ...retryConfig,

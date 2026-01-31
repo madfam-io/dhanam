@@ -8,10 +8,25 @@ const publicPaths = [
   '/forgot-password',
   '/reset-password',
   '/auth/callback', // OAuth callback from Janua SSO
+  '/demo',
 ];
+
+const SUPPORTED_LOCALES = ['es', 'en', 'pt-BR'];
 
 // Admin pages that should be rewritten on admin subdomain
 const adminPages = ['/dashboard', '/users', '/audit-logs', '/analytics', '/feature-flags'];
+
+// Inline geo-to-locale mapping (avoid importing from shared in edge middleware)
+const COUNTRY_LOCALE: Record<string, string> = {
+  MX: 'es', CO: 'es', ES: 'es', AR: 'es', CL: 'es', PE: 'es',
+  US: 'en', CA: 'en', GB: 'en', AU: 'en', FR: 'en', DE: 'en', IT: 'en', NL: 'en',
+  BR: 'pt-BR', PT: 'pt-BR',
+};
+
+function getLocaleFromCountry(country: string | null): string {
+  if (!country) return 'es';
+  return COUNTRY_LOCALE[country.toUpperCase()] || 'es';
+}
 
 export function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
@@ -39,7 +54,6 @@ export function middleware(request: NextRequest) {
     }
 
     // Rewrite admin subdomain paths to internal /admin/* routes
-    // e.g., admin.dhan.am/dashboard → internally serves /admin/dashboard
     if (adminPages.some((p) => path === p || path.startsWith(p + '/'))) {
       return NextResponse.rewrite(new URL(`/admin${path}`, request.url));
     }
@@ -54,22 +68,85 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL(newPath, adminUrl));
   }
 
-  // === APP SUBDOMAIN HANDLING (app.dhan.am) ===
+  // === GEO DETECTION (for all routes) ===
+  const countryCode = request.headers.get('cf-ipcountry') || null;
+  const response = NextResponse.next();
 
-  // Handle root path based on hostname
+  // Set geo cookie if not already set
+  if (countryCode && !request.cookies.get('dhanam_geo')) {
+    response.cookies.set('dhanam_geo', countryCode, {
+      maxAge: 365 * 24 * 60 * 60, // 1 year
+      path: '/',
+      sameSite: 'lax',
+    });
+  }
+
+  // Set geo headers for downstream use
+  if (countryCode) {
+    response.headers.set('x-geo-country', countryCode);
+    response.headers.set('x-geo-locale', getLocaleFromCountry(countryCode));
+  }
+
+  // === LANDING PAGE LOCALE ROUTING ===
+  const isLandingDomain =
+    hostname.includes('dhan.am') &&
+    !hostname.includes('app.dhan.am') &&
+    !hostname.includes('admin.dhan.am') &&
+    !hostname.includes('api.dhan.am');
+  const isLocalhost = hostname.includes('localhost');
+  const isLandingSite = isLandingDomain || isLocalhost;
+
+  // Check if path is a locale-prefixed landing route
+  const localeMatch = path.match(/^\/(es|en|pt-BR)(\/.*)?$/);
+
+  if (isLandingSite && path === '/') {
+    // Root landing page → redirect to locale prefix
+    const savedLocale = request.cookies.get('dhanam_locale')?.value;
+    const geoLocale = getLocaleFromCountry(
+      request.cookies.get('dhanam_geo')?.value || countryCode
+    );
+    const locale = savedLocale && SUPPORTED_LOCALES.includes(savedLocale) ? savedLocale : geoLocale;
+
+    return NextResponse.redirect(new URL(`/${locale}`, request.url));
+  }
+
+  if (isLandingSite && localeMatch) {
+    const locale = localeMatch[1];
+    const subPath = localeMatch[2] || '';
+
+    // Only handle landing-specific routes under locale prefix
+    // If there's no subpath or it's a landing-related path, rewrite to landing page
+    if (!subPath || subPath === '/') {
+      // Set locale cookie
+      const rewrite = NextResponse.rewrite(new URL(`/${locale}/landing`, request.url));
+      rewrite.cookies.set('dhanam_locale', locale, {
+        maxAge: 365 * 24 * 60 * 60,
+        path: '/',
+        sameSite: 'lax',
+      });
+      if (countryCode && !request.cookies.get('dhanam_geo')) {
+        rewrite.cookies.set('dhanam_geo', countryCode, {
+          maxAge: 365 * 24 * 60 * 60,
+          path: '/',
+          sameSite: 'lax',
+        });
+      }
+      return rewrite;
+    }
+  }
+
+  // === APP SUBDOMAIN HANDLING (app.dhan.am) ===
   if (path === '/') {
     const isAppSubdomain = hostname.includes('app.dhan.am');
 
     if (isAppSubdomain) {
-      // On app subdomain, redirect based on auth status
       if (token) {
         return NextResponse.redirect(new URL('/dashboard', request.url));
       } else {
         return NextResponse.redirect(new URL('/login', request.url));
       }
     }
-    // Landing page domains (dhan.am, www.dhan.am, localhost) - show landing page
-    return NextResponse.next();
+    return response;
   }
 
   const isPublicPath = publicPaths.some((p) => path.startsWith(p));
@@ -86,7 +163,7 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  return NextResponse.next();
+  return response;
 }
 
 export const config = {

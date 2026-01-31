@@ -60,6 +60,12 @@ export class CircuitBreakerService {
     monitoringWindow: 300000, // 5 minute rolling window
   };
 
+  // Track consecutive successes in half-open state per provider+region
+  private halfOpenSuccesses: Map<string, number> = new Map();
+
+  // In-memory fallback cache when DB is unavailable
+  private memoryCache: Map<string, { circuitBreakerOpen: boolean; updatedAt: Date }> = new Map();
+
   constructor(private prisma: PrismaService) {}
 
   /**
@@ -74,14 +80,38 @@ export class CircuitBreakerService {
    * @returns true if circuit is open (requests should not be attempted)
    */
   async isCircuitOpen(provider: Provider, region: string = 'US'): Promise<boolean> {
-    const health = await this.prisma.providerHealthStatus.findUnique({
-      where: {
-        provider_region: {
-          provider,
-          region,
+    const key = `${provider}:${region}`;
+
+    let health: any;
+    try {
+      health = await this.prisma.providerHealthStatus.findUnique({
+        where: {
+          provider_region: {
+            provider,
+            region,
+          },
         },
-      },
-    });
+      });
+
+      // Sync to memory cache
+      if (health) {
+        this.memoryCache.set(key, {
+          circuitBreakerOpen: health.circuitBreakerOpen,
+          updatedAt: health.updatedAt,
+        });
+      }
+    } catch {
+      // Fallback to in-memory cache when DB is unavailable
+      this.logger.warn(`DB unavailable for circuit breaker check, using memory cache for ${key}`);
+      const cached = this.memoryCache.get(key);
+      if (!cached) return false;
+
+      if (cached.circuitBreakerOpen) {
+        const timeoutPassed = Date.now() - cached.updatedAt.getTime() > this.defaultConfig.timeout;
+        return !timeoutPassed;
+      }
+      return false;
+    }
 
     if (!health) {
       return false; // No health record = circuit closed
@@ -118,6 +148,37 @@ export class CircuitBreakerService {
    */
   async recordSuccess(provider: Provider, region: string, responseTimeMs: number): Promise<void> {
     const now = new Date();
+    const key = `${provider}:${region}`;
+
+    // Check if circuit is in half-open state (circuitBreakerOpen but timeout passed)
+    const health = await this.prisma.providerHealthStatus.findUnique({
+      where: { provider_region: { provider, region } },
+    });
+
+    // Half-open: circuit breaker is still flagged open but status was set to 'degraded'
+    // by setHalfOpen (called when timeout passes during isCircuitOpen check)
+    const isHalfOpen = health?.circuitBreakerOpen && health?.status === 'degraded';
+
+    let shouldClose = true;
+
+    if (isHalfOpen) {
+      // In half-open state, require successThreshold consecutive successes before closing
+      const currentSuccesses = (this.halfOpenSuccesses.get(key) ?? 0) + 1;
+      this.halfOpenSuccesses.set(key, currentSuccesses);
+
+      if (currentSuccesses < this.defaultConfig.successThreshold) {
+        shouldClose = false;
+        this.logger.log(
+          `Half-open success ${currentSuccesses}/${this.defaultConfig.successThreshold} for ${provider} in ${region}`
+        );
+      } else {
+        this.halfOpenSuccesses.delete(key);
+        this.logger.log(`Half-open threshold met for ${provider} in ${region}. Closing circuit.`);
+      }
+    } else {
+      // Not in half-open state, clear any stale counter
+      this.halfOpenSuccesses.delete(key);
+    }
 
     await this.prisma.providerHealthStatus.upsert({
       where: {
@@ -141,8 +202,8 @@ export class CircuitBreakerService {
         successfulCalls: { increment: 1 },
         lastSuccessAt: now,
         avgResponseTimeMs: responseTimeMs,
-        status: 'healthy',
-        circuitBreakerOpen: false, // Close circuit on success
+        status: shouldClose ? 'healthy' : 'degraded',
+        circuitBreakerOpen: shouldClose ? false : true,
       },
     });
 
@@ -238,6 +299,10 @@ export class CircuitBreakerService {
    * Open the circuit breaker for a provider
    */
   private async openCircuit(provider: Provider, region: string): Promise<void> {
+    const key = `${provider}:${region}`;
+    this.halfOpenSuccesses.delete(key);
+    this.memoryCache.set(key, { circuitBreakerOpen: true, updatedAt: new Date() });
+
     await this.prisma.providerHealthStatus.update({
       where: {
         provider_region: {
@@ -346,6 +411,7 @@ export class CircuitBreakerService {
    * @param region - Geographic region
    */
   async reset(provider: Provider, region: string): Promise<void> {
+    this.halfOpenSuccesses.delete(`${provider}:${region}`);
     await this.prisma.providerHealthStatus.update({
       where: {
         provider_region: {

@@ -347,64 +347,104 @@ export class PaymentRouterService {
 
     return [
       {
-        id: 'free',
-        name: isMexico ? 'Gratis' : 'Free',
+        id: 'community',
+        name: isMexico ? 'Comunidad' : 'Community',
         price: 0,
         currency: isMexico ? 'MXN' : 'USD',
         interval: 'month',
         features: isMexico
           ? [
-              '10 cálculos ESG por día',
-              '3 simulaciones Monte Carlo por día',
-              '3 análisis de probabilidad de metas por día',
-              '1 análisis de escenarios por día',
-              '1,000 peticiones API por día',
+              '5 cálculos ESG por día',
+              '2 simulaciones Monte Carlo por día',
+              '1 espacio (personal)',
+              '500 peticiones API por día',
+              'Soporte comunitario',
             ]
           : [
-              '10 ESG calculations per day',
-              '3 Monte Carlo simulations per day',
-              '3 Goal probability analyses per day',
-              '1 Scenario analysis per day',
-              '1,000 API requests per day',
+              '5 ESG calculations per day',
+              '2 Monte Carlo simulations per day',
+              '1 space (personal)',
+              '500 API requests per day',
+              'Community support',
             ],
         provider,
       },
       {
-        id: 'premium_monthly',
-        name: 'Premium',
-        price: isMexico ? 499 : 29,
+        id: 'essentials_monthly',
+        name: 'Essentials',
+        price: isMexico ? 79 : 4.99,
+        currency: isMexico ? 'MXN' : 'USD',
+        interval: 'month',
+        features: isMexico
+          ? [
+              '20 cálculos ESG por día',
+              '10 simulaciones Monte Carlo por día',
+              'Categorización IA (ML)',
+              '2 espacios',
+              'Conexiones Belvo + Bitso',
+              '500 MB almacenamiento',
+              'Soporte por email (48hr)',
+            ]
+          : [
+              '20 ESG calculations per day',
+              '10 Monte Carlo simulations per day',
+              'AI categorization (ML loop)',
+              '2 spaces',
+              'Belvo + Bitso connections',
+              '500 MB storage',
+              'Email support (48hr SLA)',
+            ],
+        provider,
+      },
+      {
+        id: 'essentials_yearly',
+        name: isMexico ? 'Essentials Anual' : 'Essentials Annual',
+        price: isMexico ? 799 : 49.99,
+        currency: isMexico ? 'MXN' : 'USD',
+        interval: 'year',
+        features: isMexico
+          ? ['Todo lo de Essentials mensual', 'Ahorra 17%']
+          : ['Everything in Essentials monthly', 'Save 17%'],
+        provider,
+      },
+      {
+        id: 'pro_monthly',
+        name: 'Pro',
+        price: isMexico ? 199 : 11.99,
         currency: isMexico ? 'MXN' : 'USD',
         interval: 'month',
         features: isMexico
           ? [
               'Cálculos ESG ilimitados',
               'Simulaciones Monte Carlo ilimitadas',
-              'Análisis de probabilidad de metas ilimitados',
-              'Análisis de escenarios ilimitados',
-              'Rebalanceo de portafolio',
-              'Peticiones API ilimitadas',
-              'Soporte prioritario',
+              'Todas las conexiones de proveedores (7)',
+              'DeFi, Zillow, Coleccionables',
+              'Life Beat / planificación patrimonial',
+              'Vistas del hogar (Tuyo/Mío/Nuestro)',
+              '5 espacios, 5 GB almacenamiento',
+              'Soporte prioritario (24hr)',
             ]
           : [
               'Unlimited ESG calculations',
               'Unlimited Monte Carlo simulations',
-              'Unlimited Goal probability analyses',
-              'Unlimited Scenario analyses',
-              'Portfolio rebalancing',
-              'Unlimited API requests',
-              'Priority support',
+              'All provider connections (7)',
+              'DeFi, Zillow, Collectibles',
+              'Life Beat / estate planning',
+              'Household views (Yours/Mine/Ours)',
+              '5 spaces, 5 GB storage',
+              'Priority support (24hr SLA)',
             ],
         provider,
       },
       {
-        id: 'premium_yearly',
-        name: isMexico ? 'Premium Anual' : 'Premium Annual',
-        price: isMexico ? 4990 : 290, // ~2 months free
+        id: 'pro_yearly',
+        name: isMexico ? 'Pro Anual' : 'Pro Annual',
+        price: isMexico ? 1999 : 119.99,
         currency: isMexico ? 'MXN' : 'USD',
         interval: 'year',
         features: isMexico
-          ? ['Todo lo de Premium mensual', '2 meses gratis', 'Acceso anticipado a nuevas funciones']
-          : ['Everything in Premium monthly', '2 months free', 'Early access to new features'],
+          ? ['Todo lo de Pro mensual', 'Ahorra 17%']
+          : ['Everything in Pro monthly', 'Save 17%'],
         provider,
       },
     ];

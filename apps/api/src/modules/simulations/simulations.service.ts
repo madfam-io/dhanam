@@ -48,11 +48,18 @@ export class SimulationsService {
     });
 
     try {
+      // Clamp iterations to tier limit
+      const tierLimits = this.billing.getTierLimits(
+        (await this.prisma.user.findUnique({ where: { id: userId }, select: { subscriptionTier: true } }))
+          ?.subscriptionTier || 'community'
+      );
+      const maxIterations = tierLimits.monteCarloMaxIterations;
+
       const config: SimulationConfig = {
         initialBalance: dto.initialBalance,
         monthlyContribution: dto.monthlyContribution,
         years: dto.years,
-        iterations: dto.iterations || 10000,
+        iterations: Math.min(dto.iterations || 10000, maxIterations),
         expectedReturn: dto.expectedReturn,
         returnVolatility: dto.returnVolatility,
         inflationRate: dto.inflationRate,
@@ -114,6 +121,12 @@ export class SimulationsService {
     });
 
     try {
+      // Clamp iterations to tier limit
+      const retTierLimits = this.billing.getTierLimits(
+        (await this.prisma.user.findUnique({ where: { id: userId }, select: { subscriptionTier: true } }))
+          ?.subscriptionTier || 'community'
+      );
+
       const config: RetirementSimulationConfig = {
         currentAge: dto.currentAge,
         retirementAge: dto.retirementAge,
@@ -124,7 +137,7 @@ export class SimulationsService {
         preRetirementReturn: dto.preRetirementReturn,
         postRetirementReturn: dto.postRetirementReturn,
         returnVolatility: dto.returnVolatility,
-        iterations: dto.iterations,
+        iterations: Math.min(dto.iterations, retTierLimits.monteCarloMaxIterations),
         inflationRate: dto.inflationRate,
       };
 
@@ -270,11 +283,17 @@ export class SimulationsService {
         [ScenarioTypeDto.MARKET_CORRECTION]: ScenarioType.MARKET_CORRECTION,
       };
 
+      // Clamp iterations to tier limit
+      const scenarioTierLimits = this.billing.getTierLimits(
+        (await this.prisma.user.findUnique({ where: { id: userId }, select: { subscriptionTier: true } }))
+          ?.subscriptionTier || 'community'
+      );
+
       const baselineConfig: SimulationConfig = {
         initialBalance: dto.initialBalance,
         monthlyContribution: dto.monthlyContribution,
         years: dto.years,
-        iterations: dto.iterations || 10000,
+        iterations: Math.min(dto.iterations || 10000, scenarioTierLimits.monteCarloMaxIterations),
         expectedReturn: dto.expectedReturn,
         returnVolatility: dto.returnVolatility,
         inflationRate: dto.inflationRate,

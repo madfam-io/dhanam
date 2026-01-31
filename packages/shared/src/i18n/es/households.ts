@@ -16,6 +16,7 @@ export const households = {
     individual: 'Individual',
     trust: 'Fideicomiso',
     estate: 'Patrimonio',
+    partnership: 'Sociedad',
   },
 
   // Relationship Types
@@ -143,6 +144,54 @@ export const households = {
   minorAccessHelp: 'Los menores tienen acceso limitado hasta que alcancen la mayoría de edad',
 
   currencyHelp: 'La moneda base se utiliza para todos los cálculos de patrimonio neto de este hogar',
+
+  // Page-level keys (used by households page component)
+  page: {
+    title: 'Hogares',
+    description: 'Administra la planificación financiera familiar multigeneracional',
+    createHousehold: 'Crear hogar',
+  },
+  dialog: {
+    createTitle: 'Crear nuevo hogar',
+    createDescription: 'Crea un hogar para organizar la planificación financiera multigeneracional',
+  },
+  fields: {
+    name: 'Nombre',
+    namePlaceholder: 'Familia García',
+    type: 'Tipo',
+    baseCurrency: 'Moneda base',
+    descriptionOptional: 'Descripción (Opcional)',
+    descriptionPlaceholder: 'Hogar familiar principal',
+  },
+  empty: {
+    title: 'Aún no hay hogares',
+    description: 'Crea tu primer hogar para comenzar la planificación multigeneracional',
+  },
+  detail: {
+    totalNetWorth: 'Patrimonio neto total',
+    goalsSummary: 'Resumen de objetivos',
+    totalGoals: 'Total de objetivos:',
+    active: 'Activos:',
+    achieved: 'Alcanzados:',
+    targetAmount: 'Monto objetivo:',
+    members: 'Miembros',
+    minor: 'Menor de edad',
+    yoursMineOurs: 'Tuyo, mío y nuestro',
+    ownershipDescription: 'Visualiza las finanzas del hogar por titularidad. Filtra cuentas entre propiedad individual y conjunta.',
+    yourAccounts: 'Tus cuentas',
+    partnerAccounts: 'Cuentas de tu pareja',
+    jointAccounts: 'Cuentas conjuntas',
+    allAccounts: 'Todas las cuentas',
+  },
+  labels: {
+    members: 'Miembros:',
+    spaces: 'Espacios:',
+    goals: 'Objetivos:',
+  },
+  actions: {
+    cancel: 'Cancelar',
+    create: 'Crear',
+  },
 
   // Currencies
   currencies: {

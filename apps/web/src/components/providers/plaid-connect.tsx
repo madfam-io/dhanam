@@ -7,6 +7,7 @@ import { Button } from '@dhanam/ui';
 import { Card, CardContent, CardHeader, CardTitle } from '@dhanam/ui';
 import { Loader2, Shield, CreditCard, Building2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslation } from '@dhanam/shared';
 import { plaidApi } from '@/lib/api/plaid';
 
 // Plaid Link types
@@ -117,6 +118,7 @@ interface PlaidConnectProps {
 }
 
 export function PlaidConnect({ open, onOpenChange, spaceId, onSuccess }: PlaidConnectProps) {
+  const { t } = useTranslation('accounts');
   const [linkToken, setLinkToken] = useState<string | null>(null);
   const [plaidHandler, setPlaidHandler] = useState<{
     open: () => void;
@@ -151,7 +153,7 @@ export function PlaidConnect({ open, onOpenChange, spaceId, onSuccess }: PlaidCo
       setLinkToken(data.linkToken);
     },
     onError: () => {
-      toast.error('Failed to initialize Plaid Link');
+      toast.error(t('providers.plaid.initFailed'));
     },
   });
 
@@ -159,13 +161,13 @@ export function PlaidConnect({ open, onOpenChange, spaceId, onSuccess }: PlaidCo
     mutationFn: (publicToken: string) => plaidApi.linkAccount(spaceId, { publicToken }),
     onSuccess: (data) => {
       toast.success(
-        `Successfully linked ${data.accountsCount} account${data.accountsCount > 1 ? 's' : ''}`
+        t(data.accountsCount > 1 ? 'providers.plaid.linkedSuccess_plural' : 'providers.plaid.linkedSuccess', { count: data.accountsCount })
       );
       onSuccess();
       onOpenChange(false);
     },
     onError: () => {
-      toast.error('Failed to link account');
+      toast.error(t('providers.plaid.linkFailed'));
     },
   });
 
@@ -180,7 +182,7 @@ export function PlaidConnect({ open, onOpenChange, spaceId, onSuccess }: PlaidCo
     (err: PlaidLinkError | null, _metadata: PlaidLinkOnExitMetadata) => {
       if (err) {
         console.error('Plaid Link exit error:', err);
-        toast.error(err.display_message || 'Failed to connect bank account');
+        toast.error(err.display_message || t('providers.plaid.exitError'));
       }
     },
     []
@@ -218,11 +220,10 @@ export function PlaidConnect({ open, onOpenChange, spaceId, onSuccess }: PlaidCo
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <CreditCard className="h-5 w-5 text-blue-600" />
-            Connect US Bank Account
+            {t('providers.plaid.title')}
           </DialogTitle>
           <DialogDescription>
-            Securely connect your US bank account using Plaid. Your login credentials are encrypted
-            and never stored on our servers.
+            {t('providers.plaid.description')}
           </DialogDescription>
         </DialogHeader>
 
@@ -232,15 +233,15 @@ export function PlaidConnect({ open, onOpenChange, spaceId, onSuccess }: PlaidCo
             <CardHeader className="pb-3">
               <CardTitle className="text-sm flex items-center gap-2">
                 <Shield className="h-4 w-4 text-green-600" />
-                Bank-Level Security
+                {t('providers.plaid.securityTitle')}
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
               <ul className="text-sm text-muted-foreground space-y-1">
-                <li>• 256-bit SSL encryption</li>
-                <li>• Read-only access to your accounts</li>
-                <li>• Used by thousands of financial apps</li>
-                <li>• No passwords stored</li>
+                <li>• {t('providers.plaid.securityEncryption')}</li>
+                <li>• {t('providers.plaid.securityReadOnly')}</li>
+                <li>• {t('providers.plaid.securityTrusted')}</li>
+                <li>• {t('providers.plaid.securityNoPasswords')}</li>
               </ul>
             </CardContent>
           </Card>
@@ -249,7 +250,7 @@ export function PlaidConnect({ open, onOpenChange, spaceId, onSuccess }: PlaidCo
           <div>
             <h4 className="font-medium mb-3 flex items-center gap-2">
               <Building2 className="h-4 w-4" />
-              Supported Banks & Credit Unions
+              {t('providers.plaid.supportedBanks')}
             </h4>
             <div className="grid grid-cols-2 gap-3">
               {PLAID_INSTITUTIONS.map((institution) => (
@@ -268,7 +269,7 @@ export function PlaidConnect({ open, onOpenChange, spaceId, onSuccess }: PlaidCo
               ))}
             </div>
             <p className="text-xs text-muted-foreground mt-2">
-              And 10,000+ other US financial institutions
+              {t('providers.plaid.moreInstitutions')}
             </p>
           </div>
 
@@ -283,15 +284,15 @@ export function PlaidConnect({ open, onOpenChange, spaceId, onSuccess }: PlaidCo
               {createLinkTokenMutation.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Initializing...
+                  {t('providers.plaid.initializing')}
                 </>
               ) : linkAccountMutation.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Connecting...
+                  {t('providers.plaid.connecting')}
                 </>
               ) : (
-                'Connect Bank Account'
+                t('providers.plaid.connectButton')
               )}
             </Button>
 
@@ -318,7 +319,7 @@ export function PlaidConnect({ open, onOpenChange, spaceId, onSuccess }: PlaidCo
             )}
 
             <p className="text-xs text-center text-muted-foreground">
-              By connecting, you agree to Plaid&apos;s{' '}
+              {t('providers.plaid.privacyConsent')}{' '}
               <a
                 href="https://plaid.com/legal/end-user-privacy-policy"
                 target="_blank"

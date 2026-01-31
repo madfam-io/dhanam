@@ -8,6 +8,7 @@ import { Input } from '@dhanam/ui';
 import { Alert, AlertDescription } from '@dhanam/ui';
 import { Loader2, Shield, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslation } from '@dhanam/shared';
 import { authApi } from '~/lib/api/auth';
 
 interface AuthTokens {
@@ -23,13 +24,14 @@ interface TotpVerifyProps {
 }
 
 export function TotpVerify({ open, onOpenChange, onSuccess, tempTokens }: TotpVerifyProps) {
+  const { t } = useTranslation('auth');
   const [totpCode, setTotpCode] = useState('');
   const [useBackupCode, setUseBackupCode] = useState(false);
 
   const verifyMutation = useMutation({
     mutationFn: (code: string) => authApi.verifyTwoFactor({ code }),
     onSuccess: () => {
-      toast.success('Authentication successful');
+      toast.success(t('totp.authSuccess'));
       onSuccess(tempTokens);
       onOpenChange(false);
       setTotpCode('');
@@ -39,9 +41,9 @@ export function TotpVerify({ open, onOpenChange, onSuccess, tempTokens }: TotpVe
       const message =
         (error as { code?: string })?.code === 'INVALID_TOTP'
           ? useBackupCode
-            ? 'Invalid backup code'
-            : 'Invalid verification code'
-          : 'Verification failed';
+            ? t('totp.invalidBackupCode')
+            : t('totp.invalidCode')
+          : t('totp.verificationFailed');
       toast.error(message);
       setTotpCode('');
     },
@@ -67,10 +69,10 @@ export function TotpVerify({ open, onOpenChange, onSuccess, tempTokens }: TotpVe
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Shield className="h-5 w-5 text-green-600" />
-            Two-Factor Authentication
+            {t('totp.verifyTitle')}
           </DialogTitle>
           <DialogDescription>
-            Enter the code from your authenticator app to complete login
+            {t('totp.verifyDescription')}
           </DialogDescription>
         </DialogHeader>
 
@@ -78,14 +80,14 @@ export function TotpVerify({ open, onOpenChange, onSuccess, tempTokens }: TotpVe
           <Alert>
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              Your account has two-factor authentication enabled for added security.
+              {t('totp.verifyNotice')}
             </AlertDescription>
           </Alert>
 
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <label htmlFor="totp-code" className="text-sm font-medium">
-                {useBackupCode ? 'Backup Code' : 'Verification Code'}
+                {useBackupCode ? t('totp.backupCodeLabel') : t('totp.verificationCodeLabel')}
               </label>
               <Button
                 variant="link"
@@ -96,7 +98,7 @@ export function TotpVerify({ open, onOpenChange, onSuccess, tempTokens }: TotpVe
                 }}
                 className="h-auto p-0 text-xs"
               >
-                Use {useBackupCode ? 'authenticator app' : 'backup code'}
+                {useBackupCode ? t('totp.useAuthenticatorApp') : t('totp.useBackupCodeLink')}
               </Button>
             </div>
 
@@ -126,16 +128,16 @@ export function TotpVerify({ open, onOpenChange, onSuccess, tempTokens }: TotpVe
               {verifyMutation.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Verifying...
+                  {t('totp.verifying')}
                 </>
               ) : (
-                'Verify & Login'
+                t('totp.verifyAndLogin')
               )}
             </Button>
 
             {useBackupCode && (
               <p className="text-xs text-center text-muted-foreground">
-                Backup codes are single-use. Make sure to keep your remaining codes safe.
+                {t('totp.backupCodeSingleUse')}
               </p>
             )}
           </div>

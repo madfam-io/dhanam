@@ -1,7 +1,13 @@
+'use client';
+
+import { useTranslation } from '@dhanam/shared';
 import { Globe } from 'lucide-react';
 import Link from 'next/link';
 
 export function Footer() {
+  const { t } = useTranslation('landing');
+  const currentYear = new Date().getFullYear();
+
   return (
     <footer className="container mx-auto px-6 py-8 border-t">
       <div className="flex flex-col md:flex-row items-center justify-between gap-4">
@@ -12,22 +18,22 @@ export function Footer() {
 
         <div className="text-center space-y-1">
           <p className="text-sm text-muted-foreground">
-            © 2026 Dhanam. Autonomous Family Office for Everyone.
+            {t('footer.copyright', { year: currentYear })}
           </p>
           <p className="text-xs text-muted-foreground">
-            Built for Mexico and the Americas. Available on web and mobile.
+            {t('footer.subtitle')}
           </p>
         </div>
 
         <div className="flex items-center gap-6">
           <Link href="/privacy" className="text-sm text-muted-foreground hover:text-foreground">
-            Privacy
+            {t('footer.privacy')}
           </Link>
           <Link href="/terms" className="text-sm text-muted-foreground hover:text-foreground">
-            Terms
+            {t('footer.terms')}
           </Link>
           <Link href="/docs" className="text-sm text-muted-foreground hover:text-foreground">
-            Docs
+            {t('footer.docs')}
           </Link>
         </div>
       </div>

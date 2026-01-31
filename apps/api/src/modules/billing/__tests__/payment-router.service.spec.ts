@@ -378,26 +378,26 @@ describe('PaymentRouterService', () => {
     it('should return MXN plans for Mexico', () => {
       const plans = service.getPlans('MX');
 
-      expect(plans).toHaveLength(3);
+      expect(plans).toHaveLength(5);
 
-      const freePlan = plans.find((p) => p.id === 'free');
+      const freePlan = plans.find((p) => p.id === 'community');
       expect(freePlan).toMatchObject({
         price: 0,
         currency: 'MXN',
-        name: 'Gratis',
+        name: 'Comunidad',
         provider: 'stripe_mx',
       });
 
-      const premiumMonthly = plans.find((p) => p.id === 'premium_monthly');
+      const premiumMonthly = plans.find((p) => p.id === 'pro_monthly');
       expect(premiumMonthly).toMatchObject({
-        price: 499,
+        price: 199,
         currency: 'MXN',
         provider: 'stripe_mx',
       });
 
-      const premiumYearly = plans.find((p) => p.id === 'premium_yearly');
+      const premiumYearly = plans.find((p) => p.id === 'pro_yearly');
       expect(premiumYearly).toMatchObject({
-        price: 4990,
+        price: 1999,
         currency: 'MXN',
         provider: 'stripe_mx',
       });
@@ -406,26 +406,26 @@ describe('PaymentRouterService', () => {
     it('should return USD plans for US', () => {
       const plans = service.getPlans('US');
 
-      expect(plans).toHaveLength(3);
+      expect(plans).toHaveLength(5);
 
-      const freePlan = plans.find((p) => p.id === 'free');
+      const freePlan = plans.find((p) => p.id === 'community');
       expect(freePlan).toMatchObject({
         price: 0,
         currency: 'USD',
-        name: 'Free',
+        name: 'Community',
         provider: 'paddle',
       });
 
-      const premiumMonthly = plans.find((p) => p.id === 'premium_monthly');
+      const premiumMonthly = plans.find((p) => p.id === 'pro_monthly');
       expect(premiumMonthly).toMatchObject({
-        price: 29,
+        price: 11.99,
         currency: 'USD',
         provider: 'paddle',
       });
 
-      const premiumYearly = plans.find((p) => p.id === 'premium_yearly');
+      const premiumYearly = plans.find((p) => p.id === 'pro_yearly');
       expect(premiumYearly).toMatchObject({
-        price: 290,
+        price: 119.99,
         currency: 'USD',
         provider: 'paddle',
       });
@@ -433,16 +433,16 @@ describe('PaymentRouterService', () => {
 
     it('should return Spanish feature descriptions for Mexico', () => {
       const plans = service.getPlans('MX');
-      const freePlan = plans.find((p) => p.id === 'free');
+      const freePlan = plans.find((p) => p.id === 'community');
 
-      expect(freePlan?.features).toContain('10 cálculos ESG por día');
+      expect(freePlan?.features).toContain('5 cálculos ESG por día');
     });
 
     it('should return English feature descriptions for other countries', () => {
       const plans = service.getPlans('US');
-      const freePlan = plans.find((p) => p.id === 'free');
+      const freePlan = plans.find((p) => p.id === 'community');
 
-      expect(freePlan?.features).toContain('10 ESG calculations per day');
+      expect(freePlan?.features).toContain('5 ESG calculations per day');
     });
   });
 

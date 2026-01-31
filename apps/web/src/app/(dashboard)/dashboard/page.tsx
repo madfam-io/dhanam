@@ -11,6 +11,7 @@ import { useSpaceStore } from '~/stores/space';
 import { analyticsApi } from '~/lib/api/analytics';
 import { CategorySummary } from '~/lib/api/budgets';
 import { formatCurrency } from '~/lib/utils';
+import { useTranslation } from '@dhanam/shared';
 import {
   TrendingUp,
   TrendingDown,
@@ -36,8 +37,8 @@ export default function DashboardPage() {
   const { user } = useAuth();
   const { currentSpace } = useSpaceStore();
   const isGuestDemo = user?.email === 'guest@dhanam.demo';
+  const { t } = useTranslation('dashboard');
 
-  // Single combined query for all dashboard data - eliminates waterfall
   const { data: dashboardData, isLoading } = useQuery({
     queryKey: ['dashboard-data', currentSpace?.id],
     queryFn: () => {
@@ -45,10 +46,9 @@ export default function DashboardPage() {
       return analyticsApi.getDashboardData(currentSpace.id);
     },
     enabled: !!currentSpace,
-    staleTime: 30000, // 30 seconds
+    staleTime: 30000,
   });
 
-  // Extract data from combined response
   const accounts = dashboardData?.accounts;
   const recentTransactions = dashboardData?.recentTransactions;
   const budgets = dashboardData?.budgets;
@@ -58,14 +58,12 @@ export default function DashboardPage() {
   const portfolioAllocation = dashboardData?.portfolioAllocation;
   const goals = dashboardData?.goals;
 
-  // Filter active goals for display
   const activeGoals = goals?.filter((g) => g.status === 'active') || [];
 
   if (!currentSpace) {
     return <EmptyState />;
   }
 
-  // Use analytics data when available, fallback to account calculations
   const totalAssets =
     netWorthData?.totalAssets ??
     (accounts?.filter((a) => a.balance > 0).reduce((sum, a) => sum + a.balance, 0) || 0);
@@ -87,8 +85,8 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight">Welcome back, {user?.name}</h2>
-        <p className="text-muted-foreground">Here&apos;s an overview of your financial status</p>
+        <h2 className="text-3xl font-bold tracking-tight">{t('overview.welcomeBack', { name: user?.name })}</h2>
+        <p className="text-muted-foreground">{t('overview.financialOverview')}</p>
       </div>
 
       {/* Key Metrics */}
@@ -96,10 +94,10 @@ export default function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <div className="flex items-center gap-2">
-              <CardTitle className="text-sm font-medium">Net Worth</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('overview.netWorth')}</CardTitle>
               <HelpTooltip
-                title="Net Worth"
-                content="Total value of all your assets (savings, investments, crypto) minus liabilities (credit cards, loans). Updated in real-time as your accounts sync."
+                title={t('overview.netWorth')}
+                content={t('overview.netWorthTooltip')}
               />
             </div>
             <Wallet className="h-4 w-4 text-muted-foreground" />
@@ -125,14 +123,14 @@ export default function DashboardPage() {
                   </span>
                 </>
               )}
-              {netWorth > 0 ? 'Positive' : 'Negative'} net worth
+              {netWorth > 0 ? t('overview.positiveNetWorth') : t('overview.negativeNetWorth')}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Assets</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('overview.totalAssets')}</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -144,14 +142,14 @@ export default function DashboardPage() {
               )}
             </div>
             <p className="text-xs text-muted-foreground">
-              Across {accounts?.filter((a) => a.balance > 0).length || 0} accounts
+              {t('overview.acrossAccounts', { count: accounts?.filter((a) => a.balance > 0).length || 0 })}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Liabilities</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('overview.totalLiabilities')}</CardTitle>
             <TrendingDown className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -163,7 +161,7 @@ export default function DashboardPage() {
               )}
             </div>
             <p className="text-xs text-muted-foreground">
-              Across {accounts?.filter((a) => a.balance < 0).length || 0} accounts
+              {t('overview.acrossAccounts', { count: accounts?.filter((a) => a.balance < 0).length || 0 })}
             </p>
           </CardContent>
         </Card>
@@ -171,10 +169,10 @@ export default function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <div className="flex items-center gap-2">
-              <CardTitle className="text-sm font-medium">Budget Usage</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('overview.budgetUsage')}</CardTitle>
               <HelpTooltip
-                title="Budget Usage"
-                content="Track spending against your monthly budget across categories. Dhanam auto-categorizes transactions using smart rules to help you stay on track."
+                title={t('overview.budgetUsage')}
+                content={t('overview.budgetUsageTooltip')}
               />
             </div>
             <PiggyBank className="h-4 w-4 text-muted-foreground" />
@@ -186,18 +184,17 @@ export default function DashboardPage() {
               ) : currentBudgetSummary ? (
                 `${currentBudgetSummary.summary.totalPercentUsed.toFixed(0)}%`
               ) : (
-                'No budget'
+                t('overview.noBudget')
               )}
             </div>
             <p className="text-xs text-muted-foreground">
               {currentBudgetSummary
-                ? `${formatCurrency(currentBudgetSummary.summary.totalRemaining, currentSpace.currency)} remaining`
-                : 'Create a budget to track'}
+                ? t('overview.remaining', { amount: formatCurrency(currentBudgetSummary.summary.totalRemaining, currentSpace.currency) })
+                : t('overview.createBudgetToTrack')}
             </p>
           </CardContent>
         </Card>
 
-        {/* Goal Health Score - Only show if there are goals with probability data */}
         {!isLoading && goals && goals.length > 0 && (
           <PremiumGate feature="Goal Probability Tracking">
             <GoalHealthScore goals={goals} />
@@ -209,8 +206,8 @@ export default function DashboardPage() {
         {/* Accounts Overview */}
         <Card className="col-span-4">
           <CardHeader>
-            <CardTitle>Accounts</CardTitle>
-            <CardDescription>Your connected accounts and balances</CardDescription>
+            <CardTitle>{t('overview.accountsTitle')}</CardTitle>
+            <CardDescription>{t('overview.accountsDescription')}</CardDescription>
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -219,7 +216,7 @@ export default function DashboardPage() {
               </div>
             ) : accounts?.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-8">
-                No accounts connected yet
+                {t('overview.noAccountsConnected')}
               </p>
             ) : (
               <div className="space-y-4">
@@ -231,7 +228,7 @@ export default function DashboardPage() {
                       <div className="space-y-1 flex-1">
                         <p className="text-sm font-medium leading-none">{account.name}</p>
                         <p className="text-sm text-muted-foreground">
-                          {account.type} • {account.provider}
+                          {account.type} &bull; {account.provider}
                         </p>
                       </div>
                       <div className={`font-medium ${account.balance < 0 ? 'text-red-600' : ''}`}>
@@ -248,8 +245,8 @@ export default function DashboardPage() {
         {/* Recent Transactions */}
         <Card className="col-span-3">
           <CardHeader>
-            <CardTitle>Recent Transactions</CardTitle>
-            <CardDescription>Your latest financial activity</CardDescription>
+            <CardTitle>{t('overview.recentTransactions')}</CardTitle>
+            <CardDescription>{t('overview.latestActivity')}</CardDescription>
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -257,7 +254,7 @@ export default function DashboardPage() {
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
               </div>
             ) : recentTransactions?.data.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-8">No transactions yet</p>
+              <p className="text-sm text-muted-foreground text-center py-8">{t('overview.noTransactions')}</p>
             ) : (
               <div className="space-y-4">
                 {recentTransactions?.data.map((transaction) => (
@@ -287,31 +284,31 @@ export default function DashboardPage() {
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
-              <CardTitle>60-Day Cashflow Forecast</CardTitle>
+              <CardTitle>{t('overview.cashflowForecast')}</CardTitle>
               <HelpTooltip
-                title="Cashflow Forecast"
-                content="AI-powered prediction of your income and expenses for the next 60 days based on historical patterns. Helps you anticipate cash shortages and plan ahead."
+                title={t('overview.cashflowForecast')}
+                content={t('overview.cashflowTooltip')}
               />
             </div>
-            <CardDescription>Projected income, expenses, and balance trends</CardDescription>
+            <CardDescription>{t('overview.projectedDescription')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <div className="grid grid-cols-3 gap-4 text-center">
                 <div>
-                  <p className="text-sm text-muted-foreground">Projected Income</p>
+                  <p className="text-sm text-muted-foreground">{t('overview.projectedIncome')}</p>
                   <p className="text-lg font-semibold text-green-600">
                     {formatCurrency(cashflowForecast.summary.totalIncome, currentSpace.currency)}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Projected Expenses</p>
+                  <p className="text-sm text-muted-foreground">{t('overview.projectedExpenses')}</p>
                   <p className="text-lg font-semibold text-red-600">
                     {formatCurrency(cashflowForecast.summary.totalExpenses, currentSpace.currency)}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Net Cashflow</p>
+                  <p className="text-sm text-muted-foreground">{t('overview.netCashflow')}</p>
                   <p
                     className={`text-lg font-semibold ${cashflowForecast.summary.totalIncome - cashflowForecast.summary.totalExpenses >= 0 ? 'text-green-600' : 'text-red-600'}`}
                   >
@@ -324,13 +321,13 @@ export default function DashboardPage() {
               </div>
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span>Current Balance</span>
+                  <span>{t('overview.currentBalance')}</span>
                   <span>
                     {formatCurrency(cashflowForecast.summary.currentBalance, currentSpace.currency)}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span>Projected Balance (60d)</span>
+                  <span>{t('overview.projectedBalance')}</span>
                   <span
                     className={
                       cashflowForecast.summary.projectedBalance >= 0
@@ -350,8 +347,8 @@ export default function DashboardPage() {
         </Card>
       ) : (
         <AnalyticsEmptyState
-          title="60-Day Cashflow Forecast"
-          description="Projected income, expenses, and balance trends"
+          title={t('overview.cashflowForecast')}
+          description={t('overview.projectedDescription')}
           isDemoMode={isGuestDemo}
         />
       )}
@@ -360,8 +357,8 @@ export default function DashboardPage() {
       {portfolioAllocation && portfolioAllocation.length > 0 ? (
         <Card>
           <CardHeader>
-            <CardTitle>Portfolio Allocation</CardTitle>
-            <CardDescription>Asset distribution across your accounts</CardDescription>
+            <CardTitle>{t('overview.portfolioAllocation')}</CardTitle>
+            <CardDescription>{t('overview.portfolioDescription')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
@@ -396,14 +393,14 @@ export default function DashboardPage() {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-2xl font-bold tracking-tight">Financial Goals</h3>
+                <h3 className="text-2xl font-bold tracking-tight">{t('overview.financialGoals')}</h3>
                 <p className="text-sm text-muted-foreground flex items-center gap-2">
-                  Track probability of achieving your goals with Monte Carlo simulations
-                  <HelpTooltip content="Each goal shows success probability based on 10,000 Monte Carlo simulations, considering your current savings, monthly contributions, and market volatility." />
+                  {t('overview.goalsDescription')}
+                  <HelpTooltip content={t('overview.goalsTooltip')} />
                 </p>
               </div>
               <Button variant="outline" onClick={() => router.push('/goals')}>
-                View All Goals
+                {t('overview.viewAllGoals')}
               </Button>
             </div>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -417,7 +414,6 @@ export default function DashboardPage() {
               ))}
             </div>
 
-            {/* Probability Timeline */}
             {activeGoals.length > 0 && <GoalProbabilityTimeline goals={activeGoals} />}
           </div>
         </PremiumGate>
@@ -433,9 +429,9 @@ export default function DashboardPage() {
             <div>
               <CardTitle className="flex items-center gap-2">
                 <Gamepad2 className="h-5 w-5" />
-                Gaming Assets
+                {t('overview.gamingAssets')}
               </CardTitle>
-              <CardDescription>Metaverse holdings, NFTs, and staking</CardDescription>
+              <CardDescription>{t('overview.gamingDescription')}</CardDescription>
             </div>
             <Button
               variant="outline"
@@ -445,31 +441,31 @@ export default function DashboardPage() {
                 router.push('/gaming');
               }}
             >
-              View Dashboard
+              {t('overview.viewDashboard')}
             </Button>
           </div>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div>
-              <p className="text-sm text-muted-foreground">SAND Staked</p>
+              <p className="text-sm text-muted-foreground">{t('overview.sandStaked')}</p>
               <p className="text-lg font-semibold">15,000</p>
               <p className="text-xs text-green-600">8.5% APY</p>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">LAND Parcels</p>
+              <p className="text-sm text-muted-foreground">{t('overview.landParcels')}</p>
               <p className="text-lg font-semibold">5</p>
-              <p className="text-xs text-muted-foreground">2 rented</p>
+              <p className="text-xs text-muted-foreground">{t('overview.rented', { count: 2 })}</p>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">NFTs</p>
+              <p className="text-sm text-muted-foreground">{t('overview.nfts')}</p>
               <p className="text-lg font-semibold">14</p>
-              <p className="text-xs text-muted-foreground">$22.5K value</p>
+              <p className="text-xs text-muted-foreground">{t('overview.nftValue', { value: '$22.5K' })}</p>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Monthly Income</p>
+              <p className="text-sm text-muted-foreground">{t('overview.monthlyIncomeLabel')}</p>
               <p className="text-lg font-semibold text-green-600">$597</p>
-              <p className="text-xs text-muted-foreground">All sources</p>
+              <p className="text-xs text-muted-foreground">{t('overview.allSources')}</p>
             </div>
           </div>
         </CardContent>
@@ -479,8 +475,8 @@ export default function DashboardPage() {
       {currentBudgetSummary && (
         <Card>
           <CardHeader>
-            <CardTitle>Current Budget: {budgets?.[0]?.name || 'N/A'}</CardTitle>
-            <CardDescription>Track your spending across categories</CardDescription>
+            <CardTitle>{t('overview.currentBudget', { name: budgets?.[0]?.name || 'N/A' })}</CardTitle>
+            <CardDescription>{t('overview.trackSpending')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -515,16 +511,17 @@ export default function DashboardPage() {
 
 function EmptyState() {
   const router = useRouter();
+  const { t } = useTranslation('dashboard');
 
   return (
     <Card>
       <CardContent className="flex flex-col items-center justify-center py-10">
         <Target className="h-12 w-12 text-muted-foreground mb-4" />
-        <h3 className="text-lg font-semibold mb-2">Get Started</h3>
+        <h3 className="text-lg font-semibold mb-2">{t('emptyState.getStarted')}</h3>
         <p className="text-sm text-muted-foreground text-center mb-4">
-          Create a space to start tracking your finances
+          {t('emptyState.createSpaceDescription')}
         </p>
-        <Button onClick={() => router.push('/spaces/new')}>Create Your First Space</Button>
+        <Button onClick={() => router.push('/spaces/new')}>{t('emptyState.createFirstSpace')}</Button>
       </CardContent>
     </Card>
   );

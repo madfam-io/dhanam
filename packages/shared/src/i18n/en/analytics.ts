@@ -1,0 +1,37 @@
+export const analytics = {
+  title: 'Analytics',
+  description: 'Comprehensive insights into your financial health',
+  scheduleReports: 'Schedule Reports',
+  exportExcel: 'Export Excel',
+  cards: {
+    netWorth: 'Net Worth',
+    totalAssets: 'Total Assets',
+    totalLiabilities: 'Total Liabilities',
+    debtRatio: 'Debt Ratio',
+  },
+  descriptions: {
+    vsLastMonth: 'vs last month',
+    savingsInvestmentsCrypto: 'Savings, investments, and crypto',
+    creditCardsLoans: 'Credit cards and loans',
+    liabilitiesToAssets: 'Liabilities to assets',
+  },
+  emptyState: {
+    noSpaceSelected: 'No space selected',
+    selectSpacePrompt: 'Please select a space from the sidebar to view your analytics',
+  },
+  cashflow: {
+    title: '60-Day Cashflow Forecast',
+    description: 'Projected income, expenses, and balance',
+    currentBalance: 'Current Balance',
+    projectedIncome: 'Projected Income',
+    projectedExpenses: 'Projected Expenses',
+    projectedBalance: 'Projected Balance',
+    weeklyForecast: 'Weekly Forecast',
+    week: 'Week {{number}}',
+    income: 'Income',
+    expenses: 'Expenses',
+    balance: 'Balance',
+    noForecast: 'No cashflow forecast available',
+    connectAccount: 'Connect Account',
+  },
+} as const;

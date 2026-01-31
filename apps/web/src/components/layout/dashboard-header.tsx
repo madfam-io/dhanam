@@ -14,6 +14,7 @@ import { Bell, Settings, User, LogOut, ChevronDown, Shield } from 'lucide-react'
 import { useAuth } from '~/lib/hooks/use-auth';
 import { useSpaces } from '~/lib/hooks/use-spaces';
 import { useSpaceStore } from '~/stores/space';
+import { useTranslation } from '@dhanam/shared';
 import type { Space } from '@dhanam/shared';
 
 export function DashboardHeader() {
@@ -24,6 +25,7 @@ export function DashboardHeader() {
   const isPlaceholderData = spacesQuery.isPlaceholderData;
   const { currentSpace, setCurrentSpace } = useSpaceStore();
   const router = useRouter();
+  const { t } = useTranslation('dashboard');
 
   const handleLogout = async () => {
     await logout();
@@ -46,11 +48,11 @@ export function DashboardHeader() {
                 {spacesLoading && !spaces?.length ? (
                   <span className="flex items-center gap-2">
                     <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                    Loading...
+                    {t('header.loading')}
                   </span>
                 ) : (
                   <>
-                    <span>{currentSpace?.name || 'Select Space'}</span>
+                    <span>{currentSpace?.name || t('header.selectSpace')}</span>
                     {isPlaceholderData && (
                       <span className="h-2 w-2 rounded-full bg-yellow-500 animate-pulse" />
                     )}
@@ -60,7 +62,7 @@ export function DashboardHeader() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-[200px]">
-              <DropdownMenuLabel>Your Spaces</DropdownMenuLabel>
+              <DropdownMenuLabel>{t('header.yourSpaces')}</DropdownMenuLabel>
               <DropdownMenuSeparator />
               {spaces && spaces.length > 0 ? (
                 <>
@@ -74,12 +76,12 @@ export function DashboardHeader() {
                   ))}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => router.push('/dashboard/spaces/new')}>
-                    Create New Space
+                    {t('header.createNewSpace')}
                   </DropdownMenuItem>
                 </>
               ) : (
                 <DropdownMenuItem onClick={() => router.push('/dashboard/spaces/new')}>
-                  Create Your First Space
+                  {t('header.createFirstSpace')}
                 </DropdownMenuItem>
               )}
             </DropdownMenuContent>
@@ -103,25 +105,24 @@ export function DashboardHeader() {
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => router.push('/dashboard/settings')}>
                 <Settings className="mr-2 h-4 w-4" />
-                Settings
+                {t('header.settings')}
               </DropdownMenuItem>
               {/* Show admin link for users with admin/owner roles */}
               {user?.spaces?.some((space) => space.role === 'admin' || space.role === 'owner') && (
                 <DropdownMenuItem
                   onClick={() => {
-                    // Navigate to admin subdomain for cross-subdomain navigation
                     const adminUrl = process.env.NEXT_PUBLIC_ADMIN_URL || 'https://admin.dhan.am';
                     window.location.href = `${adminUrl}/dashboard`;
                   }}
                 >
                   <Shield className="mr-2 h-4 w-4" />
-                  Admin Dashboard
+                  {t('header.adminDashboard')}
                 </DropdownMenuItem>
               )}
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleLogout}>
                 <LogOut className="mr-2 h-4 w-4" />
-                Logout
+                {t('header.logout')}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

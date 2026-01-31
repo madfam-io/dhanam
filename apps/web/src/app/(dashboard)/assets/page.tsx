@@ -29,6 +29,7 @@ import {
 import { ManualAssetForm, type ManualAssetData } from '@/components/assets/manual-asset-form';
 import { apiClient } from '@/lib/api/client';
 import { useSpaceStore } from '@/stores/space';
+import { useTranslation } from '@dhanam/shared';
 
 interface ManualAsset {
   id: string;
@@ -44,40 +45,32 @@ interface ManualAsset {
   updatedAt: string;
 }
 
-interface AssetTypeConfig {
-  label: string;
+interface AssetTypeStaticConfig {
   icon: React.ComponentType<{ className?: string }>;
   color: string;
+  labelKey: string;
 }
 
-const DEFAULT_ASSET_CONFIG: AssetTypeConfig = {
-  label: 'Other',
+const DEFAULT_ASSET_STATIC: AssetTypeStaticConfig = {
   icon: Plus,
   color: 'text-gray-600 bg-gray-100',
+  labelKey: 'page.typeOther',
 };
 
-const ASSET_TYPE_CONFIG: Record<string, AssetTypeConfig> = {
-  real_estate: { label: 'Real Estate', icon: Building2, color: 'text-blue-600 bg-blue-100' },
-  vehicle: { label: 'Vehicle', icon: Car, color: 'text-green-600 bg-green-100' },
-  domain: { label: 'Web Domain', icon: Globe, color: 'text-purple-600 bg-purple-100' },
-  private_equity: {
-    label: 'Private Equity',
-    icon: TrendingUp,
-    color: 'text-orange-600 bg-orange-100',
-  },
-  angel_investment: {
-    label: 'Angel Investment',
-    icon: TrendingUp,
-    color: 'text-red-600 bg-red-100',
-  },
-  collectible: { label: 'Collectible', icon: Gem, color: 'text-pink-600 bg-pink-100' },
-  art: { label: 'Art', icon: Palette, color: 'text-indigo-600 bg-indigo-100' },
-  jewelry: { label: 'Jewelry', icon: Coins, color: 'text-yellow-600 bg-yellow-100' },
-  other: DEFAULT_ASSET_CONFIG,
+const ASSET_TYPE_STATIC: Record<string, AssetTypeStaticConfig> = {
+  real_estate: { icon: Building2, color: 'text-blue-600 bg-blue-100', labelKey: 'page.typeRealEstate' },
+  vehicle: { icon: Car, color: 'text-green-600 bg-green-100', labelKey: 'page.typeVehicle' },
+  domain: { icon: Globe, color: 'text-purple-600 bg-purple-100', labelKey: 'page.typeDomain' },
+  private_equity: { icon: TrendingUp, color: 'text-orange-600 bg-orange-100', labelKey: 'page.typePrivateEquity' },
+  angel_investment: { icon: TrendingUp, color: 'text-red-600 bg-red-100', labelKey: 'page.typeAngelInvestment' },
+  collectible: { icon: Gem, color: 'text-pink-600 bg-pink-100', labelKey: 'page.typeCollectible' },
+  art: { icon: Palette, color: 'text-indigo-600 bg-indigo-100', labelKey: 'page.typeArt' },
+  jewelry: { icon: Coins, color: 'text-yellow-600 bg-yellow-100', labelKey: 'page.typeJewelry' },
+  other: DEFAULT_ASSET_STATIC,
 };
 
-function getAssetTypeConfig(type: string): AssetTypeConfig {
-  return ASSET_TYPE_CONFIG[type] ?? DEFAULT_ASSET_CONFIG;
+function getAssetTypeStatic(type: string): AssetTypeStaticConfig {
+  return ASSET_TYPE_STATIC[type] ?? DEFAULT_ASSET_STATIC;
 }
 
 function formatCurrency(amount: number, currency: string): string {
@@ -90,6 +83,7 @@ function formatCurrency(amount: number, currency: string): string {
 }
 
 export default function AssetsPage() {
+  const { t } = useTranslation('assets');
   const currentSpaceId = useSpaceStore((state) => state.currentSpace?.id);
   const [assets, setAssets] = useState<ManualAsset[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -143,23 +137,23 @@ export default function AssetsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Manual Assets</h1>
+          <h1 className="text-3xl font-bold">{t('page.title')}</h1>
           <p className="text-muted-foreground">
-            Track illiquid assets like real estate, private equity, and collectibles
+            {t('page.description')}
           </p>
         </div>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="h-4 w-4 mr-2" />
-              Add Asset
+              {t('page.addAsset')}
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Add Manual Asset</DialogTitle>
+              <DialogTitle>{t('page.addManualAsset')}</DialogTitle>
               <DialogDescription>
-                Track an illiquid asset that cannot be automatically synced
+                {t('page.trackIlliquid')}
               </DialogDescription>
             </DialogHeader>
             <ManualAssetForm
@@ -173,12 +167,12 @@ export default function AssetsPage() {
       {/* Summary Card */}
       <Card>
         <CardHeader>
-          <CardTitle>Portfolio Summary</CardTitle>
-          <CardDescription>Total value of all manually tracked assets</CardDescription>
+          <CardTitle>{t('page.portfolioSummary')}</CardTitle>
+          <CardDescription>{t('page.portfolioDescription')}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="text-3xl font-bold">{formatCurrency(totalValue, 'USD')}</div>
-          <p className="text-sm text-muted-foreground mt-1">{assets.length} assets tracked</p>
+          <p className="text-sm text-muted-foreground mt-1">{t('page.assetsTracked', { count: assets.length })}</p>
         </CardContent>
       </Card>
 
@@ -187,20 +181,20 @@ export default function AssetsPage() {
         <Card>
           <CardContent className="py-12 text-center">
             <Building2 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-medium mb-2">No assets yet</h3>
+            <h3 className="text-lg font-medium mb-2">{t('empty.title')}</h3>
             <p className="text-muted-foreground mb-4">
-              Start tracking your illiquid assets like real estate, private equity, and collectibles
+              {t('empty.description')}
             </p>
             <Button onClick={() => setIsCreateDialogOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
-              Add Your First Asset
+              {t('empty.addFirst')}
             </Button>
           </CardContent>
         </Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {assets.map((asset) => {
-            const typeConfig = getAssetTypeConfig(asset.type);
+            const typeConfig = getAssetTypeStatic(asset.type);
             const Icon = typeConfig.icon;
             const documentCount = asset.documents?.length || 0;
 
@@ -214,7 +208,7 @@ export default function AssetsPage() {
                       >
                         <Icon className={`h-5 w-5 ${typeConfig.color.split(' ')[0]}`} />
                       </div>
-                      <Badge variant="secondary">{typeConfig.label}</Badge>
+                      <Badge variant="secondary">{t(typeConfig.labelKey)}</Badge>
                     </div>
                     <CardTitle className="text-lg mt-2">{asset.name}</CardTitle>
                     {asset.description && (
@@ -231,7 +225,7 @@ export default function AssetsPage() {
                       <div className="flex items-center gap-1">
                         <FileText className="h-4 w-4" />
                         <span>
-                          {documentCount} document{documentCount !== 1 ? 's' : ''}
+                          {documentCount !== 1 ? t('page.documents', { count: documentCount }) : t('page.document', { count: documentCount })}
                         </span>
                       </div>
                       <ChevronRight className="h-4 w-4" />

@@ -43,8 +43,10 @@ import {
   DollarSign,
   Heart,
 } from 'lucide-react';
+import { useTranslation } from '@dhanam/shared';
 
 export default function HouseholdsPage() {
+  const { t } = useTranslation('households');
   const {
     getHouseholds,
     getHousehold,
@@ -166,9 +168,9 @@ export default function HouseholdsPage() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Households</h1>
+          <h1 className="text-3xl font-bold">{t('page.title')}</h1>
           <p className="text-muted-foreground">
-            Manage multi-generational family financial planning
+            {t('page.description')}
           </p>
         </div>
 
@@ -176,30 +178,30 @@ export default function HouseholdsPage() {
           <DialogTrigger asChild>
             <Button>
               <Plus className="h-4 w-4 mr-2" />
-              Create Household
+              {t('page.createHousehold')}
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Create New Household</DialogTitle>
+              <DialogTitle>{t('dialog.createTitle')}</DialogTitle>
               <DialogDescription>
-                Create a household to organize multi-generational financial planning
+                {t('dialog.createDescription')}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label htmlFor="name">Name</Label>
+                <Label htmlFor="name">{t('fields.name')}</Label>
                 <Input
                   id="name"
                   value={newHousehold.name}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                     setNewHousehold({ ...newHousehold, name: e.target.value })
                   }
-                  placeholder="Smith Family"
+                  placeholder={t('fields.namePlaceholder')}
                 />
               </div>
               <div>
-                <Label htmlFor="type">Type</Label>
+                <Label htmlFor="type">{t('fields.type')}</Label>
                 <Select
                   value={newHousehold.type}
                   onValueChange={(value: string) =>
@@ -213,15 +215,15 @@ export default function HouseholdsPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="family">Family</SelectItem>
-                    <SelectItem value="trust">Trust</SelectItem>
-                    <SelectItem value="estate">Estate</SelectItem>
-                    <SelectItem value="partnership">Partnership</SelectItem>
+                    <SelectItem value="family">{t('types.family')}</SelectItem>
+                    <SelectItem value="trust">{t('types.trust')}</SelectItem>
+                    <SelectItem value="estate">{t('types.estate')}</SelectItem>
+                    <SelectItem value="partnership">{t('types.partnership')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label htmlFor="currency">Base Currency</Label>
+                <Label htmlFor="currency">{t('fields.baseCurrency')}</Label>
                 <Select
                   value={newHousehold.baseCurrency}
                   onValueChange={(value: string) =>
@@ -239,23 +241,23 @@ export default function HouseholdsPage() {
                 </Select>
               </div>
               <div>
-                <Label htmlFor="description">Description (Optional)</Label>
+                <Label htmlFor="description">{t('fields.descriptionOptional')}</Label>
                 <Input
                   id="description"
                   value={newHousehold.description}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                     setNewHousehold({ ...newHousehold, description: e.target.value })
                   }
-                  placeholder="Main family household"
+                  placeholder={t('fields.descriptionPlaceholder')}
                 />
               </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-                Cancel
+                {t('actions.cancel')}
               </Button>
               <Button onClick={handleCreateHousehold} disabled={!newHousehold.name}>
-                Create
+                {t('actions.create')}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -281,13 +283,13 @@ export default function HouseholdsPage() {
         <Card>
           <CardContent className="py-12 text-center">
             <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No Households Yet</h3>
+            <h3 className="text-lg font-semibold mb-2">{t('empty.title')}</h3>
             <p className="text-muted-foreground mb-4">
-              Create your first household to start multi-generational planning
+              {t('empty.description')}
             </p>
             <Button onClick={() => setIsCreateDialogOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
-              Create Household
+              {t('page.createHousehold')}
             </Button>
           </CardContent>
         </Card>
@@ -318,17 +320,17 @@ export default function HouseholdsPage() {
               <CardContent>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Members:</span>
+                    <span className="text-muted-foreground">{t('labels.members')}</span>
                     <span className="font-medium">
                       {household.members?.length || household._count?.spaces || 0}
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Spaces:</span>
+                    <span className="text-muted-foreground">{t('labels.spaces')}</span>
                     <span className="font-medium">{household._count?.spaces || 0}</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Goals:</span>
+                    <span className="text-muted-foreground">{t('labels.goals')}</span>
                     <span className="font-medium">{household._count?.goals || 0}</span>
                   </div>
                 </div>
@@ -350,7 +352,7 @@ export default function HouseholdsPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <DollarSign className="h-5 w-5" />
-                    Total Net Worth
+                    {t('detail.totalNetWorth')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -379,25 +381,25 @@ export default function HouseholdsPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Target className="h-5 w-5" />
-                    Goals Summary
+                    {t('detail.goalsSummary')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Total Goals:</span>
+                      <span className="text-muted-foreground">{t('detail.totalGoals')}</span>
                       <span className="font-medium">{goalSummary.totalGoals}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Active:</span>
+                      <span className="text-muted-foreground">{t('detail.active')}</span>
                       <span className="font-medium">{goalSummary.activeGoals}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Achieved:</span>
+                      <span className="text-muted-foreground">{t('detail.achieved')}</span>
                       <span className="font-medium">{goalSummary.achievedGoals}</span>
                     </div>
                     <div className="flex justify-between mt-4 pt-4 border-t">
-                      <span className="text-muted-foreground">Target Amount:</span>
+                      <span className="text-muted-foreground">{t('detail.targetAmount')}</span>
                       <span className="font-medium">
                         {formatCurrency(
                           goalSummary.totalTargetAmount,
@@ -415,7 +417,7 @@ export default function HouseholdsPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Users className="h-5 w-5" />
-                  Members ({selectedHousehold.members?.length || 0})
+                  {t('detail.members')} ({selectedHousehold.members?.length || 0})
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -430,7 +432,7 @@ export default function HouseholdsPage() {
                       </div>
                       {member.isMinor && (
                         <Badge variant="secondary" className="text-xs">
-                          Minor
+                          {t('detail.minor')}
                         </Badge>
                       )}
                     </div>
@@ -445,11 +447,10 @@ export default function HouseholdsPage() {
             <div className="space-y-6 mt-8">
               <div className="flex items-center gap-2">
                 <Heart className="h-6 w-6 text-primary" />
-                <h3 className="text-xl font-semibold">Yours, Mine & Ours</h3>
+                <h3 className="text-xl font-semibold">{t('detail.yoursMineOurs')}</h3>
               </div>
               <p className="text-muted-foreground">
-                View your household finances by ownership. Filter accounts between individual and
-                joint ownership.
+                {t('detail.ownershipDescription')}
               </p>
 
               {ownershipLoading ? (
@@ -483,12 +484,12 @@ export default function HouseholdsPage() {
                     <div className="mt-6">
                       <h4 className="text-lg font-medium mb-4">
                         {selectedOwnershipFilter === 'yours'
-                          ? 'Your Accounts'
+                          ? t('detail.yourAccounts')
                           : selectedOwnershipFilter === 'mine'
-                            ? "Partner's Accounts"
+                            ? t('detail.partnerAccounts')
                             : selectedOwnershipFilter === 'ours'
-                              ? 'Joint Accounts'
-                              : 'All Accounts'}
+                              ? t('detail.jointAccounts')
+                              : t('detail.allAccounts')}
                         <Badge variant="secondary" className="ml-2">
                           {ownershipAccounts.length}
                         </Badge>

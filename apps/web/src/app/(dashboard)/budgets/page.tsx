@@ -23,6 +23,7 @@ import { useSpaceStore } from '@/stores/space';
 import { budgetsApi, CategorySummary } from '@/lib/api/budgets';
 import { categoriesApi } from '@/lib/api/categories';
 import { Budget, BudgetPeriod } from '@dhanam/shared';
+import { useTranslation } from '@dhanam/shared';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { toast } from 'sonner';
 import { RuleManager } from '@/components/budgets/rule-manager';
@@ -31,6 +32,7 @@ import { BudgetAnalytics } from '@/components/budgets/budget-analytics';
 export default function BudgetsPage() {
   const { currentSpace } = useSpaceStore();
   const queryClient = useQueryClient();
+  const { t } = useTranslation('budgets');
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [selectedBudget, setSelectedBudget] = useState<Budget | null>(null);
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
@@ -62,10 +64,10 @@ export default function BudgetsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['budgets', currentSpace?.id] });
       setIsCreateOpen(false);
-      toast.success('Budget created successfully');
+      toast.success(t('toast.budgetCreated'));
     },
     onError: () => {
-      toast.error('Failed to create budget');
+      toast.error(t('toast.budgetCreateFailed'));
     },
   });
 
@@ -80,10 +82,10 @@ export default function BudgetsPage() {
         queryKey: ['budget-summary', currentSpace?.id, selectedBudget?.id],
       });
       setIsAddCategoryOpen(false);
-      toast.success('Category added successfully');
+      toast.success(t('toast.categoryAdded'));
     },
     onError: () => {
-      toast.error('Failed to add category');
+      toast.error(t('toast.categoryAddFailed'));
     },
   });
 
@@ -116,48 +118,48 @@ export default function BudgetsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Budgets</h1>
-          <p className="text-muted-foreground">Create and manage your budgets to track spending</p>
+          <h1 className="text-3xl font-bold tracking-tight">{t('page.title')}</h1>
+          <p className="text-muted-foreground">{t('page.description')}</p>
         </div>
         <div className="flex gap-2">
           <Button onClick={() => setIsRuleManagerOpen(true)} variant="outline">
             <Settings className="mr-2 h-4 w-4" />
-            Manage Rules
+            {t('page.manageRules')}
           </Button>
           <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
             <DialogTrigger asChild>
               <Button>
                 <Plus className="mr-2 h-4 w-4" />
-                Create Budget
+                {t('page.createBudget')}
               </Button>
             </DialogTrigger>
             <DialogContent>
               <form onSubmit={handleCreateSubmit}>
                 <DialogHeader>
-                  <DialogTitle>Create Budget</DialogTitle>
-                  <DialogDescription>Set up a new budget to track your spending</DialogDescription>
+                  <DialogTitle>{t('page.createBudget')}</DialogTitle>
+                  <DialogDescription>{t('dialog.create.description')}</DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
                   <div className="grid gap-2">
-                    <Label htmlFor="name">Budget Name</Label>
-                    <Input id="name" name="name" placeholder="e.g., Monthly Budget" required />
+                    <Label htmlFor="name">{t('fields.budgetName')}</Label>
+                    <Input id="name" name="name" placeholder={t('fields.budgetNamePlaceholder')} required />
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="period">Period</Label>
+                    <Label htmlFor="period">{t('fields.period')}</Label>
                     <Select name="period" required>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select period" />
+                        <SelectValue placeholder={t('fields.selectPeriod')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="monthly">Monthly</SelectItem>
-                        <SelectItem value="weekly">Weekly</SelectItem>
-                        <SelectItem value="quarterly">Quarterly</SelectItem>
-                        <SelectItem value="yearly">Yearly</SelectItem>
+                        <SelectItem value="monthly">{t('periods.monthly')}</SelectItem>
+                        <SelectItem value="weekly">{t('periods.weekly')}</SelectItem>
+                        <SelectItem value="quarterly">{t('periods.quarterly')}</SelectItem>
+                        <SelectItem value="yearly">{t('periods.yearly')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="startDate">Start Date</Label>
+                    <Label htmlFor="startDate">{t('fields.startDate')}</Label>
                     <Input
                       id="startDate"
                       name="startDate"
@@ -172,7 +174,7 @@ export default function BudgetsPage() {
                     {createBudgetMutation.isPending && (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     )}
-                    Create Budget
+                    {t('page.createBudget')}
                   </Button>
                 </DialogFooter>
               </form>
@@ -189,13 +191,13 @@ export default function BudgetsPage() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-8">
             <PiggyBank className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="font-semibold text-lg mb-2">No budgets yet</h3>
+            <h3 className="font-semibold text-lg mb-2">{t('empty.title')}</h3>
             <p className="text-muted-foreground text-center mb-4">
-              Create your first budget to start tracking expenses
+              {t('empty.description')}
             </p>
             <Button onClick={() => setIsCreateOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
-              Create Your First Budget
+              {t('empty.cta')}
             </Button>
           </CardContent>
         </Card>
@@ -214,16 +216,16 @@ export default function BudgetsPage() {
               <CardContent>
                 <div className="text-xs text-muted-foreground mb-4">
                   {formatDate(budget.startDate)} -{' '}
-                  {budget.endDate ? formatDate(budget.endDate) : 'Ongoing'}
+                  {budget.endDate ? formatDate(budget.endDate) : t('fields.ongoing')}
                 </div>
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span>Categories</span>
+                    <span>{t('fields.categories')}</span>
                     <span className="font-medium">{budget.categories?.length || 0}</span>
                   </div>
                   {budget.categories && budget.categories.length > 0 && (
                     <div className="text-xs text-muted-foreground">
-                      Total Budget:{' '}
+                      {t('summary.totalBudget')}:{' '}
                       {formatCurrency(
                         budget.categories.reduce((sum, cat) => sum + cat.budgeted, 0),
                         currentSpace.currency
@@ -248,7 +250,7 @@ export default function BudgetsPage() {
                 <DialogTitle>{selectedBudget.name}</DialogTitle>
                 <DialogDescription>
                   {formatDate(selectedBudget.startDate)} -{' '}
-                  {selectedBudget.endDate ? formatDate(selectedBudget.endDate) : 'Ongoing'}
+                  {selectedBudget.endDate ? formatDate(selectedBudget.endDate) : t('fields.ongoing')}
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-6">
@@ -258,7 +260,7 @@ export default function BudgetsPage() {
                       <div className="text-2xl font-bold">
                         {formatCurrency(budgetSummary.summary.totalBudgeted, currentSpace.currency)}
                       </div>
-                      <p className="text-xs text-muted-foreground">Total Budget</p>
+                      <p className="text-xs text-muted-foreground">{t('summary.totalBudget')}</p>
                     </CardContent>
                   </Card>
                   <Card>
@@ -266,7 +268,7 @@ export default function BudgetsPage() {
                       <div className="text-2xl font-bold">
                         {formatCurrency(budgetSummary.summary.totalSpent, currentSpace.currency)}
                       </div>
-                      <p className="text-xs text-muted-foreground">Spent</p>
+                      <p className="text-xs text-muted-foreground">{t('summary.spent')}</p>
                     </CardContent>
                   </Card>
                   <Card>
@@ -277,7 +279,7 @@ export default function BudgetsPage() {
                           currentSpace.currency
                         )}
                       </div>
-                      <p className="text-xs text-muted-foreground">Remaining</p>
+                      <p className="text-xs text-muted-foreground">{t('summary.remaining')}</p>
                     </CardContent>
                   </Card>
                   <Card>
@@ -285,7 +287,7 @@ export default function BudgetsPage() {
                       <div className="text-2xl font-bold">
                         {budgetSummary.summary.totalPercentUsed.toFixed(0)}%
                       </div>
-                      <p className="text-xs text-muted-foreground">Used</p>
+                      <p className="text-xs text-muted-foreground">{t('summary.used')}</p>
                     </CardContent>
                   </Card>
                 </div>
@@ -298,10 +300,10 @@ export default function BudgetsPage() {
 
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
-                    <h4 className="font-medium">Categories</h4>
+                    <h4 className="font-medium">{t('fields.categories')}</h4>
                     <Button size="sm" onClick={() => setIsAddCategoryOpen(true)}>
                       <Plus className="mr-2 h-4 w-4" />
-                      Add Category
+                      {t('page.addCategory')}
                     </Button>
                   </div>
                   {budgetSummary.categories.map((category: CategorySummary) => (
@@ -316,14 +318,14 @@ export default function BudgetsPage() {
                             <span className="font-medium">{category.name}</span>
                           </div>
                           <Badge variant={category.percentUsed > 90 ? 'destructive' : 'secondary'}>
-                            {category.percentUsed.toFixed(0)}% used
+                            {category.percentUsed.toFixed(0)}% {t('summary.used')}
                           </Badge>
                         </div>
                         <Progress value={category.percentUsed} className="mb-2" />
                         <div className="flex justify-between text-sm text-muted-foreground">
-                          <span>{formatCurrency(category.spent, currentSpace.currency)} spent</span>
+                          <span>{formatCurrency(category.spent, currentSpace.currency)} {t('summary.spent')}</span>
                           <span>
-                            {formatCurrency(category.remaining, currentSpace.currency)} remaining
+                            {formatCurrency(category.remaining, currentSpace.currency)} {t('summary.remaining')}
                           </span>
                         </div>
                       </CardContent>
@@ -340,16 +342,16 @@ export default function BudgetsPage() {
         <DialogContent>
           <form onSubmit={handleAddCategorySubmit}>
             <DialogHeader>
-              <DialogTitle>Add Category</DialogTitle>
-              <DialogDescription>Create a new spending category for this budget</DialogDescription>
+              <DialogTitle>{t('page.addCategory')}</DialogTitle>
+              <DialogDescription>{t('dialog.addCategory.description')}</DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
-                <Label htmlFor="category-name">Category Name</Label>
-                <Input id="category-name" name="name" placeholder="e.g., Groceries" required />
+                <Label htmlFor="category-name">{t('fields.categoryName')}</Label>
+                <Input id="category-name" name="name" placeholder={t('fields.categoryNamePlaceholder')} required />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="budgetedAmount">Budget Amount</Label>
+                <Label htmlFor="budgetedAmount">{t('fields.budgetAmount')}</Label>
                 <Input
                   id="budgetedAmount"
                   name="budgetedAmount"
@@ -365,7 +367,7 @@ export default function BudgetsPage() {
                 {createCategoryMutation.isPending && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
-                Add Category
+                {t('page.addCategory')}
               </Button>
             </DialogFooter>
           </form>
