@@ -9,8 +9,8 @@ ALTER TYPE "SubscriptionTier" ADD VALUE IF NOT EXISTS 'pro';
 -- Step 2: Migrate existing data
 -- Note: PostgreSQL enums can't remove values, so we rename via data migration.
 -- After adding new values, update all rows to use the new naming.
-UPDATE "users" SET "subscriptionTier" = 'community' WHERE "subscriptionTier" = 'free';
-UPDATE "users" SET "subscriptionTier" = 'pro' WHERE "subscriptionTier" = 'premium';
+UPDATE "users" SET "subscription_tier" = 'community' WHERE "subscription_tier" = 'free';
+UPDATE "users" SET "subscription_tier" = 'pro' WHERE "subscription_tier" = 'premium';
 
 -- Step 3: Set default for new users
-ALTER TABLE "users" ALTER COLUMN "subscriptionTier" SET DEFAULT 'community';
+ALTER TABLE "users" ALTER COLUMN "subscription_tier" SET DEFAULT 'community';
