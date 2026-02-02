@@ -110,7 +110,7 @@ export default function BillingScreen() {
   const [statusLoading, setStatusLoading] = useState(true);
 
   // Determine premium status from subscription status or user object
-  const isPremium = subscriptionStatus?.tier === 'premium' || user?.subscriptionTier === 'premium';
+  const isPremium = subscriptionStatus?.tier === 'pro' || user?.subscriptionTier === 'pro';
 
   // Fetch subscription status on mount
   const fetchSubscriptionStatus = useCallback(async () => {
@@ -217,7 +217,7 @@ export default function BillingScreen() {
         await refreshUser();
       }
 
-      if (subscriptionStatus?.tier === 'premium') {
+      if (subscriptionStatus?.tier === 'pro') {
         Alert.alert(
           'Subscription Restored',
           'Your premium subscription has been restored successfully!',

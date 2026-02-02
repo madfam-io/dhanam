@@ -83,7 +83,7 @@ export const onboardingApi = {
 
 // Billing Types
 export interface SubscriptionStatus {
-  tier: 'free' | 'premium';
+  tier: 'community' | 'essentials' | 'pro';
   startedAt: string | null;
   expiresAt: string | null;
   isActive: boolean;

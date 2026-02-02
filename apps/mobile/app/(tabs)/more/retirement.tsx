@@ -43,7 +43,7 @@ export default function RetirementScreen() {
   const { currentSpace } = useSpaces();
   const { user } = useAuth();
   const currency = currentSpace?.currency || 'USD';
-  const isPremium = user?.subscriptionTier === 'premium';
+  const isPremium = user?.subscriptionTier === 'pro';
 
   const [refreshing, setRefreshing] = useState(false);
 

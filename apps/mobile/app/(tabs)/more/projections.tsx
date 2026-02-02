@@ -62,7 +62,7 @@ const DEFAULT_CONFIG: CreateProjectionDto = {
 export default function ProjectionsScreen() {
   const { currentSpace } = useSpaces();
   const { user } = useAuth();
-  const isPremium = user?.subscriptionTier === 'premium';
+  const isPremium = user?.subscriptionTier === 'pro';
   const currency = currentSpace?.currency || 'USD';
 
   const [projection, setProjection] = useState<ProjectionResult | null>(null);
