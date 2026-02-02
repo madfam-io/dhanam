@@ -7,6 +7,8 @@ import fastifyCors from '@fastify/cors';
 // eslint-disable-next-line import/no-named-as-default
 import fastifyHelmet from '@fastify/helmet';
 // eslint-disable-next-line import/no-named-as-default
+import fastifyCsrfProtection from '@fastify/csrf-protection';
+// eslint-disable-next-line import/no-named-as-default
 import fastifyRateLimit from '@fastify/rate-limit';
 import { ValidationPipe, VersioningType, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -55,6 +57,12 @@ async function bootstrap() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await app.register(fastifyCookie as any, {
     secret: configService.get('COOKIE_SECRET') || configService.get('JWT_SECRET'),
+  });
+
+  // CSRF protection (double-submit cookie pattern, skip safe methods)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await app.register(fastifyCsrfProtection as any, {
+    cookieOpts: { signed: true, httpOnly: true, sameSite: 'strict', secure: true, path: '/' },
   });
 
   // Security headers

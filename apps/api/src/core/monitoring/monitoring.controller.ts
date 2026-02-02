@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards, HttpStatus, Res } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards, HttpStatus, HttpCode, Res, Logger } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { FastifyReply } from 'fastify';
 
@@ -10,6 +10,8 @@ import { MetricsService } from './metrics.service';
 @ApiTags('Monitoring')
 @Controller('monitoring')
 export class MonitoringController {
+  private readonly logger = new Logger(MonitoringController.name);
+
   constructor(
     private readonly healthService: HealthService,
     private readonly metricsService: MetricsService
@@ -61,6 +63,14 @@ export class MonitoringController {
   @ApiResponse({ status: 200, description: 'Liveness status retrieved successfully' })
   async getLiveness() {
     return this.healthService.getLivenessStatus();
+  }
+
+  @Post('csp-reports')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Receive Content-Security-Policy violation reports' })
+  @ApiResponse({ status: 204, description: 'Report received' })
+  handleCspReport(@Body() report: Record<string, unknown>) {
+    this.logger.warn('CSP violation report', JSON.stringify(report));
   }
 
   @Get('metrics')

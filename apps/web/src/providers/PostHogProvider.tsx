@@ -11,11 +11,18 @@ import posthog from 'posthog-js';
  * Respects user privacy preferences and provides opt-out capability.
  */
 
+function getConsentCookie(): string | null {
+  if (typeof document === 'undefined') return null;
+  const match = document.cookie.match(/(?:^|;\s*)dhanam_consent=([^;]*)/);
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
 if (typeof window !== 'undefined') {
   const apiKey = process.env.NEXT_PUBLIC_POSTHOG_KEY;
   const host = process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://app.posthog.com';
+  const consent = getConsentCookie();
 
-  if (apiKey) {
+  if (apiKey && consent !== 'rejected') {
     posthog.init(apiKey, {
       api_host: host,
       // Capture pageviews automatically
@@ -33,9 +40,13 @@ if (typeof window !== 'undefined') {
       // Cookie options
       persistence: 'localStorage+cookie',
       // Debugging (only in development)
-      loaded: (posthog) => {
+      loaded: (ph) => {
         if (process.env.NODE_ENV === 'development') {
-          posthog.debug();
+          ph.debug();
+        }
+        // Respect cookie consent: opt out if user hasn't accepted
+        if (consent !== 'accepted') {
+          ph.opt_out_capturing();
         }
       },
     });
