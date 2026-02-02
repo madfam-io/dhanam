@@ -19,7 +19,10 @@ class RedisThrottlerStorage implements ThrottlerStorageService {
     });
   }
 
-  async increment(key: string, ttl: number): Promise<{ totalHits: number; timeToExpire: number }> {
+  async increment(
+    key: string,
+    ttl: number,
+  ): Promise<{ totalHits: number; timeToExpire: number; isBlocked: boolean; timeToBlockExpire: number }> {
     const multi = this.redis.multi();
     multi.incr(key);
     multi.pttl(key);
@@ -33,7 +36,7 @@ class RedisThrottlerStorage implements ThrottlerStorageService {
       timeToExpire = ttl;
     }
 
-    return { totalHits, timeToExpire };
+    return { totalHits, timeToExpire, isBlocked: false, timeToBlockExpire: 0 };
   }
 }
 
