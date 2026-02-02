@@ -68,6 +68,7 @@ describe('BillingService', () => {
             cancelSubscription: jest.fn(),
             updateSubscription: jest.fn(),
             getSubscription: jest.fn(),
+            retrieveCheckoutSession: jest.fn(),
           },
         },
         {
@@ -558,6 +559,180 @@ describe('BillingService', () => {
         orderBy: { createdAt: 'desc' },
         take: 5,
       });
+    });
+  });
+
+  describe('createExternalCheckout', () => {
+    it('should create checkout session via Stripe for existing user', async () => {
+      const userWithCountry = {
+        ...mockUser,
+        countryCode: 'MX',
+        billingProvider: null,
+        januaCustomerId: null,
+      };
+      prisma.user.findUnique.mockResolvedValue(userWithCountry as any);
+
+      const mockCustomer = { id: 'cus_new123' } as any;
+      const mockSession = {
+        id: 'cs_test123',
+        url: 'https://checkout.stripe.com/pay/cs_test123',
+      } as any;
+
+      stripe.createCustomer.mockResolvedValue(mockCustomer);
+      stripe.createCheckoutSession.mockResolvedValue(mockSession);
+      prisma.user.update.mockResolvedValue({ ...userWithCountry, stripeCustomerId: 'cus_new123' } as any);
+
+      const result = await service.createExternalCheckout(
+        'user-123',
+        'pro',
+        'https://app.dhan.am/billing'
+      );
+
+      expect(result).toBe('https://checkout.stripe.com/pay/cs_test123');
+      expect(stripe.createCheckoutSession).toHaveBeenCalledWith(
+        expect.objectContaining({
+          metadata: expect.objectContaining({
+            janua_user_id: 'user-123',
+            plan: 'pro',
+            source: 'external',
+          }),
+        })
+      );
+      expect(audit.log).toHaveBeenCalledWith(
+        expect.objectContaining({ action: 'BILLING_UPGRADE_INITIATED' })
+      );
+    });
+
+    it('should throw NotFoundException for missing user', async () => {
+      prisma.user.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.createExternalCheckout('nonexistent', 'pro', 'https://app.dhan.am')
+      ).rejects.toThrow('User not found');
+    });
+
+    it('should reuse existing stripeCustomerId', async () => {
+      const userWithStripe = {
+        ...mockUser,
+        stripeCustomerId: 'cus_existing',
+        countryCode: 'US',
+        billingProvider: null,
+        januaCustomerId: null,
+      };
+      prisma.user.findUnique.mockResolvedValue(userWithStripe as any);
+
+      stripe.createCheckoutSession.mockResolvedValue({
+        id: 'cs_test',
+        url: 'https://checkout.stripe.com/cs_test',
+      } as any);
+
+      await service.createExternalCheckout('user-123', 'essentials', 'https://app.dhan.am');
+
+      expect(stripe.createCustomer).not.toHaveBeenCalled();
+      expect(stripe.createCheckoutSession).toHaveBeenCalledWith(
+        expect.objectContaining({ customerId: 'cus_existing' })
+      );
+    });
+  });
+
+  describe('handleCheckoutCompleted', () => {
+    it('should update user tier and create billing event', async () => {
+      const mockSession = {
+        id: 'cs_test123',
+        metadata: { janua_user_id: 'user-123', plan: 'pro', source: 'external' },
+        customer: 'cus_test123',
+        amount_total: 1999,
+        currency: 'usd',
+      };
+      const mockEvent = {
+        id: 'evt_test123',
+        type: 'checkout.session.completed',
+        data: { object: mockSession },
+      } as Stripe.Event;
+
+      prisma.user.findUnique.mockResolvedValue(mockUser as any);
+      prisma.user.update.mockResolvedValue({ ...mockUser, subscriptionTier: 'pro' } as any);
+      prisma.billingEvent.create.mockResolvedValue({} as any);
+      stripe.retrieveCheckoutSession.mockResolvedValue({
+        ...mockSession,
+        line_items: { data: [{ price: { product: 'prod_abc' } }] },
+      } as any);
+
+      await service.handleCheckoutCompleted(mockEvent);
+
+      expect(prisma.user.update).toHaveBeenCalledWith({
+        where: { id: 'user-123' },
+        data: expect.objectContaining({
+          subscriptionTier: 'pro',
+          stripeCustomerId: 'cus_test123',
+        }),
+      });
+      expect(prisma.billingEvent.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          userId: 'user-123',
+          type: 'subscription_created',
+          amount: 19.99,
+          status: 'succeeded',
+        }),
+      });
+    });
+
+    it('should skip when janua_user_id metadata is missing', async () => {
+      const mockEvent = {
+        id: 'evt_test123',
+        type: 'checkout.session.completed',
+        data: { object: { id: 'cs_test', metadata: {} } },
+      } as Stripe.Event;
+
+      await service.handleCheckoutCompleted(mockEvent);
+
+      expect(prisma.user.findUnique).not.toHaveBeenCalled();
+      expect(prisma.user.update).not.toHaveBeenCalled();
+    });
+
+    it('should handle missing user gracefully', async () => {
+      const mockEvent = {
+        id: 'evt_test123',
+        type: 'checkout.session.completed',
+        data: { object: { id: 'cs_test', metadata: { janua_user_id: 'missing' } } },
+      } as Stripe.Event;
+
+      prisma.user.findUnique.mockResolvedValue(null);
+
+      await service.handleCheckoutCompleted(mockEvent);
+
+      expect(prisma.user.update).not.toHaveBeenCalled();
+    });
+
+    it('should default to pro tier when plan is not in PLAN_TIER_MAP', async () => {
+      const mockEvent = {
+        id: 'evt_test123',
+        type: 'checkout.session.completed',
+        data: {
+          object: {
+            id: 'cs_test',
+            metadata: { janua_user_id: 'user-123', plan: 'unknown_plan' },
+            customer: 'cus_test',
+            amount_total: 0,
+            currency: 'usd',
+          },
+        },
+      } as Stripe.Event;
+
+      prisma.user.findUnique.mockResolvedValue(mockUser as any);
+      prisma.user.update.mockResolvedValue({} as any);
+      prisma.billingEvent.create.mockResolvedValue({} as any);
+      stripe.retrieveCheckoutSession.mockResolvedValue({
+        line_items: { data: [] },
+      } as any);
+
+      await service.handleCheckoutCompleted(mockEvent);
+
+      expect(prisma.user.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ subscriptionTier: 'pro' }),
+        })
+      );
     });
   });
 
