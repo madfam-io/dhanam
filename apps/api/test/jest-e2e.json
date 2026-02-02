@@ -20,6 +20,9 @@
     "^@dhanam/esg$": "<rootDir>/../../packages/esg/src/index",
     "^@dhanam/simulations$": "<rootDir>/../../packages/simulations/src/index"
   },
+  "transformIgnorePatterns": [
+    "/node_modules/(?!.*uuid)"
+  ],
   "setupFilesAfterEnv": ["<rootDir>/test/setup.ts"],
   "testTimeout": 30000,
   "collectCoverageFrom": [
