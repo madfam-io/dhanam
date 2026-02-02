@@ -188,7 +188,8 @@ describe('R2StorageService', () => {
       it('should upload file and return document metadata', async () => {
         mockS3Client.send = jest.fn().mockResolvedValue({});
 
-        const buffer = Buffer.from('test file content');
+        // PDF magic bytes: %PDF
+        const buffer = Buffer.from([0x25, 0x50, 0x44, 0x46, ...Buffer.from('test content')]);
         const result = await service.uploadFile(
           'space-123',
           'asset-456',
@@ -210,13 +211,13 @@ describe('R2StorageService', () => {
       it('should call S3 send with PutObjectCommand', async () => {
         mockS3Client.send = jest.fn().mockResolvedValue({});
 
-        const buffer = Buffer.from('content');
+        const buffer = Buffer.from('col1,col2\nval1,val2');
         await service.uploadFile(
           'space-123',
           'asset-456',
           buffer,
-          'file.txt',
-          'text/plain'
+          'data.csv',
+          'text/csv'
         );
 
         expect(mockS3Client.send).toHaveBeenCalledWith(
@@ -224,7 +225,7 @@ describe('R2StorageService', () => {
             _type: 'put',
             Bucket: 'test-bucket',
             Body: buffer,
-            ContentType: 'text/plain',
+            ContentType: 'text/csv',
           })
         );
       });
@@ -235,7 +236,7 @@ describe('R2StorageService', () => {
         const result = await service.uploadFile(
           'space-123',
           'asset-456',
-          Buffer.from('test'),
+          Buffer.from([0x25, 0x50, 0x44, 0x46]),
           'file.pdf',
           'application/pdf'
         );
