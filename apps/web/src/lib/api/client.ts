@@ -1,5 +1,3 @@
-import { AuthTokens } from '@dhanam/shared';
-
 export class ApiError extends Error {
   constructor(
     public status: number,
@@ -15,23 +13,22 @@ export class ApiError extends Error {
 export class ApiClient {
   private baseUrl: string;
   private accessToken?: string;
-  private refreshToken?: string;
-  private onTokenRefresh?: (tokens: AuthTokens) => void;
+  private onTokenRefresh?: (tokens: { accessToken: string }) => void;
 
-  constructor(config: { baseUrl?: string; onTokenRefresh?: (tokens: AuthTokens) => void }) {
-    // Use production URL as fallback (localhost is only for explicit local development)
+  constructor(config: {
+    baseUrl?: string;
+    onTokenRefresh?: (tokens: { accessToken: string }) => void;
+  }) {
     this.baseUrl = config.baseUrl || process.env.NEXT_PUBLIC_API_URL || 'https://api.dhan.am/v1';
     this.onTokenRefresh = config.onTokenRefresh;
   }
 
-  setTokens(tokens: { accessToken: string; refreshToken: string }) {
+  setTokens(tokens: { accessToken: string }) {
     this.accessToken = tokens.accessToken;
-    this.refreshToken = tokens.refreshToken;
   }
 
   clearTokens() {
     this.accessToken = undefined;
-    this.refreshToken = undefined;
   }
 
   private async request<T>(path: string, options: RequestInit = {}): Promise<T> {
@@ -49,6 +46,7 @@ export class ApiClient {
       const response = await fetch(url, {
         ...options,
         headers,
+        credentials: 'include', // Send cookies for refresh token
       });
 
       const data = await response.json();
@@ -65,11 +63,10 @@ export class ApiClient {
       return data.data || data;
     } catch (error) {
       if (error instanceof ApiError) {
-        if (error.status === 401 && this.refreshToken) {
+        if (error.status === 401) {
           try {
             const tokens = await this.refreshTokens();
             this.accessToken = tokens.accessToken;
-            this.refreshToken = tokens.refreshToken;
             this.onTokenRefresh?.(tokens);
 
             return this.request<T>(path, options);
@@ -84,13 +81,14 @@ export class ApiClient {
     }
   }
 
-  private async refreshTokens(): Promise<AuthTokens> {
+  private async refreshTokens(): Promise<{ accessToken: string; expiresIn: number }> {
     const response = await fetch(`${this.baseUrl}/auth/refresh`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ refreshToken: this.refreshToken }),
+      credentials: 'include', // Cookie carries the refresh token
+      body: JSON.stringify({}),
     });
 
     if (!response.ok) {
@@ -98,22 +96,19 @@ export class ApiClient {
     }
 
     const data = await response.json();
-    return data.data.tokens;
+    return data.data?.tokens || data.tokens;
   }
 
   async get<T>(path: string, params?: Record<string, unknown>): Promise<T> {
     const queryString = params
       ? '?' + new URLSearchParams(params as Record<string, string>).toString()
       : '';
-    return this.request<T>(`${path}${queryString}`, {
-      method: 'GET',
-    });
+    return this.request<T>(`${path}${queryString}`, { method: 'GET' });
   }
 
   async post<T>(path: string, body?: unknown): Promise<T> {
     return this.request<T>(path, {
       method: 'POST',
-      // Always send a body for POST to avoid Fastify "empty body" errors
       body: JSON.stringify(body ?? {}),
     });
   }
@@ -121,7 +116,6 @@ export class ApiClient {
   async patch<T>(path: string, body?: unknown): Promise<T> {
     return this.request<T>(path, {
       method: 'PATCH',
-      // Always send a body for PATCH to avoid Fastify "empty body" errors
       body: JSON.stringify(body ?? {}),
     });
   }
@@ -129,22 +123,17 @@ export class ApiClient {
   async put<T>(path: string, body?: unknown): Promise<T> {
     return this.request<T>(path, {
       method: 'PUT',
-      // Always send a body for PUT to avoid Fastify "empty body" errors
       body: JSON.stringify(body ?? {}),
     });
   }
 
   async delete<T>(path: string): Promise<T> {
-    return this.request<T>(path, {
-      method: 'DELETE',
-    });
+    return this.request<T>(path, { method: 'DELETE' });
   }
 }
 
-// Create the client with token refresh callback
 export const apiClient = new ApiClient({
   onTokenRefresh: (tokens) => {
-    // Import auth store dynamically to avoid circular dependency
     import('../hooks/use-auth').then(({ useAuth }) => {
       const store = useAuth.getState();
       if (store.user) {

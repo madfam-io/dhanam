@@ -15,6 +15,13 @@ export const initPostHog = (): void => {
     return; // Already initialized
   }
 
+  // Check cookie consent before initializing analytics
+  const consentMatch = document.cookie.match(/(?:^|; )dhanam_consent=([^;]*)/);
+  const consent = consentMatch ? consentMatch[1] : null;
+  if (consent === 'rejected') {
+    return; // User rejected analytics cookies
+  }
+
   const apiKey = process.env.NEXT_PUBLIC_POSTHOG_KEY;
   const host = process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://us.i.posthog.com';
 
@@ -47,6 +54,11 @@ export const initPostHog = (): void => {
     });
 
     posthogInitialized = true;
+
+    // If no consent decision yet, opt out by default (will opt in when accepted)
+    if (!consent) {
+      posthog.opt_out_capturing();
+    }
   } catch (error) {
     console.error('Failed to initialize PostHog:', error);
   }
@@ -136,5 +148,29 @@ export const trackPageView = (pageName?: string): void => {
     }
   } catch (error) {
     console.error('Failed to track page view:', error);
+  }
+};
+
+/**
+ * Opt in to PostHog capturing (call when user accepts cookies)
+ */
+export const optInPostHog = (): void => {
+  if (typeof window === 'undefined' || !posthogInitialized) return;
+  try {
+    posthog.opt_in_capturing();
+  } catch (error) {
+    console.error('Failed to opt in PostHog:', error);
+  }
+};
+
+/**
+ * Opt out of PostHog capturing (call when user rejects cookies)
+ */
+export const optOutPostHog = (): void => {
+  if (typeof window === 'undefined' || !posthogInitialized) return;
+  try {
+    posthog.opt_out_capturing();
+  } catch (error) {
+    console.error('Failed to opt out PostHog:', error);
   }
 };

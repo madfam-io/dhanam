@@ -3,6 +3,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 
 import { AuditModule } from '@core/audit/audit.module';
+import { CryptoModule } from '@core/crypto/crypto.module';
 import { LoggerModule } from '@core/logger/logger.module';
 import { PrismaModule } from '@core/prisma/prisma.module';
 import { RedisModule } from '@core/redis/redis.module';
@@ -55,6 +56,7 @@ import { TotpService } from './totp.service';
     LoggerModule,
     RedisModule,
     AuditModule,
+    CryptoModule,
     forwardRef(() => EmailModule),
   ],
   controllers: [AuthController],

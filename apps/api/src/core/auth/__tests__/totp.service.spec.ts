@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import * as speakeasy from 'speakeasy';
 
+import { CryptoService } from '@core/crypto/crypto.service';
 import { PrismaService } from '@core/prisma/prisma.service';
 import { LoggerService } from '@core/logger/logger.service';
 
@@ -10,6 +11,7 @@ describe('TotpService', () => {
   let service: TotpService;
   let prisma: jest.Mocked<PrismaService>;
   let logger: jest.Mocked<LoggerService>;
+  let cryptoService: CryptoService;
 
   const mockUser = {
     id: 'user-123',
@@ -34,17 +36,22 @@ describe('TotpService', () => {
       warn: jest.fn(),
     };
 
+    // Use real CryptoService for encryption/decryption
+    process.env.ENCRYPTION_KEY = 'test-encryption-key-12345';
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         TotpService,
         { provide: PrismaService, useValue: mockPrisma },
         { provide: LoggerService, useValue: mockLogger },
+        CryptoService,
       ],
     }).compile();
 
     service = module.get<TotpService>(TotpService);
     prisma = module.get(PrismaService);
     logger = module.get(LoggerService);
+    cryptoService = module.get<CryptoService>(CryptoService);
   });
 
   afterEach(() => {
@@ -85,6 +92,10 @@ describe('TotpService', () => {
       const updateCall = prisma.user.update.mock.calls[0][0];
       expect(updateCall.data).not.toHaveProperty('totpSecret');
       expect(updateCall.data).not.toHaveProperty('totpEnabled');
+
+      // Verify secret is encrypted
+      const storedSecret = updateCall.data.totpTempSecret;
+      expect(storedSecret).toMatch(/^v1:/); // Should have version prefix
     });
 
     it('should include correct issuer and name in QR code', async () => {
@@ -107,15 +118,18 @@ describe('TotpService', () => {
     const tempSecret = 'JBSWY3DPEHPK3PXP';
 
     it('should activate TOTP with valid verification code', async () => {
+      // Encrypt the temp secret as it would be stored
+      const encryptedTempSecret = cryptoService.encrypt(tempSecret);
+
       const userWithTempSecret = {
         ...mockUser,
-        totpTempSecret: tempSecret,
+        totpTempSecret: encryptedTempSecret,
       };
 
       prisma.user.findUnique.mockResolvedValue(userWithTempSecret as any);
       prisma.user.update.mockResolvedValue({
         ...userWithTempSecret,
-        totpSecret: tempSecret,
+        totpSecret: encryptedTempSecret,
         totpEnabled: true,
         totpTempSecret: null,
       } as any);
@@ -131,7 +145,7 @@ describe('TotpService', () => {
       expect(prisma.user.update).toHaveBeenCalledWith({
         where: { id: mockUser.id },
         data: {
-          totpSecret: tempSecret,
+          totpSecret: encryptedTempSecret,
           totpTempSecret: null,
           totpEnabled: true,
         },
@@ -139,9 +153,11 @@ describe('TotpService', () => {
     });
 
     it('should reject invalid TOTP token', async () => {
+      const encryptedTempSecret = cryptoService.encrypt(tempSecret);
+
       const userWithTempSecret = {
         ...mockUser,
-        totpTempSecret: tempSecret,
+        totpTempSecret: encryptedTempSecret,
       };
 
       prisma.user.findUnique.mockResolvedValue(userWithTempSecret as any);
@@ -170,9 +186,11 @@ describe('TotpService', () => {
     });
 
     it('should verify token with 2-step window for clock drift', async () => {
+      const encryptedTempSecret = cryptoService.encrypt(tempSecret);
+
       const userWithTempSecret = {
         ...mockUser,
-        totpTempSecret: tempSecret,
+        totpTempSecret: encryptedTempSecret,
       };
 
       prisma.user.findUnique.mockResolvedValue(userWithTempSecret as any);
@@ -199,9 +217,11 @@ describe('TotpService', () => {
     const activeSecret = 'JBSWY3DPEHPK3PXP';
 
     it('should disable TOTP with valid token', async () => {
+      const encryptedSecret = cryptoService.encrypt(activeSecret);
+
       const userWithTotp = {
         ...mockUser,
-        totpSecret: activeSecret,
+        totpSecret: encryptedSecret,
         totpEnabled: true,
       };
 
@@ -230,9 +250,11 @@ describe('TotpService', () => {
     });
 
     it('should reject invalid token when disabling', async () => {
+      const encryptedSecret = cryptoService.encrypt(activeSecret);
+
       const userWithTotp = {
         ...mockUser,
-        totpSecret: activeSecret,
+        totpSecret: encryptedSecret,
         totpEnabled: true,
       };
 
@@ -307,6 +329,46 @@ describe('TotpService', () => {
           window: 2,
         }),
       );
+    });
+  });
+
+  describe('verifyEncryptedToken', () => {
+    const secret = 'JBSWY3DPEHPK3PXP';
+
+    it('should verify valid TOTP code with encrypted secret', () => {
+      const encryptedSecret = cryptoService.encrypt(secret);
+      const validToken = speakeasy.totp({
+        secret,
+        encoding: 'base32',
+      });
+
+      const result = service.verifyEncryptedToken(encryptedSecret, validToken);
+
+      expect(result).toBe(true);
+    });
+
+    it('should reject invalid codes with encrypted secret', () => {
+      const encryptedSecret = cryptoService.encrypt(secret);
+
+      const result = service.verifyEncryptedToken(encryptedSecret, '000000');
+
+      expect(result).toBe(false);
+    });
+
+    it('should decrypt before verification', () => {
+      const encryptedSecret = cryptoService.encrypt(secret);
+      const validToken = speakeasy.totp({
+        secret,
+        encoding: 'base32',
+      });
+
+      const decryptSpy = jest.spyOn(cryptoService, 'decrypt');
+      const verifyTokenSpy = jest.spyOn(service, 'verifyToken');
+
+      service.verifyEncryptedToken(encryptedSecret, validToken);
+
+      expect(decryptSpy).toHaveBeenCalledWith(encryptedSecret);
+      expect(verifyTokenSpy).toHaveBeenCalledWith(secret, validToken);
     });
   });
 

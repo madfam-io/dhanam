@@ -1,17 +1,16 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { User, AuthTokens } from '@dhanam/shared';
+import { User } from '@dhanam/shared';
 
 interface AuthState {
   user: User | null;
   accessToken: string | null;
-  refreshToken: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
 
   // Actions
-  setAuth: (user: User, tokens: AuthTokens) => void;
-  setTokens: (accessToken: string, refreshToken: string) => void;
+  setAuth: (user: User, tokens: { accessToken: string }) => void;
+  setTokens: (accessToken: string) => void;
   setUser: (user: User) => void;
   logout: () => void;
   setLoading: (loading: boolean) => void;
@@ -22,7 +21,6 @@ export const authStore = create<AuthState>()(
     (set) => ({
       user: null,
       accessToken: null,
-      refreshToken: null,
       isAuthenticated: false,
       isLoading: false,
 
@@ -30,13 +28,12 @@ export const authStore = create<AuthState>()(
         set({
           user,
           accessToken: tokens.accessToken,
-          refreshToken: tokens.refreshToken,
           isAuthenticated: true,
         });
       },
 
-      setTokens: (accessToken, refreshToken) => {
-        set({ accessToken, refreshToken });
+      setTokens: (accessToken) => {
+        set({ accessToken });
       },
 
       setUser: (user) => {
@@ -47,7 +44,6 @@ export const authStore = create<AuthState>()(
         set({
           user: null,
           accessToken: null,
-          refreshToken: null,
           isAuthenticated: false,
         });
         // Clear the auth cookie marker for middleware
@@ -64,7 +60,6 @@ export const authStore = create<AuthState>()(
       name: 'auth-storage',
       partialize: (state) => ({
         accessToken: state.accessToken,
-        refreshToken: state.refreshToken,
       }),
     }
   )

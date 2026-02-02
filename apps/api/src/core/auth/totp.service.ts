@@ -5,6 +5,7 @@ import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import * as qrcode from 'qrcode';
 import * as speakeasy from 'speakeasy';
 
+import { CryptoService } from '@core/crypto/crypto.service';
 import {
   SecurityException,
   InfrastructureException,
@@ -24,7 +25,8 @@ export interface TotpSetupResponse {
 export class TotpService {
   constructor(
     private prisma: PrismaService,
-    private logger: LoggerService
+    private logger: LoggerService,
+    private cryptoService: CryptoService
   ) {}
 
   /**
@@ -74,10 +76,10 @@ export class TotpService {
         throw InfrastructureException.encryptionError('qr_generation', qrError as Error);
       }
 
-      // Store temporary secret (not activated until verified)
+      // Store temporary secret (not activated until verified) - encrypted at rest
       await this.prisma.user.update({
         where: { id: userId },
-        data: { totpTempSecret: secret.base32 },
+        data: { totpTempSecret: this.cryptoService.encrypt(secret.base32) },
       });
 
       this.logger.log(`TOTP setup initiated for user: ${userId}`, 'TotpService');
@@ -112,8 +114,11 @@ export class TotpService {
         throw ValidationException.invalidState('No TOTP setup in progress');
       }
 
+      // Decrypt the temporary secret for verification
+      const decryptedSecret = this.cryptoService.decrypt(user.totpTempSecret);
+
       const isValid = speakeasy.totp.verify({
-        secret: user.totpTempSecret,
+        secret: decryptedSecret,
         encoding: 'base32',
         token,
         window: 2, // Allow 2 time steps for clock drift
@@ -123,7 +128,7 @@ export class TotpService {
         throw SecurityException.totpInvalid();
       }
 
-      // Activate TOTP
+      // Activate TOTP (keep encrypted)
       await this.prisma.user.update({
         where: { id: userId },
         data: {
@@ -155,7 +160,9 @@ export class TotpService {
         throw ValidationException.invalidState('TOTP not enabled');
       }
 
-      const isValid = this.verifyToken(user.totpSecret, token);
+      // Decrypt secret for verification
+      const decryptedSecret = this.cryptoService.decrypt(user.totpSecret);
+      const isValid = this.verifyToken(decryptedSecret, token);
 
       if (!isValid) {
         throw SecurityException.totpInvalid();
@@ -184,6 +191,15 @@ export class TotpService {
       token,
       window: 2, // Allow 2 time steps for clock drift
     });
+  }
+
+  /**
+   * Verify TOTP token with encrypted secret.
+   * Decrypts the secret first, then verifies the token.
+   */
+  verifyEncryptedToken(encryptedSecret: string, token: string): boolean {
+    const decryptedSecret = this.cryptoService.decrypt(encryptedSecret);
+    return this.verifyToken(decryptedSecret, token);
   }
 
   generateBackupCodes(): string[] {

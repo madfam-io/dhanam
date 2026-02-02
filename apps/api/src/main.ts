@@ -1,6 +1,8 @@
 // eslint-disable-next-line import/no-named-as-default
 import fastifyCompress from '@fastify/compress';
 // eslint-disable-next-line import/no-named-as-default
+import fastifyCookie from '@fastify/cookie';
+// eslint-disable-next-line import/no-named-as-default
 import fastifyCors from '@fastify/cors';
 // eslint-disable-next-line import/no-named-as-default
 import fastifyHelmet from '@fastify/helmet';
@@ -31,7 +33,6 @@ async function bootstrap() {
 
   process.on('uncaughtException', (error) => {
     logger.error('Uncaught Exception:', error);
-    // Gracefully shut down the application
     process.exit(1);
   });
 
@@ -50,6 +51,12 @@ async function bootstrap() {
     type: VersioningType.URI,
   });
 
+  // Cookie support (required for httpOnly refresh tokens)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await app.register(fastifyCookie as any, {
+    secret: configService.get('COOKIE_SECRET') || configService.get('JWT_SECRET'),
+  });
+
   // Security headers
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await app.register(fastifyHelmet as any, {
@@ -59,7 +66,16 @@ async function bootstrap() {
         styleSrc: ["'self'", "'unsafe-inline'"],
         scriptSrc: ["'self'"],
         imgSrc: ["'self'", 'data:', 'https:'],
+        frameAncestors: ["'none'"],
+        baseUri: ["'self'"],
+        formAction: ["'self'"],
+        reportUri: ['/v1/csp-reports'],
       },
+    },
+    hsts: {
+      maxAge: 63072000, // 2 years
+      includeSubDomains: true,
+      preload: true,
     },
   });
 
@@ -69,7 +85,7 @@ async function bootstrap() {
   await app.register(fastifyCors as any, {
     origin: corsOrigins
       ? corsOrigins.split(',')
-      : ['http://localhost:3000', 'http://localhost:19006'],
+      : ['http://localhost:3000', 'http://localhost:3040', 'http://localhost:19006'],
     credentials: true,
   });
 
@@ -84,7 +100,6 @@ async function bootstrap() {
     max: configService.get('RATE_LIMIT_MAX') ? parseInt(configService.get('RATE_LIMIT_MAX')!) : 100,
     timeWindow: (configService.get('RATE_LIMIT_WINDOW') as string) || '15 minutes',
     allowList: (req) => {
-      // Exclude health probes and metrics from rate limiting
       const path = req.url?.split('?')[0] || '';
       return [
         '/v1/monitoring/health',
@@ -137,23 +152,19 @@ async function bootstrap() {
   const gracefulShutdown = async (signal: string) => {
     logger.log(`Received ${signal}, starting graceful shutdown...`);
 
-    // Mark service as shutting down (health probes will return not ready)
     healthService.setShuttingDown(true);
     logger.log('Health service marked as shutting down');
 
-    // Wait a brief moment for load balancer to stop sending traffic
     await new Promise((resolve) => setTimeout(resolve, 5000));
     logger.log('Grace period complete, draining queues...');
 
-    // Drain queues with timeout
     try {
-      await queueService.drainQueues(30000); // 30 second timeout
+      await queueService.drainQueues(30000);
       logger.log('Queue drain complete');
     } catch (error) {
       logger.warn('Queue drain timed out or failed:', error);
     }
 
-    // Flush Sentry events
     try {
       await sentryService.flush(2000);
       logger.log('Sentry events flushed');
@@ -161,7 +172,6 @@ async function bootstrap() {
       logger.warn('Sentry flush failed:', error);
     }
 
-    // Close the application
     logger.log('Closing application...');
     await app.close();
     logger.log('Application closed, exiting');

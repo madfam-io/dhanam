@@ -222,13 +222,19 @@ enum AssetType {
 // Models
 model User {
   id                    String    @id @default(uuid())
+  /// @pii
   email                 String    @unique
+  /// @pii @sensitive
   passwordHash          String    @map("password_hash")
+  /// @pii
   name                  String
+  /// @pii
   dateOfBirth           DateTime? @map("date_of_birth") @db.Date
   locale                String    @default("es")
   timezone              String    @default("America/Mexico_City")
+  /// @pii @sensitive
   totpSecret            String?   @map("totp_secret")
+  /// @pii @sensitive
   totpTempSecret        String?   @map("totp_temp_secret")
   totpEnabled           Boolean   @default(false) @map("totp_enabled")
   totpBackupCodes       String[]  @default([]) @map("totp_backup_codes")
@@ -264,6 +270,7 @@ model User {
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
 
   // Relations
   userSpaces          UserSpace[]
@@ -478,6 +485,7 @@ model Space {
   householdId String?   @map("household_id")
   createdAt   DateTime  @default(now()) @map("created_at")
   updatedAt   DateTime  @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
 
   // Relations
   household          Household?          @relation(fields: [householdId], references: [id], onDelete: SetNull)
@@ -496,6 +504,7 @@ model Space {
   cashflowForecasts  CashflowForecast[]
 
   @@index([householdId])
+  @@index([deletedAt])
   @@map("spaces")
 }
 
@@ -530,6 +539,7 @@ model Account {
   lastSyncedAt         DateTime?        @map("last_synced_at")
   createdAt            DateTime         @default(now()) @map("created_at")
   updatedAt            DateTime         @updatedAt @map("updated_at")
+  deletedAt            DateTime?        @map("deleted_at")
 
   // Liability-specific fields (credit cards, loans, mortgages)
   liabilityType      String?   @map("liability_type") // credit, student, mortgage, auto, personal
@@ -561,6 +571,7 @@ model Account {
   @@index([spaceId, ownership])
   @@index([spaceId, ownerId])
   @@index([spaceId, lastSyncedAt(sort: Desc)])
+  @@index([spaceId, deletedAt])
   @@map("accounts")
 }
 
@@ -595,6 +606,7 @@ model Transaction {
   metadata              Json?
   createdAt             DateTime @default(now()) @map("created_at")
   updatedAt             DateTime @updatedAt @map("updated_at")
+  deletedAt             DateTime? @map("deleted_at")
 
   // Relations
   account   Account               @relation(fields: [accountId], references: [id], onDelete: Cascade)
@@ -609,6 +621,7 @@ model Transaction {
   @@index([pending])
   @@index([isSplit])
   @@index([recurringId])
+  @@index([accountId, date(sort: Desc), deletedAt])
   @@map("transactions")
 }
 
@@ -959,10 +972,12 @@ model AuditLog {
   resourceId String?  @map("resource_id")
   metadata   String? // JSON string
   ipAddress  String?  @map("ip_address")
-  userAgent  String?  @map("user_agent")
-  severity   String   @default("low") // low, medium, high, critical
-  timestamp  DateTime @default(now())
-  createdAt  DateTime @default(now()) @map("created_at")
+  userAgent   String?   @map("user_agent")
+  severity    String    @default("low") // low, medium, high, critical
+  timestamp   DateTime  @default(now())
+  createdAt   DateTime  @default(now()) @map("created_at")
+  deletedAt   DateTime? @map("deleted_at")
+  retainUntil DateTime? @map("retain_until")
 
   // Relations
   user User? @relation(fields: [userId], references: [id], onDelete: SetNull)

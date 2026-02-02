@@ -1,28 +1,67 @@
 import { Module } from '@nestjs/common';
-import { ThrottlerModule } from '@nestjs/throttler';
+import { ConfigService } from '@nestjs/config';
+import { ThrottlerModule, ThrottlerStorageService } from '@nestjs/throttler';
+import Redis from 'ioredis';
 
 import { RedisModule } from '@core/redis/redis.module';
 
+/**
+ * Redis-backed rate limiting storage for distributed deployments.
+ * SOC 2 Control: Distributed rate limiting across multiple API instances.
+ */
+class RedisThrottlerStorage implements ThrottlerStorageService {
+  private redis: Redis;
+
+  constructor() {
+    this.redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379', {
+      keyPrefix: 'throttle:',
+      maxRetriesPerRequest: 1,
+    });
+  }
+
+  async increment(key: string, ttl: number): Promise<{ totalHits: number; timeToExpire: number }> {
+    const multi = this.redis.multi();
+    multi.incr(key);
+    multi.pttl(key);
+    const results = await multi.exec();
+
+    const totalHits = (results?.[0]?.[1] as number) || 1;
+    let timeToExpire = (results?.[1]?.[1] as number) || -1;
+
+    if (timeToExpire < 0) {
+      await this.redis.pexpire(key, ttl);
+      timeToExpire = ttl;
+    }
+
+    return { totalHits, timeToExpire };
+  }
+}
+
 @Module({
   imports: [
-    ThrottlerModule.forRoot([
-      // General API rate limiting
-      {
-        name: 'short',
-        ttl: 60 * 1000, // 1 minute
-        limit: 60, // 60 requests per minute
-      },
-      {
-        name: 'medium',
-        ttl: 15 * 60 * 1000, // 15 minutes
-        limit: 300, // 300 requests per 15 minutes
-      },
-      {
-        name: 'long',
-        ttl: 60 * 60 * 1000, // 1 hour
-        limit: 1000, // 1000 requests per hour
-      },
-    ]),
+    ThrottlerModule.forRootAsync({
+      useFactory: (configService: ConfigService) => ({
+        throttlers: [
+          {
+            name: 'short',
+            ttl: 60 * 1000,
+            limit: 60,
+          },
+          {
+            name: 'medium',
+            ttl: 15 * 60 * 1000,
+            limit: 300,
+          },
+          {
+            name: 'long',
+            ttl: 60 * 60 * 1000,
+            limit: 1000,
+          },
+        ],
+        storage: configService.get('REDIS_URL') ? new RedisThrottlerStorage() : undefined,
+      }),
+      inject: [ConfigService],
+    }),
     RedisModule,
   ],
   exports: [ThrottlerModule],

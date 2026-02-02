@@ -33,6 +33,27 @@ export class R2StorageService {
   private readonly bucket: string;
   private readonly publicUrl: string;
 
+  private static readonly MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+  private static readonly ALLOWED_MIME_TYPES = new Set([
+    'image/png',
+    'image/jpeg',
+    'image/jpg',
+    'image/gif',
+    'image/webp',
+    'application/pdf',
+    'text/csv',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // xlsx
+    'application/vnd.ms-excel', // xls
+  ]);
+
+  // Magic bytes for common file types
+  private static readonly MAGIC_BYTES: Record<string, number[]> = {
+    'image/png': [0x89, 0x50, 0x4e, 0x47],
+    'image/jpeg': [0xff, 0xd8, 0xff],
+    'image/gif': [0x47, 0x49, 0x46],
+    'application/pdf': [0x25, 0x50, 0x44, 0x46],
+  };
+
   constructor(private configService: ConfigService) {
     const accountId = this.configService.get<string>('R2_ACCOUNT_ID');
     const accessKeyId = this.configService.get<string>('R2_ACCESS_KEY_ID');
@@ -65,6 +86,50 @@ export class R2StorageService {
   }
 
   /**
+   * Validate file before upload (SOC 2 file upload controls)
+   */
+  validateUpload(buffer: Buffer, contentType: string, filename: string): void {
+    // Size check
+    if (buffer.length > R2StorageService.MAX_FILE_SIZE) {
+      throw new Error(
+        `File exceeds maximum size of ${R2StorageService.MAX_FILE_SIZE / (1024 * 1024)}MB`
+      );
+    }
+
+    // MIME type check
+    if (!R2StorageService.ALLOWED_MIME_TYPES.has(contentType)) {
+      throw new Error(`File type '${contentType}' is not allowed`);
+    }
+
+    // Extension check
+    const ext = filename.split('.').pop()?.toLowerCase();
+    const allowedExtensions = new Set([
+      'png',
+      'jpg',
+      'jpeg',
+      'gif',
+      'webp',
+      'pdf',
+      'csv',
+      'xlsx',
+      'xls',
+    ]);
+    if (!ext || !allowedExtensions.has(ext)) {
+      throw new Error(`File extension '.${ext}' is not allowed`);
+    }
+
+    // Magic bytes check for binary formats
+    const expectedMagic = R2StorageService.MAGIC_BYTES[contentType];
+    if (expectedMagic) {
+      const fileHeader = Array.from(buffer.subarray(0, expectedMagic.length));
+      const matches = expectedMagic.every((byte, i) => fileHeader[i] === byte);
+      if (!matches) {
+        throw new Error('File content does not match declared content type');
+      }
+    }
+  }
+
+  /**
    * Generate a presigned URL for direct browser upload
    */
   async getPresignedUploadUrl(
@@ -76,6 +141,10 @@ export class R2StorageService {
   ): Promise<PresignedUrlResult> {
     if (!this.s3Client) {
       throw new Error('R2 Storage is not configured');
+    }
+
+    if (!R2StorageService.ALLOWED_MIME_TYPES.has(contentType)) {
+      throw new Error(`File type '${contentType}' is not allowed`);
     }
 
     const extension = filename.split('.').pop() || '';
@@ -134,6 +203,8 @@ export class R2StorageService {
     if (!this.s3Client) {
       throw new Error('R2 Storage is not configured');
     }
+
+    this.validateUpload(buffer, contentType, filename);
 
     const extension = filename.split('.').pop() || '';
     const key = `spaces/${spaceId}/assets/${assetId}/${category}/${uuidv4()}.${extension}`;

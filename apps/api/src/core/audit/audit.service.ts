@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
+import { CryptoService } from '@core/crypto/crypto.service';
 import { LoggerService } from '@core/logger/logger.service';
 import { PrismaService } from '@core/prisma/prisma.service';
 
@@ -16,14 +17,24 @@ export interface AuditEventData {
 
 @Injectable()
 export class AuditService {
+  private lastHash: string = '0';
+
   constructor(
     private prisma: PrismaService,
-    private logger: LoggerService
+    private logger: LoggerService,
+    private cryptoService: CryptoService
   ) {}
 
   async logEvent(data: AuditEventData): Promise<void> {
     try {
-      // Log to database for persistent audit trail
+      const metadataStr = data.metadata ? JSON.stringify(data.metadata) : null;
+      const timestamp = new Date();
+
+      // HMAC chain: each record includes hash of previous for tamper detection
+      const chainInput = `${this.lastHash}|${data.action}|${data.userId || ''}|${timestamp.toISOString()}|${metadataStr || ''}`;
+      const chainHash = this.cryptoService.hmac(chainInput);
+      this.lastHash = chainHash;
+
       await this.prisma.auditLog.create({
         data: {
           action: data.action,
@@ -32,13 +43,14 @@ export class AuditService {
           userId: data.userId,
           ipAddress: data.ipAddress,
           userAgent: data.userAgent,
-          metadata: data.metadata ? JSON.stringify(data.metadata) : null,
+          metadata: metadataStr
+            ? JSON.stringify({ ...JSON.parse(metadataStr), _chain: chainHash })
+            : JSON.stringify({ _chain: chainHash }),
           severity: data.severity || 'low',
-          timestamp: new Date(),
+          timestamp,
         },
       });
 
-      // Also log critical events to application logger
       if (data.severity === 'critical' || data.severity === 'high') {
         this.logger.warn(
           `Security event: ${data.action} - ${data.resource || 'unknown'} by ${data.userId || 'anonymous'}`,
@@ -50,14 +62,46 @@ export class AuditService {
     }
   }
 
-  /**
-   * Alias for logEvent() - provides backward compatibility
-   */
   async log(data: AuditEventData): Promise<void> {
     return this.logEvent(data);
   }
 
-  // Convenience methods for common security events
+  /**
+   * Export audit logs for a user (GDPR compliance)
+   */
+  async exportUserAuditLogs(userId: string): Promise<any[]> {
+    const logs = await this.prisma.auditLog.findMany({
+      where: { userId },
+      orderBy: { timestamp: 'asc' },
+    });
+    return logs.map((log) => ({
+      action: log.action,
+      resource: log.resource,
+      resourceId: log.resourceId,
+      timestamp: log.timestamp,
+      severity: log.severity,
+    }));
+  }
+
+  /**
+   * Apply retention policy: archive/delete old audit logs
+   */
+  async applyRetentionPolicy(retentionDays: number = 365): Promise<number> {
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - retentionDays);
+
+    const result = await this.prisma.auditLog.deleteMany({
+      where: {
+        timestamp: { lt: cutoff },
+        retainUntil: { lt: new Date() },
+      },
+    });
+
+    this.logger.log(`Retention policy applied: ${result.count} audit logs purged`, 'AuditService');
+    return result.count;
+  }
+
+  // Convenience methods
   async logAuthSuccess(userId: string, ipAddress?: string, userAgent?: string): Promise<void> {
     await this.logEvent({
       action: 'AUTH_SUCCESS',

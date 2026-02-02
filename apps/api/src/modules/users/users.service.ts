@@ -12,6 +12,10 @@ import { PrismaService } from '@core/prisma/prisma.service';
 
 import { UpdateUserDto } from './dto/update-user.dto';
 
+/**
+ * UsersService
+ * Note: Soft delete is implemented. Use Prisma middleware for global filtering of deleted users.
+ */
 @Injectable()
 export class UsersService {
   constructor(
@@ -140,9 +144,13 @@ export class UsersService {
             }
           }
 
-          // Delete the user (cascades will handle related data)
-          await tx.user.delete({
+          // Soft delete the user (mark as deleted, purged by retention job after 30 days)
+          await tx.user.update({
             where: { id: userId },
+            data: {
+              deletedAt: new Date(),
+              isActive: false,
+            },
           });
         },
         {

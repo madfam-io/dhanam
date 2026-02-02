@@ -16,9 +16,12 @@ import {
   HttpCode,
   Ip,
   Headers,
+  Res,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
+import { FastifyReply } from 'fastify';
 
 import { AuditService } from '@core/audit/audit.service';
 import { ThrottleAuthGuard } from '@core/security/guards/throttle-auth.guard';
@@ -52,9 +55,19 @@ export class AuthController {
   async register(
     @Body() dto: RegisterDto,
     @Ip() ip: string,
-    @Headers('user-agent') userAgent: string
-  ): Promise<{ tokens: AuthTokens }> {
+    @Headers('user-agent') userAgent: string,
+    @Res({ passthrough: true }) res: FastifyReply
+  ): Promise<{ tokens: { accessToken: string; expiresIn: number } }> {
     const tokens = await this.authService.register(dto);
+
+    // Set refresh token as httpOnly cookie
+    res.setCookie('refresh_token', tokens.refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      path: '/v1/auth/refresh',
+      maxAge: 30 * 24 * 60 * 60, // 30 days
+    });
 
     // Log successful registration
     await this.auditService.logEvent({
@@ -66,36 +79,47 @@ export class AuthController {
       severity: 'medium',
     });
 
-    return { tokens };
+    return {
+      tokens: {
+        accessToken: tokens.accessToken,
+        expiresIn: tokens.expiresIn,
+      },
+    };
   }
 
   @Post('login')
   @UseGuards(ThrottleAuthGuard)
-  @Throttle({ default: { limit: 10, ttl: 60000 } }) // 10 login attempts per minute
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Login user' })
-  @ApiResponse({
-    status: 200,
-    description: 'Login successful',
-  })
+  @ApiResponse({ status: 200, description: 'Login successful' })
   async login(
     @Body() dto: LoginDto,
     @Ip() ip: string,
-    @Headers('user-agent') userAgent: string
-  ): Promise<{ tokens: AuthTokens }> {
+    @Headers('user-agent') userAgent: string,
+    @Res({ passthrough: true }) res: FastifyReply
+  ): Promise<{ tokens: { accessToken: string; expiresIn: number } }> {
     try {
       const tokens = await this.authService.login(dto);
 
-      // Log successful login (user ID will be retrieved by service)
-      await this.auditService.logAuthSuccess(
-        'pending', // Will be updated by auth service
-        ip,
-        userAgent
-      );
+      // Set refresh token as httpOnly cookie
+      res.setCookie('refresh_token', tokens.refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        path: '/v1/auth/refresh',
+        maxAge: 30 * 24 * 60 * 60, // 30 days
+      });
 
-      return { tokens };
+      await this.auditService.logAuthSuccess('pending', ip, userAgent);
+
+      return {
+        tokens: {
+          accessToken: tokens.accessToken,
+          expiresIn: tokens.expiresIn,
+        },
+      };
     } catch (error) {
-      // Log failed login attempt
       await this.auditService.logAuthFailure(dto.email, ip, userAgent);
       throw error;
     }
@@ -218,21 +242,64 @@ export class AuthController {
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Refresh access token' })
-  @ApiResponse({
-    status: 200,
-    description: 'Token refreshed successfully',
-  })
-  async refreshTokens(@Body() dto: RefreshTokenDto): Promise<{ tokens: AuthTokens }> {
-    const tokens = await this.authService.refreshTokens(dto);
-    return { tokens };
+  @ApiResponse({ status: 200, description: 'Token refreshed successfully' })
+  async refreshTokens(
+    @Body() dto: RefreshTokenDto,
+    @Headers('cookie') cookieHeader: string,
+    @Res({ passthrough: true }) res: FastifyReply
+  ): Promise<{ tokens: { accessToken: string; expiresIn: number } }> {
+    // Prefer cookie over body
+    let refreshToken = dto?.refreshToken;
+    if (cookieHeader) {
+      const match = cookieHeader.match(/refresh_token=([^;]+)/);
+      if (match) refreshToken = match[1];
+    }
+
+    if (!refreshToken) {
+      throw new UnauthorizedException('Refresh token required');
+    }
+
+    const tokens = await this.authService.refreshTokens({ refreshToken });
+
+    // Set new refresh token cookie
+    res.setCookie('refresh_token', tokens.refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      path: '/v1/auth/refresh',
+      maxAge: 30 * 24 * 60 * 60,
+    });
+
+    return {
+      tokens: {
+        accessToken: tokens.accessToken,
+        expiresIn: tokens.expiresIn,
+      },
+    };
   }
 
   @Post('logout')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Logout user' })
   @ApiResponse({ status: 200, description: 'Logout successful' })
-  async logout(@Body() dto: RefreshTokenDto): Promise<{ message: string }> {
-    await this.authService.logout(dto.refreshToken);
+  async logout(
+    @Body() dto: RefreshTokenDto,
+    @Headers('cookie') cookieHeader: string,
+    @Res({ passthrough: true }) res: FastifyReply
+  ): Promise<{ message: string }> {
+    let refreshToken = dto?.refreshToken;
+    if (cookieHeader) {
+      const match = cookieHeader.match(/refresh_token=([^;]+)/);
+      if (match) refreshToken = match[1];
+    }
+
+    if (refreshToken) {
+      await this.authService.logout(refreshToken);
+    }
+
+    // Clear refresh token cookie
+    res.clearCookie('refresh_token', { path: '/v1/auth/refresh' });
+
     return { message: 'Logout successful' };
   }
 

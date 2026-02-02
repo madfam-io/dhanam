@@ -1,0 +1,88 @@
+# Dhanam Alert Rules
+# Compatible with Prometheus Alertmanager / Grafana / Datadog
+# SOC 2 Control: Monitoring and alerting for availability and security
+
+groups:
+  - name: dhanam-availability
+    rules:
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m]) > 0.01
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Error rate above 1%"
+          description: "API error rate is {{ $value | humanizePercentage }} over the last 5 minutes"
+
+      - alert: HighLatency
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 1.5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "p95 latency above 1.5s"
+          description: "API p95 latency is {{ $value }}s"
+
+      - alert: BackupStale
+        expr: time() - backup_last_success_timestamp > 90000
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Database backup older than 25 hours"
+          description: "Last successful backup was {{ $value | humanizeDuration }} ago"
+
+  - name: dhanam-security
+    rules:
+      - alert: HighAuthFailureRate
+        expr: rate(auth_failures_total[15m]) > 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High authentication failure rate"
+          description: "{{ $value }} auth failures per second in the last 15 minutes"
+
+      - alert: AccountLockouts
+        expr: increase(account_lockouts_total[1h]) > 5
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Multiple account lockouts detected"
+          description: "{{ $value }} account lockouts in the last hour"
+
+  - name: dhanam-infrastructure
+    rules:
+      - alert: DatabaseDown
+        expr: pg_up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "PostgreSQL is down"
+
+      - alert: RedisDown
+        expr: redis_up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Redis is down"
+
+      - alert: QueueBackpressure
+        expr: bullmq_waiting_jobs > 1000
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Queue backpressure detected"
+          description: "{{ $value }} jobs waiting in queue"
+
+      - alert: DiskSpaceLow
+        expr: node_filesystem_avail_bytes / node_filesystem_size_bytes < 0.1
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Disk space below 10%"
