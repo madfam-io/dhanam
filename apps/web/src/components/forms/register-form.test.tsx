@@ -13,6 +13,12 @@ jest.mock('@dhanam/ui', () => ({
 // Mock @dhanam/shared
 jest.mock('@dhanam/shared', () => ({
   RegisterDto: {},
+  getGeoDefaults: () => ({
+    locale: 'es',
+    currency: 'MXN',
+    timezone: 'America/Mexico_City',
+    region: 'latam',
+  }),
 }));
 
 // Mock lucide-react icons as spans with test IDs

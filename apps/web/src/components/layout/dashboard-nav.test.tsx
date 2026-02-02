@@ -1,6 +1,29 @@
 import { render, screen } from '@testing-library/react';
 import { DashboardNav } from './dashboard-nav';
 
+// Mock @dhanam/shared (useTranslation with 'dashboard' namespace)
+jest.mock('@dhanam/shared', () => {
+  const sidebar: Record<string, string> = {
+    dashboard: 'Dashboard', accounts: 'Accounts', transactions: 'Transactions',
+    budgets: 'Budgets', zeroBased: 'Zero-Based', goals: 'Goals',
+    households: 'Households', estatePlanning: 'Estate Planning', analytics: 'Analytics',
+    esgInsights: 'ESG Insights', gaming: 'Gaming', retirement: 'Retirement',
+    scenarios: 'Scenarios', reports: 'Reports', settings: 'Settings',
+    wealth: 'Wealth', spaces: 'Spaces', help: 'Help',
+  };
+  const resolve = (key: string): string => {
+    const parts = key.split('.');
+    if (parts[0] === 'sidebar' && parts[1]) return sidebar[parts[1]] ?? key;
+    return key;
+  };
+  return {
+    useTranslation: () => ({
+      t: (key: string) => resolve(key),
+      i18n: { language: 'en', changeLanguage: jest.fn() },
+    }),
+  };
+});
+
 const mockUsePathname = jest.fn();
 
 jest.mock('next/navigation', () => ({

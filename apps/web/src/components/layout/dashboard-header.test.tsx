@@ -3,6 +3,40 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { DashboardHeader } from './dashboard-header';
 
+// Mock @dhanam/shared (useTranslation with 'dashboard' namespace)
+jest.mock('@dhanam/shared', () => {
+  const translations: Record<string, string> = {
+    'header.loading': 'Loading...',
+    'header.selectSpace': 'Select Space',
+    'header.yourSpaces': 'Your Spaces',
+    'header.createNewSpace': 'Create New Space',
+    'header.createFirstSpace': 'Create Your First Space',
+    'header.settings': 'Settings',
+    'header.adminDashboard': 'Admin Dashboard',
+    'header.logout': 'Log Out',
+  };
+  return {
+    useTranslation: () => ({
+      t: (key: string) => translations[key] ?? key,
+      i18n: { language: 'en', changeLanguage: jest.fn() },
+    }),
+  };
+});
+
+// Mock child components with complex dependencies
+jest.mock('~/components/search/search-command', () => ({
+  SearchCommand: () => <div data-testid="search-command" />,
+}));
+jest.mock('~/components/locale-switcher/LocaleSwitcher', () => ({
+  LocaleSwitcher: () => <div data-testid="locale-switcher" />,
+}));
+jest.mock('~/components/theme-toggle', () => ({
+  ThemeToggle: () => <div data-testid="theme-toggle" />,
+}));
+jest.mock('~/components/layout/notification-dropdown', () => ({
+  NotificationDropdown: () => <div data-testid="notification-dropdown"><span data-testid="icon-bell">Bell</span></div>,
+}));
+
 // Mock next/navigation
 const mockPush = jest.fn();
 jest.mock('next/navigation', () => ({
@@ -97,7 +131,7 @@ describe('DashboardHeader', () => {
   it('should show logout menu item', () => {
     render(<DashboardHeader />);
 
-    expect(screen.getByText('Logout')).toBeInTheDocument();
+    expect(screen.getByText('Log Out')).toBeInTheDocument();
     expect(screen.getByTestId('icon-logout')).toBeInTheDocument();
   });
 
@@ -119,7 +153,7 @@ describe('DashboardHeader', () => {
     const user = userEvent.setup();
     render(<DashboardHeader />);
 
-    const logoutItem = screen.getByText('Logout').closest('[role="menuitem"]')!;
+    const logoutItem = screen.getByText('Log Out').closest('[role="menuitem"]')!;
     await user.click(logoutItem);
 
     expect(mockLogout).toHaveBeenCalled();

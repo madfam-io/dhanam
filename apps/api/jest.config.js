@@ -6,6 +6,7 @@ module.exports = {
   },
   moduleFileExtensions: ['ts', 'js', 'html'],
   coverageDirectory: './coverage',
+  forceExit: true,
   testMatch: [
     '<rootDir>/src/**/*.spec.ts',
     // E2E tests excluded by default - require real infrastructure

@@ -5,6 +5,25 @@ import { useAuth } from '@/lib/hooks/use-auth';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { useRouter } from 'next/navigation';
 
+// Mock @dhanam/shared (useTranslation with 'common' namespace)
+jest.mock('@dhanam/shared', () => {
+  const translations: Record<string, string> = {
+    demoMode: 'Demo Mode',
+    demoExploring: "You're exploring Dhanam in",
+    demoExploringAs: 'Exploring as',
+    demoDescription: 'Read-only access \u2022 Sample data \u2022 Full features preview',
+    signUpToContinue: 'Sign Up to Continue',
+    signUpFree: 'Sign Up Free',
+    dismissBanner: 'Dismiss banner',
+  };
+  return {
+    useTranslation: () => ({
+      t: (key: string) => translations[key] ?? key,
+      i18n: { language: 'en', changeLanguage: jest.fn() },
+    }),
+  };
+});
+
 // Mock dependencies
 jest.mock('@/lib/hooks/use-auth');
 jest.mock('@/hooks/useAnalytics');
@@ -69,10 +88,10 @@ describe('DemoModeBanner', () => {
 
     render(<DemoModeBanner />);
 
-    // Should show time in format like "59m 59s"
+    // Should show time in format like "2h 0m" or "59m 59s"
     await waitFor(
       () => {
-        const timeElement = screen.getByText(/\d+m \d+s/);
+        const timeElement = screen.getByText(/\d+[hm]\s+\d+[ms]/);
         expect(timeElement).toBeInTheDocument();
       },
       { timeout: 2000 }
@@ -165,9 +184,9 @@ describe('DemoModeBanner', () => {
     const dismissButton = screen.getByRole('button', { name: /Dismiss banner/i });
     fireEvent.click(dismissButton);
 
-    expect(mockAnalytics.track).toHaveBeenCalledWith('demo_banner_dismissed', {
-      timeRemaining: expect.stringMatching(/\d+m \d+s/),
-    });
+    expect(mockAnalytics.track).toHaveBeenCalledWith('demo_banner_dismissed', expect.objectContaining({
+      timeRemaining: expect.stringMatching(/\d+[hm]\s+\d+[ms]/),
+    }));
   });
 
   it('should initialize session start time in localStorage on first render', () => {
