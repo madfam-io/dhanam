@@ -1,6 +1,10 @@
 import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { ThrottlerModule, ThrottlerStorageService } from '@nestjs/throttler';
+import {
+  ThrottlerModule,
+  ThrottlerStorage,
+  ThrottlerStorageRecord,
+} from '@nestjs/throttler';
 import Redis from 'ioredis';
 
 import { RedisModule } from '@core/redis/redis.module';
@@ -9,7 +13,7 @@ import { RedisModule } from '@core/redis/redis.module';
  * Redis-backed rate limiting storage for distributed deployments.
  * SOC 2 Control: Distributed rate limiting across multiple API instances.
  */
-class RedisThrottlerStorage implements ThrottlerStorageService {
+class RedisThrottlerStorage implements ThrottlerStorage {
   private redis: Redis;
 
   constructor() {
@@ -22,7 +26,10 @@ class RedisThrottlerStorage implements ThrottlerStorageService {
   async increment(
     key: string,
     ttl: number,
-  ): Promise<{ totalHits: number; timeToExpire: number; isBlocked: boolean; timeToBlockExpire: number }> {
+    limit: number,
+    blockDuration: number,
+    _throttlerName: string,
+  ): Promise<ThrottlerStorageRecord> {
     const multi = this.redis.multi();
     multi.incr(key);
     multi.pttl(key);
@@ -36,7 +43,14 @@ class RedisThrottlerStorage implements ThrottlerStorageService {
       timeToExpire = ttl;
     }
 
-    return { totalHits, timeToExpire, isBlocked: false, timeToBlockExpire: 0 };
+    const isBlocked = totalHits > limit;
+    const timeToBlockExpire = isBlocked ? blockDuration : 0;
+
+    if (isBlocked && blockDuration > 0) {
+      await this.redis.pexpire(key, blockDuration);
+    }
+
+    return { totalHits, timeToExpire, isBlocked, timeToBlockExpire };
   }
 }
 
