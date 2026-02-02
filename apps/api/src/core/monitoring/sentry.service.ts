@@ -1,7 +1,7 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as Sentry from '@sentry/node';
-import { ProfilingIntegration } from '@sentry/profiling-node';
+import { nodeProfilingIntegration } from '@sentry/profiling-node';
 
 import type { User } from '@db';
 
@@ -35,10 +35,10 @@ export class SentryService implements OnModuleInit {
       // Profiling
       profilesSampleRate: environment === 'production' ? 0.1 : 1.0,
       integrations: [
-        new ProfilingIntegration(),
-        new Sentry.Integrations.Http({ tracing: true }),
-        new Sentry.Integrations.OnUncaughtException(),
-        new Sentry.Integrations.OnUnhandledRejection(),
+        nodeProfilingIntegration(),
+        Sentry.httpIntegration(),
+        Sentry.onUncaughtExceptionIntegration(),
+        Sentry.onUnhandledRejectionIntegration(),
       ],
 
       // Error filtering
@@ -160,10 +160,7 @@ export class SentryService implements OnModuleInit {
   startTransaction(name: string, op: string) {
     if (!this.isEnabled) return null;
 
-    return Sentry.startTransaction({
-      name,
-      op,
-    });
+    return Sentry.startSpan({ name, op }, (span) => span);
   }
 
   /**

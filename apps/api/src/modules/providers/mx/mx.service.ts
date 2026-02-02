@@ -3,7 +3,15 @@ import * as crypto from 'crypto';
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { InputJsonValue } from '@prisma/client/runtime/library';
-import { Configuration, MxPlatformApi } from 'mx-platform-node';
+import {
+  Configuration,
+  InstitutionsApi,
+  UsersApi,
+  WidgetsApi,
+  MembersApi,
+  AccountsApi,
+  TransactionsApi,
+} from 'mx-platform-node';
 
 import { Provider, AccountType, Currency, Prisma as _Prisma } from '@db';
 
@@ -33,7 +41,12 @@ import {
 export class MxService implements IFinancialProvider {
   readonly name = Provider.mx;
   private readonly logger = new Logger(MxService.name);
-  private mxClient: MxPlatformApi | null = null;
+  private institutionsApi: InstitutionsApi | null = null;
+  private usersApi: UsersApi | null = null;
+  private widgetsApi: WidgetsApi | null = null;
+  private membersApi: MembersApi | null = null;
+  private accountsApi: AccountsApi | null = null;
+  private transactionsApi: TransactionsApi | null = null;
   private readonly apiKey: string;
   private readonly clientId: string;
   private readonly baseUrl: string;
@@ -67,17 +80,28 @@ export class MxService implements IFinancialProvider {
         password: this.apiKey,
       });
 
-      this.mxClient = new MxPlatformApi(configuration);
+      this.institutionsApi = new InstitutionsApi(configuration);
+      this.usersApi = new UsersApi(configuration);
+      this.widgetsApi = new WidgetsApi(configuration);
+      this.membersApi = new MembersApi(configuration);
+      this.accountsApi = new AccountsApi(configuration);
+      this.transactionsApi = new TransactionsApi(configuration);
       this.logger.log('MX client initialized successfully');
     } catch (error) {
       this.logger.error('Failed to initialize MX client:', error);
     }
   }
 
+  private get isConfigured(): boolean {
+    return this.institutionsApi !== null;
+  }
+
+  private static readonly API_VERSION = '1';
+
   async healthCheck(): Promise<ProviderHealthCheck> {
     const startTime = Date.now();
 
-    if (!this.mxClient) {
+    if (!this.isConfigured) {
       return {
         provider: Provider.mx,
         status: 'down',
@@ -90,7 +114,7 @@ export class MxService implements IFinancialProvider {
 
     try {
       // Ping MX by listing institutions with limit 1
-      await this.mxClient.listInstitutions({ page: 1, recordsPerPage: 1 } as any);
+      await this.institutionsApi!.listInstitutions(MxService.API_VERSION, undefined, undefined, 1, 1);
       const responseTimeMs = Date.now() - startTime;
 
       return {
@@ -113,7 +137,7 @@ export class MxService implements IFinancialProvider {
   }
 
   async createLink(params: CreateLinkParams): Promise<LinkResult> {
-    if (!this.mxClient) {
+    if (!this.isConfigured) {
       throw new BadRequestException('MX integration not configured');
     }
 
@@ -122,7 +146,7 @@ export class MxService implements IFinancialProvider {
       let mxUserGuid = params.metadata?.mxUserGuid as string | undefined;
 
       if (!mxUserGuid) {
-        const createUserResponse = await this.mxClient.createUser({
+        const createUserResponse = await this.usersApi!.createUser(MxService.API_VERSION, {
           user: {
             metadata: JSON.stringify({ dhanamUserId: params.userId }),
           },
@@ -144,7 +168,7 @@ export class MxService implements IFinancialProvider {
         },
       };
 
-      const widgetResponse = await this.mxClient.requestWidgetURL(mxUserGuid, widgetRequest);
+      const widgetResponse = await this.widgetsApi!.requestWidgetURL(MxService.API_VERSION, mxUserGuid, widgetRequest);
       const widgetUrl = widgetResponse.data.widget_url?.url;
 
       if (!widgetUrl) {
@@ -167,7 +191,7 @@ export class MxService implements IFinancialProvider {
   }
 
   async exchangeToken(params: ExchangeTokenParams): Promise<ExchangeTokenResult> {
-    if (!this.mxClient) {
+    if (!this.isConfigured) {
       throw new BadRequestException('MX integration not configured');
     }
 
@@ -181,7 +205,7 @@ export class MxService implements IFinancialProvider {
       }
 
       // Verify the member exists
-      const memberResponse = await this.mxClient.readMember(memberGuid, mxUserGuid);
+      const memberResponse = await this.membersApi!.readMember(MxService.API_VERSION, memberGuid, mxUserGuid);
       const member = memberResponse.data.member;
 
       if (!member) {
@@ -226,7 +250,7 @@ export class MxService implements IFinancialProvider {
   }
 
   async getAccounts(params: GetAccountsParams): Promise<ProviderAccount[]> {
-    if (!this.mxClient) {
+    if (!this.isConfigured) {
       throw new BadRequestException('MX integration not configured');
     }
 
@@ -247,9 +271,10 @@ export class MxService implements IFinancialProvider {
       const mxUserGuid = metadata.mxUserGuid;
 
       // Fetch accounts from MX
-      const accountsResponse = await this.mxClient.listMemberAccounts(
-        params.accessToken,
-        mxUserGuid
+      const accountsResponse = await this.accountsApi!.listMemberAccounts(
+        MxService.API_VERSION,
+        mxUserGuid,
+        params.accessToken
       );
 
       const mxAccounts = accountsResponse.data.accounts || [];
@@ -281,7 +306,7 @@ export class MxService implements IFinancialProvider {
   }
 
   async syncTransactions(params: SyncTransactionsParams): Promise<SyncTransactionsResult> {
-    if (!this.mxClient) {
+    if (!this.isConfigured) {
       throw new BadRequestException('MX integration not configured');
     }
 
@@ -303,10 +328,11 @@ export class MxService implements IFinancialProvider {
       const memberGuid = params.accessToken;
 
       // Calculate date range (default 90 days)
-      const toDate = params.endDate || new Date().toISOString().split('T')[0];
-      const fromDate =
+      const toDate = String(params.endDate || new Date().toISOString().split('T')[0]);
+      const fromDate = String(
         params.startDate ||
-        new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+        new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+      );
 
       // Fetch transactions from MX
       let page = 1;
@@ -315,15 +341,14 @@ export class MxService implements IFinancialProvider {
       let totalModified = 0;
 
       while (hasMore) {
-        const transactionsResponse = await this.mxClient.listTransactionsByMember(
-          memberGuid,
+        const transactionsResponse = await this.transactionsApi!.listTransactionsByMember(
+          MxService.API_VERSION,
           mxUserGuid,
-          {
-            fromDate,
-            toDate,
-            page,
-            recordsPerPage: 100,
-          } as any
+          memberGuid,
+          page,
+          100, // recordsPerPage
+          fromDate,
+          toDate
         );
 
         const mxTransactions = transactionsResponse.data.transactions || [];
@@ -417,7 +442,7 @@ export class MxService implements IFinancialProvider {
         added: totalAdded,
         modified: totalModified,
         removed: 0,
-        cursor: typeof toDate === 'string' ? toDate : toDate.toISOString(),
+        cursor: toDate,
       };
     } catch (error: any) {
       this.logger.error('Failed to sync MX transactions:', error);
@@ -426,7 +451,7 @@ export class MxService implements IFinancialProvider {
   }
 
   async handleWebhook(payload: any, signature?: string): Promise<WebhookHandlerResult> {
-    if (!this.mxClient) {
+    if (!this.isConfigured) {
       throw new BadRequestException('MX integration not configured');
     }
 
@@ -480,15 +505,18 @@ export class MxService implements IFinancialProvider {
   }
 
   async searchInstitutions(query: string, region?: string): Promise<InstitutionInfo[]> {
-    if (!this.mxClient) {
+    if (!this.isConfigured) {
       throw new BadRequestException('MX integration not configured');
     }
 
     try {
-      const response = await this.mxClient.listInstitutions({
-        name: query,
-        recordsPerPage: 20,
-      } as any);
+      const response = await this.institutionsApi!.listInstitutions(
+        MxService.API_VERSION,
+        query,
+        undefined, // isoCountryCode
+        undefined, // page
+        20 // recordsPerPage
+      );
 
       const institutions = response.data.institutions || [];
 
@@ -510,12 +538,12 @@ export class MxService implements IFinancialProvider {
   }
 
   async getInstitution(institutionId: string): Promise<InstitutionInfo> {
-    if (!this.mxClient) {
+    if (!this.isConfigured) {
       throw new BadRequestException('MX integration not configured');
     }
 
     try {
-      const response = await this.mxClient.readInstitution(institutionId);
+      const response = await this.institutionsApi!.readInstitution(MxService.API_VERSION, institutionId);
       const inst = response.data.institution;
 
       if (!inst) {
