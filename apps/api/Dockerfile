@@ -88,10 +88,10 @@ USER nestjs
 # Set working directory to where the API expects to run
 WORKDIR /app/apps/api
 
-EXPOSE 4000
+EXPOSE 4300
 
 # Health check (port and path set via env in K8s)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:${PORT:-4000}/v1/monitoring/health || exit 1
+  CMD wget --no-verbose --tries=1 --spider http://localhost:${PORT:-4300}/v1/monitoring/health || exit 1
 
 CMD ["node", "dist/main.js"]

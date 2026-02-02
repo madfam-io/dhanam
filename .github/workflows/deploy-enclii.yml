@@ -65,8 +65,8 @@ jobs:
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          username: madfam-bot
+          password: ${{ secrets.MADFAM_BOT_PAT }}
 
       - name: Build and push
         uses: docker/build-push-action@v6
@@ -138,8 +138,8 @@ jobs:
             kubectl create secret docker-registry ghcr-credentials \
               --namespace=$NAMESPACE \
               --docker-server=ghcr.io \
-              --docker-username=${{ github.actor }} \
-              --docker-password=${{ secrets.GHCR_PAT }} \
+              --docker-username=madfam-bot \
+              --docker-password=${{ secrets.MADFAM_BOT_PAT }} \
               --docker-email=ci@dhanam.dev
 
             # Update deployment
