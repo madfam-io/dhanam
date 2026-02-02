@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
+import { ThrottlerModule } from '@nestjs/throttler';
 import Stripe from 'stripe';
 
 import { BillingController } from '../billing.controller';
@@ -23,6 +24,7 @@ describe('BillingController', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
+      imports: [ThrottlerModule.forRoot([{ ttl: 60000, limit: 10 }])],
       controllers: [BillingController],
       providers: [
         {
@@ -37,6 +39,8 @@ describe('BillingController', () => {
             handleSubscriptionCancelled: jest.fn(),
             handlePaymentSucceeded: jest.fn(),
             handlePaymentFailed: jest.fn(),
+            handleCheckoutCompleted: jest.fn(),
+            createExternalCheckout: jest.fn(),
           },
         },
         {
@@ -418,6 +422,76 @@ describe('BillingController', () => {
         received: false,
         error: 'Database error',
       });
+    });
+
+    it('should handle checkout.session.completed webhook', async () => {
+      const mockEvent = {
+        id: 'evt_test123',
+        type: 'checkout.session.completed',
+        data: {
+          object: {
+            id: 'cs_test123',
+            metadata: { janua_user_id: 'user-123', plan: 'pro' },
+          },
+        },
+      } as Stripe.Event;
+
+      const mockRequest = createMockRequest(mockEvent);
+      const signature = 'valid_signature';
+
+      stripeService.constructWebhookEvent.mockReturnValue(mockEvent);
+      billingService.handleCheckoutCompleted.mockResolvedValue(undefined);
+
+      const result = await controller.handleWebhook(mockRequest as any, signature);
+
+      expect(billingService.handleCheckoutCompleted).toHaveBeenCalledWith(mockEvent);
+      expect(result).toEqual({ received: true });
+    });
+  });
+
+  describe('GET /billing/checkout', () => {
+    const mockReply = {
+      status: jest.fn().mockReturnThis(),
+      redirect: jest.fn().mockReturnThis(),
+    } as any;
+
+    it('should redirect to checkout URL for valid request', async () => {
+      billingService.createExternalCheckout.mockResolvedValue(
+        'https://checkout.stripe.com/pay/cs_test123'
+      );
+
+      await controller.publicCheckout(
+        { user_id: 'user-123', plan: 'pro', return_url: 'https://app.dhan.am/billing' } as any,
+        mockReply
+      );
+
+      expect(billingService.createExternalCheckout).toHaveBeenCalledWith(
+        'user-123',
+        'pro',
+        'https://app.dhan.am/billing'
+      );
+      expect(mockReply.status).toHaveBeenCalledWith(302);
+      expect(mockReply.redirect).toHaveBeenCalledWith(
+        'https://checkout.stripe.com/pay/cs_test123'
+      );
+    });
+
+    it('should reject return_url with disallowed host', async () => {
+      await expect(
+        controller.publicCheckout(
+          { user_id: 'user-123', plan: 'pro', return_url: 'https://evil.com/phish' } as any,
+          mockReply
+        )
+      ).rejects.toThrow('return_url host is not allowed');
+    });
+
+    it('should reject invalid return_url', async () => {
+      await expect(
+        controller.publicCheckout(
+          { user_id: 'user-123', plan: 'pro', return_url: 'not-a-url' } as any,
+          mockReply
+        )
+      ).rejects.toThrow('return_url is not a valid URL');
     });
   });
 });

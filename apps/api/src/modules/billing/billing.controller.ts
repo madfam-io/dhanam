@@ -3,13 +3,16 @@ import {
   Post,
   Get,
   Body,
+  Query,
   Req,
+  Res,
   UseGuards,
   Headers,
   RawBodyRequest,
   HttpCode,
   HttpStatus,
   Logger,
+  BadRequestException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
@@ -21,11 +24,14 @@ import {
   ApiUnauthorizedResponse,
   ApiBadRequestResponse,
 } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
+import type { FastifyReply } from 'fastify';
 
 import { JwtAuthGuard } from '../../core/auth/guards/jwt-auth.guard';
+import { ThrottleAuthGuard } from '../../core/security/guards/throttle-auth.guard';
 
 import { BillingService } from './billing.service';
-import { UpgradeToPremiumDto } from './dto';
+import { UpgradeToPremiumDto, CheckoutQueryDto } from './dto';
 import { JanuaWebhookPayloadDto, JanuaWebhookEventType } from './dto/janua-webhook.dto';
 import { JanuaBillingService } from './janua-billing.service';
 import { StripeService } from './stripe.service';
@@ -42,6 +48,42 @@ export class BillingController {
     private januaBillingService: JanuaBillingService,
     private config: ConfigService
   ) {}
+
+  /**
+   * Public checkout endpoint for external apps (e.g., Enclii).
+   * Validates user_id, plan, and return_url, then redirects to Stripe Checkout.
+   * No JWT required — secured by URL allowlist + Stripe session isolation.
+   */
+  @Get('checkout')
+  @UseGuards(ThrottleAuthGuard)
+  @Throttle({ default: { limit: 10, ttl: 60000 } }) // 10 requests per minute per IP
+  @ApiOperation({ summary: 'Redirect to payment checkout (public, no auth)' })
+  async publicCheckout(@Query() query: CheckoutQueryDto, @Res() reply: FastifyReply) {
+    const allowedHosts = [/\.madfam\.io$/, /\.dhan\.am$/, /\.enclii\.com$/];
+
+    if (process.env.NODE_ENV !== 'production') {
+      allowedHosts.push(/^localhost(:\d+)?$/);
+    }
+
+    let returnHost: string;
+    try {
+      returnHost = new URL(query.return_url).hostname;
+    } catch {
+      throw new BadRequestException('return_url is not a valid URL');
+    }
+
+    if (!allowedHosts.some((re) => re.test(returnHost))) {
+      throw new BadRequestException('return_url host is not allowed');
+    }
+
+    const checkoutUrl = await this.billingService.createExternalCheckout(
+      query.user_id,
+      query.plan,
+      query.return_url
+    );
+
+    return reply.status(302).redirect(checkoutUrl);
+  }
 
   /**
    * Initiate upgrade to premium subscription
@@ -177,6 +219,10 @@ export class BillingController {
 
         case 'invoice.payment_failed':
           await this.billingService.handlePaymentFailed(event);
+          break;
+
+        case 'checkout.session.completed':
+          await this.billingService.handleCheckoutCompleted(event);
           break;
 
         default:

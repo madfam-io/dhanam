@@ -73,6 +73,16 @@ export class StripeService {
   }
 
   /**
+   * Retrieve a checkout session by ID with optional expansions
+   */
+  async retrieveCheckoutSession(
+    sessionId: string,
+    params?: Stripe.Checkout.SessionRetrieveParams
+  ): Promise<Stripe.Checkout.Session> {
+    return await this.stripe.checkout.sessions.retrieve(sessionId, params);
+  }
+
+  /**
    * Create a billing portal session for subscription management
    */
   async createPortalSession(params: {

@@ -18,6 +18,12 @@ spec:
         component: admin
     spec:
       serviceAccountName: dhanam-admin
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 1001
+
       containers:
         - name: admin
           image: ghcr.io/madfam-org/dhanam-admin:latest
@@ -53,8 +59,26 @@ spec:
             periodSeconds: 10
             timeoutSeconds: 5
             failureThreshold: 3
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: next-cache
+              mountPath: /app/.next/cache
+
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: next-cache
+          emptyDir: {}
+
       imagePullSecrets:
-        - name: ghcr-secret
+        - name: ghcr-credentials
 ---
 apiVersion: v1
 kind: Service

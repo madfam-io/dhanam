@@ -185,6 +185,9 @@ spec:
         - name: tmp
           emptyDir: {}
 
+      imagePullSecrets:
+        - name: ghcr-credentials
+
       # Pod scheduling
       affinity:
         podAntiAffinity:
