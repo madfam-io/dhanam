@@ -1,3 +1,5 @@
+import { randomInt } from 'node:crypto';
+
 import { subDays } from 'date-fns';
 
 import { Currency } from '@db';
@@ -375,8 +377,8 @@ export class TransactionsBuilder {
     const templates = transactionTemplates.expenses.defi;
 
     for (let i = 0; i < 40; i++) {
-      const account = defiAccounts[Math.floor(Math.random() * defiAccounts.length)];
-      const tpl = templates[Math.floor(Math.random() * templates.length)];
+      const account = defiAccounts[randomInt(defiAccounts.length)];
+      const tpl = templates[randomInt(templates.length)];
       const cat = this.findCategory(ctx, tpl.category, account.spaceId);
       txns.push({
         accountId: account.id,

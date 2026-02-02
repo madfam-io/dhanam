@@ -32,7 +32,7 @@ export class SearchController {
   @ApiOkResponse({ description: 'Search results returned successfully' })
   @ApiBadRequestResponse({ description: 'Query parameter is required' })
   async search(@Param('spaceId') spaceId: string, @Query('q') query: string, @Req() req: Request) {
-    return this.nlService.search(spaceId, req.user!.id, query);
+    return this.nlService.search(spaceId, req.user!.id, String(query || ''));
   }
 
   @Get('suggestions')

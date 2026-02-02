@@ -63,7 +63,7 @@ export class ESGManager {
           return data;
         }
       } catch (error) {
-        console.warn(`Primary ESG provider failed for ${symbol}:`, error);
+        console.warn('Primary ESG provider failed', { symbol, error: (error as Error).message });
       }
     }
 
@@ -78,7 +78,7 @@ export class ESGManager {
             return data;
           }
         } catch (error) {
-          console.warn(`Fallback ESG provider ${fallbackName} failed for ${symbol}:`, error);
+          console.warn('Fallback ESG provider failed', { provider: fallbackName, symbol, error: (error as Error).message });
         }
       }
     }
@@ -97,10 +97,13 @@ export class ESGManager {
       );
 
       const validResults = batchResults
-        .filter((result): result is PromiseFulfilledResult<AssetESGData | null> => 
-          result.status === 'fulfilled' && result.value !== null
+        .filter((result): result is PromiseFulfilledResult<AssetESGData> =>
+          result.status === 'fulfilled' &&
+          result.value != null &&
+          typeof result.value === 'object' &&
+          'score' in result.value
         )
-        .map(result => result.value!);
+        .map(result => result.value);
 
       results.push(...validResults);
 

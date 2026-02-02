@@ -45,10 +45,11 @@ export class DemoDataBuilder {
       diego: () => this.buildDiegoPersona(geo),
     };
 
-    const builder = builders[personaKey];
-    if (!builder) {
-      throw new Error(`Unknown persona: ${personaKey}`);
+    const ALLOWED_PERSONAS = ['guest', 'maria', 'carlos', 'patricia', 'diego'] as const;
+    if (!ALLOWED_PERSONAS.includes(personaKey as any)) {
+      throw new Error('Unknown persona');
     }
+    const builder = builders[personaKey];
 
     const user = await builder();
 

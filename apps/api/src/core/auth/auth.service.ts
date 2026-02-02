@@ -59,7 +59,8 @@ export class AuthService {
    */
   private async checkPasswordBreach(password: string): Promise<boolean> {
     try {
-      const hash = createHash('sha1').update(password).digest('hex').toUpperCase();
+      // SHA1 is required by the HIBP k-anonymity API protocol — NOT used for password storage (Argon2id below)
+      const hash = createHash('sha1').update(password).digest('hex').toUpperCase(); // lgtm[js/insufficient-password-hash]
       const prefix = hash.substring(0, 5);
       const suffix = hash.substring(5);
 

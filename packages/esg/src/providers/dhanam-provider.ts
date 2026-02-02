@@ -55,10 +55,13 @@ export class DhanamESGProvider implements ESGProvider {
     );
 
     return results
-      .filter((result): result is PromiseFulfilledResult<AssetESGData | null> => 
-        result.status === 'fulfilled' && result.value !== null
+      .filter((result): result is PromiseFulfilledResult<AssetESGData> =>
+        result.status === 'fulfilled' &&
+        result.value != null &&
+        typeof result.value === 'object' &&
+        'score' in result.value
       )
-      .map(result => result.value!);
+      .map(result => result.value);
   }
 
   async refreshAssetData(symbol: string): Promise<void> {

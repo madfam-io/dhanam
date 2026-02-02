@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto';
+
 import type { AccountType, Provider, SpaceType } from './types';
 import { Currency } from './types';
 
@@ -84,7 +86,7 @@ export interface MockCategory {
 export class TestUtils {
   static createMockUser(overrides: Partial<MockUser> = {}): MockUser {
     return {
-      id: 'test-user-' + Math.random().toString(36).substr(2, 9),
+      id: 'test-user-' + randomUUID().slice(0, 9),
       email: 'test@example.com',
       name: 'Test User',
       locale: 'en',
@@ -97,7 +99,7 @@ export class TestUtils {
 
   static createMockSpace(overrides: Partial<MockSpace> = {}): MockSpace {
     return {
-      id: 'test-space-' + Math.random().toString(36).substr(2, 9),
+      id: 'test-space-' + randomUUID().slice(0, 9),
       name: 'Test Space',
       type: 'personal',
       currency: Currency.USD,
@@ -110,10 +112,10 @@ export class TestUtils {
 
   static createMockAccount(overrides: Partial<MockAccount> = {}): MockAccount {
     return {
-      id: 'test-account-' + Math.random().toString(36).substr(2, 9),
+      id: 'test-account-' + randomUUID().slice(0, 9),
       spaceId: 'test-space-id',
       provider: 'manual',
-      providerAccountId: 'manual-' + Math.random().toString(36).substr(2, 9),
+      providerAccountId: 'manual-' + randomUUID().slice(0, 9),
       name: 'Test Account',
       type: 'checking',
       subtype: 'checking',
@@ -130,7 +132,7 @@ export class TestUtils {
 
   static createMockTransaction(overrides: Partial<MockTransaction> = {}): MockTransaction {
     return {
-      id: 'test-tx-' + Math.random().toString(36).substr(2, 9),
+      id: 'test-tx-' + randomUUID().slice(0, 9),
       accountId: 'test-account-id',
       providerTransactionId: null,
       amount: -50,
@@ -151,7 +153,7 @@ export class TestUtils {
     const endDate = new Date('2024-12-31');
     
     return {
-      id: 'test-budget-' + Math.random().toString(36).substr(2, 9),
+      id: 'test-budget-' + randomUUID().slice(0, 9),
       spaceId: 'test-space-id',
       name: 'Test Budget',
       period: 'monthly',
@@ -167,7 +169,7 @@ export class TestUtils {
 
   static createMockCategory(overrides: Partial<MockCategory> = {}): MockCategory {
     return {
-      id: 'test-category-' + Math.random().toString(36).substr(2, 9),
+      id: 'test-category-' + randomUUID().slice(0, 9),
       budgetId: 'test-budget-id',
       name: 'Test Category',
       type: 'expense',

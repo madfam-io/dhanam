@@ -29,6 +29,7 @@ import { UsageMetricType, User } from '@db';
 import { TrackUsage } from '../billing/decorators/track-usage.decorator';
 import { UsageLimitGuard } from '../billing/guards/usage-limit.guard';
 
+import { CompareAssetsDto, CompareEnhancedAssetsDto, RefreshEsgDataDto } from './dto';
 import { EnhancedEsgService } from './enhanced-esg.service';
 import { EsgService } from './esg.service';
 
@@ -86,16 +87,8 @@ export class EsgController {
   @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
   @ApiPaymentRequiredResponse({ description: 'Daily ESG calculation limit exceeded' })
   @ApiBadRequestResponse({ description: 'Invalid symbols array or too many symbols' })
-  async compareAssets(@Body('symbols') symbols: string[]) {
-    if (!symbols || symbols.length === 0) {
-      return { error: 'Please provide at least one symbol to compare' };
-    }
-
-    if (symbols.length > 10) {
-      return { error: 'Maximum 10 symbols allowed for comparison' };
-    }
-
-    const comparison = await this.esgService.getAssetComparison(symbols);
+  async compareAssets(@Body() dto: CompareAssetsDto) {
+    const comparison = await this.esgService.getAssetComparison(dto.symbols);
     return {
       ...comparison,
       methodology: 'Dhanam ESG Framework v2.0',
@@ -242,16 +235,8 @@ export class EsgController {
   @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
   @ApiPaymentRequiredResponse({ description: 'Daily ESG calculation limit exceeded' })
   @ApiBadRequestResponse({ description: 'Invalid symbols array or too many symbols' })
-  async compareEnhancedAssets(@Body('symbols') symbols: string[]) {
-    if (!symbols || symbols.length === 0) {
-      return { error: 'Please provide at least one symbol to compare' };
-    }
-
-    if (symbols.length > 20) {
-      return { error: 'Maximum 20 symbols allowed for comparison' };
-    }
-
-    return this.enhancedEsgService.compareAssets(symbols);
+  async compareEnhancedAssets(@Body() dto: CompareEnhancedAssetsDto) {
+    return this.enhancedEsgService.compareAssets(dto.symbols);
   }
 
   @Get('v2/trends')
@@ -270,16 +255,12 @@ export class EsgController {
   @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
   @ApiPaymentRequiredResponse({ description: 'Daily ESG calculation limit exceeded' })
   @ApiBadRequestResponse({ description: 'No symbols provided' })
-  async refreshEsgData(@Body('symbols') symbols: string[]) {
-    if (!symbols || symbols.length === 0) {
-      return { error: 'Please provide symbols to refresh' };
-    }
-
-    await this.enhancedEsgService.refreshESGData(symbols);
+  async refreshEsgData(@Body() dto: RefreshEsgDataDto) {
+    await this.enhancedEsgService.refreshESGData(dto.symbols);
     return {
       success: true,
-      message: `ESG data refresh initiated for ${symbols.length} assets`,
-      symbols,
+      message: `ESG data refresh initiated for ${dto.symbols.length} assets`,
+      symbols: dto.symbols,
     };
   }
 

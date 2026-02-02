@@ -346,8 +346,19 @@ export class BlockchainService {
     };
   }
 
+  private static readonly BTC_ADDRESS_RE = /^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$|^bc1[a-z0-9]{39,59}$/;
+
+  private validateBtcAddress(address: string): string {
+    if (!BlockchainService.BTC_ADDRESS_RE.test(address)) {
+      throw new Error('Invalid BTC address format');
+    }
+    return encodeURIComponent(address);
+  }
+
   private async getBtcBalance(address: string): Promise<BlockchainBalance> {
-    const response = await this.btcClient!.get(`/rawaddr/${address}?limit=0`);
+    const response = await this.btcClient!.get(
+      `/rawaddr/${this.validateBtcAddress(address)}?limit=0`
+    );
     const data = response.data;
 
     const balanceBtc = data.final_balance / 100000000; // Convert from satoshis
@@ -499,7 +510,9 @@ export class BlockchainService {
 
   private async getBtcTransactions(address: string): Promise<BlockchainTransaction[]> {
     try {
-      const response = await this.btcClient!.get(`/rawaddr/${address}?limit=50`);
+      const response = await this.btcClient!.get(
+        `/rawaddr/${this.validateBtcAddress(address)}?limit=50`
+      );
       const data = response.data;
 
       return data.txs.map((tx: any) => ({

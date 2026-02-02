@@ -5,9 +5,9 @@ import fastifyCookie from '@fastify/cookie';
 // eslint-disable-next-line import/no-named-as-default
 import fastifyCors from '@fastify/cors';
 // eslint-disable-next-line import/no-named-as-default
+import fastifyCsrfProtection from '@fastify/csrf-protection';
 import fastifyHelmet from '@fastify/helmet';
 // eslint-disable-next-line import/no-named-as-default
-import fastifyCsrfProtection from '@fastify/csrf-protection';
 // eslint-disable-next-line import/no-named-as-default
 import fastifyRateLimit from '@fastify/rate-limit';
 import { ValidationPipe, VersioningType, Logger } from '@nestjs/common';

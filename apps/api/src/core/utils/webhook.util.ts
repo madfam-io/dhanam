@@ -285,7 +285,10 @@ export const WebhookSignatureVerifiers = {
     // Reject stale webhooks older than 5 minutes to prevent replay attacks
     const MAX_WEBHOOK_AGE_SECONDS = 300;
     const timestampSeconds = parseInt(timestamp, 10);
-    if (isNaN(timestampSeconds) || Math.abs(Date.now() / 1000 - timestampSeconds) > MAX_WEBHOOK_AGE_SECONDS) {
+    if (
+      isNaN(timestampSeconds) ||
+      Math.abs(Date.now() / 1000 - timestampSeconds) > MAX_WEBHOOK_AGE_SECONDS
+    ) {
       return false;
     }
 
