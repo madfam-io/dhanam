@@ -3,6 +3,7 @@ import { ConflictException, UnauthorizedException, BadRequestException } from '@
 import { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
 
+import { AuditService } from '@core/audit/audit.service';
 import { PrismaService } from '@core/prisma/prisma.service';
 import { LoggerService } from '@core/logger/logger.service';
 import { EmailService } from '@modules/email/email.service';
@@ -65,6 +66,7 @@ describe('AuthService', () => {
 
     const mockTotpService = {
       verifyToken: jest.fn(),
+      verifyEncryptedToken: jest.fn(),
     };
 
     const mockEmailService = {
@@ -78,6 +80,24 @@ describe('AuthService', () => {
       warn: jest.fn(),
     };
 
+    const mockAuditService = {
+      logSuspiciousActivity: jest.fn().mockResolvedValue(undefined),
+      log: jest.fn().mockResolvedValue(undefined),
+    };
+
+    // Mock fetch to prevent real HIBP API calls (password breach check)
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      text: jest.fn().mockResolvedValue(''),
+    });
+
+    // Mock Redis constructor - AuthService creates Redis in constructor
+    jest.spyOn(require('ioredis').prototype, 'get').mockResolvedValue(null);
+    jest.spyOn(require('ioredis').prototype, 'incr').mockResolvedValue(1);
+    jest.spyOn(require('ioredis').prototype, 'expire').mockResolvedValue(1);
+    jest.spyOn(require('ioredis').prototype, 'del').mockResolvedValue(1);
+    jest.spyOn(require('ioredis').prototype, 'set').mockResolvedValue('OK');
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
@@ -87,6 +107,7 @@ describe('AuthService', () => {
         { provide: TotpService, useValue: mockTotpService },
         { provide: EmailService, useValue: mockEmailService },
         { provide: LoggerService, useValue: mockLogger },
+        { provide: AuditService, useValue: mockAuditService },
       ],
     }).compile();
 
@@ -335,14 +356,14 @@ describe('AuthService', () => {
       };
       prisma.user.findUnique.mockResolvedValue(userWith2FA as any);
       prisma.user.update.mockResolvedValue(userWith2FA as any);
-      totpService.verifyToken.mockReturnValue(true);
+      totpService.verifyEncryptedToken.mockReturnValue(true);
       jwtService.sign.mockReturnValue('mock-access-token');
       sessionService.createRefreshToken.mockResolvedValue('mock-refresh-token');
 
       const loginWith2FA = { ...loginDto, totpCode: '123456' };
       const result = await service.login(loginWith2FA);
 
-      expect(totpService.verifyToken).toHaveBeenCalledWith('JBSWY3DPEHPK3PXP', '123456');
+      expect(totpService.verifyEncryptedToken).toHaveBeenCalledWith('JBSWY3DPEHPK3PXP', '123456');
       expect(result).toEqual({
         accessToken: 'mock-access-token',
         refreshToken: 'mock-refresh-token',
@@ -357,7 +378,7 @@ describe('AuthService', () => {
         passwordHash: await argon2.hash(loginDto.password),
       };
       prisma.user.findUnique.mockResolvedValue(userWith2FA as any);
-      totpService.verifyToken.mockReturnValue(false);
+      totpService.verifyEncryptedToken.mockReturnValue(false);
 
       const loginWith2FA = { ...loginDto, totpCode: '999999' };
 

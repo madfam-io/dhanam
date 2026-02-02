@@ -368,7 +368,7 @@ describe('UsersService', () => {
           delete: jest.fn(),
         },
         user: {
-          delete: jest.fn(),
+          update: jest.fn(),
         },
       };
 
@@ -377,12 +377,16 @@ describe('UsersService', () => {
       });
 
       mockTx.userSpace.findMany.mockResolvedValue([]);
-      mockTx.user.delete.mockResolvedValue(mockUser);
+      mockTx.user.update.mockResolvedValue(mockUser);
 
       await service.deleteAccount('user-123');
 
-      expect(mockTx.user.delete).toHaveBeenCalledWith({
+      expect(mockTx.user.update).toHaveBeenCalledWith({
         where: { id: 'user-123' },
+        data: {
+          deletedAt: expect.any(Date),
+          isActive: false,
+        },
       });
     });
 
@@ -395,7 +399,7 @@ describe('UsersService', () => {
           delete: jest.fn(),
         },
         user: {
-          delete: jest.fn(),
+          update: jest.fn(),
         },
       };
 
@@ -425,7 +429,7 @@ describe('UsersService', () => {
 
       mockTx.userSpace.findMany.mockResolvedValue(ownedSpaces);
       mockTx.space.delete.mockResolvedValue({ id: 'space-1' });
-      mockTx.user.delete.mockResolvedValue(mockUser);
+      mockTx.user.update.mockResolvedValue(mockUser);
 
       await service.deleteAccount('user-123');
 
@@ -443,7 +447,7 @@ describe('UsersService', () => {
           delete: jest.fn(),
         },
         user: {
-          delete: jest.fn(),
+          update: jest.fn(),
         },
       };
 
@@ -477,7 +481,7 @@ describe('UsersService', () => {
       ];
 
       mockTx.userSpace.findMany.mockResolvedValue(sharedSpaces);
-      mockTx.user.delete.mockResolvedValue(mockUser);
+      mockTx.user.update.mockResolvedValue(mockUser);
 
       await service.deleteAccount('user-123');
 
@@ -494,7 +498,7 @@ describe('UsersService', () => {
           delete: jest.fn(),
         },
         user: {
-          delete: jest.fn(),
+          update: jest.fn(),
         },
       };
 
@@ -549,7 +553,7 @@ describe('UsersService', () => {
 
       mockTx.userSpace.findMany.mockResolvedValue(mixedSpaces);
       mockTx.space.delete.mockResolvedValue({ id: 'space-solo' });
-      mockTx.user.delete.mockResolvedValue(mockUser);
+      mockTx.user.update.mockResolvedValue(mockUser);
 
       await service.deleteAccount('user-123');
 
@@ -569,7 +573,7 @@ describe('UsersService', () => {
           delete: jest.fn(),
         },
         user: {
-          delete: jest.fn(),
+          update: jest.fn(),
         },
       };
 
@@ -598,7 +602,7 @@ describe('UsersService', () => {
 
       mockTx.userSpace.findMany.mockResolvedValue(ownedSpaceWithMembers);
       mockTx.space.delete.mockResolvedValue({ id: 'space-with-members' });
-      mockTx.user.delete.mockResolvedValue(mockUser);
+      mockTx.user.update.mockResolvedValue(mockUser);
 
       await service.deleteAccount('user-123');
 
@@ -617,7 +621,7 @@ describe('UsersService', () => {
           delete: jest.fn(),
         },
         user: {
-          delete: jest.fn(),
+          update: jest.fn(),
         },
       };
 
@@ -626,7 +630,7 @@ describe('UsersService', () => {
       });
 
       mockTx.userSpace.findMany.mockResolvedValue([]);
-      mockTx.user.delete.mockResolvedValue(mockUser);
+      mockTx.user.update.mockResolvedValue(mockUser);
 
       await service.deleteAccount('user-123');
 
@@ -642,7 +646,7 @@ describe('UsersService', () => {
           delete: jest.fn(),
         },
         user: {
-          delete: jest.fn(),
+          update: jest.fn(),
         },
       };
 
@@ -651,13 +655,17 @@ describe('UsersService', () => {
       });
 
       mockTx.userSpace.findMany.mockResolvedValue([]);
-      mockTx.user.delete.mockResolvedValue(mockUser);
+      mockTx.user.update.mockResolvedValue(mockUser);
 
       await service.deleteAccount('user-123');
 
       // User deletion should happen after space cleanup
-      expect(mockTx.user.delete).toHaveBeenCalledWith({
+      expect(mockTx.user.update).toHaveBeenCalledWith({
         where: { id: 'user-123' },
+        data: {
+          deletedAt: expect.any(Date),
+          isActive: false,
+        },
       });
     });
 
@@ -670,7 +678,7 @@ describe('UsersService', () => {
           delete: jest.fn(),
         },
         user: {
-          delete: jest.fn(),
+          update: jest.fn(),
         },
       };
 

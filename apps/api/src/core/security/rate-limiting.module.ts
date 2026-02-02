@@ -3,7 +3,6 @@ import { ConfigService } from '@nestjs/config';
 import {
   ThrottlerModule,
   ThrottlerStorage,
-  ThrottlerStorageRecord,
 } from '@nestjs/throttler';
 import Redis from 'ioredis';
 
@@ -29,7 +28,7 @@ class RedisThrottlerStorage implements ThrottlerStorage {
     limit: number,
     blockDuration: number,
     _throttlerName: string,
-  ): Promise<ThrottlerStorageRecord> {
+  ): Promise<{ totalHits: number; timeToExpire: number; isBlocked: boolean; timeToBlockExpire: number }> {
     const multi = this.redis.multi();
     multi.incr(key);
     multi.pttl(key);
