@@ -135,10 +135,7 @@ export class ApiClient {
 export const apiClient = new ApiClient({
   onTokenRefresh: (tokens) => {
     import('../hooks/use-auth').then(({ useAuth }) => {
-      const store = useAuth.getState();
-      if (store.user) {
-        store.setAuth(store.user, tokens);
-      }
+      useAuth.setState({ token: tokens.accessToken });
     });
   },
 });

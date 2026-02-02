@@ -94,12 +94,12 @@ describe('R2StorageService', () => {
         const result = await service.getPresignedUploadUrl(
           'space-123',
           'asset-456',
-          'README',
-          'text/plain'
+          'document',
+          'application/pdf'
         );
 
-        // Files without extension get the filename as extension (split('.').pop() returns 'README')
-        expect(result.key).toContain('mock-uuid-1234.README');
+        // Files without extension get the filename as extension (split('.').pop() returns 'document')
+        expect(result.key).toContain('mock-uuid-1234.document');
       });
 
       it('should handle filename with trailing dot', async () => {
@@ -107,7 +107,7 @@ describe('R2StorageService', () => {
           'space-123',
           'asset-456',
           'file.',
-          'application/octet-stream'
+          'application/pdf'
         );
 
         // split('.').pop() returns '' for 'file.', then || '' makes it ''
@@ -116,16 +116,26 @@ describe('R2StorageService', () => {
       });
 
       it('should handle empty filename extension edge case', async () => {
-        // Test the || '' fallback when split returns undefined somehow
         const result = await service.getPresignedUploadUrl(
           'space-123',
           'asset-456',
           '',
-          'application/octet-stream'
+          'application/pdf'
         );
 
         // Empty string split('.').pop() returns ''
         expect(result.key).toContain('mock-uuid-1234.');
+      });
+
+      it('should reject disallowed MIME types', async () => {
+        await expect(
+          service.getPresignedUploadUrl(
+            'space-123',
+            'asset-456',
+            'file.exe',
+            'application/octet-stream'
+          )
+        ).rejects.toThrow("File type 'application/octet-stream' is not allowed");
       });
 
       it('should call getSignedUrl with correct parameters', async () => {
