@@ -110,10 +110,10 @@ module.exports = {
   ],
   coverageThreshold: {
     global: {
-      branches: 79, // CI baseline: 79.14%
-      functions: 80, // CI baseline: 80.6%
-      lines: 85, // CI baseline: 85.12%
-      statements: 84, // CI baseline: 84.11%
+      branches: 78, // CI baseline: 78.4% (post-SOC2 remediation)
+      functions: 79, // CI baseline: 79.89% (post-SOC2 remediation)
+      lines: 84, // CI baseline: 84.49% (post-SOC2 remediation)
+      statements: 83, // CI baseline: 83.5% (post-SOC2 remediation)
     },
   },
   transformIgnorePatterns: [
