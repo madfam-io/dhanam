@@ -1,15 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 
 import { GuestAuthService } from '../guest-auth.service';
+import { DemoAuthService } from '../demo-auth.service';
 import { PrismaService } from '@core/prisma/prisma.service';
 
 describe('GuestAuthService', () => {
   let service: GuestAuthService;
   let prisma: jest.Mocked<PrismaService>;
   let jwtService: jest.Mocked<JwtService>;
-  let configService: jest.Mocked<ConfigService>;
+  let demoAuthService: jest.Mocked<DemoAuthService>;
 
   const mockGuestUser = {
     id: 'guest-user-id',
@@ -29,14 +29,13 @@ describe('GuestAuthService', () => {
     lastLoginAt: null,
   };
 
-  const mockSpace = {
-    id: 'guest-space-id',
-    name: 'Demo Personal Finance',
-    type: 'personal',
-    currency: 'MXN',
-    timezone: 'America/Mexico_City',
-    createdAt: new Date(),
-    updatedAt: new Date(),
+  const mockLoginResult = {
+    user: mockGuestUser,
+    accessToken: 'mock-access-token',
+    refreshToken: 'mock-refresh-token',
+    expiresIn: 3600,
+    persona: 'guest',
+    message: 'Guest session created',
   };
 
   beforeEach(async () => {
@@ -59,8 +58,8 @@ describe('GuestAuthService', () => {
       verify: jest.fn(),
     };
 
-    const mockConfigService = {
-      get: jest.fn(),
+    const mockDemoAuthService = {
+      loginAsPersona: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -68,14 +67,14 @@ describe('GuestAuthService', () => {
         GuestAuthService,
         { provide: PrismaService, useValue: mockPrisma },
         { provide: JwtService, useValue: mockJwtService },
-        { provide: ConfigService, useValue: mockConfigService },
+        { provide: DemoAuthService, useValue: mockDemoAuthService },
       ],
     }).compile();
 
     service = module.get<GuestAuthService>(GuestAuthService);
     prisma = module.get(PrismaService);
     jwtService = module.get(JwtService);
-    configService = module.get(ConfigService);
+    demoAuthService = module.get(DemoAuthService);
   });
 
   afterEach(() => {
@@ -83,13 +82,24 @@ describe('GuestAuthService', () => {
   });
 
   describe('createGuestSession', () => {
-    it('should create guest session for existing guest user', async () => {
-      prisma.user.findUnique.mockResolvedValue(mockGuestUser as any);
-      jwtService.sign
-        .mockReturnValueOnce('mock-access-token')
-        .mockReturnValueOnce('mock-refresh-token');
-      configService.get.mockReturnValue('test-refresh-secret');
-      prisma.auditLog.create.mockResolvedValue({} as any);
+    it('should delegate to demoAuthService.loginAsPersona with guest', async () => {
+      demoAuthService.loginAsPersona.mockResolvedValue(mockLoginResult as any);
+
+      await service.createGuestSession();
+
+      expect(demoAuthService.loginAsPersona).toHaveBeenCalledWith('guest', undefined);
+    });
+
+    it('should pass countryCode to loginAsPersona', async () => {
+      demoAuthService.loginAsPersona.mockResolvedValue(mockLoginResult as any);
+
+      await service.createGuestSession('MX');
+
+      expect(demoAuthService.loginAsPersona).toHaveBeenCalledWith('guest', 'MX');
+    });
+
+    it('should return user, tokens, and expiresIn from delegation result', async () => {
+      demoAuthService.loginAsPersona.mockResolvedValue(mockLoginResult as any);
 
       const result = await service.createGuestSession();
 
@@ -101,133 +111,10 @@ describe('GuestAuthService', () => {
       });
     });
 
-    it('should create new guest user if not exists', async () => {
-      prisma.user.findUnique.mockResolvedValue(null);
-      prisma.user.create.mockResolvedValue(mockGuestUser as any);
-      prisma.space.create.mockResolvedValue(mockSpace as any);
-      jwtService.sign
-        .mockReturnValueOnce('mock-access-token')
-        .mockReturnValueOnce('mock-refresh-token');
-      configService.get.mockReturnValue('test-refresh-secret');
-      prisma.auditLog.create.mockResolvedValue({} as any);
+    it('should propagate errors from demoAuthService', async () => {
+      demoAuthService.loginAsPersona.mockRejectedValue(new Error('Demo service error'));
 
-      const result = await service.createGuestSession();
-
-      expect(prisma.user.create).toHaveBeenCalledWith({
-        data: expect.objectContaining({
-          email: 'guest@dhanam.demo',
-          name: 'Guest User',
-          passwordHash: 'GUEST_NO_PASSWORD',
-          emailVerified: true,
-          onboardingCompleted: true,
-        }),
-      });
-      expect(result.user).toEqual(mockGuestUser);
-    });
-
-    it('should create demo space for new guest user', async () => {
-      prisma.user.findUnique.mockResolvedValue(null);
-      prisma.user.create.mockResolvedValue(mockGuestUser as any);
-      prisma.space.create.mockResolvedValue(mockSpace as any);
-      jwtService.sign
-        .mockReturnValueOnce('mock-access-token')
-        .mockReturnValueOnce('mock-refresh-token');
-      configService.get.mockReturnValue('test-refresh-secret');
-      prisma.auditLog.create.mockResolvedValue({} as any);
-
-      await service.createGuestSession();
-
-      expect(prisma.space.create).toHaveBeenCalledWith({
-        data: expect.objectContaining({
-          name: 'Demo Personal Finance',
-          type: 'personal',
-          currency: 'MXN',
-          userSpaces: {
-            create: {
-              userId: mockGuestUser.id,
-              role: 'viewer',
-            },
-          },
-        }),
-      });
-    });
-
-    it('should generate access token with guest permissions', async () => {
-      prisma.user.findUnique.mockResolvedValue(mockGuestUser as any);
-      jwtService.sign
-        .mockReturnValueOnce('mock-access-token')
-        .mockReturnValueOnce('mock-refresh-token');
-      configService.get.mockReturnValue('test-refresh-secret');
-      prisma.auditLog.create.mockResolvedValue({} as any);
-
-      await service.createGuestSession();
-
-      expect(jwtService.sign).toHaveBeenCalledWith(
-        expect.objectContaining({
-          sub: mockGuestUser.id,
-          email: mockGuestUser.email,
-          isGuest: true,
-          permissions: ['read'],
-        }),
-        { expiresIn: '1h' }
-      );
-    });
-
-    it('should generate refresh token with shorter expiration', async () => {
-      prisma.user.findUnique.mockResolvedValue(mockGuestUser as any);
-      jwtService.sign
-        .mockReturnValueOnce('mock-access-token')
-        .mockReturnValueOnce('mock-refresh-token');
-      configService.get.mockReturnValue('test-refresh-secret');
-      prisma.auditLog.create.mockResolvedValue({} as any);
-
-      await service.createGuestSession();
-
-      expect(jwtService.sign).toHaveBeenNthCalledWith(
-        2,
-        expect.objectContaining({
-          sub: mockGuestUser.id,
-          isGuest: true,
-          type: 'refresh',
-        }),
-        expect.objectContaining({
-          secret: 'test-refresh-secret',
-          expiresIn: '2h',
-        })
-      );
-    });
-
-    it('should create audit log entry for session creation', async () => {
-      prisma.user.findUnique.mockResolvedValue(mockGuestUser as any);
-      jwtService.sign
-        .mockReturnValueOnce('mock-access-token')
-        .mockReturnValueOnce('mock-refresh-token');
-      configService.get.mockReturnValue('test-refresh-secret');
-      prisma.auditLog.create.mockResolvedValue({} as any);
-
-      await service.createGuestSession();
-
-      expect(prisma.auditLog.create).toHaveBeenCalledWith({
-        data: expect.objectContaining({
-          userId: mockGuestUser.id,
-          action: 'guest.session_created',
-          ipAddress: 'guest',
-          userAgent: 'guest-access',
-        }),
-      });
-    });
-
-    it('should return correct expiration time (1 hour)', async () => {
-      prisma.user.findUnique.mockResolvedValue(mockGuestUser as any);
-      jwtService.sign
-        .mockReturnValueOnce('mock-access-token')
-        .mockReturnValueOnce('mock-refresh-token');
-      configService.get.mockReturnValue('test-refresh-secret');
-      prisma.auditLog.create.mockResolvedValue({} as any);
-
-      const result = await service.createGuestSession();
-
-      expect(result.expiresIn).toBe(3600);
+      await expect(service.createGuestSession()).rejects.toThrow('Demo service error');
     });
   });
 
@@ -331,35 +218,6 @@ describe('GuestAuthService', () => {
       prisma.auditLog.deleteMany.mockRejectedValue(new Error('Database error'));
 
       await expect(service.cleanupExpiredGuestSessions()).rejects.toThrow('Database error');
-    });
-  });
-
-  describe('getOrCreateGuestUser (private method behavior)', () => {
-    it('should reuse existing guest user', async () => {
-      prisma.user.findUnique.mockResolvedValue(mockGuestUser as any);
-      jwtService.sign.mockReturnValue('token');
-      configService.get.mockReturnValue('secret');
-      prisma.auditLog.create.mockResolvedValue({} as any);
-
-      await service.createGuestSession();
-      await service.createGuestSession();
-
-      // findUnique should be called but create should not
-      expect(prisma.user.findUnique).toHaveBeenCalledTimes(2);
-      expect(prisma.user.create).not.toHaveBeenCalled();
-    });
-
-    it('should search for guest user by email', async () => {
-      prisma.user.findUnique.mockResolvedValue(mockGuestUser as any);
-      jwtService.sign.mockReturnValue('token');
-      configService.get.mockReturnValue('secret');
-      prisma.auditLog.create.mockResolvedValue({} as any);
-
-      await service.createGuestSession();
-
-      expect(prisma.user.findUnique).toHaveBeenCalledWith({
-        where: { email: 'guest@dhanam.demo' },
-      });
     });
   });
 });

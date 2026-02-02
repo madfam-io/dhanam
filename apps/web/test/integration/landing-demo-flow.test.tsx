@@ -10,6 +10,31 @@ import { useRouter } from 'next/navigation';
 jest.mock('@/lib/hooks/use-auth');
 jest.mock('@/hooks/useAnalytics');
 jest.mock('@/lib/api/auth');
+jest.mock('@dhanam/shared', () => {
+  const React = require('react');
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { landing } = require('../../../../packages/shared/src/i18n/en');
+  const resolve = (obj: any, path: string): string => {
+    const val = path.split('.').reduce((o: any, k: string) => o?.[k], obj);
+    return typeof val === 'string' ? val : path;
+  };
+  const I18nContext = React.createContext({
+    locale: 'en',
+    translations: { en: { landing } },
+    changeLanguage: jest.fn(),
+  });
+  return {
+    useTranslation: () => ({
+      t: (key: string) => resolve(landing, key),
+      i18n: { language: 'en', changeLanguage: jest.fn() },
+    }),
+    I18nContext,
+    I18nProvider: ({ children }: { children: React.ReactNode }) =>
+      React.createElement(I18nContext.Provider, {
+        value: { locale: 'en', translations: { en: { landing } }, changeLanguage: jest.fn() },
+      }, children),
+  };
+});
 
 const mockSetAuth = jest.fn();
 const mockUseAuth = useAuth as jest.MockedFunction<typeof useAuth> & {
@@ -78,8 +103,8 @@ describe('Landing Page Demo Flow', () => {
     it('should render the landing page with hero section', () => {
       render(<HomePage />);
 
-      expect(screen.getAllByText(/Know Your Financial Future/i)[0]).toBeInTheDocument();
-      expect(screen.getByText(/With 95% Confidence/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/Your Entire Financial Life/i)[0]).toBeInTheDocument();
+      expect(screen.getByText(/One Platform/i)).toBeInTheDocument();
     });
 
     it('should render "Try Live Demo" button', () => {
@@ -89,10 +114,10 @@ describe('Landing Page Demo Flow', () => {
       expect(demoButtons.length).toBeGreaterThan(0);
     });
 
-    it('should render "Start Free Trial" button', () => {
+    it('should render "Create Free Account" button', () => {
       render(<HomePage />);
 
-      const signUpButtons = screen.getAllByRole('button', { name: /Start Free Trial/i });
+      const signUpButtons = screen.getAllByRole('button', { name: /Create Free Account/i });
       expect(signUpButtons.length).toBeGreaterThan(0);
     });
 
@@ -100,8 +125,6 @@ describe('Landing Page Demo Flow', () => {
       render(<HomePage />);
 
       expect(screen.getByText(/Instant access/i)).toBeInTheDocument();
-      expect(screen.getByText(/No signup required/i)).toBeInTheDocument();
-      expect(screen.getByText(/Explore full features for 1 hour/i)).toBeInTheDocument();
     });
   });
 
@@ -198,10 +221,10 @@ describe('Landing Page Demo Flow', () => {
   });
 
   describe('Sign Up Flow', () => {
-    it('should track analytics when "Start Free Trial" is clicked', () => {
+    it('should track analytics when "Create Free Account" is clicked', () => {
       render(<HomePage />);
 
-      const signUpButtons = screen.getAllByRole('button', { name: /Start Free Trial/i });
+      const signUpButtons = screen.getAllByRole('button', { name: /Create Free Account/i });
       fireEvent.click(signUpButtons[0]!);
 
       // Verify analytics is tracked (navigation via window.location which jsdom doesn't support)
@@ -236,25 +259,25 @@ describe('Landing Page Demo Flow', () => {
     it('should render features grid', () => {
       render(<HomePage />);
 
-      expect(screen.getByText(/Monte Carlo Simulations/i)).toBeInTheDocument();
-      expect(screen.getByText(/Goal-Based Planning/i)).toBeInTheDocument();
-      expect(screen.getByText(/Scenario Analysis/i)).toBeInTheDocument();
-      expect(screen.getByText(/ESG Crypto Scoring/i)).toBeInTheDocument();
+      expect(screen.getByText(/Multi-Provider Banking/i)).toBeInTheDocument();
+      expect(screen.getByText(/DeFi & Web3/i)).toBeInTheDocument();
+      expect(screen.getByText(/Smart Categorization/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/Estate Planning/i).length).toBeGreaterThan(0);
     });
 
     it('should render pricing section', () => {
       render(<HomePage />);
 
-      expect(screen.getByText(/Simple Pricing/i)).toBeInTheDocument();
-      expect(screen.getAllByText(/Free/i).length).toBeGreaterThan(0);
-      expect(screen.getByText(/Premium/i)).toBeInTheDocument();
+      expect(screen.getByText(/Plans for Every Stage/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/Community/i).length).toBeGreaterThan(0);
+      expect(screen.getAllByText(/Pro/i).length).toBeGreaterThan(0);
     });
 
     it('should render social proof section', () => {
       render(<HomePage />);
 
-      expect(screen.getByText(/5K\+/i)).toBeInTheDocument(); // Active Users
-      expect(screen.getByText(/100K\+/i)).toBeInTheDocument(); // Simulations Run
+      expect(screen.getByText(/Integrated With the Platforms You Trust/i)).toBeInTheDocument();
+      expect(screen.getByText(/Open Source ESG Methodology/i)).toBeInTheDocument();
     });
   });
 
