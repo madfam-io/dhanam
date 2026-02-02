@@ -21,7 +21,7 @@ export function ProblemSolution() {
               <h3 className="font-semibold">{t('problemSolution.budgetTrackers')}</h3>
             </div>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              {([1, 2, 3, 4, 5, 6] as const).map((n) => (
+              {([1, 2, 3, 4, 5, 6, 7, 8] as const).map((n) => (
                 <li key={n} className="flex gap-2">
                   <span className="text-red-600">&#10007;</span> {t(`problemSolution.problem${n}`)}
                 </li>
@@ -35,7 +35,7 @@ export function ProblemSolution() {
               <h3 className="font-semibold">Dhanam</h3>
             </div>
             <ul className="space-y-2 text-sm">
-              {([1, 2, 3, 4, 5, 6] as const).map((n) => (
+              {([1, 2, 3, 4, 5, 6, 7, 8] as const).map((n) => (
                 <li key={n} className="flex gap-2">
                   <CheckCircle className="h-4 w-4 text-green-600 shrink-0 mt-0.5" />{' '}
                   {t(`problemSolution.solution${n}`)}

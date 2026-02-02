@@ -1,13 +1,14 @@
 'use client';
 
 import { useTranslation } from '@dhanam/shared';
-import { Link2, Cpu, BarChart3, Target } from 'lucide-react';
+import { Link2, Cpu, BarChart3, Target, Rocket } from 'lucide-react';
 
 const steps = [
   { number: 1, key: 'step1' as const, icon: Link2, color: 'blue' as const },
   { number: 2, key: 'step2' as const, icon: Cpu, color: 'purple' as const },
   { number: 3, key: 'step3' as const, icon: BarChart3, color: 'orange' as const },
   { number: 4, key: 'step4' as const, icon: Target, color: 'green' as const },
+  { number: 5, key: 'step5' as const, icon: Rocket, color: 'pink' as const },
 ] as const;
 
 const colorMap = {
@@ -15,6 +16,7 @@ const colorMap = {
   purple: 'bg-purple-100 dark:bg-purple-900/50 text-purple-600',
   orange: 'bg-orange-100 dark:bg-orange-900/50 text-orange-600',
   green: 'bg-green-100 dark:bg-green-900/50 text-green-600',
+  pink: 'bg-pink-100 dark:bg-pink-900/50 text-pink-600',
 } as const;
 
 export function HowItWorks() {
@@ -27,7 +29,7 @@ export function HowItWorks() {
         <p className="text-muted-foreground">{t('howItWorks.subtitle')}</p>
       </div>
 
-      <div className="max-w-5xl mx-auto grid md:grid-cols-4 gap-8">
+      <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-5 gap-8">
         {steps.map((step) => {
           const Icon = step.icon;
           return (

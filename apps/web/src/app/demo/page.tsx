@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -37,6 +37,15 @@ const PERSONAS = [
     archetype: 'Young Professional',
     features: ['Zero-based budgeting', 'Belvo bank sync', 'ESG crypto scoring'],
     color: 'border-blue-500',
+    narrative:
+      "María was juggling 5 financial apps and still couldn't find where her money went. Now AI learns her patterns, auto-categorizes every transaction, and one search finds anything across all her accounts.",
+    guidedFeatures: [
+      'AI categorization',
+      'AI Search (⌘K)',
+      'Zero-based budgeting',
+      '60-day forecast',
+    ],
+    conversionHook: 'María built her system. Build yours.',
   },
   {
     key: 'carlos',
@@ -45,6 +54,15 @@ const PERSONAS = [
     archetype: 'Small Business Owner',
     features: ['Yours / Mine / Ours spaces', 'Business budgeting', 'Manual asset tracking'],
     color: 'border-green-500',
+    narrative:
+      "Carlos's business and personal finances were hopelessly tangled. With separate spaces, clear boundaries, and a complete picture of both worlds, he finally sees the full story.",
+    guidedFeatures: [
+      'Multi-space management',
+      'Yours / Mine / Ours',
+      'Business budgeting',
+      'Manual assets',
+    ],
+    conversionHook: 'Carlos untangled his finances. Untangle yours.',
   },
   {
     key: 'patricia',
@@ -53,6 +71,15 @@ const PERSONAS = [
     archetype: 'High Net Worth',
     features: ['Estate planning', 'Multi-currency accounts', 'Investment portfolios'],
     color: 'border-purple-500',
+    narrative:
+      "Patricia's advisor gave her static projections with no probability attached. Now she runs 10,000 Monte Carlo simulations, stress-tests against 12 historical scenarios, and sees real odds.",
+    guidedFeatures: [
+      'Monte Carlo simulations',
+      'Stress scenarios',
+      'Estate planning',
+      'Document vault',
+    ],
+    conversionHook: 'Patricia sees real probabilities. See yours.',
   },
   {
     key: 'diego',
@@ -61,6 +88,10 @@ const PERSONAS = [
     archetype: 'Web3 / DeFi Native',
     features: ['Multi-chain DeFi', 'Gaming wallets & NFTs', 'DAO governance'],
     color: 'border-orange-500',
+    narrative:
+      "Diego's DeFi positions were invisible to his bank. Now he tracks 7 networks, sees ESG scores for every holding, and manages gaming assets alongside traditional finance.",
+    guidedFeatures: ['7-network DeFi tracking', 'ESG scoring', 'Gaming portfolio', 'Collectibles'],
+    conversionHook: 'Diego unified his portfolio. Unify yours.',
   },
   {
     key: 'guest',
@@ -69,6 +100,9 @@ const PERSONAS = [
     archetype: 'Basic Personal Finance',
     features: ['Monthly budgeting', 'Multi-account overview', 'Crypto wallet tracking'],
     color: 'border-gray-400',
+    narrative: '',
+    guidedFeatures: [],
+    conversionHook: 'Ready to take control of your finances?',
   },
 ];
 
@@ -108,10 +142,12 @@ const DEMO_PROFILES = {
 
 export default function DemoPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const analytics = useAnalytics();
   const { setAuth } = useAuth();
 
   const [loadingPersona, setLoadingPersona] = useState<string | null>(null);
+  const [activePersona, setActivePersona] = useState<string | null>(null);
 
   // Monte Carlo state
   const [selectedProfile, setSelectedProfile] =
@@ -125,6 +161,13 @@ export default function DemoPage() {
   useEffect(() => {
     analytics.trackPageView('Demo Page', '/demo');
     analytics.track('demo_started', {});
+
+    // Pre-select persona from query param (from landing page cards)
+    const personaParam = searchParams.get('persona');
+    if (personaParam && PERSONAS.some((p) => p.key === personaParam)) {
+      setActivePersona(personaParam);
+      handlePersonaClick(personaParam);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -261,6 +304,31 @@ export default function DemoPage() {
       </div>
 
       <div className="container mx-auto px-4 py-8 space-y-12">
+        {/* Persona Narrative (if arriving from landing card) */}
+        {activePersona &&
+          (() => {
+            const persona = PERSONAS.find((p) => p.key === activePersona);
+            return persona?.narrative ? (
+              <div className="max-w-2xl mx-auto text-center bg-gradient-to-r from-blue-600/10 to-purple-600/10 rounded-2xl p-8 space-y-4">
+                <div className="text-4xl">{persona.emoji}</div>
+                <h2 className="text-2xl font-bold">{persona.name}&apos;s Story</h2>
+                <p className="text-muted-foreground">{persona.narrative}</p>
+                {persona.guidedFeatures.length > 0 && (
+                  <div className="flex flex-wrap gap-2 justify-center pt-2">
+                    {persona.guidedFeatures.map((f) => (
+                      <span
+                        key={f}
+                        className="inline-flex items-center rounded-full border bg-card px-3 py-1 text-xs font-medium"
+                      >
+                        {f}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : null;
+          })()}
+
         {/* Persona Picker Section */}
         <div className="text-center space-y-4">
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight">Experience Dhanam</h1>
@@ -637,7 +705,12 @@ export default function DemoPage() {
                 <div className="mx-auto mb-4 w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-full flex items-center justify-center">
                   <Sparkles className="h-8 w-8 text-white" />
                 </div>
-                <CardTitle className="text-2xl">Ready to Plan Your Financial Future?</CardTitle>
+                <CardTitle className="text-2xl">
+                  {activePersona
+                    ? (PERSONAS.find((p) => p.key === activePersona)?.conversionHook ??
+                      'Ready to Plan Your Financial Future?')
+                    : 'Ready to Plan Your Financial Future?'}
+                </CardTitle>
                 <CardDescription className="text-base">
                   You&apos;ve experienced a glimpse of Dhanam&apos;s power. Sign up to unlock
                   unlimited simulations and advanced features.
@@ -645,19 +718,19 @@ export default function DemoPage() {
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-3">
-                  <h4 className="font-semibold">With a Free Account:</h4>
+                  <h4 className="font-semibold">Community (Free):</h4>
                   <ul className="space-y-2">
                     <li className="flex items-start gap-2 text-sm">
                       <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0 mt-0.5" />
-                      <span>5 Monte Carlo simulations per day</span>
+                      <span>2 Monte Carlo simulations per day</span>
                     </li>
                     <li className="flex items-start gap-2 text-sm">
                       <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0 mt-0.5" />
-                      <span>Goal tracking with probability analysis</span>
+                      <span>Basic budgeting & manual accounts</span>
                     </li>
                     <li className="flex items-start gap-2 text-sm">
                       <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0 mt-0.5" />
-                      <span>Basic scenario comparison</span>
+                      <span>5 ESG calculations per day</span>
                     </li>
                   </ul>
                 </div>
@@ -665,24 +738,25 @@ export default function DemoPage() {
                 <Separator />
 
                 <div className="space-y-3">
-                  <h4 className="font-semibold">Upgrade to Premium ($9.99/mo):</h4>
+                  <h4 className="font-semibold">Pro ($11.99/mo):</h4>
                   <ul className="space-y-2">
                     <li className="flex items-start gap-2 text-sm">
                       <Sparkles className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
                       <span>
-                        <strong>Unlimited simulations</strong> - run as many as you need
+                        <strong>Unlimited simulations</strong> — run as many as you need
                       </span>
                     </li>
                     <li className="flex items-start gap-2 text-sm">
                       <Sparkles className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
                       <span>
-                        <strong>Advanced scenarios</strong> - 12 market stress tests
+                        <strong>12 stress scenarios</strong> — from 2008 crisis to custom builder
                       </span>
                     </li>
                     <li className="flex items-start gap-2 text-sm">
                       <Sparkles className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
                       <span>
-                        <strong>Retirement planning tools</strong> - two-phase simulations
+                        <strong>Estate planning, household, collectibles</strong> — the full
+                        platform
                       </span>
                     </li>
                   </ul>

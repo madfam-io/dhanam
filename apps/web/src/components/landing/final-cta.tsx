@@ -20,14 +20,14 @@ export function FinalCta({ onLiveDemoClick, onSignUpClick }: FinalCtaProps) {
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Button
             size="lg"
-            onClick={onLiveDemoClick}
+            onClick={onSignUpClick}
             className="gap-2 bg-gradient-to-r from-blue-600 to-purple-600"
           >
-            {t('hero.cta')}
+            {t('cta.button')}
             <ArrowRight className="h-4 w-4" />
           </Button>
-          <Button size="lg" variant="outline" onClick={onSignUpClick}>
-            {t('hero.ctaSecondary')}
+          <Button size="lg" variant="outline" onClick={onLiveDemoClick}>
+            {t('cta.buttonSecondary')}
           </Button>
         </div>
       </div>

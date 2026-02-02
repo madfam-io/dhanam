@@ -1,5 +1,6 @@
-import { Currency, CategoryGoalType } from '@db';
 import { subDays } from 'date-fns';
+
+import { Currency, CategoryGoalType } from '@db';
 
 import { PrismaService } from '../../prisma/prisma.service';
 

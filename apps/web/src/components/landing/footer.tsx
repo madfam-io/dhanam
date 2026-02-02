@@ -30,6 +30,15 @@ export function Footer() {
           <Link href="/terms" className="text-sm text-muted-foreground hover:text-foreground">
             {t('footer.terms')}
           </Link>
+          <Link href="/security" className="text-sm text-muted-foreground hover:text-foreground">
+            {t('footer.security')}
+          </Link>
+          <Link href="/esg" className="text-sm text-muted-foreground hover:text-foreground">
+            {t('footer.esgMethodology')}
+          </Link>
+          <Link href="/status" className="text-sm text-muted-foreground hover:text-foreground">
+            {t('footer.statusPage')}
+          </Link>
           <Link href="/docs" className="text-sm text-muted-foreground hover:text-foreground">
             {t('footer.docs')}
           </Link>

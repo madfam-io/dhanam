@@ -1,5 +1,6 @@
-import { Currency, SpaceType, BudgetPeriod, Provider, User } from '@db';
 import { startOfMonth, endOfMonth } from 'date-fns';
+
+import { Currency, SpaceType, BudgetPeriod, Provider, User } from '@db';
 
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -11,13 +12,13 @@ import { ESGBuilder } from './demo-data/esg.builder';
 import { EstateBuilder } from './demo-data/estate.builder';
 import { GoalsBuilder } from './demo-data/goals.builder';
 import { HouseholdBuilder } from './demo-data/household.builder';
+import { NotificationsBuilder } from './demo-data/notifications.builder';
 import { RecurringBuilder } from './demo-data/recurring.builder';
 import { ReportsBuilder } from './demo-data/reports.builder';
+import { RulesBuilder } from './demo-data/rules.builder';
 import { SimulationsBuilder } from './demo-data/simulations.builder';
 import { TransactionsBuilder } from './demo-data/transactions.builder';
 import { DemoContext } from './demo-data/types';
-import { NotificationsBuilder } from './demo-data/notifications.builder';
-import { RulesBuilder } from './demo-data/rules.builder';
 import { ZeroBasedBuilder } from './demo-data/zero-based.builder';
 
 interface GeoDefaults {

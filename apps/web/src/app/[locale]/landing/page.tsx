@@ -9,9 +9,12 @@ import { useTranslation } from '@dhanam/shared';
 import { Globe } from 'lucide-react';
 
 import { Hero } from '@/components/landing/hero';
+import { PersonaCards } from '@/components/landing/persona-cards';
 import { ProblemSolution } from '@/components/landing/problem-solution';
 import { HowItWorks } from '@/components/landing/how-it-works';
+import { SecurityTrust } from '@/components/landing/security-trust';
 import { FeaturesGrid } from '@/components/landing/features-grid';
+import { PlatformDepth } from '@/components/landing/platform-depth';
 import { SocialProof } from '@/components/landing/social-proof';
 import { Pricing } from '@/components/landing/pricing';
 import { FinalCta } from '@/components/landing/final-cta';
@@ -126,9 +129,12 @@ export default function LocaleLandingPage() {
       </nav>
 
       <Hero onLiveDemoClick={handleLiveDemoClick} onSignUpClick={handleSignUpClick} />
+      <PersonaCards />
       <ProblemSolution />
       <HowItWorks />
+      <SecurityTrust />
       <FeaturesGrid />
+      <PlatformDepth />
       <SocialProof />
       <Pricing onSignUpClick={handleSignUpClick} />
       <FinalCta onLiveDemoClick={handleLiveDemoClick} onSignUpClick={handleSignUpClick} />

@@ -1,5 +1,6 @@
-import { Currency } from '@db';
 import { subDays } from 'date-fns';
+
+import { Currency } from '@db';
 
 import { PrismaService } from '../../prisma/prisma.service';
 

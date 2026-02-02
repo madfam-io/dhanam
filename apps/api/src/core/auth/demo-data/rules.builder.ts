@@ -59,7 +59,7 @@ export class RulesBuilder {
           categoryId: entertainment?.id,
           priority: 4,
           enabled: true,
-        },
+        }
       );
     }
 
@@ -87,7 +87,7 @@ export class RulesBuilder {
           categoryId: payroll?.id,
           priority: 2,
           enabled: true,
-        },
+        }
       );
     }
 
@@ -130,15 +130,13 @@ export class RulesBuilder {
           categoryId: gaming?.id,
           priority: 2,
           enabled: true,
-        },
+        }
       );
     }
 
     if (rules.length > 0) {
       await this.prisma.transactionRule.createMany({
-        data: rules
-          .filter((r) => r.categoryId)
-          .map((r) => ({ ...r, categoryId: r.categoryId! })),
+        data: rules.filter((r) => r.categoryId).map((r) => ({ ...r, categoryId: r.categoryId! })),
       });
     }
   }

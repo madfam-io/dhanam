@@ -1,9 +1,21 @@
 'use client';
 
 import { useTranslation } from '@dhanam/shared';
-import { Landmark, Coins, Home, Gamepad2, Cpu, HeartPulse } from 'lucide-react';
+import {
+  Landmark,
+  Coins,
+  Home,
+  Gamepad2,
+  Cpu,
+  HeartPulse,
+  Search,
+  Wallet,
+  TrendingUp,
+  Users,
+  FileText,
+  Trophy,
+} from 'lucide-react';
 
-// Feature configuration with icons and colors
 const featureConfig = [
   { key: 'feature1' as const, icon: Landmark, color: 'blue' },
   { key: 'feature2' as const, icon: Coins, color: 'purple' },
@@ -11,6 +23,12 @@ const featureConfig = [
   { key: 'feature4' as const, icon: Gamepad2, color: 'pink' },
   { key: 'feature5' as const, icon: Cpu, color: 'violet' },
   { key: 'feature6' as const, icon: HeartPulse, color: 'red' },
+  { key: 'feature7' as const, icon: Search, color: 'amber' },
+  { key: 'feature8' as const, icon: Wallet, color: 'green' },
+  { key: 'feature9' as const, icon: TrendingUp, color: 'orange' },
+  { key: 'feature10' as const, icon: Users, color: 'cyan' },
+  { key: 'feature11' as const, icon: FileText, color: 'indigo' },
+  { key: 'feature12' as const, icon: Trophy, color: 'amber' },
 ] as const;
 
 const colorMap: Record<string, string> = {

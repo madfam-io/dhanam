@@ -1,5 +1,6 @@
-import { ConnectionStatus } from '@db';
 import { subHours } from 'date-fns';
+
+import { ConnectionStatus } from '@db';
 
 import { PrismaService } from '../../prisma/prisma.service';
 

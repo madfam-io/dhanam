@@ -45,20 +45,16 @@ export function Hero({ onLiveDemoClick, onSignUpClick }: HeroProps) {
         <p className="text-sm text-muted-foreground">{t('hero.demoNote')}</p>
       </div>
 
-      {/* Stats Cards */}
-      <div className="mt-12 grid grid-cols-3 gap-4 max-w-2xl mx-auto">
-        <div className="text-center p-4 rounded-lg bg-card border">
-          <p className="text-3xl font-bold text-green-600">73%</p>
-          <p className="text-xs text-muted-foreground">{t('hero.stats.goalSuccess')}</p>
-        </div>
-        <div className="text-center p-4 rounded-lg bg-card border">
-          <p className="text-3xl font-bold">$1.2M</p>
-          <p className="text-xs text-muted-foreground">{t('hero.stats.nestEgg')}</p>
-        </div>
-        <div className="text-center p-4 rounded-lg bg-card border">
-          <p className="text-3xl font-bold">12</p>
-          <p className="text-xs text-muted-foreground">{t('hero.stats.scenarios')}</p>
-        </div>
+      {/* Capability Badges */}
+      <div className="mt-12 flex flex-wrap gap-4 justify-center max-w-2xl mx-auto">
+        {(['defiNetworks', 'stressScenarios', 'collectibleCategories'] as const).map((key) => (
+          <div
+            key={key}
+            className="inline-flex items-center gap-2 rounded-full border bg-card px-4 py-2 text-sm font-medium"
+          >
+            {t(`hero.capabilities.${key}`)}
+          </div>
+        ))}
       </div>
     </section>
   );
