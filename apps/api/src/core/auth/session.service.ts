@@ -20,11 +20,8 @@ export class SessionService {
   private isRedisConnected = false;
 
   constructor(private logger: LoggerService) {
-    this.redis = new Redis({
-      host: process.env.REDIS_HOST || 'localhost',
-      port: parseInt(process.env.REDIS_PORT || '6379'),
-      password: process.env.REDIS_PASSWORD,
-      db: parseInt(process.env.REDIS_DB || '0'),
+    const redisUrl = process.env.REDIS_URL;
+    const redisOptions = {
       maxRetriesPerRequest: 3,
       connectTimeout: 10000,
       retryStrategy: (times: number) => {
@@ -38,7 +35,22 @@ export class SessionService {
         const targetErrors = ['READONLY', 'ECONNRESET', 'ETIMEDOUT'];
         return targetErrors.some((e) => err.message.includes(e));
       },
-    });
+    };
+
+    // Prefer REDIS_URL (standard format) over individual env vars
+    if (redisUrl) {
+      this.logger.log('SessionService connecting via REDIS_URL', 'SessionService');
+      this.redis = new Redis(redisUrl, redisOptions);
+    } else {
+      this.logger.log('SessionService connecting via REDIS_HOST/PORT', 'SessionService');
+      this.redis = new Redis({
+        ...redisOptions,
+        host: process.env.REDIS_HOST || 'localhost',
+        port: parseInt(process.env.REDIS_PORT || '6379'),
+        password: process.env.REDIS_PASSWORD,
+        db: parseInt(process.env.REDIS_DB || '0'),
+      });
+    }
 
     // Track connection state
     this.redis.on('connect', () => {

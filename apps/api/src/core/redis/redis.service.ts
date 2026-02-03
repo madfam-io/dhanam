@@ -1,19 +1,42 @@
-import { Injectable, OnModuleDestroy } from '@nestjs/common';
+import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import Redis from 'ioredis';
 
 @Injectable()
 export class RedisService implements OnModuleDestroy {
+  private readonly logger = new Logger(RedisService.name);
   private redis: Redis;
 
   constructor() {
-    this.redis = new Redis({
-      host: process.env.REDIS_HOST || 'localhost',
-      port: parseInt(process.env.REDIS_PORT || '6379'),
-      password: process.env.REDIS_PASSWORD,
-      db: parseInt(process.env.REDIS_DB || '0'),
-      maxRetriesPerRequest: 3,
-      lazyConnect: true,
-      connectTimeout: 10000,
+    // Prefer REDIS_URL (standard format) over individual env vars
+    const redisUrl = process.env.REDIS_URL;
+
+    if (redisUrl) {
+      this.logger.log('Connecting to Redis via REDIS_URL');
+      this.redis = new Redis(redisUrl, {
+        maxRetriesPerRequest: 3,
+        lazyConnect: true,
+        connectTimeout: 10000,
+      });
+    } else {
+      // Fallback to individual env vars for backwards compatibility
+      this.logger.log('Connecting to Redis via individual env vars (REDIS_HOST/PORT)');
+      this.redis = new Redis({
+        host: process.env.REDIS_HOST || 'localhost',
+        port: parseInt(process.env.REDIS_PORT || '6379'),
+        password: process.env.REDIS_PASSWORD,
+        db: parseInt(process.env.REDIS_DB || '0'),
+        maxRetriesPerRequest: 3,
+        lazyConnect: true,
+        connectTimeout: 10000,
+      });
+    }
+
+    this.redis.on('error', (error) => {
+      this.logger.error(`Redis connection error: ${error.message}`);
+    });
+
+    this.redis.on('connect', () => {
+      this.logger.log('Redis connected');
     });
   }
 
