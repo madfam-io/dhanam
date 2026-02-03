@@ -49,6 +49,8 @@ jobs:
             echo "Run 'pnpm install' locally and commit the updated lockfile."
             exit 1
           }
+        env:
+          DATABASE_URL: 'postgresql://dummy:dummy@localhost:5432/dummy'
 
   lint:
     name: Lint
@@ -93,6 +95,8 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+        env:
+          DATABASE_URL: 'postgresql://dummy:dummy@localhost:5432/dummy'
 
       - name: Run linting
         run: pnpm lint
@@ -140,6 +144,8 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+        env:
+          DATABASE_URL: 'postgresql://dummy:dummy@localhost:5432/dummy'
 
       - name: Generate Prisma Client
         run: pnpm db:generate
@@ -220,6 +226,8 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+        env:
+          DATABASE_URL: 'postgresql://test:test@localhost:5432/dhanam_test'
 
       - name: Setup test environment
         run: |
@@ -312,6 +320,8 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+        env:
+          DATABASE_URL: 'postgresql://dummy:dummy@localhost:5432/dummy'
 
       - name: Generate Prisma Client
         run: pnpm db:generate
@@ -398,6 +408,8 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+        env:
+          DATABASE_URL: 'postgresql://test:test@localhost:5432/dhanam_e2e'
 
       - name: Setup E2E test environment
         run: |

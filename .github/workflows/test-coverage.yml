@@ -73,12 +73,15 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+        env:
+          DATABASE_URL: 'postgresql://postgres:test_password@localhost:5432/dhanam_test'
 
       - name: Generate Prisma Client
         run: |
           cd apps/api
           pnpm prisma generate
         env:
+          DATABASE_URL: 'postgresql://postgres:test_password@localhost:5432/dhanam_test'
           PRISMA_ENGINES_CHECKSUM_IGNORE_MISSING: 1
 
       - name: Run database migrations
@@ -205,12 +208,15 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+        env:
+          DATABASE_URL: 'postgresql://postgres:test_password@localhost:5432/dhanam_test'
 
       - name: Generate Prisma Client
         run: |
           cd apps/api
           pnpm prisma generate
         env:
+          DATABASE_URL: 'postgresql://postgres:test_password@localhost:5432/dhanam_test'
           PRISMA_ENGINES_CHECKSUM_IGNORE_MISSING: 1
 
       - name: Run database migrations
@@ -253,12 +259,15 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+        env:
+          DATABASE_URL: 'postgresql://dummy:dummy@localhost:5432/dummy'
 
       - name: Generate Prisma Client
         run: |
           cd apps/api
           pnpm prisma generate
         env:
+          DATABASE_URL: 'postgresql://dummy:dummy@localhost:5432/dummy'
           PRISMA_ENGINES_CHECKSUM_IGNORE_MISSING: 1
 
       - name: Build all packages
