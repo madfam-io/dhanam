@@ -28,6 +28,10 @@ COPY packages/config/package.json ./packages/config/
 COPY packages/esg/package.json ./packages/esg/
 COPY packages/simulations/package.json ./packages/simulations/
 
+# Set dummy DATABASE_URL for Prisma postinstall script
+# Prisma generate runs during install and requires this env var
+ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
+
 # Install ALL dependencies (including devDependencies for build)
 RUN pnpm install --frozen-lockfile
 
