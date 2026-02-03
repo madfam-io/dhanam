@@ -57,7 +57,7 @@
     "react-native-screens": "4.20.0",
     "react-native-svg": "15.15.1",
     "react-redux": "^9.2.0",
-    "zustand": "^4.5.2"
+    "zustand": "^5.0.11"
   },
   "devDependencies": {
     "@babel/core": "^7.29.0",
