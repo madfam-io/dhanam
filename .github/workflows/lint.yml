@@ -36,6 +36,14 @@ jobs:
         env:
           DATABASE_URL: 'postgresql://dummy:dummy@localhost:5432/dummy'
 
+      - name: Generate Prisma Client
+        run: |
+          cd apps/api
+          pnpm prisma generate
+        env:
+          DATABASE_URL: 'postgresql://dummy:dummy@localhost:5432/dummy'
+          PRISMA_ENGINES_CHECKSUM_IGNORE_MISSING: 1
+
       - name: Run ESLint
         run: pnpm lint
 
