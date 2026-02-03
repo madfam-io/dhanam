@@ -137,6 +137,7 @@ spec:
 
           # Security
           securityContext:
+            privileged: false
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
             capabilities:

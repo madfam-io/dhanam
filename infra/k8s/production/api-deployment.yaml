@@ -141,6 +141,46 @@ spec:
                   name: dhanam-secrets
                   key: ENCRYPTION_KEY
 
+            # JWT Secret (required)
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: dhanam-secrets
+                  key: JWT_SECRET
+
+            # =================================================================
+            # AWS/KMS (placeholder - not configured)
+            # =================================================================
+            - name: AWS_REGION
+              value: "us-east-1"
+            - name: KMS_KEY_ID
+              value: "placeholder"
+
+            # =================================================================
+            # Financial Integrations (placeholder - not configured)
+            # =================================================================
+            # Belvo (Mexico/LATAM banking)
+            - name: BELVO_SECRET_KEY_ID
+              value: "placeholder"
+            - name: BELVO_SECRET_KEY_PASSWORD
+              value: "placeholder"
+            - name: BELVO_WEBHOOK_SECRET
+              value: "placeholder"
+
+            # Plaid (US/Canada banking)
+            - name: PLAID_CLIENT_ID
+              value: "placeholder"
+            - name: PLAID_SECRET
+              value: "placeholder"
+            - name: PLAID_WEBHOOK_SECRET
+              value: "placeholder"
+
+            # Bitso (Crypto exchange)
+            - name: BITSO_API_KEY
+              value: "placeholder"
+            - name: BITSO_API_SECRET
+              value: "placeholder"
+
             # CORS
             - name: CORS_ORIGINS
               value: "https://app.dhan.am,https://dhan.am"
@@ -153,10 +193,9 @@ spec:
               cpu: "500m"
               memory: "512Mi"
 
-          # Health checks
+          # Health checks (TCP socket - app doesn't have /health endpoint)
           readinessProbe:
-            httpGet:
-              path: /health
+            tcpSocket:
               port: 4300
             initialDelaySeconds: 10
             periodSeconds: 10
@@ -164,8 +203,7 @@ spec:
             failureThreshold: 3
 
           livenessProbe:
-            httpGet:
-              path: /health
+            tcpSocket:
               port: 4300
             initialDelaySeconds: 30
             periodSeconds: 30
@@ -174,6 +212,7 @@ spec:
 
           # Security
           securityContext:
+            privileged: false
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
             capabilities:
