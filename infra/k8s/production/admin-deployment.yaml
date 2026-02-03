@@ -28,7 +28,7 @@ spec:
 
       containers:
         - name: admin
-          image: ghcr.io/madfam-org/dhanam-admin:latest
+          image: ghcr.io/madfam-org/dhanam-admin:main
           imagePullPolicy: Always
           ports:
             - containerPort: 3400

@@ -44,7 +44,7 @@ spec:
 
       containers:
         - name: web
-          image: ghcr.io/madfam-org/dhanam-web:latest
+          image: ghcr.io/madfam-org/dhanam-web:main
           imagePullPolicy: Always
 
           ports:
