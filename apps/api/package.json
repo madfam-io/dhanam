@@ -72,7 +72,7 @@
     "@types/pdfkit": "^0.17.2",
     "@types/qrcode": "^1.5.6",
     "@types/speakeasy": "^2.0.10",
-    "@types/uuid": "^10.0.0",
+    "@types/uuid": "^11.0.0",
     "argon2": "^0.44.0",
     "axios": "^1.13.3",
     "bcryptjs": "^3.0.3",
