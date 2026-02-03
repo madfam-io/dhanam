@@ -23,6 +23,8 @@ FROM base AS deps
 # Copy workspace configuration
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/api/package.json ./apps/api/
+# Copy Prisma schema for postinstall generate
+COPY apps/api/prisma ./apps/api/prisma/
 COPY packages/shared/package.json ./packages/shared/
 COPY packages/config/package.json ./packages/config/
 COPY packages/esg/package.json ./packages/esg/
