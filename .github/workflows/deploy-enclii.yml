@@ -114,7 +114,7 @@ jobs:
           fi
 
       - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.0.3
+        uses: appleboy/ssh-action@v1.2.5
         with:
           host: ${{ secrets.ENCLII_SSH_HOST }}
           username: ${{ secrets.ENCLII_SSH_USER }}
