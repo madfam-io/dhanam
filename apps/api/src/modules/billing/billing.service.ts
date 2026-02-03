@@ -5,7 +5,7 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Stripe from 'stripe';
 
-import { UsageMetricType } from '@db';
+import { UsageMetricType, SubscriptionTier, Currency } from '@db';
 
 import { AuditService } from '../../core/audit/audit.service';
 import { PrismaService } from '../../core/prisma/prisma.service';
@@ -855,7 +855,7 @@ export class BillingService {
     await this.prisma.user.update({
       where: { id: user.id },
       data: {
-        subscriptionTier: tier,
+        subscriptionTier: tier as SubscriptionTier,
         subscriptionStartedAt: new Date(),
         stripeCustomerId: (session.customer as string) || user.stripeCustomerId,
       },
@@ -866,7 +866,7 @@ export class BillingService {
         userId: user.id,
         type: 'subscription_created',
         amount: (session.amount_total || 0) / 100,
-        currency: session.currency?.toUpperCase() || 'USD',
+        currency: (session.currency?.toUpperCase() || 'USD') as Currency,
         status: 'succeeded',
         stripeEventId: event.id,
         metadata: { plan, source: session.metadata?.source },
@@ -1012,7 +1012,7 @@ export class BillingService {
 
     await this.prisma.user.update({
       where: { id: user.id },
-      data: { subscriptionTier: tier },
+      data: { subscriptionTier: tier as SubscriptionTier },
     });
 
     this.logger.log(`Janua subscription updated for user ${user.id}: ${status}`);
