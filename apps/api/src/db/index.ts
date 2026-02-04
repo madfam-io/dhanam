@@ -8,19 +8,31 @@
 // Re-export everything from the generated Prisma client
 export * from '../../generated/prisma';
 
-// Re-export runtime types that were previously at @prisma/client/runtime/library
-export {
-  Prisma,
-} from '../../generated/prisma';
+// Re-export Prisma namespace
+export { Prisma } from '../../generated/prisma';
 
-// Make runtime types available as top-level exports
+// Re-export runtime types as both values and types
 import { Prisma } from '../../generated/prisma';
 
+// Error classes (value + type)
 export const PrismaClientKnownRequestError = Prisma.PrismaClientKnownRequestError;
-export const PrismaClientUnknownRequestError = Prisma.PrismaClientUnknownRequestError;
-export const PrismaClientRustPanicError = Prisma.PrismaClientRustPanicError;
-export const PrismaClientInitializationError = Prisma.PrismaClientInitializationError;
-export const PrismaClientValidationError = Prisma.PrismaClientValidationError;
-export const Decimal = Prisma.Decimal;
+export type PrismaClientKnownRequestError = InstanceType<typeof Prisma.PrismaClientKnownRequestError>;
 
+export const PrismaClientUnknownRequestError = Prisma.PrismaClientUnknownRequestError;
+export type PrismaClientUnknownRequestError = InstanceType<typeof Prisma.PrismaClientUnknownRequestError>;
+
+export const PrismaClientRustPanicError = Prisma.PrismaClientRustPanicError;
+export type PrismaClientRustPanicError = InstanceType<typeof Prisma.PrismaClientRustPanicError>;
+
+export const PrismaClientInitializationError = Prisma.PrismaClientInitializationError;
+export type PrismaClientInitializationError = InstanceType<typeof Prisma.PrismaClientInitializationError>;
+
+export const PrismaClientValidationError = Prisma.PrismaClientValidationError;
+export type PrismaClientValidationError = InstanceType<typeof Prisma.PrismaClientValidationError>;
+
+// Decimal (value + type)
+export const Decimal = Prisma.Decimal;
+export type Decimal = Prisma.Decimal;
+
+// Type-only exports
 export type InputJsonValue = Prisma.InputJsonValue;
