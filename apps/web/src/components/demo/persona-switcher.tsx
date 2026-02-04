@@ -37,7 +37,7 @@ export function PersonaSwitcher({ currentPersona }: { currentPersona?: string })
     setSwitching(true);
     try {
       const result = await authApi.switchPersona(personaKey);
-      setAuth(result.user as any, result.tokens);
+      setAuth(result.user, result.tokens);
       router.refresh();
     } catch (error) {
       console.error('Failed to switch persona:', error);
@@ -51,7 +51,7 @@ export function PersonaSwitcher({ currentPersona }: { currentPersona?: string })
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="sm" className="gap-2" disabled={switching}>
           {switching ? <Loader2 className="h-4 w-4 animate-spin" /> : <span>{current.emoji}</span>}
-          <span className="hidden sm:inline">{t(current.nameKey as any)}</span>
+          <span className="hidden sm:inline">{t(current.nameKey)}</span>
           <ChevronDown className="h-3 w-3" />
         </Button>
       </DropdownMenuTrigger>
@@ -65,7 +65,7 @@ export function PersonaSwitcher({ currentPersona }: { currentPersona?: string })
             className={persona.key === currentPersona ? 'bg-accent' : ''}
           >
             <span className="mr-2">{persona.emoji}</span>
-            <span>{t(persona.nameKey as any)}</span>
+            <span>{t(persona.nameKey)}</span>
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>

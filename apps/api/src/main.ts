@@ -6,6 +6,7 @@ import fastifyCookie from '@fastify/cookie';
 import fastifyCors from '@fastify/cors';
 // eslint-disable-next-line import/no-named-as-default
 import fastifyCsrfProtection from '@fastify/csrf-protection';
+// eslint-disable-next-line import/no-named-as-default
 import fastifyHelmet from '@fastify/helmet';
 // eslint-disable-next-line import/no-named-as-default
 // eslint-disable-next-line import/no-named-as-default

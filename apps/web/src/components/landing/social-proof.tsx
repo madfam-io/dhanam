@@ -17,8 +17,20 @@ export function SocialProof() {
   const { t } = useTranslation('landing');
   const i18n = useContext(I18nContext);
 
+  const translations = i18n?.translations as
+    | Record<
+        string,
+        {
+          landing?: {
+            trustSignals?: {
+              partners?: string[];
+            };
+          };
+        }
+      >
+    | undefined;
   const partners: string[] =
-    (i18n?.translations as any)?.[i18n?.locale ?? 'en']?.landing?.trustSignals?.partners ?? [];
+    translations?.[i18n?.locale ?? 'en']?.landing?.trustSignals?.partners ?? [];
 
   return (
     <section className="container mx-auto px-6 py-16 bg-muted/30">

@@ -12,7 +12,24 @@ export function PlatformDepth() {
   const i18n = useContext(I18nContext);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
-  const lang = (i18n?.translations as any)?.[i18n?.locale ?? 'en']?.landing?.platformDepth;
+  const translations = i18n?.translations as
+    | Record<
+        string,
+        {
+          landing?: {
+            platformDepth?: Record<
+              string,
+              {
+                items?: string[];
+                protocols?: string;
+                title?: string;
+              }
+            >;
+          };
+        }
+      >
+    | undefined;
+  const lang = translations?.[i18n?.locale ?? 'en']?.landing?.platformDepth;
 
   const toggle = (key: string) => setExpanded((prev) => ({ ...prev, [key]: !prev[key] }));
 

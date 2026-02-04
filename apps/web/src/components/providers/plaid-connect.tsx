@@ -190,7 +190,7 @@ export function PlaidConnect({ open, onOpenChange, spaceId, onSuccess }: PlaidCo
         toast.error(err.display_message || t('providers.plaid.exitError'));
       }
     },
-    []
+    [t]
   );
 
   // Initialize Plaid Link handler

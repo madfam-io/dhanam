@@ -15,7 +15,26 @@ export function Pricing({ onSignUpClick }: PricingProps) {
   const { t } = useTranslation('landing');
   const i18n = useContext(I18nContext);
 
-  const lang = (i18n?.translations as any)?.[i18n?.locale ?? 'en']?.landing?.pricing;
+  const translations = i18n?.translations as
+    | Record<
+        string,
+        {
+          landing?: {
+            pricing?: Record<
+              string,
+              {
+                features?: string[];
+                name?: string;
+                price?: string;
+                period?: string;
+                ctaText?: string;
+              }
+            >;
+          };
+        }
+      >
+    | undefined;
+  const lang = translations?.[i18n?.locale ?? 'en']?.landing?.pricing;
 
   return (
     <section className="container mx-auto px-6 py-16">
