@@ -87,6 +87,7 @@ COPY --from=builder --chown=nestjs:nodejs /app/packages ./packages
 # Copy built application to apps/api (matching the expected path structure)
 COPY --from=builder --chown=nestjs:nodejs /app/apps/api/dist ./apps/api/dist
 COPY --from=builder --chown=nestjs:nodejs /app/apps/api/prisma ./apps/api/prisma
+COPY --from=builder --chown=nestjs:nodejs /app/apps/api/generated ./apps/api/generated
 COPY --from=builder --chown=nestjs:nodejs /app/apps/api/package.json ./apps/api/package.json
 
 USER nestjs
