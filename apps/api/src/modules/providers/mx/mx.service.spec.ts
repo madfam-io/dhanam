@@ -27,16 +27,36 @@ jest.mock('@prisma/client', () => ({
 }));
 
 // Mock MX Platform SDK
+// Define mock functions outside so they can be referenced
+const mockListInstitutions = jest.fn();
+const mockReadInstitution = jest.fn();
+const mockCreateUser = jest.fn();
+const mockRequestWidgetURL = jest.fn();
+const mockReadMember = jest.fn();
+const mockListMemberAccounts = jest.fn();
+const mockListTransactionsByMember = jest.fn();
+
+// Mock MX Platform SDK
 jest.mock('mx-platform-node', () => ({
   Configuration: jest.fn().mockImplementation(() => ({})),
-  MxPlatformApi: jest.fn().mockImplementation(() => ({
-    listInstitutions: jest.fn(),
-    createUser: jest.fn(),
-    requestWidgetURL: jest.fn(),
-    readMember: jest.fn(),
-    listMemberAccounts: jest.fn(),
-    listTransactionsByMember: jest.fn(),
-    readInstitution: jest.fn(),
+  InstitutionsApi: jest.fn().mockImplementation(() => ({
+    listInstitutions: mockListInstitutions,
+    readInstitution: mockReadInstitution,
+  })),
+  UsersApi: jest.fn().mockImplementation(() => ({
+    createUser: mockCreateUser,
+  })),
+  WidgetsApi: jest.fn().mockImplementation(() => ({
+    requestWidgetURL: mockRequestWidgetURL,
+  })),
+  MembersApi: jest.fn().mockImplementation(() => ({
+    readMember: mockReadMember,
+  })),
+  AccountsApi: jest.fn().mockImplementation(() => ({
+    listMemberAccounts: mockListMemberAccounts,
+  })),
+  TransactionsApi: jest.fn().mockImplementation(() => ({
+    listTransactionsByMember: mockListTransactionsByMember,
   })),
 }));
 
@@ -112,8 +132,17 @@ describe('MxService', () => {
     configService = module.get<ConfigService>(ConfigService);
     cryptoService = module.get<CryptoService>(CryptoService);
 
-    // Access the private mxClient for mocking
-    mockMxClient = (service as any).mxClient;
+    // Access the private mxClient for mocking - Wait, we need to map the mocks to the unified object expected by tests
+    // The tests expect mockMxClient to have all methods.
+    mockMxClient = {
+      listInstitutions: mockListInstitutions,
+      readInstitution: mockReadInstitution,
+      createUser: mockCreateUser,
+      requestWidgetURL: mockRequestWidgetURL,
+      readMember: mockReadMember,
+      listMemberAccounts: mockListMemberAccounts,
+      listTransactionsByMember: mockListTransactionsByMember,
+    };
 
     jest.clearAllMocks();
   });
@@ -155,10 +184,13 @@ describe('MxService', () => {
       expect(result.errorRate).toBe(0);
       expect(result.avgResponseTimeMs).toBeGreaterThanOrEqual(0); // Can be 0 in fast test environment
       expect(result.lastCheckedAt).toBeInstanceOf(Date);
-      expect(mockMxClient.listInstitutions).toHaveBeenCalledWith({
-        page: 1,
-        recordsPerPage: 1,
-      });
+      expect(mockMxClient.listInstitutions).toHaveBeenCalledWith(
+        '1',
+        undefined,
+        undefined,
+        1,
+        1
+      );
     });
 
     it('should return down status when MX is not configured', async () => {
@@ -223,20 +255,24 @@ describe('MxService', () => {
         provider: 'mx',
       });
 
-      expect(mockMxClient.createUser).toHaveBeenCalledWith({
+      expect(mockMxClient.createUser).toHaveBeenCalledWith('1', {
         user: {
           metadata: JSON.stringify({ dhanamUserId: userId }),
         },
       });
 
-      expect(mockMxClient.requestWidgetURL).toHaveBeenCalledWith('mx-user-guid-123', {
-        widget_url: {
-          widget_type: 'connect_widget',
-          mode: 'verification',
-          ui_message_version: 4,
-          wait_for_full_aggregation: false,
-        },
-      });
+      expect(mockMxClient.requestWidgetURL).toHaveBeenCalledWith(
+        '1',
+        'mx-user-guid-123',
+        {
+          widget_url: {
+            widget_type: 'connect_widget',
+            mode: 'verification',
+            ui_message_version: 4,
+            wait_for_full_aggregation: false,
+          },
+        }
+      );
     });
 
     it('should create MX link for existing MX user', async () => {
@@ -815,10 +851,13 @@ describe('MxService', () => {
       expect(result[0].supportedProducts).toContain('accounts');
       expect(result[0].region).toBe('US');
 
-      expect(mockMxClient.listInstitutions).toHaveBeenCalledWith({
-        name: 'chase',
-        recordsPerPage: 20,
-      });
+      expect(mockMxClient.listInstitutions).toHaveBeenCalledWith(
+        '1',
+        'chase',
+        undefined,
+        undefined,
+        20
+      );
     });
 
     it('should default region to US when not specified', async () => {
