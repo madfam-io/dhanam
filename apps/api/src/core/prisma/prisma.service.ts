@@ -13,19 +13,20 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
       : 10; // Default Prisma pool size
 
     // Append connection pool parameters to DATABASE_URL if not already present
-    let finalUrl = databaseUrl;
+    // Prisma 7 reads DATABASE_URL from env (datasourceUrl constructor option was removed)
     if (databaseUrl && !databaseUrl.includes('connection_limit')) {
       const separator = databaseUrl.includes('?') ? '&' : '?';
-      finalUrl = `${databaseUrl}${separator}connection_limit=${poolSize}&pool_timeout=10`;
+      process.env.DATABASE_URL = `${databaseUrl}${separator}connection_limit=${poolSize}&pool_timeout=10`;
+    } else if (databaseUrl) {
+      process.env.DATABASE_URL = databaseUrl;
     }
 
     super({
-      datasourceUrl: finalUrl,
       log:
         configService.get('NODE_ENV') === 'development'
           ? ['query', 'info', 'warn', 'error']
           : ['error'],
-    } as any);
+    });
   }
 
   async onModuleInit() {
