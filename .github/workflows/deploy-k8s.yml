@@ -113,7 +113,7 @@ jobs:
           fi
 
       - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.2.2
+        uses: appleboy/ssh-action@v1.2.5
         with:
           host: ${{ secrets.K8S_SSH_HOST }}
           username: ${{ secrets.K8S_SSH_USER }}
@@ -133,7 +133,7 @@ jobs:
             sudo kubectl get pods -n dhanam -l app=dhanam-api
 
       - name: Verify deployment health
-        uses: appleboy/ssh-action@v1.2.2
+        uses: appleboy/ssh-action@v1.2.5
         with:
           host: ${{ secrets.K8S_SSH_HOST }}
           username: ${{ secrets.K8S_SSH_USER }}
