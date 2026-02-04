@@ -26,7 +26,7 @@ export class UsersService {
   /**
    * Handle Prisma errors and map to domain exceptions
    */
-  private handlePrismaError(error: unknown, operation: string): never {
+  private handlePrismaError(error: any, operation: string): never {
     if (error instanceof PrismaClientKnownRequestError) {
       switch (error.code) {
         case 'P2025':

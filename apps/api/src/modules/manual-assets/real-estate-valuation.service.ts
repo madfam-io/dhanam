@@ -1,5 +1,5 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { ManualAssetType } from '@prisma/client';
+import { ManualAssetType } from '@db';
 
 import { PrismaService } from '../../core/prisma/prisma.service';
 import { ZillowService } from '../integrations/zillow/zillow.service';

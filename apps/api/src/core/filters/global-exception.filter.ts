@@ -48,7 +48,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     @Optional() @Inject('SentryService') private readonly sentryService?: SentryService
   ) {}
 
-  catch(exception: unknown, host: ArgumentsHost) {
+  catch(exception: any, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<FastifyReply>();
     const request = ctx.getRequest<FastifyRequest>();
@@ -67,7 +67,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
   }
 
   private captureInSentry(
-    exception: unknown,
+    exception: any,
     request: FastifyRequest,
     errorResponse: ErrorResponse & { meta: { status: number; correlationId?: string } }
   ) {
@@ -153,7 +153,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
   }
 
   private createErrorResponse(
-    exception: unknown,
+    exception: any,
     request: FastifyRequest
   ): ErrorResponse & {
     meta: {
@@ -547,7 +547,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
   }
 
   private logError(
-    exception: unknown,
+    exception: any,
     request: FastifyRequest,
     errorResponse: ErrorResponse & { meta: { status: number } }
   ) {
