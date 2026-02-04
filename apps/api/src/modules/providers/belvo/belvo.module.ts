@@ -5,6 +5,7 @@ import { AuditModule } from '@core/audit/audit.module';
 import { CryptoModule } from '@core/crypto/crypto.module';
 import { PrismaModule } from '@core/prisma/prisma.module';
 import { AccountsModule } from '@modules/accounts/accounts.module';
+import { BillingModule } from '@modules/billing/billing.module';
 import { OrchestratorModule } from '@modules/providers/orchestrator/orchestrator.module';
 import { TransactionsModule } from '@modules/transactions/transactions.module';
 
@@ -20,6 +21,7 @@ import { BelvoService } from './belvo.service';
     AccountsModule,
     TransactionsModule,
     OrchestratorModule,
+    BillingModule,
   ],
   controllers: [BelvoController],
   providers: [BelvoService],
