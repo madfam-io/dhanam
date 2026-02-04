@@ -3,7 +3,7 @@ import { RulesService } from './rules.service';
 import { PrismaService } from '@core/prisma/prisma.service';
 import { mockDeep, DeepMockProxy } from 'jest-mock-extended';
 import { Transaction, Category } from '@db';
-import { Decimal } from '@prisma/client/runtime/library';
+import { Decimal } from '@db';
 
 describe('RulesService', () => {
   let service: RulesService;

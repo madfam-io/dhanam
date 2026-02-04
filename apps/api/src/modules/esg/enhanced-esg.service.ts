@@ -1,6 +1,6 @@
 import { ESGManager, PortfolioHolding, PortfolioESGAnalysis, AssetESGData } from '@dhanam/esg';
 import { Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
-import { Decimal } from '@prisma/client/runtime/library';
+import { Decimal } from '@db';
 
 import { PrismaService } from '../../core/prisma/prisma.service';
 

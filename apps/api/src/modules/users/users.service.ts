@@ -1,6 +1,6 @@
 import { User, UserProfile } from '@dhanam/shared';
 import { Injectable } from '@nestjs/common';
-import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
+import { PrismaClientKnownRequestError } from '@db';
 
 import {
   BusinessRuleException,

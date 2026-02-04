@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ReportService } from './report.service';
 import { PrismaService } from '@core/prisma/prisma.service';
 import { AnalyticsService } from './analytics.service';
-import { Decimal } from '@prisma/client/runtime/library';
+import { Decimal } from '@db';
 import { EventEmitter } from 'events';
 
 // Mock @dhanam/shared

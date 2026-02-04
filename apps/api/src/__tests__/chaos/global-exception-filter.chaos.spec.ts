@@ -2,7 +2,7 @@ import { HttpStatus, HttpException } from '@nestjs/common';
 import {
   PrismaClientKnownRequestError,
   PrismaClientValidationError,
-} from '@prisma/client/runtime/library';
+} from '@db';
 
 import { GlobalExceptionFilter } from '../../core/filters/global-exception.filter';
 import { TimeoutError } from '../../core/utils/timeout.util';

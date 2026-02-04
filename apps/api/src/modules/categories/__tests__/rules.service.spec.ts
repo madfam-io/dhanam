@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { Decimal } from '@prisma/client/runtime/library';
+import { Decimal } from '@db';
 
 import { RulesService, CategoryRule, RuleCondition } from '../rules.service';
 import { PrismaService } from '@core/prisma/prisma.service';

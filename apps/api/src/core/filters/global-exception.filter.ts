@@ -14,7 +14,7 @@ import {
   PrismaClientRustPanicError,
   PrismaClientInitializationError,
   PrismaClientUnknownRequestError,
-} from '@prisma/client/runtime/library';
+} from '@db';
 import { FastifyReply, FastifyRequest } from 'fastify';
 
 import type { SentryService } from '@core/monitoring/sentry.service';

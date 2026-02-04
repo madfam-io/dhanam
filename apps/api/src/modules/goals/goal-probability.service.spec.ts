@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { GoalProbabilityService } from './goal-probability.service';
 import { PrismaService } from '@/core/prisma/prisma.service';
 import { MonteCarloEngine } from '../simulations/engines/monte-carlo.engine';
-import { Decimal } from '@prisma/client/runtime/library';
+import { Decimal } from '@db';
 
 describe('GoalProbabilityService', () => {
   let service: GoalProbabilityService;

@@ -2,7 +2,7 @@ import * as crypto from 'crypto';
 
 import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import type { InputJsonValue } from '@prisma/client/runtime/library';
+import type { InputJsonValue } from '@db';
 import axios, { AxiosInstance, AxiosError } from 'axios';
 
 import { Retry } from '@core/decorators/retry.decorator';

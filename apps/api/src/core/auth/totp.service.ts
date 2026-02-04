@@ -1,7 +1,7 @@
 import { randomBytes, createHash } from 'crypto';
 
 import { Injectable } from '@nestjs/common';
-import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
+import { PrismaClientKnownRequestError } from '@db';
 import * as qrcode from 'qrcode';
 import * as speakeasy from 'speakeasy';
 

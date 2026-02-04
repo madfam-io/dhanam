@@ -3,7 +3,7 @@ import * as crypto from 'crypto';
 import { HttpService } from '@nestjs/axios';
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import type { InputJsonValue } from '@prisma/client/runtime/library';
+import type { InputJsonValue } from '@db';
 import { firstValueFrom } from 'rxjs';
 
 import { Provider, AccountType, Currency, Prisma as _Prisma } from '@db';

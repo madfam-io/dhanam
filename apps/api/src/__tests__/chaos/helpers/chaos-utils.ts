@@ -1,4 +1,4 @@
-import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
+import { PrismaClientKnownRequestError } from '@db';
 
 /**
  * Creates an operation that fails N times then succeeds

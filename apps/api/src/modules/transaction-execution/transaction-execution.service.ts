@@ -8,7 +8,7 @@ import {
   ConflictException,
   Logger,
 } from '@nestjs/common';
-import type { InputJsonValue } from '@prisma/client/runtime/library';
+import type { InputJsonValue } from '@db';
 import { addDays, isAfter } from 'date-fns';
 
 import { Prisma as _Prisma } from '@db';

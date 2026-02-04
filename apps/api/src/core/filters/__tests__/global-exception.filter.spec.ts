@@ -10,7 +10,7 @@ import {
   InternalServerErrorException,
   ConflictException,
 } from '@nestjs/common';
-import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
+import { PrismaClientKnownRequestError } from '@db';
 import { FastifyReply, FastifyRequest } from 'fastify';
 
 import { GlobalExceptionFilter, ErrorResponse } from '../global-exception.filter';

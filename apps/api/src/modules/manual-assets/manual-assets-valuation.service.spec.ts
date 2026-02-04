@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
-import { Decimal } from '@prisma/client/runtime/library';
+import { Decimal } from '@db';
 
 import { ManualAssetsService } from './manual-assets.service';
 import { PrismaService } from '../../core/prisma/prisma.service';
