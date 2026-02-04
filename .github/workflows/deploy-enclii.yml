@@ -126,7 +126,7 @@ jobs:
             # Configuration
             NAMESPACE="dhanam"
             DEPLOYMENT="dhanam-web"
-            CONTAINER="web"
+            CONTAINER="dhanam-web"
             IMAGE="${{ needs.build.outputs.image_full }}"
 
             echo "=== Deploying Dhanam Web ==="
@@ -255,6 +255,6 @@ jobs:
       - name: Deploy
         run: |
           kubectl set image deployment/dhanam-web \
-            web=${{ needs.build.outputs.image_full }} \
+            dhanam-web=${{ needs.build.outputs.image_full }} \
             -n dhanam
           kubectl rollout status deployment/dhanam-web -n dhanam --timeout=300s

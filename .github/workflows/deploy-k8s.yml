@@ -122,7 +122,7 @@ jobs:
           script: |
             # Update deployment image
             sudo kubectl set image deployment/dhanam-api \
-              dhanam-api=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ needs.build-and-push.outputs.image_digest }} \
+              api=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ needs.build-and-push.outputs.image_digest }} \
               -n dhanam
 
             # Wait for rollout
