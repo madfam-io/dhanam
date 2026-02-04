@@ -1,32 +1,39 @@
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { Pool } from 'pg';
 
 import { PrismaClient } from '@db';
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
+  private pool: Pool;
+
   constructor(private configService: ConfigService) {
     // Build database URL with connection pool configuration
     const databaseUrl = configService.get('database.url') || configService.get('DATABASE_URL');
     const poolSize = configService.get('DATABASE_POOL_SIZE')
       ? parseInt(configService.get('DATABASE_POOL_SIZE')!, 10)
-      : 10; // Default Prisma pool size
+      : 10;
 
-    // Append connection pool parameters to DATABASE_URL if not already present
-    // Prisma 7 reads DATABASE_URL from env (datasourceUrl constructor option was removed)
-    if (databaseUrl && !databaseUrl.includes('connection_limit')) {
-      const separator = databaseUrl.includes('?') ? '&' : '?';
-      process.env.DATABASE_URL = `${databaseUrl}${separator}connection_limit=${poolSize}&pool_timeout=10`;
-    } else if (databaseUrl) {
-      process.env.DATABASE_URL = databaseUrl;
-    }
+    // Create pg Pool for the Prisma 7 driver adapter
+    const pool = new Pool({
+      connectionString: databaseUrl,
+      max: poolSize,
+      idleTimeoutMillis: 10000,
+    });
+
+    const adapter = new PrismaPg(pool);
 
     super({
+      adapter,
       log:
         configService.get('NODE_ENV') === 'development'
           ? ['query', 'info', 'warn', 'error']
           : ['error'],
     });
+
+    this.pool = pool;
   }
 
   async onModuleInit() {
@@ -35,6 +42,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
 
   async onModuleDestroy() {
     await this.$disconnect();
+    await this.pool.end();
   }
 
   async cleanDatabase() {
