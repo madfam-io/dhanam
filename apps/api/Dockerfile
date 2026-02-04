@@ -90,6 +90,12 @@ COPY --from=builder --chown=nestjs:nodejs /app/apps/api/prisma ./apps/api/prisma
 COPY --from=builder --chown=nestjs:nodejs /app/apps/api/generated ./apps/api/generated
 COPY --from=builder --chown=nestjs:nodejs /app/apps/api/package.json ./apps/api/package.json
 
+# Create symlink for Prisma client runtime resolution
+# Code imports from @prisma/client/runtime/library which needs to resolve to generated/prisma/runtime
+RUN mkdir -p ./apps/api/node_modules/@prisma/client && \
+    ln -sf ../../generated/prisma/runtime ./apps/api/node_modules/@prisma/client/runtime && \
+    chown -R nestjs:nodejs ./apps/api/node_modules/@prisma
+
 USER nestjs
 
 # Set working directory to where the API expects to run
