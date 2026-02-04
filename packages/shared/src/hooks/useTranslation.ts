@@ -32,13 +32,14 @@ export function useTranslation(namespace?: TranslationNamespace) {
 
   /**
    * Translate a key
-   * @param key - Translation key in dot notation (e.g., "save" or "common.save")
+   * @param key - Translation key in dot notation (e.g., "save" or "common.save" or "howItWorks.title")
    * @param params - Optional parameters for interpolation
    *
    * Fallback chain: requested locale → es (Spanish) → raw key
    */
   const t = (key: string, params?: Record<string, string | number>): string => {
-    const fullKey = namespace && !key.includes('.') ? `${namespace}.${key}` : key;
+    // Always use namespace if provided - keys are relative to the namespace
+    const fullKey = namespace ? `${namespace}.${key}` : key;
     const keys = fullKey.split('.');
 
     // Try requested locale first, then fall back to Spanish, then raw key

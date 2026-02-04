@@ -25,16 +25,9 @@ export default function LocaleLandingPage() {
   const locale = params.locale as 'en' | 'es' | 'pt-BR';
   const { isAuthenticated } = useAuth();
   const analytics = useAnalytics();
-  const { t, setLocale } = useTranslation('landing');
+  const { t } = useTranslation('landing');
 
   const appUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://app.dhan.am';
-
-  useEffect(() => {
-    // Sync i18n context with URL locale
-    if (locale && ['en', 'es', 'pt-BR'].includes(locale)) {
-      setLocale(locale);
-    }
-  }, [locale, setLocale]);
 
   useEffect(() => {
     if (isAuthenticated) {
