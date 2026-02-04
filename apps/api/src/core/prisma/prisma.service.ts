@@ -42,7 +42,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
 
   async onModuleDestroy() {
     await this.$disconnect();
-    await this.pool.end();
+    // Pool is already ended by $disconnect() through the PrismaPg adapter
   }
 
   async cleanDatabase() {

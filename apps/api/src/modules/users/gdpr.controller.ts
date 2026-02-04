@@ -94,7 +94,7 @@ export class GdprController {
     };
   }
 
-  @Delete()
+  @Delete('erasure')
   @HttpCode(HttpStatus.ACCEPTED)
   @ApiOperation({ summary: 'Request account deletion (GDPR right to erasure)' })
   @ApiResponse({ status: 202, description: 'Deletion scheduled (30-day waiting period)' })
