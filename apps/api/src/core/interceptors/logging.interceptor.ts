@@ -27,7 +27,7 @@ export class LoggingInterceptor implements NestInterceptor {
             ip,
             userAgent,
             userId,
-            responseSize: JSON.stringify(data).length,
+            responseSize: data != null ? JSON.stringify(data).length : 0,
           });
         },
         error: (error) => {

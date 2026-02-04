@@ -120,7 +120,7 @@ export class QueueService implements OnModuleInit, OnModuleDestroy {
       const status = this.redis.status;
       if (status === 'wait') {
         await this.redis.connect();
-      } else if (status !== 'ready' && status !== 'connect') {
+      } else if (status !== 'ready' && status !== 'connect' && status !== 'connecting') {
         this.logger.warn(`Redis in unexpected state: ${status}, attempting connection...`);
         await this.redis.connect();
       }
