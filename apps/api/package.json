@@ -78,7 +78,7 @@
     "axios": "^1.13.3",
     "bcryptjs": "^3.0.3",
     "belvo": "^0.28.0",
-    "bitcoinjs-lib": "^6.1.5",
+    "bitcoinjs-lib": "^7.0.1",
     "bull": "^4.16.5",
     "bullmq": "^5.67.1",
     "class-transformer": "^0.5.1",
