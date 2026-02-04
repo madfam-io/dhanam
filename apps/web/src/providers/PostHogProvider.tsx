@@ -14,7 +14,7 @@ import posthog from 'posthog-js';
 function getConsentCookie(): string | null {
   if (typeof document === 'undefined') return null;
   const match = document.cookie.match(/(?:^|;\s*)dhanam_consent=([^;]*)/);
-  return match ? decodeURIComponent(match[1]) : null;
+  return match?.[1] ? decodeURIComponent(match[1]) : null;
 }
 
 if (typeof window !== 'undefined') {
