@@ -2,7 +2,7 @@
 # Dhanam Web Deployment (Next.js)
 # =============================================================================
 # Frontend dashboard for personal finance and wealth management
-# Uses port 3000 to match Dockerfile and Enclii configuration
+# Uses port 4200 to match Enclii port allocation (4200-4299 block)
 # =============================================================================
 
 apiVersion: apps/v1
@@ -183,7 +183,7 @@ spec:
   ports:
     - name: http
       port: 80
-      targetPort: 3000
+      targetPort: 4200
       protocol: TCP
   selector:
     app: dhanam-web
