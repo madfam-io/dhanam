@@ -24,7 +24,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: madfam-org/dhanam-web
+  IMAGE_NAME: madfam-org/dhanam/web
 
 concurrency:
   group: deploy-web-k8s-${{ github.ref }}
