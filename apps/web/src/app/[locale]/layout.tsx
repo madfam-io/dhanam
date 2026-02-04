@@ -2,17 +2,16 @@
 
 import { I18nProvider, type Locale } from '@dhanam/shared';
 
-export default function LocaleLayout({
+export default async function LocaleLayout({
   children,
   params,
 }: {
   children: React.ReactNode;
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 }) {
   // Validate and normalize locale from URL param
-  const locale = (['en', 'es', 'pt-BR'].includes(params.locale)
-    ? params.locale
-    : 'es') as Locale;
+  const { locale: localeParam } = await params;
+  const locale = (['en', 'es', 'pt-BR'].includes(localeParam) ? localeParam : 'es') as Locale;
 
   return <I18nProvider defaultLocale={locale}>{children}</I18nProvider>;
 }

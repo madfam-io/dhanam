@@ -8,6 +8,9 @@ import {
   Inject,
   Optional,
 } from '@nestjs/common';
+import { FastifyReply, FastifyRequest } from 'fastify';
+
+import type { SentryService } from '@core/monitoring/sentry.service';
 import {
   PrismaClientKnownRequestError,
   PrismaClientValidationError,
@@ -15,9 +18,6 @@ import {
   PrismaClientInitializationError,
   PrismaClientUnknownRequestError,
 } from '@db';
-import { FastifyReply, FastifyRequest } from 'fastify';
-
-import type { SentryService } from '@core/monitoring/sentry.service';
 
 import { isDomainException, ErrorCode } from '../exceptions/domain-exceptions';
 import { TimeoutError } from '../utils/timeout.util';

@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
-import type { InputJsonValue } from '@db';
 
+import type { InputJsonValue } from '@db';
 import { Transaction, Prisma } from '@db';
 
 import { PrismaService } from '../../core/prisma/prisma.service';

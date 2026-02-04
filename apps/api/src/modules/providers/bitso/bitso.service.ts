@@ -2,12 +2,12 @@ import * as crypto from 'crypto';
 
 import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import type { InputJsonValue } from '@db';
 import axios, { AxiosInstance, AxiosError } from 'axios';
 
 import { Retry } from '@core/decorators/retry.decorator';
 import { ProviderException } from '@core/exceptions/domain-exceptions';
 import { withTimeout, TIMEOUT_PRESETS } from '@core/utils/timeout.util';
+import type { InputJsonValue } from '@db';
 import { Prisma as _Prisma, Account, Currency } from '@db';
 
 import { CryptoService } from '../../../core/crypto/crypto.service';

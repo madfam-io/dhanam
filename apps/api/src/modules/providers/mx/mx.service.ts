@@ -2,7 +2,6 @@ import * as crypto from 'crypto';
 
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import type { InputJsonValue } from '@db';
 import {
   Configuration,
   InstitutionsApi,
@@ -13,6 +12,7 @@ import {
   TransactionsApi,
 } from 'mx-platform-node';
 
+import type { InputJsonValue } from '@db';
 import { Provider, AccountType, Currency, Prisma as _Prisma } from '@db';
 
 import { CryptoService } from '../../../core/crypto/crypto.service';
@@ -114,7 +114,13 @@ export class MxService implements IFinancialProvider {
 
     try {
       // Ping MX by listing institutions with limit 1
-      await this.institutionsApi!.listInstitutions(MxService.API_VERSION, undefined, undefined, 1, 1);
+      await this.institutionsApi!.listInstitutions(
+        MxService.API_VERSION,
+        undefined,
+        undefined,
+        1,
+        1
+      );
       const responseTimeMs = Date.now() - startTime;
 
       return {
@@ -168,7 +174,11 @@ export class MxService implements IFinancialProvider {
         },
       };
 
-      const widgetResponse = await this.widgetsApi!.requestWidgetURL(MxService.API_VERSION, mxUserGuid, widgetRequest);
+      const widgetResponse = await this.widgetsApi!.requestWidgetURL(
+        MxService.API_VERSION,
+        mxUserGuid,
+        widgetRequest
+      );
       const widgetUrl = widgetResponse.data.widget_url?.url;
 
       if (!widgetUrl) {
@@ -205,7 +215,11 @@ export class MxService implements IFinancialProvider {
       }
 
       // Verify the member exists
-      const memberResponse = await this.membersApi!.readMember(MxService.API_VERSION, memberGuid, mxUserGuid);
+      const memberResponse = await this.membersApi!.readMember(
+        MxService.API_VERSION,
+        memberGuid,
+        mxUserGuid
+      );
       const member = memberResponse.data.member;
 
       if (!member) {
@@ -331,7 +345,7 @@ export class MxService implements IFinancialProvider {
       const toDate = String(params.endDate || new Date().toISOString().split('T')[0]);
       const fromDate = String(
         params.startDate ||
-        new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+          new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
       );
 
       // Fetch transactions from MX
@@ -543,7 +557,10 @@ export class MxService implements IFinancialProvider {
     }
 
     try {
-      const response = await this.institutionsApi!.readInstitution(MxService.API_VERSION, institutionId);
+      const response = await this.institutionsApi!.readInstitution(
+        MxService.API_VERSION,
+        institutionId
+      );
       const inst = response.data.institution;
 
       if (!inst) {

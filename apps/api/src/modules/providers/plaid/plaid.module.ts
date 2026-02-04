@@ -12,7 +12,14 @@ import { PlaidController } from './plaid.controller';
 import { PlaidService } from './plaid.service';
 
 @Module({
-  imports: [PrismaModule, CryptoModule, SpacesModule, OrchestratorModule, AuditModule, BillingModule],
+  imports: [
+    PrismaModule,
+    CryptoModule,
+    SpacesModule,
+    OrchestratorModule,
+    AuditModule,
+    BillingModule,
+  ],
   controllers: [PlaidController],
   providers: [PlaidService, PlaidWebhookHandler],
   exports: [PlaidService],

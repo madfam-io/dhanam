@@ -1,6 +1,5 @@
 import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import type { InputJsonValue } from '@db';
 import {
   PlaidApi,
   Configuration,
@@ -21,6 +20,7 @@ import { AuditService } from '@core/audit/audit.service';
 import { MonitorPerformance } from '@core/decorators/monitor-performance.decorator';
 import { Retry } from '@core/decorators/retry.decorator';
 import { ProviderException } from '@core/exceptions/domain-exceptions';
+import type { InputJsonValue } from '@db';
 import { Prisma as _Prisma, Account, Currency } from '@db';
 
 import { CryptoService } from '../../../core/crypto/crypto.service';

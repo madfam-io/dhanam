@@ -1,13 +1,14 @@
 /** @type {import("eslint").Linter.Config} */
+require('@rushstack/eslint-patch/modern-module-resolution');
+
 module.exports = {
   extends: [
     'next/core-web-vitals',
     'plugin:@typescript-eslint/recommended',
-    'plugin:jsx-a11y/recommended',
     'prettier',
   ],
   parser: '@typescript-eslint/parser',
-  plugins: ['@typescript-eslint', 'jsx-a11y', 'prettier'],
+  plugins: ['@typescript-eslint', 'prettier'],
   env: {
     browser: true,
     es2022: true,

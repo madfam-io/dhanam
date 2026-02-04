@@ -38,9 +38,9 @@ function HomePageContent() {
     const geoCookie =
       typeof document !== 'undefined'
         ? document.cookie
-          .split('; ')
-          .find((c) => c.startsWith('dhanam_geo='))
-          ?.split('=')[1]
+            .split('; ')
+            .find((c) => c.startsWith('dhanam_geo='))
+            ?.split('=')[1]
         : undefined;
 
     try {

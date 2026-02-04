@@ -182,8 +182,6 @@ export function SpendingCategoryChart({ data, currency, isLoading }: SpendingCat
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
-                activeIndex={activeIndex}
-                activeShape={renderActiveShape}
                 data={chartData}
                 cx="50%"
                 cy="50%"
@@ -193,6 +191,10 @@ export function SpendingCategoryChart({ data, currency, isLoading }: SpendingCat
                 dataKey="value"
                 onMouseEnter={(_, index) => setActiveIndex(index)}
                 onMouseLeave={() => setActiveIndex(undefined)}
+                {...({
+                  activeIndex,
+                  activeShape: renderActiveShape,
+                } as any)}
               >
                 {chartData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.color} />

@@ -16,16 +16,22 @@ import { Prisma } from '../../generated/prisma';
 
 // Error classes (value + type)
 export const PrismaClientKnownRequestError = Prisma.PrismaClientKnownRequestError;
-export type PrismaClientKnownRequestError = InstanceType<typeof Prisma.PrismaClientKnownRequestError>;
+export type PrismaClientKnownRequestError = InstanceType<
+  typeof Prisma.PrismaClientKnownRequestError
+>;
 
 export const PrismaClientUnknownRequestError = Prisma.PrismaClientUnknownRequestError;
-export type PrismaClientUnknownRequestError = InstanceType<typeof Prisma.PrismaClientUnknownRequestError>;
+export type PrismaClientUnknownRequestError = InstanceType<
+  typeof Prisma.PrismaClientUnknownRequestError
+>;
 
 export const PrismaClientRustPanicError = Prisma.PrismaClientRustPanicError;
 export type PrismaClientRustPanicError = InstanceType<typeof Prisma.PrismaClientRustPanicError>;
 
 export const PrismaClientInitializationError = Prisma.PrismaClientInitializationError;
-export type PrismaClientInitializationError = InstanceType<typeof Prisma.PrismaClientInitializationError>;
+export type PrismaClientInitializationError = InstanceType<
+  typeof Prisma.PrismaClientInitializationError
+>;
 
 export const PrismaClientValidationError = Prisma.PrismaClientValidationError;
 export type PrismaClientValidationError = InstanceType<typeof Prisma.PrismaClientValidationError>;

@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Decimal } from '@db';
 import { Job } from 'bullmq';
 
 import { PrismaService } from '@core/prisma/prisma.service';
+import { Decimal } from '@db';
 
 import { ValuationSnapshotJobData } from '../queue.service';
 

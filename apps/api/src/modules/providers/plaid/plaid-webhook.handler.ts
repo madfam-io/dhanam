@@ -1,11 +1,11 @@
 import * as crypto from 'crypto';
 
 import { Injectable, Logger } from '@nestjs/common';
-import type { InputJsonValue } from '@db';
 import { AccountsGetRequest } from 'plaid';
 
 import { CryptoService } from '@core/crypto/crypto.service';
 import { PrismaService } from '@core/prisma/prisma.service';
+import type { InputJsonValue } from '@db';
 
 import { PlaidWebhookDto } from './dto';
 

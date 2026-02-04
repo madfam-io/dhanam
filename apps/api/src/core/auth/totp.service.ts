@@ -1,7 +1,6 @@
 import { randomBytes, createHash } from 'crypto';
 
 import { Injectable } from '@nestjs/common';
-import { PrismaClientKnownRequestError } from '@db';
 import * as qrcode from 'qrcode';
 import * as speakeasy from 'speakeasy';
 
@@ -14,6 +13,7 @@ import {
 } from '@core/exceptions/domain-exceptions';
 import { LoggerService } from '@core/logger/logger.service';
 import { PrismaService } from '@core/prisma/prisma.service';
+import { PrismaClientKnownRequestError } from '@db';
 
 export interface TotpSetupResponse {
   qrCodeUrl: string;

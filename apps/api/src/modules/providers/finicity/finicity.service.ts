@@ -3,9 +3,9 @@ import * as crypto from 'crypto';
 import { HttpService } from '@nestjs/axios';
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import type { InputJsonValue } from '@db';
 import { firstValueFrom } from 'rxjs';
 
+import type { InputJsonValue } from '@db';
 import { Provider, AccountType, Currency, Prisma as _Prisma } from '@db';
 
 import { CryptoService } from '../../../core/crypto/crypto.service';

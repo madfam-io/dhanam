@@ -13,7 +13,13 @@ import { GoalsController } from './goals.controller';
 import { GoalsService } from './goals.service';
 
 @Module({
-  imports: [PrismaModule, AuditModule, TransactionExecutionModule, SimulationsModule, BillingModule],
+  imports: [
+    PrismaModule,
+    AuditModule,
+    TransactionExecutionModule,
+    SimulationsModule,
+    BillingModule,
+  ],
   controllers: [GoalsController],
   providers: [
     GoalsService,

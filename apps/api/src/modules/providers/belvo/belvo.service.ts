@@ -2,7 +2,6 @@ import * as crypto from 'crypto';
 
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import type { InputJsonValue } from '@db';
 
 import { AuditService } from '@core/audit/audit.service';
 import { CryptoService } from '@core/crypto/crypto.service';
@@ -11,6 +10,7 @@ import { Retry } from '@core/decorators/retry.decorator';
 import { ProviderException } from '@core/exceptions/domain-exceptions';
 import { PrismaService } from '@core/prisma/prisma.service';
 import { withTimeout, TIMEOUT_PRESETS } from '@core/utils/timeout.util';
+import type { InputJsonValue } from '@db';
 import { Account, Transaction, Prisma as _Prisma, Currency, AccountType } from '@db';
 
 import { CircuitBreakerService } from '../orchestrator/circuit-breaker.service';
