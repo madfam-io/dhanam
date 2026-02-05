@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UnauthorizedException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 
 import { JwtStrategy } from '../strategies/jwt.strategy';
 import { PrismaService } from '@core/prisma/prisma.service';
@@ -21,9 +22,6 @@ describe('JwtStrategy', () => {
   };
 
   beforeEach(async () => {
-    // Set JWT_SECRET for tests
-    process.env.JWT_SECRET = 'test-jwt-secret-key-for-unit-tests';
-
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         JwtStrategy,
@@ -35,6 +33,15 @@ describe('JwtStrategy', () => {
             },
           },
         },
+        {
+          provide: ConfigService,
+          useValue: {
+            get: jest.fn((key: string) => {
+              if (key === 'jwt.secret') return 'test-jwt-secret-key-for-unit-tests';
+              return undefined;
+            }),
+          },
+        },
       ],
     }).compile();
 
@@ -44,28 +51,31 @@ describe('JwtStrategy', () => {
     jest.clearAllMocks();
   });
 
-  afterEach(() => {
-    delete process.env.JWT_SECRET;
-  });
-
   describe('constructor - JWT_SECRET validation', () => {
     it('should throw error if JWT_SECRET is not set (SECURITY FIX)', () => {
       // Arrange
-      delete process.env.JWT_SECRET;
+      const mockConfigService = {
+        get: jest.fn(() => undefined),
+      } as unknown as ConfigService;
 
       // Act & Assert
       expect(() => {
-        new JwtStrategy(prisma);
+        new JwtStrategy(prisma, mockConfigService);
       }).toThrow('JWT_SECRET environment variable is required');
     });
 
     it('should initialize successfully when JWT_SECRET is set', () => {
       // Arrange
-      process.env.JWT_SECRET = 'valid-secret';
+      const mockConfigService = {
+        get: jest.fn((key: string) => {
+          if (key === 'jwt.secret') return 'valid-secret';
+          return undefined;
+        }),
+      } as unknown as ConfigService;
 
       // Act & Assert
       expect(() => {
-        new JwtStrategy(prisma);
+        new JwtStrategy(prisma, mockConfigService);
       }).not.toThrow();
     });
 
@@ -259,7 +269,7 @@ describe('JwtStrategy', () => {
     it('should use environment variable JWT_SECRET', () => {
       // This is tested in constructor tests
       // Verifies no hardcoded fallback exists (security fix)
-      expect(process.env.JWT_SECRET).toBe('test-jwt-secret-key-for-unit-tests');
+      expect(strategy).toBeDefined();
     });
 
     it('should have correct issuer configured', () => {

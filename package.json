@@ -75,7 +75,8 @@
       "lodash": ">=4.17.23",
       "fast-xml-parser": ">=5.3.4",
       "fastify": ">=5.7.2",
-      "@isaacs/brace-expansion": ">=5.0.1"
+      "@isaacs/brace-expansion": ">=5.0.1",
+      "hono": ">=4.11.7"
     }
   }
 }

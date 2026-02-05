@@ -10,7 +10,7 @@ export class CategoriesService {
   constructor(
     private prisma: PrismaService,
     private spacesService: SpacesService
-  ) { }
+  ) {}
 
   async findAll(
     spaceId: string,
@@ -103,8 +103,13 @@ export class CategoriesService {
     });
 
     if (!category) {
-      console.error(`Category ${categoryId} not found in space ${spaceId}. Checking raw existence...`);
-      const raw = await this.prisma.category.findUnique({ where: { id: categoryId }, include: { budget: true } });
+      console.error(
+        `Category ${categoryId} not found in space ${spaceId}. Checking raw existence...`
+      );
+      const raw = await this.prisma.category.findUnique({
+        where: { id: categoryId },
+        include: { budget: true },
+      });
       console.error('Raw category:', raw);
       throw new NotFoundException('Category not found');
     }
@@ -256,43 +261,40 @@ export class CategoriesService {
 
     // Get all transactions for this category in the budget period
     // Get all transactions for this category in the budget period
-    try {
-      const transactions = await this.prisma.transaction.findMany({
-        where: {
-          categoryId,
-          date: {
-            gte: budget.startDate,
-            ...(budget.endDate && { lte: budget.endDate }),
-          },
+    const transactions = await this.prisma.transaction.findMany({
+      where: {
+        categoryId,
+        date: {
+          gte: budget.startDate,
+          ...(budget.endDate && { lte: budget.endDate }),
         },
-        include: {
-          account: true,
-        },
-        orderBy: { date: 'desc' },
-      });
+      },
+      include: {
+        account: true,
+      },
+      orderBy: { date: 'desc' },
+    });
 
-      const totalSpent = transactions.reduce((sum, t) => sum + Math.abs(t.amount ? t.amount.toNumber() : 0), 0);
-      const budgetedAmount = category.budgetedAmount;
-      const remaining = budgetedAmount - totalSpent;
-      const percentUsed = (totalSpent / budgetedAmount) * 100;
+    const totalSpent = transactions.reduce(
+      (sum, t) => sum + Math.abs(t.amount ? t.amount.toNumber() : 0),
+      0
+    );
+    const budgetedAmount = category.budgetedAmount;
+    const remaining = budgetedAmount - totalSpent;
+    const percentUsed = (totalSpent / budgetedAmount) * 100;
 
-      return {
-        ...category,
-        budgetedAmount: budgetedAmount,
-        createdAt: new Date(category.createdAt).toISOString(),
-        updatedAt: new Date(category.updatedAt).toISOString(),
-        spending: {
-          totalBudgeted: budgetedAmount,
-          totalSpent,
-          remaining,
-          percentUsed: Math.min(percentUsed, 100),
-        },
-      };
-
-    } catch (error) {
-      // Re-throw
-      throw error;
-    }
+    return {
+      ...category,
+      budgetedAmount: budgetedAmount,
+      createdAt: new Date(category.createdAt).toISOString(),
+      updatedAt: new Date(category.updatedAt).toISOString(),
+      spending: {
+        totalBudgeted: budgetedAmount,
+        totalSpent,
+        remaining,
+        percentUsed: Math.min(percentUsed, 100),
+      },
+    };
   }
 
   private generateRandomColor(): string {
