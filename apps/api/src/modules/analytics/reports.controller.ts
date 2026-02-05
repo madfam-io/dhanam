@@ -1,3 +1,5 @@
+import { CurrentUser } from '@core/auth/decorators/current-user.decorator';
+import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
 import {
   Controller,
   Get,
@@ -23,9 +25,6 @@ import {
 import { IsString, IsDateString, IsOptional, IsEnum } from 'class-validator';
 import { Response } from 'express';
 
-import { CurrentUser } from '@core/auth/decorators/current-user.decorator';
-import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
-
 import { SpacesService } from '../spaces/spaces.service';
 
 import { ReportService } from './report.service';
@@ -41,8 +40,8 @@ class GenerateReportDto {
   endDate!: string;
 
   @IsOptional()
-  @IsEnum(['pdf', 'csv'])
-  format?: 'pdf' | 'csv';
+  @IsEnum(['pdf', 'csv', 'excel', 'json'])
+  format?: 'pdf' | 'csv' | 'excel' | 'json';
 }
 
 class ReportListItem {
@@ -133,6 +132,27 @@ export class ReportsController {
         `attachment; filename="dhanam-export-${dto.startDate}-to-${dto.endDate}.csv"`
       );
       res.status(HttpStatus.OK).send(csv);
+    } else if (format === 'excel') {
+      const excel = await this.reportService.generateExcelExport(dto.spaceId, startDate, endDate);
+
+      res.setHeader(
+        'Content-Type',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      );
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename="dhanam-export-${dto.startDate}-to-${dto.endDate}.xlsx"`
+      );
+      res.status(HttpStatus.OK).send(excel);
+    } else if (format === 'json') {
+      const json = await this.reportService.generateJsonExport(dto.spaceId, startDate, endDate);
+
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename="dhanam-export-${dto.startDate}-to-${dto.endDate}.json"`
+      );
+      res.status(HttpStatus.OK).send(json);
     } else {
       const pdf = await this.reportService.generatePdfReport(dto.spaceId, startDate, endDate);
 
@@ -209,5 +229,72 @@ export class ReportsController {
       `attachment; filename="dhanam-export-${startDate}-to-${endDate}.csv"`
     );
     res.status(HttpStatus.OK).send(csv);
+  }
+
+  @Get(':spaceId/download/excel')
+  @ApiOperation({ summary: 'Download Excel export' })
+  @ApiParam({ name: 'spaceId', description: 'Space UUID' })
+  @ApiQuery({ name: 'startDate', required: true })
+  @ApiQuery({ name: 'endDate', required: true })
+  @ApiOkResponse({ description: 'Excel export file' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiForbiddenResponse({ description: 'User lacks access to this space' })
+  @ApiBadRequestResponse({ description: 'Invalid date parameters' })
+  async downloadExcelExport(
+    @CurrentUser('id') userId: string,
+    @Param('spaceId') spaceId: string,
+    @Query('startDate') startDate: string,
+    @Query('endDate') endDate: string,
+    @Res() res: Response
+  ): Promise<void> {
+    await this.spacesService.verifyUserAccess(userId, spaceId, 'viewer');
+
+    const excel = await this.reportService.generateExcelExport(
+      spaceId,
+      new Date(startDate),
+      new Date(endDate)
+    );
+
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    );
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="dhanam-export-${startDate}-to-${endDate}.xlsx"`
+    );
+    res.status(HttpStatus.OK).send(excel);
+  }
+
+  @Get(':spaceId/download/json')
+  @ApiOperation({ summary: 'Download JSON export' })
+  @ApiParam({ name: 'spaceId', description: 'Space UUID' })
+  @ApiQuery({ name: 'startDate', required: true })
+  @ApiQuery({ name: 'endDate', required: true })
+  @ApiOkResponse({ description: 'JSON export file' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiForbiddenResponse({ description: 'User lacks access to this space' })
+  @ApiBadRequestResponse({ description: 'Invalid date parameters' })
+  async downloadJsonExport(
+    @CurrentUser('id') userId: string,
+    @Param('spaceId') spaceId: string,
+    @Query('startDate') startDate: string,
+    @Query('endDate') endDate: string,
+    @Res() res: Response
+  ): Promise<void> {
+    await this.spacesService.verifyUserAccess(userId, spaceId, 'viewer');
+
+    const json = await this.reportService.generateJsonExport(
+      spaceId,
+      new Date(startDate),
+      new Date(endDate)
+    );
+
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="dhanam-export-${startDate}-to-${endDate}.json"`
+    );
+    res.status(HttpStatus.OK).send(json);
   }
 }

@@ -1,12 +1,20 @@
 'use client';
 
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@dhanam/ui';
 import { Button } from '@dhanam/ui';
 import { Input } from '@dhanam/ui';
 import { Label } from '@dhanam/ui';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@dhanam/ui';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import {
   FileText,
   Download,
@@ -16,11 +24,19 @@ import {
   FileType,
   TrendingUp,
   PiggyBank,
+  Plus,
+  FileJson,
+  Share2,
 } from 'lucide-react';
 import { useSpaceStore } from '@/stores/space';
-import { reportsApi } from '@/lib/api/reports';
+import { reportsApi, type SavedReport } from '@/lib/api/reports';
 import { toast } from 'sonner';
 import { useTranslation } from '@dhanam/shared';
+import { SavedReportCard } from '@/components/reports/saved-report-card';
+import { ShareReportDialog } from '@/components/reports/share-report-dialog';
+import { ShareManagementPanel } from '@/components/reports/share-management-panel';
+import { ShareLinkPanel } from '@/components/reports/share-link-panel';
+import { ReportHistoryPanel } from '@/components/reports/report-history-panel';
 
 function getDefaultStartDate(): string {
   const date = new Date();
@@ -34,12 +50,28 @@ function getDefaultEndDate(): string {
 
 export default function ReportsPage() {
   const { currentSpace } = useSpaceStore();
+  const queryClient = useQueryClient();
   const [selectedReport, setSelectedReport] = useState<string | null>(null);
   const [startDate, setStartDate] = useState<string>(getDefaultStartDate);
   const [endDate, setEndDate] = useState<string>(getDefaultEndDate);
-  const [exportFormat, setExportFormat] = useState<'pdf' | 'csv'>('pdf');
+  const [exportFormat, setExportFormat] = useState<'pdf' | 'csv' | 'excel' | 'json'>('pdf');
   const [isGenerating, setIsGenerating] = useState(false);
   const { t } = useTranslation('reports');
+
+  // Saved report detail panels
+  const [shareDialogReport, setShareDialogReport] = useState<SavedReport | null>(null);
+  const [historyReportId, setHistoryReportId] = useState<string | null>(null);
+  const [sharingReportId, setSharingReportId] = useState<string | null>(null);
+
+  // Create report dialog
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [createForm, setCreateForm] = useState({
+    name: '',
+    description: '',
+    type: 'monthly_spending',
+    format: 'pdf' as 'pdf' | 'csv' | 'excel' | 'json',
+  });
+  const [isCreating, setIsCreating] = useState(false);
 
   const reportTemplates = [
     {
@@ -81,6 +113,25 @@ export default function ReportsPage() {
     enabled: !!currentSpace,
   });
 
+  const { data: savedReports, isLoading: loadingSaved } = useQuery({
+    queryKey: ['saved-reports', currentSpace?.id],
+    queryFn: () => {
+      if (!currentSpace) throw new Error('No current space');
+      return reportsApi.getSavedReports(currentSpace.id);
+    },
+    enabled: !!currentSpace,
+  });
+
+  const { data: sharedWithMe, isLoading: loadingShared } = useQuery({
+    queryKey: ['shared-reports'],
+    queryFn: () => reportsApi.getSharedWithMe(),
+    enabled: !!currentSpace,
+  });
+
+  const refreshSavedReports = () => {
+    queryClient.invalidateQueries({ queryKey: ['saved-reports'] });
+  };
+
   const handleGenerateReport = async () => {
     if (!currentSpace?.id) {
       toast.error(t('toast.selectSpaceFirst'));
@@ -95,15 +146,19 @@ export default function ReportsPage() {
 
       if (exportFormat === 'csv') {
         blob = await reportsApi.downloadCsvExport(spaceId, startDate, endDate);
+      } else if (exportFormat === 'excel') {
+        blob = await reportsApi.downloadExcelExport(spaceId, startDate, endDate);
+      } else if (exportFormat === 'json') {
+        blob = await reportsApi.downloadJsonExport(spaceId, startDate, endDate);
       } else {
         blob = await reportsApi.downloadPdfReport(spaceId, startDate, endDate);
       }
 
-      // Create download link
+      const ext = exportFormat === 'excel' ? 'xlsx' : exportFormat;
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `dhanam-${selectedReport || 'report'}-${startDate}-to-${endDate}.${exportFormat}`;
+      a.download = `dhanam-${selectedReport || 'report'}-${startDate}-to-${endDate}.${ext}`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -117,7 +172,7 @@ export default function ReportsPage() {
     }
   };
 
-  const handleQuickExport = async (format: 'pdf' | 'csv') => {
+  const handleQuickExport = async (format: 'pdf' | 'csv' | 'excel' | 'json') => {
     if (!currentSpace?.id) {
       toast.error(t('toast.selectSpaceFirst'));
       return;
@@ -131,14 +186,19 @@ export default function ReportsPage() {
 
       if (format === 'csv') {
         blob = await reportsApi.downloadCsvExport(spaceId, startDate, endDate);
+      } else if (format === 'excel') {
+        blob = await reportsApi.downloadExcelExport(spaceId, startDate, endDate);
+      } else if (format === 'json') {
+        blob = await reportsApi.downloadJsonExport(spaceId, startDate, endDate);
       } else {
         blob = await reportsApi.downloadPdfReport(spaceId, startDate, endDate);
       }
 
+      const ext = format === 'excel' ? 'xlsx' : format;
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `dhanam-report-${startDate}-to-${endDate}.${format}`;
+      a.download = `dhanam-report-${startDate}-to-${endDate}.${ext}`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -149,6 +209,30 @@ export default function ReportsPage() {
       toast.error(t('toast.failedToDownload'));
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  const handleCreateReport = async () => {
+    if (!currentSpace?.id) return;
+
+    setIsCreating(true);
+    try {
+      await reportsApi.createSavedReport({
+        spaceId: currentSpace.id,
+        name: createForm.name,
+        description: createForm.description || undefined,
+        type: createForm.type,
+        format: createForm.format,
+        filters: { startDate, endDate },
+      });
+      setCreateDialogOpen(false);
+      setCreateForm({ name: '', description: '', type: 'monthly_spending', format: 'pdf' });
+      refreshSavedReports();
+      toast.success('Report configuration saved');
+    } catch {
+      toast.error('Failed to create report');
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -229,10 +313,146 @@ export default function ReportsPage() {
                 )}
                 {t('quickExport.csvExport')}
               </Button>
+              <Button
+                onClick={() => handleQuickExport('excel')}
+                disabled={isGenerating}
+                variant="outline"
+              >
+                {isGenerating ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <FileSpreadsheet className="mr-2 h-4 w-4" />
+                )}
+                Excel
+              </Button>
+              <Button
+                onClick={() => handleQuickExport('json')}
+                disabled={isGenerating}
+                variant="outline"
+              >
+                {isGenerating ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <FileJson className="mr-2 h-4 w-4" />
+                )}
+                JSON
+              </Button>
             </div>
           </div>
         </CardContent>
       </Card>
+
+      {/* Saved Reports */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-semibold">My Saved Reports</h2>
+          <Button onClick={() => setCreateDialogOpen(true)} size="sm">
+            <Plus className="mr-2 h-4 w-4" />
+            Create Report
+          </Button>
+        </div>
+
+        {loadingSaved ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        ) : savedReports && savedReports.length > 0 ? (
+          <div className="space-y-3">
+            {savedReports.map((report) => (
+              <SavedReportCard
+                key={report.id}
+                report={report}
+                onGenerate={refreshSavedReports}
+                onShare={() => setShareDialogReport(report)}
+                onShowHistory={() => {
+                  setHistoryReportId(
+                    historyReportId === report.id ? null : report.id
+                  );
+                  setSharingReportId(null);
+                }}
+                onDeleted={refreshSavedReports}
+              />
+            ))}
+          </div>
+        ) : (
+          <Card>
+            <CardContent className="py-8">
+              <div className="text-center text-muted-foreground">
+                <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>No saved reports yet</p>
+                <p className="text-sm">
+                  Create a saved report to generate and archive financial reports
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+
+      {/* Expanded History / Sharing Panels */}
+      {historyReportId && (
+        <div className="space-y-4">
+          <ReportHistoryPanel
+            reportId={historyReportId}
+            onGenerate={refreshSavedReports}
+          />
+          <div className="grid gap-4 md:grid-cols-2">
+            <ShareManagementPanel
+              reportId={historyReportId}
+              onUpdate={refreshSavedReports}
+            />
+            <ShareLinkPanel
+              reportId={historyReportId}
+              onUpdate={refreshSavedReports}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Shared With Me */}
+      {!loadingShared && sharedWithMe && sharedWithMe.length > 0 && (
+        <div className="space-y-4">
+          <h2 className="text-xl font-semibold flex items-center gap-2">
+            <Share2 className="h-5 w-5" />
+            Shared With Me
+          </h2>
+          <div className="space-y-3">
+            {sharedWithMe.map((report) => (
+              <Card key={report.id}>
+                <CardContent className="pt-6">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 bg-muted rounded-lg">
+                        <FileText className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold">{report.name}</h3>
+                        {report.description && (
+                          <p className="text-sm text-muted-foreground">{report.description}</p>
+                        )}
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Shared by {report.sharedBy.name} &middot; Role: {report.shareRole}
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setHistoryReportId(
+                          historyReportId === report.id ? null : report.id
+                        );
+                      }}
+                    >
+                      View
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Report Templates */}
       <div className="space-y-4">
@@ -301,7 +521,9 @@ export default function ReportsPage() {
               <Label>{t('custom.format')}</Label>
               <Select
                 value={exportFormat}
-                onValueChange={(value: 'pdf' | 'csv') => setExportFormat(value)}
+                onValueChange={(value: 'pdf' | 'csv' | 'excel' | 'json') =>
+                  setExportFormat(value)
+                }
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -309,6 +531,8 @@ export default function ReportsPage() {
                 <SelectContent>
                   <SelectItem value="pdf">{t('quickExport.pdfReport')}</SelectItem>
                   <SelectItem value="csv">{t('quickExport.csvExport')}</SelectItem>
+                  <SelectItem value="excel">Excel Spreadsheet</SelectItem>
+                  <SelectItem value="json">JSON Data</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -372,6 +596,108 @@ export default function ReportsPage() {
           </CardContent>
         </Card>
       ) : null}
+
+      {/* Share Report Dialog */}
+      {shareDialogReport && (
+        <ShareReportDialog
+          report={shareDialogReport}
+          open={!!shareDialogReport}
+          onOpenChange={(open) => {
+            if (!open) setShareDialogReport(null);
+          }}
+          onShared={refreshSavedReports}
+        />
+      )}
+
+      {/* Create Report Dialog */}
+      <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Create Saved Report</DialogTitle>
+            <DialogDescription>
+              Save a report configuration to generate and archive on demand or on a schedule.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="report-name">Report Name</Label>
+              <Input
+                id="report-name"
+                placeholder="Monthly Financial Summary"
+                value={createForm.name}
+                onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="report-desc">Description (Optional)</Label>
+              <Input
+                id="report-desc"
+                placeholder="Detailed monthly breakdown of income and expenses"
+                value={createForm.description}
+                onChange={(e) => setCreateForm({ ...createForm, description: e.target.value })}
+              />
+            </div>
+            <div className="grid gap-4 grid-cols-2">
+              <div className="space-y-2">
+                <Label>Report Type</Label>
+                <Select
+                  value={createForm.type}
+                  onValueChange={(value) => setCreateForm({ ...createForm, type: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="monthly_spending">Monthly Spending</SelectItem>
+                    <SelectItem value="quarterly_net_worth">Quarterly Net Worth</SelectItem>
+                    <SelectItem value="annual_tax">Annual Tax</SelectItem>
+                    <SelectItem value="custom">Custom</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Format</Label>
+                <Select
+                  value={createForm.format}
+                  onValueChange={(value: 'pdf' | 'csv' | 'excel' | 'json') =>
+                    setCreateForm({ ...createForm, format: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pdf">PDF</SelectItem>
+                    <SelectItem value="csv">CSV</SelectItem>
+                    <SelectItem value="excel">Excel</SelectItem>
+                    <SelectItem value="json">JSON</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setCreateDialogOpen(false)}
+              disabled={isCreating}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleCreateReport}
+              disabled={isCreating || !createForm.name}
+            >
+              {isCreating ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Plus className="mr-2 h-4 w-4" />
+              )}
+              Create Report
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

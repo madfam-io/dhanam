@@ -1,5 +1,7 @@
 import { subDays } from 'date-fns';
 
+import { ReportFormat } from '@db';
+
 import { PrismaService } from '../../prisma/prisma.service';
 
 import { DemoContext } from './types';
@@ -15,20 +17,24 @@ export class ReportsBuilder {
     const spaceId = ctx.spaces[0]?.id;
     if (!spaceId) return;
 
+    const userId = ctx.user.id;
+
     const reports: Array<{
       spaceId: string;
+      createdBy: string;
       name: string;
       type: string;
       schedule: string | null;
-      format: string;
+      format: ReportFormat;
       lastRunAt: Date;
     }> = [
       {
         spaceId,
+        createdBy: userId,
         name: 'Monthly Spending Report',
         type: 'monthly_spending',
         schedule: '0 8 1 * *',
-        format: 'pdf',
+        format: ReportFormat.pdf,
         lastRunAt: subDays(new Date(), 3),
       },
     ];
@@ -37,18 +43,20 @@ export class ReportsBuilder {
       reports.push(
         {
           spaceId,
+          createdBy: userId,
           name: 'Quarterly Net Worth',
           type: 'quarterly_net_worth',
           schedule: '0 8 1 */3 *',
-          format: 'pdf',
+          format: ReportFormat.pdf,
           lastRunAt: subDays(new Date(), 15),
         },
         {
           spaceId,
+          createdBy: userId,
           name: 'Annual Tax Overview',
           type: 'annual_tax',
           schedule: null,
-          format: 'csv',
+          format: ReportFormat.csv,
           lastRunAt: subDays(new Date(), 45),
         }
       );
