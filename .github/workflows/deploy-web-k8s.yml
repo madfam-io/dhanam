@@ -34,21 +34,25 @@ jobs:
   preflight:
     name: Preflight Check
     runs-on: ubuntu-latest
+    environment: production
+    outputs:
+      skip: ${{ steps.check-secret.outputs.skip }}
     steps:
-      - name: Validate required secrets
+      - name: Check KUBECONFIG secret
+        id: check-secret
         run: |
           if [ -z "${{ secrets.KUBECONFIG_PRODUCTION }}" ]; then
-            echo "::error::KUBECONFIG_PRODUCTION secret is not configured"
-            echo "Please configure the following secrets in GitHub repository settings:"
-            echo "  - KUBECONFIG_PRODUCTION: Base64-encoded kubeconfig for the production K8s cluster"
-            echo "  - MADFAM_BOT_PAT: GitHub PAT for GHCR image pulls"
-            exit 1
+            echo "::notice::KUBECONFIG_PRODUCTION secret not configured - skipping deployment"
+            echo "skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
           fi
 
   build-and-push:
     name: Build and Push Web to GHCR
     runs-on: ubuntu-latest
     needs: preflight
+    if: needs.preflight.outputs.skip != 'true'
     permissions:
       contents: read
       packages: write
@@ -107,7 +111,7 @@ jobs:
 
       - name: Generate build summary
         run: |
-          echo "## Docker Build Summary 🐳" >> $GITHUB_STEP_SUMMARY
+          echo "## Docker Build Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Image**: \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}\`" >> $GITHUB_STEP_SUMMARY
           echo "**Tags**: \`${{ steps.meta.outputs.tags }}\`" >> $GITHUB_STEP_SUMMARY
@@ -116,7 +120,8 @@ jobs:
   deploy:
     name: Deploy to K8s
     runs-on: ubuntu-latest
-    needs: build-and-push
+    needs: [preflight, build-and-push]
+    if: needs.preflight.outputs.skip != 'true'
     environment: production
 
     steps:
@@ -130,6 +135,7 @@ jobs:
           mkdir -p ~/.kube
           echo "${{ secrets.KUBECONFIG_PRODUCTION }}" | base64 -d > ~/.kube/config
           chmod 600 ~/.kube/config
+          kubectl cluster-info
 
       - name: Update GHCR credentials
         run: |
@@ -161,8 +167,8 @@ jobs:
       - name: Generate deploy summary
         if: success()
         run: |
-          echo "## Deployment Summary 🚀" >> $GITHUB_STEP_SUMMARY
+          echo "## Deployment Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Status**: ✅ Success" >> $GITHUB_STEP_SUMMARY
+          echo "**Status**: Success" >> $GITHUB_STEP_SUMMARY
           echo "**Environment**: Production (K8s)" >> $GITHUB_STEP_SUMMARY
           echo "**Image Digest**: \`${{ needs.build-and-push.outputs.image_digest }}\`" >> $GITHUB_STEP_SUMMARY

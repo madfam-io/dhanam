@@ -34,23 +34,25 @@ jobs:
   preflight:
     name: Preflight Check
     runs-on: ubuntu-latest
+    environment: production
+    outputs:
+      skip: ${{ steps.check-secret.outputs.skip }}
     steps:
-      - name: Validate required secrets
+      - name: Check KUBECONFIG secret
+        id: check-secret
         run: |
-          if [ -z "${{ secrets.K8S_SSH_HOST }}" ]; then
-            echo "::error::K8S_SSH_HOST secret is not configured"
-            echo "Please configure the following secrets in GitHub repository settings:"
-            echo "  - K8S_SSH_HOST: SSH host for K8s cluster"
-            echo "  - K8S_SSH_USER: SSH username"
-            echo "  - K8S_SSH_KEY: SSH private key"
-            echo "  - K8S_SSH_PORT: SSH port (optional, default 22)"
-            exit 1
+          if [ -z "${{ secrets.KUBECONFIG_PRODUCTION }}" ]; then
+            echo "::notice::KUBECONFIG_PRODUCTION secret not configured - skipping deployment"
+            echo "skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
           fi
 
   build-and-push:
     name: Build and Push to GHCR
     runs-on: ubuntu-latest
     needs: preflight
+    if: needs.preflight.outputs.skip != 'true'
     permissions:
       contents: read
       packages: write
@@ -104,7 +106,7 @@ jobs:
 
       - name: Generate build summary
         run: |
-          echo "## Docker Build Summary 🐳" >> $GITHUB_STEP_SUMMARY
+          echo "## Docker Build Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Image**: \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}\`" >> $GITHUB_STEP_SUMMARY
           echo "**Tags**: \`${{ steps.meta.outputs.tags }}\`" >> $GITHUB_STEP_SUMMARY
@@ -113,64 +115,62 @@ jobs:
   deploy:
     name: Deploy to K8s
     runs-on: ubuntu-latest
-    needs: build-and-push
+    needs: [preflight, build-and-push]
+    if: needs.preflight.outputs.skip != 'true'
     environment: production
 
     steps:
-      - name: Validate SSH secrets
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'v1.29.0'
+
+      - name: Configure kubeconfig
         run: |
-          if [ -z "${{ secrets.K8S_SSH_HOST }}" ]; then
-            echo "::error::K8S_SSH_HOST secret is not configured"
-            echo "Please configure the following secrets in GitHub repository settings:"
-            echo "  - K8S_SSH_HOST: SSH host for K8s cluster"
-            echo "  - K8S_SSH_USER: SSH username"
-            echo "  - K8S_SSH_KEY: SSH private key"
-            echo "  - K8S_SSH_PORT: SSH port (optional, default 22)"
-            exit 1
-          fi
+          mkdir -p ~/.kube
+          echo "${{ secrets.KUBECONFIG_PRODUCTION }}" | base64 -d > ~/.kube/config
+          chmod 600 ~/.kube/config
+          kubectl cluster-info
 
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.2.5
-        with:
-          host: ${{ secrets.K8S_SSH_HOST }}
-          username: ${{ secrets.K8S_SSH_USER }}
-          key: ${{ secrets.K8S_SSH_KEY }}
-          port: ${{ secrets.K8S_SSH_PORT || 22 }}
-          script: |
-            # Update deployment image
-            sudo kubectl set image deployment/dhanam-api \
-              api=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ needs.build-and-push.outputs.image_digest }} \
-              -n dhanam
+      - name: Update GHCR credentials
+        run: |
+          kubectl delete secret ghcr-credentials -n dhanam --ignore-not-found
+          kubectl create secret docker-registry ghcr-credentials \
+            --namespace=dhanam \
+            --docker-server=ghcr.io \
+            --docker-username=madfam-bot \
+            --docker-password=${{ secrets.MADFAM_BOT_PAT }} \
+            --docker-email=ci@dhanam.dev
 
-            # Wait for rollout
-            sudo kubectl rollout status deployment/dhanam-api -n dhanam --timeout=300s
+      - name: Deploy to K8s
+        run: |
+          # Update deployment image
+          kubectl set image deployment/dhanam-api \
+            dhanam-api=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ needs.build-and-push.outputs.image_digest }} \
+            -n dhanam
 
-            # Verify pods are healthy
-            echo "Deployment complete. Pod status:"
-            sudo kubectl get pods -n dhanam -l app=dhanam-api
+          # Wait for rollout
+          kubectl rollout status deployment/dhanam-api -n dhanam --timeout=300s
 
-      - name: Verify deployment health
-        uses: appleboy/ssh-action@v1.2.5
-        with:
-          host: ${{ secrets.K8S_SSH_HOST }}
-          username: ${{ secrets.K8S_SSH_USER }}
-          key: ${{ secrets.K8S_SSH_KEY }}
-          port: ${{ secrets.K8S_SSH_PORT || 22 }}
-          script: |
-            # Get pod IPs and check health
-            PODS=$(sudo kubectl get pods -n dhanam -l app=dhanam-api -o jsonpath='{.items[*].status.podIP}')
-            for POD_IP in $PODS; do
-              echo "Checking health of pod at $POD_IP..."
-              curl -sf "http://$POD_IP:4300/v1/monitoring/health" || exit 1
-            done
-            echo "All pods healthy!"
+      - name: Verify deployment
+        run: |
+          echo "=== Pod Status ==="
+          kubectl get pods -n dhanam -l app=dhanam-api -o wide
+
+          # Health check via pod IP
+          PODS=$(kubectl get pods -n dhanam -l app=dhanam-api -o jsonpath='{.items[*].status.podIP}')
+          for POD_IP in $PODS; do
+            echo "Checking health of pod at $POD_IP..."
+            curl -sf "http://$POD_IP:4300/v1/monitoring/health" || exit 1
+          done
+          echo "All pods healthy!"
 
       - name: Generate deploy summary
         if: success()
         run: |
-          echo "## Deployment Summary 🚀" >> $GITHUB_STEP_SUMMARY
+          echo "## Deployment Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Status**: ✅ Success" >> $GITHUB_STEP_SUMMARY
+          echo "**Status**: Success" >> $GITHUB_STEP_SUMMARY
           echo "**Environment**: Production (K8s)" >> $GITHUB_STEP_SUMMARY
           echo "**Image Digest**: \`${{ needs.build-and-push.outputs.image_digest }}\`" >> $GITHUB_STEP_SUMMARY
           echo "**Commit**: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
@@ -179,7 +179,7 @@ jobs:
       - name: Notify failure
         if: failure()
         run: |
-          echo "## Deployment Failed ❌" >> $GITHUB_STEP_SUMMARY
+          echo "## Deployment Failed" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Check the logs above for details." >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
