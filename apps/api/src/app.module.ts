@@ -12,6 +12,7 @@ import { AnalyticsModule } from '@modules/analytics/analytics.module';
 import { BillingModule } from '@modules/billing/billing.module';
 import { BudgetsModule } from '@modules/budgets/budgets.module';
 import { CategoriesModule } from '@modules/categories/categories.module';
+import { DocumentsModule } from '@modules/documents/documents.module';
 import { EmailModule } from '@modules/email/email.module';
 import { EstatePlanningModule } from '@modules/estate-planning/estate-planning.module';
 import { FxRatesModule } from '@modules/fx-rates/fx-rates.module';
@@ -72,6 +73,7 @@ import { validationSchema } from './config/validation';
     SimulationsModule,
     TransactionExecutionModule,
     ManualAssetsModule,
+    DocumentsModule,
     RecurringModule,
     SubscriptionsModule,
     SearchModule,

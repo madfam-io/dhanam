@@ -282,4 +282,97 @@ export class R2StorageService {
   getPublicUrl(key: string): string {
     return `${this.publicUrl}/${key}`;
   }
+
+  /**
+   * Generate a presigned URL for direct browser upload (standalone documents, no asset required)
+   */
+  async getPresignedUploadUrlGeneric(
+    spaceId: string,
+    filename: string,
+    contentType: string,
+    category: string = 'general',
+    metadata?: Record<string, string>
+  ): Promise<PresignedUrlResult> {
+    if (!this.s3Client) {
+      throw new Error('R2 Storage is not configured');
+    }
+
+    if (!R2StorageService.ALLOWED_MIME_TYPES.has(contentType)) {
+      throw new Error(`File type '${contentType}' is not allowed`);
+    }
+
+    const extension = filename.split('.').pop() || '';
+    const key = `spaces/${spaceId}/documents/${category}/${uuidv4()}.${extension}`;
+
+    const command = new PutObjectCommand({
+      Bucket: this.bucket,
+      Key: key,
+      ContentType: contentType,
+      Metadata: {
+        'original-filename': filename,
+        'space-id': spaceId,
+        category,
+        ...metadata,
+      },
+    });
+
+    const expiresIn = 3600; // 1 hour
+    const uploadUrl = await getSignedUrl(this.s3Client, command, { expiresIn });
+    const expiresAt = new Date(Date.now() + expiresIn * 1000).toISOString();
+
+    return {
+      uploadUrl,
+      key,
+      expiresAt,
+    };
+  }
+
+  /**
+   * Get the file size of an object in R2 via HeadObject
+   */
+  async getFileSize(key: string): Promise<number | null> {
+    if (!this.s3Client) {
+      return null;
+    }
+
+    try {
+      const response = await this.s3Client.send(
+        new HeadObjectCommand({
+          Bucket: this.bucket,
+          Key: key,
+        })
+      );
+      return response.ContentLength ?? null;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Download a file from R2 as a Buffer
+   */
+  async downloadFile(key: string): Promise<Buffer> {
+    if (!this.s3Client) {
+      throw new Error('R2 Storage is not configured');
+    }
+
+    const response = await this.s3Client.send(
+      new GetObjectCommand({
+        Bucket: this.bucket,
+        Key: key,
+      })
+    );
+
+    const stream = response.Body;
+    if (!stream) {
+      throw new Error('Empty response body from R2');
+    }
+
+    // Convert readable stream to Buffer
+    const chunks: Uint8Array[] = [];
+    for await (const chunk of stream as AsyncIterable<Uint8Array>) {
+      chunks.push(chunk);
+    }
+    return Buffer.concat(chunks);
+  }
 }

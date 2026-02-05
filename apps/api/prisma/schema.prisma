@@ -496,6 +496,7 @@ model Space {
   transactionOrders  TransactionOrder[]
   simulations        Simulation[]
   manualAssets       ManualAsset[]
+  documents          Document[]
   connectionAttempts ConnectionAttempt[]
   subscriptions      Subscription[]
   incomeEvents       IncomeEvent[]
@@ -1774,4 +1775,59 @@ model CashflowForecast {
 
   @@index([spaceId])
   @@map("cashflow_forecasts")
+}
+
+// ==================== Standalone Documents ====================
+
+enum DocumentCategory {
+  bank_statement
+  tax_document
+  csv_import
+  receipt
+  invoice
+  contract
+  insurance
+  appraisal
+  deed
+  title
+  certificate
+  statement
+  photo
+  general
+}
+
+enum DocumentStatus {
+  pending_upload
+  uploaded
+  processing
+  ready
+  failed
+}
+
+model Document {
+  id            String           @id @default(uuid())
+  spaceId       String           @map("space_id")
+  uploadedBy    String           @map("uploaded_by")
+  filename      String
+  contentType   String           @map("content_type")
+  fileSize      Int              @map("file_size")
+  r2Key         String           @unique @map("r2_key")
+  category      DocumentCategory @default(general)
+  status        DocumentStatus   @default(pending_upload)
+  manualAssetId String?          @map("manual_asset_id")
+  accountId     String?          @map("account_id")
+  csvPreview    Json?            @map("csv_preview")
+  csvMapping    Json?            @map("csv_mapping")
+  errorMessage  String?          @map("error_message")
+  createdAt     DateTime         @default(now()) @map("created_at")
+  updatedAt     DateTime         @updatedAt @map("updated_at")
+  deletedAt     DateTime?        @map("deleted_at")
+
+  space         Space            @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+
+  @@index([spaceId, status])
+  @@index([spaceId, category])
+  @@index([spaceId, createdAt(sort: Desc)])
+  @@index([uploadedBy])
+  @@map("documents")
 }
