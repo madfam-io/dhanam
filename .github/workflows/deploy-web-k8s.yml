@@ -31,9 +31,24 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  preflight:
+    name: Preflight Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate required secrets
+        run: |
+          if [ -z "${{ secrets.KUBECONFIG_PRODUCTION }}" ]; then
+            echo "::error::KUBECONFIG_PRODUCTION secret is not configured"
+            echo "Please configure the following secrets in GitHub repository settings:"
+            echo "  - KUBECONFIG_PRODUCTION: Base64-encoded kubeconfig for the production K8s cluster"
+            echo "  - MADFAM_BOT_PAT: GitHub PAT for GHCR image pulls"
+            exit 1
+          fi
+
   build-and-push:
     name: Build and Push Web to GHCR
     runs-on: ubuntu-latest
+    needs: preflight
     permissions:
       contents: read
       packages: write
