@@ -48,7 +48,7 @@ export class OnboardingService {
     private readonly emailService: EmailService,
     private readonly analytics: OnboardingAnalytics,
     private readonly preferencesService: PreferencesService
-  ) {}
+  ) { }
 
   async getOnboardingStatus(userId: string): Promise<OnboardingStatusDto> {
     const user = await this.prisma.user.findUnique({
@@ -367,7 +367,7 @@ export class OnboardingService {
         secret: this.configService.get('JWT_SECRET'),
       });
 
-      if (payload.type !== 'email_verification') {
+      if (payload.type !== 'email_verification' || !payload.userId) {
         throw new BadRequestException('Invalid verification token');
       }
 

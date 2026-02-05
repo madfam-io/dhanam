@@ -83,9 +83,7 @@ describe('Categories E2E', () => {
         const categoryData = {
           budgetId,
           name: 'Food & Dining',
-          type: 'expense',
-          limit: 5000,
-          currency: 'MXN',
+          budgetedAmount: 5000,
           icon: 'utensils',
           color: '#FF5733',
         };
@@ -97,19 +95,19 @@ describe('Categories E2E', () => {
           .expect(201);
 
         expect(response.body).toHaveProperty('id');
-        expect(response.body.name).toBe('Food & Dining');
-        expect(response.body.type).toBe('expense');
-        expect(response.body.limit).toBe(5000);
-
+        console.log('Created Category ID:', response.body.id);
         categoryId = response.body.id;
+
+        expect(response.body.name).toBe('Food & Dining');
+        expect(Number(response.body.budgetedAmount)).toBe(5000);
       });
 
       it('should create an income category', async () => {
         const categoryData = {
           budgetId,
           name: 'Salary',
-          type: 'income',
-          currency: 'MXN',
+          budgetedAmount: 5000,
+          // currency: 'MXN', // Removed
           icon: 'wallet',
           color: '#28A745',
         };
@@ -121,7 +119,6 @@ describe('Categories E2E', () => {
           .expect(201);
 
         expect(response.body.name).toBe('Salary');
-        expect(response.body.type).toBe('income');
       });
 
       it('should reject category without authentication', async () => {
@@ -200,7 +197,7 @@ describe('Categories E2E', () => {
 
         const categories = response.body.data || response.body;
         categories.forEach((cat: any) => {
-          expect(cat.type).toBe('expense');
+          expect(cat.name).toBeDefined();
         });
       });
     });
@@ -214,8 +211,7 @@ describe('Categories E2E', () => {
 
         expect(response.body.id).toBe(categoryId);
         expect(response.body).toHaveProperty('name');
-        expect(response.body).toHaveProperty('type');
-        expect(response.body).toHaveProperty('limit');
+        expect(response.body).toHaveProperty('budgetedAmount');
       });
 
       it('should return 404 for non-existent category', async () => {
@@ -245,7 +241,7 @@ describe('Categories E2E', () => {
 
       it('should update category limit', async () => {
         const updateData = {
-          limit: 6000,
+          budgetedAmount: 6000,
         };
 
         const response = await request(app.getHttpServer())
@@ -254,7 +250,7 @@ describe('Categories E2E', () => {
           .send(updateData)
           .expect(200);
 
-        expect(response.body.limit).toBe(6000);
+        expect(Number(response.body.budgetedAmount)).toBe(6000);
       });
 
       it('should update category appearance', async () => {
@@ -353,23 +349,24 @@ describe('Categories E2E', () => {
       });
 
       const response = await request(app.getHttpServer())
-        .get(`/v1/spaces/${spaceId}/categories/${trackingCategoryId}`)
+        .get(`/v1/spaces/${spaceId}/categories/${trackingCategoryId}/spending`)
         .set('Authorization', `Bearer ${authToken}`)
         .expect(200);
 
       // Category should show spent amount
-      expect(response.body).toHaveProperty('spent');
-      expect(response.body.spent).toBeGreaterThanOrEqual(500);
+      expect(response.body.spending).toHaveProperty('totalSpent');
+      expect(response.body.spending.totalSpent).toBeGreaterThanOrEqual(500);
     });
 
     it('should calculate remaining budget', async () => {
       const response = await request(app.getHttpServer())
-        .get(`/v1/spaces/${spaceId}/categories/${trackingCategoryId}`)
+        .get(`/v1/spaces/${spaceId}/categories/${trackingCategoryId}/spending`)
         .set('Authorization', `Bearer ${authToken}`)
         .expect(200);
 
-      const remaining = response.body.limit - response.body.spent;
-      expect(remaining).toBeLessThanOrEqual(response.body.limit);
+      // totalBudgeted comes from the spending response structure
+      const remaining = Number(response.body.spending.totalBudgeted) - Number(response.body.spending.totalSpent);
+      expect(remaining).toBeLessThanOrEqual(Number(response.body.spending.totalBudgeted));
     });
 
     it('should get category summary with spending statistics', async () => {
@@ -404,9 +401,15 @@ describe('Categories E2E', () => {
     it('should create a categorization rule', async () => {
       const ruleData = {
         categoryId: rulesCategoryId,
-        pattern: 'uber|didi|taxi|lyft',
-        matchType: 'description',
+        name: 'Transport Rule',
         priority: 10,
+        conditions: [
+          {
+            field: 'description',
+            operator: 'contains',
+            value: 'uber',
+          },
+        ],
       };
 
       const response = await request(app.getHttpServer())
@@ -419,7 +422,10 @@ describe('Categories E2E', () => {
         });
 
       expect(response.body).toHaveProperty('id');
-      expect(response.body.pattern).toBe('uber|didi|taxi|lyft');
+      expect(response.body.name).toBe('Transport Rule');
+      expect(response.body.conditions).toHaveLength(1);
+      expect(response.body.conditions[0].field).toBe('description');
+      expect(response.body.conditions[0].value).toBe('uber');
     });
 
     it('should list rules for a category', async () => {
@@ -428,7 +434,9 @@ describe('Categories E2E', () => {
         .set('Authorization', `Bearer ${authToken}`)
         .expect(200);
 
-      expect(Array.isArray(response.body.data || response.body)).toBe(true);
+      expect(Array.isArray(response.body)).toBe(true);
+      expect(response.body.length).toBeGreaterThan(0);
+      expect(response.body[0].name).toBe('Transport Rule');
     });
 
     it('should apply rules to auto-categorize transactions', async () => {

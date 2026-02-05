@@ -7,10 +7,12 @@ import { CategoriesController } from './categories.controller';
 import { CategoriesService } from './categories.service';
 import { RulesService } from './rules.service';
 
+import { CategorizationRulesController } from './categorization-rules.controller';
+
 @Module({
   imports: [PrismaModule, SpacesModule],
-  controllers: [CategoriesController],
+  controllers: [CategoriesController, CategorizationRulesController],
   providers: [CategoriesService, RulesService],
   exports: [CategoriesService, RulesService],
 })
-export class CategoriesModule {}
+export class CategoriesModule { }

@@ -13,7 +13,7 @@ export class TransactionsService {
   constructor(
     private prisma: PrismaService,
     private spacesService: SpacesService
-  ) {}
+  ) { }
 
   async findAll(
     spaceId: string,
@@ -30,6 +30,13 @@ export class TransactionsService {
       ...(filter.endDate && { date: { lte: filter.endDate } }),
       ...(filter.minAmount && { amount: { gte: filter.minAmount } }),
       ...(filter.maxAmount && { amount: { lte: filter.maxAmount } }),
+      ...(filter.merchant && { merchant: { contains: filter.merchant, mode: 'insensitive' } }),
+      ...(filter.search && {
+        OR: [
+          { description: { contains: filter.search, mode: 'insensitive' } },
+          { merchant: { contains: filter.search, mode: 'insensitive' } },
+        ],
+      }),
     };
 
     const orderBy: Prisma.TransactionOrderByWithRelationInput = filter.sortBy

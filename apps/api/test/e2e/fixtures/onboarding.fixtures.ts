@@ -1,7 +1,7 @@
 export const OnboardingTestData = {
   newUser: {
     email: 'onboarding.test@example.com',
-    password: 'SecurePassword123!',
+    password: 'DhanamSecureTestPassword_2024!_Unique',
     name: 'Onboarding Test User',
     locale: 'es',
     timezone: 'America/Mexico_City',

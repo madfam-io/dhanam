@@ -21,10 +21,11 @@ describe('Preferences Management E2E', () => {
 
     app = moduleFixture.createNestApplication();
     app.useGlobalPipes(new ValidationPipe({ transform: true }));
-    
+    app.setGlobalPrefix('v1');
+
     prisma = app.get<PrismaService>(PrismaService);
     testHelper = new TestHelper(prisma, app.get<JwtService>(JwtService));
-    
+
     await app.init();
     await testHelper.cleanDatabase();
 
@@ -42,7 +43,7 @@ describe('Preferences Management E2E', () => {
   describe('User Preferences', () => {
     it('should get default preferences for new user', async () => {
       const response = await request(app.getHttpServer())
-        .get('/preferences/user')
+        .get('/v1/preferences/user')
         .set('Authorization', `Bearer ${authToken}`)
         .expect(200);
 
@@ -81,7 +82,7 @@ describe('Preferences Management E2E', () => {
       };
 
       const response = await request(app.getHttpServer())
-        .put('/preferences/user')
+        .put('/v1/preferences/user')
         .set('Authorization', `Bearer ${authToken}`)
         .send(updateData)
         .expect(200);
@@ -90,7 +91,7 @@ describe('Preferences Management E2E', () => {
 
       // Verify persistence
       const getResponse = await request(app.getHttpServer())
-        .get('/preferences/user')
+        .get('/v1/preferences/user')
         .set('Authorization', `Bearer ${authToken}`)
         .expect(200);
 
@@ -104,7 +105,7 @@ describe('Preferences Management E2E', () => {
       };
 
       const response = await request(app.getHttpServer())
-        .patch('/preferences/user')
+        .patch('/v1/preferences/user')
         .set('Authorization', `Bearer ${authToken}`)
         .send(partialUpdate)
         .expect(200);
@@ -118,21 +119,21 @@ describe('Preferences Management E2E', () => {
     it('should validate preference values', async () => {
       // Invalid currency
       await request(app.getHttpServer())
-        .patch('/preferences/user')
+        .patch('/v1/preferences/user')
         .set('Authorization', `Bearer ${authToken}`)
         .send({ defaultCurrency: 'INVALID' })
         .expect(400);
 
       // Invalid language
       await request(app.getHttpServer())
-        .patch('/preferences/user')
+        .patch('/v1/preferences/user')
         .set('Authorization', `Bearer ${authToken}`)
         .send({ language: 'xx' })
         .expect(400);
 
       // Invalid fiscal year start
       await request(app.getHttpServer())
-        .patch('/preferences/user')
+        .patch('/v1/preferences/user')
         .set('Authorization', `Bearer ${authToken}`)
         .send({ fiscalYearStart: 13 })
         .expect(400);
@@ -162,7 +163,7 @@ describe('Preferences Management E2E', () => {
 
     it('should get default space preferences', async () => {
       const response = await request(app.getHttpServer())
-        .get(`/preferences/space/${spaceId}`)
+        .get(`/v1/preferences/space/${spaceId}`)
         .set('Authorization', `Bearer ${authToken}`)
         .expect(200);
 
@@ -199,7 +200,7 @@ describe('Preferences Management E2E', () => {
       };
 
       const response = await request(app.getHttpServer())
-        .put(`/preferences/space/${spaceId}`)
+        .put(`/v1/preferences/space/${spaceId}`)
         .set('Authorization', `Bearer ${authToken}`)
         .send(updateData)
         .expect(200);
@@ -210,26 +211,26 @@ describe('Preferences Management E2E', () => {
     it('should maintain separate preferences per space', async () => {
       // Update first space
       await request(app.getHttpServer())
-        .patch(`/preferences/space/${spaceId}`)
+        .patch(`/v1/preferences/space/${spaceId}`)
         .set('Authorization', `Bearer ${authToken}`)
         .send({ budgetRollover: true })
         .expect(200);
 
       // Update second space differently
       await request(app.getHttpServer())
-        .patch(`/preferences/space/${secondSpaceId}`)
+        .patch(`/v1/preferences/space/${secondSpaceId}`)
         .set('Authorization', `Bearer ${authToken}`)
         .send({ budgetRollover: false })
         .expect(200);
 
       // Verify they're different
       const space1Prefs = await request(app.getHttpServer())
-        .get(`/preferences/space/${spaceId}`)
+        .get(`/v1/preferences/space/${spaceId}`)
         .set('Authorization', `Bearer ${authToken}`)
         .expect(200);
 
       const space2Prefs = await request(app.getHttpServer())
-        .get(`/preferences/space/${secondSpaceId}`)
+        .get(`/v1/preferences/space/${secondSpaceId}`)
         .set('Authorization', `Bearer ${authToken}`)
         .expect(200);
 
@@ -248,12 +249,12 @@ describe('Preferences Management E2E', () => {
 
       // Try to access space preferences without permission
       await request(app.getHttpServer())
-        .get(`/preferences/space/${spaceId}`)
+        .get(`/v1/preferences/space/${spaceId}`)
         .set('Authorization', `Bearer ${otherToken}`)
         .expect(403);
 
       await request(app.getHttpServer())
-        .put(`/preferences/space/${spaceId}`)
+        .put(`/v1/preferences/space/${spaceId}`)
         .set('Authorization', `Bearer ${otherToken}`)
         .send({ budgetRollover: true })
         .expect(403);
@@ -261,7 +262,7 @@ describe('Preferences Management E2E', () => {
 
     it('should handle non-existent space', async () => {
       await request(app.getHttpServer())
-        .get('/preferences/space/non-existent-id')
+        .get('/v1/preferences/space/non-existent-id')
         .set('Authorization', `Bearer ${authToken}`)
         .expect(404);
     });
@@ -286,7 +287,7 @@ describe('Preferences Management E2E', () => {
       };
 
       const response = await request(app.getHttpServer())
-        .put('/preferences/notifications')
+        .put('/v1/preferences/notifications')
         .set('Authorization', `Bearer ${authToken}`)
         .send(notificationPrefs)
         .expect(200);
@@ -296,7 +297,7 @@ describe('Preferences Management E2E', () => {
 
     it('should update specific notification channel', async () => {
       const response = await request(app.getHttpServer())
-        .patch('/preferences/notifications/email')
+        .patch('/v1/preferences/notifications/email')
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           enabled: false,
@@ -310,7 +311,7 @@ describe('Preferences Management E2E', () => {
 
     it('should validate notification types', async () => {
       await request(app.getHttpServer())
-        .patch('/preferences/notifications/email')
+        .patch('/v1/preferences/notifications/email')
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           types: ['invalid_type'],
@@ -323,7 +324,7 @@ describe('Preferences Management E2E', () => {
     it('should apply preference template', async () => {
       // Apply minimalist template
       const response = await request(app.getHttpServer())
-        .post('/preferences/apply-template')
+        .post('/v1/preferences/apply-template')
         .set('Authorization', `Bearer ${authToken}`)
         .send({ template: 'minimalist' })
         .expect(200);
@@ -340,7 +341,7 @@ describe('Preferences Management E2E', () => {
 
     it('should list available templates', async () => {
       const response = await request(app.getHttpServer())
-        .get('/preferences/templates')
+        .get('/v1/preferences/templates')
         .set('Authorization', `Bearer ${authToken}`)
         .expect(200);
 
@@ -369,7 +370,7 @@ describe('Preferences Management E2E', () => {
   describe('Preference Export/Import', () => {
     it('should export all preferences', async () => {
       const response = await request(app.getHttpServer())
-        .get('/preferences/export')
+        .get('/v1/preferences/export')
         .set('Authorization', `Bearer ${authToken}`)
         .expect(200);
 
@@ -388,7 +389,7 @@ describe('Preferences Management E2E', () => {
       };
 
       const response = await request(app.getHttpServer())
-        .post('/preferences/import')
+        .post('/v1/preferences/import')
         .set('Authorization', `Bearer ${authToken}`)
         .send(importData)
         .expect(200);
@@ -403,7 +404,7 @@ describe('Preferences Management E2E', () => {
 
       // Verify import was successful
       const userPrefs = await request(app.getHttpServer())
-        .get('/preferences/user')
+        .get('/v1/preferences/user')
         .set('Authorization', `Bearer ${authToken}`)
         .expect(200);
 
@@ -413,7 +414,7 @@ describe('Preferences Management E2E', () => {
 
     it('should validate import data', async () => {
       await request(app.getHttpServer())
-        .post('/preferences/import')
+        .post('/v1/preferences/import')
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           version: '99.0', // Unsupported version
@@ -427,26 +428,26 @@ describe('Preferences Management E2E', () => {
     it('should track preference changes', async () => {
       // Make several preference changes
       await request(app.getHttpServer())
-        .patch('/preferences/user')
+        .patch('/v1/preferences/user')
         .set('Authorization', `Bearer ${authToken}`)
         .send({ emailNotifications: true })
         .expect(200);
 
       await request(app.getHttpServer())
-        .patch('/preferences/user')
+        .patch('/v1/preferences/user')
         .set('Authorization', `Bearer ${authToken}`)
         .send({ emailNotifications: false })
         .expect(200);
 
       await request(app.getHttpServer())
-        .patch('/preferences/user')
+        .patch('/v1/preferences/user')
         .set('Authorization', `Bearer ${authToken}`)
         .send({ defaultCurrency: 'CAD' })
         .expect(200);
 
       // Get preference history
       const response = await request(app.getHttpServer())
-        .get('/preferences/history')
+        .get('/v1/preferences/history')
         .set('Authorization', `Bearer ${authToken}`)
         .query({ limit: 10 })
         .expect(200);
@@ -454,7 +455,7 @@ describe('Preferences Management E2E', () => {
       expect(response.body).toHaveProperty('changes');
       expect(response.body.changes).toBeInstanceOf(Array);
       expect(response.body.changes.length).toBeGreaterThanOrEqual(3);
-      
+
       expect(response.body.changes[0]).toMatchObject({
         field: expect.any(String),
         oldValue: expect.anything(),
@@ -470,7 +471,7 @@ describe('Preferences Management E2E', () => {
       endDate.setHours(23, 59, 59, 999);
 
       const response = await request(app.getHttpServer())
-        .get('/preferences/history')
+        .get('/v1/preferences/history')
         .set('Authorization', `Bearer ${authToken}`)
         .query({
           startDate: startDate.toISOString(),
@@ -500,7 +501,7 @@ describe('Preferences Management E2E', () => {
 
       // Update preferences via onboarding endpoint
       const response = await request(app.getHttpServer())
-        .put('/onboarding/preferences')
+        .put('/v1/onboarding/v1/preferences')
         .set('Authorization', `Bearer ${onboardingToken}`)
         .send({
           locale: 'en',
@@ -515,7 +516,7 @@ describe('Preferences Management E2E', () => {
 
       // Verify preferences were updated
       const prefsResponse = await request(app.getHttpServer())
-        .get('/preferences/user')
+        .get('/v1/preferences/user')
         .set('Authorization', `Bearer ${onboardingToken}`)
         .expect(200);
 
@@ -528,7 +529,7 @@ describe('Preferences Management E2E', () => {
 
       // Verify user locale was updated
       const userResponse = await request(app.getHttpServer())
-        .get('/auth/me')
+        .get('/v1/auth/me')
         .set('Authorization', `Bearer ${onboardingToken}`)
         .expect(200);
 

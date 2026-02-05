@@ -1,4 +1,5 @@
 import { Module, forwardRef } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 
@@ -44,13 +45,17 @@ import { TotpService } from './totp.service';
       defaultStrategy: process.env.JANUA_ENABLED === 'true' ? 'janua' : 'jwt',
     }),
     // JwtModule still needed for legacy mode and internal token operations
-    JwtModule.register({
-      secret: process.env.JWT_SECRET,
-      signOptions: {
-        expiresIn: '15m',
-        issuer: 'dhanam-api',
-        audience: 'dhanam-web',
-      },
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: async (configService: ConfigService) => ({
+        secret: configService.get<string>('jwt.secret'),
+        signOptions: {
+          expiresIn: '15m',
+          issuer: 'dhanam-api',
+          audience: 'dhanam-web',
+        },
+      }),
     }),
     PrismaModule,
     LoggerModule,
@@ -73,4 +78,4 @@ import { TotpService } from './totp.service';
   ],
   exports: [AuthService, TotpService, SessionService, GuestAuthService, DemoAuthService],
 })
-export class AuthModule {}
+export class AuthModule { }

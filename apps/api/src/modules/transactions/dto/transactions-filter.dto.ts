@@ -54,6 +54,14 @@ export class TransactionsFilterDto {
   @Min(1)
   page?: number = 1;
 
+  @ApiPropertyOptional()
+  @IsOptional()
+  search?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  merchant?: string;
+
   @ApiPropertyOptional({ default: 20, minimum: 1, maximum: 100 })
   @IsOptional()
   @IsNumber()

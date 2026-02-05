@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
+import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/core/prisma/prisma.service';
 import { hash } from 'argon2';
@@ -15,10 +16,16 @@ describe('AppController (e2e)', () => {
       imports: [AppModule],
     }).compile();
 
-    app = moduleFixture.createNestApplication();
+    app = moduleFixture.createNestApplication<NestFastifyApplication>(
+      new FastifyAdapter(),
+    );
+    app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }));
+    app.setGlobalPrefix('v1');
+
     prisma = app.get<PrismaService>(PrismaService);
-    
+
     await app.init();
+    await app.getHttpAdapter().getInstance().ready();
 
     // Clean database
     await prisma.transaction.deleteMany();
@@ -41,7 +48,7 @@ describe('AppController (e2e)', () => {
 
     // Login to get token
     const loginResponse = await request(app.getHttpServer())
-      .post('/auth/login')
+      .post('/v1/auth/login')
       .send({
         email: 'test@example.com',
         password: 'password123',
@@ -56,14 +63,14 @@ describe('AppController (e2e)', () => {
 
   it('/health (GET)', () => {
     return request(app.getHttpServer())
-      .get('/health')
+      .get('/health') // Health is usually global or we check
       .expect(200);
   });
 
   describe('/auth', () => {
     it('/auth/register (POST)', async () => {
       const response = await request(app.getHttpServer())
-        .post('/auth/register')
+        .post('/v1/auth/register')
         .send({
           email: 'newuser@example.com',
           password: 'password123',
@@ -81,7 +88,7 @@ describe('AppController (e2e)', () => {
 
     it('/auth/login (POST)', async () => {
       const response = await request(app.getHttpServer())
-        .post('/auth/login')
+        .post('/v1/auth/login')
         .send({
           email: 'test@example.com',
           password: 'password123',
@@ -95,7 +102,7 @@ describe('AppController (e2e)', () => {
 
     it('/auth/me (GET)', async () => {
       const response = await request(app.getHttpServer())
-        .get('/auth/me')
+        .get('/v1/auth/me')
         .set('Authorization', `Bearer ${authToken}`)
         .expect(200);
 
@@ -109,7 +116,7 @@ describe('AppController (e2e)', () => {
 
     it('/spaces (POST)', async () => {
       const response = await request(app.getHttpServer())
-        .post('/spaces')
+        .post('/v1/spaces')
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           name: 'Test Space',
@@ -126,7 +133,7 @@ describe('AppController (e2e)', () => {
 
     it('/spaces (GET)', async () => {
       const response = await request(app.getHttpServer())
-        .get('/spaces')
+        .get('/v1/spaces')
         .set('Authorization', `Bearer ${authToken}`)
         .expect(200);
 
@@ -136,7 +143,7 @@ describe('AppController (e2e)', () => {
 
     it('/spaces/:id (GET)', async () => {
       const response = await request(app.getHttpServer())
-        .get(`/spaces/${spaceId}`)
+        .get(`/v1/spaces/${spaceId}`)
         .set('Authorization', `Bearer ${authToken}`)
         .expect(200);
 

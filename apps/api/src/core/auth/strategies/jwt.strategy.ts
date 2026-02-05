@@ -1,4 +1,5 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 
@@ -8,9 +9,12 @@ import { JwtPayload } from '../auth.service';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor(private prisma: PrismaService) {
+  constructor(
+    private prisma: PrismaService,
+    private configService: ConfigService
+  ) {
     // Validate JWT_SECRET is set
-    const jwtSecret = process.env.JWT_SECRET;
+    const jwtSecret = configService.get<string>('jwt.secret');
     if (!jwtSecret) {
       throw new Error('JWT_SECRET environment variable is required');
     }

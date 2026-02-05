@@ -10,7 +10,7 @@ export class CategoriesService {
   constructor(
     private prisma: PrismaService,
     private spacesService: SpacesService
-  ) {}
+  ) { }
 
   async findAll(
     spaceId: string,
@@ -88,6 +88,7 @@ export class CategoriesService {
   async findOne(spaceId: string, userId: string, categoryId: string): Promise<any> {
     await this.spacesService.verifyUserAccess(userId, spaceId, 'viewer');
 
+    // console.log(`Searching category ${categoryId} in space ${spaceId} for user ${userId}`);
     const category = await this.prisma.category.findFirst({
       where: {
         id: categoryId,
@@ -100,6 +101,13 @@ export class CategoriesService {
         },
       },
     });
+
+    if (!category) {
+      console.error(`Category ${categoryId} not found in space ${spaceId}. Checking raw existence...`);
+      const raw = await this.prisma.category.findUnique({ where: { id: categoryId }, include: { budget: true } });
+      console.error('Raw category:', raw);
+      throw new NotFoundException('Category not found');
+    }
 
     if (!category) {
       throw new NotFoundException('Category not found');
@@ -231,78 +239,60 @@ export class CategoriesService {
     const category = await this.findOne(spaceId, userId, categoryId);
 
     // Get budget period
-    const budget = await this.prisma.budget.findUnique({
-      where: { id: category.budgetId },
-    });
+    let budget: any;
+    try {
+      budget = await this.prisma.budget.findUnique({
+        where: { id: category.budgetId },
+      });
+    } catch (e) {
+      console.error('Error finding budget', e);
+      throw e;
+    }
 
     if (!budget) {
+      console.error(`Budget not found for category ${categoryId} (budgetId: ${category.budgetId})`);
       throw new NotFoundException('Budget not found');
     }
 
     // Get all transactions for this category in the budget period
-    const transactions = await this.prisma.transaction.findMany({
-      where: {
-        categoryId,
-        date: {
-          gte: budget.startDate,
-          ...(budget.endDate && { lte: budget.endDate }),
+    // Get all transactions for this category in the budget period
+    try {
+      const transactions = await this.prisma.transaction.findMany({
+        where: {
+          categoryId,
+          date: {
+            gte: budget.startDate,
+            ...(budget.endDate && { lte: budget.endDate }),
+          },
         },
-      },
-      include: {
-        account: true,
-      },
-      orderBy: { date: 'desc' },
-    });
+        include: {
+          account: true,
+        },
+        orderBy: { date: 'desc' },
+      });
 
-    const totalSpent = transactions.reduce((sum, t) => sum + Math.abs(t.amount.toNumber()), 0);
-    const budgetedAmount = category.budgetedAmount.toNumber();
-    const remaining = budgetedAmount - totalSpent;
-    const percentUsed = (totalSpent / budgetedAmount) * 100;
+      const totalSpent = transactions.reduce((sum, t) => sum + Math.abs(t.amount ? t.amount.toNumber() : 0), 0);
+      const budgetedAmount = category.budgetedAmount;
+      const remaining = budgetedAmount - totalSpent;
+      const percentUsed = (totalSpent / budgetedAmount) * 100;
 
-    // Group transactions by day for spending trend
-    const dailySpending = transactions.reduce(
-      (acc, transaction) => {
-        if (!transaction.date) return acc;
-        const dateKey = transaction.date.toISOString().split('T')[0];
-        if (!dateKey) return acc;
-        if (!acc[dateKey]) {
-          acc[dateKey] = 0;
-        }
-        acc[dateKey] += Math.abs(transaction.amount.toNumber());
-        return acc;
-      },
-      {} as Record<string, number>
-    );
+      return {
+        ...category,
+        budgetedAmount: budgetedAmount,
+        createdAt: new Date(category.createdAt).toISOString(),
+        updatedAt: new Date(category.updatedAt).toISOString(),
+        spending: {
+          totalBudgeted: budgetedAmount,
+          totalSpent,
+          remaining,
+          percentUsed: Math.min(percentUsed, 100),
+        },
+      };
 
-    return {
-      ...category,
-      budgetedAmount: budgetedAmount,
-      createdAt: category.createdAt.toISOString(),
-      updatedAt: category.updatedAt.toISOString(),
-      budget: {
-        ...category.budget,
-        createdAt: category.budget.createdAt.toISOString(),
-        updatedAt: category.budget.updatedAt.toISOString(),
-        startDate: category.budget.startDate.toISOString(),
-        endDate: category.budget.endDate ? category.budget.endDate.toISOString() : null,
-      },
-      spending: {
-        totalBudgeted: budgetedAmount,
-        totalSpent,
-        remaining,
-        percentUsed,
-        transactionCount: transactions.length,
-        averageTransaction: transactions.length > 0 ? totalSpent / transactions.length : 0,
-      },
-      transactions: transactions.slice(0, 10).map((t) => ({
-        ...t,
-        amount: t.amount.toNumber(),
-        date: t.date ? t.date.toISOString() : null,
-        createdAt: t.createdAt.toISOString(),
-        updatedAt: t.updatedAt.toISOString(),
-      })), // Return last 10 transactions
-      dailySpending,
-    };
+    } catch (error) {
+      // Re-throw
+      throw error;
+    }
   }
 
   private generateRandomColor(): string {

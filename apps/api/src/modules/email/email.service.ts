@@ -84,6 +84,8 @@ export class EmailService {
       'sync-failed',
       'weekly-summary',
       'monthly-report',
+      'onboarding-complete',
+      'email-verification',
     ];
 
     for (const template of templates) {
@@ -343,12 +345,12 @@ export class EmailService {
   ): Promise<void> {
     const attachments = pdfBuffer
       ? [
-          {
-            filename: `dhanam-report-${new Date().toISOString().slice(0, 7)}.pdf`,
-            content: pdfBuffer,
-            contentType: 'application/pdf',
-          },
-        ]
+        {
+          filename: `dhanam-report-${new Date().toISOString().slice(0, 7)}.pdf`,
+          content: pdfBuffer,
+          contentType: 'application/pdf',
+        },
+      ]
       : undefined;
 
     await this.sendEmail({

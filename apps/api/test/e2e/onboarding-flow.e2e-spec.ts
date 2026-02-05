@@ -23,10 +23,16 @@ describe('Onboarding Flow E2E', () => {
       imports: [AppModule],
     }).compile();
 
-    app = moduleFixture.createNestApplication();
+    import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
+
+    app = moduleFixture.createNestApplication<NestFastifyApplication>(
+      new FastifyAdapter()
+    );
     app.useGlobalPipes(new ValidationPipe({ transform: true }));
 
-    prisma = app.get<PrismaService>(PrismaService);
+    await app.init();
+    // Wait for fastify to be ready
+    await app.getHttpAdapter().getInstance().ready();
     jwtService = app.get<JwtService>(JwtService);
     testHelper = new TestHelper(prisma, jwtService);
 
@@ -49,7 +55,12 @@ describe('Onboarding Flow E2E', () => {
           ...OnboardingTestData.newUser,
           email: testUserEmail,
         })
-        .expect(201);
+      // .expect(201); // Comment out to debug
+
+      if (registerResponse.status !== 201) {
+        console.error('Registration failed:', JSON.stringify(registerResponse.body, null, 2));
+      }
+      expect(registerResponse.status).toBe(201);
 
       expect(registerResponse.body).toHaveProperty('tokens');
       expect(registerResponse.body.tokens).toHaveProperty('accessToken');
@@ -295,7 +306,7 @@ describe('Onboarding Flow E2E', () => {
 
     it('should not allow skipping required steps', async () => {
       const requiredSteps: OnboardingStep[] = ['email_verification', 'preferences', 'space_setup'];
-      
+
       for (const step of requiredSteps) {
         await request(app.getHttpServer())
           .post(`/onboarding/skip/${step}`)
