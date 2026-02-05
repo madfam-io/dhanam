@@ -1,5 +1,7 @@
 # CLAUDE.md
 
+> **See also:** [`llms.txt`](llms.txt) for a concise project overview with links, and [`llms-full.txt`](llms-full.txt) for expanded inlined content. For machine-readable metadata, see [`tools/agent-manifest.json`](tools/agent-manifest.json).
+
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ---

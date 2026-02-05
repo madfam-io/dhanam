@@ -10,6 +10,8 @@
 | [CHANGELOG](../CHANGELOG.md) | Version history and changes |
 | [CONTRIBUTING](../CONTRIBUTING.md) | Development guidelines |
 | [SECURITY](../SECURITY.md) | Security policies |
+| [llms.txt](../llms.txt) | LLM-readable project overview ([llmstxt.org](https://llmstxt.org/)) |
+| [llms-full.txt](../llms-full.txt) | Expanded LLM context with inlined content |
 
 ## Getting Started
 
@@ -177,6 +179,15 @@
 - **Backend**: Node.js, PostgreSQL, Redis
 - **Mobile**: React Native (Expo)
 - **Banking**: Plaid, Open Banking APIs
+
+## LLM & Agent Context
+
+| Document | Description |
+|----------|-------------|
+| [llms.txt](../llms.txt) | Concise project overview with documentation links |
+| [llms-full.txt](../llms-full.txt) | Expanded version with inlined critical content |
+| [CLAUDE.md](../CLAUDE.md) | Claude Code agent guidance |
+| [agent-manifest.json](../tools/agent-manifest.json) | Machine-readable project metadata |
 
 ## MADFAM Ecosystem Integration
 

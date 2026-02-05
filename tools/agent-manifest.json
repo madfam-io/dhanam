@@ -99,5 +99,16 @@
     "external": ["PostgreSQL", "Redis", "Stripe", "Paddle", "Belvo", "Plaid"]
   },
 
-  "dependents": []
+  "dependents": [],
+
+  "llmContext": {
+    "llmsTxt": "llms.txt",
+    "llmsFullTxt": "llms-full.txt",
+    "claudeMd": "CLAUDE.md",
+    "spec": "https://llmstxt.org/",
+    "webUrls": {
+      "llmsTxt": "https://dhan.am/llms.txt",
+      "llmsFullTxt": "https://dhan.am/llms-full.txt"
+    }
+  }
 }

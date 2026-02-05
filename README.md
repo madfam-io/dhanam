@@ -327,6 +327,17 @@ Comprehensive documentation is available in the [`docs/`](docs/) directory:
 - [Comprehensive Audit 2025](docs/audits/COMPREHENSIVE_AUDIT_REPORT_2025.md) - Latest audit
 - [Implementation Roadmap](docs/guides/IMPLEMENTATION_ROADMAP.md) - Project roadmap
 
+## LLM & Agent Context
+
+This project provides machine-readable context files for LLM agents:
+
+- [`llms.txt`](llms.txt) — Concise project overview with documentation links ([llmstxt.org spec](https://llmstxt.org/))
+- [`llms-full.txt`](llms-full.txt) — Expanded version with inlined critical content
+- [`CLAUDE.md`](CLAUDE.md) — Agent guidance for Claude Code
+- [`tools/agent-manifest.json`](tools/agent-manifest.json) — Machine-readable project metadata
+
+These files are also served at `https://dhan.am/llms.txt` and `https://dhan.am/llms-full.txt`.
+
 ## Contributing
 
 1. Fork the repository
