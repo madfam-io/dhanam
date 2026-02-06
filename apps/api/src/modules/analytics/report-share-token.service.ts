@@ -1,7 +1,5 @@
 import { randomBytes } from 'crypto';
 
-import { AuditService } from '@core/audit/audit.service';
-import { PrismaService } from '@core/prisma/prisma.service';
 import {
   Injectable,
   Logger,
@@ -9,6 +7,9 @@ import {
   ForbiddenException,
   GoneException,
 } from '@nestjs/common';
+
+import { AuditService } from '@core/audit/audit.service';
+import { PrismaService } from '@core/prisma/prisma.service';
 
 import { R2StorageService } from '../storage/r2.service';
 

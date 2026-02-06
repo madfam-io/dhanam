@@ -4,7 +4,8 @@ import { PrismaService } from '@core/prisma/prisma.service';
 import { LoggerService } from '@core/logger/logger.service';
 import { UsersService } from '../users.service';
 import { UpdateUserDto } from '../dto/update-user.dto';
-import { BusinessRuleException } from '@core/exceptions/domain-exceptions';
+import { BusinessRuleException, ValidationException } from '@core/exceptions/domain-exceptions';
+import { PrismaClientKnownRequestError } from '@db';
 
 describe('UsersService', () => {
   let service: UsersService;
@@ -690,6 +691,98 @@ describe('UsersService', () => {
 
       // Verify transaction was attempted
       expect(prisma.$transaction).toHaveBeenCalled();
+    });
+  });
+
+  describe('updateProfile error handling', () => {
+    it('should throw ValidationException for empty name', async () => {
+      await expect(
+        service.updateProfile('user-123', { name: '   ' })
+      ).rejects.toThrow('Invalid input for field: name');
+    });
+
+    it('should throw BusinessRuleException on Prisma P2025 error', async () => {
+      const prismaError = new PrismaClientKnownRequestError('Record not found', {
+        code: 'P2025',
+        clientVersion: '5.0.0',
+      });
+
+      prisma.user.update.mockRejectedValue(prismaError);
+
+      await expect(
+        service.updateProfile('nonexistent', { name: 'Test' })
+      ).rejects.toThrow(BusinessRuleException);
+    });
+
+    it('should throw ValidationException on Prisma P2002 (duplicate) error', async () => {
+      const prismaError = new PrismaClientKnownRequestError('Unique constraint failed', {
+        code: 'P2002',
+        clientVersion: '5.0.0',
+        meta: { target: ['email'] },
+      });
+
+      prisma.user.update.mockRejectedValue(prismaError);
+
+      await expect(
+        service.updateProfile('user-123', { name: 'Test' })
+      ).rejects.toThrow(ValidationException);
+    });
+
+    it('should throw InfrastructureException on unknown Prisma error code', async () => {
+      const prismaError = new PrismaClientKnownRequestError('Unknown error', {
+        code: 'P9999',
+        clientVersion: '5.0.0',
+      });
+
+      prisma.user.update.mockRejectedValue(prismaError);
+
+      await expect(
+        service.updateProfile('user-123', { name: 'Test' })
+      ).rejects.toThrow('Database operation failed');
+    });
+
+    it('should throw InfrastructureException on generic non-Prisma error', async () => {
+      prisma.user.update.mockRejectedValue(new Error('Connection lost'));
+
+      await expect(
+        service.updateProfile('user-123', { name: 'Test' })
+      ).rejects.toThrow('Database operation failed');
+    });
+  });
+
+  describe('getProfile error handling', () => {
+    it('should call handlePrismaError when findUnique throws non-BusinessRuleException', async () => {
+      prisma.user.findUnique.mockRejectedValue(new Error('Connection reset'));
+
+      await expect(service.getProfile('user-123')).rejects.toThrow('Database operation failed');
+    });
+  });
+
+  describe('deleteAccount error handling', () => {
+    it('should wrap transaction errors as InfrastructureException', async () => {
+      (prisma.$transaction as jest.Mock).mockRejectedValue(new Error('Deadlock'));
+
+      await expect(service.deleteAccount('user-123')).rejects.toThrow('Database operation failed');
+    });
+  });
+
+  describe('handlePrismaError', () => {
+    it('should pass through BusinessRuleException', async () => {
+      prisma.user.update.mockRejectedValue(
+        BusinessRuleException.resourceNotFound('User', 'test')
+      );
+
+      await expect(
+        service.updateProfile('user-123', { name: 'Test' })
+      ).rejects.toThrow(BusinessRuleException);
+    });
+
+    it('should wrap non-Error values as InfrastructureException', async () => {
+      prisma.user.update.mockRejectedValue('string error');
+
+      await expect(
+        service.updateProfile('user-123', { name: 'Test' })
+      ).rejects.toThrow('Database operation failed');
     });
   });
 

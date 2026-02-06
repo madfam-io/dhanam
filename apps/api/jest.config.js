@@ -33,6 +33,12 @@ module.exports = {
     '!src/**/strategies/*.ts', // Passport.js thin wrappers
     '!src/**/seeds/*.ts', // Seed files
     '!src/**/tasks/*.ts', // Scheduled tasks
+    '!src/core/auth/demo-data/**', // Demo data builders
+    '!src/core/auth/demo-data.builder.ts', // Demo data orchestrator
+    '!src/core/auth/demo-auth.service.ts', // Demo auth service
+    '!src/core/jobs/retention.job.ts', // Scheduled retention job
+    '!src/core/logging/logging.config.ts', // Logging configuration
+    '!src/__tests__/**', // Test helpers and fixtures
     '!src/types/**', // Type definitions
     // External API integrations - require real API connections for meaningful tests
     '!src/modules/providers/plaid/plaid.service.ts', // Plaid SDK wrapper

@@ -253,6 +253,32 @@ describe('AuthService', () => {
       expect(prisma.user.create).not.toHaveBeenCalled();
     });
 
+    it('should reject breached passwords during registration', async () => {
+      prisma.user.findUnique.mockResolvedValue(null);
+      // Mock fetch to return HIBP response containing the SHA1 suffix of 'SecurePassword123!'
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        text: jest.fn().mockResolvedValue('353F4B927FD953E5AF7C41084183E8CE5FB:42\nABCDEF1234567890:10'),
+      });
+
+      await expect(service.register(registerDto)).rejects.toThrow(
+        'This password has been found in a data breach',
+      );
+    });
+
+    it('should allow registration when breach check API fails (fail-open)', async () => {
+      prisma.user.findUnique.mockResolvedValue(null);
+      prisma.user.create.mockResolvedValue(mockUser as any);
+      prisma.space.create.mockResolvedValue({} as any);
+      jwtService.sign.mockReturnValue('mock-access-token');
+      sessionService.createRefreshToken.mockResolvedValue('mock-refresh-token');
+      // Mock fetch to throw (network error)
+      (global.fetch as jest.Mock).mockRejectedValueOnce(new Error('Network error'));
+
+      const result = await service.register(registerDto);
+      expect(result.accessToken).toBe('mock-access-token');
+    });
+
     it('should use default locale "es" if not provided', async () => {
       const dtoWithoutLocale = { ...registerDto, locale: undefined };
       prisma.user.findUnique.mockResolvedValue(null);
@@ -307,6 +333,35 @@ describe('AuthService', () => {
         where: { id: mockUser.id },
         data: { lastLoginAt: expect.any(Date) },
       });
+    });
+
+    it('should reject login when account is locked', async () => {
+      // Override the redis.get mock to return 'locked' for the lockout key check
+      const redisSpy = require('ioredis').prototype.get;
+      redisSpy.mockReset();
+      redisSpy.mockResolvedValue('locked');
+
+      await expect(service.login(loginDto)).rejects.toThrow(
+        'Account temporarily locked',
+      );
+    });
+
+    it('should lock account after max failed login attempts', async () => {
+      // User not found → triggers recordFailedLogin
+      prisma.user.findUnique.mockResolvedValue(null);
+      // Override redis.incr to return MAX_LOGIN_ATTEMPTS (5)
+      const incrSpy = require('ioredis').prototype.incr;
+      incrSpy.mockReset();
+      incrSpy.mockResolvedValue(5);
+
+      await expect(service.login(loginDto)).rejects.toThrow(UnauthorizedException);
+      // Verify lockout was set via redis.set
+      expect(require('ioredis').prototype.set).toHaveBeenCalledWith(
+        `lockout:${loginDto.email}`,
+        'locked',
+        'EX',
+        expect.any(Number),
+      );
     });
 
     it('should reject invalid passwords', async () => {
@@ -544,6 +599,20 @@ describe('AuthService', () => {
 
       await expect(service.resetPassword(resetDto)).rejects.toThrow(
         new BadRequestException('Invalid or expired reset token')
+      );
+    });
+
+    it('should reject breached passwords during password reset', async () => {
+      sessionService.validatePasswordResetToken.mockResolvedValue('user-123');
+      // Reset fetch mock and set it to return HIBP response with the SHA1 suffix of 'NewSecurePassword456!'
+      (global.fetch as jest.Mock).mockReset();
+      (global.fetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        text: jest.fn().mockResolvedValue('0482E8AC51130E934F0C2F43668E433AE7A:15\nABCDEF1234567890:10'),
+      });
+
+      await expect(service.resetPassword(resetDto)).rejects.toThrow(
+        'This password has been found in a data breach',
       );
     });
   });

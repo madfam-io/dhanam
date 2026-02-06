@@ -1,5 +1,3 @@
-import { CurrentUser } from '@core/auth/decorators/current-user.decorator';
-import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
 import {
   Controller,
   Get,
@@ -26,6 +24,9 @@ import {
   ApiParam,
   ApiQuery,
 } from '@nestjs/swagger';
+
+import { CurrentUser } from '@core/auth/decorators/current-user.decorator';
+import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
 
 import { CreateSavedReportDto, UpdateSavedReportDto } from './dto';
 import { ReportArchiveService } from './report-archive.service';

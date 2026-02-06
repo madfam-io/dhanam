@@ -1,5 +1,6 @@
-import { ReportFormat } from '@db';
 import { IsString, IsEnum, IsOptional, IsBoolean } from 'class-validator';
+
+import { ReportFormat } from '@db';
 
 export class UpdateSavedReportDto {
   @IsString()

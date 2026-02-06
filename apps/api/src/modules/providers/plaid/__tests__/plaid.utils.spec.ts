@@ -131,6 +131,32 @@ describe('Plaid Utilities', () => {
       expect(result.code).toBe(ErrorCode.PROVIDER_UNAVAILABLE);
     });
 
+    it('should map INTERNAL_SERVER_ERROR with timeout to timeout', () => {
+      const error = {
+        response: {
+          data: {
+            error_code: 'INTERNAL_SERVER_ERROR',
+            error_message: 'Request timeout exceeded',
+          },
+        },
+      };
+      const result = mapPlaidError(error, 'sync');
+      expect(result.code).toBe(ErrorCode.PROVIDER_TIMEOUT);
+    });
+
+    it('should map INTERNAL_SERVER_ERROR without timeout to generic retryable error', () => {
+      const error = {
+        response: {
+          data: {
+            error_code: 'INTERNAL_SERVER_ERROR',
+            error_message: 'Something went wrong',
+          },
+        },
+      };
+      const result = mapPlaidError(error, 'sync');
+      expect(result).toBeInstanceOf(ProviderException);
+    });
+
     it('should wrap unknown errors in syncFailed', () => {
       const error = new Error('Unknown error');
       const result = mapPlaidError(error, 'sync');

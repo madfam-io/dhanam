@@ -5,9 +5,8 @@ import { SpacesModule } from '../spaces/spaces.module';
 
 import { CategoriesController } from './categories.controller';
 import { CategoriesService } from './categories.service';
-import { RulesService } from './rules.service';
-
 import { CategorizationRulesController } from './categorization-rules.controller';
+import { RulesService } from './rules.service';
 
 @Module({
   imports: [PrismaModule, SpacesModule],
@@ -15,4 +14,4 @@ import { CategorizationRulesController } from './categorization-rules.controller
   providers: [CategoriesService, RulesService],
   exports: [CategoriesService, RulesService],
 })
-export class CategoriesModule { }
+export class CategoriesModule {}

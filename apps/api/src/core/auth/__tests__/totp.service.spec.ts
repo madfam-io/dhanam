@@ -1,9 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import * as speakeasy from 'speakeasy';
 
+import * as qrcode from 'qrcode';
+
 import { CryptoService } from '@core/crypto/crypto.service';
 import { PrismaService } from '@core/prisma/prisma.service';
 import { LoggerService } from '@core/logger/logger.service';
+import { PrismaClientKnownRequestError } from '@db';
 
 import { TotpService } from '../totp.service';
 
@@ -524,6 +527,115 @@ describe('TotpService', () => {
       expect(logger.log).toHaveBeenCalledWith(
         `Backup code used for user: ${mockUser.id}`,
         'TotpService',
+      );
+    });
+
+    it('should return false and log error when verification throws', async () => {
+      prisma.user.findUnique.mockRejectedValue(new Error('DB connection lost'));
+
+      const result = await service.verifyBackupCode(mockUser.id, validCode);
+
+      expect(result).toBe(false);
+      expect(logger.error).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to verify backup code'),
+        expect.any(String),
+        'TotpService',
+      );
+    });
+
+    it('should return false for code not matching any stored hash', async () => {
+      prisma.user.findUnique.mockResolvedValue({
+        ...mockUser,
+        totpBackupCodes: ['aaaa', 'bbbb'],
+      } as any);
+
+      const result = await service.verifyBackupCode(mockUser.id, 'ABCD1234');
+
+      expect(result).toBe(false);
+    });
+  });
+
+  describe('handleError (error mapping)', () => {
+    it('should map PrismaClientKnownRequestError P2025 to BusinessRuleException', async () => {
+      const prismaError = new PrismaClientKnownRequestError('Not found', {
+        code: 'P2025',
+        clientVersion: '5.0.0',
+      });
+      prisma.user.update.mockRejectedValue(prismaError);
+
+      await expect(
+        service.storeBackupCodes(mockUser.id, ['12345678']),
+      ).rejects.toThrow('not found');
+    });
+
+    it('should map other PrismaClientKnownRequestError to InfrastructureException', async () => {
+      const prismaError = new PrismaClientKnownRequestError('Connection error', {
+        code: 'P2024',
+        clientVersion: '5.0.0',
+      });
+      prisma.user.update.mockRejectedValue(prismaError);
+
+      await expect(
+        service.storeBackupCodes(mockUser.id, ['12345678']),
+      ).rejects.toThrow('Database operation failed');
+    });
+
+    it('should wrap unknown errors as InfrastructureException', async () => {
+      prisma.user.update.mockRejectedValue(new Error('Unknown error'));
+
+      await expect(
+        service.storeBackupCodes(mockUser.id, ['12345678']),
+      ).rejects.toThrow();
+      expect(logger.error).toHaveBeenCalledWith(
+        expect.stringContaining('TOTP operation failed'),
+        expect.any(String),
+        'TotpService',
+      );
+    });
+
+    it('should wrap non-Error values as InfrastructureException', async () => {
+      prisma.user.update.mockRejectedValue('string error');
+
+      await expect(
+        service.storeBackupCodes(mockUser.id, ['12345678']),
+      ).rejects.toThrow();
+    });
+  });
+
+  describe('setupTotp error paths', () => {
+    it('should propagate handleError on prisma failure', async () => {
+      prisma.user.update.mockRejectedValue(new Error('DB error'));
+
+      await expect(
+        service.setupTotp(mockUser.id, mockUser.email),
+      ).rejects.toThrow();
+    });
+  });
+
+  describe('enableTotp error paths', () => {
+    it('should throw ValidationException for non-6-digit token', async () => {
+      await expect(service.enableTotp(mockUser.id, 'abc')).rejects.toThrow(
+        'Invalid input for field: token',
+      );
+    });
+
+    it('should throw ValidationException for empty token', async () => {
+      await expect(service.enableTotp(mockUser.id, '')).rejects.toThrow(
+        'Invalid input for field: token',
+      );
+    });
+  });
+
+  describe('disableTotp error paths', () => {
+    it('should throw ValidationException for non-6-digit token', async () => {
+      await expect(service.disableTotp(mockUser.id, 'abc')).rejects.toThrow(
+        'Invalid input for field: token',
+      );
+    });
+
+    it('should throw ValidationException for empty token', async () => {
+      await expect(service.disableTotp(mockUser.id, '')).rejects.toThrow(
+        'Invalid input for field: token',
       );
     });
   });

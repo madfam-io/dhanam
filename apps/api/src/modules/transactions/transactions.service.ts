@@ -13,7 +13,7 @@ export class TransactionsService {
   constructor(
     private prisma: PrismaService,
     private spacesService: SpacesService
-  ) { }
+  ) {}
 
   async findAll(
     spaceId: string,

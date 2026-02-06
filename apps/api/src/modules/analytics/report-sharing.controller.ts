@@ -1,5 +1,3 @@
-import { CurrentUser } from '@core/auth/decorators/current-user.decorator';
-import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
 import {
   Controller,
   Get,
@@ -24,6 +22,9 @@ import {
   ApiNotFoundResponse,
   ApiParam,
 } from '@nestjs/swagger';
+
+import { CurrentUser } from '@core/auth/decorators/current-user.decorator';
+import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
 
 import { ShareReportDto, UpdateShareRoleDto, CreateShareTokenDto } from './dto';
 import { ReportCollaborationService } from './report-collaboration.service';

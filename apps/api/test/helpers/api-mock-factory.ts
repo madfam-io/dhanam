@@ -180,9 +180,11 @@ export function createFetchResponse<T>(
  * Create a mock AuditService
  */
 export function createAuditMock() {
-  return {
+  const mock = {
     log: jest.fn().mockResolvedValue(undefined),
+    logEvent: jest.fn().mockResolvedValue(undefined),
   };
+  return mock;
 }
 
 /**

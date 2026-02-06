@@ -78,4 +78,4 @@ import { TotpService } from './totp.service';
   ],
   exports: [AuthService, TotpService, SessionService, GuestAuthService, DemoAuthService],
 })
-export class AuthModule { }
+export class AuthModule {}

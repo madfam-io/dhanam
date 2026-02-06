@@ -1,5 +1,6 @@
-import { ReportFormat } from '@db';
 import { IsString, IsNotEmpty, IsEnum, IsOptional, IsBoolean, IsUUID } from 'class-validator';
+
+import { ReportFormat } from '@db';
 
 export class CreateSavedReportDto {
   @IsUUID()

@@ -48,7 +48,7 @@ export class OnboardingService {
     private readonly emailService: EmailService,
     private readonly analytics: OnboardingAnalytics,
     private readonly preferencesService: PreferencesService
-  ) { }
+  ) {}
 
   async getOnboardingStatus(userId: string): Promise<OnboardingStatusDto> {
     const user = await this.prisma.user.findUnique({

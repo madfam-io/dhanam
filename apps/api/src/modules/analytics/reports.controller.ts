@@ -1,5 +1,3 @@
-import { CurrentUser } from '@core/auth/decorators/current-user.decorator';
-import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
 import {
   Controller,
   Get,
@@ -24,6 +22,9 @@ import {
 } from '@nestjs/swagger';
 import { IsString, IsDateString, IsOptional, IsEnum } from 'class-validator';
 import { Response } from 'express';
+
+import { CurrentUser } from '@core/auth/decorators/current-user.decorator';
+import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
 
 import { SpacesService } from '../spaces/spaces.service';
 

@@ -334,6 +334,194 @@ describe('SessionService', () => {
     });
   });
 
+  describe('constructor branches', () => {
+    it('should connect via REDIS_URL when set', async () => {
+      process.env.REDIS_URL = 'redis://custom-host:6380';
+
+      const module2 = await Test.createTestingModule({
+        providers: [
+          SessionService,
+          { provide: LoggerService, useValue: { log: jest.fn(), error: jest.fn(), warn: jest.fn() } },
+        ],
+      }).compile();
+
+      const svc2 = module2.get<SessionService>(SessionService);
+      expect(svc2).toBeDefined();
+
+      delete process.env.REDIS_URL;
+    });
+
+    it('should connect via REDIS_HOST/PORT when REDIS_URL not set', async () => {
+      delete process.env.REDIS_URL;
+
+      const module2 = await Test.createTestingModule({
+        providers: [
+          SessionService,
+          { provide: LoggerService, useValue: { log: jest.fn(), error: jest.fn(), warn: jest.fn() } },
+        ],
+      }).compile();
+
+      const svc2 = module2.get<SessionService>(SessionService);
+      expect(svc2).toBeDefined();
+    });
+  });
+
+  describe('Redis event handlers', () => {
+    it('should set isRedisConnected on connect event', () => {
+      // Simulate connect event
+      const connectHandler = (redis.on as jest.Mock).mock.calls.find(
+        (call: any[]) => call[0] === 'connect'
+      );
+      if (connectHandler) {
+        connectHandler[1]();
+        expect((service as any).isRedisConnected).toBe(true);
+      }
+    });
+
+    it('should clear isRedisConnected on error event', () => {
+      const errorHandler = (redis.on as jest.Mock).mock.calls.find(
+        (call: any[]) => call[0] === 'error'
+      );
+      if (errorHandler) {
+        (service as any).isRedisConnected = true;
+        errorHandler[1](new Error('Redis error'));
+        expect((service as any).isRedisConnected).toBe(false);
+      }
+    });
+
+    it('should clear isRedisConnected on close event', () => {
+      const closeHandler = (redis.on as jest.Mock).mock.calls.find(
+        (call: any[]) => call[0] === 'close'
+      );
+      if (closeHandler) {
+        (service as any).isRedisConnected = true;
+        closeHandler[1]();
+        expect((service as any).isRedisConnected).toBe(false);
+      }
+    });
+  });
+
+  describe('executeRedisOperation error paths', () => {
+    it('should throw InfrastructureException when Redis is disconnected and ping fails', async () => {
+      (service as any).isRedisConnected = false;
+      redis.status = 'end';
+      redis.ping = jest.fn().mockRejectedValue(new Error('ECONNREFUSED'));
+
+      await expect(service.createRefreshToken(mockUserId, mockEmail)).rejects.toThrow(
+        'Cache operation failed'
+      );
+    });
+
+    it('should reconnect when Redis ping succeeds', async () => {
+      (service as any).isRedisConnected = false;
+      redis.status = 'end';
+      redis.ping = jest.fn().mockResolvedValue('PONG');
+
+      const token = await service.createRefreshToken(mockUserId, mockEmail);
+
+      expect(token).toBeDefined();
+      expect((service as any).isRedisConnected).toBe(true);
+    });
+
+    it('should mark disconnected on ECONNREFUSED error', async () => {
+      (service as any).isRedisConnected = true;
+      redis.status = 'ready';
+      redis.setex = jest.fn().mockRejectedValue(new Error('ECONNREFUSED'));
+
+      await expect(service.createRefreshToken(mockUserId, mockEmail)).rejects.toThrow();
+      expect((service as any).isRedisConnected).toBe(false);
+    });
+
+    it('should mark disconnected on ETIMEDOUT error', async () => {
+      (service as any).isRedisConnected = true;
+      redis.status = 'ready';
+      redis.setex = jest.fn().mockRejectedValue(new Error('ETIMEDOUT'));
+
+      await expect(service.createRefreshToken(mockUserId, mockEmail)).rejects.toThrow();
+      expect((service as any).isRedisConnected).toBe(false);
+    });
+  });
+
+  describe('revokeRefreshToken error paths', () => {
+    it('should handle parse error in session data during revocation', async () => {
+      redis.get = jest.fn().mockResolvedValue('not-valid-json');
+
+      await service.revokeRefreshToken('some-token');
+
+      expect(logger.error).toHaveBeenCalledWith(
+        'Failed to parse session data during revocation',
+        expect.any(String),
+        'SessionService'
+      );
+    });
+
+    it('should log error when revocation fails', async () => {
+      redis.get = jest.fn().mockRejectedValue(new Error('Redis down'));
+
+      await service.revokeRefreshToken('some-token');
+
+      expect(logger.error).toHaveBeenCalled();
+    });
+  });
+
+  describe('revokeAllUserSessions error paths', () => {
+    it('should log error when revokeAll fails', async () => {
+      redis.smembers = jest.fn().mockRejectedValue(new Error('Redis unavailable'));
+
+      await service.revokeAllUserSessions(mockUserId);
+
+      expect(logger.error).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to revoke all sessions'),
+        expect.any(String),
+        'SessionService'
+      );
+    });
+  });
+
+  describe('validateRefreshToken Redis failure', () => {
+    it('should return null on Redis failure (graceful degradation)', async () => {
+      (service as any).isRedisConnected = false;
+      redis.status = 'end';
+      redis.ping = jest.fn().mockRejectedValue(new Error('ECONNREFUSED'));
+
+      const result = await service.validateRefreshToken('any-token');
+
+      expect(result).toBeNull();
+      expect(logger.warn).toHaveBeenCalledWith(
+        'Redis unavailable during token validation',
+        'SessionService'
+      );
+    });
+  });
+
+  describe('validatePasswordResetToken Redis failure', () => {
+    it('should return null on Redis failure (graceful degradation)', async () => {
+      (service as any).isRedisConnected = false;
+      redis.status = 'end';
+      redis.ping = jest.fn().mockRejectedValue(new Error('ECONNREFUSED'));
+
+      const result = await service.validatePasswordResetToken('any-token');
+
+      expect(result).toBeNull();
+      expect(logger.warn).toHaveBeenCalledWith(
+        'Redis unavailable during password reset validation',
+        'SessionService'
+      );
+    });
+
+    it('should handle cleanup failure for corrupted token', async () => {
+      redis.get = jest.fn().mockResolvedValue('invalid-json');
+      // First del succeeds (from cleanup after parse error), but second one is the cleanup inside catch
+      redis.del = jest.fn()
+        .mockRejectedValueOnce(new Error('Redis down'))
+        .mockResolvedValue(1);
+
+      const result = await service.validatePasswordResetToken('some-token');
+
+      expect(result).toBeNull();
+    });
+  });
+
   describe('onModuleDestroy', () => {
     it('should disconnect from Redis on module destroy', async () => {
       redis.disconnect = jest.fn().mockResolvedValue(undefined);

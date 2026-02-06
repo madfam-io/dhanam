@@ -303,6 +303,97 @@ describe('R2StorageService', () => {
         expect(url).toBe('https://test.r2.dev/spaces/space-123/document.pdf');
       });
     });
+
+    describe('getFileSize', () => {
+      it('should return ContentLength from HeadObject', async () => {
+        mockS3Client.send = jest.fn().mockResolvedValue({ ContentLength: 4096 });
+
+        const result = await service.getFileSize('test-key.pdf');
+
+        expect(result).toBe(4096);
+      });
+
+      it('should return null when ContentLength undefined', async () => {
+        mockS3Client.send = jest.fn().mockResolvedValue({ ContentLength: undefined });
+
+        const result = await service.getFileSize('test-key.pdf');
+
+        expect(result).toBeNull();
+      });
+
+      it('should return null on HeadObject error', async () => {
+        mockS3Client.send = jest.fn().mockRejectedValue(new Error('Not found'));
+
+        const result = await service.getFileSize('nonexistent.pdf');
+
+        expect(result).toBeNull();
+      });
+    });
+
+    describe('downloadFile', () => {
+      it('should return file as Buffer', async () => {
+        const chunks = [Buffer.from('hello '), Buffer.from('world')];
+        const asyncIterable = {
+          [Symbol.asyncIterator]: () => {
+            let i = 0;
+            return {
+              next: () =>
+                Promise.resolve(
+                  i < chunks.length
+                    ? { value: chunks[i++], done: false }
+                    : { value: undefined, done: true }
+                ),
+            };
+          },
+        };
+
+        mockS3Client.send = jest.fn().mockResolvedValue({ Body: asyncIterable });
+
+        const result = await service.downloadFile('test-key.pdf');
+
+        expect(result.toString()).toBe('hello world');
+      });
+
+      it('should throw when response body is empty', async () => {
+        mockS3Client.send = jest.fn().mockResolvedValue({ Body: null });
+
+        await expect(service.downloadFile('empty-key.pdf')).rejects.toThrow(
+          'Empty response body from R2'
+        );
+      });
+    });
+
+    describe('getPresignedUploadUrlGeneric', () => {
+      it('should generate presigned URL with document key structure', async () => {
+        const result = await service.getPresignedUploadUrlGeneric(
+          'space-123',
+          'report.pdf',
+          'application/pdf',
+          'report'
+        );
+
+        expect(result.key).toContain('spaces/space-123/documents/report/');
+        expect(result.uploadUrl).toBe('https://presigned.url/test');
+      });
+
+      it('should pass custom metadata to PutObjectCommand', async () => {
+        await service.getPresignedUploadUrlGeneric(
+          'space-123',
+          'file.csv',
+          'text/csv',
+          'general',
+          { customField: 'value' }
+        );
+
+        expect(getSignedUrl).toHaveBeenCalled();
+      });
+
+      it('should reject disallowed MIME types', async () => {
+        await expect(
+          service.getPresignedUploadUrlGeneric('space', 'f.exe', 'application/octet-stream')
+        ).rejects.toThrow("File type 'application/octet-stream' is not allowed");
+      });
+    });
   });
 
   describe('without R2 configured', () => {
@@ -420,6 +511,58 @@ describe('R2StorageService', () => {
 
       const svc = module.get<R2StorageService>(R2StorageService);
       expect(svc.isAvailable()).toBe(false);
+    });
+  });
+
+  describe('validateUpload', () => {
+    it('should accept valid PDF file', () => {
+      const buffer = Buffer.from([0x25, 0x50, 0x44, 0x46, ...Buffer.from('test')]);
+      expect(() => service.validateUpload(buffer, 'application/pdf', 'test.pdf')).not.toThrow();
+    });
+
+    it('should accept valid CSV file', () => {
+      const buffer = Buffer.from('col1,col2\nval1,val2');
+      expect(() => service.validateUpload(buffer, 'text/csv', 'data.csv')).not.toThrow();
+    });
+
+    it('should throw when file exceeds max size', () => {
+      const buffer = Buffer.alloc(11 * 1024 * 1024); // 11MB
+      expect(() => service.validateUpload(buffer, 'application/pdf', 'huge.pdf')).toThrow(
+        'File exceeds maximum size'
+      );
+    });
+
+    it('should throw for disallowed MIME type', () => {
+      const buffer = Buffer.from('test');
+      expect(() => service.validateUpload(buffer, 'application/octet-stream', 'file.exe')).toThrow(
+        "File type 'application/octet-stream' is not allowed"
+      );
+    });
+
+    it('should throw for disallowed extension', () => {
+      const buffer = Buffer.from('test');
+      expect(() => service.validateUpload(buffer, 'text/csv', 'file.exe')).toThrow(
+        "File extension '.exe' is not allowed"
+      );
+    });
+
+    it('should throw for missing extension', () => {
+      const buffer = Buffer.from('test');
+      expect(() => service.validateUpload(buffer, 'text/csv', 'noext')).toThrow(
+        'is not allowed'
+      );
+    });
+
+    it('should throw when magic bytes mismatch', () => {
+      const buffer = Buffer.from([0x00, 0x00, 0x00, 0x00, ...Buffer.from('not pdf')]);
+      expect(() => service.validateUpload(buffer, 'application/pdf', 'fake.pdf')).toThrow(
+        'File content does not match declared content type'
+      );
+    });
+
+    it('should accept PNG with correct magic bytes', () => {
+      const buffer = Buffer.from([0x89, 0x50, 0x4e, 0x47, ...Buffer.from('data')]);
+      expect(() => service.validateUpload(buffer, 'image/png', 'image.png')).not.toThrow();
     });
   });
 
