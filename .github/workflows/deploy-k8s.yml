@@ -101,6 +101,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add infra/k8s/production/kustomization.yaml
           git diff --staged --quiet || git commit -m "chore(deploy): update api image digest to ${DIGEST:0:19}"
+          git pull --rebase origin main || true
           git push
 
       - name: Report lifecycle event

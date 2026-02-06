@@ -1,16 +1,18 @@
 apiVersion: enclii.dev/v1
 kind: Service
 metadata:
-  name: dhanam-web
+  name: dhanam
   project: dhanam
 spec:
-  build:
-    type: dockerfile
   runtime:
-    port: 4200
+    port: 8080
     replicas: 1
-    healthCheck: /
+    healthCheck: /health
   domains:
+    - name: api.dhan.am
+      environment: production
+    - name: admin.dhan.am
+      environment: production
     - name: dhan.am
       environment: production
     - name: www.dhan.am
