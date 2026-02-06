@@ -193,10 +193,10 @@ spec:
               cpu: "1000m"
               memory: "768Mi"
 
-          # Health checks (TCP socket - app doesn't have /health endpoint)
-          # NOTE: Consider implementing /health endpoint for better diagnostics
+          # Health checks (HTTP - root /health endpoint registered in main.ts)
           startupProbe:
-            tcpSocket:
+            httpGet:
+              path: /health
               port: 4300
             initialDelaySeconds: 5
             periodSeconds: 5
@@ -204,7 +204,8 @@ spec:
             timeoutSeconds: 3
 
           readinessProbe:
-            tcpSocket:
+            httpGet:
+              path: /health
               port: 4300
             initialDelaySeconds: 5
             periodSeconds: 10
@@ -212,7 +213,8 @@ spec:
             failureThreshold: 3
 
           livenessProbe:
-            tcpSocket:
+            httpGet:
+              path: /health
               port: 4300
             initialDelaySeconds: 15
             periodSeconds: 30

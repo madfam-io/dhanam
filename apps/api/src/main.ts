@@ -190,6 +190,15 @@ async function bootstrap() {
   process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
   process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
+  // Root-level health endpoint (outside /v1 prefix) for external monitoring
+  // Cloudflare, uptime monitors, and load balancers expect GET /health
+  const fastifyInstance = app.getHttpAdapter().getInstance();
+  fastifyInstance.get('/health', async (_request, reply) => {
+    const status = await healthService.getHealthStatus();
+    const code = status.status === 'unhealthy' ? 503 : 200;
+    return reply.status(code).send(status);
+  });
+
   const port = configService.get('PORT') || 4000;
   await app.listen(port, '0.0.0.0');
   logger.log(`Application started on port ${port}`);
