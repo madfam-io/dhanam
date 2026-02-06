@@ -142,7 +142,7 @@ jobs:
     name: Deploy to K8s (Manual)
     runs-on: ubuntu-latest
     needs: [build-and-push]
-    if: github.event_name == 'workflow_dispatch' && secrets.KUBECONFIG_PRODUCTION != ''
+    if: github.event_name == 'workflow_dispatch'
     environment: production
 
     steps:
