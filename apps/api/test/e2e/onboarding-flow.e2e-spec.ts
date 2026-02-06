@@ -137,6 +137,12 @@ describe('Onboarding Flow E2E', () => {
         .send({ step: 'space_setup' })
         .expect(200);
 
+      // Upgrade tier to allow a second space (registration auto-creates one)
+      await prisma.user.update({
+        where: { id: userId },
+        data: { subscriptionTier: 'essentials' },
+      });
+
       // Step 6: Create space
       const spaceResponse = await request(app.getHttpServer())
         .post('/v1/spaces')

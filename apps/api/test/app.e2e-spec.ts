@@ -23,10 +23,12 @@ describe('AppController (e2e)', () => {
       await testHelper.cleanDatabase();
 
       // Create test user via helper (bypasses HIBP check)
+      // Use 'essentials' tier to allow creating a second space via HTTP
       const { authToken: token } = await testHelper.createCompleteUserWithSpace({
         email: 'test@example.com',
         password: 'E2eT3st-Str0ng-Pwd!9182',
         name: 'Test User',
+        subscriptionTier: 'essentials',
       });
 
       authToken = token;

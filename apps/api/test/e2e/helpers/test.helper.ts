@@ -11,6 +11,7 @@ export interface CreateUserData {
   locale?: string;
   timezone?: string;
   emailVerified?: boolean;
+  subscriptionTier?: 'community' | 'essentials' | 'pro';
 }
 
 export interface CreateSpaceData {
@@ -91,7 +92,7 @@ export class TestHelper {
 
   async createUser(data: CreateUserData): Promise<User> {
     const passwordHash = await hash(data.password);
-    
+
     return await this.prisma.user.create({
       data: {
         email: data.email,
@@ -102,6 +103,7 @@ export class TestHelper {
         emailVerified: data.emailVerified || false,
         onboardingStep: 'welcome',
         onboardingCompleted: false,
+        subscriptionTier: data.subscriptionTier || 'community',
       },
     });
   }
@@ -223,12 +225,16 @@ export class TestHelper {
     password: string;
     name: string;
     spaceName?: string;
+    subscriptionTier?: 'community' | 'essentials' | 'pro';
   }): Promise<{
     user: User;
     space: Space;
     authToken: string;
   }> {
-    const user = await this.createUser(data);
+    const user = await this.createUser({
+      ...data,
+      subscriptionTier: data.subscriptionTier,
+    });
     const space = await this.createSpace(user.id, {
       name: data.spaceName || 'Personal Space',
       type: 'personal',
