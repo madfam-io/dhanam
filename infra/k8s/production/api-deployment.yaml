@@ -45,7 +45,7 @@ spec:
 
       containers:
         - name: api
-          image: ghcr.io/madfam-org/dhanam/api:main
+          image: dhanam-api
           imagePullPolicy: Always
 
           ports:

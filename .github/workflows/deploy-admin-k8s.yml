@@ -1,9 +1,16 @@
 name: Deploy Admin to K8s (GHCR)
 
-# Manual deployment workflow for dhanam-admin dashboard.
-# Mirrors deploy-web-k8s.yml pattern with kubeconfig-based deploys.
+# Auto-deploy: push to main builds + commits digest → ArgoCD syncs
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/admin/**'
+      - 'packages/**'
+      - 'pnpm-lock.yaml'
+    paths-ignore:
+      - 'infra/k8s/production/kustomization.yaml'
   workflow_dispatch:
     inputs:
       force_deploy:
@@ -15,37 +22,19 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: madfam-org/dhanam/admin
+  SERVICE_SHORT_NAME: dhanam-admin
 
 concurrency:
   group: deploy-admin-k8s-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
-  preflight:
-    name: Preflight Check
-    runs-on: ubuntu-latest
-    environment: production
-    outputs:
-      skip: ${{ steps.check-secret.outputs.skip }}
-    steps:
-      - name: Check KUBECONFIG secret
-        id: check-secret
-        run: |
-          if [ -z "${{ secrets.KUBECONFIG_PRODUCTION }}" ]; then
-            echo "::notice::KUBECONFIG_PRODUCTION secret not configured - skipping deployment"
-            echo "skip=true" >> $GITHUB_OUTPUT
-          else
-            echo "skip=false" >> $GITHUB_OUTPUT
-          fi
-
   build-and-push:
     name: Build and Push Admin to GHCR
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       packages: write
-      attestations: write
-      id-token: write
 
     outputs:
       image_tag: ${{ steps.meta.outputs.tags }}
@@ -54,6 +43,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -86,25 +77,70 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          # Disable provenance attestations to avoid GHCR 403 errors
           provenance: false
           sbom: false
           build-args: |
             NEXT_PUBLIC_API_URL=https://api.dhan.am/v1
+
+      - name: Commit digest to kustomization.yaml
+        if: github.ref == 'refs/heads/main'
+        run: |
+          DIGEST="${{ steps.build.outputs.digest }}"
+          echo "Updating kustomization.yaml with digest: $DIGEST"
+
+          curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
+          sudo mv kustomize /usr/local/bin/
+
+          cd infra/k8s/production
+          kustomize edit set image ${{ env.SERVICE_SHORT_NAME }}=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${DIGEST}
+
+          cd ${{ github.workspace }}
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add infra/k8s/production/kustomization.yaml
+          git diff --staged --quiet || git commit -m "chore(deploy): update admin image digest to ${DIGEST:0:19}"
+          git push
+
+      - name: Report lifecycle event
+        if: always()
+        continue-on-error: true
+        run: |
+          EVENT_TYPE="image_pushed"
+          if [ "${{ steps.build.outcome }}" != "success" ]; then
+            EVENT_TYPE="build_failed"
+          fi
+
+          curl -sf -X POST "https://api.enclii.dev/v1/callbacks/lifecycle-event" \
+            -H "Authorization: Bearer ${{ secrets.ENCLII_CALLBACK_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "repo_full_name": "madfam-org/dhanam",
+              "commit_sha": "${{ github.sha }}",
+              "branch": "${{ github.ref_name }}",
+              "ref": "${{ github.ref }}",
+              "event_type": "'"$EVENT_TYPE"'",
+              "source": "ci_callback",
+              "message": "Admin build '"$EVENT_TYPE"'",
+              "metadata": {
+                "image": "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}",
+                "digest": "${{ steps.build.outputs.digest }}",
+                "workflow": "deploy-admin-k8s",
+                "service": "dhanam-admin"
+              }
+            }'
 
       - name: Generate build summary
         run: |
           echo "## Docker Build Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Image**: \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "**Tags**: \`${{ steps.meta.outputs.tags }}\`" >> $GITHUB_STEP_SUMMARY
           echo "**Digest**: \`${{ steps.build.outputs.digest }}\`" >> $GITHUB_STEP_SUMMARY
 
   deploy:
-    name: Deploy to K8s
+    name: Deploy to K8s (Manual)
     runs-on: ubuntu-latest
-    needs: [preflight, build-and-push]
-    if: needs.preflight.outputs.skip != 'true'
+    needs: [build-and-push]
+    if: github.event_name == 'workflow_dispatch' && secrets.KUBECONFIG_PRODUCTION != ''
     environment: production
 
     steps:
@@ -118,40 +154,10 @@ jobs:
           mkdir -p ~/.kube
           echo "${{ secrets.KUBECONFIG_PRODUCTION }}" | base64 -d > ~/.kube/config
           chmod 600 ~/.kube/config
-          kubectl cluster-info
-
-      - name: Update GHCR credentials
-        run: |
-          kubectl delete secret ghcr-credentials -n dhanam --ignore-not-found
-          kubectl create secret docker-registry ghcr-credentials \
-            --namespace=dhanam \
-            --docker-server=ghcr.io \
-            --docker-username=madfam-bot \
-            --docker-password=${{ secrets.MADFAM_BOT_PAT }} \
-            --docker-email=ci@dhanam.dev
 
       - name: Deploy to K8s
         run: |
-          # Update image (container name is "admin" per deployment spec)
           kubectl set image deployment/dhanam-admin \
             admin=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ needs.build-and-push.outputs.image_digest }} \
             -n dhanam
-
-          # Wait for rollout
           kubectl rollout status deployment/dhanam-admin -n dhanam --timeout=300s
-
-      - name: Verify deployment
-        run: |
-          echo "=== Pod Status ==="
-          kubectl get pods -n dhanam -l app=dhanam-admin -o wide
-          echo ""
-          echo "Deployment complete!"
-
-      - name: Generate deploy summary
-        if: success()
-        run: |
-          echo "## Deployment Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Status**: Success" >> $GITHUB_STEP_SUMMARY
-          echo "**Environment**: Production (K8s)" >> $GITHUB_STEP_SUMMARY
-          echo "**Image Digest**: \`${{ needs.build-and-push.outputs.image_digest }}\`" >> $GITHUB_STEP_SUMMARY

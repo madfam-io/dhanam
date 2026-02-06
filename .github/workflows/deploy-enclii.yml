@@ -1,10 +1,8 @@
 name: Deploy via Enclii (K8s)
 
-# NOTE: This workflow is DISABLED for auto-deploy.
-# Enclii handles production deployments automatically via .enclii.yml
-# Use this workflow only for manual deployments when needed.
-#
-# To deploy: Simply push to main. Enclii auto-deploys.
+# Manual deployment workflow for dhanam-web via Enclii.
+# Auto-deploy is handled by deploy-web-k8s.yml (push → build → digest commit → ArgoCD sync).
+# Use this workflow only for manual/emergency deployments.
 
 on:
   # Disabled: Enclii handles auto-deploy
