@@ -118,6 +118,15 @@ spec:
               memory: "256Mi"
 
           # Health checks
+          startupProbe:
+            httpGet:
+              path: /api/health
+              port: 4200
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 30
+            timeoutSeconds: 5
+
           readinessProbe:
             httpGet:
               path: /api/health

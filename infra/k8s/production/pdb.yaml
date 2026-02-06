@@ -1,0 +1,48 @@
+# =============================================================================
+# Dhanam PodDisruptionBudgets
+# =============================================================================
+# Protect dhanam services during voluntary disruptions (node drain, k3s upgrade).
+# All services run replicas=2, so minAvailable=1 guarantees availability.
+# =============================================================================
+
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: dhanam-api
+  namespace: dhanam
+  labels:
+    app: dhanam-api
+    app.kubernetes.io/component: pdb
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: dhanam-api
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: dhanam-admin
+  namespace: dhanam
+  labels:
+    app: dhanam-admin
+    app.kubernetes.io/component: pdb
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: dhanam-admin
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: dhanam-web
+  namespace: dhanam
+  labels:
+    app: dhanam-web
+    app.kubernetes.io/component: pdb
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: dhanam-web
