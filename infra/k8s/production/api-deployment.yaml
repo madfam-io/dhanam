@@ -194,10 +194,9 @@ spec:
               memory: "768Mi"
 
           # Health checks
-          # TODO: Switch to httpGet /health once new image with root health endpoint is deployed
-          # See: apps/api/src/main.ts (root /health route added for external monitoring)
           startupProbe:
-            tcpSocket:
+            httpGet:
+              path: /health
               port: 4300
             initialDelaySeconds: 5
             periodSeconds: 5
@@ -205,7 +204,8 @@ spec:
             timeoutSeconds: 3
 
           readinessProbe:
-            tcpSocket:
+            httpGet:
+              path: /health
               port: 4300
             initialDelaySeconds: 5
             periodSeconds: 10
@@ -213,7 +213,8 @@ spec:
             failureThreshold: 3
 
           livenessProbe:
-            tcpSocket:
+            httpGet:
+              path: /health
               port: 4300
             initialDelaySeconds: 15
             periodSeconds: 30
