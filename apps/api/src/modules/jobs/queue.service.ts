@@ -482,11 +482,8 @@ export class QueueService implements OnModuleInit, OnModuleDestroy {
   }
 
   async getAllQueueStats() {
-    const stats = [];
-    for (const queueName of this.queues.keys()) {
-      stats.push(await this.getQueueStats(queueName));
-    }
-    return stats;
+    const queueNames = Array.from(this.queues.keys());
+    return Promise.all(queueNames.map((name) => this.getQueueStats(name)));
   }
 
   async pauseQueue(queueName: string): Promise<void> {

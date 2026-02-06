@@ -20,6 +20,16 @@ export interface HealthStatus {
   environment: string;
 }
 
+export interface BasicHealthStatus {
+  status: 'healthy' | 'unhealthy';
+  timestamp: string;
+  uptime: number;
+  checks: {
+    database: HealthCheck;
+    redis: HealthCheck;
+  };
+}
+
 export interface HealthCheck {
   status: 'up' | 'down';
   responseTime?: number;
@@ -61,6 +71,29 @@ export class HealthService {
    */
   setShuttingDown(value: boolean): void {
     this.isShuttingDown = value;
+  }
+
+  async getBasicHealthStatus(): Promise<BasicHealthStatus> {
+    const [dbResult, redisResult] = await Promise.allSettled([
+      this.checkDatabase(),
+      this.checkRedis(),
+    ]);
+
+    const database: HealthCheck =
+      dbResult.status === 'fulfilled' ? dbResult.value : this.createFailedCheck(dbResult.reason);
+    const redis: HealthCheck =
+      redisResult.status === 'fulfilled'
+        ? redisResult.value
+        : this.createFailedCheck(redisResult.reason);
+
+    const status = database.status === 'up' && redis.status === 'up' ? 'healthy' : 'unhealthy';
+
+    return {
+      status,
+      timestamp: new Date().toISOString(),
+      uptime: Date.now() - this.startTime,
+      checks: { database, redis },
+    };
   }
 
   async getHealthStatus(): Promise<HealthStatus> {
@@ -122,11 +155,10 @@ export class HealthService {
       };
     }
 
-    const health = await this.getHealthStatus();
-    const criticalServices = [health.checks.database, health.checks.redis];
-
-    const ready = criticalServices.every((check) => check.status === 'up');
-    const failedServices = criticalServices
+    const health = await this.getBasicHealthStatus();
+    const ready =
+      health.checks.database.status === 'up' && health.checks.redis.status === 'up';
+    const failedServices = [health.checks.database, health.checks.redis]
       .filter((check) => check.status !== 'up')
       .map((check) => check.error || 'Unknown error');
 

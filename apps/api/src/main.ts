@@ -112,9 +112,12 @@ async function bootstrap() {
       const path = req.url?.split('?')[0] || '';
       return [
         '/v1/monitoring/health',
+        '/v1/monitoring/health/live',
+        '/v1/monitoring/health/ready',
         '/v1/monitoring/ready',
         '/metrics',
         '/health',
+        '/health/full',
         '/ready',
       ].includes(path);
     },
@@ -190,10 +193,17 @@ async function bootstrap() {
   process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
   process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
-  // Root-level health endpoint (outside /v1 prefix) for external monitoring
-  // Cloudflare, uptime monitors, and load balancers expect GET /health
+  // Root-level health endpoints (outside /v1 prefix) for external monitoring
+  // Cloudflare, uptime monitors, K8s probes, and load balancers expect GET /health
   const fastifyInstance = app.getHttpAdapter().getInstance();
   fastifyInstance.get('/health', async (_request, reply) => {
+    const status = await healthService.getBasicHealthStatus();
+    const code = status.status === 'unhealthy' ? 503 : 200;
+    return reply.status(code).send(status);
+  });
+
+  // Full health check with all 5 checks (external APIs, queues, providers) for debugging
+  fastifyInstance.get('/health/full', async (_request, reply) => {
     const status = await healthService.getHealthStatus();
     const code = status.status === 'unhealthy' ? 503 : 200;
     return reply.status(code).send(status);

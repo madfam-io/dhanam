@@ -215,11 +215,11 @@ spec:
 
           livenessProbe:
             httpGet:
-              path: /health
+              path: /v1/monitoring/health/live
               port: 4300
             initialDelaySeconds: 15
             periodSeconds: 30
-            timeoutSeconds: 5
+            timeoutSeconds: 3
             failureThreshold: 3
 
           # Security
