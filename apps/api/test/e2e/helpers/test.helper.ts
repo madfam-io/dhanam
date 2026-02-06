@@ -60,13 +60,21 @@ export class TestHelper {
   }
 
   async cleanDatabase(): Promise<void> {
-    // Clean in order to respect foreign key constraints
+    // Clean tables that may not exist yet (added after initial migrations)
+    try {
+      await this.prisma.$transaction([
+        this.prisma.reportShareToken.deleteMany(),
+        this.prisma.reportShare.deleteMany(),
+        this.prisma.generatedReport.deleteMany(),
+        this.prisma.savedReport.deleteMany(),
+        this.prisma.document.deleteMany(),
+      ]);
+    } catch {
+      // Tables may not exist if migrations haven't been applied
+    }
+
+    // Clean core tables in order to respect foreign key constraints
     await this.prisma.$transaction([
-      this.prisma.reportShareToken.deleteMany(),
-      this.prisma.reportShare.deleteMany(),
-      this.prisma.generatedReport.deleteMany(),
-      this.prisma.savedReport.deleteMany(),
-      this.prisma.document.deleteMany(),
       this.prisma.transaction.deleteMany(),
       this.prisma.category.deleteMany(),
       this.prisma.budget.deleteMany(),
