@@ -2,20 +2,20 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
-  - namespace.yaml
-  - api-deployment.yaml
-  - admin-deployment.yaml
-  - web-deployment.yaml
+- namespace.yaml
+- api-deployment.yaml
+- admin-deployment.yaml
+- web-deployment.yaml
 
 # Image transformer: maps short names to full GHCR paths
 # CI workflows update these entries with @sha256:... digests after each build
 images:
-  - name: dhanam-api
-    newName: ghcr.io/madfam-org/dhanam/api
-    newTag: main
-  - name: dhanam-admin
-    newName: ghcr.io/madfam-org/dhanam/admin
-    newTag: main
-  - name: dhanam-web
-    newName: ghcr.io/madfam-org/dhanam/web
-    newTag: main
+- name: dhanam-admin
+  newName: ghcr.io/madfam-org/dhanam/admin
+  newTag: main
+- digest: sha256:522315cde1f2f8237a720e7900d4c25a36280964825f329f256f4a586bcd2a26
+  name: dhanam-api
+  newName: ghcr.io/madfam-org/dhanam/api
+- name: dhanam-web
+  newName: ghcr.io/madfam-org/dhanam/web
+  newTag: main
