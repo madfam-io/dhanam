@@ -42,6 +42,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         isActive: true,
         totpEnabled: true,
         lastLoginAt: true,
+        subscriptionTier: true,
       },
     });
 
@@ -57,6 +58,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       locale: user.locale,
       timezone: user.timezone,
       totpEnabled: user.totpEnabled,
+      subscriptionTier: user.subscriptionTier,
     };
   }
 }

@@ -19,6 +19,7 @@ describe('JwtStrategy', () => {
     isActive: true,
     totpEnabled: false,
     lastLoginAt: new Date(),
+    subscriptionTier: 'community',
   };
 
   beforeEach(async () => {
@@ -115,6 +116,7 @@ describe('JwtStrategy', () => {
           isActive: true,
           totpEnabled: true,
           lastLoginAt: true,
+          subscriptionTier: true,
         },
       });
       expect(result).toEqual({
@@ -125,6 +127,7 @@ describe('JwtStrategy', () => {
         locale: 'en',
         timezone: 'America/New_York',
         totpEnabled: false,
+        subscriptionTier: 'community',
       });
     });
 
@@ -218,6 +221,7 @@ describe('JwtStrategy', () => {
         isActive: true,
         totpEnabled: true,
         lastLoginAt: true,
+        subscriptionTier: true,
       });
       // Verify passwordHash is NOT selected (security)
       expect(selectFields).not.toHaveProperty('passwordHash');
