@@ -62,6 +62,11 @@ export class TestHelper {
   async cleanDatabase(): Promise<void> {
     // Clean in order to respect foreign key constraints
     await this.prisma.$transaction([
+      this.prisma.reportShareToken.deleteMany(),
+      this.prisma.reportShare.deleteMany(),
+      this.prisma.generatedReport.deleteMany(),
+      this.prisma.savedReport.deleteMany(),
+      this.prisma.document.deleteMany(),
       this.prisma.transaction.deleteMany(),
       this.prisma.category.deleteMany(),
       this.prisma.budget.deleteMany(),

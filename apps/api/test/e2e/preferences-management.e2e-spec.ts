@@ -1,10 +1,10 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
-import request from 'supertest';
-import { AppModule } from '../../src/app.module';
-import { PrismaService } from '../../src/core/prisma/prisma.service';
+import { INestApplication } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import request from 'supertest';
+
+import { PrismaService } from '../../src/core/prisma/prisma.service';
 import { TestHelper } from './helpers/test.helper';
+import { createE2EApp } from './helpers/e2e-app.helper';
 import { PreferencesTestData } from './fixtures/preferences.fixtures';
 
 describe('Preferences Management E2E', () => {
@@ -15,25 +15,18 @@ describe('Preferences Management E2E', () => {
   let userId: string;
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(new ValidationPipe({ transform: true }));
-    app.setGlobalPrefix('v1');
+    app = await createE2EApp();
 
     prisma = app.get<PrismaService>(PrismaService);
     testHelper = new TestHelper(prisma, app.get<JwtService>(JwtService));
 
-    await app.init();
     await testHelper.cleanDatabase();
 
     // Create test user
     const user = await testHelper.createUser(PreferencesTestData.testUser);
     authToken = testHelper.generateAuthToken(user);
     userId = user.id;
-  });
+  }, 30000);
 
   afterAll(async () => {
     await testHelper.cleanDatabase();
@@ -362,7 +355,7 @@ describe('Preferences Management E2E', () => {
             name: 'Power User',
             description: expect.any(String),
           }),
-        ])
+        ]),
       );
     });
   });
@@ -417,7 +410,7 @@ describe('Preferences Management E2E', () => {
         .post('/v1/preferences/import')
         .set('Authorization', `Bearer ${authToken}`)
         .send({
-          version: '99.0', // Unsupported version
+          version: '99.0',
           user: {},
         })
         .expect(400);
@@ -493,7 +486,7 @@ describe('Preferences Management E2E', () => {
     it('should update preferences during onboarding', async () => {
       // Create new user for onboarding test
       const onboardingUser = await testHelper.createUser({
-        email: 'onboarding@example.com',
+        email: 'onboarding-prefs@example.com',
         password: 'Onboarding123!',
         name: 'Onboarding User',
       });
@@ -501,7 +494,7 @@ describe('Preferences Management E2E', () => {
 
       // Update preferences via onboarding endpoint
       const response = await request(app.getHttpServer())
-        .put('/v1/onboarding/v1/preferences')
+        .put('/v1/onboarding/preferences')
         .set('Authorization', `Bearer ${onboardingToken}`)
         .send({
           locale: 'en',
@@ -533,8 +526,8 @@ describe('Preferences Management E2E', () => {
         .set('Authorization', `Bearer ${onboardingToken}`)
         .expect(200);
 
-      expect(userResponse.body.locale).toBe('en');
-      expect(userResponse.body.timezone).toBe('America/New_York');
+      expect(userResponse.body.user.locale).toBe('en');
+      expect(userResponse.body.user.timezone).toBe('America/New_York');
     });
   });
 });

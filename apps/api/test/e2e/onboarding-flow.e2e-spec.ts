@@ -1,15 +1,16 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import { AppModule } from '../../src/app.module';
+import { NestFastifyApplication } from '@nestjs/platform-fastify';
+
 import { PrismaService } from '../../src/core/prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { TestHelper } from './helpers/test.helper';
+import { createE2EApp } from './helpers/e2e-app.helper';
 import { OnboardingTestData } from './fixtures/onboarding.fixtures';
 import { OnboardingStep } from '../../src/modules/onboarding/dto';
 
 describe('Onboarding Flow E2E', () => {
-  let app: INestApplication;
+  let app: INestApplication<NestFastifyApplication>;
   let prisma: PrismaService;
   let jwtService: JwtService;
   let testHelper: TestHelper;
@@ -19,26 +20,14 @@ describe('Onboarding Flow E2E', () => {
   let testUserEmail: string;
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
+    app = await createE2EApp();
 
-    import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
-
-    app = moduleFixture.createNestApplication<NestFastifyApplication>(
-      new FastifyAdapter()
-    );
-    app.useGlobalPipes(new ValidationPipe({ transform: true }));
-
-    await app.init();
-    // Wait for fastify to be ready
-    await app.getHttpAdapter().getInstance().ready();
+    prisma = app.get<PrismaService>(PrismaService);
     jwtService = app.get<JwtService>(JwtService);
     testHelper = new TestHelper(prisma, jwtService);
 
-    await app.init();
     await testHelper.cleanDatabase();
-  });
+  }, 30000);
 
   afterAll(async () => {
     await testHelper.cleanDatabase();
@@ -50,12 +39,11 @@ describe('Onboarding Flow E2E', () => {
       // Step 1: Register new user with unique email
       testUserEmail = TestHelper.generateUniqueEmail('onboarding');
       const registerResponse = await request(app.getHttpServer())
-        .post('/auth/register')
+        .post('/v1/auth/register')
         .send({
           ...OnboardingTestData.newUser,
           email: testUserEmail,
-        })
-      // .expect(201); // Comment out to debug
+        });
 
       if (registerResponse.status !== 201) {
         console.error('Registration failed:', JSON.stringify(registerResponse.body, null, 2));
@@ -68,16 +56,14 @@ describe('Onboarding Flow E2E', () => {
 
       // Get user info from /auth/me
       const meResponse = await request(app.getHttpServer())
-        .get('/auth/me')
+        .get('/v1/auth/me')
         .set('Authorization', `Bearer ${authToken}`)
         .expect(200);
       userId = meResponse.body.user.id;
 
       // Verify initial onboarding status
-      // Note: Registration auto-creates a personal space, so space_setup may be true
-      // Note: currentStep may be null until first step update
       const initialStatus = await request(app.getHttpServer())
-        .get('/onboarding/status')
+        .get('/v1/onboarding/status')
         .set('Authorization', `Bearer ${authToken}`)
         .expect(200);
 
@@ -87,8 +73,6 @@ describe('Onboarding Flow E2E', () => {
         stepStatus: {
           welcome: true,
           email_verification: false,
-          // preferences may be false or true depending on defaults
-          // space_setup is true if registration auto-creates a space
           connect_accounts: false,
           first_budget: false,
           feature_tour: false,
@@ -98,15 +82,14 @@ describe('Onboarding Flow E2E', () => {
 
       // Step 2: Move to email verification
       await request(app.getHttpServer())
-        .put('/onboarding/step')
+        .put('/v1/onboarding/step')
         .set('Authorization', `Bearer ${authToken}`)
         .send({ step: 'email_verification' })
         .expect(200);
 
       // Step 3: Send verification email
-      // Note: POST endpoints may return 200 or 201
       const verificationResponse = await request(app.getHttpServer())
-        .post('/onboarding/resend-verification')
+        .post('/v1/onboarding/resend-verification')
         .set('Authorization', `Bearer ${authToken}`);
 
       expect([200, 201]).toContain(verificationResponse.status);
@@ -118,12 +101,11 @@ describe('Onboarding Flow E2E', () => {
       // Step 4: Verify email (simulate token verification)
       const verificationToken = jwtService.sign(
         { userId, email: testUserEmail, type: 'email_verification' },
-        { expiresIn: '24h' }
+        { expiresIn: '24h' },
       );
 
-      // Note: POST endpoints may return 200 or 201
       const verifyResponse = await request(app.getHttpServer())
-        .post('/onboarding/verify-email')
+        .post('/v1/onboarding/verify-email')
         .send({ token: verificationToken });
 
       expect([200, 201]).toContain(verifyResponse.status);
@@ -134,7 +116,7 @@ describe('Onboarding Flow E2E', () => {
 
       // Check auto-advancement to preferences
       const postVerificationStatus = await request(app.getHttpServer())
-        .get('/onboarding/status')
+        .get('/v1/onboarding/status')
         .set('Authorization', `Bearer ${authToken}`)
         .expect(200);
 
@@ -143,21 +125,21 @@ describe('Onboarding Flow E2E', () => {
 
       // Step 5: Update preferences
       await request(app.getHttpServer())
-        .put('/onboarding/preferences')
+        .put('/v1/onboarding/preferences')
         .set('Authorization', `Bearer ${authToken}`)
         .send(OnboardingTestData.preferences)
         .expect(200);
 
       // Move to space setup
       await request(app.getHttpServer())
-        .put('/onboarding/step')
+        .put('/v1/onboarding/step')
         .set('Authorization', `Bearer ${authToken}`)
         .send({ step: 'space_setup' })
         .expect(200);
 
       // Step 6: Create space
       const spaceResponse = await request(app.getHttpServer())
-        .post('/spaces')
+        .post('/v1/spaces')
         .set('Authorization', `Bearer ${authToken}`)
         .send(OnboardingTestData.personalSpace)
         .expect(201);
@@ -166,28 +148,27 @@ describe('Onboarding Flow E2E', () => {
 
       // Check progress after space creation
       const postSpaceStatus = await request(app.getHttpServer())
-        .get('/onboarding/status')
+        .get('/v1/onboarding/status')
         .set('Authorization', `Bearer ${authToken}`)
         .expect(200);
 
       expect(postSpaceStatus.body.stepStatus.space_setup).toBe(true);
 
       // Step 7: Skip optional connect accounts step
-      // Note: POST endpoints may return 200 or 201
       const skipConnectResponse = await request(app.getHttpServer())
-        .post('/onboarding/skip/connect_accounts')
+        .post('/v1/onboarding/skip/connect_accounts')
         .set('Authorization', `Bearer ${authToken}`);
       expect([200, 201]).toContain(skipConnectResponse.status);
 
       // Step 8: Create first budget
       await request(app.getHttpServer())
-        .put('/onboarding/step')
+        .put('/v1/onboarding/step')
         .set('Authorization', `Bearer ${authToken}`)
         .send({ step: 'first_budget' })
         .expect(200);
 
       const budgetResponse = await request(app.getHttpServer())
-        .post(`/spaces/${spaceId}/budgets`)
+        .post(`/v1/spaces/${spaceId}/budgets`)
         .set('Authorization', `Bearer ${authToken}`)
         .send(OnboardingTestData.firstBudget)
         .expect(201);
@@ -196,20 +177,19 @@ describe('Onboarding Flow E2E', () => {
 
       // Step 9: Complete feature tour
       await request(app.getHttpServer())
-        .put('/onboarding/step')
+        .put('/v1/onboarding/step')
         .set('Authorization', `Bearer ${authToken}`)
         .send({ step: 'feature_tour', data: { tourCompleted: true } })
         .expect(200);
 
       // Step 10: Complete onboarding
-      // Note: POST endpoints may return 200 or 201
       const completeResponse = await request(app.getHttpServer())
-        .post('/onboarding/complete')
+        .post('/v1/onboarding/complete')
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           skipOptional: false,
           metadata: {
-            timeSpent: 300000, // 5 minutes
+            timeSpent: 300000,
             completedSteps: ['welcome', 'email_verification', 'preferences', 'space_setup', 'first_budget', 'feature_tour'],
           },
         });
@@ -228,23 +208,20 @@ describe('Onboarding Flow E2E', () => {
   describe('Partial Onboarding with Skip', () => {
     let partialUserToken: string;
     let partialUserEmail: string;
-    let partialUserId: string;
 
     beforeEach(async () => {
-      // Create a new user with unique email for partial onboarding tests
       partialUserEmail = TestHelper.generateUniqueEmail('partial');
       const user = await testHelper.createUser({
         ...OnboardingTestData.partialUser,
         email: partialUserEmail,
       });
-      partialUserId = user.id;
       partialUserToken = testHelper.generateAuthToken(user);
     });
 
     it('should allow skipping optional steps', async () => {
       // Move through required steps quickly
       await request(app.getHttpServer())
-        .put('/onboarding/step')
+        .put('/v1/onboarding/step')
         .set('Authorization', `Bearer ${partialUserToken}`)
         .send({ step: 'email_verification' })
         .expect(200);
@@ -255,49 +232,45 @@ describe('Onboarding Flow E2E', () => {
       });
 
       await prisma.user.update({
-        where: { id: user.id },
+        where: { id: user!.id },
         data: { emailVerified: true },
       });
 
       // Update preferences
       await request(app.getHttpServer())
-        .put('/onboarding/preferences')
+        .put('/v1/onboarding/preferences')
         .set('Authorization', `Bearer ${partialUserToken}`)
         .send({ locale: 'en', timezone: 'UTC' })
         .expect(200);
 
       await request(app.getHttpServer())
-        .put('/onboarding/step')
+        .put('/v1/onboarding/step')
         .set('Authorization', `Bearer ${partialUserToken}`)
         .send({ step: 'space_setup' })
         .expect(200);
 
       // Create space
       await request(app.getHttpServer())
-        .post('/spaces')
+        .post('/v1/spaces')
         .set('Authorization', `Bearer ${partialUserToken}`)
         .send(OnboardingTestData.minimalSpace)
         .expect(201);
 
       // Skip all optional steps
-      // Note: Skip endpoint may return 200 or 201 depending on implementation
       const optionalSteps: OnboardingStep[] = ['connect_accounts', 'first_budget', 'feature_tour'];
 
       for (const step of optionalSteps) {
         const skipResponse = await request(app.getHttpServer())
-          .post(`/onboarding/skip/${step}`)
+          .post(`/v1/onboarding/skip/${step}`)
           .set('Authorization', `Bearer ${partialUserToken}`);
 
-        // Accept both 200 and 201 as valid responses
         expect([200, 201]).toContain(skipResponse.status);
-
-        // Verify response has expected structure
         expect(skipResponse.body).toBeDefined();
       }
 
       // Check final status
       const finalStatus = await request(app.getHttpServer())
-        .get('/onboarding/status')
+        .get('/v1/onboarding/status')
         .set('Authorization', `Bearer ${partialUserToken}`)
         .expect(200);
 
@@ -309,7 +282,7 @@ describe('Onboarding Flow E2E', () => {
 
       for (const step of requiredSteps) {
         await request(app.getHttpServer())
-          .post(`/onboarding/skip/${step}`)
+          .post(`/v1/onboarding/skip/${step}`)
           .set('Authorization', `Bearer ${partialUserToken}`)
           .expect(400);
       }
@@ -335,14 +308,14 @@ describe('Onboarding Flow E2E', () => {
     it('should enforce step dependencies', async () => {
       // Try to jump to space_setup without completing preferences
       await request(app.getHttpServer())
-        .put('/onboarding/step')
+        .put('/v1/onboarding/step')
         .set('Authorization', `Bearer ${dependencyUserToken}`)
         .send({ step: 'space_setup' })
         .expect(400);
 
       // Try connect_accounts without space_setup
       await request(app.getHttpServer())
-        .put('/onboarding/step')
+        .put('/v1/onboarding/step')
         .set('Authorization', `Bearer ${dependencyUserToken}`)
         .send({ step: 'connect_accounts' })
         .expect(400);
@@ -355,31 +328,30 @@ describe('Onboarding Flow E2E', () => {
         data: { emailVerified: true },
       });
 
-      // Complete preferences - must use non-default values to trigger completion
-      // Defaults are: locale='es', timezone='America/Mexico_City', currency='MXN'
+      // Complete preferences
       await request(app.getHttpServer())
-        .put('/onboarding/preferences')
+        .put('/v1/onboarding/preferences')
         .set('Authorization', `Bearer ${dependencyUserToken}`)
         .send({ locale: 'en', timezone: 'America/New_York', currency: 'USD' })
         .expect(200);
 
       // Now space_setup should work
       await request(app.getHttpServer())
-        .put('/onboarding/step')
+        .put('/v1/onboarding/step')
         .set('Authorization', `Bearer ${dependencyUserToken}`)
         .send({ step: 'space_setup' })
         .expect(200);
 
       // Create space
       await request(app.getHttpServer())
-        .post('/spaces')
+        .post('/v1/spaces')
         .set('Authorization', `Bearer ${dependencyUserToken}`)
         .send(OnboardingTestData.businessSpace)
         .expect(201);
 
       // Now connect_accounts should work
       await request(app.getHttpServer())
-        .put('/onboarding/step')
+        .put('/v1/onboarding/step')
         .set('Authorization', `Bearer ${dependencyUserToken}`)
         .send({ step: 'connect_accounts' })
         .expect(200);
@@ -391,7 +363,6 @@ describe('Onboarding Flow E2E', () => {
     let resetUserId: string;
 
     beforeEach(async () => {
-      // Create a user and complete their onboarding for reset testing
       const resetUserEmail = TestHelper.generateUniqueEmail('reset');
       const user = await testHelper.createUser({
         email: resetUserEmail,
@@ -416,15 +387,15 @@ describe('Onboarding Flow E2E', () => {
     it('should reset onboarding progress', async () => {
       // Verify onboarding is completed
       const completeStatus = await request(app.getHttpServer())
-        .get('/onboarding/status')
+        .get('/v1/onboarding/status')
         .set('Authorization', `Bearer ${resetUserToken}`)
         .expect(200);
 
       expect(completeStatus.body.completed).toBe(true);
 
-      // Reset onboarding - accept 200 or 201
+      // Reset onboarding
       const resetResponse = await request(app.getHttpServer())
-        .post('/onboarding/reset')
+        .post('/v1/onboarding/reset')
         .set('Authorization', `Bearer ${resetUserToken}`);
 
       expect([200, 201]).toContain(resetResponse.status);
@@ -435,7 +406,7 @@ describe('Onboarding Flow E2E', () => {
 
       // Verify user can go through onboarding again
       await request(app.getHttpServer())
-        .put('/onboarding/step')
+        .put('/v1/onboarding/step')
         .set('Authorization', `Bearer ${resetUserToken}`)
         .send({ step: 'email_verification' })
         .expect(200);
@@ -445,7 +416,7 @@ describe('Onboarding Flow E2E', () => {
   describe('Edge Cases', () => {
     it('should handle invalid onboarding step', async () => {
       await request(app.getHttpServer())
-        .put('/onboarding/step')
+        .put('/v1/onboarding/step')
         .set('Authorization', `Bearer ${authToken}`)
         .send({ step: 'invalid_step' })
         .expect(400);
@@ -454,11 +425,11 @@ describe('Onboarding Flow E2E', () => {
     it('should handle expired email verification token', async () => {
       const expiredToken = jwtService.sign(
         { userId, email: 'test@example.com', type: 'email_verification' },
-        { expiresIn: '-1s' } // Expired token
+        { expiresIn: '-1s' },
       );
 
       await request(app.getHttpServer())
-        .post('/onboarding/verify-email')
+        .post('/v1/onboarding/verify-email')
         .send({ token: expiredToken })
         .expect(400);
     });
@@ -466,25 +437,23 @@ describe('Onboarding Flow E2E', () => {
     it('should handle invalid verification token type', async () => {
       const wrongTypeToken = jwtService.sign(
         { userId, email: 'test@example.com', type: 'password_reset' },
-        { expiresIn: '24h' }
+        { expiresIn: '24h' },
       );
 
       await request(app.getHttpServer())
-        .post('/onboarding/verify-email')
+        .post('/v1/onboarding/verify-email')
         .send({ token: wrongTypeToken })
         .expect(400);
     });
 
     it('should handle already verified email', async () => {
-      // Try to verify again
       const verificationToken = jwtService.sign(
         { userId, email: testUserEmail, type: 'email_verification' },
-        { expiresIn: '24h' }
+        { expiresIn: '24h' },
       );
 
-      // Note: POST endpoints may return 200 or 201
       const response = await request(app.getHttpServer())
-        .post('/onboarding/verify-email')
+        .post('/v1/onboarding/verify-email')
         .send({ token: verificationToken });
 
       expect([200, 201]).toContain(response.status);
@@ -497,9 +466,6 @@ describe('Onboarding Flow E2E', () => {
 
   describe('Analytics Tracking', () => {
     it('should track onboarding events', async () => {
-      // This test would verify that analytics events are properly tracked
-      // In a real scenario, you might mock the analytics service and verify calls
-
       const analyticsUserEmail = TestHelper.generateUniqueEmail('analytics');
       const analyticsUser = await testHelper.createUser({
         email: analyticsUserEmail,
@@ -511,14 +477,14 @@ describe('Onboarding Flow E2E', () => {
 
       // Track step progression
       await request(app.getHttpServer())
-        .put('/onboarding/step')
+        .put('/v1/onboarding/step')
         .set('Authorization', `Bearer ${analyticsToken}`)
         .send({ step: 'email_verification', data: { source: 'test' } })
         .expect(200);
 
       // Verify analytics metadata is included
       const status = await request(app.getHttpServer())
-        .get('/onboarding/status')
+        .get('/v1/onboarding/status')
         .set('Authorization', `Bearer ${analyticsToken}`)
         .expect(200);
 
@@ -529,7 +495,7 @@ describe('Onboarding Flow E2E', () => {
   describe('Service Health', () => {
     it('should return onboarding service health status', async () => {
       const response = await request(app.getHttpServer())
-        .get('/onboarding/health')
+        .get('/v1/onboarding/health')
         .expect(200);
 
       expect(response.body).toMatchObject({

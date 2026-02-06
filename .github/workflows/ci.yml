@@ -236,7 +236,7 @@ jobs:
           echo "REDIS_URL=redis://localhost:6379" >> apps/api/.env
           echo "JWT_SECRET=$(openssl rand -hex 32)" >> apps/api/.env
           echo "JWT_REFRESH_SECRET=$(openssl rand -hex 32)" >> apps/api/.env
-          echo "ENCRYPTION_KEY=$(openssl rand -hex 32)" >> apps/api/.env
+          echo "ENCRYPTION_KEY=ci-test-encryption-key-exactly32" >> apps/api/.env
 
       - name: Generate Prisma Client
         working-directory: apps/api
@@ -343,8 +343,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     if: github.ref == 'refs/heads/main'
-    # Allow E2E tests to fail without blocking CI (tests have known issues)
-    continue-on-error: true
 
     services:
       postgres:
@@ -418,7 +416,7 @@ jobs:
           echo "REDIS_URL=redis://localhost:6379" >> apps/api/.env
           echo "JWT_SECRET=$(openssl rand -hex 32)" >> apps/api/.env
           echo "JWT_REFRESH_SECRET=$(openssl rand -hex 32)" >> apps/api/.env
-          echo "ENCRYPTION_KEY=$(openssl rand -hex 32)" >> apps/api/.env
+          echo "ENCRYPTION_KEY=ci-test-encryption-key-exactly32" >> apps/api/.env
 
       - name: Generate Prisma Client
         working-directory: apps/api

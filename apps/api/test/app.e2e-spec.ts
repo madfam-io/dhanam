@@ -1,69 +1,49 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import request from 'supertest';
-import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
-import { AppModule } from '../src/app.module';
+
 import { PrismaService } from '../src/core/prisma/prisma.service';
-import { hash } from 'argon2';
+
+import { createE2EApp } from './e2e/helpers/e2e-app.helper';
+import { TestHelper } from './e2e/helpers/test.helper';
 
 describe('AppController (e2e)', () => {
   let app: INestApplication;
-  let prisma: PrismaService;
+  let testHelper: TestHelper;
   let authToken: string;
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
+    try {
+      app = await createE2EApp();
 
-    app = moduleFixture.createNestApplication<NestFastifyApplication>(
-      new FastifyAdapter(),
-    );
-    app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }));
-    app.setGlobalPrefix('v1');
+      const prisma = app.get<PrismaService>(PrismaService);
+      const jwtService = app.get<JwtService>(JwtService);
+      testHelper = new TestHelper(prisma, jwtService);
 
-    prisma = app.get<PrismaService>(PrismaService);
+      await testHelper.cleanDatabase();
 
-    await app.init();
-    await app.getHttpAdapter().getInstance().ready();
-
-    // Clean database
-    await prisma.transaction.deleteMany();
-    await prisma.category.deleteMany();
-    await prisma.budget.deleteMany();
-    await prisma.account.deleteMany();
-    await prisma.userSpace.deleteMany();
-    await prisma.space.deleteMany();
-    await prisma.providerConnection.deleteMany();
-    await prisma.user.deleteMany();
-
-    // Create test user
-    await prisma.user.create({
-      data: {
+      // Create test user via helper (bypasses HIBP check)
+      const { authToken: token } = await testHelper.createCompleteUserWithSpace({
         email: 'test@example.com',
-        passwordHash: await hash('password123'),
+        password: 'E2eT3st-Str0ng-Pwd!9182',
         name: 'Test User',
-      },
-    });
-
-    // Login to get token
-    const loginResponse = await request(app.getHttpServer())
-      .post('/v1/auth/login')
-      .send({
-        email: 'test@example.com',
-        password: 'password123',
       });
 
-    authToken = loginResponse.body.tokens?.accessToken;
-  });
+      authToken = token;
+    } catch (error) {
+      console.error('E2E beforeAll failed:', error);
+      throw error;
+    }
+  }, 30000);
 
   afterAll(async () => {
+    await testHelper.cleanDatabase();
     await app.close();
   });
 
-  it('/health (GET)', () => {
+  it('/v1/monitoring/health (GET)', () => {
     return request(app.getHttpServer())
-      .get('/health') // Health is usually global or we check
+      .get('/v1/monitoring/health')
       .expect(200);
   });
 
@@ -73,7 +53,7 @@ describe('AppController (e2e)', () => {
         .post('/v1/auth/register')
         .send({
           email: 'newuser@example.com',
-          password: 'password123',
+          password: 'E2eT3st-Str0ng-Pwd!9182',
           name: 'New User',
           locale: 'en',
           timezone: 'UTC',
@@ -82,8 +62,8 @@ describe('AppController (e2e)', () => {
 
       expect(response.body).toHaveProperty('tokens');
       expect(response.body.tokens).toHaveProperty('accessToken');
-      expect(response.body.tokens).toHaveProperty('refreshToken');
       expect(response.body.tokens).toHaveProperty('expiresIn');
+      // refreshToken is only in httpOnly cookie, not in body
     });
 
     it('/auth/login (POST)', async () => {
@@ -91,13 +71,14 @@ describe('AppController (e2e)', () => {
         .post('/v1/auth/login')
         .send({
           email: 'test@example.com',
-          password: 'password123',
+          password: 'E2eT3st-Str0ng-Pwd!9182',
         })
         .expect(200);
 
       expect(response.body).toHaveProperty('tokens');
       expect(response.body.tokens).toHaveProperty('accessToken');
-      expect(response.body.tokens).toHaveProperty('refreshToken');
+      expect(response.body.tokens).toHaveProperty('expiresIn');
+      // refreshToken is only in httpOnly cookie, not in body
     });
 
     it('/auth/me (GET)', async () => {
@@ -119,7 +100,7 @@ describe('AppController (e2e)', () => {
         .post('/v1/spaces')
         .set('Authorization', `Bearer ${authToken}`)
         .send({
-          name: 'Test Space',
+          name: 'Test Space 2',
           type: 'personal',
           currency: 'USD',
           timezone: 'UTC',
@@ -127,7 +108,7 @@ describe('AppController (e2e)', () => {
         .expect(201);
 
       expect(response.body).toHaveProperty('id');
-      expect(response.body.name).toBe('Test Space');
+      expect(response.body.name).toBe('Test Space 2');
       spaceId = response.body.id;
     });
 
@@ -148,7 +129,7 @@ describe('AppController (e2e)', () => {
         .expect(200);
 
       expect(response.body.id).toBe(spaceId);
-      expect(response.body.name).toBe('Test Space');
+      expect(response.body.name).toBe('Test Space 2');
     });
   });
 });
