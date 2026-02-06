@@ -35,6 +35,7 @@ jobs:
     permissions:
       contents: write
       packages: write
+      id-token: write
 
     outputs:
       image_tag: ${{ steps.meta.outputs.tags }}
@@ -55,6 +56,11 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
+        with:
+          cosign-release: 'v2.2.4'
 
       - name: Extract metadata for Docker
         id: meta
@@ -82,6 +88,13 @@ jobs:
           build-args: |
             BUILDTIME=${{ github.event.head_commit.timestamp }}
             VERSION=${{ github.sha }}
+
+      - name: Sign image with cosign
+        if: steps.build.outcome == 'success'
+        env:
+          COSIGN_EXPERIMENTAL: "true"
+        run: |
+          cosign sign --yes ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}
 
       - name: Commit digest to kustomization.yaml
         if: github.ref == 'refs/heads/main'

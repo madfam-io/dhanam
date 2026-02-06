@@ -57,6 +57,7 @@ jobs:
     permissions:
       contents: read
       packages: write
+      id-token: write
 
     outputs:
       image_tag: ${{ steps.vars.outputs.sha_short }}
@@ -84,6 +85,11 @@ jobs:
           username: madfam-bot
           password: ${{ secrets.MADFAM_BOT_PAT }}
 
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
+        with:
+          cosign-release: 'v2.2.4'
+
       - name: Build and push
         id: build
         uses: docker/build-push-action@v6
@@ -106,6 +112,13 @@ jobs:
             NEXT_PUBLIC_OIDC_ISSUER=https://auth.madfam.io
             NEXT_PUBLIC_OIDC_CLIENT_ID=jnc_uE2zp9ume_Fd6jMl1elL6wqjiECM711t
             NEXT_PUBLIC_JANUA_API_URL=https://api.janua.dev
+
+      - name: Sign image with cosign
+        if: steps.build.outcome == 'success'
+        env:
+          COSIGN_EXPERIMENTAL: "true"
+        run: |
+          cosign sign --yes ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}
 
   deploy:
     name: Deploy to Enclii K8s

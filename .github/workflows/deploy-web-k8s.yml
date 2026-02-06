@@ -34,6 +34,7 @@ jobs:
     permissions:
       contents: write
       packages: write
+      id-token: write
 
     outputs:
       image_tag: ${{ steps.meta.outputs.tags }}
@@ -54,6 +55,11 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
+        with:
+          cosign-release: 'v2.2.4'
 
       - name: Extract metadata for Docker
         id: meta
@@ -83,6 +89,13 @@ jobs:
             NEXT_PUBLIC_BASE_URL=https://app.dhan.am
             NEXT_PUBLIC_OIDC_AUTHORITY=https://auth.madfam.io
             NEXT_PUBLIC_OIDC_CLIENT_ID=dhanam-web
+
+      - name: Sign image with cosign
+        if: steps.build.outcome == 'success'
+        env:
+          COSIGN_EXPERIMENTAL: "true"
+        run: |
+          cosign sign --yes ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}
 
       - name: Commit digest to kustomization.yaml
         if: github.ref == 'refs/heads/main'
