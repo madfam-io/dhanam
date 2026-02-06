@@ -165,11 +165,7 @@ export function ShareLinkPanel({ reportId, onUpdate }: ShareLinkPanelProps) {
                   </div>
 
                   <div className="flex items-center gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleCopy(token)}
-                    >
+                    <Button variant="ghost" size="icon" onClick={() => handleCopy(token)}>
                       {copiedId === token.id ? (
                         <Check className="h-4 w-4 text-success" />
                       ) : (
@@ -199,8 +195,8 @@ export function ShareLinkPanel({ reportId, onUpdate }: ShareLinkPanelProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>Revoke Share Link</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to revoke this share link? Anyone who has the link will no longer
-              be able to access the report.
+              Are you sure you want to revoke this share link? Anyone who has the link will no
+              longer be able to access the report.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

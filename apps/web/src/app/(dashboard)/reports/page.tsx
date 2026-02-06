@@ -61,7 +61,6 @@ export default function ReportsPage() {
   // Saved report detail panels
   const [shareDialogReport, setShareDialogReport] = useState<SavedReport | null>(null);
   const [historyReportId, setHistoryReportId] = useState<string | null>(null);
-  const [sharingReportId, setSharingReportId] = useState<string | null>(null);
 
   // Create report dialog
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -365,10 +364,7 @@ export default function ReportsPage() {
                 onGenerate={refreshSavedReports}
                 onShare={() => setShareDialogReport(report)}
                 onShowHistory={() => {
-                  setHistoryReportId(
-                    historyReportId === report.id ? null : report.id
-                  );
-                  setSharingReportId(null);
+                  setHistoryReportId(historyReportId === report.id ? null : report.id);
                 }}
                 onDeleted={refreshSavedReports}
               />
@@ -392,19 +388,10 @@ export default function ReportsPage() {
       {/* Expanded History / Sharing Panels */}
       {historyReportId && (
         <div className="space-y-4">
-          <ReportHistoryPanel
-            reportId={historyReportId}
-            onGenerate={refreshSavedReports}
-          />
+          <ReportHistoryPanel reportId={historyReportId} onGenerate={refreshSavedReports} />
           <div className="grid gap-4 md:grid-cols-2">
-            <ShareManagementPanel
-              reportId={historyReportId}
-              onUpdate={refreshSavedReports}
-            />
-            <ShareLinkPanel
-              reportId={historyReportId}
-              onUpdate={refreshSavedReports}
-            />
+            <ShareManagementPanel reportId={historyReportId} onUpdate={refreshSavedReports} />
+            <ShareLinkPanel reportId={historyReportId} onUpdate={refreshSavedReports} />
           </div>
         </div>
       )}
@@ -439,9 +426,7 @@ export default function ReportsPage() {
                       variant="outline"
                       size="sm"
                       onClick={() => {
-                        setHistoryReportId(
-                          historyReportId === report.id ? null : report.id
-                        );
+                        setHistoryReportId(historyReportId === report.id ? null : report.id);
                       }}
                     >
                       View
@@ -521,9 +506,7 @@ export default function ReportsPage() {
               <Label>{t('custom.format')}</Label>
               <Select
                 value={exportFormat}
-                onValueChange={(value: 'pdf' | 'csv' | 'excel' | 'json') =>
-                  setExportFormat(value)
-                }
+                onValueChange={(value: 'pdf' | 'csv' | 'excel' | 'json') => setExportFormat(value)}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -684,10 +667,7 @@ export default function ReportsPage() {
             >
               Cancel
             </Button>
-            <Button
-              onClick={handleCreateReport}
-              disabled={isCreating || !createForm.name}
-            >
+            <Button onClick={handleCreateReport} disabled={isCreating || !createForm.name}>
               {isCreating ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (

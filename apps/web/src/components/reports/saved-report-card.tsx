@@ -116,20 +116,13 @@ export function SavedReportCard({
                       })}
                     </span>
                   )}
-                  {report._count && (
-                    <span>{report._count.generatedReports} reports generated</span>
-                  )}
+                  {report._count && <span>{report._count.generatedReports} reports generated</span>}
                 </div>
               </div>
             </div>
 
             <div className="flex items-center gap-1 shrink-0">
-              <Button
-                variant="default"
-                size="sm"
-                onClick={handleGenerate}
-                disabled={generating}
-              >
+              <Button variant="default" size="sm" onClick={handleGenerate} disabled={generating}>
                 {generating ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
@@ -184,9 +177,7 @@ export function SavedReportCard({
               disabled={deleting}
               className="bg-destructive hover:bg-destructive/90"
             >
-              {deleting ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : null}
+              {deleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
               Delete Report
             </AlertDialogAction>
           </AlertDialogFooter>

@@ -202,7 +202,9 @@ export const reportsApi = {
 
   updateSavedReport: async (
     id: string,
-    data: Partial<Pick<SavedReport, 'name' | 'description' | 'schedule' | 'format' | 'filters' | 'enabled'>>
+    data: Partial<
+      Pick<SavedReport, 'name' | 'description' | 'schedule' | 'format' | 'filters' | 'enabled'>
+    >
   ): Promise<SavedReport> => {
     return apiClient.patch<SavedReport>(`/reports/saved/${id}`, data);
   },

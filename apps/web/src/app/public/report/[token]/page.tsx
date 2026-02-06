@@ -40,9 +40,7 @@ export default function PublicReportPage() {
         setReport(data);
       } catch (err) {
         setError(
-          err instanceof Error
-            ? err.message
-            : 'This link is invalid, expired, or has been revoked.'
+          err instanceof Error ? err.message : 'This link is invalid, expired, or has been revoked.'
         );
       } finally {
         setLoading(false);
@@ -94,18 +92,14 @@ export default function PublicReportPage() {
             <FileText className="h-8 w-8" />
           </div>
           <CardTitle>{report.reportName}</CardTitle>
-          <CardDescription>
-            Shared financial report
-          </CardDescription>
+          <CardDescription>Shared financial report</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-center gap-3">
             <Badge variant="outline" className="text-xs uppercase">
               {report.format}
             </Badge>
-            <span className="text-sm text-muted-foreground">
-              {formatFileSize(report.fileSize)}
-            </span>
+            <span className="text-sm text-muted-foreground">{formatFileSize(report.fileSize)}</span>
             <span className="text-sm text-muted-foreground">
               {new Date(report.generatedAt).toLocaleDateString()}
             </span>
@@ -120,9 +114,7 @@ export default function PublicReportPage() {
             Download Report
           </Button>
 
-          <p className="text-xs text-center text-muted-foreground">
-            Powered by Dhanam
-          </p>
+          <p className="text-xs text-center text-muted-foreground">Powered by Dhanam</p>
         </CardContent>
       </Card>
     </div>
