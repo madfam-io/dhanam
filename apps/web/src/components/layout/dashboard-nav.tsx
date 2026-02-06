@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@dhanam/ui';
 import { useTranslation } from '@dhanam/shared';
+
+import { useDemoNavigation } from '~/lib/contexts/demo-navigation-context';
 import {
   LayoutDashboard,
   Wallet,
@@ -42,6 +44,9 @@ const navigation = [
 export function DashboardNav() {
   const pathname = usePathname();
   const { t } = useTranslation('dashboard');
+  const { demoHref, stripDemoPrefix } = useDemoNavigation();
+
+  const normalizedPath = stripDemoPrefix(pathname);
 
   return (
     <nav className="w-64 border-r bg-background">
@@ -50,11 +55,12 @@ export function DashboardNav() {
           <li>
             <ul className="-mx-2 space-y-1">
               {navigation.map((item) => {
-                const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+                const isActive =
+                  normalizedPath === item.href || normalizedPath.startsWith(item.href + '/');
                 return (
                   <li key={item.key} data-tour={`sidebar-${item.key}`}>
                     <Link
-                      href={item.href}
+                      href={demoHref(item.href)}
                       className={cn(
                         isActive
                           ? 'bg-primary/10 text-primary'

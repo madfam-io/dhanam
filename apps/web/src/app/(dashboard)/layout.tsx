@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { DashboardNav } from '~/components/layout/dashboard-nav';
 import { DashboardHeader } from '~/components/layout/dashboard-header';
@@ -8,7 +8,9 @@ import { DemoModeBanner } from '~/components/demo/demo-mode-banner';
 import { DemoTour } from '~/components/demo/demo-tour';
 import { KeyboardShortcuts } from '~/components/keyboard-shortcuts';
 import { PageTransition } from '~/components/motion/page-transition';
+import { DemoNavigationProvider } from '~/lib/contexts/demo-navigation-context';
 import { useAuth } from '~/lib/hooks/use-auth';
+import { authApi } from '~/lib/api/auth';
 
 /**
  * Loading skeleton shown during SSR and initial client hydration.
@@ -31,16 +33,36 @@ function DashboardSkeleton() {
   );
 }
 
+function isDemoModeCookie(): boolean {
+  if (typeof document === 'undefined') return false;
+  return document.cookie.includes('demo-mode=true');
+}
+
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, _hasHydrated, user, refreshUser } = useAuth();
+  const { isAuthenticated, _hasHydrated, user, refreshUser, setAuth } = useAuth();
   const router = useRouter();
   // Track if client has hydrated - prevents SSR/client mismatch
   const [hasMounted, setHasMounted] = useState(false);
+  const [demoAutoLoginInProgress, setDemoAutoLoginInProgress] = useState(false);
 
   // Mark as mounted after initial render (client-side only)
   useEffect(() => {
     setHasMounted(true);
   }, []);
+
+  // Demo auto-auth: if demo-mode cookie is set but user not authenticated, auto-login as guest
+  const attemptDemoLogin = useCallback(async () => {
+    if (demoAutoLoginInProgress) return;
+    setDemoAutoLoginInProgress(true);
+    try {
+      const result = await authApi.loginAsPersona('guest');
+      setAuth(result.user as any, result.tokens);
+    } catch (error) {
+      console.error('Demo auto-login failed:', error);
+    } finally {
+      setDemoAutoLoginInProgress(false);
+    }
+  }, [demoAutoLoginInProgress, setAuth]);
 
   // Fetch user profile in background if we have tokens but no user data
   // This happens after SSO login where only tokens are stored
@@ -52,11 +74,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [_hasHydrated, isAuthenticated, user, refreshUser]);
 
   // Redirect unauthenticated users after Zustand hydration is complete
+  // Skip redirect when in demo mode — auto-login will handle it
   useEffect(() => {
     if (hasMounted && _hasHydrated && !isAuthenticated) {
-      router.push('/login');
+      if (isDemoModeCookie()) {
+        attemptDemoLogin();
+      } else {
+        router.push('/login');
+      }
     }
-  }, [hasMounted, _hasHydrated, isAuthenticated, router]);
+  }, [hasMounted, _hasHydrated, isAuthenticated, router, attemptDemoLogin]);
 
   // Show skeleton during SSR and initial hydration
   // This ensures server and client render the same content initially
@@ -69,25 +96,27 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return <DashboardSkeleton />;
   }
 
-  // After hydration, if not authenticated, show skeleton while redirecting
+  // After hydration, if not authenticated, show skeleton while redirecting or auto-logging in
   if (!isAuthenticated) {
     return <DashboardSkeleton />;
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <DashboardHeader />
-      <DemoModeBanner />
-      <DemoTour />
-      <KeyboardShortcuts />
-      <div className="flex">
-        <DashboardNav />
-        <main className="flex-1 p-6">
-          <div className="mx-auto max-w-7xl">
-            <PageTransition>{children}</PageTransition>
-          </div>
-        </main>
+    <DemoNavigationProvider>
+      <div className="min-h-screen bg-background">
+        <DashboardHeader />
+        <DemoModeBanner />
+        <DemoTour />
+        <KeyboardShortcuts />
+        <div className="flex">
+          <DashboardNav />
+          <main className="flex-1 p-6">
+            <div className="mx-auto max-w-7xl">
+              <PageTransition>{children}</PageTransition>
+            </div>
+          </main>
+        </div>
       </div>
-    </div>
+    </DemoNavigationProvider>
   );
 }

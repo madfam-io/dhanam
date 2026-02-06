@@ -77,6 +77,15 @@ jest.mock('@dhanam/ui', () => ({
   cn: (...args: unknown[]) => args.filter(Boolean).join(' '),
 }));
 
+const mockDemoNavigation = {
+  isDemoMode: false,
+  demoHref: (path: string) => path,
+  stripDemoPrefix: (path: string) => path,
+};
+jest.mock('~/lib/contexts/demo-navigation-context', () => ({
+  useDemoNavigation: () => mockDemoNavigation,
+}));
+
 const expectedLinks = [
   { name: 'Dashboard', href: '/dashboard' },
   { name: 'Accounts', href: '/accounts' },
@@ -144,5 +153,42 @@ describe('DashboardNav', () => {
       const anchor = screen.getByText(link.name).closest('a');
       expect(anchor?.className).not.toContain('bg-primary/10');
     }
+  });
+
+  describe('demo mode', () => {
+    beforeEach(() => {
+      mockDemoNavigation.isDemoMode = true;
+      mockDemoNavigation.demoHref = (path: string) => `/demo${path}`;
+      mockDemoNavigation.stripDemoPrefix = (path: string) =>
+        path.startsWith('/demo') ? path.replace(/^\/demo/, '') || '/' : path;
+    });
+
+    afterEach(() => {
+      mockDemoNavigation.isDemoMode = false;
+      mockDemoNavigation.demoHref = (path: string) => path;
+      mockDemoNavigation.stripDemoPrefix = (path: string) => path;
+    });
+
+    it('prefixes link hrefs with /demo', () => {
+      mockUsePathname.mockReturnValue('/demo/dashboard');
+      render(<DashboardNav />);
+
+      const dashboardLink = screen.getByText('Dashboard').closest('a');
+      expect(dashboardLink).toHaveAttribute('href', '/demo/dashboard');
+
+      const accountsLink = screen.getByText('Accounts').closest('a');
+      expect(accountsLink).toHaveAttribute('href', '/demo/accounts');
+    });
+
+    it('detects active state from /demo-prefixed pathname', () => {
+      mockUsePathname.mockReturnValue('/demo/accounts');
+      render(<DashboardNav />);
+
+      const activeLink = screen.getByText('Accounts').closest('a');
+      expect(activeLink?.className).toContain('bg-primary/10');
+
+      const inactiveLink = screen.getByText('Dashboard').closest('a');
+      expect(inactiveLink?.className).not.toContain('bg-primary/10');
+    });
   });
 });

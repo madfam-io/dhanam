@@ -15,6 +15,8 @@ import { useAuth } from '~/lib/hooks/use-auth';
 import { useSpaces } from '~/lib/hooks/use-spaces';
 import { useSpaceStore } from '~/stores/space';
 import { useTranslation } from '@dhanam/shared';
+
+import { useDemoNavigation } from '~/lib/contexts/demo-navigation-context';
 import { PersonaSwitcher } from '~/components/demo/persona-switcher';
 import { NotificationDropdown } from '~/components/layout/notification-dropdown';
 import { SearchCommand } from '~/components/search/search-command';
@@ -33,8 +35,13 @@ export function DashboardHeader() {
   const { currentSpace, setCurrentSpace } = useSpaceStore();
   const router = useRouter();
   const { t } = useTranslation('dashboard');
+  const { demoHref } = useDemoNavigation();
 
   const handleLogout = async () => {
+    // Clear demo-mode cookie on logout
+    if (typeof document !== 'undefined') {
+      document.cookie = 'demo-mode=; path=/; max-age=0; SameSite=Lax';
+    }
     await logout();
     router.push('/login');
   };
@@ -82,12 +89,12 @@ export function DashboardHeader() {
                     </DropdownMenuItem>
                   ))}
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => router.push('/dashboard/spaces/new')}>
+                  <DropdownMenuItem onClick={() => router.push(demoHref('/dashboard/spaces/new'))}>
                     {t('header.createNewSpace')}
                   </DropdownMenuItem>
                 </>
               ) : (
-                <DropdownMenuItem onClick={() => router.push('/dashboard/spaces/new')}>
+                <DropdownMenuItem onClick={() => router.push(demoHref('/dashboard/spaces/new'))}>
                   {t('header.createFirstSpace')}
                 </DropdownMenuItem>
               )}
@@ -123,7 +130,7 @@ export function DashboardHeader() {
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>{user?.email}</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => router.push('/dashboard/settings')}>
+              <DropdownMenuItem onClick={() => router.push(demoHref('/dashboard/settings'))}>
                 <Settings className="mr-2 h-4 w-4" />
                 {t('header.settings')}
               </DropdownMenuItem>

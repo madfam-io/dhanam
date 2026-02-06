@@ -9,6 +9,7 @@ const publicPaths = [
   '/reset-password',
   '/auth/callback', // OAuth callback from Janua SSO
   '/demo',
+  '/demo/',
 ];
 
 const SUPPORTED_LOCALES = ['es', 'en', 'pt-BR'];
@@ -87,6 +88,14 @@ export function middleware(request: NextRequest) {
     const adminUrl = process.env.NEXT_PUBLIC_ADMIN_URL || 'https://admin.dhan.am';
     const newPath = path.replace(/^\/admin/, '') || '/';
     return NextResponse.redirect(new URL(newPath, adminUrl));
+  }
+
+  // === DEMO MODE HANDLING ===
+  if (path.startsWith('/demo/')) {
+    const demoPath = path.replace(/^\/demo/, '') || '/dashboard';
+    const response = NextResponse.rewrite(new URL(demoPath, request.url));
+    response.cookies.set('demo-mode', 'true', { path: '/', maxAge: 7200, sameSite: 'lax' });
+    return response;
   }
 
   // === GEO DETECTION (for all routes) ===
@@ -170,8 +179,8 @@ export function middleware(request: NextRequest) {
 
   const isPublicPath = publicPaths.some((p) => path.startsWith(p));
 
-  // Redirect authenticated users away from auth pages
-  if (isPublicPath && token) {
+  // Redirect authenticated users away from auth pages (but not /demo)
+  if (isPublicPath && token && !path.startsWith('/demo')) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 

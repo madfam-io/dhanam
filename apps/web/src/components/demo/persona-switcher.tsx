@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,6 +15,8 @@ import { useAuth } from '~/lib/hooks/use-auth';
 import { authApi } from '~/lib/api/auth';
 import { useTranslation } from '@dhanam/shared';
 
+import { useDemoNavigation } from '~/lib/contexts/demo-navigation-context';
+
 const PERSONAS = [
   { key: 'guest', emoji: '👋', nameKey: 'personaGuest' },
   { key: 'maria', emoji: '🧑‍💼', nameKey: 'personaMaria' },
@@ -26,8 +27,8 @@ const PERSONAS = [
 
 export function PersonaSwitcher({ currentPersona }: { currentPersona?: string }) {
   const { setAuth } = useAuth();
-  const router = useRouter();
   const { t } = useTranslation('common');
+  const { demoHref } = useDemoNavigation();
   const [switching, setSwitching] = useState(false);
 
   const current = PERSONAS.find((p) => p.key === currentPersona) || PERSONAS[0];
@@ -38,7 +39,8 @@ export function PersonaSwitcher({ currentPersona }: { currentPersona?: string })
     try {
       const result = await authApi.switchPersona(personaKey);
       setAuth(result.user, result.tokens);
-      router.refresh();
+      // Full page reload to reset all state with the new persona's data
+      window.location.href = demoHref('/dashboard');
     } catch (error) {
       console.error('Failed to switch persona:', error);
     } finally {

@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
 import { Dialog, DialogContent } from '@dhanam/ui';
+
+import { useDemoRouter } from '~/lib/hooks/use-demo-router';
 
 const shortcuts = [
   { keys: ['⌘', 'K'], label: 'Open search / command palette' },
@@ -26,7 +27,7 @@ const NAV_MAP: Record<string, string> = {
 
 export function KeyboardShortcuts() {
   const [open, setOpen] = useState(false);
-  const router = useRouter();
+  const router = useDemoRouter();
   const pendingG = useRef(false);
   const gTimer = useRef<ReturnType<typeof setTimeout>>();
 

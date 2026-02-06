@@ -101,6 +101,15 @@ jest.mock('~/stores/space', () => ({
   }),
 }));
 
+const mockDemoNavigation = {
+  isDemoMode: false,
+  demoHref: (path: string) => path,
+  stripDemoPrefix: (path: string) => path,
+};
+jest.mock('~/lib/contexts/demo-navigation-context', () => ({
+  useDemoNavigation: () => mockDemoNavigation,
+}));
+
 describe('DashboardHeader', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -180,5 +189,37 @@ describe('DashboardHeader', () => {
     render(<DashboardHeader />);
 
     expect(screen.getByTestId('icon-bell')).toBeInTheDocument();
+  });
+
+  describe('demo mode navigation', () => {
+    beforeEach(() => {
+      mockDemoNavigation.isDemoMode = true;
+      mockDemoNavigation.demoHref = (path: string) => `/demo${path}`;
+    });
+
+    afterEach(() => {
+      mockDemoNavigation.isDemoMode = false;
+      mockDemoNavigation.demoHref = (path: string) => path;
+    });
+
+    it('should prefix settings navigation with /demo', async () => {
+      const user = userEvent.setup();
+      render(<DashboardHeader />);
+
+      const settingsItem = screen.getAllByText('Settings')[0]!.closest('[role="menuitem"]')!;
+      await user.click(settingsItem);
+
+      expect(mockPush).toHaveBeenCalledWith('/demo/dashboard/settings');
+    });
+
+    it('should prefix create space navigation with /demo', async () => {
+      const user = userEvent.setup();
+      render(<DashboardHeader />);
+
+      const createItem = screen.getByText('Create New Space').closest('[role="menuitem"]')!;
+      await user.click(createItem);
+
+      expect(mockPush).toHaveBeenCalledWith('/demo/dashboard/spaces/new');
+    });
   });
 });
