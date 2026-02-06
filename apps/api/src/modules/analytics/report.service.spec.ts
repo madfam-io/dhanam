@@ -14,6 +14,12 @@ jest.mock('@dhanam/shared', () => ({
   AccountBalanceAnalytics: {},
   PortfolioAllocation: {},
   Currency: { USD: 'USD', EUR: 'EUR', MXN: 'MXN' },
+  ANALYTICS: {
+    HISTORY_DAYS: 90,
+    PDF_PAGE_BREAK_Y: 700,
+    SHARE_TOKEN_MAX_HOURS: 720,
+    AMOUNT_DISPLAY_MULTIPLIER: 10_000,
+  },
 }), { virtual: true });
 
 // Mock pdfkit

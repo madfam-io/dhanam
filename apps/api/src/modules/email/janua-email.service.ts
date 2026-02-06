@@ -17,6 +17,8 @@ import { ConfigService } from '@nestjs/config';
 import { AxiosError } from 'axios';
 import { firstValueFrom } from 'rxjs';
 
+import { TIMEOUT_PRESETS } from '@core/utils/timeout.util';
+
 // ============================================================================
 // Types
 // ============================================================================
@@ -153,7 +155,7 @@ export class JanuaEmailService implements OnModuleInit {
       const response = await firstValueFrom(
         this.httpService.get(`${this.baseUrl}/api/v1/internal/email/health`, {
           headers: this.getHeaders(),
-          timeout: 5000,
+          timeout: TIMEOUT_PRESETS.health_check,
         })
       );
 
@@ -210,7 +212,7 @@ export class JanuaEmailService implements OnModuleInit {
       const response = await firstValueFrom(
         this.httpService.post(`${this.baseUrl}/api/v1/internal/email/send`, payload, {
           headers: this.getHeaders(),
-          timeout: 30000,
+          timeout: TIMEOUT_PRESETS.email_send,
         })
       );
 
@@ -255,7 +257,7 @@ export class JanuaEmailService implements OnModuleInit {
       const response = await firstValueFrom(
         this.httpService.post(`${this.baseUrl}/api/v1/internal/email/send-template`, payload, {
           headers: this.getHeaders(),
-          timeout: 30000,
+          timeout: TIMEOUT_PRESETS.email_send,
         })
       );
 
@@ -293,7 +295,7 @@ export class JanuaEmailService implements OnModuleInit {
       const response = await firstValueFrom(
         this.httpService.post(`${this.baseUrl}/api/v1/internal/email/send-batch`, payload, {
           headers: this.getHeaders(),
-          timeout: 60000,
+          timeout: TIMEOUT_PRESETS.email_batch,
         })
       );
 
@@ -325,7 +327,7 @@ export class JanuaEmailService implements OnModuleInit {
       const response = await firstValueFrom(
         this.httpService.get(`${this.baseUrl}/api/v1/internal/email/templates`, {
           headers: this.getHeaders(),
-          timeout: 10000,
+          timeout: TIMEOUT_PRESETS.email_template_fetch,
         })
       );
 

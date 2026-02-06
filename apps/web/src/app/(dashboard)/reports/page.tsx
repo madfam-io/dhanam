@@ -57,6 +57,7 @@ export default function ReportsPage() {
   const [exportFormat, setExportFormat] = useState<'pdf' | 'csv' | 'excel' | 'json'>('pdf');
   const [isGenerating, setIsGenerating] = useState(false);
   const { t } = useTranslation('reports');
+  const { t: tCommon } = useTranslation('common');
 
   // Saved report detail panels
   const [shareDialogReport, setShareDialogReport] = useState<SavedReport | null>(null);
@@ -227,9 +228,9 @@ export default function ReportsPage() {
       setCreateDialogOpen(false);
       setCreateForm({ name: '', description: '', type: 'monthly_spending', format: 'pdf' });
       refreshSavedReports();
-      toast.success('Report configuration saved');
+      toast.success(t('toast.reportConfigSaved'));
     } catch {
-      toast.error('Failed to create report');
+      toast.error(t('toast.failedToCreate'));
     } finally {
       setIsCreating(false);
     }
@@ -322,7 +323,7 @@ export default function ReportsPage() {
                 ) : (
                   <FileSpreadsheet className="mr-2 h-4 w-4" />
                 )}
-                Excel
+                {t('quickExport.excelExport')}
               </Button>
               <Button
                 onClick={() => handleQuickExport('json')}
@@ -334,7 +335,7 @@ export default function ReportsPage() {
                 ) : (
                   <FileJson className="mr-2 h-4 w-4" />
                 )}
-                JSON
+                {t('quickExport.jsonExport')}
               </Button>
             </div>
           </div>
@@ -344,10 +345,10 @@ export default function ReportsPage() {
       {/* Saved Reports */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold">My Saved Reports</h2>
+          <h2 className="text-xl font-semibold">{t('saved.heading')}</h2>
           <Button onClick={() => setCreateDialogOpen(true)} size="sm">
             <Plus className="mr-2 h-4 w-4" />
-            Create Report
+            {t('saved.createReport')}
           </Button>
         </div>
 
@@ -375,10 +376,8 @@ export default function ReportsPage() {
             <CardContent className="py-8">
               <div className="text-center text-muted-foreground">
                 <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>No saved reports yet</p>
-                <p className="text-sm">
-                  Create a saved report to generate and archive financial reports
-                </p>
+                <p>{t('saved.noSavedReports')}</p>
+                <p className="text-sm">{t('saved.noSavedReportsDesc')}</p>
               </div>
             </CardContent>
           </Card>
@@ -401,7 +400,7 @@ export default function ReportsPage() {
         <div className="space-y-4">
           <h2 className="text-xl font-semibold flex items-center gap-2">
             <Share2 className="h-5 w-5" />
-            Shared With Me
+            {t('saved.sharedWithMe')}
           </h2>
           <div className="space-y-3">
             {sharedWithMe.map((report) => (
@@ -418,7 +417,8 @@ export default function ReportsPage() {
                           <p className="text-sm text-muted-foreground">{report.description}</p>
                         )}
                         <p className="text-xs text-muted-foreground mt-1">
-                          Shared by {report.sharedBy.name} &middot; Role: {report.shareRole}
+                          {t('saved.sharedBy', { name: report.sharedBy.name })} &middot;{' '}
+                          {t('saved.role', { role: report.shareRole })}
                         </p>
                       </div>
                     </div>
@@ -429,7 +429,7 @@ export default function ReportsPage() {
                         setHistoryReportId(historyReportId === report.id ? null : report.id);
                       }}
                     >
-                      View
+                      {t('saved.view')}
                     </Button>
                   </div>
                 </CardContent>
@@ -514,8 +514,8 @@ export default function ReportsPage() {
                 <SelectContent>
                   <SelectItem value="pdf">{t('quickExport.pdfReport')}</SelectItem>
                   <SelectItem value="csv">{t('quickExport.csvExport')}</SelectItem>
-                  <SelectItem value="excel">Excel Spreadsheet</SelectItem>
-                  <SelectItem value="json">JSON Data</SelectItem>
+                  <SelectItem value="excel">{t('quickExport.excelSpreadsheet')}</SelectItem>
+                  <SelectItem value="json">{t('quickExport.jsonData')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -596,33 +596,31 @@ export default function ReportsPage() {
       <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>Create Saved Report</DialogTitle>
-            <DialogDescription>
-              Save a report configuration to generate and archive on demand or on a schedule.
-            </DialogDescription>
+            <DialogTitle>{t('createDialog.title')}</DialogTitle>
+            <DialogDescription>{t('createDialog.description')}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="report-name">Report Name</Label>
+              <Label htmlFor="report-name">{t('createDialog.reportName')}</Label>
               <Input
                 id="report-name"
-                placeholder="Monthly Financial Summary"
+                placeholder={t('createDialog.reportNamePlaceholder')}
                 value={createForm.name}
                 onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="report-desc">Description (Optional)</Label>
+              <Label htmlFor="report-desc">{t('createDialog.reportDescription')}</Label>
               <Input
                 id="report-desc"
-                placeholder="Detailed monthly breakdown of income and expenses"
+                placeholder={t('createDialog.reportDescriptionPlaceholder')}
                 value={createForm.description}
                 onChange={(e) => setCreateForm({ ...createForm, description: e.target.value })}
               />
             </div>
             <div className="grid gap-4 grid-cols-2">
               <div className="space-y-2">
-                <Label>Report Type</Label>
+                <Label>{t('createDialog.reportType')}</Label>
                 <Select
                   value={createForm.type}
                   onValueChange={(value) => setCreateForm({ ...createForm, type: value })}
@@ -631,15 +629,19 @@ export default function ReportsPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="monthly_spending">Monthly Spending</SelectItem>
-                    <SelectItem value="quarterly_net_worth">Quarterly Net Worth</SelectItem>
-                    <SelectItem value="annual_tax">Annual Tax</SelectItem>
-                    <SelectItem value="custom">Custom</SelectItem>
+                    <SelectItem value="monthly_spending">
+                      {t('createDialog.monthlySpending')}
+                    </SelectItem>
+                    <SelectItem value="quarterly_net_worth">
+                      {t('createDialog.quarterlyNetWorth')}
+                    </SelectItem>
+                    <SelectItem value="annual_tax">{t('createDialog.annualTax')}</SelectItem>
+                    <SelectItem value="custom">{t('createDialog.custom')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Format</Label>
+                <Label>{t('createDialog.format')}</Label>
                 <Select
                   value={createForm.format}
                   onValueChange={(value: 'pdf' | 'csv' | 'excel' | 'json') =>
@@ -665,7 +667,7 @@ export default function ReportsPage() {
               onClick={() => setCreateDialogOpen(false)}
               disabled={isCreating}
             >
-              Cancel
+              {tCommon('cancel')}
             </Button>
             <Button onClick={handleCreateReport} disabled={isCreating || !createForm.name}>
               {isCreating ? (
@@ -673,7 +675,7 @@ export default function ReportsPage() {
               ) : (
                 <Plus className="mr-2 h-4 w-4" />
               )}
-              Create Report
+              {t('saved.createReport')}
             </Button>
           </DialogFooter>
         </DialogContent>

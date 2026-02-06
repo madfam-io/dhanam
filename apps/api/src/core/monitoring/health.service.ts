@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import Redis from 'ioredis';
 
 import { PrismaService } from '@core/prisma/prisma.service';
+import { TIMEOUT_PRESETS } from '@core/utils/timeout.util';
 import { QueueService } from '@modules/jobs/queue.service';
 
 export interface HealthStatus {
@@ -156,8 +157,7 @@ export class HealthService {
     }
 
     const health = await this.getBasicHealthStatus();
-    const ready =
-      health.checks.database.status === 'up' && health.checks.redis.status === 'up';
+    const ready = health.checks.database.status === 'up' && health.checks.redis.status === 'up';
     const failedServices = [health.checks.database, health.checks.redis]
       .filter((check) => check.status !== 'up')
       .map((check) => check.error || 'Unknown error');
@@ -215,7 +215,7 @@ export class HealthService {
       if (!this.redisClient || this.redisClient.status === 'end') {
         this.redisClient = new Redis(redisUrl, {
           maxRetriesPerRequest: 1,
-          connectTimeout: 5000,
+          connectTimeout: TIMEOUT_PRESETS.health_check,
           lazyConnect: true,
         });
         await this.redisClient.connect();
@@ -296,7 +296,7 @@ export class HealthService {
     for (const endpoint of endpoints) {
       try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_PRESETS.health_check);
 
         const response = await fetch(endpoint.url, {
           signal: controller.signal,
@@ -414,7 +414,7 @@ export class HealthService {
       const baseUrl = env === 'production' ? 'https://api.belvo.com' : 'https://sandbox.belvo.com';
 
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_PRESETS.health_check);
 
       const response = await fetch(`${baseUrl}/api/`, {
         signal: controller.signal,
@@ -474,7 +474,7 @@ export class HealthService {
             : 'https://sandbox.plaid.com';
 
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_PRESETS.health_check);
 
       const response = await fetch(`${baseUrl}/categories/get`, {
         signal: controller.signal,
@@ -526,7 +526,7 @@ export class HealthService {
     try {
       // Check Bitso public API (ticker endpoint doesn't require auth)
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_PRESETS.health_check);
 
       const response = await fetch('https://api.bitso.com/v3/ticker?book=btc_mxn', {
         signal: controller.signal,

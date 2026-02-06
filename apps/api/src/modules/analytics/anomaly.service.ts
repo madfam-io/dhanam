@@ -1,3 +1,4 @@
+import { ANOMALY_DETECTION } from '@dhanam/shared';
 import { Injectable, Logger } from '@nestjs/common';
 
 import { Currency } from '@db';
@@ -40,13 +41,6 @@ interface TransactionStats {
 @Injectable()
 export class AnomalyService {
   private readonly logger = new Logger(AnomalyService.name);
-
-  // Thresholds for anomaly detection
-  private readonly ZSCORE_THRESHOLD = 2.5; // Standard deviations for outlier
-  private readonly SPENDING_SPIKE_THRESHOLD = 1.5; // 50% increase triggers spike
-  private readonly LARGE_TRANSACTION_THRESHOLD = 500; // Threshold for "large" at new merchant
-  private readonly MIN_HISTORY_DAYS = 30; // Minimum history needed for analysis
-  private readonly DUPLICATE_TIME_WINDOW_HOURS = 48; // Window for duplicate detection
 
   constructor(
     private prisma: PrismaService,
@@ -106,7 +100,7 @@ export class AnomalyService {
    */
   private async detectUnusualAmounts(spaceId: string, days: number): Promise<SpendingAnomaly[]> {
     const startDate = this.getStartDate(days);
-    const historyStartDate = this.getStartDate(days + this.MIN_HISTORY_DAYS);
+    const historyStartDate = this.getStartDate(days + ANOMALY_DETECTION.MIN_HISTORY_DAYS);
 
     // Get recent transactions
     const recentTransactions = await this.prisma.transaction.findMany({
@@ -144,7 +138,7 @@ export class AnomalyService {
       const amount = Math.abs(Number(txn.amount));
       const zScore = (amount - stats.mean) / stats.stdDev;
 
-      if (zScore > this.ZSCORE_THRESHOLD && stats.stdDev > 0) {
+      if (zScore > ANOMALY_DETECTION.ZSCORE_THRESHOLD && stats.stdDev > 0) {
         const severity = this.getSeverityFromZScore(zScore);
         anomalies.push({
           id: `unusual-${txn.id}`,
@@ -205,7 +199,7 @@ export class AnomalyService {
         const currentSpending = weeklySpending[i];
         const ratio = currentSpending / historicalAvg;
 
-        if (ratio > this.SPENDING_SPIKE_THRESHOLD) {
+        if (ratio > ANOMALY_DETECTION.SPENDING_SPIKE_MULTIPLIER) {
           const weekEnd = new Date(now);
           weekEnd.setDate(weekEnd.getDate() - i * 7);
 
@@ -257,7 +251,7 @@ export class AnomalyService {
       where: {
         account: { spaceId },
         date: { gte: startDate },
-        amount: { lt: -this.LARGE_TRANSACTION_THRESHOLD },
+        amount: { lt: -ANOMALY_DETECTION.LARGE_TRANSACTION_USD },
         pending: false,
       },
       select: {
@@ -360,7 +354,7 @@ export class AnomalyService {
       const normalizedHistorical = historical.total * daysRatio;
       const ratio = recentAmount / normalizedHistorical;
 
-      if (ratio > this.SPENDING_SPIKE_THRESHOLD && recentAmount > 100) {
+      if (ratio > ANOMALY_DETECTION.SPENDING_SPIKE_MULTIPLIER && recentAmount > 100) {
         const categoryName = categoryNames.get(recent.categoryId) || 'Unknown';
         anomalies.push({
           id: `category-surge-${recent.categoryId}`,
@@ -416,7 +410,7 @@ export class AnomalyService {
       if (previous) {
         const hoursDiff = (txn.date.getTime() - previous.date.getTime()) / (1000 * 60 * 60);
 
-        if (hoursDiff <= this.DUPLICATE_TIME_WINDOW_HOURS && hoursDiff > 0) {
+        if (hoursDiff <= ANOMALY_DETECTION.DUPLICATE_WINDOW_HOURS && hoursDiff > 0) {
           const amount = Math.abs(Number(txn.amount));
           anomalies.push({
             id: `duplicate-${txn.id}`,

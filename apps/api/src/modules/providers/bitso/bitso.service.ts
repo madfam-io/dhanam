@@ -1,5 +1,6 @@
 import * as crypto from 'crypto';
 
+import { PROVIDER_DEFAULTS } from '@dhanam/shared';
 import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios, { AxiosInstance, AxiosError } from 'axios';
@@ -337,7 +338,9 @@ export class BitsoService {
 
         // Calculate USD value
         const usdPrice = priceMap[`${balance.currency.toLowerCase()}_mxn`] || 0;
-        const mxnToUsdRate = priceMap['usd_mxn'] ? 1 / priceMap['usd_mxn'] : 0.05; // Fallback rate
+        const mxnToUsdRate = priceMap['usd_mxn']
+          ? 1 / priceMap['usd_mxn']
+          : PROVIDER_DEFAULTS.BITSO_DEFAULT_FEE_RATE; // Fallback rate
         const usdValue = usdPrice * mxnToUsdRate * totalAmount;
 
         const accountData = {
@@ -348,7 +351,9 @@ export class BitsoService {
           type: 'crypto' as const,
           subtype: 'crypto',
           currency: Currency.USD, // Normalize to USD for portfolio tracking
-          balance: Math.round(usdValue * 100) / 100, // Round to 2 decimals
+          balance:
+            Math.round(usdValue * PROVIDER_DEFAULTS.BITSO_AMOUNT_PRECISION) /
+            PROVIDER_DEFAULTS.BITSO_AMOUNT_PRECISION, // Round to 2 decimals
           lastSyncedAt: new Date(),
           metadata: {
             cryptoCurrency: balance.currency.toUpperCase(),
@@ -396,8 +401,13 @@ export class BitsoService {
 
         // Calculate USD value
         const usdPrice = priceMap[`${balance.currency.toLowerCase()}_mxn`] || 0;
-        const mxnToUsdRate = priceMap['usd_mxn'] ? 1 / priceMap['usd_mxn'] : 0.05; // Fallback rate
-        const usdValue = Math.round(usdPrice * mxnToUsdRate * totalAmount * 100) / 100;
+        const mxnToUsdRate = priceMap['usd_mxn']
+          ? 1 / priceMap['usd_mxn']
+          : PROVIDER_DEFAULTS.BITSO_DEFAULT_FEE_RATE; // Fallback rate
+        const usdValue =
+          Math.round(
+            usdPrice * mxnToUsdRate * totalAmount * PROVIDER_DEFAULTS.BITSO_AMOUNT_PRECISION
+          ) / PROVIDER_DEFAULTS.BITSO_AMOUNT_PRECISION;
 
         const providerAccountId = `bitso_${balance.currency.toLowerCase()}_${clientId}`;
 
@@ -502,7 +512,7 @@ export class BitsoService {
   private async syncTrades(client: AxiosInstance, clientId: string) {
     try {
       const tradesResponse = await client.get('/user_trades', {
-        params: { limit: 100 }, // Get last 100 trades
+        params: { limit: PROVIDER_DEFAULTS.BITSO_TRADE_FETCH_LIMIT }, // Get last 100 trades
       });
       const trades: BitsoTrade[] = tradesResponse.data.payload;
 

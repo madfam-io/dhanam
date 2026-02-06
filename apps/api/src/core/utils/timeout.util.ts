@@ -94,6 +94,23 @@ export const TIMEOUT_PRESETS: Record<string, number> = {
 
   // File upload/download
   file_operation: 60000, // 1 minute
+
+  // Email operations
+  email_send: 30000, // 30 seconds
+  email_batch: 60000, // 1 minute
+  email_template_fetch: 10000, // 10 seconds
+
+  // Health checks
+  health_check: 5000, // 5 seconds
+
+  // Blockchain queries
+  blockchain_query: 10000, // 10 seconds
+
+  // Circuit breaker retry window
+  circuit_breaker_retry: 60000, // 1 minute
+
+  // Collectibles API throttle delay
+  collectibles_api_delay: 200, // 200ms
 };
 
 const logger = new Logger('TimeoutUtil');

@@ -12,6 +12,7 @@ import {
   Area,
   AreaChart,
 } from 'recharts';
+import { useTranslation } from '@dhanam/shared';
 
 interface SimulationChartProps {
   timeSeries: MonthlySnapshot[];
@@ -20,6 +21,7 @@ interface SimulationChartProps {
 }
 
 export function SimulationChart({ timeSeries, title, description }: SimulationChartProps) {
+  const { t } = useTranslation('analytics');
   const chartData = timeSeries.map((point) => ({
     month: point.month,
     year: (point.month / 12).toFixed(1),
@@ -44,11 +46,19 @@ export function SimulationChart({ timeSeries, title, description }: SimulationCh
       const data = payload[0].payload;
       return (
         <div className="bg-background border rounded-lg p-3 shadow-lg">
-          <p className="font-semibold mb-2">Year {data.year}</p>
+          <p className="font-semibold mb-2">
+            {t('charts.simulation.year')} {data.year}
+          </p>
           <div className="space-y-1 text-sm">
-            <p className="text-green-600">Best 10%: {formatCurrency(data.p90)}</p>
-            <p className="text-blue-600 font-semibold">Median: {formatCurrency(data.median)}</p>
-            <p className="text-red-600">Worst 10%: {formatCurrency(data.p10)}</p>
+            <p className="text-green-600">
+              {t('charts.simulation.best10')}: {formatCurrency(data.p90)}
+            </p>
+            <p className="text-blue-600 font-semibold">
+              {t('charts.simulation.median')}: {formatCurrency(data.median)}
+            </p>
+            <p className="text-red-600">
+              {t('charts.simulation.worst10')}: {formatCurrency(data.p10)}
+            </p>
           </div>
         </div>
       );
@@ -59,9 +69,9 @@ export function SimulationChart({ timeSeries, title, description }: SimulationCh
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{title || 'Portfolio Growth Projections'}</CardTitle>
+        <CardTitle>{title || t('charts.simulation.defaultTitle')}</CardTitle>
         <CardDescription>
-          {description || 'Median outcome with 10th-90th percentile range'}
+          {description || t('charts.simulation.defaultDescription')}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -75,11 +85,15 @@ export function SimulationChart({ timeSeries, title, description }: SimulationCh
             </defs>
             <XAxis
               dataKey="year"
-              label={{ value: 'Years', position: 'insideBottom', offset: -5 }}
+              label={{ value: t('charts.simulation.years'), position: 'insideBottom', offset: -5 }}
             />
             <YAxis
               tickFormatter={formatCurrency}
-              label={{ value: 'Portfolio Value', angle: -90, position: 'insideLeft' }}
+              label={{
+                value: t('charts.simulation.portfolioValue'),
+                angle: -90,
+                position: 'insideLeft',
+              }}
             />
             <Tooltip content={<CustomTooltip />} />
             <Legend />
@@ -102,7 +116,7 @@ export function SimulationChart({ timeSeries, title, description }: SimulationCh
               strokeWidth={1}
               strokeDasharray="5 5"
               dot={false}
-              name="10th Percentile"
+              name={t('charts.simulation.p10')}
             />
             <Line
               type="monotone"
@@ -110,7 +124,7 @@ export function SimulationChart({ timeSeries, title, description }: SimulationCh
               stroke="#3b82f6"
               strokeWidth={3}
               dot={false}
-              name="Median"
+              name={t('charts.simulation.median')}
             />
             <Line
               type="monotone"
@@ -119,16 +133,13 @@ export function SimulationChart({ timeSeries, title, description }: SimulationCh
               strokeWidth={1}
               strokeDasharray="5 5"
               dot={false}
-              name="90th Percentile"
+              name={t('charts.simulation.p90')}
             />
           </AreaChart>
         </ResponsiveContainer>
 
         <div className="mt-4 text-sm text-muted-foreground">
-          <p>
-            The shaded area represents the 80% confidence interval (10th to 90th percentile). The
-            median line shows the most likely outcome.
-          </p>
+          <p>{t('charts.simulation.confidenceNote')}</p>
         </div>
       </CardContent>
     </Card>

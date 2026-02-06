@@ -1,3 +1,4 @@
+import { PROVIDER_HEALTH } from '@dhanam/shared';
 import { Injectable, Logger } from '@nestjs/common';
 
 import { PrismaService } from '@core/prisma/prisma.service';
@@ -120,9 +121,9 @@ export class ProviderSelectionService {
       },
     });
 
-    // Get recent connection attempts (last 30 days)
+    // Get recent connection attempts (last N days)
     const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - PROVIDER_HEALTH.RECENT_CONNECTION_DAYS);
 
     const recentAttempts = await this.prisma.connectionAttempt.findMany({
       where: {

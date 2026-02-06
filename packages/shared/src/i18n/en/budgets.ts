@@ -194,6 +194,67 @@ export const budgets = {
     categoryAdded: 'Category added successfully',
     categoryAddFailed: 'Failed to add category',
   },
+  rules: {
+    title: 'Transaction Categorization Rules',
+    description:
+      'Create rules to automatically categorize transactions based on patterns',
+    priorityHint:
+      'Rules are applied in priority order (lower numbers first)',
+    addRule: 'Add Rule',
+    noRulesTitle: 'No rules yet',
+    noRulesDescription:
+      'Create rules to automatically categorize transactions',
+    createFirstRule: 'Create Your First Rule',
+    createRuleTitle: 'Create Categorization Rule',
+    createRuleDescription:
+      'Define a pattern to automatically categorize transactions',
+    labels: {
+      ruleName: 'Rule Name',
+      field: 'Field',
+      operator: 'Operator',
+      patternValue: 'Pattern Value',
+      priority: 'Priority (1 = highest)',
+      category: 'Category',
+    },
+    placeholders: {
+      ruleName: 'e.g., Grocery Stores',
+      selectField: 'Select field',
+      selectOperator: 'Select operator',
+      patternValue: 'e.g., walmart|target|grocery',
+      selectCategory: 'Select category',
+    },
+    fields: {
+      description: 'Description',
+      merchant: 'Merchant',
+      amount: 'Amount',
+    },
+    operators: {
+      contains: 'Contains',
+      equals: 'Equals',
+      startsWith: 'Starts with',
+      endsWith: 'Ends with',
+      regex: 'Regex',
+      gte: 'Greater than',
+      lte: 'Less than',
+    },
+    buttons: {
+      testing: 'Testing...',
+      testRule: 'Test Rule',
+      creating: 'Creating...',
+      createRule: 'Create Rule',
+    },
+    testResults: 'Test Results:',
+    testMatch: 'Would match {{count}} transactions',
+    sampleMatches: 'Sample matches:',
+    toast: {
+      ruleCreated: 'Rule created successfully',
+      ruleCreateFailed: 'Failed to create rule',
+      ruleUpdated: 'Rule updated successfully',
+      ruleUpdateFailed: 'Failed to update rule',
+      ruleTestMatch: 'Rule would match {{count}} transactions',
+      ruleTestFailed: 'Failed to test rule',
+    },
+  },
   zeroBased: {
     title: 'Zero-Based Budget',
     description: 'Give every dollar a job \u2022 Envelope budgeting for {{name}}',

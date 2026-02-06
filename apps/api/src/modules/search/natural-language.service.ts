@@ -1,3 +1,4 @@
+import { SEARCH_DEFAULTS } from '@dhanam/shared';
 import { Injectable, Logger } from '@nestjs/common';
 
 import { Currency } from '@db';
@@ -531,7 +532,7 @@ export class NaturalLanguageService {
     } else if (/\brecent|latest\b/i.test(query)) {
       sortBy = 'date';
       sortOrder = 'desc';
-      limit = 20;
+      limit = SEARCH_DEFAULTS.MAX_RESULTS;
     }
 
     // Extract explicit limit
@@ -660,7 +661,7 @@ export class NaturalLanguageService {
           timeRange,
           sortBy,
           sortOrder,
-          limit || 20
+          limit || SEARCH_DEFAULTS.MAX_RESULTS
         );
     }
   }
@@ -836,7 +837,7 @@ export class NaturalLanguageService {
         lastTransaction: data.lastDate.toISOString(),
       }))
       .sort((a, b) => b.total - a.total)
-      .slice(0, 20);
+      .slice(0, SEARCH_DEFAULTS.MAX_RESULTS);
 
     return {
       answer: `You made purchases at ${merchants.length} different merchants ${timeRange.periodLabel}.`,
@@ -862,7 +863,7 @@ export class NaturalLanguageService {
     const transactions = await this.prisma.transaction.findMany({
       where,
       orderBy,
-      take: limit || 20,
+      take: limit || SEARCH_DEFAULTS.MAX_RESULTS,
       select: {
         id: true,
         date: true,
@@ -940,7 +941,7 @@ export class NaturalLanguageService {
       'Compare this month to last month',
     ];
 
-    if (!partialQuery || partialQuery.length < 2) {
+    if (!partialQuery || partialQuery.length < SEARCH_DEFAULTS.MIN_QUERY_LENGTH) {
       return suggestions.slice(0, 5);
     }
 

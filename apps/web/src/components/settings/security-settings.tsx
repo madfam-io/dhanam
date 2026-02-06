@@ -9,11 +9,14 @@ import { Alert, AlertDescription } from '@dhanam/ui';
 import { Separator } from '@dhanam/ui';
 import { Shield, Smartphone, Key, AlertTriangle, Check, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslation } from '@dhanam/shared';
 import { TotpSetup } from '~/components/auth/totp-setup';
 
 export function SecuritySettings() {
   const [showTotpSetup, setShowTotpSetup] = useState(false);
   const queryClient = useQueryClient();
+  const { t } = useTranslation('settings');
+  const { t: tCommon } = useTranslation('common');
 
   const { data: totpStatus, isLoading } = useQuery({
     queryKey: ['totp-status'],
@@ -23,11 +26,11 @@ export function SecuritySettings() {
   const disableTotpMutation = useMutation({
     mutationFn: () => Promise.resolve(),
     onSuccess: () => {
-      toast.success('Two-factor authentication disabled');
+      toast.success(t('toast.twoFactorDisabled'));
       queryClient.invalidateQueries({ queryKey: ['totp-status'] });
     },
     onError: () => {
-      toast.error('Failed to disable 2FA');
+      toast.error(t('toast.failedToDisable2FA'));
     },
   });
 
@@ -43,11 +46,11 @@ export function SecuritySettings() {
       a.download = 'dhanam-backup-codes.txt';
       a.click();
       URL.revokeObjectURL(url);
-      toast.success('New backup codes generated and downloaded');
+      toast.success(t('toast.backupCodesGenerated'));
       queryClient.invalidateQueries({ queryKey: ['totp-status'] });
     },
     onError: () => {
-      toast.error('Failed to generate backup codes');
+      toast.error(t('toast.failedToGenerateBackupCodes'));
     },
   });
 
@@ -66,10 +69,8 @@ export function SecuritySettings() {
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-medium">Security Settings</h3>
-        <p className="text-sm text-muted-foreground">
-          Manage your account security and authentication preferences
-        </p>
+        <h3 className="text-lg font-medium">{t('securityPage.title')}</h3>
+        <p className="text-sm text-muted-foreground">{t('securityPage.description')}</p>
       </div>
 
       <Separator />
@@ -79,30 +80,28 @@ export function SecuritySettings() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Smartphone className="h-5 w-5" />
-            Two-Factor Authentication
+            {t('securityPage.twoFactorTitle')}
           </CardTitle>
-          <CardDescription>
-            Add an extra layer of security to your account with time-based codes
-          </CardDescription>
+          <CardDescription>{t('securityPage.twoFactorDescription')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="space-y-1">
-              <p className="text-sm font-medium">Authenticator App</p>
+              <p className="text-sm font-medium">{t('securityPage.authenticatorApp')}</p>
               <p className="text-sm text-muted-foreground">
                 {totpStatus?.enabled
-                  ? 'Two-factor authentication is enabled'
-                  : 'Use your phone to generate verification codes'}
+                  ? t('securityPage.twoFactorEnabled')
+                  : t('securityPage.twoFactorPrompt')}
               </p>
             </div>
             <Badge variant={totpStatus?.enabled ? 'default' : 'secondary'}>
               {totpStatus?.enabled ? (
                 <>
                   <Check className="h-3 w-3 mr-1" />
-                  Enabled
+                  {tCommon('enabled')}
                 </>
               ) : (
-                'Disabled'
+                tCommon('disabled')
               )}
             </Badge>
           </div>
@@ -112,8 +111,7 @@ export function SecuritySettings() {
               <Alert>
                 <Shield className="h-4 w-4" />
                 <AlertDescription>
-                  Your account is protected with two-factor authentication. You have{' '}
-                  {totpStatus.backupCodesRemaining} backup codes remaining.
+                  {t('securityPage.accountProtected', { count: totpStatus.backupCodesRemaining })}
                 </AlertDescription>
               </Alert>
 
@@ -127,12 +125,12 @@ export function SecuritySettings() {
                   {generateBackupCodesMutation.isPending ? (
                     <>
                       <Loader2 className="mr-2 h-3 w-3 animate-spin" />
-                      Generating...
+                      {t('securityPage.generating')}
                     </>
                   ) : (
                     <>
                       <Key className="mr-2 h-3 w-3" />
-                      New Backup Codes
+                      {t('securityPage.newBackupCodes')}
                     </>
                   )}
                 </Button>
@@ -146,10 +144,10 @@ export function SecuritySettings() {
                   {disableTotpMutation.isPending ? (
                     <>
                       <Loader2 className="mr-2 h-3 w-3 animate-spin" />
-                      Disabling...
+                      {t('securityPage.disabling')}
                     </>
                   ) : (
-                    'Disable 2FA'
+                    t('security.disableTwoFactor')
                   )}
                 </Button>
               </div>
@@ -159,14 +157,13 @@ export function SecuritySettings() {
               <Alert className="border-warning/30 bg-warning/10">
                 <AlertTriangle className="h-4 w-4 text-warning" />
                 <AlertDescription className="text-warning-foreground">
-                  Your account is not protected by two-factor authentication. We strongly recommend
-                  enabling it for enhanced security.
+                  {t('securityPage.accountNotProtected')}
                 </AlertDescription>
               </Alert>
 
               <Button onClick={() => setShowTotpSetup(true)}>
                 <Shield className="mr-2 h-4 w-4" />
-                Enable Two-Factor Authentication
+                {t('securityPage.enableTwoFactor')}
               </Button>
             </div>
           )}

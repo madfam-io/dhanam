@@ -25,6 +25,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@dhanam/ui';
 import { Badge } from '@/components/ui/badge';
 import { apiClient } from '@/lib/api/client';
+import { useTranslation } from '@dhanam/shared';
 
 interface SearchResult {
   answer?: string;
@@ -57,6 +58,7 @@ interface CommandItem {
 }
 
 export function SearchCommand({ spaceId }: SearchCommandProps) {
+  const { t } = useTranslation('common');
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult | null>(null);
@@ -76,7 +78,7 @@ export function SearchCommand({ spaceId }: SearchCommandProps) {
       // Navigate
       {
         id: 'nav-dashboard',
-        label: 'Go to Dashboard',
+        label: t('searchCommand.commands.goToDashboard'),
         icon: LayoutDashboard,
         group: 'navigate',
         action: () => {
@@ -86,7 +88,7 @@ export function SearchCommand({ spaceId }: SearchCommandProps) {
       },
       {
         id: 'nav-transactions',
-        label: 'Go to Transactions',
+        label: t('searchCommand.commands.goToTransactions'),
         icon: Receipt,
         group: 'navigate',
         action: () => {
@@ -96,7 +98,7 @@ export function SearchCommand({ spaceId }: SearchCommandProps) {
       },
       {
         id: 'nav-budgets',
-        label: 'Go to Budgets',
+        label: t('searchCommand.commands.goToBudgets'),
         icon: PiggyBank,
         group: 'navigate',
         action: () => {
@@ -106,7 +108,7 @@ export function SearchCommand({ spaceId }: SearchCommandProps) {
       },
       {
         id: 'nav-accounts',
-        label: 'Go to Accounts',
+        label: t('searchCommand.commands.goToAccounts'),
         icon: Wallet,
         group: 'navigate',
         action: () => {
@@ -116,7 +118,7 @@ export function SearchCommand({ spaceId }: SearchCommandProps) {
       },
       {
         id: 'nav-analytics',
-        label: 'Go to Analytics',
+        label: t('searchCommand.commands.goToAnalytics'),
         icon: TrendingUp,
         group: 'navigate',
         action: () => {
@@ -126,7 +128,7 @@ export function SearchCommand({ spaceId }: SearchCommandProps) {
       },
       {
         id: 'nav-goals',
-        label: 'Go to Goals',
+        label: t('searchCommand.commands.goToGoals'),
         icon: Target,
         group: 'navigate',
         action: () => {
@@ -136,7 +138,7 @@ export function SearchCommand({ spaceId }: SearchCommandProps) {
       },
       {
         id: 'nav-esg',
-        label: 'Go to ESG Insights',
+        label: t('searchCommand.commands.goToEsg'),
         icon: Leaf,
         group: 'navigate',
         action: () => {
@@ -146,7 +148,7 @@ export function SearchCommand({ spaceId }: SearchCommandProps) {
       },
       {
         id: 'nav-gaming',
-        label: 'Go to DeFi Gaming',
+        label: t('searchCommand.commands.goToGaming'),
         icon: Gamepad2,
         group: 'navigate',
         action: () => {
@@ -156,7 +158,7 @@ export function SearchCommand({ spaceId }: SearchCommandProps) {
       },
       {
         id: 'nav-households',
-        label: 'Go to Households',
+        label: t('searchCommand.commands.goToHouseholds'),
         icon: Users,
         group: 'navigate',
         action: () => {
@@ -166,7 +168,7 @@ export function SearchCommand({ spaceId }: SearchCommandProps) {
       },
       {
         id: 'nav-settings',
-        label: 'Go to Settings',
+        label: t('searchCommand.commands.goToSettings'),
         icon: Settings,
         group: 'navigate',
         action: () => {
@@ -177,7 +179,7 @@ export function SearchCommand({ spaceId }: SearchCommandProps) {
       // Actions
       {
         id: 'action-new-txn',
-        label: 'New Transaction',
+        label: t('searchCommand.commands.newTransaction'),
         icon: Plus,
         group: 'actions',
         action: () => {
@@ -187,7 +189,7 @@ export function SearchCommand({ spaceId }: SearchCommandProps) {
       },
       {
         id: 'action-new-budget',
-        label: 'New Budget',
+        label: t('searchCommand.commands.newBudget'),
         icon: Plus,
         group: 'actions',
         action: () => {
@@ -197,7 +199,7 @@ export function SearchCommand({ spaceId }: SearchCommandProps) {
       },
       {
         id: 'action-export',
-        label: 'Export CSV',
+        label: t('searchCommand.commands.exportCsv'),
         icon: Download,
         group: 'actions',
         action: () => {
@@ -206,7 +208,7 @@ export function SearchCommand({ spaceId }: SearchCommandProps) {
         },
       },
     ],
-    [handleClose, router]
+    [handleClose, router, t]
   );
 
   // Filter commands by query
@@ -305,9 +307,9 @@ export function SearchCommand({ spaceId }: SearchCommandProps) {
         className="gap-2 text-muted-foreground"
       >
         <Search className="h-4 w-4" />
-        <span className="hidden sm:inline">Search...</span>
+        <span className="hidden sm:inline">{t('searchCommand.triggerLabel')}</span>
         <kbd className="hidden sm:inline-flex pointer-events-none h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground">
-          <span className="text-xs">⌘</span>K
+          <span className="text-xs">&#x2318;</span>K
         </kbd>
       </Button>
 
@@ -318,7 +320,7 @@ export function SearchCommand({ spaceId }: SearchCommandProps) {
           <div className="flex items-center border-b px-3">
             <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
             <input
-              placeholder="Search transactions, or type > for commands..."
+              placeholder={t('searchCommand.placeholder')}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               className="flex h-12 w-full bg-transparent py-3 px-3 text-sm outline-none placeholder:text-muted-foreground"
@@ -336,7 +338,7 @@ export function SearchCommand({ spaceId }: SearchCommandProps) {
                 {navigateGroup.length > 0 && (
                   <div className="mb-2">
                     <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-1">
-                      Navigate
+                      {t('searchCommand.navigate')}
                     </h4>
                     {navigateGroup.map((cmd) => {
                       const Icon = cmd.icon;
@@ -359,7 +361,7 @@ export function SearchCommand({ spaceId }: SearchCommandProps) {
                 {actionGroup.length > 0 && (
                   <div>
                     <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-1">
-                      Actions
+                      {t('searchCommand.actions')}
                     </h4>
                     {actionGroup.map((cmd) => {
                       const Icon = cmd.icon;
@@ -381,8 +383,9 @@ export function SearchCommand({ spaceId }: SearchCommandProps) {
                 )}
                 {query.length === 0 && (
                   <p className="text-xs text-muted-foreground px-2 pt-2">
-                    Type to search transactions, or{' '}
-                    <kbd className="rounded border px-1 text-[10px]">&gt;</kbd> for commands
+                    {t('searchCommand.commandHint')}{' '}
+                    <kbd className="rounded border px-1 text-[10px]">&gt;</kbd>{' '}
+                    {t('searchCommand.commandHintSuffix')}
                   </p>
                 )}
               </div>
@@ -397,7 +400,9 @@ export function SearchCommand({ spaceId }: SearchCommandProps) {
                     <p className="text-sm">{results.answer}</p>
                     {results.confidence != null && (
                       <Badge variant="outline" className="mt-2 text-xs">
-                        {Math.round(results.confidence * 100)}% confidence
+                        {t('searchCommand.confidence', {
+                          percent: Math.round(results.confidence * 100),
+                        })}
                       </Badge>
                     )}
                   </div>
@@ -408,7 +413,7 @@ export function SearchCommand({ spaceId }: SearchCommandProps) {
                   <div className="space-y-2">
                     <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-1">
                       <Receipt className="h-3 w-3" />
-                      Transactions
+                      {t('searchCommand.transactions')}
                     </h4>
                     {results.transactions.slice(0, 5).map((txn) => (
                       <button
@@ -424,7 +429,7 @@ export function SearchCommand({ spaceId }: SearchCommandProps) {
                           <p className="text-sm font-medium">{txn.description}</p>
                           <p className="text-xs text-muted-foreground">
                             {new Date(txn.date).toLocaleDateString()} ·{' '}
-                            {txn.category || 'Uncategorized'}
+                            {txn.category || t('searchCommand.uncategorized')}
                           </p>
                         </div>
                         <span
@@ -442,7 +447,7 @@ export function SearchCommand({ spaceId }: SearchCommandProps) {
                   <div className="space-y-2">
                     <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-1">
                       <BarChart3 className="h-3 w-3" />
-                      By Category
+                      {t('searchCommand.byCategory')}
                     </h4>
                     {results.categoryBreakdown.map((cat) => (
                       <div
@@ -462,7 +467,7 @@ export function SearchCommand({ spaceId }: SearchCommandProps) {
                 {results.suggestions && results.suggestions.length > 0 && (
                   <div className="space-y-1">
                     <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      Try also
+                      {t('searchCommand.tryAlso')}
                     </h4>
                     {results.suggestions.map((s) => (
                       <button
@@ -488,7 +493,7 @@ export function SearchCommand({ spaceId }: SearchCommandProps) {
                       router.push(`/transactions?q=${encodeURIComponent(query)}`);
                     }}
                   >
-                    View all results
+                    {t('searchCommand.viewAllResults')}
                     <ArrowRight className="h-4 w-4 ml-2" />
                   </Button>
                 )}
@@ -497,7 +502,7 @@ export function SearchCommand({ spaceId }: SearchCommandProps) {
 
             {!results && !isSearching && !showCommands && query.length >= 3 && (
               <div className="p-8 text-center text-sm text-muted-foreground">
-                No results found for &ldquo;{query}&rdquo;
+                {t('searchCommand.noResults')} &ldquo;{query}&rdquo;
               </div>
             )}
           </div>

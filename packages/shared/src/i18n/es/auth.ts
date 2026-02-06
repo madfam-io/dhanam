@@ -159,6 +159,21 @@ export const auth = {
     verificationFailed: 'Verificación fallida',
   },
 
+  // Form states
+  signingIn: 'Iniciando sesión...',
+  creatingAccount: 'Creando cuenta...',
+  passwordHelp: 'Debe contener al menos 8 caracteres, una mayúscula y un número',
+  agreementPrefix: 'Al crear una cuenta, aceptas nuestros',
+  termsOfService: 'Términos de Servicio',
+
+  // Placeholders
+  placeholders: {
+    email: 'tu@ejemplo.com',
+    password: '••••••••',
+    totpCode: '123456',
+    fullName: 'Juan García',
+  },
+
   // Success
   loginSuccessful: 'Inicio de sesión exitoso',
   signupSuccessful: 'Registro exitoso',

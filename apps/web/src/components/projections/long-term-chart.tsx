@@ -13,6 +13,7 @@ import {
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import type { YearlySnapshot } from '@/lib/api/projections';
+import { useTranslation } from '@dhanam/shared';
 
 interface LongTermChartProps {
   snapshots: YearlySnapshot[];
@@ -37,6 +38,7 @@ function formatCurrency(value: number, currency = 'USD'): string {
 }
 
 export function LongTermChart({ snapshots, retirementYear, currency = 'USD' }: LongTermChartProps) {
+  const { t } = useTranslation('analytics');
   const data = snapshots.map((s) => ({
     year: s.year,
     age: s.age,
@@ -52,10 +54,8 @@ export function LongTermChart({ snapshots, retirementYear, currency = 'USD' }: L
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Net Worth Projection</CardTitle>
-        <CardDescription>
-          Your projected net worth over time. The shaded area shows retirement years.
-        </CardDescription>
+        <CardTitle>{t('charts.longTerm.netWorthProjection')}</CardTitle>
+        <CardDescription>{t('charts.longTerm.netWorthDescription')}</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="h-[400px]">
@@ -89,20 +89,24 @@ export function LongTermChart({ snapshots, retirementYear, currency = 'USD' }: L
                   return (
                     <div className="rounded-lg border bg-background p-3 shadow-md">
                       <p className="font-semibold">
-                        {label} (Age {data.age})
+                        {label} ({t('charts.longTerm.age')} {data.age})
                         {data.isRetired && (
-                          <span className="ml-2 text-xs text-orange-500">Retired</span>
+                          <span className="ml-2 text-xs text-orange-500">
+                            {t('charts.longTerm.retired')}
+                          </span>
                         )}
                       </p>
                       <div className="mt-2 space-y-1 text-sm">
                         <p className="text-green-600">
-                          Net Worth: {formatCurrency(data.netWorth, currency)}
+                          {t('charts.longTerm.netWorth')}: {formatCurrency(data.netWorth, currency)}
                         </p>
                         <p className="text-blue-600">
-                          Assets: {formatCurrency(data.totalAssets, currency)}
+                          {t('charts.longTerm.totalAssets')}:{' '}
+                          {formatCurrency(data.totalAssets, currency)}
                         </p>
                         <p className="text-red-600">
-                          Debt: {formatCurrency(data.totalDebt, currency)}
+                          {t('charts.longTerm.totalDebt')}:{' '}
+                          {formatCurrency(data.totalDebt, currency)}
                         </p>
                       </div>
                     </div>
@@ -113,7 +117,7 @@ export function LongTermChart({ snapshots, retirementYear, currency = 'USD' }: L
               <Area
                 type="monotone"
                 dataKey="totalAssets"
-                name="Total Assets"
+                name={t('charts.longTerm.totalAssets')}
                 stroke="#3b82f6"
                 fill="url(#assetsGradient)"
                 strokeWidth={2}
@@ -121,7 +125,7 @@ export function LongTermChart({ snapshots, retirementYear, currency = 'USD' }: L
               <Area
                 type="monotone"
                 dataKey="netWorth"
-                name="Net Worth"
+                name={t('charts.longTerm.netWorth')}
                 stroke="#22c55e"
                 fill="url(#netWorthGradient)"
                 strokeWidth={2}
@@ -129,7 +133,7 @@ export function LongTermChart({ snapshots, retirementYear, currency = 'USD' }: L
               <Area
                 type="monotone"
                 dataKey="totalDebt"
-                name="Total Debt"
+                name={t('charts.longTerm.totalDebt')}
                 stroke="#ef4444"
                 fill="url(#debtGradient)"
                 strokeWidth={2}
@@ -147,6 +151,7 @@ export function IncomeExpenseChart({
   retirementYear,
   currency = 'USD',
 }: LongTermChartProps) {
+  const { t } = useTranslation('analytics');
   const data = snapshots.map((s) => ({
     year: s.year,
     age: s.age,
@@ -159,10 +164,8 @@ export function IncomeExpenseChart({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Income vs Expenses</CardTitle>
-        <CardDescription>
-          Projected income and expenses over time. Green area shows positive cashflow.
-        </CardDescription>
+        <CardTitle>{t('charts.longTerm.incomeVsExpenses')}</CardTitle>
+        <CardDescription>{t('charts.longTerm.incomeVsExpensesDescription')}</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="h-[300px]">
@@ -192,17 +195,17 @@ export function IncomeExpenseChart({
                   return (
                     <div className="rounded-lg border bg-background p-3 shadow-md">
                       <p className="font-semibold">
-                        {label} (Age {data.age})
+                        {label} ({t('charts.longTerm.age')} {data.age})
                       </p>
                       <div className="mt-2 space-y-1 text-sm">
                         <p className="text-green-600">
-                          Income: {formatCurrency(data.income, currency)}
+                          {t('charts.longTerm.income')}: {formatCurrency(data.income, currency)}
                         </p>
                         <p className="text-orange-600">
-                          Expenses: {formatCurrency(data.expenses, currency)}
+                          {t('charts.longTerm.expenses')}: {formatCurrency(data.expenses, currency)}
                         </p>
                         <p className={data.netCashflow >= 0 ? 'text-green-600' : 'text-red-600'}>
-                          Net: {formatCurrency(data.netCashflow, currency)}
+                          {t('charts.longTerm.net')}: {formatCurrency(data.netCashflow, currency)}
                         </p>
                       </div>
                     </div>
@@ -213,7 +216,7 @@ export function IncomeExpenseChart({
               <Area
                 type="monotone"
                 dataKey="income"
-                name="Income"
+                name={t('charts.longTerm.income')}
                 stroke="#22c55e"
                 fill="url(#incomeGradient)"
                 strokeWidth={2}
@@ -221,7 +224,7 @@ export function IncomeExpenseChart({
               <Area
                 type="monotone"
                 dataKey="expenses"
-                name="Expenses"
+                name={t('charts.longTerm.expenses')}
                 stroke="#f97316"
                 fill="url(#expensesGradient)"
                 strokeWidth={2}

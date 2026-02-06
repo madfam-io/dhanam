@@ -1,3 +1,4 @@
+import { PROVIDER_HEALTH } from '@dhanam/shared';
 import { Injectable, Logger } from '@nestjs/common';
 
 import { Provider, ConnectionStatus } from '@db';
@@ -137,11 +138,13 @@ export class ConnectionHealthService {
           : Infinity;
         const hoursSinceSync = lastSyncAge / (1000 * 60 * 60);
 
-        if (hoursSinceSync > 48) {
+        if (hoursSinceSync > PROVIDER_HEALTH.DEGRADED_HOURS) {
           status = status === 'healthy' ? 'degraded' : status;
           healthScore = Math.min(healthScore, 50);
-          actionRequired = actionRequired || 'Account has not synced in over 48 hours.';
-        } else if (hoursSinceSync > 24) {
+          actionRequired =
+            actionRequired ||
+            `Account has not synced in over ${PROVIDER_HEALTH.DEGRADED_HOURS} hours.`;
+        } else if (hoursSinceSync > PROVIDER_HEALTH.WARNING_HOURS) {
           healthScore = Math.min(healthScore, 70);
         }
 

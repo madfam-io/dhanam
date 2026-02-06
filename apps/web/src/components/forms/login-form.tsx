@@ -1,18 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button, Input, Label } from '@dhanam/ui';
-import { LoginDto } from '@dhanam/shared';
+import { LoginDto, useTranslation } from '@dhanam/shared';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
-
-const loginSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
-  totpCode: z.string().optional(),
-});
 
 interface LoginFormProps {
   onSubmit: (data: LoginDto) => void;
@@ -22,6 +16,18 @@ interface LoginFormProps {
 
 export function LoginForm({ onSubmit, isLoading, showTotpField }: LoginFormProps) {
   const [showPassword, setShowPassword] = useState(false);
+  const { t } = useTranslation('auth');
+  const { t: tv } = useTranslation('validations');
+
+  const loginSchema = useMemo(
+    () =>
+      z.object({
+        email: z.string().email(tv('emailInvalid')),
+        password: z.string().min(8, tv('passwordMinLength', { min: '8' })),
+        totpCode: z.string().optional(),
+      }),
+    [tv]
+  );
 
   const {
     register,
@@ -34,11 +40,11 @@ export function LoginForm({ onSubmit, isLoading, showTotpField }: LoginFormProps
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
+        <Label htmlFor="email">{t('email')}</Label>
         <Input
           id="email"
           type="email"
-          placeholder="you@example.com"
+          placeholder={t('placeholders.email')}
           {...register('email')}
           disabled={isLoading}
         />
@@ -46,12 +52,12 @@ export function LoginForm({ onSubmit, isLoading, showTotpField }: LoginFormProps
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="password">Password</Label>
+        <Label htmlFor="password">{t('password')}</Label>
         <div className="relative">
           <Input
             id="password"
             type={showPassword ? 'text' : 'password'}
-            placeholder="••••••••"
+            placeholder={t('placeholders.password')}
             {...register('password')}
             disabled={isLoading}
           />
@@ -68,11 +74,11 @@ export function LoginForm({ onSubmit, isLoading, showTotpField }: LoginFormProps
 
       {showTotpField && (
         <div className="space-y-2">
-          <Label htmlFor="totpCode">2FA Code</Label>
+          <Label htmlFor="totpCode">{t('totpCode')}</Label>
           <Input
             id="totpCode"
             type="text"
-            placeholder="123456"
+            placeholder={t('placeholders.totpCode')}
             maxLength={6}
             {...register('totpCode')}
             disabled={isLoading}
@@ -85,10 +91,10 @@ export function LoginForm({ onSubmit, isLoading, showTotpField }: LoginFormProps
         {isLoading ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Signing in...
+            {t('signingIn')}
           </>
         ) : (
-          'Sign in'
+          t('loginButton')
         )}
       </Button>
     </form>

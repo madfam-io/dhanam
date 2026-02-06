@@ -6,6 +6,7 @@
 
 import * as es from './es';
 import * as en from './en';
+import * as ptBR from './pt-BR';
 
 // Export translation objects
 export const translations = {
@@ -62,32 +63,30 @@ export const translations = {
     reports: es.reports,
   },
   'pt-BR': {
-    // Portuguese stubs — re-export from Spanish as fallback
-    // Replace with actual pt-BR translations as they become available
-    common: es.common,
-    auth: es.auth,
-    transactions: es.transactions,
-    budgets: es.budgets,
-    accounts: es.accounts,
-    spaces: es.spaces,
-    wealth: es.wealth,
-    errors: es.errors,
-    validations: es.validations,
-    estatePlanning: es.estatePlanning,
-    households: es.households,
-    transactionExecution: es.transactionExecution,
-    email: es.email,
-    apiErrors: es.apiErrors,
-    landing: es.landing,
-    dashboard: es.dashboard,
-    settings: es.settings,
-    projections: es.projections,
-    assets: es.assets,
-    goals: es.goals,
-    gaming: es.gaming,
-    esg: es.esg,
-    analytics: es.analytics,
-    reports: es.reports,
+    common: ptBR.common,
+    auth: ptBR.auth,
+    transactions: ptBR.transactions,
+    budgets: ptBR.budgets,
+    accounts: ptBR.accounts,
+    spaces: ptBR.spaces,
+    wealth: ptBR.wealth,
+    errors: ptBR.errors,
+    validations: ptBR.validations,
+    estatePlanning: ptBR.estatePlanning,
+    households: ptBR.households,
+    transactionExecution: ptBR.transactionExecution,
+    email: ptBR.email,
+    apiErrors: ptBR.apiErrors,
+    landing: ptBR.landing,
+    dashboard: ptBR.dashboard,
+    settings: ptBR.settings,
+    projections: ptBR.projections,
+    assets: ptBR.assets,
+    goals: ptBR.goals,
+    gaming: ptBR.gaming,
+    esg: ptBR.esg,
+    analytics: ptBR.analytics,
+    reports: ptBR.reports,
   },
 } as const;
 

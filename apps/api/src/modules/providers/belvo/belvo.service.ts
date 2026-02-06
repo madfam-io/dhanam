@@ -1,5 +1,6 @@
 import * as crypto from 'crypto';
 
+import { PROVIDER_DEFAULTS } from '@dhanam/shared';
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
@@ -344,7 +345,12 @@ export class BelvoService {
         // Default to last 90 days if no cursor
         const endDate = new Date().toISOString().split('T')[0];
         const startDate =
-          cursor || new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+          cursor ||
+          new Date(
+            Date.now() - PROVIDER_DEFAULTS.BELVO_TRANSACTION_HISTORY_DAYS * 24 * 60 * 60 * 1000
+          )
+            .toISOString()
+            .split('T')[0];
 
         // Fetch transactions from Belvo
         const belvoTransactions = await this.belvoClient.transactions.retrieve(
@@ -424,7 +430,12 @@ export class BelvoService {
       // Default to last 90 days if not specified
       const endDate = dateTo || new Date().toISOString().split('T')[0];
       const startDate =
-        dateFrom || new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+        dateFrom ||
+        new Date(
+          Date.now() - PROVIDER_DEFAULTS.BELVO_TRANSACTION_HISTORY_DAYS * 24 * 60 * 60 * 1000
+        )
+          .toISOString()
+          .split('T')[0];
 
       // Fetch transactions from Belvo
       const belvoTransactions = await this.belvoClient.transactions.retrieve(

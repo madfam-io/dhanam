@@ -14,6 +14,7 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@dhanam/ui';
 import { formatCurrency } from '@/lib/utils';
 import type { Currency } from '@dhanam/shared';
+import { useTranslation } from '@dhanam/shared';
 
 interface IncomeExpenseDataPoint {
   month: string;
@@ -28,6 +29,7 @@ interface IncomeExpenseChartProps {
 }
 
 export function IncomeExpenseChart({ data, currency, isLoading }: IncomeExpenseChartProps) {
+  const { t } = useTranslation('analytics');
   const { formattedData, avgSavings } = useMemo(() => {
     if (!data || data.length === 0) {
       return { formattedData: [], avgSavings: 0 };
@@ -56,19 +58,19 @@ export function IncomeExpenseChart({ data, currency, isLoading }: IncomeExpenseC
           <div className="space-y-1">
             <p className="text-sm flex items-center gap-2">
               <span className="w-3 h-3 rounded-sm bg-green-500" />
-              <span className="text-muted-foreground">Income:</span>
+              <span className="text-muted-foreground">{t('charts.incomeExpense.income')}:</span>
               <span className="font-semibold">{formatCurrency(income, currency as Currency)}</span>
             </p>
             <p className="text-sm flex items-center gap-2">
               <span className="w-3 h-3 rounded-sm bg-red-500" />
-              <span className="text-muted-foreground">Expenses:</span>
+              <span className="text-muted-foreground">{t('charts.incomeExpense.expenses')}:</span>
               <span className="font-semibold">
                 {formatCurrency(expenses, currency as Currency)}
               </span>
             </p>
             <hr className="my-1" />
             <p className="text-sm flex items-center gap-2">
-              <span className="text-muted-foreground">Net:</span>
+              <span className="text-muted-foreground">{t('charts.incomeExpense.net')}:</span>
               <span className={`font-semibold ${savings >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {savings >= 0 ? '+' : ''}
                 {formatCurrency(savings, currency as Currency)}
@@ -85,8 +87,8 @@ export function IncomeExpenseChart({ data, currency, isLoading }: IncomeExpenseC
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Income vs Expenses</CardTitle>
-          <CardDescription>Loading...</CardDescription>
+          <CardTitle>{t('charts.incomeExpense.title')}</CardTitle>
+          <CardDescription>{t('common:loading')}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="h-[300px] flex items-center justify-center">
@@ -101,12 +103,12 @@ export function IncomeExpenseChart({ data, currency, isLoading }: IncomeExpenseC
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Income vs Expenses</CardTitle>
-          <CardDescription>No data available</CardDescription>
+          <CardTitle>{t('charts.incomeExpense.title')}</CardTitle>
+          <CardDescription>{t('charts.incomeExpense.noData')}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-            Add transactions to see your income and expense trends
+            {t('charts.incomeExpense.noDataHint')}
           </div>
         </CardContent>
       </Card>
@@ -118,11 +120,13 @@ export function IncomeExpenseChart({ data, currency, isLoading }: IncomeExpenseC
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle>Income vs Expenses</CardTitle>
-            <CardDescription>Monthly comparison with net savings</CardDescription>
+            <CardTitle>{t('charts.incomeExpense.title')}</CardTitle>
+            <CardDescription>{t('charts.incomeExpense.description')}</CardDescription>
           </div>
           <div className="text-right">
-            <p className="text-xs text-muted-foreground">Avg. Monthly Savings</p>
+            <p className="text-xs text-muted-foreground">
+              {t('charts.incomeExpense.avgMonthlySavings')}
+            </p>
             <p
               className={`text-lg font-semibold ${avgSavings >= 0 ? 'text-green-600' : 'text-red-600'}`}
             >
@@ -154,8 +158,18 @@ export function IncomeExpenseChart({ data, currency, isLoading }: IncomeExpenseC
                 wrapperStyle={{ paddingTop: '10px' }}
                 formatter={(value) => <span className="text-sm capitalize">{value}</span>}
               />
-              <Bar dataKey="income" name="Income" fill="hsl(142 76% 36%)" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="expenses" name="Expenses" fill="hsl(0 84% 60%)" radius={[4, 4, 0, 0]} />
+              <Bar
+                dataKey="income"
+                name={t('charts.incomeExpense.income')}
+                fill="hsl(142 76% 36%)"
+                radius={[4, 4, 0, 0]}
+              />
+              <Bar
+                dataKey="expenses"
+                name={t('charts.incomeExpense.expenses')}
+                fill="hsl(0 84% 60%)"
+                radius={[4, 4, 0, 0]}
+              />
             </BarChart>
           </ResponsiveContainer>
         </div>

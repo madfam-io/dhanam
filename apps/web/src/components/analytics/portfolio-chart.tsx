@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@dhan
 import { Badge } from '@dhanam/ui';
 import { formatCurrency } from '@/lib/utils';
 import type { Currency } from '@dhanam/shared';
+import { useTranslation } from '@dhanam/shared';
 
 interface PortfolioAllocation {
   assetType: string;
@@ -31,18 +32,19 @@ const ASSET_COLORS: Record<string, string> = {
   other: 'hsl(var(--muted-foreground))',
 };
 
-const ASSET_LABELS: Record<string, string> = {
-  checking: 'Checking',
-  savings: 'Savings',
-  investment: 'Investments',
-  crypto: 'Crypto',
-  credit: 'Credit',
-  real_estate: 'Real Estate',
-  vehicle: 'Vehicles',
-  other: 'Other',
+const ASSET_LABEL_KEYS: Record<string, string> = {
+  checking: 'charts.portfolio.checking',
+  savings: 'charts.portfolio.savings',
+  investment: 'charts.portfolio.investment',
+  crypto: 'charts.portfolio.crypto',
+  credit: 'charts.portfolio.credit',
+  real_estate: 'charts.portfolio.realEstate',
+  vehicle: 'charts.portfolio.vehicle',
+  other: 'charts.portfolio.other',
 };
 
 export function PortfolioChart({ data, currency, isLoading }: PortfolioChartProps) {
+  const { t } = useTranslation('analytics');
   const [activeIndex, setActiveIndex] = useState<number | undefined>(undefined);
 
   const { chartData, totalValue, liabilityBreakdown } = useMemo(() => {
@@ -60,7 +62,7 @@ export function PortfolioChart({ data, currency, isLoading }: PortfolioChartProp
     const liabilities = data.filter((item) => item.value < 0 || item.assetType === 'credit');
 
     const chartData = assets.map((item) => ({
-      name: ASSET_LABELS[item.assetType] || item.assetType,
+      name: t(ASSET_LABEL_KEYS[item.assetType] || 'charts.portfolio.other'),
       value: Math.abs(item.value),
       percentage: item.percentage,
       color: ASSET_COLORS[item.assetType] || ASSET_COLORS.other,
@@ -73,7 +75,7 @@ export function PortfolioChart({ data, currency, isLoading }: PortfolioChartProp
       totalValue,
       liabilityBreakdown: liabilities,
     };
-  }, [data]);
+  }, [data, t]);
 
   const renderActiveShape = (props: any) => {
     const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill } = props;
@@ -103,7 +105,7 @@ export function PortfolioChart({ data, currency, isLoading }: PortfolioChartProp
             {formatCurrency(data.value, currency as Currency)}
           </p>
           <p className="text-xs text-muted-foreground">
-            {data.percentage.toFixed(1)}% of portfolio
+            {t('charts.portfolio.ofPortfolio', { percent: data.percentage.toFixed(1) })}
           </p>
         </div>
       );
@@ -115,8 +117,8 @@ export function PortfolioChart({ data, currency, isLoading }: PortfolioChartProp
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Portfolio Allocation</CardTitle>
-          <CardDescription>Loading...</CardDescription>
+          <CardTitle>{t('charts.portfolio.title')}</CardTitle>
+          <CardDescription>{t('common:loading')}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="h-[350px] flex items-center justify-center">
@@ -131,12 +133,12 @@ export function PortfolioChart({ data, currency, isLoading }: PortfolioChartProp
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Portfolio Allocation</CardTitle>
-          <CardDescription>No portfolio data available</CardDescription>
+          <CardTitle>{t('charts.portfolio.title')}</CardTitle>
+          <CardDescription>{t('charts.portfolio.noData')}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="h-[350px] flex items-center justify-center text-muted-foreground">
-            Connect accounts to see your portfolio allocation
+            {t('charts.portfolio.noDataHint')}
           </div>
         </CardContent>
       </Card>
@@ -148,11 +150,11 @@ export function PortfolioChart({ data, currency, isLoading }: PortfolioChartProp
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle>Portfolio Allocation</CardTitle>
-            <CardDescription>Asset distribution across accounts</CardDescription>
+            <CardTitle>{t('charts.portfolio.title')}</CardTitle>
+            <CardDescription>{t('charts.portfolio.description')}</CardDescription>
           </div>
           <div className="text-right">
-            <p className="text-xs text-muted-foreground">Total Assets</p>
+            <p className="text-xs text-muted-foreground">{t('charts.portfolio.totalAssets')}</p>
             <p className="text-lg font-semibold text-green-600">
               {formatCurrency(totalValue, currency as Currency)}
             </p>
@@ -191,7 +193,7 @@ export function PortfolioChart({ data, currency, isLoading }: PortfolioChartProp
 
           {/* Asset Breakdown */}
           <div className="space-y-3">
-            <h4 className="text-sm font-medium">Asset Breakdown</h4>
+            <h4 className="text-sm font-medium">{t('charts.portfolio.assetBreakdown')}</h4>
             <div className="space-y-2">
               {chartData.map((asset, index) => (
                 <div
@@ -218,7 +220,7 @@ export function PortfolioChart({ data, currency, isLoading }: PortfolioChartProp
             {liabilityBreakdown.length > 0 && (
               <>
                 <h4 className="text-sm font-medium mt-4 flex items-center gap-2">
-                  Liabilities
+                  {t('charts.portfolio.liabilities')}
                   <Badge variant="destructive" className="text-xs">
                     {formatCurrency(
                       liabilityBreakdown.reduce((sum, l) => sum + Math.abs(l.value), 0),
@@ -235,7 +237,7 @@ export function PortfolioChart({ data, currency, isLoading }: PortfolioChartProp
                       <div className="flex items-center gap-2">
                         <div className="w-3 h-3 rounded-sm bg-red-500" />
                         <span className="text-sm">
-                          {ASSET_LABELS[liability.assetType] || liability.assetType}
+                          {t(ASSET_LABEL_KEYS[liability.assetType] || 'charts.portfolio.other')}
                         </span>
                       </div>
                       <p className="text-sm font-medium text-red-600">

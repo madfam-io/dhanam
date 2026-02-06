@@ -141,4 +141,15 @@ export const dashboard = {
     budgetProgress: 'Progreso de presupuestos',
     goals: 'Metas financieras',
   },
+  savingsStreak: {
+    title: 'Racha de ahorro y logros',
+    weeksOfPositiveSavings: 'semanas de ahorro positivo',
+    savingsRate: 'Tasa de ahorro',
+    target: '{{rate}}% / {{target}}% meta',
+    aboveTarget: 'Por encima de la meta -- ¡excelente!',
+    streakCelebration: '¡{{weeks}} semanas de racha de ahorro! ¡Sigue así!',
+    badgeBudgetMaster: 'Maestro del presupuesto',
+    badgeSavingsStar: 'Estrella del ahorro',
+    badgeEsgLeader: 'Líder ESG',
+  },
 } as const;

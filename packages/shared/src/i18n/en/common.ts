@@ -210,4 +210,43 @@ export const common = {
   version: 'Version',
   language: 'Language',
   timezone: 'Timezone',
+
+  // Aria labels
+  aria: {
+    toggleTheme: 'Toggle theme',
+    help: 'Help',
+    closeModal: 'Close modal',
+  },
+
+  // Search command
+  searchCommand: {
+    triggerLabel: 'Search...',
+    placeholder: 'Search transactions, or type > for commands...',
+    navigate: 'Navigate',
+    actions: 'Actions',
+    commandHint: 'Type to search transactions, or',
+    commandHintSuffix: 'for commands',
+    transactions: 'Transactions',
+    byCategory: 'By Category',
+    tryAlso: 'Try also',
+    viewAllResults: 'View all results',
+    noResults: 'No results found for',
+    confidence: '{{percent}}% confidence',
+    uncategorized: 'Uncategorized',
+    commands: {
+      goToDashboard: 'Go to Dashboard',
+      goToTransactions: 'Go to Transactions',
+      goToBudgets: 'Go to Budgets',
+      goToAccounts: 'Go to Accounts',
+      goToAnalytics: 'Go to Analytics',
+      goToGoals: 'Go to Goals',
+      goToEsg: 'Go to ESG Insights',
+      goToGaming: 'Go to DeFi Gaming',
+      goToHouseholds: 'Go to Households',
+      goToSettings: 'Go to Settings',
+      newTransaction: 'New Transaction',
+      newBudget: 'New Budget',
+      exportCsv: 'Export CSV',
+    },
+  },
 } as const;

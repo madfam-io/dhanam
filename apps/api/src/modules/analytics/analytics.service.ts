@@ -1,4 +1,5 @@
 import {
+  ANALYTICS,
   NetWorthResponse,
   CashflowForecast,
   SpendingByCategory,
@@ -482,7 +483,10 @@ export class AnalyticsService {
     );
 
     // Analyze historical patterns for forecasting
-    const historicalData = await this.getHistoricalCashflowPatterns(spaceId, 90); // Last 90 days
+    const historicalData = await this.getHistoricalCashflowPatterns(
+      spaceId,
+      ANALYTICS.HISTORY_DAYS
+    );
 
     const forecast = [];
     let runningBalance = currentBalance;

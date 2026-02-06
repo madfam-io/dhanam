@@ -15,6 +15,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@dhan
 import { TrendingUp, TrendingDown } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import type { Currency } from '@dhanam/shared';
+import { useTranslation } from '@dhanam/shared';
 
 interface NetWorthDataPoint {
   date: string;
@@ -30,6 +31,7 @@ interface NetWorthChartProps {
 }
 
 export function NetWorthChart({ data, currency, isLoading }: NetWorthChartProps) {
+  const { t } = useTranslation('analytics');
   const { trend, changePercent, formattedData } = useMemo(() => {
     if (!data || data.length < 2) {
       return { trend: 'neutral', changePercent: 0, formattedData: data || [] };
@@ -59,14 +61,14 @@ export function NetWorthChart({ data, currency, isLoading }: NetWorthChartProps)
           <p className="text-sm font-medium mb-2">{label}</p>
           <div className="space-y-1">
             <p className="text-sm">
-              <span className="text-muted-foreground">Net Worth: </span>
+              <span className="text-muted-foreground">{t('charts.netWorth.netWorth')}: </span>
               <span className="font-semibold">
                 {formatCurrency(payload[0]?.value || 0, currency as Currency)}
               </span>
             </p>
             {payload[1] && (
               <p className="text-sm">
-                <span className="text-muted-foreground">Assets: </span>
+                <span className="text-muted-foreground">{t('charts.netWorth.assets')}: </span>
                 <span className="text-green-600">
                   {formatCurrency(payload[1]?.value || 0, currency as Currency)}
                 </span>
@@ -74,7 +76,7 @@ export function NetWorthChart({ data, currency, isLoading }: NetWorthChartProps)
             )}
             {payload[2] && (
               <p className="text-sm">
-                <span className="text-muted-foreground">Liabilities: </span>
+                <span className="text-muted-foreground">{t('charts.netWorth.liabilities')}: </span>
                 <span className="text-red-600">
                   {formatCurrency(payload[2]?.value || 0, currency as Currency)}
                 </span>
@@ -91,8 +93,8 @@ export function NetWorthChart({ data, currency, isLoading }: NetWorthChartProps)
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Net Worth Trend</CardTitle>
-          <CardDescription>Loading...</CardDescription>
+          <CardTitle>{t('charts.netWorth.title')}</CardTitle>
+          <CardDescription>{t('common:loading')}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="h-[300px] flex items-center justify-center">
@@ -107,12 +109,12 @@ export function NetWorthChart({ data, currency, isLoading }: NetWorthChartProps)
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Net Worth Trend</CardTitle>
-          <CardDescription>No historical data available yet</CardDescription>
+          <CardTitle>{t('charts.netWorth.title')}</CardTitle>
+          <CardDescription>{t('charts.netWorth.noData')}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-            Connect accounts to track your net worth over time
+            {t('charts.netWorth.noDataHint')}
           </div>
         </CardContent>
       </Card>
@@ -124,8 +126,8 @@ export function NetWorthChart({ data, currency, isLoading }: NetWorthChartProps)
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle>Net Worth Trend</CardTitle>
-            <CardDescription>Your wealth trajectory over time</CardDescription>
+            <CardTitle>{t('charts.netWorth.title')}</CardTitle>
+            <CardDescription>{t('charts.netWorth.description')}</CardDescription>
           </div>
           <div className="flex items-center gap-2">
             {trend === 'up' ? (

@@ -6,6 +6,7 @@ import * as bitcoin from 'bitcoinjs-lib';
 import * as ethers from 'ethers';
 
 import { MonitorPerformance } from '@core/decorators/monitor-performance.decorator';
+import { TIMEOUT_PRESETS } from '@core/utils/timeout.util';
 import type { InputJsonValue } from '@db';
 import { Prisma as _Prisma, Account, Currency, AccountType } from '@db';
 
@@ -64,7 +65,7 @@ export class BlockchainService {
     // Initialize Bitcoin API client
     this.btcClient = axios.create({
       baseURL: 'https://blockchain.info',
-      timeout: 10000,
+      timeout: TIMEOUT_PRESETS.blockchain_query,
     });
 
     this.logger.log('Blockchain providers initialized');

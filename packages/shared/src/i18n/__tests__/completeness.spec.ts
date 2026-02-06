@@ -6,9 +6,10 @@
 
 import * as es from '../es';
 import * as en from '../en';
+import * as ptBR from '../pt-BR';
 
 // Build a minimal translations object for testing (no React imports needed)
-const translations = { en, es };
+const translations = { en, es, 'pt-BR': ptBR };
 
 type TranslationObj = Record<string, unknown>;
 

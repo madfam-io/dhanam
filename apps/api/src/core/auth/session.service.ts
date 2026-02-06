@@ -1,5 +1,6 @@
 import { randomBytes, createHash } from 'crypto';
 
+import { AUTH_DEFAULTS, TIME_UNITS } from '@dhanam/shared';
 import { Injectable } from '@nestjs/common';
 import Redis from 'ioredis';
 
@@ -107,7 +108,8 @@ export class SessionService {
   async createRefreshToken(userId: string, email: string): Promise<string> {
     const token = randomBytes(32).toString('hex');
     const hashedToken = this.hashToken(token);
-    const expiresAt = Date.now() + 30 * 24 * 60 * 60 * 1000; // 30 days
+    const refreshExpirySeconds = AUTH_DEFAULTS.REFRESH_TOKEN_EXPIRY_DAYS * TIME_UNITS.DAY_SECONDS;
+    const expiresAt = Date.now() + refreshExpirySeconds * 1000;
 
     const sessionData: SessionData = {
       userId,
@@ -120,7 +122,7 @@ export class SessionService {
     await this.executeRedisOperation('setex_refresh_token', () =>
       this.redis.setex(
         `refresh_token:${hashedToken}`,
-        30 * 24 * 60 * 60, // 30 days in seconds
+        refreshExpirySeconds,
         JSON.stringify(sessionData)
       )
     );
@@ -128,7 +130,10 @@ export class SessionService {
     // Track user's active sessions
     await this.executeRedisOperation('sadd_user_sessions', async () => {
       await this.redis.sadd(`user_sessions:${userId}`, hashedToken);
-      await this.redis.expire(`user_sessions:${userId}`, 30 * 24 * 60 * 60);
+      await this.redis.expire(
+        `user_sessions:${userId}`,
+        AUTH_DEFAULTS.REFRESH_TOKEN_EXPIRY_DAYS * TIME_UNITS.DAY_SECONDS
+      );
     });
 
     this.logger.log(`Refresh token created for user: ${userId}`, 'SessionService');

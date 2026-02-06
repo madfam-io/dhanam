@@ -1,3 +1,4 @@
+import { ML_THRESHOLDS } from '@dhanam/shared';
 import { Injectable } from '@nestjs/common';
 
 /**
@@ -93,7 +94,7 @@ export class FuzzyMatcherService {
   findAllMatches(
     target: string,
     candidates: string[],
-    threshold: number = 0.7
+    threshold: number = ML_THRESHOLDS.FUZZY_MATCH_SCORE
   ): Array<{ match: string; similarity: number; index: number }> {
     if (!target || candidates.length === 0) {
       return [];

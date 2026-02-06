@@ -6,6 +6,7 @@ import { Card } from '@dhanam/ui';
 import { Separator } from '@dhanam/ui';
 import type { UserDetails } from '~/lib/api/admin';
 import { User, Mail, Shield, Globe, Clock, Building2, CreditCard, Receipt } from 'lucide-react';
+import { useTranslation } from '@dhanam/shared';
 
 interface UserDetailsModalProps {
   user: UserDetails;
@@ -13,6 +14,8 @@ interface UserDetailsModalProps {
 }
 
 export function UserDetailsModal({ user, onClose }: UserDetailsModalProps) {
+  const { t } = useTranslation('common');
+
   return (
     <Dialog open={true} onOpenChange={onClose}>
       <div
@@ -21,7 +24,7 @@ export function UserDetailsModal({ user, onClose }: UserDetailsModalProps) {
         onKeyDown={(e) => e.key === 'Escape' && onClose()}
         role="button"
         tabIndex={0}
-        aria-label="Close modal"
+        aria-label={t('aria.closeModal')}
       />
       <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
         <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
@@ -32,7 +35,7 @@ export function UserDetailsModal({ user, onClose }: UserDetailsModalProps) {
                 onClick={onClose}
                 className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300"
               >
-                <span className="sr-only">Close</span>
+                <span className="sr-only">{t('close')}</span>
                 <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path
                     strokeLinecap="round"

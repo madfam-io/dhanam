@@ -194,6 +194,67 @@ export const budgets = {
     categoryAdded: 'Categoría agregada exitosamente',
     categoryAddFailed: 'Error al agregar categoría',
   },
+  rules: {
+    title: 'Reglas de categorización de transacciones',
+    description:
+      'Crea reglas para categorizar automáticamente transacciones basadas en patrones',
+    priorityHint:
+      'Las reglas se aplican en orden de prioridad (números menores primero)',
+    addRule: 'Agregar regla',
+    noRulesTitle: 'Aún no hay reglas',
+    noRulesDescription:
+      'Crea reglas para categorizar automáticamente las transacciones',
+    createFirstRule: 'Crea tu primera regla',
+    createRuleTitle: 'Crear regla de categorización',
+    createRuleDescription:
+      'Define un patrón para categorizar transacciones automáticamente',
+    labels: {
+      ruleName: 'Nombre de la regla',
+      field: 'Campo',
+      operator: 'Operador',
+      patternValue: 'Valor del patrón',
+      priority: 'Prioridad (1 = más alta)',
+      category: 'Categoría',
+    },
+    placeholders: {
+      ruleName: 'ej. Supermercados',
+      selectField: 'Seleccionar campo',
+      selectOperator: 'Seleccionar operador',
+      patternValue: 'ej. walmart|soriana|super',
+      selectCategory: 'Seleccionar categoría',
+    },
+    fields: {
+      description: 'Descripción',
+      merchant: 'Comercio',
+      amount: 'Monto',
+    },
+    operators: {
+      contains: 'Contiene',
+      equals: 'Es igual a',
+      startsWith: 'Comienza con',
+      endsWith: 'Termina con',
+      regex: 'Regex',
+      gte: 'Mayor que',
+      lte: 'Menor que',
+    },
+    buttons: {
+      testing: 'Probando...',
+      testRule: 'Probar regla',
+      creating: 'Creando...',
+      createRule: 'Crear regla',
+    },
+    testResults: 'Resultados de la prueba:',
+    testMatch: 'Coincidiría con {{count}} transacciones',
+    sampleMatches: 'Coincidencias de ejemplo:',
+    toast: {
+      ruleCreated: 'Regla creada exitosamente',
+      ruleCreateFailed: 'Error al crear regla',
+      ruleUpdated: 'Regla actualizada exitosamente',
+      ruleUpdateFailed: 'Error al actualizar regla',
+      ruleTestMatch: 'La regla coincidiría con {{count}} transacciones',
+      ruleTestFailed: 'Error al probar regla',
+    },
+  },
   zeroBased: {
     title: 'Presupuesto Base Cero',
     description: 'Asigna cada peso a una tarea \u2022 Presupuesto por sobres para {{name}}',

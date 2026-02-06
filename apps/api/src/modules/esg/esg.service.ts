@@ -1,3 +1,4 @@
+import { ESG_THRESHOLDS } from '@dhanam/shared';
 import { Injectable, NotFoundException } from '@nestjs/common';
 
 import { Decimal } from '@db';
@@ -463,11 +464,11 @@ export class EsgService {
     const insights: string[] = [];
 
     // Environmental insights
-    if (scores.environmental < 50) {
+    if (scores.environmental < ESG_THRESHOLDS.MODERATE_SCORE) {
       insights.push(
         'Your portfolio has a high environmental impact. Consider increasing allocation to Proof-of-Stake cryptocurrencies like ETH, ADA, or ALGO.'
       );
-    } else if (scores.environmental > 80) {
+    } else if (scores.environmental > ESG_THRESHOLDS.GOOD_ENVIRONMENTAL) {
       insights.push(
         'Excellent environmental performance! Your portfolio focuses on energy-efficient cryptocurrencies.'
       );
@@ -492,7 +493,7 @@ export class EsgService {
     }
 
     // Governance insights
-    if (scores.governance > 80) {
+    if (scores.governance > ESG_THRESHOLDS.GOOD_GOVERNANCE) {
       insights.push(
         'Your portfolio shows strong governance characteristics with decentralized and transparent projects.'
       );

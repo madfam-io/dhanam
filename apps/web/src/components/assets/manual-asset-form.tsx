@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Building2, Car, Globe, TrendingUp, Gem, Palette, Coins, Plus } from 'lucide-react';
+import { useTranslation } from '@dhanam/shared';
 
 interface ManualAssetFormProps {
   onSubmit: (asset: ManualAssetData) => Promise<void>;
@@ -27,49 +28,50 @@ export interface ManualAssetData {
   notes?: string;
 }
 
-const ASSET_TYPES = [
+const ASSET_TYPE_CONFIG = [
   {
     value: 'real_estate',
-    label: 'Real Estate',
+    labelKey: 'form.types.realEstate' as const,
     icon: Building2,
     color: 'text-blue-600',
   },
-  { value: 'vehicle', label: 'Vehicle', icon: Car, color: 'text-green-600' },
+  { value: 'vehicle', labelKey: 'form.types.vehicle' as const, icon: Car, color: 'text-green-600' },
   {
     value: 'domain',
-    label: 'Web Domain',
+    labelKey: 'form.types.webDomain' as const,
     icon: Globe,
     color: 'text-purple-600',
   },
   {
     value: 'private_equity',
-    label: 'Private Equity',
+    labelKey: 'form.types.privateEquity' as const,
     icon: TrendingUp,
     color: 'text-orange-600',
   },
   {
     value: 'angel_investment',
-    label: 'Angel Investment',
+    labelKey: 'form.types.angelInvestment' as const,
     icon: TrendingUp,
     color: 'text-red-600',
   },
   {
     value: 'collectible',
-    label: 'Collectible',
+    labelKey: 'form.types.collectible' as const,
     icon: Gem,
     color: 'text-pink-600',
   },
-  { value: 'art', label: 'Art', icon: Palette, color: 'text-indigo-600' },
+  { value: 'art', labelKey: 'form.types.art' as const, icon: Palette, color: 'text-indigo-600' },
   {
     value: 'jewelry',
-    label: 'Jewelry',
+    labelKey: 'form.types.jewelry' as const,
     icon: Coins,
     color: 'text-yellow-600',
   },
-  { value: 'other', label: 'Other', icon: Plus, color: 'text-gray-600' },
+  { value: 'other', labelKey: 'form.types.other' as const, icon: Plus, color: 'text-gray-600' },
 ];
 
 export function ManualAssetForm({ onSubmit, onCancel, initialData }: ManualAssetFormProps) {
+  const { t } = useTranslation('assets');
   const [formData, setFormData] = useState<ManualAssetData>({
     name: initialData?.name || '',
     type: initialData?.type || 'real_estate',
@@ -110,9 +112,9 @@ export function ManualAssetForm({ onSubmit, onCancel, initialData }: ManualAsset
         return (
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label>Address</Label>
+              <Label>{t('form.realEstate.address')}</Label>
               <Input
-                placeholder="123 Main St"
+                placeholder={t('form.realEstate.placeholders.address')}
                 value={formData.metadata?.address || ''}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   setFormData({
@@ -123,9 +125,9 @@ export function ManualAssetForm({ onSubmit, onCancel, initialData }: ManualAsset
               />
             </div>
             <div>
-              <Label>City</Label>
+              <Label>{t('form.realEstate.city')}</Label>
               <Input
-                placeholder="San Francisco"
+                placeholder={t('form.realEstate.placeholders.city')}
                 value={formData.metadata?.city || ''}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   setFormData({
@@ -136,9 +138,9 @@ export function ManualAssetForm({ onSubmit, onCancel, initialData }: ManualAsset
               />
             </div>
             <div>
-              <Label>State/Province</Label>
+              <Label>{t('form.realEstate.stateProvince')}</Label>
               <Input
-                placeholder="CA"
+                placeholder={t('form.realEstate.placeholders.state')}
                 value={formData.metadata?.state || ''}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   setFormData({
@@ -149,10 +151,10 @@ export function ManualAssetForm({ onSubmit, onCancel, initialData }: ManualAsset
               />
             </div>
             <div>
-              <Label>Square Feet</Label>
+              <Label>{t('form.realEstate.squareFeet')}</Label>
               <Input
                 type="number"
-                placeholder="2500"
+                placeholder={t('form.realEstate.placeholders.sqft')}
                 value={formData.metadata?.sqft || ''}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   setFormData({
@@ -169,9 +171,9 @@ export function ManualAssetForm({ onSubmit, onCancel, initialData }: ManualAsset
         return (
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label>Make</Label>
+              <Label>{t('form.vehicle.make')}</Label>
               <Input
-                placeholder="Tesla"
+                placeholder={t('form.vehicle.placeholders.make')}
                 value={formData.metadata?.make || ''}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   setFormData({
@@ -182,9 +184,9 @@ export function ManualAssetForm({ onSubmit, onCancel, initialData }: ManualAsset
               />
             </div>
             <div>
-              <Label>Model</Label>
+              <Label>{t('form.vehicle.model')}</Label>
               <Input
-                placeholder="Model 3"
+                placeholder={t('form.vehicle.placeholders.model')}
                 value={formData.metadata?.model || ''}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   setFormData({
@@ -195,10 +197,10 @@ export function ManualAssetForm({ onSubmit, onCancel, initialData }: ManualAsset
               />
             </div>
             <div>
-              <Label>Year</Label>
+              <Label>{t('form.vehicle.year')}</Label>
               <Input
                 type="number"
-                placeholder="2023"
+                placeholder={t('form.vehicle.placeholders.year')}
                 value={formData.metadata?.year || ''}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   setFormData({
@@ -209,9 +211,9 @@ export function ManualAssetForm({ onSubmit, onCancel, initialData }: ManualAsset
               />
             </div>
             <div>
-              <Label>VIN</Label>
+              <Label>{t('form.vehicle.vin')}</Label>
               <Input
-                placeholder="1234567890"
+                placeholder={t('form.vehicle.placeholders.vin')}
                 value={formData.metadata?.vin || ''}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   setFormData({
@@ -229,9 +231,9 @@ export function ManualAssetForm({ onSubmit, onCancel, initialData }: ManualAsset
         return (
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label>Company Name</Label>
+              <Label>{t('form.investment.companyName')}</Label>
               <Input
-                placeholder="Acme Inc."
+                placeholder={t('form.investment.placeholders.companyName')}
                 value={formData.metadata?.companyName || ''}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   setFormData({
@@ -242,7 +244,7 @@ export function ManualAssetForm({ onSubmit, onCancel, initialData }: ManualAsset
               />
             </div>
             <div>
-              <Label>Investment Date</Label>
+              <Label>{t('form.investment.investmentDate')}</Label>
               <Input
                 type="date"
                 value={formData.metadata?.investmentDate || ''}
@@ -255,11 +257,11 @@ export function ManualAssetForm({ onSubmit, onCancel, initialData }: ManualAsset
               />
             </div>
             <div>
-              <Label>Ownership %</Label>
+              <Label>{t('form.investment.ownershipPercent')}</Label>
               <Input
                 type="number"
                 step="0.01"
-                placeholder="5.5"
+                placeholder={t('form.investment.placeholders.ownershipPercent')}
                 value={formData.metadata?.ownershipPercentage || ''}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   setFormData({
@@ -273,10 +275,10 @@ export function ManualAssetForm({ onSubmit, onCancel, initialData }: ManualAsset
               />
             </div>
             <div>
-              <Label>Shares Owned</Label>
+              <Label>{t('form.investment.sharesOwned')}</Label>
               <Input
                 type="number"
-                placeholder="10000"
+                placeholder={t('form.investment.placeholders.shares')}
                 value={formData.metadata?.shares || ''}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   setFormData({
@@ -293,9 +295,9 @@ export function ManualAssetForm({ onSubmit, onCancel, initialData }: ManualAsset
         return (
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label>Domain Name</Label>
+              <Label>{t('form.domain.domainName')}</Label>
               <Input
-                placeholder="example.com"
+                placeholder={t('form.domain.placeholders.domain')}
                 value={formData.metadata?.domain || ''}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   setFormData({
@@ -306,9 +308,9 @@ export function ManualAssetForm({ onSubmit, onCancel, initialData }: ManualAsset
               />
             </div>
             <div>
-              <Label>Registrar</Label>
+              <Label>{t('form.domain.registrar')}</Label>
               <Input
-                placeholder="GoDaddy"
+                placeholder={t('form.domain.placeholders.registrar')}
                 value={formData.metadata?.registrar || ''}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   setFormData({
@@ -319,7 +321,7 @@ export function ManualAssetForm({ onSubmit, onCancel, initialData }: ManualAsset
               />
             </div>
             <div>
-              <Label>Expiry Date</Label>
+              <Label>{t('form.domain.expiryDate')}</Label>
               <Input
                 type="date"
                 value={formData.metadata?.expiryDate || ''}
@@ -342,19 +344,17 @@ export function ManualAssetForm({ onSubmit, onCancel, initialData }: ManualAsset
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle>{initialData ? 'Edit Manual Asset' : 'Add Manual Asset'}</CardTitle>
-        <CardDescription>
-          Track illiquid assets like real estate, private equity, and collectibles
-        </CardDescription>
+        <CardTitle>{initialData ? t('form.editTitle') : t('form.addTitle')}</CardTitle>
+        <CardDescription>{t('form.description')}</CardDescription>
       </CardHeader>
 
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Asset Type Selection */}
           <div className="space-y-2">
-            <Label>Asset Type</Label>
+            <Label>{t('form.labels.assetType')}</Label>
             <div className="grid grid-cols-3 gap-2">
-              {ASSET_TYPES.map((type) => {
+              {ASSET_TYPE_CONFIG.map((type) => {
                 const Icon = type.icon;
                 return (
                   <button
@@ -368,7 +368,7 @@ export function ManualAssetForm({ onSubmit, onCancel, initialData }: ManualAsset
                     }`}
                   >
                     <Icon className={`h-4 w-4 ${type.color}`} />
-                    <span className="text-sm">{type.label}</span>
+                    <span className="text-sm">{t(type.labelKey)}</span>
                   </button>
                 );
               })}
@@ -378,10 +378,10 @@ export function ManualAssetForm({ onSubmit, onCancel, initialData }: ManualAsset
           {/* Basic Information */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label>Asset Name *</Label>
+              <Label>{t('form.labels.assetName')} *</Label>
               <Input
                 required
-                placeholder="e.g., Downtown Condo, Model S, Acme Inc."
+                placeholder={t('form.placeholders.assetName')}
                 value={formData.name}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   setFormData({ ...formData, name: e.target.value })
@@ -389,7 +389,7 @@ export function ManualAssetForm({ onSubmit, onCancel, initialData }: ManualAsset
               />
             </div>
             <div>
-              <Label>Current Value *</Label>
+              <Label>{t('form.labels.currentValue')} *</Label>
               <Input
                 required
                 type="number"
@@ -405,7 +405,7 @@ export function ManualAssetForm({ onSubmit, onCancel, initialData }: ManualAsset
           {/* Acquisition Information */}
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <Label>Currency</Label>
+              <Label>{t('form.labels.currency')}</Label>
               <select
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                 value={formData.currency}
@@ -419,7 +419,7 @@ export function ManualAssetForm({ onSubmit, onCancel, initialData }: ManualAsset
               </select>
             </div>
             <div>
-              <Label>Acquisition Date</Label>
+              <Label>{t('form.labels.acquisitionDate')}</Label>
               <Input
                 type="date"
                 value={formData.acquisitionDate}
@@ -429,11 +429,11 @@ export function ManualAssetForm({ onSubmit, onCancel, initialData }: ManualAsset
               />
             </div>
             <div>
-              <Label>Acquisition Cost</Label>
+              <Label>{t('form.labels.acquisitionCost')}</Label>
               <Input
                 type="number"
                 step="0.01"
-                placeholder="Original purchase price"
+                placeholder={t('form.placeholders.acquisitionCost')}
                 value={formData.acquisitionCost || ''}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   setFormData({
@@ -449,7 +449,7 @@ export function ManualAssetForm({ onSubmit, onCancel, initialData }: ManualAsset
           {formData.acquisitionCost && formData.currentValue && (
             <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium">Unrealized Gain/Loss:</span>
+                <span className="text-sm font-medium">{t('form.labels.unrealizedGainLoss')}:</span>
                 <span
                   className={`text-lg font-bold ${
                     formData.currentValue - formData.acquisitionCost >= 0
@@ -465,9 +465,9 @@ export function ManualAssetForm({ onSubmit, onCancel, initialData }: ManualAsset
 
           {/* Description */}
           <div>
-            <Label>Description</Label>
+            <Label>{t('form.labels.description')}</Label>
             <Textarea
-              placeholder="Brief description of the asset..."
+              placeholder={t('form.placeholders.description')}
               value={formData.description}
               onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
                 setFormData({ ...formData, description: e.target.value })
@@ -479,22 +479,22 @@ export function ManualAssetForm({ onSubmit, onCancel, initialData }: ManualAsset
           {/* Type-Specific Metadata */}
           {showMetadata && (
             <div className="space-y-2">
-              <Label className="font-semibold">Asset Details</Label>
+              <Label className="font-semibold">{t('form.labels.assetDetails')}</Label>
               {renderMetadataFields()}
             </div>
           )}
 
           {!showMetadata && (
             <Button type="button" variant="outline" size="sm" onClick={() => setShowMetadata(true)}>
-              Add Asset Details
+              {t('form.buttons.addDetails')}
             </Button>
           )}
 
           {/* Notes */}
           <div>
-            <Label>Notes</Label>
+            <Label>{t('form.labels.notes')}</Label>
             <Textarea
-              placeholder="Additional notes, appraisal info, etc..."
+              placeholder={t('form.placeholders.notes')}
               value={formData.notes}
               onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
                 setFormData({ ...formData, notes: e.target.value })
@@ -507,11 +507,15 @@ export function ManualAssetForm({ onSubmit, onCancel, initialData }: ManualAsset
           <div className="flex gap-2 justify-end">
             {onCancel && (
               <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
-                Cancel
+                {t('form.buttons.cancel')}
               </Button>
             )}
             <Button type="submit" disabled={isLoading}>
-              {isLoading ? 'Saving...' : initialData ? 'Update Asset' : 'Add Asset'}
+              {isLoading
+                ? t('form.buttons.saving')
+                : initialData
+                  ? t('form.buttons.updateAsset')
+                  : t('form.buttons.addAsset')}
             </Button>
           </div>
         </form>

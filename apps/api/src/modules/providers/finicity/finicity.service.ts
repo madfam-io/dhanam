@@ -1,5 +1,6 @@
 import * as crypto from 'crypto';
 
+import { PROVIDER_DEFAULTS } from '@dhanam/shared';
 import { HttpService } from '@nestjs/axios';
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -378,7 +379,7 @@ export class FinicityService implements IFinancialProvider {
               params: {
                 fromDate,
                 toDate,
-                limit: 1000,
+                limit: PROVIDER_DEFAULTS.FINICITY_FETCH_LIMIT,
               },
             }
           )
@@ -533,7 +534,7 @@ export class FinicityService implements IFinancialProvider {
           params: {
             search: query,
             start: 1,
-            limit: 20,
+            limit: PROVIDER_DEFAULTS.FINICITY_MAX_ACCOUNTS,
           },
         })
       );

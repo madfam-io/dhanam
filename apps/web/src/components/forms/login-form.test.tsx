@@ -14,6 +14,43 @@ jest.mock('@dhanam/ui', () => ({
   Label: ({ children, ...props }: any) => <label {...props}>{children}</label>,
 }));
 
+// Mock @dhanam/shared with useTranslation
+const authTranslations: Record<string, string> = {
+  email: 'Email',
+  password: 'Password',
+  totpCode: 'TOTP code',
+  loginButton: 'Sign in',
+  signingIn: 'Signing in...',
+  'placeholders.email': 'you@example.com',
+  'placeholders.password': '••••••••',
+  'placeholders.totpCode': '123456',
+};
+
+const validationTranslations: Record<string, string> = {
+  emailInvalid: 'Invalid email address',
+  passwordMinLength: 'Password must be at least {{min}} characters',
+};
+
+jest.mock('@dhanam/shared', () => ({
+  LoginDto: {},
+  useTranslation: (namespace?: string) => ({
+    t: (key: string, params?: Record<string, string | number>) => {
+      const map = namespace === 'validations' ? validationTranslations : authTranslations;
+      let value = map[key] || key;
+      if (params) {
+        Object.entries(params).forEach(([k, v]) => {
+          value = value.replace(`{{${k}}}`, String(v));
+        });
+      }
+      return value;
+    },
+    locale: 'en',
+    setLocale: jest.fn(),
+    hasKey: () => true,
+    getNamespace: () => ({}),
+  }),
+}));
+
 // Mock lucide-react icons
 jest.mock('lucide-react', () => ({
   Eye: ({ ...props }: any) => <span data-testid="eye-icon" {...props} />,
@@ -68,7 +105,6 @@ describe('LoginForm', () => {
     // Import fireEvent locally to avoid conflict if not imported at top
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const { fireEvent } = require('@testing-library/react');
-    const user = userEvent.setup();
     render(<LoginForm onSubmit={mockOnSubmit} />);
 
     // Use fireEvent.click instead of user.click to avoid jsdom/react interaction bug
@@ -116,13 +152,13 @@ describe('LoginForm', () => {
   it('should show TOTP field when showTotpField is true', () => {
     render(<LoginForm onSubmit={mockOnSubmit} showTotpField={true} />);
 
-    expect(screen.getByLabelText('2FA Code')).toBeInTheDocument();
+    expect(screen.getByLabelText('TOTP code')).toBeInTheDocument();
     expect(screen.getByPlaceholderText('123456')).toBeInTheDocument();
   });
 
   it('should not show TOTP field by default', () => {
     render(<LoginForm onSubmit={mockOnSubmit} />);
 
-    expect(screen.queryByLabelText('2FA Code')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('TOTP code')).not.toBeInTheDocument();
   });
 });

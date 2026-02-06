@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@dhan
 import { useState } from 'react';
 import { formatCurrency } from '@/lib/utils';
 import type { Currency } from '@dhanam/shared';
+import { useTranslation } from '@dhanam/shared';
 
 interface SpendingCategory {
   categoryId: string;
@@ -33,6 +34,7 @@ const COLORS = [
 ];
 
 export function SpendingCategoryChart({ data, currency, isLoading }: SpendingCategoryChartProps) {
+  const { t } = useTranslation('analytics');
   const [activeIndex, setActiveIndex] = useState<number | undefined>(undefined);
 
   const { chartData, totalSpending } = useMemo(() => {
@@ -56,7 +58,7 @@ export function SpendingCategoryChart({ data, currency, isLoading }: SpendingCat
       const otherTotal = rest.reduce((sum, item) => sum + Math.abs(item.amount), 0);
       const otherPercentage = rest.reduce((sum, item) => sum + item.percentage, 0);
       chartData.push({
-        name: 'Other',
+        name: t('charts.spendingCategory.other'),
         value: otherTotal,
         percentage: otherPercentage,
         color: 'hsl(var(--muted-foreground))',
@@ -66,7 +68,7 @@ export function SpendingCategoryChart({ data, currency, isLoading }: SpendingCat
     const totalSpending = chartData.reduce((sum, item) => sum + item.value, 0);
 
     return { chartData, totalSpending };
-  }, [data]);
+  }, [data, t]);
 
   const renderActiveShape = (props: any) => {
     const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill } = props;
@@ -104,7 +106,9 @@ export function SpendingCategoryChart({ data, currency, isLoading }: SpendingCat
           <p className="text-lg font-semibold">
             {formatCurrency(data.value, currency as Currency)}
           </p>
-          <p className="text-xs text-muted-foreground">{data.percentage.toFixed(1)}% of total</p>
+          <p className="text-xs text-muted-foreground">
+            {t('charts.spendingCategory.ofTotal', { percent: data.percentage.toFixed(1) })}
+          </p>
         </div>
       );
     }
@@ -133,8 +137,8 @@ export function SpendingCategoryChart({ data, currency, isLoading }: SpendingCat
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Spending by Category</CardTitle>
-          <CardDescription>Loading...</CardDescription>
+          <CardTitle>{t('charts.spendingCategory.title')}</CardTitle>
+          <CardDescription>{t('common:loading')}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="h-[300px] flex items-center justify-center">
@@ -149,12 +153,12 @@ export function SpendingCategoryChart({ data, currency, isLoading }: SpendingCat
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Spending by Category</CardTitle>
-          <CardDescription>No spending data available</CardDescription>
+          <CardTitle>{t('charts.spendingCategory.title')}</CardTitle>
+          <CardDescription>{t('charts.spendingCategory.noData')}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-            Add transactions to see your spending breakdown
+            {t('charts.spendingCategory.noDataHint')}
           </div>
         </CardContent>
       </Card>
@@ -166,11 +170,13 @@ export function SpendingCategoryChart({ data, currency, isLoading }: SpendingCat
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle>Spending by Category</CardTitle>
-            <CardDescription>Where your money goes</CardDescription>
+            <CardTitle>{t('charts.spendingCategory.title')}</CardTitle>
+            <CardDescription>{t('charts.spendingCategory.description')}</CardDescription>
           </div>
           <div className="text-right">
-            <p className="text-xs text-muted-foreground">Total Spending</p>
+            <p className="text-xs text-muted-foreground">
+              {t('charts.spendingCategory.totalSpending')}
+            </p>
             <p className="text-lg font-semibold">
               {formatCurrency(totalSpending, currency as Currency)}
             </p>

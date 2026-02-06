@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button, Tabs, TabsContent, TabsList, TabsTrigger } from '@dhanam/ui';
 import { Bell, Check, AlertTriangle, Lightbulb, Trophy, Info, Clock } from 'lucide-react';
+import { useTranslation } from '@dhanam/shared';
 
 interface Notification {
   id: string;
@@ -41,20 +42,27 @@ function groupByDate(notifications: Notification[]): Record<string, Notification
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
   const weekAgo = today - 7 * 86400000;
 
-  const groups: Record<string, Notification[]> = { Today: [], 'This Week': [], Earlier: [] };
+  const groups: Record<string, Notification[]> = { today: [], thisWeek: [], earlier: [] };
 
   for (const n of notifications) {
     const ts = new Date(n.createdAt).getTime();
-    if (ts >= today) groups['Today']!.push(n);
-    else if (ts >= weekAgo) groups['This Week']!.push(n);
-    else groups['Earlier']!.push(n);
+    if (ts >= today) groups['today']!.push(n);
+    else if (ts >= weekAgo) groups['thisWeek']!.push(n);
+    else groups['earlier']!.push(n);
   }
 
   return groups;
 }
 
+const GROUP_LABEL_KEYS: Record<string, string> = {
+  today: 'today',
+  thisWeek: 'thisWeek',
+  earlier: 'earlier',
+};
+
 export default function NotificationsPage() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation('common');
 
   const { data: notifications = [] } = useQuery<Notification[]>({
     queryKey: ['notifications-all'],
@@ -108,16 +116,18 @@ export default function NotificationsPage() {
     const groups = groupByDate(items);
     return (
       <div className="space-y-6">
-        {Object.entries(groups).map(([label, groupItems]) =>
+        {Object.entries(groups).map(([key, groupItems]) =>
           groupItems.length > 0 ? (
-            <div key={label}>
-              <h3 className="text-sm font-medium text-muted-foreground mb-3">{label}</h3>
+            <div key={key}>
+              <h3 className="text-sm font-medium text-muted-foreground mb-3">
+                {t(GROUP_LABEL_KEYS[key] ?? key)}
+              </h3>
               <div className="space-y-2">{renderGroup(groupItems)}</div>
             </div>
           ) : null
         )}
         {items.length === 0 && (
-          <p className="text-center text-muted-foreground py-8">No notifications</p>
+          <p className="text-center text-muted-foreground py-8">{t('noNotifications')}</p>
         )}
       </div>
     );
@@ -127,25 +137,25 @@ export default function NotificationsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Notifications</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{t('notifications')}</h1>
           <p className="text-muted-foreground">
-            {unreadCount > 0 ? `${unreadCount} unread` : 'All caught up'}
+            {unreadCount > 0 ? t('unreadCount', { count: unreadCount }) : t('allCaughtUp')}
           </p>
         </div>
         {unreadCount > 0 && (
           <Button variant="outline" size="sm" onClick={() => markAllRead.mutate()}>
             <Check className="mr-2 h-4 w-4" />
-            Mark all as read
+            {t('markAllAsRead')}
           </Button>
         )}
       </div>
 
       <Tabs defaultValue="all">
         <TabsList>
-          <TabsTrigger value="all">All</TabsTrigger>
-          <TabsTrigger value="alerts">Alerts</TabsTrigger>
-          <TabsTrigger value="insights">Insights</TabsTrigger>
-          <TabsTrigger value="reminders">Reminders</TabsTrigger>
+          <TabsTrigger value="all">{t('all')}</TabsTrigger>
+          <TabsTrigger value="alerts">{t('alerts')}</TabsTrigger>
+          <TabsTrigger value="insights">{t('insights')}</TabsTrigger>
+          <TabsTrigger value="reminders">{t('reminders')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="all" className="mt-4">

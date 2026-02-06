@@ -1,5 +1,6 @@
 import * as crypto from 'crypto';
 
+import { PROVIDER_DEFAULTS } from '@dhanam/shared';
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
@@ -436,9 +437,11 @@ export class MxService implements IFinancialProvider {
 
         page++;
 
-        // Safety check: don't fetch more than 10 pages in one sync
-        if (page > 10) {
-          this.logger.warn('Reached maximum page limit (10) for MX transaction sync');
+        // Safety check: don't fetch more than configured max pages in one sync
+        if (page > PROVIDER_DEFAULTS.MX_MAX_PAGES) {
+          this.logger.warn(
+            `Reached maximum page limit (${PROVIDER_DEFAULTS.MX_MAX_PAGES}) for MX transaction sync`
+          );
           break;
         }
       }

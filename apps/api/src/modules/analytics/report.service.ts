@@ -1,3 +1,4 @@
+import { ANALYTICS } from '@dhanam/shared';
 import { Injectable, Logger } from '@nestjs/common';
 import { format } from 'date-fns';
 import * as ExcelJS from 'exceljs';
@@ -151,7 +152,7 @@ export class ReportService {
               yPos
             );
             yPos += 20;
-            if (yPos > 700) {
+            if (yPos > ANALYTICS.PDF_PAGE_BREAK_Y) {
               doc.addPage();
               yPos = 50;
             }
@@ -213,7 +214,7 @@ export class ReportService {
               );
               yPos += 30;
 
-              if (yPos > 700) {
+              if (yPos > ANALYTICS.PDF_PAGE_BREAK_Y) {
                 doc.addPage();
                 yPos = 50;
               }
@@ -240,7 +241,7 @@ export class ReportService {
             );
             totalBalance += account.balance.toNumber();
             yPos += 20;
-            if (yPos > 700) {
+            if (yPos > ANALYTICS.PDF_PAGE_BREAK_Y) {
               doc.addPage();
               yPos = 50;
             }

@@ -141,4 +141,15 @@ export const dashboard = {
     budgetProgress: 'Budget Progress',
     goals: 'Financial Goals',
   },
+  savingsStreak: {
+    title: 'Savings Streak & Achievements',
+    weeksOfPositiveSavings: 'weeks of positive savings',
+    savingsRate: 'Savings rate',
+    target: '{{rate}}% / {{target}}% target',
+    aboveTarget: 'Above target -- great work!',
+    streakCelebration: '{{weeks}}-week savings streak! Keep it going!',
+    badgeBudgetMaster: 'Budget Master',
+    badgeSavingsStar: 'Savings Star',
+    badgeEsgLeader: 'ESG Leader',
+  },
 } as const;

@@ -10,9 +10,57 @@ jest.mock('@dhanam/ui', () => ({
   Label: ({ children, ...props }: any) => <label {...props}>{children}</label>,
 }));
 
-// Mock @dhanam/shared
+// Mock @dhanam/shared with useTranslation
+const authTranslations: Record<string, string> = {
+  email: 'Email',
+  password: 'Password',
+  fullName: 'Full Name',
+  createAccount: 'Create account',
+  creatingAccount: 'Creating account...',
+  passwordHelp: 'Must contain at least 8 characters, one uppercase letter, and one number',
+  agreementPrefix: 'By creating an account, you agree to our',
+  termsOfService: 'Terms of Service',
+  privacyPolicy: 'Privacy Policy',
+  'placeholders.email': 'you@example.com',
+  'placeholders.password': '••••••••',
+  'placeholders.fullName': 'John Doe',
+};
+
+const commonTranslations: Record<string, string> = {
+  and: 'and',
+};
+
+const validationTranslations: Record<string, string> = {
+  emailInvalid: 'Invalid email address',
+  passwordMinLength: 'Password must be at least {{min}} characters',
+  passwordUppercase: 'Password must contain at least one uppercase letter',
+  passwordNumber: 'Password must contain at least one number',
+  nameMinLength: 'Name must be at least {{min}} characters',
+};
+
 jest.mock('@dhanam/shared', () => ({
   RegisterDto: {},
+  useTranslation: (namespace?: string) => ({
+    t: (key: string, params?: Record<string, string | number>) => {
+      const map =
+        namespace === 'validations'
+          ? validationTranslations
+          : namespace === 'common'
+            ? commonTranslations
+            : authTranslations;
+      let value = map[key] || key;
+      if (params) {
+        Object.entries(params).forEach(([k, v]) => {
+          value = value.replace(`{{${k}}}`, String(v));
+        });
+      }
+      return value;
+    },
+    locale: 'en',
+    setLocale: jest.fn(),
+    hasKey: () => true,
+    getNamespace: () => ({}),
+  }),
   getGeoDefaults: () => ({
     locale: 'es',
     currency: 'MXN',

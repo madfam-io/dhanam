@@ -1,4 +1,5 @@
 import { ESGManager, PortfolioHolding, PortfolioESGAnalysis, AssetESGData } from '@dhanam/esg';
+import { ESG_CACHE } from '@dhanam/shared';
 import { Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
 
 import { Decimal } from '@db';
@@ -14,8 +15,8 @@ export class EnhancedEsgService implements OnModuleInit {
   onModuleInit() {
     this.esgManager = new ESGManager({
       caching: {
-        ttl: 3600, // 1 hour cache
-        maxSize: 500,
+        ttl: ESG_CACHE.TTL_SECONDS, // 1 hour cache
+        maxSize: ESG_CACHE.MAX_ENTRIES,
       },
       scoring: {
         weights: {

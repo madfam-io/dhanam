@@ -1,0 +1,266 @@
+/**
+ * Brazilian Portuguese Budget Translations
+ * Budget management, categories, tracking
+ */
+export const budgets = {
+  // Main
+  budgets: 'Orçamentos',
+  budget: 'Orçamento',
+  newBudget: 'Novo orçamento',
+  createBudget: 'Criar orçamento',
+  editBudget: 'Editar orçamento',
+  deleteBudget: 'Excluir orçamento',
+  budgetDetails: 'Detalhes do orçamento',
+  myBudgets: 'Meus orçamentos',
+
+  // Fields
+  budgetName: 'Nome do orçamento',
+  budgetPeriod: 'Período',
+  budgetAmount: 'Valor orçado',
+  spentAmount: 'Valor gasto',
+  remainingAmount: 'Valor restante',
+  startDate: 'Data de início',
+  endDate: 'Data de término',
+  rolloverUnused: 'Transferir saldo',
+
+  // Periods
+  monthly: 'Mensal',
+  quarterly: 'Trimestral',
+  yearly: 'Anual',
+  custom: 'Personalizado',
+  currentPeriod: 'Período atual',
+  nextPeriod: 'Próximo período',
+  previousPeriod: 'Período anterior',
+
+  // Categories
+  categories: 'Categorias',
+  category: 'Categoria',
+  newCategory: 'Nova categoria',
+  addCategory: 'Adicionar categoria',
+  editCategory: 'Editar categoria',
+  deleteCategory: 'Excluir categoria',
+  categoryName: 'Nome da categoria',
+  categoryBudget: 'Orçamento da categoria',
+  categorySpent: 'Gasto na categoria',
+  categoryRemaining: 'Restante na categoria',
+  uncategorized: 'Sem categoria',
+  allCategories: 'Todas as categorias',
+
+  // Predefined categories
+  groceries: 'Supermercado',
+  restaurants: 'Restaurantes',
+  transportation: 'Transporte',
+  utilities: 'Serviços',
+  rent: 'Aluguel',
+  mortgage: 'Financiamento',
+  entertainment: 'Entretenimento',
+  healthcare: 'Saúde',
+  insurance: 'Seguros',
+  education: 'Educação',
+  shopping: 'Compras',
+  personal: 'Pessoal',
+  gifts: 'Presentes',
+  travel: 'Viagens',
+  savings: 'Poupança',
+  investments: 'Investimentos',
+  debt: 'Dívidas',
+  other: 'Outros',
+
+  // Status
+  onTrack: 'No caminho',
+  overBudget: 'Acima do orçamento',
+  underBudget: 'Abaixo do orçamento',
+  budgetExceeded: 'Orçamento excedido',
+  warningThreshold: 'Limite de aviso',
+
+  // Progress
+  progress: 'Progresso',
+  percentUsed: '{{percent}}% utilizado',
+  percentRemaining: '{{percent}}% restante',
+  daysRemaining: '{{days}} dias restantes',
+  daysInPeriod: '{{days}} dias no período',
+
+  // Alerts
+  budgetAlert: 'Alerta de orçamento',
+  budgetAlerts: 'Alertas de orçamento',
+  enableAlerts: 'Habilitar alertas',
+  alertThreshold: 'Limite de alerta',
+  alertAt80Percent: 'Alerta em 80%',
+  alertAt90Percent: 'Alerta em 90%',
+  alertAt100Percent: 'Alerta em 100%',
+  customThreshold: 'Limite personalizado',
+
+  // Actions
+  viewBudget: 'Ver orçamento',
+  adjustBudget: 'Ajustar orçamento',
+  resetBudget: 'Redefinir orçamento',
+  duplicateBudget: 'Duplicar orçamento',
+  archiveBudget: 'Arquivar orçamento',
+  restoreBudget: 'Restaurar orçamento',
+
+  // Reports
+  budgetReport: 'Relatório de orçamento',
+  spendingBreakdown: 'Detalhamento de gastos',
+  categoryBreakdown: 'Detalhamento por categoria',
+  monthlyComparison: 'Comparação mensal',
+  yearlyComparison: 'Comparação anual',
+  trend: 'Tendência',
+  insights: 'Insights',
+
+  // Goals
+  budgetGoals: 'Metas de orçamento',
+  savingsGoal: 'Meta de poupança',
+  spendingLimit: 'Limite de gastos',
+  goalProgress: 'Progresso da meta',
+  goalAchieved: 'Meta alcançada',
+  onTrackToGoal: 'No caminho da meta',
+
+  // Messages
+  noBudgets: 'Você não tem orçamentos',
+  createFirstBudget: 'Crie seu primeiro orçamento',
+  budgetCreated: 'Orçamento criado',
+  budgetUpdated: 'Orçamento atualizado',
+  budgetDeleted: 'Orçamento excluído',
+  categoryAdded: 'Categoria adicionada',
+  categoryUpdated: 'Categoria atualizada',
+  categoryDeleted: 'Categoria excluída',
+
+  // Warnings
+  approachingLimit: 'Aproximando-se do limite',
+  exceededLimit: 'Limite excedido',
+  youHaveSpent: 'Você gastou {{amount}} de {{budget}}',
+  remainingForPeriod: 'Restam {{amount}} para este período',
+  overspentBy: 'Você excedeu em {{amount}}',
+
+  // Errors
+  budgetNotFound: 'Orçamento não encontrado',
+  categoryNotFound: 'Categoria não encontrada',
+  invalidBudgetAmount: 'Valor de orçamento inválido',
+  budgetNameRequired: 'O nome do orçamento é obrigatório',
+  budgetAmountRequired: 'O valor do orçamento é obrigatório',
+  categoryNameRequired: 'O nome da categoria é obrigatório',
+  categoryBudgetRequired: 'O orçamento da categoria é obrigatório',
+  periodRequired: 'O período é obrigatório',
+  startDateRequired: 'A data de início é obrigatória',
+
+  // Page-level keys (used by budgets page component)
+  page: {
+    title: 'Orçamentos',
+    description: 'Gerencie seus orçamentos e categorias de gastos',
+    manageRules: 'Gerenciar Regras',
+    createBudget: 'Criar Orçamento',
+    addCategory: 'Adicionar Categoria',
+  },
+  dialog: {
+    create: {
+      description: 'Configure um novo orçamento para controlar seus gastos',
+    },
+    addCategory: {
+      description: 'Adicione uma categoria de gasto a este orçamento',
+    },
+  },
+  fields: {
+    budgetName: 'Nome do orçamento',
+    budgetNamePlaceholder: 'ex. Despesas Mensais',
+    period: 'Período',
+    selectPeriod: 'Selecione um período',
+    startDate: 'Data de início',
+    ongoing: 'Em andamento',
+    categories: 'Categorias',
+    categoryName: 'Nome da categoria',
+    categoryNamePlaceholder: 'ex. Supermercado',
+    budgetAmount: 'Valor orçado',
+  },
+  periods: {
+    monthly: 'Mensal',
+    weekly: 'Semanal',
+    quarterly: 'Trimestral',
+    yearly: 'Anual',
+  },
+  summary: {
+    totalBudget: 'Orçamento Total',
+    spent: 'gasto',
+    remaining: 'restante',
+    used: 'utilizado',
+  },
+  empty: {
+    title: 'Sem orçamentos ainda',
+    description: 'Crie seu primeiro orçamento para começar a controlar seus gastos',
+    cta: 'Crie Seu Primeiro Orçamento',
+  },
+  toast: {
+    budgetCreated: 'Orçamento criado com sucesso',
+    budgetCreateFailed: 'Erro ao criar orçamento',
+    categoryAdded: 'Categoria adicionada com sucesso',
+    categoryAddFailed: 'Erro ao adicionar categoria',
+  },
+  rules: {
+    title: 'Regras de categorização de transações',
+    description: 'Crie regras para categorizar automaticamente transações com base em padrões',
+    priorityHint: 'As regras são aplicadas em ordem de prioridade (números menores primeiro)',
+    addRule: 'Adicionar regra',
+    noRulesTitle: 'Nenhuma regra ainda',
+    noRulesDescription: 'Crie regras para categorizar automaticamente as transações',
+    createFirstRule: 'Crie sua primeira regra',
+    createRuleTitle: 'Criar regra de categorização',
+    createRuleDescription: 'Defina um padrão para categorizar transações automaticamente',
+    labels: {
+      ruleName: 'Nome da regra',
+      field: 'Campo',
+      operator: 'Operador',
+      patternValue: 'Valor do padrão',
+      priority: 'Prioridade (1 = mais alta)',
+      category: 'Categoria',
+    },
+    placeholders: {
+      ruleName: 'ex. Supermercados',
+      selectField: 'Selecionar campo',
+      selectOperator: 'Selecionar operador',
+      patternValue: 'ex. walmart|extra|mercado',
+      selectCategory: 'Selecionar categoria',
+    },
+    fields: {
+      description: 'Descrição',
+      merchant: 'Estabelecimento',
+      amount: 'Valor',
+    },
+    operators: {
+      contains: 'Contém',
+      equals: 'É igual a',
+      startsWith: 'Começa com',
+      endsWith: 'Termina com',
+      regex: 'Regex',
+      gte: 'Maior que',
+      lte: 'Menor que',
+    },
+    buttons: {
+      testing: 'Testando...',
+      testRule: 'Testar regra',
+      creating: 'Criando...',
+      createRule: 'Criar regra',
+    },
+    testResults: 'Resultados do teste:',
+    testMatch: 'Corresponderia a {{count}} transações',
+    sampleMatches: 'Correspondências de exemplo:',
+    toast: {
+      ruleCreated: 'Regra criada com sucesso',
+      ruleCreateFailed: 'Erro ao criar regra',
+      ruleUpdated: 'Regra atualizada com sucesso',
+      ruleUpdateFailed: 'Erro ao atualizar regra',
+      ruleTestMatch: 'A regra corresponderia a {{count}} transações',
+      ruleTestFailed: 'Erro ao testar regra',
+    },
+  },
+  zeroBased: {
+    title: 'Orçamento Base Zero',
+    description: 'Dê uma função a cada real \u2022 Orçamento por envelopes para {{name}}',
+    addIncome: 'Adicionar Receita',
+    rollover: 'Transferir',
+    howItWorks: 'Como funciona',
+    loading: 'Carregando seu orçamento...',
+    errorTitle: 'Erro ao carregar os dados do orçamento',
+    errorFallback: 'Por favor tente novamente mais tarde',
+    retry: 'Tentar novamente',
+    noSpace: 'Selecione um espaço para ver seu orçamento',
+  },
+} as const;

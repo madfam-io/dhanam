@@ -1,10 +1,11 @@
+import { ANALYTICS } from '@dhanam/shared';
 import { Type } from 'class-transformer';
 import { IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
 
 export class CreateShareTokenDto {
   @IsInt()
   @Min(1)
-  @Max(720) // 30 days max
+  @Max(ANALYTICS.SHARE_TOKEN_MAX_HOURS) // 30 days max
   @IsOptional()
   @Type(() => Number)
   expiresInHours?: number;

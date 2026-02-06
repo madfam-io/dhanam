@@ -144,18 +144,22 @@ export class ConnectionHealthController {
 
     let statusBadge: 'green' | 'yellow' | 'red' = 'green';
     let statusText = 'All connections healthy';
+    let statusTextKey = 'CONN_STATUS_ALL_HEALTHY';
 
     if (health.requiresReauthCount > 0 || health.errorCount > 0) {
       statusBadge = 'red';
       statusText = `${health.errorCount + health.requiresReauthCount} connection(s) need attention`;
+      statusTextKey = 'CONN_STATUS_NEED_ATTENTION';
     } else if (health.degradedCount > 0) {
       statusBadge = 'yellow';
       statusText = `${health.degradedCount} connection(s) degraded`;
+      statusTextKey = 'CONN_STATUS_DEGRADED';
     }
 
     const response: any = {
       statusBadge,
       statusText,
+      statusTextKey,
       healthScore: health.overallHealthScore,
       totalConnections: health.totalConnections,
       healthyCount: health.healthyCount,

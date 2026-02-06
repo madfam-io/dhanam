@@ -139,6 +139,30 @@ export const RETRY_PRESETS: Record<string, Partial<RetryConfig>> = {
     maxDelayMs: 1000,
     backoffMultiplier: 1.5,
   },
+
+  // Blockchain API calls - moderate retries
+  blockchain: {
+    maxRetries: 3,
+    baseDelayMs: 1000,
+    maxDelayMs: 10000,
+    backoffMultiplier: 2,
+  },
+
+  // Zillow - no retries (rate-limited API)
+  zillow: {
+    maxRetries: 0,
+    baseDelayMs: 0,
+    maxDelayMs: 0,
+    backoffMultiplier: 1,
+  },
+
+  // Default provider retries
+  provider_default: {
+    maxRetries: 5,
+    baseDelayMs: 2000,
+    maxDelayMs: 60000,
+    backoffMultiplier: 2,
+  },
 };
 
 const logger = new Logger('RetryUtil');

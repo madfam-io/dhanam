@@ -4,6 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
 
 import { AuditService } from '@core/audit/audit.service';
+import { SecurityConfigService } from '@core/config/security.config';
 import { PrismaService } from '@core/prisma/prisma.service';
 import { LoggerService } from '@core/logger/logger.service';
 import { EmailService } from '@modules/email/email.service';
@@ -85,6 +86,18 @@ describe('AuthService', () => {
       log: jest.fn().mockResolvedValue(undefined),
     };
 
+    const mockSecurityConfig = {
+      getJwtExpiry: jest.fn().mockReturnValue('15m'),
+      getJwtExpirySeconds: jest.fn().mockReturnValue(900),
+      getRefreshTokenExpiryDays: jest.fn().mockReturnValue(30),
+      getRefreshTokenExpirySeconds: jest.fn().mockReturnValue(2592000),
+      getRefreshTokenExpiryMs: jest.fn().mockReturnValue(2592000000),
+      getMaxLoginAttempts: jest.fn().mockReturnValue(5),
+      getAccountLockoutMinutes: jest.fn().mockReturnValue(15),
+      getAccountLockoutSeconds: jest.fn().mockReturnValue(900),
+      getPasswordBreachCheckTimeoutMs: jest.fn().mockReturnValue(5000),
+    };
+
     // Mock fetch to prevent real HIBP API calls (password breach check)
     global.fetch = jest.fn().mockResolvedValue({
       ok: true,
@@ -108,6 +121,7 @@ describe('AuthService', () => {
         { provide: EmailService, useValue: mockEmailService },
         { provide: LoggerService, useValue: mockLogger },
         { provide: AuditService, useValue: mockAuditService },
+        { provide: SecurityConfigService, useValue: mockSecurityConfig },
       ],
     }).compile();
 

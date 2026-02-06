@@ -1,4 +1,5 @@
 // eslint-disable-next-line import/no-named-as-default
+import { SECURITY_HEADERS, SHUTDOWN_TIMEOUT_MS } from '@dhanam/shared';
 import fastifyCompress from '@fastify/compress';
 // eslint-disable-next-line import/no-named-as-default
 import fastifyCookie from '@fastify/cookie';
@@ -82,7 +83,7 @@ async function bootstrap() {
       },
     },
     hsts: {
-      maxAge: 63072000, // 2 years
+      maxAge: SECURITY_HEADERS.HSTS_MAX_AGE_SECONDS,
       includeSubDomains: true,
       preload: true,
     },
@@ -167,7 +168,7 @@ async function bootstrap() {
     healthService.setShuttingDown(true);
     logger.log('Health service marked as shutting down');
 
-    await new Promise((resolve) => setTimeout(resolve, 5000));
+    await new Promise((resolve) => setTimeout(resolve, SHUTDOWN_TIMEOUT_MS));
     logger.log('Grace period complete, draining queues...');
 
     try {

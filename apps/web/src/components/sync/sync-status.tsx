@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@dhanam/ui';
 import { Badge } from '@dhanam/ui';
 import { Button } from '@dhanam/ui';
+import { useTranslation } from '@dhanam/shared';
 import { RefreshCw, CheckCircle, XCircle, Clock, Wifi, WifiOff, AlertCircle } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -26,6 +27,8 @@ interface SyncStatus {
 }
 
 export function SyncStatus({ spaceId }: SyncStatusProps) {
+  const { t } = useTranslation('apiErrors');
+
   const { data: syncStatus, isLoading } = useQuery({
     queryKey: ['sync-status', spaceId],
     queryFn: () => {
@@ -90,20 +93,20 @@ export function SyncStatus({ spaceId }: SyncStatusProps) {
       case 'connected':
         return (
           <Badge variant="secondary" className="text-green-700 bg-green-50 border-green-200">
-            Connected
+            {t('SYNC_STATUS_CONNECTED')}
           </Badge>
         );
       case 'syncing':
         return (
           <Badge variant="secondary" className="text-blue-700 bg-blue-50 border-blue-200">
-            Syncing
+            {t('SYNC_STATUS_SYNCING')}
           </Badge>
         );
       case 'error':
       case 'expired':
-        return <Badge variant="destructive">Error</Badge>;
+        return <Badge variant="destructive">{t('SYNC_STATUS_ERROR')}</Badge>;
       default:
-        return <Badge variant="outline">Unknown</Badge>;
+        return <Badge variant="outline">{t('SYNC_STATUS_UNKNOWN')}</Badge>;
     }
   };
 
@@ -139,23 +142,26 @@ export function SyncStatus({ spaceId }: SyncStatusProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             {getOverallStatusIcon(syncStatus.overall)}
-            Data Sync Status
+            {t('SYNC_STATUS_TITLE')}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-between">
             <div className="space-y-1">
               <p className="text-sm">
-                Last updated{' '}
-                {formatDistanceToNow(new Date(syncStatus.lastSync), { addSuffix: true })}
+                {t('SYNC_STATUS_LAST_UPDATED', {
+                  time: formatDistanceToNow(new Date(syncStatus.lastSync), { addSuffix: true }),
+                })}
               </p>
               <p className="text-xs text-muted-foreground">
-                Next sync {formatDistanceToNow(new Date(syncStatus.nextSync), { addSuffix: true })}
+                {t('SYNC_STATUS_NEXT_SYNC', {
+                  time: formatDistanceToNow(new Date(syncStatus.nextSync), { addSuffix: true }),
+                })}
               </p>
             </div>
             <Button size="sm" variant="outline">
               <RefreshCw className="mr-2 h-4 w-4" />
-              Sync Now
+              {t('SYNC_STATUS_SYNC_NOW')}
             </Button>
           </div>
         </CardContent>
@@ -164,7 +170,7 @@ export function SyncStatus({ spaceId }: SyncStatusProps) {
       {/* Account Status */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Account Connections</CardTitle>
+          <CardTitle className="text-base">{t('SYNC_STATUS_ACCOUNT_CONNECTIONS')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
@@ -178,8 +184,10 @@ export function SyncStatus({ spaceId }: SyncStatusProps) {
                   <div>
                     <p className="font-medium text-sm">{account.name}</p>
                     <p className="text-xs text-muted-foreground capitalize">
-                      {account.provider} • Last sync{' '}
-                      {formatDistanceToNow(new Date(account.lastSync), { addSuffix: true })}
+                      {account.provider} •{' '}
+                      {t('SYNC_STATUS_LAST_SYNC', {
+                        time: formatDistanceToNow(new Date(account.lastSync), { addSuffix: true }),
+                      })}
                     </p>
                     {account.error && <p className="text-xs text-red-600 mt-1">{account.error}</p>}
                   </div>
@@ -188,7 +196,7 @@ export function SyncStatus({ spaceId }: SyncStatusProps) {
                   {getStatusBadge(account.status)}
                   {account.status === 'error' && (
                     <Button size="sm" variant="outline">
-                      Reconnect
+                      {t('SYNC_STATUS_RECONNECT')}
                     </Button>
                   )}
                 </div>
@@ -208,7 +216,7 @@ export function SyncStatus({ spaceId }: SyncStatusProps) {
                 <p className="text-2xl font-bold">
                   {syncStatus.accounts.filter((acc) => acc.status === 'connected').length}
                 </p>
-                <p className="text-xs text-muted-foreground">Connected</p>
+                <p className="text-xs text-muted-foreground">{t('SYNC_STATUS_CONNECTED_COUNT')}</p>
               </div>
             </div>
           </CardContent>
@@ -226,7 +234,7 @@ export function SyncStatus({ spaceId }: SyncStatusProps) {
                     ).length
                   }
                 </p>
-                <p className="text-xs text-muted-foreground">Need Attention</p>
+                <p className="text-xs text-muted-foreground">{t('SYNC_STATUS_NEED_ATTENTION')}</p>
               </div>
             </div>
           </CardContent>
@@ -240,7 +248,7 @@ export function SyncStatus({ spaceId }: SyncStatusProps) {
                 <p className="text-2xl font-bold">
                   {syncStatus.accounts.filter((acc) => acc.status === 'syncing').length}
                 </p>
-                <p className="text-xs text-muted-foreground">Syncing</p>
+                <p className="text-xs text-muted-foreground">{t('SYNC_STATUS_SYNCING_COUNT')}</p>
               </div>
             </div>
           </CardContent>

@@ -274,7 +274,7 @@ export class ConnectionHealthCheckProcessor implements OnModuleInit {
     const reauthCount = newNotifications.filter((n) => n.type === 'reauth').length;
     const degradedCount = newNotifications.filter((n) => n.type === 'degraded').length;
 
-    const summaryMessage = this.errorMessagesService.getSummaryMessage(
+    const summary = this.errorMessagesService.getSummaryMessage(
       errorCount,
       reauthCount,
       degradedCount
@@ -291,9 +291,11 @@ export class ConnectionHealthCheckProcessor implements OnModuleInit {
               ? 'connection_error'
               : 'connection_degraded',
         title: 'Account Connection Issue',
-        message: summaryMessage,
+        message: summary.text,
         metadata: {
           spaceName,
+          messageKey: summary.key,
+          messageParams: summary.params,
           accounts: newNotifications.map((n) => ({
             accountId: n.accountId,
             accountName: n.accountName,
@@ -310,7 +312,7 @@ export class ConnectionHealthCheckProcessor implements OnModuleInit {
         template: 'connection-health-alert',
         data: {
           spaceName,
-          summaryMessage,
+          summaryMessage: summary.text,
           accounts: newNotifications,
           actionUrl: '/accounts/health',
         },

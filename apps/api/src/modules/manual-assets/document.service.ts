@@ -1,3 +1,4 @@
+import { STORAGE_LIMITS } from '@dhanam/shared';
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 
 import { PrismaService } from '../../core/prisma/prisma.service';
@@ -36,7 +37,7 @@ const ALLOWED_FILE_TYPES = [
   'text/csv',
 ];
 
-const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+const MAX_FILE_SIZE = STORAGE_LIMITS.MAX_FILE_SIZE_BYTES;
 
 const DOCUMENT_CATEGORIES = [
   'deed',

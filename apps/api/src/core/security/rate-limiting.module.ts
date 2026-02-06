@@ -1,3 +1,4 @@
+import { RATE_LIMIT_WINDOWS } from '@dhanam/shared';
 import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ThrottlerModule, ThrottlerStorage } from '@nestjs/throttler';
@@ -62,17 +63,17 @@ class RedisThrottlerStorage implements ThrottlerStorage {
         throttlers: [
           {
             name: 'short',
-            ttl: 60 * 1000,
+            ttl: RATE_LIMIT_WINDOWS.SHORT * 1000,
             limit: 60,
           },
           {
             name: 'medium',
-            ttl: 15 * 60 * 1000,
+            ttl: RATE_LIMIT_WINDOWS.MEDIUM * 1000,
             limit: 300,
           },
           {
             name: 'long',
-            ttl: 60 * 60 * 1000,
+            ttl: RATE_LIMIT_WINDOWS.LONG * 1000,
             limit: 1000,
           },
         ],

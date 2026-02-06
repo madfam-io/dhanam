@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useTranslation } from '@dhanam/shared';
 import {
   exchangeCodeForTokens,
   getStoredCodeVerifier,
@@ -12,12 +13,13 @@ import {
  * Loading fallback for the callback page
  */
 function CallbackLoading() {
+  const { t } = useTranslation('auth');
   return (
     <div className="flex min-h-screen items-center justify-center">
       <div className="text-center">
         <div className="mb-4 h-12 w-12 mx-auto animate-spin rounded-full border-4 border-primary border-t-transparent" />
-        <h2 className="text-xl font-semibold">Completing sign in...</h2>
-        <p className="text-muted-foreground mt-2">Please wait while we verify your credentials.</p>
+        <h2 className="text-xl font-semibold">{t('completingSignIn')}</h2>
+        <p className="text-muted-foreground mt-2">{t('verifyingCredentials')}</p>
       </div>
     </div>
   );
@@ -29,6 +31,7 @@ function CallbackLoading() {
 function CallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { t } = useTranslation('auth');
   const [status, setStatus] = useState<'processing' | 'success' | 'error'>('processing');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -52,7 +55,7 @@ function CallbackContent() {
 
       if (!code) {
         setStatus('error');
-        setErrorMessage('No authorization code received');
+        setErrorMessage(t('noAuthorizationCode'));
         setTimeout(() => {
           router.push('/login?error=Missing%20authorization%20code');
         }, 2000);
@@ -63,7 +66,7 @@ function CallbackContent() {
       const codeVerifier = getStoredCodeVerifier();
       if (!codeVerifier) {
         setStatus('error');
-        setErrorMessage('Session expired. Please try logging in again.');
+        setErrorMessage(t('sessionExpiredRetry'));
         setTimeout(() => {
           router.push('/login?error=Session%20expired');
         }, 2000);
@@ -127,7 +130,7 @@ function CallbackContent() {
         console.error('Token exchange error:', err);
         clearStoredCodeVerifier();
         setStatus('error');
-        setErrorMessage(err instanceof Error ? err.message : 'Authentication failed');
+        setErrorMessage(err instanceof Error ? err.message : t('authenticationFailed'));
         setTimeout(() => {
           router.push('/login?error=Authentication%20failed');
         }, 2000);
@@ -143,10 +146,8 @@ function CallbackContent() {
         {status === 'processing' && (
           <>
             <div className="mb-4 h-12 w-12 mx-auto animate-spin rounded-full border-4 border-primary border-t-transparent" />
-            <h2 className="text-xl font-semibold">Completing sign in...</h2>
-            <p className="text-muted-foreground mt-2">
-              Please wait while we verify your credentials.
-            </p>
+            <h2 className="text-xl font-semibold">{t('completingSignIn')}</h2>
+            <p className="text-muted-foreground mt-2">{t('verifyingCredentials')}</p>
           </>
         )}
 
@@ -167,8 +168,8 @@ function CallbackContent() {
                 />
               </svg>
             </div>
-            <h2 className="text-xl font-semibold text-green-600">Sign in successful!</h2>
-            <p className="text-muted-foreground mt-2">Redirecting to dashboard...</p>
+            <h2 className="text-xl font-semibold text-green-600">{t('signInSuccessful')}</h2>
+            <p className="text-muted-foreground mt-2">{t('redirectingToDashboard')}</p>
           </>
         )}
 
@@ -189,9 +190,9 @@ function CallbackContent() {
                 />
               </svg>
             </div>
-            <h2 className="text-xl font-semibold text-red-600">Sign in failed</h2>
+            <h2 className="text-xl font-semibold text-red-600">{t('signInFailed')}</h2>
             <p className="text-muted-foreground mt-2">{errorMessage}</p>
-            <p className="text-sm text-muted-foreground mt-1">Redirecting to login...</p>
+            <p className="text-sm text-muted-foreground mt-1">{t('redirectingToLogin')}</p>
           </>
         )}
       </div>

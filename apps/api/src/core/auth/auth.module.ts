@@ -1,9 +1,11 @@
+import { AUTH_DEFAULTS } from '@dhanam/shared';
 import { Module, forwardRef } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 
 import { AuditModule } from '@core/audit/audit.module';
+import { SecurityConfigService } from '@core/config/security.config';
 import { CryptoModule } from '@core/crypto/crypto.module';
 import { LoggerModule } from '@core/logger/logger.module';
 import { PrismaModule } from '@core/prisma/prisma.module';
@@ -51,7 +53,8 @@ import { TotpService } from './totp.service';
       useFactory: async (configService: ConfigService) => ({
         secret: configService.get<string>('jwt.secret'),
         signOptions: {
-          expiresIn: '15m',
+          expiresIn: (configService.get<string>('JWT_EXPIRES_IN') ??
+            AUTH_DEFAULTS.JWT_EXPIRY) as typeof AUTH_DEFAULTS.JWT_EXPIRY,
           issuer: 'dhanam-api',
           audience: 'dhanam-web',
         },
@@ -71,11 +74,19 @@ import { TotpService } from './totp.service';
     SessionService,
     GuestAuthService,
     DemoAuthService,
+    SecurityConfigService,
     // Register both strategies - guard will select based on config
     JanuaStrategy,
     JwtStrategy,
     LocalStrategy,
   ],
-  exports: [AuthService, TotpService, SessionService, GuestAuthService, DemoAuthService],
+  exports: [
+    AuthService,
+    TotpService,
+    SessionService,
+    GuestAuthService,
+    DemoAuthService,
+    SecurityConfigService,
+  ],
 })
 export class AuthModule {}

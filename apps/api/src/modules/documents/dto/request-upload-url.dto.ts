@@ -1,3 +1,4 @@
+import { STORAGE_LIMITS } from '@dhanam/shared';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, Max, Min } from 'class-validator';
@@ -24,7 +25,7 @@ export class RequestUploadUrlDto {
   @IsOptional()
   @IsInt()
   @Min(1)
-  @Max(500 * 1024 * 1024) // 500MB hard cap
+  @Max(STORAGE_LIMITS.MAX_SPACE_STORAGE_BYTES)
   @Type(() => Number)
   estimatedSize?: number;
 

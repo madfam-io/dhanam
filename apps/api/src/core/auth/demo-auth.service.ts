@@ -1,4 +1,4 @@
-import { getGeoDefaults } from '@dhanam/shared';
+import { AUTH_DEFAULTS, getGeoDefaults } from '@dhanam/shared';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
@@ -169,15 +169,17 @@ export class DemoAuthService {
       permissions: ['read'],
     };
 
-    const accessToken = this.jwtService.sign(payload, { expiresIn: '2h' });
+    const accessToken = this.jwtService.sign(payload, {
+      expiresIn: AUTH_DEFAULTS.DEMO_ACCESS_TOKEN_EXPIRY,
+    });
     const refreshToken = this.jwtService.sign(
       { ...payload, type: 'refresh' },
       {
         secret: this.configService.get('JWT_REFRESH_SECRET'),
-        expiresIn: '4h',
+        expiresIn: AUTH_DEFAULTS.DEMO_REFRESH_TOKEN_EXPIRY,
       }
     );
 
-    return { accessToken, refreshToken, expiresIn: 7200 };
+    return { accessToken, refreshToken, expiresIn: AUTH_DEFAULTS.DEMO_ACCESS_TOKEN_EXPIRY_SECONDS };
   }
 }

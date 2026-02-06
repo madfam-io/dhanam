@@ -1,3 +1,4 @@
+import { SUBSCRIPTION } from '@dhanam/shared';
 import { Injectable, Logger } from '@nestjs/common';
 
 import { Currency, RecurrenceFrequency, SubscriptionCategory, SubscriptionStatus } from '@db';
@@ -369,7 +370,7 @@ export class SubscriptionDetectorService {
       return `Consider cancelling ${serviceName} - you could save $${annualCost.toFixed(2)}/year with low usage.`;
     }
 
-    if (usageFrequency === 'medium' && annualCost > 100) {
+    if (usageFrequency === 'medium' && annualCost > SUBSCRIPTION.ANNUAL_COST_WARNING_USD) {
       return `Look for annual billing discounts for ${serviceName} - many services offer 15-20% off.`;
     }
 

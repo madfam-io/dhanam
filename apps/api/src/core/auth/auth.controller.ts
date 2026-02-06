@@ -5,6 +5,7 @@ import {
   RefreshTokenDto,
   ForgotPasswordDto,
   ResetPasswordDto,
+  RATE_LIMIT_PRESETS,
 } from '@dhanam/shared';
 import {
   Controller,
@@ -24,6 +25,7 @@ import { Throttle } from '@nestjs/throttler';
 import { FastifyReply } from 'fastify';
 
 import { AuditService } from '@core/audit/audit.service';
+import { SecurityConfigService } from '@core/config/security.config';
 import { ThrottleAuthGuard } from '@core/security/guards/throttle-auth.guard';
 
 import { AuthService } from './auth.service';
@@ -41,12 +43,18 @@ export class AuthController {
     private totpService: TotpService,
     private auditService: AuditService,
     private guestAuthService: GuestAuthService,
-    private demoAuthService: DemoAuthService
+    private demoAuthService: DemoAuthService,
+    private securityConfig: SecurityConfigService
   ) {}
 
   @Post('register')
   @UseGuards(ThrottleAuthGuard)
-  @Throttle({ default: { limit: 5, ttl: 60000 } }) // 5 registrations per minute
+  @Throttle({
+    default: {
+      limit: RATE_LIMIT_PRESETS.registration.limit,
+      ttl: RATE_LIMIT_PRESETS.registration.ttl * 1000,
+    },
+  })
   @ApiOperation({ summary: 'Register a new user' })
   @ApiResponse({
     status: 201,
@@ -66,7 +74,7 @@ export class AuthController {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
       path: '/v1/auth/refresh',
-      maxAge: 30 * 24 * 60 * 60, // 30 days
+      maxAge: this.securityConfig.getRefreshTokenExpirySeconds(),
     });
 
     // Log successful registration
@@ -89,7 +97,9 @@ export class AuthController {
 
   @Post('login')
   @UseGuards(ThrottleAuthGuard)
-  @Throttle({ default: { limit: 10, ttl: 60000 } })
+  @Throttle({
+    default: { limit: RATE_LIMIT_PRESETS.login.limit, ttl: RATE_LIMIT_PRESETS.login.ttl * 1000 },
+  })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Login user' })
   @ApiResponse({ status: 200, description: 'Login successful' })
@@ -108,7 +118,7 @@ export class AuthController {
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
         path: '/v1/auth/refresh',
-        maxAge: 30 * 24 * 60 * 60, // 30 days
+        maxAge: this.securityConfig.getRefreshTokenExpirySeconds(),
       });
 
       await this.auditService.logAuthSuccess('pending', ip, userAgent);
@@ -163,7 +173,12 @@ export class AuthController {
 
   @Post('demo/login')
   @UseGuards(ThrottleAuthGuard)
-  @Throttle({ default: { limit: 20, ttl: 60000 } })
+  @Throttle({
+    default: {
+      limit: RATE_LIMIT_PRESETS.demo_login.limit,
+      ttl: RATE_LIMIT_PRESETS.demo_login.ttl * 1000,
+    },
+  })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Login as a demo persona' })
   @ApiResponse({ status: 200, description: 'Demo persona session created' })
@@ -199,7 +214,9 @@ export class AuthController {
 
   @Post('demo/switch')
   @UseGuards(JwtAuthGuard, ThrottleAuthGuard)
-  @Throttle({ default: { limit: 30, ttl: 60000 } })
+  @Throttle({
+    default: { limit: RATE_LIMIT_PRESETS.logout.limit, ttl: RATE_LIMIT_PRESETS.logout.ttl * 1000 },
+  })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Switch demo persona (requires existing demo JWT)' })
   @ApiResponse({ status: 200, description: 'Switched to new persona' })
@@ -267,7 +284,7 @@ export class AuthController {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
       path: '/v1/auth/refresh',
-      maxAge: 30 * 24 * 60 * 60,
+      maxAge: this.securityConfig.getRefreshTokenExpirySeconds(),
     });
 
     return {
@@ -305,7 +322,12 @@ export class AuthController {
 
   @Post('forgot-password')
   @UseGuards(ThrottleAuthGuard)
-  @Throttle({ default: { limit: 3, ttl: 3600000 } }) // 3 requests per hour
+  @Throttle({
+    default: {
+      limit: RATE_LIMIT_PRESETS.password_reset_request.limit,
+      ttl: RATE_LIMIT_PRESETS.password_reset_request.ttl * 1000,
+    },
+  })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Request password reset' })
   @ApiResponse({ status: 200, description: 'Reset email sent if user exists' })
@@ -316,7 +338,12 @@ export class AuthController {
 
   @Post('reset-password')
   @UseGuards(ThrottleAuthGuard)
-  @Throttle({ default: { limit: 5, ttl: 3600000 } }) // 5 attempts per hour
+  @Throttle({
+    default: {
+      limit: RATE_LIMIT_PRESETS.password_reset_confirm.limit,
+      ttl: RATE_LIMIT_PRESETS.password_reset_confirm.ttl * 1000,
+    },
+  })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Reset password with token' })
   @ApiResponse({ status: 200, description: 'Password reset successful' })
@@ -344,7 +371,12 @@ export class AuthController {
 
   @Post('totp/enable')
   @UseGuards(JwtAuthGuard, ThrottleAuthGuard)
-  @Throttle({ default: { limit: 5, ttl: 300000 } }) // 5 attempts per 5 minutes
+  @Throttle({
+    default: {
+      limit: RATE_LIMIT_PRESETS.totp_enable.limit,
+      ttl: RATE_LIMIT_PRESETS.totp_enable.ttl * 1000,
+    },
+  })
   @ApiOperation({ summary: 'Enable TOTP 2FA' })
   @ApiResponse({ status: 200, description: 'TOTP enabled successfully' })
   async enableTotp(@CurrentUser() user: AuthenticatedUser, @Body() body: { token: string }) {
@@ -354,7 +386,12 @@ export class AuthController {
 
   @Post('totp/disable')
   @UseGuards(JwtAuthGuard, ThrottleAuthGuard)
-  @Throttle({ default: { limit: 5, ttl: 300000 } }) // 5 attempts per 5 minutes
+  @Throttle({
+    default: {
+      limit: RATE_LIMIT_PRESETS.totp_disable.limit,
+      ttl: RATE_LIMIT_PRESETS.totp_disable.ttl * 1000,
+    },
+  })
   @ApiOperation({ summary: 'Disable TOTP 2FA' })
   @ApiResponse({ status: 200, description: 'TOTP disabled successfully' })
   async disableTotp(@CurrentUser() user: AuthenticatedUser, @Body() body: { token: string }) {

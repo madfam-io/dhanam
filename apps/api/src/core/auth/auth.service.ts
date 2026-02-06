@@ -21,6 +21,7 @@ import * as argon2 from 'argon2';
 import Redis from 'ioredis';
 
 import { AuditService } from '@core/audit/audit.service';
+import { SecurityConfigService } from '@core/config/security.config';
 import { LoggerService } from '@core/logger/logger.service';
 import { PrismaService } from '@core/prisma/prisma.service';
 import { EmailService } from '@modules/email/email.service';
@@ -38,8 +39,6 @@ export interface JwtPayload {
 @Injectable()
 export class AuthService {
   private redis: Redis;
-  private readonly MAX_LOGIN_ATTEMPTS = 5;
-  private readonly LOCKOUT_DURATION = 15 * 60; // 15 minutes in seconds
 
   constructor(
     private prisma: PrismaService,
@@ -49,7 +48,8 @@ export class AuthService {
     private totpService: TotpService,
     @Inject(forwardRef(() => EmailService))
     private emailService: EmailService,
-    private auditService: AuditService
+    private auditService: AuditService,
+    private securityConfig: SecurityConfigService
   ) {
     this.redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379');
   }
@@ -65,7 +65,10 @@ export class AuthService {
       const suffix = hash.substring(5);
 
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      const timeoutId = setTimeout(
+        () => controller.abort(),
+        this.securityConfig.getPasswordBreachCheckTimeoutMs()
+      );
 
       const response = await fetch(`https://api.pwnedpasswords.com/range/${prefix}`, {
         signal: controller.signal,
@@ -90,20 +93,22 @@ export class AuthService {
   }
 
   private async recordFailedLogin(email: string): Promise<void> {
+    const lockoutSeconds = this.securityConfig.getAccountLockoutSeconds();
+    const maxAttempts = this.securityConfig.getMaxLoginAttempts();
     const attemptsKey = `login_attempts:${email}`;
     const attempts = await this.redis.incr(attemptsKey);
-    await this.redis.expire(attemptsKey, this.LOCKOUT_DURATION);
+    await this.redis.expire(attemptsKey, lockoutSeconds);
 
-    if (attempts >= this.MAX_LOGIN_ATTEMPTS) {
+    if (attempts >= maxAttempts) {
       const lockoutKey = `lockout:${email}`;
-      await this.redis.set(lockoutKey, 'locked', 'EX', this.LOCKOUT_DURATION);
+      await this.redis.set(lockoutKey, 'locked', 'EX', lockoutSeconds);
       await this.redis.del(attemptsKey);
 
       // Audit lockout event
       await this.auditService.logSuspiciousActivity('ACCOUNT_LOCKED', undefined, undefined, {
         email,
         attempts,
-        lockoutMinutes: this.LOCKOUT_DURATION / 60,
+        lockoutMinutes: this.securityConfig.getAccountLockoutMinutes(),
       });
     }
   }
@@ -324,7 +329,7 @@ export class AuthService {
     return {
       accessToken,
       refreshToken,
-      expiresIn: 15 * 60, // 15 minutes in seconds
+      expiresIn: this.securityConfig.getJwtExpirySeconds(),
     };
   }
 }

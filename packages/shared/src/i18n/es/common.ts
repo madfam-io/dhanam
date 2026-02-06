@@ -210,4 +210,43 @@ export const common = {
   version: 'Versión',
   language: 'Idioma',
   timezone: 'Zona horaria',
+
+  // Aria labels
+  aria: {
+    toggleTheme: 'Cambiar tema',
+    help: 'Ayuda',
+    closeModal: 'Cerrar modal',
+  },
+
+  // Search command
+  searchCommand: {
+    triggerLabel: 'Buscar...',
+    placeholder: 'Buscar transacciones, o escribe > para comandos...',
+    navigate: 'Navegar',
+    actions: 'Acciones',
+    commandHint: 'Escribe para buscar transacciones, o',
+    commandHintSuffix: 'para comandos',
+    transactions: 'Transacciones',
+    byCategory: 'Por categoría',
+    tryAlso: 'Intenta también',
+    viewAllResults: 'Ver todos los resultados',
+    noResults: 'No se encontraron resultados para',
+    confidence: '{{percent}}% de confianza',
+    uncategorized: 'Sin categorizar',
+    commands: {
+      goToDashboard: 'Ir al Panel',
+      goToTransactions: 'Ir a Transacciones',
+      goToBudgets: 'Ir a Presupuestos',
+      goToAccounts: 'Ir a Cuentas',
+      goToAnalytics: 'Ir a Analítica',
+      goToGoals: 'Ir a Metas',
+      goToEsg: 'Ir a Insights ESG',
+      goToGaming: 'Ir a DeFi Gaming',
+      goToHouseholds: 'Ir a Hogares',
+      goToSettings: 'Ir a Configuración',
+      newTransaction: 'Nueva transacción',
+      newBudget: 'Nuevo presupuesto',
+      exportCsv: 'Exportar CSV',
+    },
+  },
 } as const;

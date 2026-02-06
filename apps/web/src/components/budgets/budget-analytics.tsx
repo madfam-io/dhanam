@@ -20,7 +20,7 @@ import {
 } from 'recharts';
 import { budgetsApi } from '@/lib/api/budgets';
 import { formatCurrency } from '@/lib/utils';
-import { Currency } from '@dhanam/shared';
+import { Currency, useTranslation } from '@dhanam/shared';
 
 interface BudgetAnalyticsProps {
   spaceId: string;
@@ -36,6 +36,7 @@ interface CategoryData {
 }
 
 export function BudgetAnalytics({ spaceId, budgetId, currency }: BudgetAnalyticsProps) {
+  const { t } = useTranslation('analytics');
   const { data: analytics } = useQuery({
     queryKey: ['budget-analytics', spaceId, budgetId],
     queryFn: () => budgetsApi.getBudgetAnalytics(spaceId, budgetId),
@@ -86,7 +87,7 @@ export function BudgetAnalytics({ spaceId, budgetId, currency }: BudgetAnalytics
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Budget Health</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('charts.budget.budgetHealth')}</CardTitle>
             {analytics.summary.totalPercentUsed > 90 ? (
               <AlertTriangle className="h-4 w-4 text-red-500" />
             ) : analytics.summary.totalPercentUsed > 75 ? (
@@ -99,12 +100,14 @@ export function BudgetAnalytics({ spaceId, budgetId, currency }: BudgetAnalytics
             <div className="text-2xl font-bold">
               {analytics.summary.totalPercentUsed.toFixed(0)}%
             </div>
-            <p className="text-xs text-muted-foreground">of total budget used</p>
+            <p className="text-xs text-muted-foreground">{t('charts.budget.ofTotalBudgetUsed')}</p>
             <div className="mt-2">
               <Badge
                 variant={analytics.summary.totalPercentUsed > 90 ? 'destructive' : 'secondary'}
               >
-                {formatCurrency(analytics.summary.totalRemaining, currency)} remaining
+                {t('charts.budget.remaining', {
+                  amount: formatCurrency(analytics.summary.totalRemaining, currency),
+                })}
               </Badge>
             </div>
           </CardContent>
@@ -112,12 +115,14 @@ export function BudgetAnalytics({ spaceId, budgetId, currency }: BudgetAnalytics
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Categories at Risk</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t('charts.budget.categoriesAtRisk')}
+            </CardTitle>
             <AlertTriangle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">{overBudgetCategories.length}</div>
-            <p className="text-xs text-muted-foreground">over budget</p>
+            <p className="text-xs text-muted-foreground">{t('charts.budget.overBudget')}</p>
             {overBudgetCategories.length > 0 && (
               <div className="mt-2 text-xs">
                 {overBudgetCategories.slice(0, 2).map((cat) => (
@@ -132,12 +137,14 @@ export function BudgetAnalytics({ spaceId, budgetId, currency }: BudgetAnalytics
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Days Remaining</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t('charts.budget.daysRemaining')}
+            </CardTitle>
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{analytics.summary.daysRemaining || 0}</div>
-            <p className="text-xs text-muted-foreground">in this period</p>
+            <p className="text-xs text-muted-foreground">{t('charts.budget.inThisPeriod')}</p>
           </CardContent>
         </Card>
       </div>
@@ -147,7 +154,7 @@ export function BudgetAnalytics({ spaceId, budgetId, currency }: BudgetAnalytics
         {/* Category Spending Bar Chart */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Category Spending</CardTitle>
+            <CardTitle className="text-base">{t('charts.budget.categorySpending')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-80">
@@ -173,8 +180,8 @@ export function BudgetAnalytics({ spaceId, budgetId, currency }: BudgetAnalytics
                     }}
                     labelStyle={{ color: '#000' }}
                   />
-                  <Bar dataKey="budgeted" fill="#e5e7eb" name="Budgeted" />
-                  <Bar dataKey="spent" fill="#3b82f6" name="Spent" />
+                  <Bar dataKey="budgeted" fill="#e5e7eb" name={t('charts.budget.budgeted')} />
+                  <Bar dataKey="spent" fill="#3b82f6" name={t('charts.budget.spent')} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -184,7 +191,7 @@ export function BudgetAnalytics({ spaceId, budgetId, currency }: BudgetAnalytics
         {/* Spending Distribution Pie Chart */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Spending Distribution</CardTitle>
+            <CardTitle className="text-base">{t('charts.budget.spendingDistribution')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-80">
@@ -217,7 +224,7 @@ export function BudgetAnalytics({ spaceId, budgetId, currency }: BudgetAnalytics
       {weeklyTrendData.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Weekly Spending Trend</CardTitle>
+            <CardTitle className="text-base">{t('charts.budget.weeklySpendingTrend')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-80">
@@ -238,7 +245,7 @@ export function BudgetAnalytics({ spaceId, budgetId, currency }: BudgetAnalytics
                     dataKey="spent"
                     stroke="#3b82f6"
                     strokeWidth={2}
-                    name="Spent"
+                    name={t('charts.budget.spent')}
                   />
                   <Line
                     type="monotone"
@@ -246,7 +253,7 @@ export function BudgetAnalytics({ spaceId, budgetId, currency }: BudgetAnalytics
                     stroke="#e5e7eb"
                     strokeWidth={2}
                     strokeDasharray="5 5"
-                    name="Budget"
+                    name={t('charts.budget.budget')}
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -260,16 +267,22 @@ export function BudgetAnalytics({ spaceId, budgetId, currency }: BudgetAnalytics
         {underBudgetCategories.length > 0 && (
           <Card>
             <CardHeader>
-              <CardTitle className="text-base text-green-600">Opportunities</CardTitle>
+              <CardTitle className="text-base text-green-600">
+                {t('charts.budget.opportunities')}
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground mb-3">Categories with room to grow:</p>
+              <p className="text-sm text-muted-foreground mb-3">
+                {t('charts.budget.categoriesWithRoom')}
+              </p>
               <div className="space-y-2">
                 {underBudgetCategories.slice(0, 3).map((cat) => (
                   <div key={cat.name} className="flex justify-between text-sm">
                     <span>{cat.name}</span>
                     <span className="text-green-600">
-                      {formatCurrency(cat.budgeted - cat.spent, currency)} available
+                      {t('charts.budget.available', {
+                        amount: formatCurrency(cat.budgeted - cat.spent, currency),
+                      })}
                     </span>
                   </div>
                 ))}
@@ -281,16 +294,22 @@ export function BudgetAnalytics({ spaceId, budgetId, currency }: BudgetAnalytics
         {overBudgetCategories.length > 0 && (
           <Card>
             <CardHeader>
-              <CardTitle className="text-base text-red-600">Attention Needed</CardTitle>
+              <CardTitle className="text-base text-red-600">
+                {t('charts.budget.attentionNeeded')}
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground mb-3">Categories over budget:</p>
+              <p className="text-sm text-muted-foreground mb-3">
+                {t('charts.budget.categoriesOverBudget')}
+              </p>
               <div className="space-y-2">
                 {overBudgetCategories.slice(0, 3).map((cat) => (
                   <div key={cat.name} className="flex justify-between text-sm">
                     <span>{cat.name}</span>
                     <span className="text-red-600">
-                      {formatCurrency(cat.spent - cat.budgeted, currency)} over
+                      {t('charts.budget.over', {
+                        amount: formatCurrency(cat.spent - cat.budgeted, currency),
+                      })}
                     </span>
                   </div>
                 ))}

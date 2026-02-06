@@ -159,6 +159,21 @@ export const auth = {
     verificationFailed: 'Verification failed',
   },
 
+  // Form states
+  signingIn: 'Signing in...',
+  creatingAccount: 'Creating account...',
+  passwordHelp: 'Must contain at least 8 characters, one uppercase letter, and one number',
+  agreementPrefix: 'By creating an account, you agree to our',
+  termsOfService: 'Terms of Service',
+
+  // Placeholders
+  placeholders: {
+    email: 'you@example.com',
+    password: '••••••••',
+    totpCode: '123456',
+    fullName: 'John Doe',
+  },
+
   // Success
   loginSuccessful: 'Login successful',
   signupSuccessful: 'Signup successful',

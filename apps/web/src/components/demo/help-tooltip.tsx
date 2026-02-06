@@ -2,6 +2,7 @@
 
 import { Info } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslation } from '@dhanam/shared';
 
 interface HelpTooltipProps {
   content: string;
@@ -9,6 +10,7 @@ interface HelpTooltipProps {
 }
 
 export function HelpTooltip({ content, title }: HelpTooltipProps) {
+  const { t } = useTranslation('common');
   const [isVisible, setIsVisible] = useState(false);
 
   return (
@@ -21,7 +23,7 @@ export function HelpTooltip({ content, title }: HelpTooltipProps) {
           setIsVisible(!isVisible);
         }}
         className="text-muted-foreground hover:text-foreground transition-colors"
-        aria-label="Help"
+        aria-label={t('aria.help')}
       >
         <Info className="h-4 w-4" />
       </button>

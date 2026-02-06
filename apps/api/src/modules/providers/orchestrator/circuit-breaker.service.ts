@@ -1,3 +1,4 @@
+import { PROVIDER_DEFAULTS } from '@dhanam/shared';
 import { Injectable, Logger } from '@nestjs/common';
 
 import { Provider } from '@db';
@@ -56,7 +57,7 @@ export class CircuitBreakerService {
   private readonly defaultConfig: CircuitBreakerConfig = {
     failureThreshold: 5, // Open after 5 failures
     successThreshold: 2, // Close after 2 successes
-    timeout: 60000, // Try again after 60 seconds
+    timeout: PROVIDER_DEFAULTS.CIRCUIT_BREAKER_RETRY_MS, // Try again after 60 seconds
     monitoringWindow: 300000, // 5 minute rolling window
   };
 

@@ -13,6 +13,7 @@ import { Plus, Loader2, Settings, TestTube, CheckCircle, XCircle, ArrowUpDown } 
 import { toast } from 'sonner';
 import { rulesApi, CreateRuleDto, TestRuleDto } from '@/lib/api/rules';
 import { categoriesApi } from '@/lib/api/categories';
+import { useTranslation } from '@dhanam/shared';
 
 interface RuleManagerProps {
   open: boolean;
@@ -21,6 +22,7 @@ interface RuleManagerProps {
 }
 
 export function RuleManager({ open, onOpenChange, spaceId }: RuleManagerProps) {
+  const { t } = useTranslation('budgets');
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [testResult, setTestResult] = useState<{
     matchCount: number;
@@ -45,10 +47,10 @@ export function RuleManager({ open, onOpenChange, spaceId }: RuleManagerProps) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transaction-rules', spaceId] });
       setIsCreateOpen(false);
-      toast.success('Rule created successfully');
+      toast.success(t('rules.toast.ruleCreated'));
     },
     onError: () => {
-      toast.error('Failed to create rule');
+      toast.error(t('rules.toast.ruleCreateFailed'));
     },
   });
 
@@ -57,10 +59,10 @@ export function RuleManager({ open, onOpenChange, spaceId }: RuleManagerProps) {
       rulesApi.toggleRule(spaceId, params.ruleId, params.isActive),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transaction-rules', spaceId] });
-      toast.success('Rule updated successfully');
+      toast.success(t('rules.toast.ruleUpdated'));
     },
     onError: () => {
-      toast.error('Failed to update rule');
+      toast.error(t('rules.toast.ruleUpdateFailed'));
     },
   });
 
@@ -68,10 +70,10 @@ export function RuleManager({ open, onOpenChange, spaceId }: RuleManagerProps) {
     mutationFn: (data: TestRuleDto) => rulesApi.testRule(spaceId, data),
     onSuccess: (data) => {
       setTestResult(data);
-      toast.success(`Rule would match ${data.matchCount} transactions`);
+      toast.success(t('rules.toast.ruleTestMatch', { count: data.matchCount }));
     },
     onError: () => {
-      toast.error('Failed to test rule');
+      toast.error(t('rules.toast.ruleTestFailed'));
     },
   });
 
@@ -108,21 +110,17 @@ export function RuleManager({ open, onOpenChange, spaceId }: RuleManagerProps) {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Settings className="h-5 w-5" />
-            Transaction Categorization Rules
+            {t('rules.title')}
           </DialogTitle>
-          <DialogDescription>
-            Create rules to automatically categorize transactions based on patterns
-          </DialogDescription>
+          <DialogDescription>{t('rules.description')}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">
           <div className="flex justify-between items-center">
-            <p className="text-sm text-muted-foreground">
-              Rules are applied in priority order (lower numbers first)
-            </p>
+            <p className="text-sm text-muted-foreground">{t('rules.priorityHint')}</p>
             <Button onClick={() => setIsCreateOpen(true)} size="sm">
               <Plus className="mr-2 h-4 w-4" />
-              Add Rule
+              {t('rules.addRule')}
             </Button>
           </div>
 
@@ -134,13 +132,13 @@ export function RuleManager({ open, onOpenChange, spaceId }: RuleManagerProps) {
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-8">
                 <Settings className="h-12 w-12 text-muted-foreground mb-4" />
-                <h3 className="font-semibold text-lg mb-2">No rules yet</h3>
+                <h3 className="font-semibold text-lg mb-2">{t('rules.noRulesTitle')}</h3>
                 <p className="text-muted-foreground text-center mb-4">
-                  Create rules to automatically categorize transactions
+                  {t('rules.noRulesDescription')}
                 </p>
                 <Button onClick={() => setIsCreateOpen(true)}>
                   <Plus className="mr-2 h-4 w-4" />
-                  Create Your First Rule
+                  {t('rules.createFirstRule')}
                 </Button>
               </CardContent>
             </Card>
@@ -200,53 +198,56 @@ export function RuleManager({ open, onOpenChange, spaceId }: RuleManagerProps) {
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogContent className="max-w-md">
             <DialogHeader>
-              <DialogTitle>Create Categorization Rule</DialogTitle>
-              <DialogDescription>
-                Define a pattern to automatically categorize transactions
-              </DialogDescription>
+              <DialogTitle>{t('rules.createRuleTitle')}</DialogTitle>
+              <DialogDescription>{t('rules.createRuleDescription')}</DialogDescription>
             </DialogHeader>
 
             <form id="rule-form" onSubmit={handleCreateSubmit} className="space-y-4">
               <div className="space-y-2">
                 <label htmlFor="rule-name" className="text-sm font-medium">
-                  Rule Name
+                  {t('rules.labels.ruleName')}
                 </label>
-                <Input id="rule-name" name="name" placeholder="e.g., Grocery Stores" required />
+                <Input
+                  id="rule-name"
+                  name="name"
+                  placeholder={t('rules.placeholders.ruleName')}
+                  required
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
                   <label htmlFor="field" className="text-sm font-medium">
-                    Field
+                    {t('rules.labels.field')}
                   </label>
                   <Select name="field" required>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select field" />
+                      <SelectValue placeholder={t('rules.placeholders.selectField')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="description">Description</SelectItem>
-                      <SelectItem value="merchant">Merchant</SelectItem>
-                      <SelectItem value="amount">Amount</SelectItem>
+                      <SelectItem value="description">{t('rules.fields.description')}</SelectItem>
+                      <SelectItem value="merchant">{t('rules.fields.merchant')}</SelectItem>
+                      <SelectItem value="amount">{t('rules.fields.amount')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="space-y-2">
                   <label htmlFor="operator" className="text-sm font-medium">
-                    Operator
+                    {t('rules.labels.operator')}
                   </label>
                   <Select name="operator" required>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select operator" />
+                      <SelectValue placeholder={t('rules.placeholders.selectOperator')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="contains">Contains</SelectItem>
-                      <SelectItem value="equals">Equals</SelectItem>
-                      <SelectItem value="startsWith">Starts with</SelectItem>
-                      <SelectItem value="endsWith">Ends with</SelectItem>
-                      <SelectItem value="regex">Regex</SelectItem>
-                      <SelectItem value="gte">Greater than</SelectItem>
-                      <SelectItem value="lte">Less than</SelectItem>
+                      <SelectItem value="contains">{t('rules.operators.contains')}</SelectItem>
+                      <SelectItem value="equals">{t('rules.operators.equals')}</SelectItem>
+                      <SelectItem value="startsWith">{t('rules.operators.startsWith')}</SelectItem>
+                      <SelectItem value="endsWith">{t('rules.operators.endsWith')}</SelectItem>
+                      <SelectItem value="regex">{t('rules.operators.regex')}</SelectItem>
+                      <SelectItem value="gte">{t('rules.operators.gte')}</SelectItem>
+                      <SelectItem value="lte">{t('rules.operators.lte')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -254,19 +255,19 @@ export function RuleManager({ open, onOpenChange, spaceId }: RuleManagerProps) {
 
               <div className="space-y-2">
                 <label htmlFor="value" className="text-sm font-medium">
-                  Pattern Value
+                  {t('rules.labels.patternValue')}
                 </label>
                 <Input
                   id="value"
                   name="value"
-                  placeholder="e.g., walmart|target|grocery"
+                  placeholder={t('rules.placeholders.patternValue')}
                   required
                 />
               </div>
 
               <div className="space-y-2">
                 <label htmlFor="priority" className="text-sm font-medium">
-                  Priority (1 = highest)
+                  {t('rules.labels.priority')}
                 </label>
                 <Input
                   id="priority"
@@ -280,11 +281,11 @@ export function RuleManager({ open, onOpenChange, spaceId }: RuleManagerProps) {
 
               <div className="space-y-2">
                 <label htmlFor="categoryId" className="text-sm font-medium">
-                  Category
+                  {t('rules.labels.category')}
                 </label>
                 <Select name="categoryId" required>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select category" />
+                    <SelectValue placeholder={t('rules.placeholders.selectCategory')} />
                   </SelectTrigger>
                   <SelectContent>
                     {categories?.map((category) => (
@@ -307,12 +308,12 @@ export function RuleManager({ open, onOpenChange, spaceId }: RuleManagerProps) {
                   {testRuleMutation.isPending ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Testing...
+                      {t('rules.buttons.testing')}
                     </>
                   ) : (
                     <>
                       <TestTube className="mr-2 h-4 w-4" />
-                      Test Rule
+                      {t('rules.buttons.testRule')}
                     </>
                   )}
                 </Button>
@@ -321,10 +322,10 @@ export function RuleManager({ open, onOpenChange, spaceId }: RuleManagerProps) {
                   {createRuleMutation.isPending ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Creating...
+                      {t('rules.buttons.creating')}
                     </>
                   ) : (
-                    'Create Rule'
+                    t('rules.buttons.createRule')
                   )}
                 </Button>
               </div>
@@ -333,10 +334,11 @@ export function RuleManager({ open, onOpenChange, spaceId }: RuleManagerProps) {
                 <Alert>
                   <CheckCircle className="h-4 w-4" />
                   <AlertDescription>
-                    <strong>Test Results:</strong> Would match {testResult.matchCount} transactions
+                    <strong>{t('rules.testResults')}</strong>{' '}
+                    {t('rules.testMatch', { count: testResult.matchCount })}
                     {(testResult.sampleMatches?.length ?? 0) > 0 && (
                       <div className="mt-2 space-y-1">
-                        <p className="text-xs font-medium">Sample matches:</p>
+                        <p className="text-xs font-medium">{t('rules.sampleMatches')}</p>
                         {testResult.sampleMatches
                           ?.slice(0, 3)
                           .map((match: { id: string; description: string; amount: number }) => (

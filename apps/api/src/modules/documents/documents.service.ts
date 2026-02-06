@@ -1,3 +1,4 @@
+import { STORAGE_LIMITS } from '@dhanam/shared';
 import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 
 import { AuditService } from '@core/audit/audit.service';
@@ -16,11 +17,11 @@ import {
 } from './dto';
 
 /** 50 MB per file for non-admin users */
-const MAX_FILE_SIZE = 50 * 1024 * 1024;
+const MAX_FILE_SIZE = STORAGE_LIMITS.MAX_FILE_SIZE_BYTES;
 /** 500 MB total per space for non-admin users */
-const MAX_SPACE_STORAGE = 500 * 1024 * 1024;
+const MAX_SPACE_STORAGE = STORAGE_LIMITS.MAX_SPACE_STORAGE_BYTES;
 /** CSVs under this size get synchronous preview generation */
-const CSV_SYNC_THRESHOLD = 5 * 1024 * 1024;
+const CSV_SYNC_THRESHOLD = STORAGE_LIMITS.CSV_PREVIEW_THRESHOLD_BYTES;
 
 export interface StorageUsageResult {
   used: number;

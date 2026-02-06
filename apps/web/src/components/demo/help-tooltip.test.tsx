@@ -2,6 +2,20 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { HelpTooltip } from './help-tooltip';
 
+const commonTranslations: Record<string, string> = {
+  'aria.help': 'Help',
+};
+
+jest.mock('@dhanam/shared', () => ({
+  useTranslation: () => ({
+    t: (key: string) => commonTranslations[key] || key,
+    locale: 'en',
+    setLocale: jest.fn(),
+    hasKey: () => true,
+    getNamespace: () => ({}),
+  }),
+}));
+
 describe('HelpTooltip', () => {
   it('should render info icon', () => {
     render(<HelpTooltip content="Test content" />);

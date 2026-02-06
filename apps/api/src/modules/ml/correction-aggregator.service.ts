@@ -1,3 +1,4 @@
+import { ML_THRESHOLDS } from '@dhanam/shared';
 import { Injectable, Logger } from '@nestjs/common';
 
 import { PrismaService } from '@core/prisma/prisma.service';
@@ -190,7 +191,7 @@ export class CorrectionAggregatorService {
 
       // Calculate recency weight (exponential decay over 90 days)
       const ageInDays = (now - correction.createdAt.getTime()) / (1000 * 60 * 60 * 24);
-      const recencyWeight = Math.exp(-ageInDays / 90);
+      const recencyWeight = Math.exp(-ageInDays / ML_THRESHOLDS.RECENCY_DAYS);
 
       const currentWeight = aggregation.categoryWeights.get(correction.correctedCategoryId) || 0;
       aggregation.categoryWeights.set(

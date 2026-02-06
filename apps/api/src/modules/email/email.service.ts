@@ -1,6 +1,7 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
+import { TIME_UNITS } from '@dhanam/shared';
 import { InjectQueue } from '@nestjs/bull';
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -465,12 +466,12 @@ export class EmailService {
   private formatDuration(seconds: number): string {
     if (seconds < 60) {
       return `${seconds}s`;
-    } else if (seconds < 3600) {
+    } else if (seconds < TIME_UNITS.HOUR_SECONDS) {
       const minutes = Math.floor(seconds / 60);
       return `${minutes}m`;
     } else {
-      const hours = Math.floor(seconds / 3600);
-      const minutes = Math.floor((seconds % 3600) / 60);
+      const hours = Math.floor(seconds / TIME_UNITS.HOUR_SECONDS);
+      const minutes = Math.floor((seconds % TIME_UNITS.HOUR_SECONDS) / 60);
       return `${hours}h ${minutes}m`;
     }
   }
