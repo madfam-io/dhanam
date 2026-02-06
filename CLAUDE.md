@@ -23,8 +23,11 @@ Dhanam uses **Janua** (MADFAM's own SSO platform) for ALL authentication.
 Dhanam uses **Enclii** (MADFAM's own deployment platform) for ALL production deployments.
 
 - **Config file**: `.enclii.yml` (project root)
+- **Domain manifest**: `enclii.yaml` (project root) — declares domains for auto-provisioning
 - **Auto-deploy**: Enabled on `main` branch
 - **Flow**: Push to main → Enclii detects → Builds → Deploys to bare metal K8s
+- On push to main, Enclii's webhook reads `enclii.yaml` and auto-provisions DNS + tunnel routes
+- Only dhanam-web domains listed (dhan.am, www, app); api/admin domains managed via static tunnel config
 
 **To deploy**: Simply push to main. Enclii handles everything automatically.
 
@@ -187,7 +190,4 @@ Each app requires environment configuration:
 - Web: API URL, PostHog key, default locale
 - Mobile: Same as web for Expo public variables
 
-The application targets 99.9% availability with RTO 4h and daily backups.# Build trigger 1768794242
-# Build retry 1768794847
-# Build trigger 1768796202
-# Build trigger 1768796866
+The application targets 99.9% availability with RTO 4h and daily backups.
