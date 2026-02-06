@@ -9,8 +9,7 @@ on:
       - 'apps/admin/**'
       - 'packages/**'
       - 'pnpm-lock.yaml'
-    paths-ignore:
-      - 'infra/k8s/production/kustomization.yaml'
+      - '!infra/k8s/production/kustomization.yaml'
   workflow_dispatch:
     inputs:
       force_deploy:
