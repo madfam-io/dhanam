@@ -174,6 +174,17 @@ export const auth = {
     fullName: 'Juan García',
   },
 
+  // Callback page
+  completingSignIn: 'Completando inicio de sesión...',
+  verifyingCredentials: 'Por favor espera mientras verificamos tus credenciales.',
+  noAuthorizationCode: 'No se recibió código de autorización',
+  sessionExpiredRetry: 'Sesión expirada. Intenta iniciar sesión de nuevo.',
+  signInSuccessful: '¡Inicio de sesión exitoso!',
+  redirectingToDashboard: 'Redirigiendo al panel...',
+  signInFailed: 'Error al iniciar sesión',
+  redirectingToLogin: 'Redirigiendo al inicio de sesión...',
+  authenticationFailed: 'Error de autenticación',
+
   // Success
   loginSuccessful: 'Inicio de sesión exitoso',
   signupSuccessful: 'Registro exitoso',

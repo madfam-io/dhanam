@@ -174,6 +174,17 @@ export const auth = {
     fullName: 'John Doe',
   },
 
+  // Callback page
+  completingSignIn: 'Completing sign in...',
+  verifyingCredentials: 'Please wait while we verify your credentials.',
+  noAuthorizationCode: 'No authorization code received',
+  sessionExpiredRetry: 'Session expired. Please try signing in again.',
+  signInSuccessful: 'Sign in successful!',
+  redirectingToDashboard: 'Redirecting to dashboard...',
+  signInFailed: 'Sign in failed',
+  redirectingToLogin: 'Redirecting to login...',
+  authenticationFailed: 'Authentication failed',
+
   // Success
   loginSuccessful: 'Login successful',
   signupSuccessful: 'Signup successful',

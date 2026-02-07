@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { useAuth } from '@/lib/hooks/use-auth';
 import { Button } from '@dhanam/ui';
 import { useAnalytics } from '@/hooks/useAnalytics';
-import { useTranslation, I18nProvider } from '@dhanam/shared';
+import { useTranslation } from '@dhanam/shared';
 import { Globe } from 'lucide-react';
 
 import { Hero } from '@/components/landing/hero';
@@ -101,9 +101,5 @@ function HomePageContent() {
 }
 
 export default function HomePage() {
-  return (
-    <I18nProvider>
-      <HomePageContent />
-    </I18nProvider>
-  );
+  return <HomePageContent />;
 }

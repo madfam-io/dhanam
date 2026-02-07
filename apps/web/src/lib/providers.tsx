@@ -1,6 +1,7 @@
 'use client';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { I18nProvider } from '@dhanam/shared';
 import { ThemeProvider } from '~/components/theme-provider';
 import { AuthProvider } from '~/components/auth-provider';
 import { PreferencesProvider } from '~/contexts/PreferencesContext';
@@ -23,16 +24,23 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-        <PostHogProvider>
-          <JanuaAuthBridge>
-            <AuthProvider>
-              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-              <PreferencesProvider>{children as any}</PreferencesProvider>
-            </AuthProvider>
-          </JanuaAuthBridge>
-        </PostHogProvider>
-      </ThemeProvider>
+      <I18nProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <PostHogProvider>
+            <JanuaAuthBridge>
+              <AuthProvider>
+                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                <PreferencesProvider>{children as any}</PreferencesProvider>
+              </AuthProvider>
+            </JanuaAuthBridge>
+          </PostHogProvider>
+        </ThemeProvider>
+      </I18nProvider>
     </QueryClientProvider>
   );
 }
