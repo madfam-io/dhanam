@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useCallback } from 'react';
-import { JanuaProvider, useJanua } from '@janua/react-sdk';
+import { JanuaProvider, useJanua, useUser } from '@janua/react-sdk';
 import { useAuth } from '~/lib/hooks/use-auth';
 import type { UserProfile, AuthTokens, Locale } from '@dhanam/shared';
 
@@ -18,10 +18,11 @@ const januaConfig: React.ComponentProps<typeof JanuaProvider>['config'] = {
  */
 function JanuaAuthSync({ children }: { children: React.ReactNode }) {
   const {
-    user: januaUser,
     isAuthenticated: januaAuthenticated,
     isLoading: januaLoading,
   } = useJanua();
+  // useUser() provides richer user data (display_name, avatar, etc.)
+  const { user: januaUser } = useUser();
   const { setAuth, clearAuth, isAuthenticated: dhanamAuthenticated, _hasHydrated } = useAuth();
 
   const syncAuthState = useCallback(() => {
@@ -118,4 +119,4 @@ export function JanuaAuthBridge({ children }: JanuaAuthBridgeProps) {
 }
 
 // Re-export Janua hooks for direct usage if needed
-export { useJanua };
+export { useJanua, useUser };
