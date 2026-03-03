@@ -229,18 +229,22 @@ export class CollectiblesValuationService {
     category: CollectibleCategory;
     provider: string;
     available: boolean;
+    comingSoon: boolean;
   }> {
     const categories: Array<{
       category: CollectibleCategory;
       provider: string;
       available: boolean;
+      comingSoon: boolean;
     }> = [];
 
     for (const adapter of this.adapters.values()) {
+      const available = adapter.isAvailable();
       categories.push({
         category: adapter.category,
         provider: adapter.provider,
-        available: adapter.provider === 'kicksdb',
+        available,
+        comingSoon: !available,
       });
     }
 

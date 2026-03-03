@@ -1,0 +1,26 @@
+# =============================================================================
+# ServiceMonitor: Scrapes Dhanam API /metrics endpoint
+# =============================================================================
+# Requires: Prometheus Operator CRDs installed in cluster
+# =============================================================================
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: dhanam-api
+  namespace: dhanam-monitoring
+  labels:
+    app: dhanam-api
+    release: prometheus
+spec:
+  namespaceSelector:
+    matchNames:
+      - dhanam
+  selector:
+    matchLabels:
+      app: dhanam-api
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: 30s
+      scrapeTimeout: 10s
+      honorLabels: true

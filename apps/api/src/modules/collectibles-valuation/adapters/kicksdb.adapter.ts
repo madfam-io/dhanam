@@ -44,6 +44,10 @@ export class KicksDbAdapter implements CollectibleProviderAdapter {
     }
   }
 
+  isAvailable(): boolean {
+    return !!this.apiKey;
+  }
+
   async search(query: string, limit = 10): Promise<CatalogItem[]> {
     if (!this.apiKey) return [];
 

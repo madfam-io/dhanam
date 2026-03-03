@@ -5,7 +5,7 @@ metadata:
   project: dhanam
 spec:
   runtime:
-    port: 8080
+    port: 80
     replicas: 1
     healthCheck: /health
   domains:

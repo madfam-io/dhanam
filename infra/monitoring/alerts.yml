@@ -1,3 +1,8 @@
+# ============================================================================
+# DEPRECATED: This file is maintained for reference only.
+# The canonical alert rules are in the PrometheusRule CRD at:
+#   infra/k8s/monitoring/prometheus-rules.yaml
+# ============================================================================
 # Dhanam Alert Rules
 # Compatible with Prometheus Alertmanager / Grafana / Datadog
 # SOC 2 Control: Monitoring and alerting for availability and security

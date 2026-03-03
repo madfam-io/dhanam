@@ -70,43 +70,35 @@ module.exports = {
     '!src/core/monitoring/metrics.service.ts', // Metrics infrastructure
     '!src/core/monitoring/health.service.ts', // Health checks
     '!src/core/monitoring/deployment-monitor.service.ts', // Deployment monitoring
-    '!src/core/config/env-validation.service.ts', // Env validation
     '!src/modules/jobs/queue.service.ts', // BullMQ queue
     // Auth guards that are thin wrappers
     '!src/**/*.guard.ts', // Guard wrappers (already tested via E2E)
+    // Phase 1 completed: zillow.service.ts, zapper.service.ts now have tests
+    // Phase 2 completed: r2.service.ts, document.service.ts now have tests
+    // Phase 3 completed: correction.service.ts, subscription-detector.service.ts now have tests
+    // Phase 4 completed: rate-limiter.service.ts, connection-health.service.ts now have tests
+    // Phase 5 completed: zero-based.service.ts, executor-access.service.ts, subscriptions.service.ts now have tests
+    // Phase 6 completed: audit.service.ts, redis.service.ts, env-validation.service.ts,
+    //   natural-language.service.ts, recurring.service.ts, accounts.service.ts now have tests
+    '!src/modules/providers/defi/defi.service.ts', // DeFi orchestration
+    // Complex stateful services - better suited for integration tests
+    '!src/modules/providers/connection-health/error-messages.service.ts',
     // Low-coverage core services needing integration tests
     '!src/modules/budgets/budgets.service.ts', // Complex budget calculations
     '!src/core/logger/logger.service.ts', // Logging infrastructure
-    '!src/core/audit/audit.service.ts', // Audit logging
     // Database/cache infrastructure
     '!src/core/prisma/prisma.service.ts', // Prisma client wrapper
-    '!src/core/redis/redis.service.ts', // Redis client wrapper
     // Services requiring database integration tests
-    '!src/modules/accounts/accounts.service.ts', // Complex account operations
     '!src/modules/esg/enhanced-esg.service.ts', // ESG calculations
     '!src/modules/billing/billing.service.ts', // Billing logic
     '!src/modules/categories/categories.service.ts', // Category operations
-    // Crypto services
     // Email processing
     '!src/**/email.processor.ts', // Email queue processor
     // Re-export index files
     '!src/**/index.ts', // Module re-exports
     // New feature modules - pending test implementation
-    '!src/modules/recurring/recurring.service.ts', // Recurring transaction management
     '!src/modules/subscriptions/subscriptions.service.ts', // Subscription management
-    '!src/modules/search/natural-language.service.ts', // NLP search (complex ML logic)
     // Zero-coverage services requiring integration/E2E testing
-    // External API integrations - require real API connections
-    // Phase 1 completed: zillow.service.ts, zapper.service.ts now have tests
-    // Phase 2 completed: r2.service.ts, document.service.ts now have tests
-    // Phase 3 completed: correction.service.ts, subscription-detector.service.ts now have tests
-    // Phase 4 completed: rate-limiter.service.ts, connection-health.service.ts now have tests
-    '!src/modules/providers/defi/defi.service.ts', // DeFi orchestration
-    // Complex stateful services - better suited for integration tests
-    '!src/modules/providers/connection-health/error-messages.service.ts',
-    // Feature modules pending test implementation
-    // Phase 5 completed: zero-based.service.ts, executor-access.service.ts, subscriptions.service.ts now have tests
-    // document.service.ts moved to Phase 2 completed
     '!src/modules/manual-assets/pe-analytics.service.ts', // PE analytics
     '!src/modules/manual-assets/real-estate-valuation.service.ts', // Real estate valuation
     '!src/modules/collectibles-valuation/collectibles-valuation.service.ts', // Collectibles valuation orchestrator
@@ -116,10 +108,10 @@ module.exports = {
   ],
   coverageThreshold: {
     global: {
-      branches: 78, // CI baseline: 78.4% (post-SOC2 remediation)
-      functions: 79, // CI baseline: 79.89% (post-SOC2 remediation)
-      lines: 84, // CI baseline: 84.49% (post-SOC2 remediation)
-      statements: 83, // CI baseline: 83.5% (post-SOC2 remediation)
+      branches: 90, // Target: raised from 78% baseline (Phase 6 coverage expansion)
+      functions: 92, // Target: raised from 79% baseline (Phase 6 coverage expansion)
+      lines: 95, // Target: raised from 84% baseline (Phase 6 coverage expansion)
+      statements: 95, // Target: raised from 83% baseline (Phase 6 coverage expansion)
     },
   },
   transformIgnorePatterns: [

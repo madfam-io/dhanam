@@ -1,7 +1,7 @@
 # Dhanam Tech Debt Log
 
-> **Last Updated**: 2026-01-18
-> **Context**: Operation GOVERNOR - API-First Migration
+> **Last Updated**: 2026-03-02
+> **Context**: Production Readiness — Enterprise Hardening
 
 ---
 
@@ -9,32 +9,11 @@
 
 ### TD-001: GHCR Container Build Workflow
 
-**Status**: MISSING
+**Status**: RESOLVED
 **Severity**: CRITICAL
-**Blocking**: Dhanam K8s deployment
 
-**Problem**:
-K8s manifests reference `ghcr.io/madfam-org/dhanam-*` images, but CI/CD workflow (`deploy.yml`) is configured for AWS ECR. No workflow exists to build and push to GHCR.
-
-**Current State**:
-- Pods in `ImagePullBackOff` state
-- `ghcr.io/madfam-org/dhanam-api:latest` - DOES NOT EXIST
-- `ghcr.io/madfam-org/dhanam-web:latest` - DOES NOT EXIST
-
-**Required Action**:
-Create `.github/workflows/docker-build.yml` that:
-1. Builds `apps/api/Dockerfile` → `ghcr.io/madfam-org/dhanam-api`
-2. Builds `apps/web/Dockerfile` → `ghcr.io/madfam-org/dhanam-web`
-3. Pushes to GHCR on main branch merge
-
-**Workaround**: Manual build and push (one-time bootstrap)
-```bash
-# From dhanam repo root
-docker build -t ghcr.io/madfam-org/dhanam-api:latest apps/api
-docker build -t ghcr.io/madfam-org/dhanam-web:latest apps/web
-docker push ghcr.io/madfam-org/dhanam-api:latest
-docker push ghcr.io/madfam-org/dhanam-web:latest
-```
+**Resolution**:
+GHCR workflows now exist with pinned digests. `deploy-enclii.yml` and `deploy-web-k8s.yml` build and push to `ghcr.io/madfam-org/dhanam/*`. Images are signed with cosign.
 
 **Ticket**: DHANAM-001
 
@@ -103,14 +82,69 @@ Billing secrets (`dhanam-billing-secrets`) were created with placeholder values.
 
 ---
 
+### TD-005: Enclii Port Mismatch
+
+**Status**: RESOLVED
+**Severity**: MEDIUM
+
+**Resolution**:
+`enclii.yaml` port changed from 8080 to 80 to match ClusterIP service internal port mapping.
+
+---
+
+### TD-006: JWT Secrets Missing from Template
+
+**Status**: RESOLVED
+**Severity**: MEDIUM
+
+**Resolution**:
+Added `JWT_SECRET` and `JWT_REFRESH_SECRET` to `infra/k8s/production/secrets-template.yaml`. These are referenced by `api-deployment.yaml`.
+
+---
+
+### TD-007: Monitoring Stack
+
+**Status**: RESOLVED
+**Severity**: MEDIUM
+
+**Resolution**:
+Created `infra/k8s/monitoring/` with ServiceMonitor, PrometheusRule CRDs, Alertmanager routing config, and Grafana dashboard ConfigMaps. Added metrics port to api-deployment.yaml Service spec. Alert routing uses placeholder receivers for Slack/PagerDuty.
+
+---
+
+### TD-008: Staging Environment
+
+**Status**: RESOLVED
+**Severity**: MEDIUM
+
+**Resolution**:
+Created `infra/k8s/staging/` with namespace, kustomization overlay (1 replica, `:main` tags, `NODE_ENV=staging`), and secrets template. Added `.github/workflows/deploy-staging.yml` for auto-deploy on push to main.
+
+---
+
+### TD-009: ArgoCD Documentation
+
+**Status**: RESOLVED
+**Severity**: LOW
+
+**Resolution**:
+Created `infra/k8s/argocd/application.yaml` (ArgoCD Application CRD for GitOps sync) and `infra/k8s/argocd/README.md` documenting the sync loop, UI access, and operational procedures.
+
+---
+
 ## Tracking
 
 | ID | Title | Severity | Status | Assigned |
 |----|-------|----------|--------|----------|
-| TD-001 | GHCR Container Build Workflow | CRITICAL | MISSING | - |
+| TD-001 | GHCR Container Build Workflow | CRITICAL | RESOLVED | - |
 | TD-002 | Database Provisioning API | HIGH | MISSING | - |
-| TD-003 | CI/CD Platform Migration | HIGH | IN_PROGRESS | - |
+| TD-003 | CI/CD Platform Migration | HIGH | RESOLVED | - |
 | TD-004 | Billing Secrets Placeholder | MEDIUM | PLACEHOLDER | - |
+| TD-005 | Enclii Port Mismatch | MEDIUM | RESOLVED | - |
+| TD-006 | JWT Secrets Missing from Template | MEDIUM | RESOLVED | - |
+| TD-007 | Monitoring Stack | MEDIUM | RESOLVED | - |
+| TD-008 | Staging Environment | MEDIUM | RESOLVED | - |
+| TD-009 | ArgoCD Documentation | LOW | RESOLVED | - |
 
 ---
 

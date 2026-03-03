@@ -32,10 +32,11 @@ describe('CollectiblesValuationService', () => {
     set: jest.fn(),
   };
 
-  const makeMockAdapter = (provider: string, category: string) => ({
+  const makeMockAdapter = (provider: string, category: string, available = false) => ({
     provider,
     category,
     supportedCurrencies: ['USD'],
+    isAvailable: jest.fn().mockReturnValue(available),
     search: jest.fn(),
     getValuation: jest.fn(),
     healthCheck: jest.fn(),
@@ -47,7 +48,7 @@ describe('CollectiblesValuationService', () => {
   const mockPcgs = makeMockAdapter('pcgs', 'coin');
   const mockPsa = makeMockAdapter('psa', 'trading_card');
   const mockHagerty = makeMockAdapter('hagerty', 'classic_car');
-  const mockKicksDb = makeMockAdapter('kicksdb', 'sneaker');
+  const mockKicksDb = makeMockAdapter('kicksdb', 'sneaker', true);
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -341,10 +342,12 @@ describe('CollectiblesValuationService', () => {
       const kicksdb = result.find((c) => c.provider === 'kicksdb');
       expect(kicksdb).toBeDefined();
       expect(kicksdb!.available).toBe(true);
+      expect(kicksdb!.comingSoon).toBe(false);
 
       const artsy = result.find((c) => c.provider === 'artsy');
       expect(artsy).toBeDefined();
       expect(artsy!.available).toBe(false);
+      expect(artsy!.comingSoon).toBe(true);
     });
   });
 });

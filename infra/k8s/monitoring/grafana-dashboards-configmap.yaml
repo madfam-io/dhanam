@@ -1,0 +1,178 @@
+# =============================================================================
+# Grafana Dashboard ConfigMap for Dhanam
+# =============================================================================
+# Auto-provisioned by Grafana sidecar (label: grafana_dashboard: "1")
+# Covers: request rate/errors, p95 latency, auth failures, queue depth,
+#          DB/Redis health, pod restarts
+# =============================================================================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dhanam-grafana-dashboards
+  namespace: dhanam-monitoring
+  labels:
+    app: dhanam
+    grafana_dashboard: "1"
+data:
+  dhanam-overview.json: |
+    {
+      "annotations": { "list": [] },
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 1,
+      "id": null,
+      "links": [],
+      "liveNow": false,
+      "panels": [
+        {
+          "title": "Request Rate",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+          "targets": [
+            {
+              "expr": "sum(rate(http_requests_total{namespace=\"dhanam\"}[5m])) by (status)",
+              "legendFormat": "HTTP {{ status }}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": { "unit": "reqps" }
+          }
+        },
+        {
+          "title": "Error Rate (%)",
+          "type": "stat",
+          "gridPos": { "h": 8, "w": 6, "x": 12, "y": 0 },
+          "targets": [
+            {
+              "expr": "sum(rate(http_requests_total{namespace=\"dhanam\",status=~\"5..\"}[5m])) / sum(rate(http_requests_total{namespace=\"dhanam\"}[5m])) * 100",
+              "legendFormat": "Error %"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "thresholds": {
+                "steps": [
+                  { "color": "green", "value": null },
+                  { "color": "yellow", "value": 0.5 },
+                  { "color": "red", "value": 1 }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "p95 Latency",
+          "type": "stat",
+          "gridPos": { "h": 8, "w": 6, "x": 18, "y": 0 },
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{namespace=\"dhanam\"}[5m])) by (le))",
+              "legendFormat": "p95"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s",
+              "thresholds": {
+                "steps": [
+                  { "color": "green", "value": null },
+                  { "color": "yellow", "value": 0.5 },
+                  { "color": "red", "value": 1.5 }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Auth Failures",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+          "targets": [
+            {
+              "expr": "rate(auth_failures_total{namespace=\"dhanam\"}[5m])",
+              "legendFormat": "Auth failures/s"
+            }
+          ]
+        },
+        {
+          "title": "Queue Depth",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+          "targets": [
+            {
+              "expr": "bullmq_waiting_jobs{namespace=\"dhanam\"}",
+              "legendFormat": "{{ queue }} waiting"
+            },
+            {
+              "expr": "bullmq_active_jobs{namespace=\"dhanam\"}",
+              "legendFormat": "{{ queue }} active"
+            }
+          ]
+        },
+        {
+          "title": "Database Health",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 6, "x": 0, "y": 16 },
+          "targets": [
+            {
+              "expr": "pg_up",
+              "legendFormat": "PostgreSQL"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "mappings": [
+                { "options": { "0": { "text": "DOWN", "color": "red" }, "1": { "text": "UP", "color": "green" } }, "type": "value" }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Redis Health",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 6, "x": 6, "y": 16 },
+          "targets": [
+            {
+              "expr": "redis_up",
+              "legendFormat": "Redis"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "mappings": [
+                { "options": { "0": { "text": "DOWN", "color": "red" }, "1": { "text": "UP", "color": "green" } }, "type": "value" }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Pod Restarts (1h)",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 6, "x": 12, "y": 16 },
+          "targets": [
+            {
+              "expr": "sum(increase(kube_pod_container_status_restarts_total{namespace=\"dhanam\"}[1h])) by (pod)",
+              "legendFormat": "{{ pod }}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "thresholds": {
+                "steps": [
+                  { "color": "green", "value": null },
+                  { "color": "yellow", "value": 1 },
+                  { "color": "red", "value": 3 }
+                ]
+              }
+            }
+          }
+        }
+      ],
+      "schemaVersion": 39,
+      "tags": ["dhanam", "overview"],
+      "templating": { "list": [] },
+      "time": { "from": "now-6h", "to": "now" },
+      "title": "Dhanam Overview",
+      "uid": "dhanam-overview"
+    }

@@ -38,6 +38,7 @@ export interface CollectibleProviderAdapter {
   readonly provider: string;
   readonly category: CollectibleCategory;
   readonly supportedCurrencies: string[];
+  isAvailable(): boolean;
   search(query: string, limit?: number): Promise<CatalogItem[]>;
   getValuation(externalId: string): Promise<ValuationResult | null>;
   healthCheck(): Promise<boolean>;

@@ -88,8 +88,8 @@ SMTP_PASS=""
 SMTP_FROM="noreply@dhanam.local"
 
 # Provider APIs (use sandbox credentials)
-BELVO_SECRET_ID="sandbox"
-BELVO_SECRET_PASSWORD="sandbox"
+BELVO_SECRET_KEY_ID="sandbox"
+BELVO_SECRET_KEY_PASSWORD="sandbox"
 BELVO_ENV="sandbox"
 
 PLAID_CLIENT_ID="sandbox_client_id"

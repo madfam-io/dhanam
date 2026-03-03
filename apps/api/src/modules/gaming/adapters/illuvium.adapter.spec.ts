@@ -29,32 +29,22 @@ describe('IlluviumAdapter', () => {
     expect(adapter.supportedTokens).toEqual(['ILV']);
   });
 
+  it('should not be available (coming soon)', () => {
+    expect(adapter.isAvailable()).toBe(false);
+  });
+
   describe('getPositions', () => {
-    it('should return positions with correct structure', async () => {
+    it('should return empty positions', async () => {
       const result = await adapter.getPositions('space-1');
 
       expect(result.platform).toBe('illuvium');
       expect(result.chain).toBe('immutable-zkevm');
-      expect(result.totalValueUsd).toBe(6200);
-      expect(result.tokens).toHaveLength(1);
-      expect(result.tokens[0].symbol).toBe('ILV');
-      expect(result.staking).toHaveLength(1);
-      expect(result.land).toHaveLength(1);
-      expect(result.nfts).toHaveLength(1);
-    });
-
-    it('should include staking with sILV rewards', async () => {
-      const result = await adapter.getPositions('space-1');
-
-      expect(result.staking[0].rewardToken).toBe('sILV');
-      expect(result.staking[0].apy).toBe(18);
-    });
-
-    it('should include p2e and staking earnings', async () => {
-      const result = await adapter.getPositions('space-1');
-
-      expect(result.earnings).toHaveLength(2);
-      expect(result.earnings.map((e) => e.source)).toEqual(['staking', 'p2e']);
+      expect(result.totalValueUsd).toBe(0);
+      expect(result.tokens).toEqual([]);
+      expect(result.staking).toEqual([]);
+      expect(result.land).toEqual([]);
+      expect(result.nfts).toEqual([]);
+      expect(result.earnings).toEqual([]);
     });
   });
 });

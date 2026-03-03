@@ -21,45 +21,20 @@ export class EnjinAdapter implements MetaversePlatformAdapter {
     private readonly redis: RedisService
   ) {}
 
+  isAvailable(): boolean {
+    return false;
+  }
+
   async getPositions(_spaceId: string): Promise<MetaversePosition> {
     return {
       platform: this.platform,
       chain: this.chain,
-      totalValueUsd: 1850,
-      tokens: [{ symbol: 'ENJ', balance: 5000, valueUsd: 1250, priceUsd: 0.25, change24h: -0.8 }],
+      totalValueUsd: 0,
+      tokens: [],
       staking: [],
       land: [],
-      nfts: [
-        {
-          id: 'enj-item-1',
-          name: 'Enjin Legendary Sword',
-          collection: 'Lost Relics',
-          platform: 'enjin',
-          chain: 'ethereum',
-          currentValueUsd: 320,
-          acquisitionCostUsd: 200,
-          meltValue: 50,
-        },
-        {
-          id: 'enj-item-2',
-          name: 'Enjin Epic Shield',
-          collection: 'Age of Rust',
-          platform: 'enjin',
-          chain: 'ethereum',
-          currentValueUsd: 280,
-          acquisitionCostUsd: 150,
-          meltValue: 35,
-        },
-      ],
-      earnings: [
-        {
-          source: 'marketplace',
-          platform: 'enjin',
-          monthlyAmountUsd: 45,
-          token: 'ENJ',
-          description: 'Cross-game item marketplace sales',
-        },
-      ],
+      nfts: [],
+      earnings: [],
     };
   }
 }

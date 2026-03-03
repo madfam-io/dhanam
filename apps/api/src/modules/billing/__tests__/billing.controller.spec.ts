@@ -511,7 +511,7 @@ describe('BillingController', () => {
         {
           user_id: 'user-123',
           plan: 'enclii_pro',
-          return_url: 'https://app.enclii.dev/billing',
+          return_url: 'https://app.enclii.com/billing',
           product: 'enclii',
         } as any,
         mockReply
@@ -520,7 +520,7 @@ describe('BillingController', () => {
       expect(billingService.createExternalCheckout).toHaveBeenCalledWith(
         'user-123',
         'enclii_pro',
-        'https://app.enclii.dev/billing',
+        'https://app.enclii.com/billing',
         'enclii'
       );
     });

@@ -135,8 +135,8 @@ Errors are classified by type and retryability:
 // Environment variables
 PLAID_CLIENT_ID=xxx
 PLAID_SECRET=xxx
-BELVO_SECRET_ID=xxx
-BELVO_SECRET_PASSWORD=xxx
+BELVO_SECRET_KEY_ID=xxx
+BELVO_SECRET_KEY_PASSWORD=xxx
 MX_CLIENT_ID=xxx
 MX_API_KEY=xxx
 ```

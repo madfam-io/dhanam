@@ -43,8 +43,8 @@ export const configuration = () => ({
 
   providers: {
     belvo: {
-      secretId: process.env.BELVO_SECRET_ID,
-      secretPassword: process.env.BELVO_SECRET_PASSWORD,
+      secretId: process.env.BELVO_SECRET_KEY_ID,
+      secretPassword: process.env.BELVO_SECRET_KEY_PASSWORD,
       webhookSecret: process.env.BELVO_WEBHOOK_SECRET,
     },
     plaid: {

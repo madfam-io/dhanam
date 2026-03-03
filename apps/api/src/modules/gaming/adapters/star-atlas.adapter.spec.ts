@@ -29,30 +29,22 @@ describe('StarAtlasAdapter', () => {
     expect(adapter.supportedTokens).toEqual(['ATLAS', 'POLIS']);
   });
 
+  it('should not be available (coming soon)', () => {
+    expect(adapter.isAvailable()).toBe(false);
+  });
+
   describe('getPositions', () => {
-    it('should return positions with correct structure', async () => {
+    it('should return empty positions', async () => {
       const result = await adapter.getPositions('space-1');
 
       expect(result.platform).toBe('star-atlas');
       expect(result.chain).toBe('solana');
-      expect(result.totalValueUsd).toBe(2800);
-      expect(result.tokens).toHaveLength(2);
-      expect(result.staking).toHaveLength(1);
-      expect(result.nfts).toHaveLength(2);
-    });
-
-    it('should include ship NFTs', async () => {
-      const result = await adapter.getPositions('space-1');
-
-      expect(result.nfts[0].collection).toBe('Star Atlas Ships');
-      expect(result.nfts[1].collection).toBe('Star Atlas Ships');
-    });
-
-    it('should include fleet staking and mission earnings', async () => {
-      const result = await adapter.getPositions('space-1');
-
-      expect(result.earnings).toHaveLength(2);
-      expect(result.earnings.map((e) => e.source)).toEqual(['staking', 'p2e']);
+      expect(result.totalValueUsd).toBe(0);
+      expect(result.tokens).toEqual([]);
+      expect(result.staking).toEqual([]);
+      expect(result.land).toEqual([]);
+      expect(result.nfts).toEqual([]);
+      expect(result.earnings).toEqual([]);
     });
   });
 });

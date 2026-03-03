@@ -1,4 +1,4 @@
-import { Injectable, NotImplementedException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 
 import type {
   CatalogItem,
@@ -12,16 +12,16 @@ export class HagertyAdapter implements CollectibleProviderAdapter {
   readonly category = 'classic_car' as const;
   readonly supportedCurrencies = ['USD'];
 
+  isAvailable(): boolean {
+    return false;
+  }
+
   async search(_query: string, _limit?: number): Promise<CatalogItem[]> {
-    throw new NotImplementedException(
-      'Hagerty adapter requires membership configuration. Set HAGERTY_API_KEY to enable.'
-    );
+    return [];
   }
 
   async getValuation(_externalId: string): Promise<ValuationResult | null> {
-    throw new NotImplementedException(
-      'Hagerty adapter requires membership configuration. Set HAGERTY_API_KEY to enable.'
-    );
+    return null;
   }
 
   async healthCheck(): Promise<boolean> {

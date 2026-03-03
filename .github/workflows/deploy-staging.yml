@@ -1,0 +1,45 @@
+name: Deploy to Staging
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: true
+
+jobs:
+  deploy-staging:
+    name: Apply Staging Kustomization
+    runs-on: ubuntu-latest
+    environment: staging
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'v1.29.0'
+
+      - name: Configure kubeconfig
+        run: |
+          mkdir -p ~/.kube
+          echo "${{ secrets.KUBECONFIG_STAGING }}" | base64 -d > ~/.kube/config
+          chmod 600 ~/.kube/config
+
+      - name: Apply staging manifests
+        run: |
+          kubectl apply -k infra/k8s/staging/
+
+      - name: Wait for rollout
+        run: |
+          kubectl rollout status deployment/dhanam-api -n dhanam-staging --timeout=300s
+          kubectl rollout status deployment/dhanam-web -n dhanam-staging --timeout=300s
+
+      - name: Verify pods
+        run: |
+          echo "=== Staging Deployment Status ==="
+          kubectl get pods -n dhanam-staging -o wide

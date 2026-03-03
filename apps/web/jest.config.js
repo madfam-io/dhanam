@@ -27,6 +27,14 @@ const customJestConfig = {
   ],
   collectCoverageFrom: ['src/**/*.{js,jsx,ts,tsx}', '!src/**/*.d.ts', '!src/**/index.ts'],
   coverageDirectory: './coverage',
+  coverageThreshold: {
+    global: {
+      branches: 30, // Baseline for web page smoke tests (Phase 6)
+      functions: 30, // Baseline for web page smoke tests (Phase 6)
+      lines: 30, // Baseline for web page smoke tests (Phase 6)
+      statements: 30, // Baseline for web page smoke tests (Phase 6)
+    },
+  },
   transformIgnorePatterns: ['node_modules/(?!(.*\\.mjs$|.*\\.js$))'],
 };
 

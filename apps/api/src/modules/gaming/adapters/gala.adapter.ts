@@ -21,41 +21,20 @@ export class GalaAdapter implements MetaversePlatformAdapter {
     private readonly redis: RedisService
   ) {}
 
+  isAvailable(): boolean {
+    return false;
+  }
+
   async getPositions(_spaceId: string): Promise<MetaversePosition> {
     return {
       platform: this.platform,
       chain: this.chain,
-      totalValueUsd: 3400,
-      tokens: [{ symbol: 'GALA', balance: 120000, valueUsd: 2400, priceUsd: 0.02, change24h: 0.5 }],
+      totalValueUsd: 0,
+      tokens: [],
       staking: [],
-      land: [{ id: 'gala-land-1', platform: 'gala', valueUsd: 400, rentalStatus: 'self-use' }],
-      nfts: [
-        {
-          id: 'gala-node-1',
-          name: 'Gala Node License',
-          collection: 'Gala Nodes',
-          platform: 'gala',
-          chain: 'galachain',
-          currentValueUsd: 600,
-          acquisitionCostUsd: 1200,
-        },
-      ],
-      earnings: [
-        {
-          source: 'node_rewards',
-          platform: 'gala',
-          monthlyAmountUsd: 150,
-          token: 'GALA',
-          description: 'Gala Node operator rewards',
-        },
-        {
-          source: 'p2e',
-          platform: 'gala',
-          monthlyAmountUsd: 40,
-          token: 'GALA',
-          description: 'Town Star and Spider Tanks earnings',
-        },
-      ],
+      land: [],
+      nfts: [],
+      earnings: [],
     };
   }
 }

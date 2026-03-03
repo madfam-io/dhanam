@@ -130,8 +130,8 @@ SMTP_PASS=
 EMAIL_FROM=noreply@dhanam.local
 
 # Providers (add your test credentials)
-BELVO_SECRET_ID=your_belvo_secret_id
-BELVO_SECRET_PASSWORD=your_belvo_secret_password
+BELVO_SECRET_KEY_ID=your_belvo_secret_key_id
+BELVO_SECRET_KEY_PASSWORD=your_belvo_secret_key_password
 BELVO_ENV=sandbox
 
 PLAID_CLIENT_ID=your_plaid_client_id

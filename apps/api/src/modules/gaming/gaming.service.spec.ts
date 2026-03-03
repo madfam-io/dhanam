@@ -50,6 +50,7 @@ describe('GamingService', () => {
     platform,
     chain,
     supportedTokens: tokens,
+    isAvailable: jest.fn().mockReturnValue(true),
     getPositions: jest.fn(),
   });
 
@@ -200,12 +201,13 @@ describe('GamingService', () => {
       );
     });
 
-    it('should include chain and tokens for each platform', () => {
+    it('should include chain, tokens, and available for each platform', () => {
       const platforms = service.getSupportedPlatforms();
 
       for (const p of platforms) {
         expect(p.chain).toBeDefined();
         expect(p.tokens.length).toBeGreaterThan(0);
+        expect(typeof p.available).toBe('boolean');
       }
     });
   });

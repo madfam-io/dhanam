@@ -1,4 +1,4 @@
-import { Injectable, NotImplementedException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 
 import type {
   CatalogItem,
@@ -12,16 +12,16 @@ export class PcgsAdapter implements CollectibleProviderAdapter {
   readonly category = 'coin' as const;
   readonly supportedCurrencies = ['USD'];
 
+  isAvailable(): boolean {
+    return false;
+  }
+
   async search(_query: string, _limit?: number): Promise<CatalogItem[]> {
-    throw new NotImplementedException(
-      'PCGS adapter requires API key configuration. Set PCGS_API_KEY to enable.'
-    );
+    return [];
   }
 
   async getValuation(_externalId: string): Promise<ValuationResult | null> {
-    throw new NotImplementedException(
-      'PCGS adapter requires API key configuration. Set PCGS_API_KEY to enable.'
-    );
+    return null;
   }
 
   async healthCheck(): Promise<boolean> {

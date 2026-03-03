@@ -107,15 +107,14 @@
 - [ ] **Build API Image**
   ```bash
   cd apps/api
-  docker build -f ../../infra/docker/Dockerfile.api -t ghcr.io/madfam-org/dhanam-api:latest .
-  docker push ghcr.io/madfam-org/dhanam-api:latest
+  docker build -f apps/api/Dockerfile -t ghcr.io/madfam-org/dhanam/api:latest .
+  docker push ghcr.io/madfam-org/dhanam/api:latest
   ```
 
 - [ ] **Build Web Image**
   ```bash
-  cd apps/web
-  docker build -f ../../infra/docker/Dockerfile.web -t ghcr.io/madfam-org/dhanam-web:latest .
-  docker push ghcr.io/madfam-org/dhanam-web:latest
+  docker build -f apps/web/Dockerfile -t ghcr.io/madfam-org/dhanam/web:latest .
+  docker push ghcr.io/madfam-org/dhanam/web:latest
   ```
 
 - [ ] **Verify Images in Registry**

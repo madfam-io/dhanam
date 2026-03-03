@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
   Body,
   Param,
   Query,
@@ -16,6 +17,7 @@ import {
   ApiResponse,
   ApiBearerAuth,
   ApiParam,
+  ApiQuery,
   ApiUnauthorizedResponse,
   ApiForbiddenResponse,
   ApiBadRequestResponse,
@@ -23,6 +25,7 @@ import {
 
 import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
 
+import { AdminOpsService } from './admin-ops.service';
 import { AdminService } from './admin.service';
 import {
   UserSearchDto,
@@ -33,6 +36,9 @@ import {
   FeatureFlagDto,
   UpdateFeatureFlagDto,
   PaginatedResponseDto,
+  CacheFlushDto,
+  SpaceSearchDto,
+  UserActionDto,
 } from './dto';
 import { AdminGuard } from './guards/admin.guard';
 
@@ -43,7 +49,10 @@ import { AdminGuard } from './guards/admin.guard';
 @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
 @ApiForbiddenResponse({ description: 'User lacks admin privileges' })
 export class AdminController {
-  constructor(private readonly adminService: AdminService) {}
+  constructor(
+    private readonly adminService: AdminService,
+    private readonly adminOpsService: AdminOpsService
+  ) {}
 
   @Get('users')
   @ApiOperation({ summary: 'Search and list users with pagination' })
@@ -143,5 +152,131 @@ export class AdminController {
     @Request() req: any
   ): Promise<FeatureFlagDto> {
     return this.adminService.updateFeatureFlag(key, dto, req.user.id);
+  }
+
+  // ──────────────────────────────────────────────
+  // Phase 5 endpoints
+  // ──────────────────────────────────────────────
+
+  @Get('health')
+  @ApiOperation({ summary: 'System health check (DB, Redis, queues, providers)' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Health status retrieved' })
+  async getSystemHealth(@Request() req: any) {
+    return this.adminOpsService.getSystemHealth(req.user.id);
+  }
+
+  @Get('metrics')
+  @ApiOperation({ summary: 'DAU/WAU/MAU, queue stats, resource usage' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Metrics retrieved' })
+  async getMetrics(@Request() req: any) {
+    return this.adminOpsService.getMetrics(req.user.id);
+  }
+
+  @Post('cache/flush')
+  @ApiOperation({ summary: 'Flush Redis cache by pattern' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Cache flushed' })
+  @ApiBadRequestResponse({ description: 'Invalid pattern or not confirmed' })
+  async flushCache(@Body() dto: CacheFlushDto, @Request() req: any) {
+    return this.adminOpsService.flushCache(dto, req.user.id);
+  }
+
+  @Get('queues')
+  @ApiOperation({ summary: 'BullMQ queue stats' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Queue stats retrieved' })
+  async getQueueStats(@Request() req: any) {
+    return this.adminOpsService.getQueueStats(req.user.id);
+  }
+
+  @Post('queues/:name/retry-failed')
+  @ApiOperation({ summary: 'Retry failed jobs in a queue' })
+  @ApiParam({ name: 'name', description: 'Queue name' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Retry initiated' })
+  async retryFailedJobs(@Param('name') name: string, @Request() req: any) {
+    return this.adminOpsService.retryFailedJobs(name, req.user.id);
+  }
+
+  @Post('queues/:name/clear')
+  @ApiOperation({ summary: 'Clear a queue' })
+  @ApiParam({ name: 'name', description: 'Queue name' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Queue cleared' })
+  async clearQueue(@Param('name') name: string, @Request() req: any) {
+    return this.adminOpsService.clearQueue(name, req.user.id);
+  }
+
+  @Get('spaces')
+  @ApiOperation({ summary: 'Search and list spaces' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Spaces retrieved' })
+  async searchSpaces(@Query() dto: SpaceSearchDto) {
+    return this.adminOpsService.searchSpaces(dto);
+  }
+
+  @Patch('users/:id/deactivate')
+  @ApiOperation({ summary: 'Deactivate user and invalidate sessions' })
+  @ApiParam({ name: 'id', description: 'User ID' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'User deactivated' })
+  async deactivateUser(@Param('id') id: string, @Body() dto: UserActionDto, @Request() req: any) {
+    return this.adminOpsService.deactivateUser(id, dto, req.user.id);
+  }
+
+  @Patch('users/:id/reset-2fa')
+  @ApiOperation({ summary: 'Reset TOTP 2FA for a user' })
+  @ApiParam({ name: 'id', description: 'User ID' })
+  @ApiResponse({ status: HttpStatus.OK, description: '2FA reset' })
+  async resetUserTotp(@Param('id') id: string, @Body() dto: UserActionDto, @Request() req: any) {
+    return this.adminOpsService.resetUserTotp(id, dto, req.user.id);
+  }
+
+  @Post('users/:id/force-logout')
+  @ApiOperation({ summary: 'Invalidate all sessions for a user' })
+  @ApiParam({ name: 'id', description: 'User ID' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Sessions invalidated' })
+  async forceLogout(@Param('id') id: string, @Request() req: any) {
+    return this.adminOpsService.forceLogout(id, req.user.id);
+  }
+
+  @Get('billing/events')
+  @ApiOperation({ summary: 'Billing event log' })
+  @ApiQuery({ name: 'page', required: false })
+  @ApiQuery({ name: 'limit', required: false })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Billing events retrieved' })
+  async getBillingEvents(@Query('page') page?: number, @Query('limit') limit?: number) {
+    return this.adminOpsService.getBillingEvents(page || 1, limit || 20);
+  }
+
+  @Get('gdpr/export/:userId')
+  @ApiOperation({ summary: 'GDPR data export for a user' })
+  @ApiParam({ name: 'userId', description: 'User ID' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Data exported' })
+  async gdprExport(@Param('userId') userId: string, @Request() req: any) {
+    return this.adminOpsService.gdprExport(userId, req.user.id);
+  }
+
+  @Post('gdpr/delete/:userId')
+  @ApiOperation({ summary: 'GDPR deletion (queued)' })
+  @ApiParam({ name: 'userId', description: 'User ID' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Deletion queued' })
+  async gdprDelete(@Param('userId') userId: string, @Request() req: any) {
+    return this.adminOpsService.gdprDelete(userId, req.user.id);
+  }
+
+  @Post('retention/execute')
+  @ApiOperation({ summary: 'Execute retention policies' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Retention execution initiated' })
+  async executeRetention(@Request() req: any) {
+    return this.adminOpsService.executeRetention(req.user.id);
+  }
+
+  @Get('deployment/status')
+  @ApiOperation({ summary: 'Deployment monitor data' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Deployment status retrieved' })
+  async getDeploymentStatus() {
+    return this.adminOpsService.getDeploymentStatus();
+  }
+
+  @Get('providers/health')
+  @ApiOperation({ summary: 'Provider health and rate limits' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Provider health retrieved' })
+  async getProviderHealth(@Request() req: any) {
+    return this.adminOpsService.getProviderHealth(req.user.id);
   }
 }

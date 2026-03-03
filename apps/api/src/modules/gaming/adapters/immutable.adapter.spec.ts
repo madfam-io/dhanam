@@ -29,30 +29,22 @@ describe('ImmutableAdapter', () => {
     expect(adapter.supportedTokens).toEqual(['IMX']);
   });
 
+  it('should not be available (coming soon)', () => {
+    expect(adapter.isAvailable()).toBe(false);
+  });
+
   describe('getPositions', () => {
-    it('should return positions with correct structure', async () => {
+    it('should return empty positions', async () => {
       const result = await adapter.getPositions('space-1');
 
       expect(result.platform).toBe('immutable');
       expect(result.chain).toBe('immutable-zkevm');
-      expect(result.totalValueUsd).toBe(2100);
-      expect(result.tokens).toHaveLength(1);
-      expect(result.staking).toHaveLength(1);
-      expect(result.nfts).toHaveLength(2);
-    });
-
-    it('should include staking and marketplace earnings', async () => {
-      const result = await adapter.getPositions('space-1');
-
-      expect(result.earnings).toHaveLength(2);
-      expect(result.earnings.map((e) => e.source)).toEqual(['staking', 'marketplace']);
-    });
-
-    it('should include Gods Unchained and Guild of Guardians NFTs', async () => {
-      const result = await adapter.getPositions('space-1');
-
-      expect(result.nfts[0].collection).toBe('Gods Unchained');
-      expect(result.nfts[1].collection).toBe('Guild of Guardians');
+      expect(result.totalValueUsd).toBe(0);
+      expect(result.tokens).toEqual([]);
+      expect(result.staking).toEqual([]);
+      expect(result.land).toEqual([]);
+      expect(result.nfts).toEqual([]);
+      expect(result.earnings).toEqual([]);
     });
   });
 });

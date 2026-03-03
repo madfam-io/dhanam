@@ -92,6 +92,7 @@ export interface MetaversePlatformAdapter {
   readonly chain: BlockchainNetwork;
   readonly supportedTokens: string[];
 
+  isAvailable(): boolean;
   getPositions(spaceId: string): Promise<MetaversePosition>;
 }
 

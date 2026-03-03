@@ -655,11 +655,10 @@ export class AdminService {
 
   private async getQueueStatus(): Promise<'active' | 'error' | 'idle'> {
     try {
-      // Check if there are any failed jobs in recent history
       const failedJobs = await this.prisma.auditLog.count({
         where: {
           action: { startsWith: 'job.failed' },
-          timestamp: { gte: new Date(Date.now() - 60 * 60 * 1000) }, // Last hour
+          timestamp: { gte: new Date(Date.now() - 60 * 60 * 1000) },
         },
       });
 
@@ -667,11 +666,10 @@ export class AdminService {
         return 'error';
       }
 
-      // Check if there are active jobs
       const activeJobs = await this.prisma.auditLog.count({
         where: {
           action: { startsWith: 'job.started' },
-          timestamp: { gte: new Date(Date.now() - 5 * 60 * 1000) }, // Last 5 minutes
+          timestamp: { gte: new Date(Date.now() - 5 * 60 * 1000) },
         },
       });
 

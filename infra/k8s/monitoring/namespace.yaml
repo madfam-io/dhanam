@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: dhanam-monitoring
+  labels:
+    app.kubernetes.io/part-of: dhanam
+    purpose: observability

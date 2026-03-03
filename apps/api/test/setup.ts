@@ -18,8 +18,8 @@ process.env.ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'test-encryption-key-
 process.env.POSTHOG_API_KEY = process.env.POSTHOG_API_KEY || 'test-posthog-api-key';
 process.env.POSTHOG_HOST = process.env.POSTHOG_HOST || 'https://app.posthog.com';
 process.env.SENTRY_DSN = process.env.SENTRY_DSN || '';
-process.env.BELVO_SECRET_ID = process.env.BELVO_SECRET_ID || 'test-belvo-secret';
-process.env.BELVO_SECRET_PASSWORD = process.env.BELVO_SECRET_PASSWORD || 'test-belvo-password';
+process.env.BELVO_SECRET_KEY_ID = process.env.BELVO_SECRET_KEY_ID || 'test-belvo-secret';
+process.env.BELVO_SECRET_KEY_PASSWORD = process.env.BELVO_SECRET_KEY_PASSWORD || 'test-belvo-password';
 process.env.PLAID_CLIENT_ID = process.env.PLAID_CLIENT_ID || 'test-plaid-client';
 process.env.PLAID_SECRET = process.env.PLAID_SECRET || 'test-plaid-secret';
 

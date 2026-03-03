@@ -187,14 +187,14 @@ terraform output
 
 ```bash
 # Build API image
-docker build -f infra/docker/Dockerfile.api -t dhanam-api:latest .
+docker build -f apps/api/Dockerfile -t dhanam-api:latest .
 
 # Build Web image
-docker build -f infra/docker/Dockerfile.web -t dhanam-web:latest .
+docker build -f apps/web/Dockerfile -t dhanam-web:latest .
 
-# Tag images for ECR
-docker tag dhanam-api:latest 123456789012.dkr.ecr.us-east-1.amazonaws.com/dhanam-api:latest
-docker tag dhanam-web:latest 123456789012.dkr.ecr.us-east-1.amazonaws.com/dhanam-web:latest
+# Tag images for GHCR
+docker tag dhanam-api:latest ghcr.io/madfam-org/dhanam/api:latest
+docker tag dhanam-web:latest ghcr.io/madfam-org/dhanam/web:latest
 ```
 
 ### 2. Push to ECR
@@ -279,8 +279,8 @@ PLAID_CLIENT_ID="your-plaid-client-id"
 PLAID_SECRET="your-plaid-secret"
 PLAID_ENV="production"
 
-BELVO_SECRET_ID="your-belvo-secret-id"
-BELVO_SECRET_PASSWORD="your-belvo-password"
+BELVO_SECRET_KEY_ID="your-belvo-secret-key-id"
+BELVO_SECRET_KEY_PASSWORD="your-belvo-secret-key-password"
 BELVO_ENV="production"
 
 BITSO_API_KEY="your-bitso-api-key"

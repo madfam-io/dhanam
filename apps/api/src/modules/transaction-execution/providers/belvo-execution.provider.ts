@@ -107,11 +107,11 @@ export class BelvoExecutionProvider extends ExecutionProvider {
 
   private initializeBelvoClient() {
     const secretId = this.isProduction
-      ? this.configService.get('BELVO_SECRET_ID')
+      ? this.configService.get('BELVO_SECRET_KEY_ID')
       : this.configService.get('BELVO_SANDBOX_SECRET_ID');
 
     const secretPassword = this.isProduction
-      ? this.configService.get('BELVO_SECRET_PASSWORD')
+      ? this.configService.get('BELVO_SECRET_KEY_PASSWORD')
       : this.configService.get('BELVO_SANDBOX_SECRET_PASSWORD');
 
     if (!secretId || !secretPassword) {

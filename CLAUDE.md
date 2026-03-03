@@ -36,6 +36,7 @@ Dhanam uses **Enclii** (MADFAM's own deployment platform) for ALL production dep
 - `check-migrations.yml` - Database migration validation
 - `publish-packages.yml` - Tag-triggered npm publish to npm.madfam.io (manual dispatch with dry-run)
 - `deploy-enclii.yml`, `deploy-k8s.yml`, `deploy-web-k8s.yml` - Manual/fallback deployment options
+- `deploy-staging.yml` - Auto-deploy staging on push to main
 - Primary production deployment is via **Enclii auto-deploy**, not GitHub Actions
 
 ### Production URLs
@@ -47,7 +48,7 @@ Dhanam uses **Enclii** (MADFAM's own deployment platform) for ALL production dep
 
 ## Project Overview
 
-This is the Dhanam Ledger project - a comprehensive budget and wealth tracking application that unifies personal and business financial management with ESG crypto insights. It targets LATAM-first users with multilingual support (English/Spanish).
+This is the Dhanam Ledger project - a comprehensive budget and wealth tracking application that unifies personal and business financial management with ESG crypto insights. It targets LATAM-first users with multilingual support (English/Spanish/Portuguese).
 
 **Core Features:**
 - Personal and business budgeting with category caps and rules-based auto-categorization
@@ -69,7 +70,7 @@ This is the Dhanam Ledger project - a comprehensive budget and wealth tracking a
 **Monorepo Structure (Turborepo + pnpm):**
 ```
 apps/
-├─ admin/         # Next.js 16 admin dashboard (port 3400)
+├─ admin/         # Next.js 16 admin redirect (see web admin SRE ops center)
 ├─ api/           # NestJS (Fastify) backend (port 4010)
 ├─ mobile/        # React Native + Expo app
 └─ web/           # Next.js 15 user dashboard (port 3040)
@@ -81,7 +82,11 @@ packages/
 ├─ simulations/   # Monte Carlo & scenario analysis engines
 └─ ui/            # Reusable UI components (shadcn-ui)
 infra/
-└─ docker/        # Local dev docker-compose
+├─ docker/        # Local dev docker-compose
+├─ k8s/production/  # K8s manifests (kustomize)
+├─ k8s/staging/     # Staging overlay (1 replica, :main tags)
+├─ k8s/monitoring/  # ServiceMonitor, PrometheusRule, Alertmanager, Grafana dashboards
+└─ k8s/argocd/      # ArgoCD Application CRD for GitOps
 ```
 
 **Tech Stack:**
@@ -131,7 +136,7 @@ turbo test        # Turborepo test
 - ESG scores computed via Dhanam package and cached
 
 **Localization:**
-- Default Spanish (ES) for Mexico region, English elsewhere
+- Default Spanish (ES) for Mexico region, English elsewhere, Portuguese (pt-BR) available
 - Currency formatting for MXN/USD/EUR with Banxico FX rates
 - All user-facing text must support i18n via packages/shared/i18n
 
@@ -183,7 +188,15 @@ Uses the Dhanam package (https://github.com/aldoruizluna/Dhanam) for:
 
 **PostHog Events:** sign_up, onboarding_complete, connect_initiated, connect_success, sync_success, budget_created, rule_created, txn_categorized, alert_fired, view_net_worth, export_data
 
-**Admin Features:** User search, read-only impersonation with audit trails, feature flags, comprehensive audit logging
+**Admin Panel (SRE Ops Center):** Lives at `apps/web/(admin)/admin/` — includes system health, queue management, provider dashboards, compliance (GDPR export/delete, retention), deployment status, billing events, user/space management with audit trails.
+
+## Monitoring & Observability
+
+- **Prometheus**: ServiceMonitor scrapes `/metrics` on port 4300; PrometheusRule CRD wraps alert rules
+- **Alertmanager**: Critical alerts (1h repeat), warnings (12h repeat); receivers for Slack/PagerDuty
+- **Grafana**: Auto-provisioned dashboards for request rate, error rate, p95 latency, auth failures, queue depth, DB/Redis health, pod restarts
+- **Staging**: `infra/k8s/staging/` — 1 replica, `:main` image tags, auto-deployed on push to main
+- **ArgoCD**: GitOps sync from `infra/k8s/production/` with auto-sync, prune, and self-heal
 
 ## Environment Setup
 

@@ -152,8 +152,9 @@ dhanam/
 │   ├── simulations/  # Monte Carlo & scenario analysis engines
 │   └── ui/           # Reusable UI components (shadcn-ui)
 ├── infra/
-│   ├── docker/       # Docker configurations
-│   └── terraform/    # Infrastructure as code
+│   ├── docker/       # Local dev docker-compose
+│   ├── k8s/          # Kubernetes manifests (production, staging, monitoring, argocd)
+│   └── monitoring/   # Alert rules (deprecated — see k8s/monitoring/)
 └── scripts/          # Development scripts
 ```
 
@@ -249,7 +250,7 @@ http://localhost:4010/docs
 
 ## Testing
 
-We maintain 80%+ test coverage across the codebase with comprehensive unit, integration, and E2E tests.
+We maintain 90%+ test coverage on the API with comprehensive unit, integration, and E2E tests.
 
 ```bash
 # Run all tests
@@ -282,23 +283,35 @@ For detailed testing documentation, see:
 
 ## Deployment
 
-The application is deployed via Enclii to bare metal K8s:
+The application is deployed via **Enclii** to bare metal K8s (GitOps with ArgoCD):
 
-1. Build Docker images
-   ```bash
-   docker build -f infra/docker/Dockerfile.api -t dhanam-api .
-   docker build -f infra/docker/Dockerfile.web -t dhanam-web .
-   ```
+1. **Production**: Push to `main` → Enclii auto-deploys with pinned image digests
+2. **Staging**: Push to `main` → `deploy-staging.yml` applies `infra/k8s/staging/` (1 replica, `:main` tags)
+3. **Manual/Emergency**: Use `deploy-enclii.yml` or `deploy-k8s.yml` workflows
 
-2. Deploy with Terraform
-   ```bash
-   cd infra/terraform
-   terraform init
-   terraform plan
-   terraform apply
-   ```
+```bash
+# Build Docker images (for local testing)
+docker build -f apps/api/Dockerfile -t dhanam-api .
+docker build -f apps/web/Dockerfile -t dhanam-web .
+```
 
 For complete deployment instructions, see [Deployment Guide](docs/DEPLOYMENT.md).
+
+## Monitoring & Observability
+
+- **Prometheus**: ServiceMonitor + PrometheusRule CRDs in `infra/k8s/monitoring/`
+- **Alertmanager**: Routing for critical (1h) and warning (12h) alerts
+- **Grafana**: Auto-provisioned dashboards for request rate, latency, errors, queues, DB/Redis health
+- **ArgoCD**: GitOps sync from `infra/k8s/production/` — see `infra/k8s/argocd/README.md`
+
+## Admin Panel (SRE Ops Center)
+
+The admin panel at `apps/web/(admin)/admin/` provides:
+- System health monitoring (DB, Redis, queues, providers)
+- Queue management (stats, retry failed, clear)
+- Provider dashboard (health, latency, rate limits)
+- GDPR compliance (data export, right-to-deletion)
+- User/space management with audit trails
 
 ## Documentation
 

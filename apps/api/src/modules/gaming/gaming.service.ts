@@ -52,8 +52,9 @@ export class GamingService {
     const cached = await this.redis.get(cacheKey);
     if (cached) return JSON.parse(cached);
 
+    const availableAdapters = this.adapters.filter((a) => a.isAvailable());
     const positions = await Promise.allSettled(
-      this.adapters.map((adapter) => adapter.getPositions(spaceId))
+      availableAdapters.map((adapter) => adapter.getPositions(spaceId))
     );
 
     const resolved = positions
@@ -93,11 +94,13 @@ export class GamingService {
     platform: MetaversePlatform;
     chain: BlockchainNetwork;
     tokens: string[];
+    available: boolean;
   }> {
     return this.adapters.map((a) => ({
       platform: a.platform,
       chain: a.chain,
       tokens: a.supportedTokens,
+      available: a.isAvailable(),
     }));
   }
 

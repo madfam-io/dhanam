@@ -29,33 +29,22 @@ describe('AxieAdapter', () => {
     expect(adapter.supportedTokens).toEqual(['AXS', 'SLP', 'RONIN']);
   });
 
+  it('should not be available (coming soon)', () => {
+    expect(adapter.isAvailable()).toBe(false);
+  });
+
   describe('getPositions', () => {
-    it('should return positions with correct structure', async () => {
+    it('should return empty positions', async () => {
       const result = await adapter.getPositions('space-1');
 
       expect(result.platform).toBe('axie');
       expect(result.chain).toBe('ronin');
-      expect(result.totalValueUsd).toBeGreaterThan(0);
-      expect(result.tokens).toHaveLength(2);
-      expect(result.nfts).toHaveLength(3);
-      expect(result.earnings).toHaveLength(3);
-    });
-
-    it('should include guild information', async () => {
-      const result = await adapter.getPositions('space-1');
-
-      expect(result.guild).toBeDefined();
-      expect(result.guild!.guildName).toBe('Ronin Raiders');
-      expect(result.guild!.role).toBe('manager');
-      expect(result.guild!.scholarCount).toBe(5);
-    });
-
-    it('should include scholarship earnings', async () => {
-      const result = await adapter.getPositions('space-1');
-
-      const scholarship = result.earnings.find((e) => e.source === 'scholarship');
-      expect(scholarship).toBeDefined();
-      expect(scholarship!.monthlyAmountUsd).toBe(200);
+      expect(result.totalValueUsd).toBe(0);
+      expect(result.tokens).toEqual([]);
+      expect(result.staking).toEqual([]);
+      expect(result.land).toEqual([]);
+      expect(result.nfts).toEqual([]);
+      expect(result.earnings).toEqual([]);
     });
   });
 });
