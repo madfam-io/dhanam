@@ -7,6 +7,7 @@ import { Badge } from '@dhanam/ui';
 import { CreditCard, ExternalLink, Loader2, Crown, Zap, Calendar, Receipt } from 'lucide-react';
 import { billingApi, BillingEvent } from '@/lib/api/billing';
 import { UsageOverview } from '@/components/billing/UsageIndicator';
+import { MFAGate } from '@/components/billing/MFAGate';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useState } from 'react';
@@ -50,6 +51,7 @@ export default function BillingPage() {
   useTranslation('dashboard');
   const router = useRouter();
   const [isOpeningPortal, setIsOpeningPortal] = useState(false);
+  const [showMFAChallenge, setShowMFAChallenge] = useState(false);
 
   const { data: status, isLoading: statusLoading } = useQuery({
     queryKey: ['billing-status'],
@@ -143,7 +145,7 @@ export default function BillingPage() {
             {(tier === 'essentials' || tier === 'pro') && (
               <Button
                 variant="outline"
-                onClick={handleManageSubscription}
+                onClick={() => setShowMFAChallenge(true)}
                 disabled={isOpeningPortal}
               >
                 {isOpeningPortal ? (
@@ -171,6 +173,15 @@ export default function BillingPage() {
           <UsageOverview />
         </CardContent>
       </Card>
+
+      {/* MFA verification for subscription management */}
+      <MFAGate
+        open={showMFAChallenge}
+        onOpenChange={setShowMFAChallenge}
+        onVerified={handleManageSubscription}
+      >
+        <span />
+      </MFAGate>
 
       {/* Billing History */}
       <Card>
