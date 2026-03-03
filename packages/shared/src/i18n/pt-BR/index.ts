@@ -24,5 +24,6 @@ export { assets } from './assets';
 export { goals } from './goals';
 export { gaming } from './gaming';
 export { esg } from './esg';
+export { legal } from './legal';
 export { analytics } from './analytics';
 export { reports } from './reports';

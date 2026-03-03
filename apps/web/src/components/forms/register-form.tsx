@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import Link from 'next/link';
-import { Button, Input, Label } from '@dhanam/ui';
+import { Button, Checkbox, Input, Label } from '@dhanam/ui';
 import { RegisterDto, useTranslation } from '@dhanam/shared';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useGeoDefaults } from '@/lib/hooks/use-geo-defaults';
@@ -34,6 +34,9 @@ export function RegisterForm({ onSubmit, isLoading }: RegisterFormProps) {
         name: z.string().min(2, tv('nameMinLength', { min: '2' })),
         locale: z.enum(['en', 'es', 'pt-BR']).optional(),
         timezone: z.string().optional(),
+        acceptTerms: z.literal(true, {
+          message: tv('termsRequired'),
+        }),
       }),
     [tv]
   );
@@ -41,17 +44,25 @@ export function RegisterForm({ onSubmit, isLoading }: RegisterFormProps) {
   const {
     register,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors },
-  } = useForm<RegisterDto>({
+  } = useForm<RegisterDto & { acceptTerms: boolean }>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
       locale: geo.locale,
       timezone: geo.timezone,
+      acceptTerms: false,
     },
   });
 
+  const acceptTerms = watch('acceptTerms');
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <form
+      onSubmit={handleSubmit(({ acceptTerms: _accept, ...data }) => onSubmit(data))}
+      className="space-y-4"
+    >
       <div className="space-y-2">
         <Label htmlFor="name">{t('fullName')}</Label>
         <Input
@@ -109,16 +120,35 @@ export function RegisterForm({ onSubmit, isLoading }: RegisterFormProps) {
         )}
       </Button>
 
-      <p className="text-xs text-center text-muted-foreground">
-        {t('agreementPrefix')}{' '}
-        <Link href="/terms" className="underline">
-          {t('termsOfService')}
-        </Link>{' '}
-        {tc('and')}{' '}
-        <Link href="/privacy" className="underline">
-          {t('privacyPolicy')}
-        </Link>
-      </p>
+      <div className="space-y-2">
+        <div className="flex items-start gap-2">
+          <Checkbox
+            id="acceptTerms"
+            checked={acceptTerms}
+            onCheckedChange={(checked) =>
+              setValue('acceptTerms', checked === true, { shouldValidate: true })
+            }
+            disabled={isLoading}
+            className="mt-0.5"
+          />
+          <Label
+            htmlFor="acceptTerms"
+            className="text-xs text-muted-foreground font-normal leading-tight cursor-pointer"
+          >
+            {t('agreementPrefix')}{' '}
+            <Link href="/terms" className="underline hover:text-foreground">
+              {t('termsOfService')}
+            </Link>{' '}
+            {tc('and')}{' '}
+            <Link href="/privacy" className="underline hover:text-foreground">
+              {t('privacyPolicy')}
+            </Link>
+          </Label>
+        </div>
+        {errors.acceptTerms && (
+          <p className="text-sm text-destructive">{errors.acceptTerms.message}</p>
+        )}
+      </div>
     </form>
   );
 }

@@ -249,4 +249,11 @@ export const common = {
       exportCsv: 'Export CSV',
     },
   },
+  // Cookie consent
+  cookieConsent: {
+    message: 'We use cookies to analyze site usage and improve your experience.',
+    accept: 'Accept',
+    reject: 'Reject',
+    learnMore: 'Learn more',
+  },
 } as const;

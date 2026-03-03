@@ -3,7 +3,30 @@
 # =============================================================================
 # Routes critical alerts with 1h repeat, warnings with 12h repeat.
 # Replace placeholder webhook URLs with real Slack/PagerDuty endpoints.
+#
+# SETUP INSTRUCTIONS:
+# -------------------
+# 1. Create two Slack channels:
+#    - #dhanam-alerts-critical  (for P1/critical alerts — pod crashes, DB down, auth failures)
+#    - #dhanam-alerts           (for P2/warning alerts — high latency, queue depth, memory pressure)
+#
+# 2. Create Slack Incoming Webhooks:
+#    - Go to https://api.slack.com/apps → Create New App → Incoming Webhooks
+#    - Create one webhook per channel
+#    - Webhook URL format: https://hooks.slack.com/services/<WORKSPACE_ID>/<BOT_ID>/<TOKEN>
+#
+# 3. (Optional) Create a PagerDuty service for critical alerts:
+#    - Go to PagerDuty → Services → New Service
+#    - Integration type: "Events API v2"
+#    - Copy the Integration Key (32-char hex string)
+#    - Service Key format: 32-character hexadecimal string (e.g., a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4)
+#
+# 4. Replace placeholder URLs below with actual webhook URLs
+#    - Or use kubectl create secret to inject at deploy time
+#
+# 5. Apply: kubectl apply -f alertmanager-config.yaml
 # =============================================================================
+
 apiVersion: v1
 kind: Secret
 metadata:
@@ -41,31 +64,55 @@ stringData:
             send_resolved: true
 
       - name: critical
-        # TODO: Replace with real Slack/PagerDuty webhook
+        # ---------------------------------------------------------------
+        # CRITICAL RECEIVER — Slack channel: #dhanam-alerts-critical
+        # ---------------------------------------------------------------
+        # Triggers on: pod crashes, database unreachable, auth failure
+        # spikes, provider connection failures, queue backlog > threshold
+        #
+        # Option A: Slack webhook (recommended for initial setup)
+        # Uncomment and replace <SLACK_WEBHOOK_URL> with your webhook URL:
+        # Format: https://hooks.slack.com/services/T.../B.../xxx
+        #
+        # Option B: PagerDuty (recommended for on-call rotation)
+        # Uncomment and replace <PAGERDUTY_SERVICE_KEY> with integration key:
+        # Format: 32-character hex string from PagerDuty Events API v2
+        # ---------------------------------------------------------------
         webhook_configs:
           - url: 'http://placeholder-webhook/critical'
             send_resolved: true
-        # Uncomment and configure for PagerDuty:
+        # Uncomment for PagerDuty:
         # pagerduty_configs:
         #   - service_key: '<PAGERDUTY_SERVICE_KEY>'
         #     severity: critical
-        # Uncomment and configure for Slack:
+        # Uncomment for Slack:
         # slack_configs:
         #   - api_url: '<SLACK_WEBHOOK_URL>'
         #     channel: '#dhanam-alerts-critical'
-        #     title: '{{ .CommonAnnotations.summary }}'
+        #     title: '🚨 [CRITICAL] {{ .CommonAnnotations.summary }}'
         #     text: '{{ .CommonAnnotations.description }}'
+        #     send_resolved: true
 
       - name: warning
+        # ---------------------------------------------------------------
+        # WARNING RECEIVER — Slack channel: #dhanam-alerts
+        # ---------------------------------------------------------------
+        # Triggers on: high p95 latency, memory pressure, queue depth
+        # warnings, elevated error rates, certificate expiry warnings
+        #
+        # Uncomment and replace <SLACK_WEBHOOK_URL> with your webhook URL:
+        # Format: https://hooks.slack.com/services/T.../B.../xxx
+        # ---------------------------------------------------------------
         webhook_configs:
           - url: 'http://placeholder-webhook/warning'
             send_resolved: true
-        # Uncomment and configure for Slack:
+        # Uncomment for Slack:
         # slack_configs:
         #   - api_url: '<SLACK_WEBHOOK_URL>'
         #     channel: '#dhanam-alerts'
-        #     title: '{{ .CommonAnnotations.summary }}'
+        #     title: '⚠️ [WARNING] {{ .CommonAnnotations.summary }}'
         #     text: '{{ .CommonAnnotations.description }}'
+        #     send_resolved: true
 
     inhibit_rules:
       - source_match:

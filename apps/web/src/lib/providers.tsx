@@ -8,6 +8,7 @@ import { PreferencesProvider } from '~/contexts/PreferencesContext';
 import PostHogProvider from '~/providers/PostHogProvider';
 import { JanuaAuthBridge } from '~/providers/JanuaAuthBridge';
 import { useState } from 'react';
+import { CookieConsentBanner } from '~/components/cookie-consent-banner';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -38,6 +39,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
                 <PreferencesProvider>{children as any}</PreferencesProvider>
               </AuthProvider>
             </JanuaAuthBridge>
+            <CookieConsentBanner />
           </PostHogProvider>
         </ThemeProvider>
       </I18nProvider>

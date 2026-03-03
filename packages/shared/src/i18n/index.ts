@@ -35,6 +35,7 @@ export const translations = {
     esg: en.esg,
     analytics: en.analytics,
     reports: en.reports,
+    legal: en.legal,
   },
   es: {
     common: es.common,
@@ -61,6 +62,7 @@ export const translations = {
     esg: es.esg,
     analytics: es.analytics,
     reports: es.reports,
+    legal: es.legal,
   },
   'pt-BR': {
     common: ptBR.common,
@@ -87,6 +89,7 @@ export const translations = {
     esg: ptBR.esg,
     analytics: ptBR.analytics,
     reports: ptBR.reports,
+    legal: ptBR.legal,
   },
 } as const;
 

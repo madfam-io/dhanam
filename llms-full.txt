@@ -32,6 +32,7 @@ Dhanam Ledger unifies personal and business financial management with ESG crypto
 - **Household Views**: Yours/Mine/Ours ownership filtering with joint/individual/trust account types
 - **Document Storage**: Cloudflare R2-backed attachments for manual assets
 - **Multi-Platform**: Web dashboard (Next.js 15), admin console (Next.js 16), and mobile app (React Native + Expo)
+- **Legal & Compliance**: Privacy policy, terms of service, cookie policy, security disclosure, and ESG methodology pages with full i18n (EN/ES/PT-BR). Cookie consent banner with PostHog opt-in/out. Terms acceptance checkbox on registration.
 
 ### Production Status
 
@@ -341,7 +342,18 @@ Configuration in `.enclii.yml`:
 ### Kubernetes Resources
 
 Namespace `dhanam` with deployments: dhanam-api, dhanam-web, dhanam-admin.
-Secrets: dhanam-secrets, dhanam-billing-secrets, ghcr-credentials.
+Secrets: dhanam-secrets, dhanam-billing-secrets, dhanam-provider-secrets, dhanam-janua-secrets, ghcr-credentials.
+
+### Launch Operations
+
+See `docs/LAUNCH_OPERATIONS.md` for the complete production launch runbook covering:
+- Critical path timeline (8 weeks, Belvo/Plaid longest lead)
+- Corporate/legal foundation (RFC, Acta Constitutiva, IMPI trademark)
+- Legal compliance (LFPDPPP, CNBV assessment)
+- External account creation (14 services with credential outputs)
+- Infrastructure provisioning and DNS
+- App store submissions (Apple + Google Play)
+- Go-to-market sequence (soft launch MX → public MX → US → global)
 
 ### GitHub Actions CI/CD
 

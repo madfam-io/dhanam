@@ -40,6 +40,7 @@
 ## Deployment
 
 - [Deployment Guide](https://github.com/madfam-org/dhanam/blob/main/docs/DEPLOYMENT.md): Production deployment via Enclii, fallback options, and infrastructure details
+- [Launch Operations Runbook](https://github.com/madfam-org/dhanam/blob/main/docs/LAUNCH_OPERATIONS.md): Complete production launch checklist — legal, accounts, infra, app stores, go-to-market
 - [Enclii Configuration](https://github.com/madfam-org/dhanam/blob/main/.enclii.yml): Service definition, domains, autoscaling, SLOs
 
 ## Security

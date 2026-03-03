@@ -69,6 +69,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang={locale} suppressHydrationWarning>
       <head>
+        <link rel="icon" href="/favicon.ico" sizes="32x32" />
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="alternate" hrefLang="es" href="https://dhan.am/es" />
         <link rel="alternate" hrefLang="en" href="https://dhan.am/en" />
         <link rel="alternate" hrefLang="pt-BR" href="https://dhan.am/pt-BR" />

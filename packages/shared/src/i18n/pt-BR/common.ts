@@ -260,4 +260,11 @@ export const common = {
   version: 'Versão',
   language: 'Idioma',
   timezone: 'Fuso horário',
+  // Cookie consent
+  cookieConsent: {
+    message: 'Usamos cookies para analisar o uso do site e melhorar sua experiência.',
+    accept: 'Aceitar',
+    reject: 'Rejeitar',
+    learnMore: 'Saiba mais',
+  },
 } as const;
