@@ -55,7 +55,7 @@ importers:
         version: link:../../packages/ui
       next:
         specifier: 15.5.11
-        version: 15.5.11(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        version: 15.5.11(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react:
         specifier: 18.3.1
         version: 18.3.1
@@ -519,8 +519,8 @@ importers:
         specifier: ^3.10.0
         version: 3.10.0(react-hook-form@7.71.2(react@18.3.1))
       '@janua/react-sdk':
-        specifier: 0.1.0
-        version: 0.1.0(axios@1.13.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: 0.1.1
+        version: 0.1.1(axios@1.13.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@radix-ui/react-alert-dialog':
         specifier: ^1.1.15
         version: 1.1.15(@types/react-dom@18.3.7(@types/react@18.3.28))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -598,7 +598,7 @@ importers:
         version: 0.563.0(react@18.3.1)
       next:
         specifier: 15.5.11
-        version: 15.5.11(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        version: 15.5.11(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       next-themes:
         specifier: ^0.4.6
         version: 0.4.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -2494,14 +2494,14 @@ packages:
     resolution: {integrity: sha512-ZXRY4jNvVgSVQ8DL3LTcakaAtXwTVUxE81hslsyD2AtoXW/wVob10HkOJ1X/pAlcI7D+2YoZKg5do8G/w6RYgA==}
     engines: {node: '>=8'}
 
-  '@janua/react-sdk@0.1.0':
-    resolution: {integrity: sha512-Or8TKjaWpQ5lzbXjT4AK8w8p1DEMWvyCqrjXT/jonEl3uUaymx6d8x3qTIMRFoivvtEOfCvq6KgeExQRBPk68A==}
+  '@janua/react-sdk@0.1.1':
+    resolution: {integrity: sha512-SyezNtV3YyjtYheR0KvQPpnikU1zL+o2EJw1iKd8gzx5q+RdtY3knryk9AOGl2JUf3JkSY9KTBJ25LOqmKaEBw==}
     peerDependencies:
       react: 18.3.1
       react-dom: 18.3.1
 
-  '@janua/typescript-sdk@0.1.0':
-    resolution: {integrity: sha512-BNONPPmDC1Qchu+WKyhcPE1Pc2OLfugRYsHf6gEogh/SPtuxCsbSCUdtLXSgVPyEEx2Q4ydUkgqkRRe4zDOZRw==}
+  '@janua/typescript-sdk@0.1.1':
+    resolution: {integrity: sha512-Pgo8koAeukckHPGF2W18w7ToAppG4dVmv2YaaRwbwSRWh6k5ZKlt3zojHEwU2qk4do0nGY/xlQknoq/y4KfeQA==}
     engines: {node: '>=16.0.0'}
     peerDependencies:
       '@apollo/client': ^3.8.0
@@ -13021,9 +13021,9 @@ snapshots:
 
   '@istanbuljs/schema@0.1.3': {}
 
-  '@janua/react-sdk@0.1.0(axios@1.13.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+  '@janua/react-sdk@0.1.1(axios@1.13.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
-      '@janua/typescript-sdk': 0.1.0(axios@1.13.5)
+      '@janua/typescript-sdk': 0.1.1(axios@1.13.5)
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
     transitivePeerDependencies:
@@ -13032,7 +13032,7 @@ snapshots:
       - graphql
       - graphql-ws
 
-  '@janua/typescript-sdk@0.1.0(axios@1.13.5)':
+  '@janua/typescript-sdk@0.1.1(axios@1.13.5)':
     optionalDependencies:
       axios: 1.13.5
 
@@ -13053,6 +13053,42 @@ snapshots:
       jest-message-util: 30.2.0
       jest-util: 30.2.0
       slash: 3.0.0
+
+  '@jest/core@30.2.0':
+    dependencies:
+      '@jest/console': 30.2.0
+      '@jest/pattern': 30.0.1
+      '@jest/reporters': 30.2.0
+      '@jest/test-result': 30.2.0
+      '@jest/transform': 30.2.0
+      '@jest/types': 30.2.0
+      '@types/node': 20.19.34
+      ansi-escapes: 4.3.2
+      chalk: 4.1.2
+      ci-info: 4.4.0
+      exit-x: 0.2.2
+      graceful-fs: 4.2.11
+      jest-changed-files: 30.2.0
+      jest-config: 30.2.0(@types/node@20.19.34)
+      jest-haste-map: 30.2.0
+      jest-message-util: 30.2.0
+      jest-regex-util: 30.0.1
+      jest-resolve: 30.2.0
+      jest-resolve-dependencies: 30.2.0
+      jest-runner: 30.2.0
+      jest-runtime: 30.2.0
+      jest-snapshot: 30.2.0
+      jest-util: 30.2.0
+      jest-validate: 30.2.0
+      jest-watcher: 30.2.0
+      micromatch: 4.0.8
+      pretty-format: 30.2.0
+      slash: 3.0.0
+    transitivePeerDependencies:
+      - babel-plugin-macros
+      - esbuild-register
+      - supports-color
+      - ts-node
 
   '@jest/core@30.2.0(ts-node@10.9.2(@types/node@20.19.34)(typescript@5.9.3))':
     dependencies:
@@ -19093,13 +19129,13 @@ snapshots:
 
   jest-cli@30.2.0(@types/node@20.19.34):
     dependencies:
-      '@jest/core': 30.2.0(ts-node@10.9.2(@types/node@20.19.34)(typescript@5.9.3))
+      '@jest/core': 30.2.0
       '@jest/test-result': 30.2.0
       '@jest/types': 30.2.0
       chalk: 4.1.2
       exit-x: 0.2.2
       import-local: 3.2.0
-      jest-config: 30.2.0(@types/node@20.19.34)(ts-node@10.9.2(@types/node@20.19.34)(typescript@5.9.3))
+      jest-config: 30.2.0(@types/node@20.19.34)
       jest-util: 30.2.0
       jest-validate: 30.2.0
       yargs: 17.7.2
@@ -19147,6 +19183,38 @@ snapshots:
       - esbuild-register
       - supports-color
       - ts-node
+
+  jest-config@30.2.0(@types/node@20.19.34):
+    dependencies:
+      '@babel/core': 7.29.0
+      '@jest/get-type': 30.1.0
+      '@jest/pattern': 30.0.1
+      '@jest/test-sequencer': 30.2.0
+      '@jest/types': 30.2.0
+      babel-jest: 30.2.0(@babel/core@7.29.0)
+      chalk: 4.1.2
+      ci-info: 4.4.0
+      deepmerge: 4.3.1
+      glob: 13.0.6
+      graceful-fs: 4.2.11
+      jest-circus: 30.2.0
+      jest-docblock: 30.2.0
+      jest-environment-node: 30.2.0
+      jest-regex-util: 30.0.1
+      jest-resolve: 30.2.0
+      jest-runner: 30.2.0
+      jest-util: 30.2.0
+      jest-validate: 30.2.0
+      micromatch: 4.0.8
+      parse-json: 5.2.0
+      pretty-format: 30.2.0
+      slash: 3.0.0
+      strip-json-comments: 3.1.1
+    optionalDependencies:
+      '@types/node': 20.19.34
+    transitivePeerDependencies:
+      - babel-plugin-macros
+      - supports-color
 
   jest-config@30.2.0(@types/node@20.19.34)(ts-node@10.9.2(@types/node@20.19.34)(typescript@5.9.3)):
     dependencies:
@@ -19627,7 +19695,7 @@ snapshots:
 
   jest@30.2.0(@types/node@20.19.34):
     dependencies:
-      '@jest/core': 30.2.0(ts-node@10.9.2(@types/node@20.19.34)(typescript@5.9.3))
+      '@jest/core': 30.2.0
       '@jest/types': 30.2.0
       import-local: 3.2.0
       jest-cli: 30.2.0(@types/node@20.19.34)
@@ -20606,7 +20674,7 @@ snapshots:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
-  next@15.5.11(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+  next@15.5.11(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
       '@next/env': 15.5.11
       '@swc/helpers': 0.5.15
@@ -20614,7 +20682,7 @@ snapshots:
       postcss: 8.4.31
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
-      styled-jsx: 5.1.6(@babel/core@7.29.0)(react@18.3.1)
+      styled-jsx: 5.1.6(react@18.3.1)
     optionalDependencies:
       '@next/swc-darwin-arm64': 15.5.7
       '@next/swc-darwin-x64': 15.5.7
@@ -22259,12 +22327,10 @@ snapshots:
 
   structured-headers@0.4.1: {}
 
-  styled-jsx@5.1.6(@babel/core@7.29.0)(react@18.3.1):
+  styled-jsx@5.1.6(react@18.3.1):
     dependencies:
       client-only: 0.0.1
       react: 18.3.1
-    optionalDependencies:
-      '@babel/core': 7.29.0
 
   sucrase@3.34.0:
     dependencies:
