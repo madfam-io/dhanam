@@ -5,8 +5,8 @@ namespace: dhanam-staging
 
 resources:
   - namespace.yaml
-  - ../production/api-deployment.yaml
-  - ../production/web-deployment.yaml
+  - api-deployment.yaml
+  - web-deployment.yaml
 
 # Staging overrides: 1 replica, :main image tags, NODE_ENV=staging
 patches:
