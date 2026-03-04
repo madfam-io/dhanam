@@ -111,34 +111,34 @@ Advanced test runner with options.
 
 ## Deployment Scripts
 
-### `deploy.sh`
-Deploys the application to AWS.
-- Builds Docker images
-- Pushes to ECR
-- Updates ECS services
-- Runs database migrations
-- Performs health checks
+### `enclii-deploy.sh`
+Triggers an Enclii deployment (fallback when auto-deploy is unavailable).
 
 **Usage:**
 ```bash
-# Deploy to staging
-./scripts/deploy.sh staging
-
-# Deploy to production
-./scripts/deploy.sh production
+./scripts/enclii-deploy.sh
 ```
 
-### `setup-aws.sh`
-Sets up AWS infrastructure.
-- Configures AWS credentials
-- Creates ECR repositories
-- Sets up ECS clusters
-- Configures RDS and ElastiCache
-- Sets up CloudFront distribution
+### `deploy-dhanam.sh`
+Deploys Dhanam services to the K8s cluster.
 
 **Usage:**
 ```bash
-./scripts/setup-aws.sh
+./scripts/deploy-dhanam.sh
+```
+
+### `provision-db.sh`
+Provisions the Dhanam database via the Enclii API (idempotent — safe to re-run).
+- Calls `POST /v1/admin/provision/postgres` on switchyard-api
+- Creates database, role, and extensions if they don't exist
+- Auto-updates PgBouncer configuration
+
+**Usage:**
+```bash
+export ENCLII_API_URL=https://api.enclii.com
+export ENCLII_ADMIN_TOKEN=$(enclii auth token)
+export DB_PASSWORD=<secure-password>
+./scripts/provision-db.sh
 ```
 
 ### `setup-local.sh`
@@ -155,35 +155,6 @@ Sets up local infrastructure with Docker.
 ```
 
 ## Operations Scripts
-
-### `backup.sh`
-Creates database backups.
-- Dumps PostgreSQL database
-- Compresses backup files
-- Uploads to S3 (if configured)
-- Manages backup retention
-
-**Usage:**
-```bash
-# Create local backup
-./scripts/backup.sh
-
-# Backup and upload to S3
-./scripts/backup.sh --upload
-```
-
-### `monitor.sh`
-Monitors application health and metrics.
-- Checks service status
-- Monitors database connections
-- Checks Redis health
-- Reports queue status
-- Displays recent errors
-
-**Usage:**
-```bash
-./scripts/monitor.sh
-```
 
 ### `queue-admin.sh`
 Manages BullMQ job queues.
@@ -254,7 +225,7 @@ Most scripts respect these environment variables:
 - `NODE_ENV`: Environment (development, staging, production)
 - `DATABASE_URL`: PostgreSQL connection string
 - `REDIS_URL`: Redis connection string
-- `AWS_REGION`: AWS region for deployment scripts
+- `ENCLII_API_URL`: Enclii switchyard-api URL (for provisioning)
 
 ### Logging
 Scripts use consistent logging format:

@@ -533,8 +533,19 @@ Mexico's Ley para Regular las Instituciones de Tecnologia Financiera (Ley Fintec
   - PostgreSQL 15+
   - SSL required
   - Daily automated backups with 7-day retention
-- [ ] Create the `dhanam` database and a dedicated user.
-- [ ] Record the connection string: `postgresql://user:pass@host:5432/dhanam`
+- [ ] Create the `dhanam` database and dedicated user **via Enclii provisioning API** (required per Law 7 — do not use raw `kubectl exec`):
+  ```bash
+  # Option A: Use the convenience script
+  export ENCLII_API_URL=https://api.enclii.com
+  export ENCLII_ADMIN_TOKEN=$(enclii auth token)
+  export DB_PASSWORD=<secure-password>
+  ./scripts/provision-db.sh
+
+  # Option B: Use the Enclii CLI
+  enclii onboard --db-name dhanam --db-password "${DB_PASSWORD}"
+  ```
+  The API endpoint (`POST /v1/admin/provision/postgres`) is idempotent — it checks `pg_database`/`pg_roles` before creating, and auto-updates PgBouncer config. Requires `POSTGRES_ADMIN_URL` set on `switchyard-api`. See `docs/DEPLOYMENT.md` for full details.
+- [ ] Record the connection string: `postgresql://dhanam_user:pass@host:5432/dhanam`
 - [ ] Run migrations: `npx prisma migrate deploy` (from `apps/api/`).
 
 **Redis:**

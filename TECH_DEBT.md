@@ -1,6 +1,6 @@
 # Dhanam Tech Debt Log
 
-> **Last Updated**: 2026-03-02
+> **Last Updated**: 2026-03-03
 > **Context**: Production Readiness — Enterprise Hardening
 
 ---
@@ -23,27 +23,23 @@ GHCR workflows now exist with pinned digests. `deploy-enclii.yml` and `deploy-we
 
 ### TD-002: Database Provisioning API
 
-**Status**: MISSING
+**Status**: RESOLVED
 **Severity**: HIGH
 **Violation**: Law 7 (API Mandate)
 
 **Problem**:
 Dhanam database and user were provisioned via `kubectl exec` into postgres pod instead of using a proper API. This violates Law 7: "All tenant operations MUST be performed via Enclii/Janua APIs."
 
-**Evidence**:
-```bash
-# Commands executed during Operation GOVERNOR (2026-01-18)
-kubectl exec -n data postgres-0 -- psql -U enclii -c "CREATE DATABASE dhanam;"
-kubectl exec -n data postgres-0 -- psql -U enclii -c "CREATE USER dhanam_user..."
-```
+**Resolution**:
+The Enclii provisioning API already exists at `POST /v1/admin/provision/postgres` on the `switchyard-api` service. It is idempotent (checks `pg_database`/`pg_roles` before creating), handles PgBouncer config updates, and validates SQL identifiers. The `enclii onboard` CLI also supports `--db-name`/`--db-password` flags.
 
-**Required Action**:
-Implement Enclii Database Provisioning API:
-- `POST /api/v1/databases` - Create database
-- `POST /api/v1/databases/{db}/users` - Create user with permissions
-- `DELETE /api/v1/databases/{db}` - Drop database (with safety checks)
+- Created `scripts/provision-db.sh` as a reproducible wrapper for the Enclii API call
+- Rewrote `docs/DEPLOYMENT.md` to document the Enclii provisioning API as the required method (also removed ~600 lines of stale AWS ECS/Fargate content, related to TD-003)
+- Updated `docs/LAUNCH_OPERATIONS.md` to reference the Enclii provisioning API
 
-**Ticket**: ENCLII-XXX
+**Operational note**: The actual API call to formally re-register the existing database must be run by an operator with admin credentials. The call is idempotent and safe to run against the already-provisioned `dhanam` database.
+
+**Ticket**: DHANAM-004
 
 ---
 
@@ -137,7 +133,7 @@ Created `infra/k8s/argocd/application.yaml` (ArgoCD Application CRD for GitOps s
 | ID | Title | Severity | Status | Assigned |
 |----|-------|----------|--------|----------|
 | TD-001 | GHCR Container Build Workflow | CRITICAL | RESOLVED | - |
-| TD-002 | Database Provisioning API | HIGH | MISSING | - |
+| TD-002 | Database Provisioning API | HIGH | RESOLVED | - |
 | TD-003 | CI/CD Platform Migration | HIGH | RESOLVED | - |
 | TD-004 | Billing Secrets Placeholder | MEDIUM | PLACEHOLDER | - |
 | TD-005 | Enclii Port Mismatch | MEDIUM | RESOLVED | - |

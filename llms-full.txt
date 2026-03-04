@@ -425,11 +425,12 @@ Severity: CVSS v3.1 classification (Critical 9.0+, High 7.0+, Medium 4.0+, Low <
 
 | ID | Title | Severity | Status |
 |----|-------|----------|--------|
-| TD-001 | GHCR Container Build Workflow — K8s manifests reference GHCR images but no CI workflow builds/pushes them | CRITICAL | Missing |
-| TD-002 | Database Provisioning API — DB provisioned via kubectl exec instead of Enclii API | HIGH | Missing |
+| TD-001 | GHCR Container Build Workflow | CRITICAL | Resolved |
+| TD-002 | Database Provisioning API — remediated via Enclii API (`POST /v1/admin/provision/postgres`) | HIGH | Resolved |
+| TD-003 | CI/CD Platform Migration — AWS infrastructure fully removed | HIGH | Resolved |
 | TD-004 | Billing Secrets Placeholder — Stripe/Paddle credentials are placeholder values | MEDIUM | Placeholder |
 
-TD-003 (CI/CD Platform Migration) has been resolved — AWS infrastructure fully removed.
+Database provisioning script: `scripts/provision-db.sh` (calls Enclii API, idempotent).
 
 ---
 
