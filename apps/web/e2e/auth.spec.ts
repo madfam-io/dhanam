@@ -48,6 +48,27 @@ test.describe('Authentication', () => {
   });
 });
 
+test.describe('Forgot Password', () => {
+  test('should display forgot password page', async ({ page }) => {
+    await page.goto('/forgot-password');
+
+    await expect(page.locator('input[type="email"]')).toBeVisible();
+  });
+
+  test('should navigate to forgot password from login', async ({ page }) => {
+    await page.goto('/login');
+    await page.click('a[href="/forgot-password"]');
+    await expect(page).toHaveURL(/\/forgot-password/);
+  });
+
+  test('should have back to login link', async ({ page }) => {
+    await page.goto('/forgot-password');
+
+    const loginLink = page.locator('a[href="/login"]');
+    await expect(loginLink).toBeVisible();
+  });
+});
+
 test.describe('Registration', () => {
   test('should display registration page', async ({ page }) => {
     await page.goto('/register');

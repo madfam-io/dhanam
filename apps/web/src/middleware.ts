@@ -10,6 +10,14 @@ const publicPaths = [
   '/auth/callback', // OAuth callback from Janua SSO
   '/demo',
   '/demo/',
+  // Legal pages (rendered under (legal) route group)
+  '/privacy',
+  '/terms',
+  '/cookies',
+  '/security',
+  '/esg',
+  '/status',
+  '/docs',
 ];
 
 const SUPPORTED_LOCALES = ['es', 'en', 'pt-BR'];

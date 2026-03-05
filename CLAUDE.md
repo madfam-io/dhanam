@@ -41,7 +41,7 @@ Dhanam uses **Enclii** (MADFAM's own deployment platform) for ALL production dep
 
 ### Production URLs
 - Web: `https://app.dhan.am`
-- Admin: `https://admin.dhanam.com`
+- Admin: `https://admin.dhan.am` (deprecated — admin is in web app)
 - API: `https://api.dhan.am`
 
 ---

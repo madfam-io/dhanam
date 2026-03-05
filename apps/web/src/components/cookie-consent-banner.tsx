@@ -42,7 +42,7 @@ export function CookieConsentBanner() {
   if (!visible) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background p-4 shadow-lg">
+    <div className="fixed bottom-0 left-0 right-0 z-[9999] border-t bg-background p-4 shadow-lg">
       <div className="mx-auto flex max-w-4xl flex-col items-center gap-4 sm:flex-row">
         <p className="flex-1 text-sm text-muted-foreground">
           {t('cookieConsent.message')}{' '}

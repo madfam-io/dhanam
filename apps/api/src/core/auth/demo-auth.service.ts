@@ -1,5 +1,5 @@
 import { AUTH_DEFAULTS, getGeoDefaults } from '@dhanam/shared';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 
@@ -87,7 +87,19 @@ export class DemoAuthService {
       throw new NotFoundException(`Unknown persona: ${personaKey}`);
     }
 
-    const user = await this.ensurePersonaExists(personaKey, countryCode);
+    let user: User;
+    try {
+      user = await this.ensurePersonaExists(personaKey, countryCode);
+    } catch (error: unknown) {
+      const prismaError = error as { code?: string };
+      if (prismaError?.code === 'P2021' || prismaError?.code === 'P2010') {
+        throw new ServiceUnavailableException(
+          'Demo mode is temporarily unavailable. Please try again later.'
+        );
+      }
+      throw error;
+    }
+
     const tokens = this.createDemoTokens(user, personaKey);
 
     await this.prisma.auditLog.create({
@@ -113,7 +125,19 @@ export class DemoAuthService {
       throw new NotFoundException(`Unknown persona: ${newPersonaKey}`);
     }
 
-    const user = await this.ensurePersonaExists(newPersonaKey);
+    let user: User;
+    try {
+      user = await this.ensurePersonaExists(newPersonaKey);
+    } catch (error: unknown) {
+      const prismaError = error as { code?: string };
+      if (prismaError?.code === 'P2021' || prismaError?.code === 'P2010') {
+        throw new ServiceUnavailableException(
+          'Demo mode is temporarily unavailable. Please try again later.'
+        );
+      }
+      throw error;
+    }
+
     const tokens = this.createDemoTokens(user, newPersonaKey);
 
     await this.prisma.auditLog.create({

@@ -56,10 +56,12 @@ export function LocaleSwitcher() {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="sm" className="gap-2">
           <Globe className="h-4 w-4" />
-          <span className="hidden sm:inline">
+          <span className="hidden sm:inline" suppressHydrationWarning>
             {currentLocale.flag} {currentLocale.name}
           </span>
-          <span className="sm:hidden">{currentLocale.flag}</span>
+          <span className="sm:hidden" suppressHydrationWarning>
+            {currentLocale.flag}
+          </span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
@@ -69,7 +71,9 @@ export function LocaleSwitcher() {
             onClick={() => handleLocaleChange(l.code)}
             className={locale === l.code ? 'bg-accent' : ''}
           >
-            <span className="mr-2">{l.flag}</span>
+            <span className="mr-2" suppressHydrationWarning>
+              {l.flag}
+            </span>
             <span>{l.name}</span>
             {locale === l.code && (
               <span className="ml-auto text-xs text-muted-foreground">{t('common.active')}</span>

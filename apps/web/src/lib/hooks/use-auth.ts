@@ -184,7 +184,9 @@ if (typeof window !== 'undefined') {
   setTimeout(() => {
     const state = useAuth.getState();
     if (!state._hasHydrated) {
-      console.warn('[useAuth] Hydration timeout - forcing completion');
+      if (process.env.NODE_ENV !== 'production') {
+        console.warn('[useAuth] Hydration timeout - forcing completion');
+      }
       state.setHasHydrated(true);
     }
   }, 500); // localStorage is synchronous - 500ms is sufficient safety margin
