@@ -52,12 +52,10 @@ RUN pnpm --filter @dhanam/config build || true
 RUN pnpm --filter @dhanam/esg build || true
 RUN pnpm --filter @dhanam/simulations build || true
 
-# Generate Prisma client (requires DATABASE_URL for validation in newer Prisma)
+# Generate Prisma client
 WORKDIR /app/apps/api
 ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
-# Remove prisma.config.ts to avoid dotenv dependency during Docker build
-# (DATABASE_URL is set via ENV directive above)
-RUN rm -f prisma.config.ts && npx prisma generate
+RUN npx prisma generate
 
 # Build the application
 RUN pnpm build
@@ -91,6 +89,8 @@ COPY --from=builder --chown=nestjs:nodejs /app/apps/api/dist ./apps/api/dist
 COPY --from=builder --chown=nestjs:nodejs /app/apps/api/prisma ./apps/api/prisma
 COPY --from=builder --chown=nestjs:nodejs /app/apps/api/generated ./apps/api/generated
 COPY --from=builder --chown=nestjs:nodejs /app/apps/api/package.json ./apps/api/package.json
+# prisma.config.ts needed for `prisma migrate deploy` in container
+COPY --from=builder --chown=nestjs:nodejs /app/apps/api/prisma.config.ts ./apps/api/prisma.config.ts
 
 # Create symlinks for Prisma module resolution from generated directory
 # The generated Prisma client requires @prisma/client-runtime-utils which is in pnpm store
