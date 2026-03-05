@@ -6,6 +6,8 @@ resources:
 - api-deployment.yaml
 - admin-deployment.yaml
 - web-deployment.yaml
+- network-policies.yaml
+- pdb.yaml
 
 # Image transformer: maps short names to full GHCR paths
 # CI workflows update these entries with @sha256:... digests after each build

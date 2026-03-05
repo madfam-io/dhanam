@@ -1,0 +1,204 @@
+# =============================================================================
+# Dhanam NetworkPolicies
+# =============================================================================
+# Zero-trust network isolation for dhanam namespace.
+# Default: deny all ingress/egress. Per-service allow rules follow.
+# =============================================================================
+
+# --- Default Deny ---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+  namespace: dhanam
+  labels:
+    app.kubernetes.io/component: network-policy
+    app.kubernetes.io/managed-by: enclii
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-egress
+  namespace: dhanam
+  labels:
+    app.kubernetes.io/component: network-policy
+    app.kubernetes.io/managed-by: enclii
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+
+---
+# --- API Ingress: allow cloudflare-tunnel on port 4300 ---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: dhanam-api-ingress
+  namespace: dhanam
+  labels:
+    app.kubernetes.io/component: network-policy
+    app.kubernetes.io/managed-by: enclii
+spec:
+  podSelector:
+    matchLabels:
+      app: dhanam-api
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: cloudflare-tunnel
+      ports:
+        - port: 4300
+          protocol: TCP
+
+---
+# --- API Egress: DNS, postgres, redis, HTTPS ---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: dhanam-api-egress
+  namespace: dhanam
+  labels:
+    app.kubernetes.io/component: network-policy
+    app.kubernetes.io/managed-by: enclii
+spec:
+  podSelector:
+    matchLabels:
+      app: dhanam-api
+  policyTypes:
+    - Egress
+  egress:
+    # DNS
+    - ports:
+        - port: 53
+          protocol: UDP
+    # PostgreSQL (data namespace)
+    - ports:
+        - port: 5432
+          protocol: TCP
+      to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: data
+          podSelector:
+            matchLabels:
+              app: postgres
+    # Redis (data namespace)
+    - ports:
+        - port: 6379
+          protocol: TCP
+      to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: data
+          podSelector:
+            matchLabels:
+              app: redis
+    # HTTPS (external APIs: Stripe, Belvo, Plaid, etc.)
+    - ports:
+        - port: 443
+          protocol: TCP
+
+---
+# --- Web Ingress: allow cloudflare-tunnel on port 4200 ---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: dhanam-web-ingress
+  namespace: dhanam
+  labels:
+    app.kubernetes.io/component: network-policy
+    app.kubernetes.io/managed-by: enclii
+spec:
+  podSelector:
+    matchLabels:
+      app: dhanam-web
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: cloudflare-tunnel
+      ports:
+        - port: 4200
+          protocol: TCP
+
+---
+# --- Web Egress: DNS, HTTPS ---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: dhanam-web-egress
+  namespace: dhanam
+  labels:
+    app.kubernetes.io/component: network-policy
+    app.kubernetes.io/managed-by: enclii
+spec:
+  podSelector:
+    matchLabels:
+      app: dhanam-web
+  policyTypes:
+    - Egress
+  egress:
+    - ports:
+        - port: 53
+          protocol: UDP
+    - ports:
+        - port: 443
+          protocol: TCP
+
+---
+# --- Admin Ingress: allow cloudflare-tunnel on port 3400 ---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: dhanam-admin-ingress
+  namespace: dhanam
+  labels:
+    app.kubernetes.io/component: network-policy
+    app.kubernetes.io/managed-by: enclii
+spec:
+  podSelector:
+    matchLabels:
+      app: dhanam-admin
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: cloudflare-tunnel
+      ports:
+        - port: 3400
+          protocol: TCP
+
+---
+# --- Admin Egress: DNS, HTTPS ---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: dhanam-admin-egress
+  namespace: dhanam
+  labels:
+    app.kubernetes.io/component: network-policy
+    app.kubernetes.io/managed-by: enclii
+spec:
+  podSelector:
+    matchLabels:
+      app: dhanam-admin
+  policyTypes:
+    - Egress
+  egress:
+    - ports:
+        - port: 53
+          protocol: UDP
+    - ports:
+        - port: 443
+          protocol: TCP
