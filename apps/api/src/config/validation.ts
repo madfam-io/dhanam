@@ -15,49 +15,25 @@ export const validationSchema = Joi.object({
 
   ENCRYPTION_KEY: Joi.string().required().length(32),
 
-  BELVO_SECRET_KEY_ID: Joi.string().when('NODE_ENV', {
-    is: 'production',
-    then: Joi.required(),
-  }),
-  BELVO_SECRET_KEY_PASSWORD: Joi.string().when('NODE_ENV', {
-    is: 'production',
-    then: Joi.required(),
-  }),
+  BELVO_SECRET_KEY_ID: Joi.string().optional().allow(''),
+  BELVO_SECRET_KEY_PASSWORD: Joi.string().optional().allow(''),
   BELVO_ENV: Joi.string().valid('sandbox', 'development', 'production').default('sandbox'),
-  BELVO_WEBHOOK_SECRET: Joi.string().when('NODE_ENV', {
-    is: 'production',
-    then: Joi.required(),
-  }),
+  BELVO_WEBHOOK_SECRET: Joi.string().optional().allow(''),
 
-  PLAID_CLIENT_ID: Joi.string().when('NODE_ENV', {
-    is: 'production',
-    then: Joi.required(),
-  }),
-  PLAID_SECRET: Joi.string().when('NODE_ENV', {
-    is: 'production',
-    then: Joi.required(),
-  }),
+  PLAID_CLIENT_ID: Joi.string().optional().allow(''),
+  PLAID_SECRET: Joi.string().optional().allow(''),
   PLAID_ENV: Joi.string().valid('sandbox', 'development', 'production').default('sandbox'),
-  PLAID_WEBHOOK_SECRET: Joi.string().when('NODE_ENV', {
-    is: 'production',
-    then: Joi.required(),
-  }),
+  PLAID_WEBHOOK_SECRET: Joi.string().optional().allow(''),
 
-  BITSO_API_KEY: Joi.string().when('NODE_ENV', {
-    is: 'production',
-    then: Joi.required(),
-  }),
-  BITSO_API_SECRET: Joi.string().when('NODE_ENV', {
-    is: 'production',
-    then: Joi.required(),
-  }),
+  BITSO_API_KEY: Joi.string().optional().allow(''),
+  BITSO_API_SECRET: Joi.string().optional().allow(''),
 
-  BANXICO_API_TOKEN: Joi.string().optional(),
+  BANXICO_API_TOKEN: Joi.string().optional().allow(''),
 
-  SMTP_HOST: Joi.string().default('localhost'),
+  SMTP_HOST: Joi.string().optional().allow('').default('localhost'),
   SMTP_PORT: Joi.number().default(587),
-  SMTP_USER: Joi.string().allow(''),
-  SMTP_PASS: Joi.string().allow(''),
+  SMTP_USER: Joi.string().optional().allow(''),
+  SMTP_PASS: Joi.string().optional().allow(''),
   EMAIL_FROM: Joi.string().email().default('noreply@dhanam.app'),
 
   POSTHOG_API_KEY: Joi.string().optional(),
