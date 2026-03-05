@@ -23,6 +23,7 @@ jest.mock('@dhanam/ui', () => ({
 const authTranslations: Record<string, string> = {
   email: 'Email',
   password: 'Password',
+  confirmPassword: 'Confirm password',
   fullName: 'Full Name',
   createAccount: 'Create account',
   creatingAccount: 'Creating account...',
@@ -46,6 +47,7 @@ const validationTranslations: Record<string, string> = {
   passwordNumber: 'Password must contain at least one number',
   nameMinLength: 'Name must be at least {{min}} characters',
   termsRequired: 'You must accept the terms and conditions',
+  passwordsDoNotMatch: 'Passwords do not match',
 };
 
 jest.mock('@dhanam/shared', () => ({
@@ -99,6 +101,7 @@ describe('RegisterForm', () => {
     expect(screen.getByLabelText('Full Name')).toBeInTheDocument();
     expect(screen.getByLabelText('Email')).toBeInTheDocument();
     expect(screen.getByLabelText('Password')).toBeInTheDocument();
+    expect(screen.getByLabelText('Confirm password')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Create account' })).toBeInTheDocument();
   });
 
@@ -107,11 +110,12 @@ describe('RegisterForm', () => {
     expect(screen.getByRole('checkbox')).toBeInTheDocument();
   });
 
-  it('should render password toggle button', () => {
+  it('should render password toggle buttons', () => {
     render(<RegisterForm onSubmit={mockOnSubmit} />);
 
-    // Initially shows Eye icon (password hidden)
-    expect(screen.getByTestId('eye-icon')).toBeInTheDocument();
+    // Initially shows Eye icons (passwords hidden) — one for each password field
+    const eyeIcons = screen.getAllByTestId('eye-icon');
+    expect(eyeIcons).toHaveLength(2);
   });
 
   it('should toggle password visibility on click', async () => {
@@ -121,15 +125,16 @@ describe('RegisterForm', () => {
     const passwordInput = screen.getByLabelText('Password');
     expect(passwordInput).toHaveAttribute('type', 'password');
 
-    // Click toggle
-    const toggleButton = screen.getByTestId('eye-icon').closest('button')!;
+    // Click toggle (first eye icon belongs to Password field)
+    const eyeIcons = screen.getAllByTestId('eye-icon');
+    const toggleButton = eyeIcons[0].closest('button')!;
     await user.click(toggleButton);
 
     expect(passwordInput).toHaveAttribute('type', 'text');
-    expect(screen.getByTestId('eye-off-icon')).toBeInTheDocument();
 
     // Click again to hide
-    const toggleAgain = screen.getByTestId('eye-off-icon').closest('button')!;
+    const eyeOffIcon = screen.getByTestId('eye-off-icon');
+    const toggleAgain = eyeOffIcon.closest('button')!;
     await user.click(toggleAgain);
 
     expect(passwordInput).toHaveAttribute('type', 'password');
@@ -215,6 +220,7 @@ describe('RegisterForm', () => {
     await user.type(screen.getByLabelText('Full Name'), 'John Doe');
     await user.type(screen.getByLabelText('Email'), 'john@example.com');
     await user.type(screen.getByLabelText('Password'), 'Password1');
+    await user.type(screen.getByLabelText('Confirm password'), 'Password1');
 
     const checkbox = screen.getByRole('checkbox');
     await user.click(checkbox);
@@ -233,9 +239,10 @@ describe('RegisterForm', () => {
       );
     });
 
-    // Verify acceptTerms is NOT passed to onSubmit
+    // Verify acceptTerms and confirmPassword are NOT passed to onSubmit
     const submittedData = mockOnSubmit.mock.calls[0][0];
     expect(submittedData).not.toHaveProperty('acceptTerms');
+    expect(submittedData).not.toHaveProperty('confirmPassword');
   });
 
   // Skipped: ZodError from z.literal(true) propagates through jsdom event system
@@ -265,6 +272,7 @@ describe('RegisterForm', () => {
     expect(screen.getByLabelText('Full Name')).toBeDisabled();
     expect(screen.getByLabelText('Email')).toBeDisabled();
     expect(screen.getByLabelText('Password')).toBeDisabled();
+    expect(screen.getByLabelText('Confirm password')).toBeDisabled();
     expect(screen.getByRole('checkbox')).toBeDisabled();
   });
 

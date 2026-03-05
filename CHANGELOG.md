@@ -9,9 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Golden-ratio design token system for UI consistency
+- Cookie consent banner (GDPR/LATAM compliance) in root layout
+- Mobile hamburger menu on landing page navigation
+- Custom 404 page with back-to-home link
+- Confirm password field on registration form with match validation
+- Explicit `<meta charset="utf-8" />` in root layout for PT-BR diacritics
 
 ### Fixed
 - RangeError in Bitso webhook signature verification
+- www.dhan.am redirect including port number (`url.host` → `url.hostname`)
+- Duplicate H1 on landing page (nav brand changed from `<h1>` to `<span>`)
+- CSP blocking Cloudflare Insights (`script-src` and `connect-src` updated)
+- useAuth hydration timeout using `requestIdleCallback` instead of `setTimeout`
 
 ## [0.2.0] - 2025-01-24
 

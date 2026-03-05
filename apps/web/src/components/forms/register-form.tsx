@@ -17,6 +17,7 @@ interface RegisterFormProps {
 
 export function RegisterForm({ onSubmit, isLoading }: RegisterFormProps) {
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const geo = useGeoDefaults();
   const { t } = useTranslation('auth');
   const { t: tc } = useTranslation('common');
@@ -24,20 +25,26 @@ export function RegisterForm({ onSubmit, isLoading }: RegisterFormProps) {
 
   const registerSchema = useMemo(
     () =>
-      z.object({
-        email: z.string().email(tv('emailInvalid')),
-        password: z
-          .string()
-          .min(8, tv('passwordMinLength', { min: '8' }))
-          .regex(/[A-Z]/, tv('passwordUppercase'))
-          .regex(/[0-9]/, tv('passwordNumber')),
-        name: z.string().min(2, tv('nameMinLength', { min: '2' })),
-        locale: z.enum(['en', 'es', 'pt-BR']).optional(),
-        timezone: z.string().optional(),
-        acceptTerms: z.literal(true, {
-          message: tv('termsRequired'),
+      z
+        .object({
+          email: z.string().email(tv('emailInvalid')),
+          password: z
+            .string()
+            .min(8, tv('passwordMinLength', { min: '8' }))
+            .regex(/[A-Z]/, tv('passwordUppercase'))
+            .regex(/[0-9]/, tv('passwordNumber')),
+          confirmPassword: z.string(),
+          name: z.string().min(2, tv('nameMinLength', { min: '2' })),
+          locale: z.enum(['en', 'es', 'pt-BR']).optional(),
+          timezone: z.string().optional(),
+          acceptTerms: z.literal(true, {
+            message: tv('termsRequired'),
+          }),
+        })
+        .refine((data) => data.password === data.confirmPassword, {
+          message: tv('passwordsDoNotMatch'),
+          path: ['confirmPassword'],
         }),
-      }),
     [tv]
   );
 
@@ -47,7 +54,7 @@ export function RegisterForm({ onSubmit, isLoading }: RegisterFormProps) {
     setValue,
     watch,
     formState: { errors },
-  } = useForm<RegisterDto & { acceptTerms: boolean }>({
+  } = useForm<RegisterDto & { acceptTerms: boolean; confirmPassword: string }>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
       locale: geo.locale,
@@ -60,7 +67,9 @@ export function RegisterForm({ onSubmit, isLoading }: RegisterFormProps) {
 
   return (
     <form
-      onSubmit={handleSubmit(({ acceptTerms: _accept, ...data }) => onSubmit(data))}
+      onSubmit={handleSubmit(({ acceptTerms: _accept, confirmPassword: _confirm, ...data }) =>
+        onSubmit(data)
+      )}
       className="space-y-4"
     >
       <div className="space-y-2">
@@ -107,6 +116,29 @@ export function RegisterForm({ onSubmit, isLoading }: RegisterFormProps) {
         </div>
         {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
         <p className="text-xs text-muted-foreground">{t('passwordHelp')}</p>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="confirmPassword">{t('confirmPassword')}</Label>
+        <div className="relative">
+          <Input
+            id="confirmPassword"
+            type={showConfirmPassword ? 'text' : 'password'}
+            placeholder={t('confirmPassword')}
+            {...register('confirmPassword')}
+            disabled={isLoading}
+          />
+          <button
+            type="button"
+            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+          >
+            {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+          </button>
+        </div>
+        {errors.confirmPassword && (
+          <p className="text-sm text-destructive">{errors.confirmPassword.message}</p>
+        )}
       </div>
 
       <Button type="submit" className="w-full" disabled={isLoading}>

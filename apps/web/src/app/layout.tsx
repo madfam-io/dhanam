@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google';
 import { cookies } from 'next/headers';
 import { Providers } from '~/lib/providers';
 import { Toaster } from 'sonner';
+import { CookieConsentBanner } from '~/components/cookie-consent-banner';
 import '~/styles/globals.css';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -69,6 +70,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang={locale} suppressHydrationWarning>
       <head>
+        <meta charSet="utf-8" />
         <link rel="icon" href="/favicon.ico" sizes="32x32" />
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
@@ -88,6 +90,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className={inter.className}>
         <Providers>{children}</Providers>
         <Toaster />
+        <CookieConsentBanner />
       </body>
     </html>
   );

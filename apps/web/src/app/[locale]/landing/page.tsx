@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { useAuth } from '@/lib/hooks/use-auth';
 import { Button } from '@dhanam/ui';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { useTranslation } from '@dhanam/shared';
-import { Globe } from 'lucide-react';
+import { Globe, Menu, X } from 'lucide-react';
 
 import { Hero } from '@/components/landing/hero';
 import { PersonaCards } from '@/components/landing/persona-cards';
@@ -27,6 +27,7 @@ export default function LocaleLandingPage() {
   const analytics = useAnalytics();
   const { t } = useTranslation('landing');
 
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const appUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://app.dhan.am';
 
   useEffect(() => {
@@ -96,10 +97,10 @@ export default function LocaleLandingPage() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Globe className="h-6 w-6 text-primary" />
-            <h1 className="text-2xl font-bold">Dhanam</h1>
+            <span className="text-2xl font-bold">Dhanam</span>
           </div>
-          <div className="flex items-center gap-4">
-            {/* Locale switcher */}
+          {/* Desktop nav */}
+          <div className="hidden md:flex items-center gap-4">
             <div className="flex items-center gap-1 text-sm">
               {(['es', 'en', 'pt-BR'] as const).map((l) => (
                 <a
@@ -118,7 +119,40 @@ export default function LocaleLandingPage() {
               <Button>{t('nav.getStarted')}</Button>
             </a>
           </div>
+          {/* Mobile hamburger */}
+          <button
+            type="button"
+            className="md:hidden p-2 text-muted-foreground hover:text-foreground"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Toggle menu"
+          >
+            {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </button>
         </div>
+        {/* Mobile menu dropdown */}
+        {mobileMenuOpen && (
+          <div className="md:hidden mt-4 pb-4 flex flex-col gap-3 border-t pt-4">
+            <div className="flex items-center gap-1 text-sm">
+              {(['es', 'en', 'pt-BR'] as const).map((l) => (
+                <a
+                  key={l}
+                  href={`/${l}`}
+                  className={`px-2 py-1 rounded ${l === locale ? 'bg-primary/10 font-medium' : 'text-muted-foreground hover:text-foreground'}`}
+                >
+                  {l === 'es' ? 'ES' : l === 'en' ? 'EN' : 'PT'}
+                </a>
+              ))}
+            </div>
+            <a href={`${appUrl}/login`} className="w-full">
+              <Button variant="ghost" className="w-full justify-start">
+                {t('nav.login')}
+              </Button>
+            </a>
+            <a href={`${appUrl}/register`} className="w-full">
+              <Button className="w-full">{t('nav.getStarted')}</Button>
+            </a>
+          </div>
+        )}
       </nav>
 
       <Hero onLiveDemoClick={handleLiveDemoClick} onSignUpClick={handleSignUpClick} />

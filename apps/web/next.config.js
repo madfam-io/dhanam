@@ -58,11 +58,11 @@ const nextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://us.i.posthog.com https://challenges.cloudflare.com",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://us.i.posthog.com https://challenges.cloudflare.com https://static.cloudflareinsights.com",
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: https:",
               "font-src 'self' data:",
-              `connect-src 'self' ${process.env.NEXT_PUBLIC_API_URL || 'https://api.dhan.am'} https://us.i.posthog.com ${process.env.NEXT_PUBLIC_OIDC_ISSUER || 'https://auth.madfam.io'} https://challenges.cloudflare.com`,
+              `connect-src 'self' ${process.env.NEXT_PUBLIC_API_URL || 'https://api.dhan.am'} https://us.i.posthog.com ${process.env.NEXT_PUBLIC_OIDC_ISSUER || 'https://auth.madfam.io'} https://challenges.cloudflare.com https://cloudflareinsights.com`,
               "frame-ancestors 'none'",
               "base-uri 'self'",
               "form-action 'self'",

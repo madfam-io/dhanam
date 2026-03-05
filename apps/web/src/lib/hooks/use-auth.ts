@@ -180,14 +180,20 @@ export const useAuth = create<AuthState>()(
 
 // Safety net: Force hydration complete after timeout
 // This guarantees skeleton cannot persist indefinitely regardless of edge cases
+// Using onRehydrateStorage callback as primary mechanism (above).
+// This timeout is a fallback for edge cases where zustand persist doesn't fire.
 if (typeof window !== 'undefined') {
-  setTimeout(() => {
+  // Use requestIdleCallback (or setTimeout fallback) to avoid hydration mismatch warnings
+  const scheduleHydrationCheck = () => {
     const state = useAuth.getState();
     if (!state._hasHydrated) {
-      if (process.env.NODE_ENV !== 'production') {
-        console.warn('[useAuth] Hydration timeout - forcing completion');
-      }
       state.setHasHydrated(true);
     }
-  }, 500); // localStorage is synchronous - 500ms is sufficient safety margin
+  };
+
+  if ('requestIdleCallback' in window) {
+    window.requestIdleCallback(scheduleHydrationCheck, { timeout: 1000 });
+  } else {
+    setTimeout(scheduleHydrationCheck, 500);
+  }
 }

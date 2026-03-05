@@ -59,7 +59,7 @@ export function middleware(request: NextRequest) {
   if (hostname.startsWith('www.')) {
     const apex = hostname.replace(/^www\./, '');
     const url = new URL(request.url);
-    url.host = apex;
+    url.hostname = apex;
     return NextResponse.redirect(url, 301);
   }
 
