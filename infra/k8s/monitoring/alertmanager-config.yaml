@@ -59,9 +59,7 @@ stringData:
 
     receivers:
       - name: default
-        webhook_configs:
-          - url: 'http://placeholder-webhook/default'
-            send_resolved: true
+        webhook_configs: []
 
       - name: critical
         # ---------------------------------------------------------------
@@ -70,28 +68,24 @@ stringData:
         # Triggers on: pod crashes, database unreachable, auth failure
         # spikes, provider connection failures, queue backlog > threshold
         #
-        # Option A: Slack webhook (recommended for initial setup)
-        # Uncomment and replace <SLACK_WEBHOOK_URL> with your webhook URL:
+        # Slack webhook (recommended for initial setup)
+        # Replace REPLACE_WITH_SLACK_CRITICAL_WEBHOOK_URL with your webhook URL
         # Format: https://hooks.slack.com/services/T.../B.../xxx
         #
-        # Option B: PagerDuty (recommended for on-call rotation)
-        # Uncomment and replace <PAGERDUTY_SERVICE_KEY> with integration key:
+        # PagerDuty (recommended for on-call rotation)
+        # Replace REPLACE_WITH_PAGERDUTY_SERVICE_KEY with integration key
         # Format: 32-character hex string from PagerDuty Events API v2
         # ---------------------------------------------------------------
-        webhook_configs:
-          - url: 'http://placeholder-webhook/critical'
+        slack_configs:
+          - api_url: 'REPLACE_WITH_SLACK_CRITICAL_WEBHOOK_URL'
+            channel: '#dhanam-alerts-critical'
+            title: '🚨 [CRITICAL] {{ .CommonAnnotations.summary }}'
+            text: '{{ .CommonAnnotations.description }}'
             send_resolved: true
         # Uncomment for PagerDuty:
         # pagerduty_configs:
-        #   - service_key: '<PAGERDUTY_SERVICE_KEY>'
+        #   - service_key: 'REPLACE_WITH_PAGERDUTY_SERVICE_KEY'
         #     severity: critical
-        # Uncomment for Slack:
-        # slack_configs:
-        #   - api_url: '<SLACK_WEBHOOK_URL>'
-        #     channel: '#dhanam-alerts-critical'
-        #     title: '🚨 [CRITICAL] {{ .CommonAnnotations.summary }}'
-        #     text: '{{ .CommonAnnotations.description }}'
-        #     send_resolved: true
 
       - name: warning
         # ---------------------------------------------------------------
@@ -100,19 +94,15 @@ stringData:
         # Triggers on: high p95 latency, memory pressure, queue depth
         # warnings, elevated error rates, certificate expiry warnings
         #
-        # Uncomment and replace <SLACK_WEBHOOK_URL> with your webhook URL:
+        # Replace REPLACE_WITH_SLACK_WARNING_WEBHOOK_URL with your webhook URL
         # Format: https://hooks.slack.com/services/T.../B.../xxx
         # ---------------------------------------------------------------
-        webhook_configs:
-          - url: 'http://placeholder-webhook/warning'
+        slack_configs:
+          - api_url: 'REPLACE_WITH_SLACK_WARNING_WEBHOOK_URL'
+            channel: '#dhanam-alerts'
+            title: '⚠️ [WARNING] {{ .CommonAnnotations.summary }}'
+            text: '{{ .CommonAnnotations.description }}'
             send_resolved: true
-        # Uncomment for Slack:
-        # slack_configs:
-        #   - api_url: '<SLACK_WEBHOOK_URL>'
-        #     channel: '#dhanam-alerts'
-        #     title: '⚠️ [WARNING] {{ .CommonAnnotations.summary }}'
-        #     text: '{{ .CommonAnnotations.description }}'
-        #     send_resolved: true
 
     inhibit_rules:
       - source_match:

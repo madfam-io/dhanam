@@ -233,10 +233,7 @@ interface ParsedDeepLink {
  * Match a URL path segment against a route pattern.
  * Supports :param placeholders.
  */
-function matchPattern(
-  urlPath: string,
-  pattern: string
-): Record<string, string> | null {
+function matchPattern(urlPath: string, pattern: string): Record<string, string> | null {
   const urlParts = urlPath.split('/').filter(Boolean);
   const patternParts = pattern.split('/').filter(Boolean);
 
@@ -261,10 +258,7 @@ function matchPattern(
 /**
  * Substitute $param placeholders in a router path with actual values.
  */
-function substituteParams(
-  routerPath: string,
-  params: Record<string, string>
-): string {
+function substituteParams(routerPath: string, params: Record<string, string>): string {
   let result = routerPath;
   for (const [key, value] of Object.entries(params)) {
     result = result.replace(`$${key}`, value);
@@ -284,8 +278,7 @@ export function parseDeepLink(url: string): ParsedDeepLink | null {
   // Try to match against known routes (most specific first)
   // Sort by pattern segment count descending for specificity
   const sortedRoutes = [...DEEP_LINK_ROUTES].sort(
-    (a, b) =>
-      b.pattern.split('/').length - a.pattern.split('/').length
+    (a, b) => b.pattern.split('/').length - a.pattern.split('/').length
   );
 
   for (const route of sortedRoutes) {
@@ -313,10 +306,7 @@ export function parseDeepLink(url: string): ParsedDeepLink | null {
  * @param isAuthenticated - Whether the user is currently authenticated
  * @returns true if the link was handled, false otherwise
  */
-export function handleDeepLink(
-  url: string,
-  isAuthenticated: boolean
-): boolean {
+export function handleDeepLink(url: string, isAuthenticated: boolean): boolean {
   const parsed = parseDeepLink(url);
 
   if (!parsed) {
@@ -394,10 +384,5 @@ export function createDeepLinkUrl(
  * Use this in your app's root layout if you need custom prefix handling.
  */
 export const linkingConfig = {
-  prefixes: [
-    Linking.createURL('/'),
-    'https://app.dhan.am',
-    'https://dhan.am',
-    'dhanam://',
-  ],
+  prefixes: [Linking.createURL('/'), 'https://app.dhan.am', 'https://dhan.am', 'dhanam://'],
 };

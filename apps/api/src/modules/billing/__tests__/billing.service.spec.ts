@@ -838,4 +838,133 @@ describe('BillingService', () => {
       });
     });
   });
+
+  describe('constructor - billing secrets validation', () => {
+    /**
+     * Helper to build a BillingService with a custom ConfigService mock.
+     * The constructor validates billing secrets at instantiation time,
+     * so we must create a fresh testing module for each config scenario.
+     */
+    async function buildServiceWithConfig(
+      configOverride: (key: string, defaultValue?: any) => any
+    ): Promise<BillingService> {
+      const mod: TestingModule = await Test.createTestingModule({
+        providers: [
+          BillingService,
+          {
+            provide: PrismaService,
+            useValue: {
+              user: { findUnique: jest.fn(), update: jest.fn() },
+              billingEvent: { create: jest.fn(), findMany: jest.fn() },
+              usageMetric: { upsert: jest.fn(), findUnique: jest.fn(), findMany: jest.fn() },
+            },
+          },
+          {
+            provide: StripeService,
+            useValue: {
+              createCustomer: jest.fn(),
+              createCheckoutSession: jest.fn(),
+              createPortalSession: jest.fn(),
+              cancelSubscription: jest.fn(),
+              updateSubscription: jest.fn(),
+              getSubscription: jest.fn(),
+              retrieveCheckoutSession: jest.fn(),
+            },
+          },
+          {
+            provide: AuditService,
+            useValue: { log: jest.fn() },
+          },
+          {
+            provide: ConfigService,
+            useValue: { get: jest.fn(configOverride) },
+          },
+          {
+            provide: JanuaBillingService,
+            useValue: {
+              isEnabled: jest.fn().mockReturnValue(false),
+              getProviderForCountry: jest.fn().mockReturnValue('stripe'),
+              createCustomer: jest.fn(),
+              createCheckoutSession: jest.fn(),
+              createPortalSession: jest.fn(),
+              cancelSubscription: jest.fn(),
+            },
+          },
+        ],
+      }).compile();
+
+      return mod.get<BillingService>(BillingService);
+    }
+
+    it('should not set billingDisabled when config returns undefined (no placeholder values)', () => {
+      // The default beforeEach ConfigService returns defaultValue for unknown keys,
+      // which is undefined for the billing secret keys. billingDisabled stays false.
+      expect((service as any).billingDisabled).toBe(false);
+    });
+
+    it('should not set billingDisabled in non-production when placeholder value detected', async () => {
+      const svc = await buildServiceWithConfig((key: string, defaultValue?: any) => {
+        if (key === 'NODE_ENV') return 'development';
+        if (key === 'STRIPE_MX_WEBHOOK_SECRET') return 'your_stripe_webhook_placeholder';
+        if (key === 'STRIPE_PREMIUM_PRICE_ID') return 'price_premium123';
+        if (key === 'WEB_URL') return 'http://localhost:3000';
+        return defaultValue;
+      });
+
+      // In dev mode, placeholder values log a warning but do NOT disable billing
+      expect((svc as any).billingDisabled).toBe(false);
+    });
+
+    it('should set billingDisabled=true in production when placeholder value detected', async () => {
+      const svc = await buildServiceWithConfig((key: string, defaultValue?: any) => {
+        if (key === 'NODE_ENV') return 'production';
+        if (key === 'PADDLE_API_KEY') return 'your_paddle_api_key_here';
+        if (key === 'STRIPE_PREMIUM_PRICE_ID') return 'price_premium123';
+        if (key === 'WEB_URL') return 'http://localhost:3000';
+        return defaultValue;
+      });
+
+      expect((svc as any).billingDisabled).toBe(true);
+    });
+
+    it('should detect "placeholder" substring regardless of case', async () => {
+      const svc = await buildServiceWithConfig((key: string, defaultValue?: any) => {
+        if (key === 'NODE_ENV') return 'production';
+        if (key === 'PADDLE_WEBHOOK_SECRET') return 'myPlaceholderSecret';
+        if (key === 'STRIPE_PREMIUM_PRICE_ID') return 'price_premium123';
+        if (key === 'WEB_URL') return 'http://localhost:3000';
+        return defaultValue;
+      });
+
+      expect((svc as any).billingDisabled).toBe(true);
+    });
+
+    it('should detect values starting with "your-" prefix', async () => {
+      const svc = await buildServiceWithConfig((key: string, defaultValue?: any) => {
+        if (key === 'NODE_ENV') return 'production';
+        if (key === 'PADDLE_VENDOR_ID') return 'your-vendor-id';
+        if (key === 'STRIPE_PREMIUM_PRICE_ID') return 'price_premium123';
+        if (key === 'WEB_URL') return 'http://localhost:3000';
+        return defaultValue;
+      });
+
+      expect((svc as any).billingDisabled).toBe(true);
+    });
+
+    it('should not flag legitimate secret values', async () => {
+      const svc = await buildServiceWithConfig((key: string, defaultValue?: any) => {
+        if (key === 'NODE_ENV') return 'production';
+        if (key === 'STRIPE_MX_WEBHOOK_SECRET') return 'whsec_abc123realvalue';
+        if (key === 'PADDLE_API_KEY') return 'pdl_live_abc123';
+        if (key === 'PADDLE_VENDOR_ID') return '12345';
+        if (key === 'PADDLE_CLIENT_TOKEN') return 'ctok_live_abc';
+        if (key === 'PADDLE_WEBHOOK_SECRET') return 'pdl_ntfset_abc';
+        if (key === 'STRIPE_PREMIUM_PRICE_ID') return 'price_premium123';
+        if (key === 'WEB_URL') return 'http://localhost:3000';
+        return defaultValue;
+      });
+
+      expect((svc as any).billingDisabled).toBe(false);
+    });
+  });
 });

@@ -1,4 +1,9 @@
-import { formatCurrency, getCurrencySymbol, formatPercentage, formatCompactNumber } from '../currency';
+import {
+  formatCurrency,
+  getCurrencySymbol,
+  formatPercentage,
+  formatCompactNumber,
+} from '../currency';
 
 describe('formatCurrency', () => {
   it('should format USD amounts', () => {

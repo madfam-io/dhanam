@@ -11,7 +11,7 @@ Dhanam is MADFAM's personal finance and wealth tracking application. It targets 
 
 | Component | Port | Domain | Description |
 |-----------|------|--------|-------------|
-| Dhanam API | 8500 (container) / 80 (K8s service) | api.dhan.am | Backend API |
+| Dhanam API | 4000 (default) / 4300 (K8s via PORT env) / 80 (K8s service) | api.dhan.am | Backend API |
 | Dhanam Web | 3300 (container) / 80 (K8s service) | app.dhan.am, dhan.am | Next.js dashboard |
 | Dhanam Admin | 3301 (container) / 80 (K8s service) | admin.dhan.am | Admin console |
 

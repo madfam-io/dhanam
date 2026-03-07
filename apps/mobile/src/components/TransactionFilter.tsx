@@ -35,8 +35,14 @@ const dateRanges = [
 ];
 
 const defaultCategories = [
-  'Food', 'Transport', 'Shopping', 'Entertainment',
-  'Bills', 'Healthcare', 'Investment', 'Other',
+  'Food',
+  'Transport',
+  'Shopping',
+  'Entertainment',
+  'Bills',
+  'Healthcare',
+  'Investment',
+  'Other',
 ];
 
 const transactionTypes = [
@@ -63,9 +69,7 @@ export function TransactionFilter({
   if (!visible) return null;
 
   const toggleCategory = (cat: string) => {
-    setCategories((prev) =>
-      prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]
-    );
+    setCategories((prev) => (prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]));
   };
 
   const handleReset = () => {

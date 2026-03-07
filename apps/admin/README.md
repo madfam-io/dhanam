@@ -1,25 +1,31 @@
 # Dhanam Admin Dashboard
 
-> **⚠️ DEPRECATED**: This app is a scaffold only. All admin functionality has been implemented in the web app at `apps/web/src/app/(admin)/admin/`. This app should not receive new development. See `apps/web` for the active admin dashboard.
-
-> ~~Administrative dashboard for Dhanam platform management, user operations, and system monitoring.~~
+> Standalone admin console for Dhanam platform management, system monitoring, and compliance operations.
 
 ## Overview
 
 The admin dashboard provides platform administrators with tools for:
 
+- **System Health**: Database, Redis, queues, and provider health monitoring
+- **Queue Management**: BullMQ queue inspection and management
+- **Provider Status**: Financial data provider health and connectivity
+- **Deployment Status**: Build info, version, and environment details
 - **User Management**: Search, view, and manage user accounts
-- **Read-only Impersonation**: View user perspectives with audit trails
+- **Space Management**: Browse and inspect spaces
 - **Feature Flags**: Control feature rollout across the platform
-- **System Monitoring**: Health checks, provider status, and analytics
-- **Audit Logs**: Comprehensive logging of all sensitive operations
+- **Audit Logs**: Searchable audit trail of all sensitive operations
+- **Billing Events**: Billing event log viewer
+- **Analytics**: Onboarding funnel visualization
+- **Compliance**: GDPR data export/delete, data retention management
 
 ## Tech Stack
 
-- **Framework**: Next.js 16.1.1 (App Router)
+- **Framework**: Next.js 15.5.11 (App Router)
 - **React**: 18.3.1
-- **Styling**: Tailwind CSS via `@dhanam/ui`
-- **State**: React Server Components + Client Components as needed
+- **Styling**: Tailwind CSS with Dhanam design system
+- **State**: Zustand (auth), React Context (admin data), TanStack React Query
+- **UI Components**: Radix UI primitives, Recharts, Lucide icons
+- **Error Tracking**: Sentry
 - **Types**: TypeScript 5.9+
 
 ## Getting Started
@@ -45,7 +51,7 @@ The admin dashboard runs at **http://localhost:3400**
 ### Build
 
 ```bash
-# Production build
+# Production build (standalone output)
 pnpm build
 
 # Start production server
@@ -57,101 +63,99 @@ pnpm start
 ```
 apps/admin/
 ├── src/
-│   └── app/
-│       ├── layout.tsx      # Root layout with providers
-│       ├── page.tsx        # Dashboard home page
-│       └── api/
-│           └── health/
-│               └── route.ts # Health check endpoint
-├── public/                  # Static assets
-├── package.json
+│   ├── app/
+│   │   ├── layout.tsx              # Root layout with providers
+│   │   ├── page.tsx                # Redirects to /dashboard
+│   │   └── (dashboard)/
+│   │       ├── layout.tsx          # Admin shell (header + nav + main)
+│   │       ├── dashboard/page.tsx  # System stats overview
+│   │       ├── system-health/      # DB, Redis, queues, providers health
+│   │       ├── queues/             # BullMQ queue management
+│   │       ├── providers/          # Provider health monitoring
+│   │       ├── deployment/         # Build info, version, environment
+│   │       ├── spaces/             # Space search/browse
+│   │       ├── users/              # User search/management
+│   │       ├── feature-flags/      # Feature flag CRUD
+│   │       ├── audit-logs/         # Searchable audit trail
+│   │       ├── billing-events/     # Billing event logs
+│   │       ├── analytics/          # Onboarding funnel
+│   │       └── compliance/         # GDPR export/delete, retention
+│   ├── components/                 # 11 admin UI components
+│   ├── contexts/                   # AdminContext provider
+│   ├── lib/
+│   │   ├── api/                    # Typed API client (31 endpoints)
+│   │   ├── hooks/                  # Auth store (Zustand + persist)
+│   │   └── utils.ts                # cn() utility
+│   ├── middleware.ts               # Auth cookie check
+│   └── styles/
+├── public/
+├── tailwind.config.ts
+├── postcss.config.js
 ├── next.config.js
+├── package.json
 └── tsconfig.json
 ```
 
-## Environment Variables
-
-Create a `.env.local` file based on the template:
-
-```bash
-# API Configuration
-NEXT_PUBLIC_API_URL=http://localhost:4010
-NEXT_PUBLIC_ADMIN_URL=http://localhost:3400
-
-# Authentication (via Janua SSO)
-NEXT_PUBLIC_JANUA_ISSUER=https://auth.madfam.io
-NEXT_PUBLIC_JANUA_CLIENT_ID=dhanam-admin
-
-# Feature Flags
-NEXT_PUBLIC_ENABLE_IMPERSONATION=true
-NEXT_PUBLIC_ENABLE_AUDIT_LOGS=true
-
-# Analytics
-NEXT_PUBLIC_POSTHOG_KEY=your-posthog-key
-NEXT_PUBLIC_POSTHOG_HOST=https://app.posthog.com
-```
-
-## API Endpoints
-
-### Health Check
-
-```
-GET /api/health
-```
-
-Returns admin service health status.
-
 ## Authentication
 
-Admin access requires:
+Authentication uses cross-subdomain cookie sharing with the main web app:
 
-1. Valid Janua SSO session with admin role
-2. TOTP 2FA verification (mandatory for all admin operations)
-3. IP allowlist validation (in production)
+1. The `auth-storage` cookie is set with `Domain=.dhan.am` by the web app
+2. Admin middleware reads this cookie to verify authentication
+3. Unauthenticated users are redirected to `app.dhan.am/login?from=admin.dhan.am`
+4. Admin access requires `admin` or `owner` role in at least one space
 
-## Security Considerations
+No separate login flow — the web app handles all authentication.
 
-- **Audit Logging**: All admin actions are logged with user ID, timestamp, and action details
-- **Rate Limiting**: Admin API endpoints have stricter rate limits
-- **Session Timeout**: Admin sessions expire after 15 minutes of inactivity
-- **RBAC**: Role-based access control for different admin permission levels
+## Environment Variables
 
-## Available Scripts
+See `.env.example` for the full template. Key variables:
 
-| Script | Description |
-|--------|-------------|
-| `pnpm dev` | Start development server on port 3400 |
-| `pnpm build` | Create production build |
-| `pnpm start` | Start production server |
-| `pnpm lint` | Run ESLint |
-| `pnpm typecheck` | Run TypeScript type checking |
+```bash
+NEXT_PUBLIC_API_URL=http://localhost:4010/v1  # API base URL
+NEXT_PUBLIC_APP_URL=http://localhost:3040      # Web app URL (for auth redirects)
+NEXT_PUBLIC_OIDC_ISSUER=https://auth.madfam.io
+NEXT_PUBLIC_SENTRY_DSN=                        # Optional: Sentry error tracking
+```
+
+## API Client
+
+The admin app includes a fully typed API client (`src/lib/api/admin.ts`) with 31 endpoints covering:
+
+- System stats and health checks
+- User and space management (search, details, suspend/unsuspend)
+- Feature flag CRUD operations
+- Audit log queries with filtering
+- Queue management (pause, resume, clean)
+- Cache operations (flush, stats)
+- Compliance actions (GDPR export/delete, retention)
+- Billing event queries
+
+All requests include the auth token from the Zustand store and target the API at `NEXT_PUBLIC_API_URL`.
+
+## Security
+
+- **Cross-subdomain auth**: Cookie-based with `Domain=.dhan.am`
+- **Role check**: Admin/owner role required (checked in layout + middleware)
+- **AdminGuard**: Backend guard validates admin access on all admin API endpoints
+- **Audit logging**: All admin actions logged server-side
 
 ## Deployment
 
-Admin dashboard is deployed via Enclii PaaS:
+Deployed via Enclii PaaS to bare metal K8s:
 
-- **Production**: `https://admin.dhanam.com`
+- **Production**: `https://admin.dhan.am`
 - **Auto-deploy**: Triggered on push to `main` branch
-- **Config**: See `.enclii.yml` in monorepo root
+- **K8s manifest**: `infra/k8s/production/admin-deployment.yaml`
 
-## Dependencies
+## Related
 
-### Runtime
-- `@dhanam/shared` - Shared types, utils, i18n
-- `@dhanam/ui` - UI component library
-
-### Development
-- `@dhanam/config` - Shared ESLint/TypeScript configuration
-
-## Related Documentation
-
-- [Main README](../../README.md) - Project overview
-- [API Documentation](../api/README.md) - Backend API reference
-- [Admin Dashboard Guide](../../docs/ADMIN_DASHBOARD.md) - Feature documentation
-- [Deployment Guide](../../docs/DEPLOYMENT.md) - Deployment instructions
+- [CLAUDE.md](../../CLAUDE.md) - Project overview and guidelines
+- [Web Admin (dev fallback)](../web/src/app/(admin)/) - Web-embedded admin (redirects to standalone in production)
+- [API Admin Module](../api/src/modules/admin/) - Backend admin endpoints
 
 ---
 
 **Port**: 3400
-**Status**: DEPRECATED — All admin features live in `apps/web/(admin)/admin/`
-**Last Updated**: January 2026
+**Status**: ACTIVE — Standalone admin app at admin.dhan.am
+**Last Updated**: March 2026

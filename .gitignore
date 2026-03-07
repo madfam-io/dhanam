@@ -55,6 +55,7 @@ web-build/
 .vercel
 .netlify
 *.pem
+.playwright-mcp/
 
 # Database
 *.db

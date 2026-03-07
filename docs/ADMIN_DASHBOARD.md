@@ -7,8 +7,9 @@ The Dhanam Admin Dashboard provides comprehensive tools for system administrator
 ## Access Requirements
 
 - **Role**: User must have `admin` or `owner` role in at least one space
-- **URL**: `/admin/dashboard`
-- **Authentication**: Valid JWT token required
+- **Production URL**: `https://admin.dhan.am/dashboard`
+- **Development URL**: `http://localhost:3400/dashboard` (standalone) or `http://localhost:3040/admin/dashboard` (web-embedded)
+- **Authentication**: Cross-subdomain cookie (`auth-storage` with `Domain=.dhan.am`) — unauthenticated users redirected to `app.dhan.am/login`
 
 ## Dashboard Sections
 
@@ -280,5 +281,6 @@ POST /api/admin/feature-flags/:key
 
 For technical implementation details, see:
 - [Admin Module Code](../apps/api/src/modules/admin/)
-- [Admin UI Components](../apps/web/src/components/admin/)
+- [Standalone Admin App](../apps/admin/) — production admin at admin.dhan.am
+- [Web-Embedded Admin (dev fallback)](../apps/web/src/app/(admin)/) — redirects to standalone in production
 - [Infrastructure Guide](./INFRASTRUCTURE.md)

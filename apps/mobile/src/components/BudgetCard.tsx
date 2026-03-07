@@ -1,12 +1,6 @@
 import React from 'react';
 
-import {
-  View,
-  StyleSheet,
-  PaperText as Text,
-  Card,
-  ProgressBar,
-} from '@/lib/react-native-compat';
+import { View, StyleSheet, PaperText as Text, Card, ProgressBar } from '@/lib/react-native-compat';
 import { formatCurrency } from '@/utils/currency';
 
 interface BudgetCardProps {
@@ -55,19 +49,12 @@ export function BudgetCard({
               {category}
             </Text>
           </View>
-          <Text
-            variant="titleMedium"
-            style={[styles.amount, isOver && styles.amountOver]}
-          >
+          <Text variant="titleMedium" style={[styles.amount, isOver && styles.amountOver]}>
             {formatCurrency(spent, currency)}
           </Text>
         </View>
 
-        <ProgressBar
-          progress={progress}
-          color={getProgressColor()}
-          style={styles.progressBar}
-        />
+        <ProgressBar progress={progress} color={getProgressColor()} style={styles.progressBar} />
 
         <View style={styles.footer}>
           <Text variant="bodySmall" style={styles.footerText}>

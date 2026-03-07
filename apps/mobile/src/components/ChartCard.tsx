@@ -30,9 +30,7 @@ export function ChartCard({
   onPeriodChange,
   children,
 }: ChartCardProps) {
-  const [selectedPeriod, setSelectedPeriod] = useState(
-    defaultPeriod || periods[0]?.value || '1m'
-  );
+  const [selectedPeriod, setSelectedPeriod] = useState(defaultPeriod || periods[0]?.value || '1m');
 
   const handlePeriodChange = (period: string) => {
     setSelectedPeriod(period);

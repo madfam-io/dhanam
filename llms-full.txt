@@ -31,7 +31,7 @@ Dhanam Ledger unifies personal and business financial management with ESG crypto
 - **Estate Planning**: Digital wills, beneficiary designations, Life Beat dead man's switch (30/60/90 day escalation)
 - **Household Views**: Yours/Mine/Ours ownership filtering with joint/individual/trust account types
 - **Document Storage**: Cloudflare R2-backed attachments for manual assets
-- **Multi-Platform**: Web dashboard (Next.js 15), admin console (Next.js 16), and mobile app (React Native + Expo)
+- **Multi-Platform**: Web dashboard (Next.js 15), admin console (Next.js 15), and mobile app (React Native + Expo)
 - **Legal & Compliance**: Privacy policy, terms of service, cookie policy, security disclosure, and ESG methodology pages with full i18n (EN/ES/PT-BR). Cookie consent banner with PostHog opt-in/out. Terms acceptance checkbox on registration.
 
 ### Production Status
@@ -52,8 +52,8 @@ Infrastructure: 2-node Hetzner cluster via Enclii PaaS — "The Sanctuary" (AX41
 ```
 dhanam/
 ├── apps/
-│   ├── admin/         # Next.js 16 admin dashboard (port 3400)
-│   │                  # User search, read-only impersonation, feature flags, audit logs
+│   ├── admin/         # Next.js 15 standalone admin dashboard (port 3400)
+│   │                  # System health, queues, providers, compliance, user/space mgmt, audit logs
 │   ├── api/           # NestJS (Fastify) backend API (port 4010)
 │   │                  # 32 modules, Prisma ORM, BullMQ jobs, Swagger docs
 │   ├── mobile/        # React Native + Expo mobile app

@@ -1,0 +1,54 @@
+name: Load Tests
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_url:
+        description: 'Target API base URL'
+        required: true
+        default: 'https://staging.api.dhan.am'
+      scenario:
+        description: 'Scenario to run (or "all")'
+        required: true
+        default: 'api-health'
+        type: choice
+        options:
+          - api-health
+          - auth-flow
+          - transactions
+          - dashboard
+          - account-refresh
+          - all
+
+jobs:
+  load-test:
+    name: k6 Load Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install k6
+        run: |
+          sudo gpg -k
+          sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D68
+          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update
+          sudo apt-get install k6
+
+      - name: Run scenario
+        env:
+          BASE_URL: ${{ inputs.target_url }}
+          TEST_EMAIL: ${{ secrets.LOAD_TEST_EMAIL }}
+          TEST_PASSWORD: ${{ secrets.LOAD_TEST_PASSWORD }}
+          TEST_SPACE_ID: ${{ secrets.LOAD_TEST_SPACE_ID }}
+        run: |
+          if [ "${{ inputs.scenario }}" = "all" ]; then
+            for f in tests/load/k6/scenarios/*.js; do
+              echo "=== Running $(basename $f) ==="
+              k6 run "$f" || true
+            done
+          else
+            k6 run "tests/load/k6/scenarios/${{ inputs.scenario }}.js"
+          fi

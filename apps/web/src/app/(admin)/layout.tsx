@@ -10,6 +10,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { user, isAuthenticated } = useAuth();
 
   useEffect(() => {
+    // In production, redirect to standalone admin app at admin.dhan.am
+    if (
+      typeof window !== 'undefined' &&
+      process.env.NODE_ENV === 'production' &&
+      window.location.hostname !== 'admin.dhan.am'
+    ) {
+      const adminUrl = process.env.NEXT_PUBLIC_ADMIN_URL || 'https://admin.dhan.am';
+      const path = window.location.pathname.replace(/^\/(admin)/, '');
+      window.location.href = `${adminUrl}${path || '/dashboard'}`;
+      return;
+    }
+
     if (!isAuthenticated) {
       // Redirect to app subdomain login with return URL for cross-subdomain auth
       const appUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://app.dhan.am';

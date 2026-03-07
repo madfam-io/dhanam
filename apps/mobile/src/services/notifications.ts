@@ -223,9 +223,7 @@ export async function scheduleLocalNotification(
 /**
  * Cancel a scheduled local notification.
  */
-export async function cancelScheduledNotification(
-  identifier: string
-): Promise<void> {
+export async function cancelScheduledNotification(identifier: string): Promise<void> {
   await Notifications.cancelScheduledNotificationAsync(identifier);
 }
 
@@ -267,14 +265,10 @@ export function getNotificationDeepLink(
       return data?.budgetId ? `/budgets/${data.budgetId}` : '/(tabs)/budgets';
     case 'transaction_new':
     case 'transaction_large':
-      return data?.transactionId
-        ? `/transactions/${data.transactionId}`
-        : '/(tabs)/transactions';
+      return data?.transactionId ? `/transactions/${data.transactionId}` : '/(tabs)/transactions';
     case 'account_sync':
     case 'account_error':
-      return data?.accountId
-        ? `/accounts/${data.accountId}`
-        : '/(tabs)/accounts';
+      return data?.accountId ? `/accounts/${data.accountId}` : '/(tabs)/accounts';
     case 'goal_milestone':
     case 'goal_achieved':
       return '/(tabs)/more/goals';

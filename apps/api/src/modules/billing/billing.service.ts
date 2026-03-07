@@ -82,6 +82,7 @@ export interface UpgradeOptions {
 @Injectable()
 export class BillingService {
   private readonly logger = new Logger(BillingService.name);
+  private billingDisabled = false;
 
   // Usage limits per tier
   private readonly usageLimits = {
@@ -157,7 +158,39 @@ export class BillingService {
     private januaBilling: JanuaBillingService,
     private audit: AuditService,
     private config: ConfigService
-  ) {}
+  ) {
+    // Validate billing secrets on startup
+    const billingSecretKeys = [
+      'STRIPE_MX_WEBHOOK_SECRET',
+      'PADDLE_VENDOR_ID',
+      'PADDLE_API_KEY',
+      'PADDLE_CLIENT_TOKEN',
+      'PADDLE_WEBHOOK_SECRET',
+    ];
+
+    const isProduction = this.config.get<string>('NODE_ENV') === 'production';
+
+    for (const key of billingSecretKeys) {
+      const value = this.config.get<string>(key);
+      if (
+        value &&
+        (value.toLowerCase().includes('placeholder') ||
+          value.startsWith('your_') ||
+          value.startsWith('your-'))
+      ) {
+        if (isProduction) {
+          this.logger.error(
+            `CRITICAL: Billing secret ${key} contains placeholder value. Billing endpoints are disabled.`
+          );
+          this.billingDisabled = true;
+        } else {
+          this.logger.warn(
+            `Billing secret ${key} contains placeholder value. Billing features may not work.`
+          );
+        }
+      }
+    }
+  }
 
   /**
    * Initiate upgrade to premium subscription
@@ -781,7 +814,12 @@ export class BillingService {
    * Create a checkout session for an external (unauthenticated) caller.
    * Returns the Stripe/Janua checkout URL.
    */
-  async createExternalCheckout(userId: string, plan: string, returnUrl: string, product?: string): Promise<string> {
+  async createExternalCheckout(
+    userId: string,
+    plan: string,
+    returnUrl: string,
+    product?: string
+  ): Promise<string> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: {

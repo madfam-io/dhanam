@@ -752,6 +752,6 @@ This platform is positioned to compete with:
 **Confidence Level:** VERY HIGH
 
 For questions or clarifications, refer to:
-- Full audit report: `/home/user/dhanam/docs/audits/COMPREHENSIVE_AUDIT_REPORT_2025.md`
+- Full audit report: _(removed — audit reports archived)_
 - Project documentation: `/home/user/dhanam/CLAUDE.md`
 - Database schema: `/home/user/dhanam/apps/api/prisma/schema.prisma`

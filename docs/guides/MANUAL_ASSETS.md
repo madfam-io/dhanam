@@ -2,7 +2,7 @@
 
 **Status:** Implemented
 **Date:** November 20, 2025
-**Related Analysis:** `/docs/audits/MARKET_GAP_ANALYSIS_2025.md`
+**Related Analysis:** _(removed — audit reports archived)_
 
 ## Overview
 
@@ -542,7 +542,7 @@ CREATE INDEX "manual_asset_valuations_asset_id_date_idx" ON "manual_asset_valuat
 ## Implementation Impact
 
 ### Addresses Market Gap
-From `/docs/audits/MARKET_GAP_ANALYSIS_2025.md`:
+From _(removed — audit reports archived)_:
 
 **Gap Closed:** Private Equity/Illiquid Assets (Tier 1 Critical Gap)
 - **Business Impact:** CRITICAL for HNWI - Can't compete with Kubera without this
@@ -605,7 +605,7 @@ From `/docs/audits/MARKET_GAP_ANALYSIS_2025.md`:
 
 - **Kubera Manual Entry:** https://kubera.com/features/manual-assets
 - **HNWI Asset Allocation:** https://www.cnbc.com/2023/06/15/where-wealthy-investors-put-their-money.html
-- **Market Analysis:** `/docs/audits/MARKET_GAP_ANALYSIS_2025.md`
+- **Market Analysis:** _(removed — audit reports archived)_
 
 ---
 

@@ -80,7 +80,7 @@ export class BillingController {
       query.user_id,
       query.plan,
       query.return_url,
-      query.product,
+      query.product
     );
 
     return reply.status(302).redirect(checkoutUrl);

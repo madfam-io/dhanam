@@ -1,5 +1,5 @@
-import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
+import React from 'react';
 
 import { AccountCard } from '../AccountCard';
 
@@ -45,7 +45,7 @@ describe('AccountCard', () => {
   it('should call onPress when tapped', () => {
     const mockOnPress = jest.fn();
     const { UNSAFE_root } = render(
-      <AccountCard account={mockAccount as any} onPress={mockOnPress} />,
+      <AccountCard account={mockAccount as any} onPress={mockOnPress} />
     );
 
     // The Card wraps in a TouchableOpacity when onPress is provided

@@ -82,9 +82,7 @@ export function GoalCard({
             {(progress * 100).toFixed(0)}%
           </Text>
           <Text variant="bodySmall" style={styles.remainingText}>
-            {isComplete
-              ? 'Goal reached!'
-              : `${formatCurrency(remaining, currency)} to go`}
+            {isComplete ? 'Goal reached!' : `${formatCurrency(remaining, currency)} to go`}
           </Text>
         </View>
       </Card.Content>

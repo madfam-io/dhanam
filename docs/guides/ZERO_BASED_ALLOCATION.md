@@ -2,7 +2,7 @@
 
 **Status:** Implemented
 **Date:** November 20, 2025
-**Related Analysis:** `/docs/audits/MARKET_GAP_ANALYSIS_2025.md`
+**Related Analysis:** _(removed — audit reports archived)_
 
 ## Overview
 
@@ -207,7 +207,7 @@ Add tests for:
 ## Implementation Impact
 
 ### Addresses Market Gap
-From `/docs/audits/MARKET_GAP_ANALYSIS_2025.md`:
+From _(removed — audit reports archived)_:
 
 **Gap Closed:** Zero-Based Allocation (Tier 1 Critical Gap)
 - **Business Impact:** HIGH - YNAB's #1 feature
@@ -245,7 +245,7 @@ From `/docs/audits/MARKET_GAP_ANALYSIS_2025.md`:
 
 - **YNAB Methodology:** https://www.ynab.com/the-four-rules
 - **Zero-Based Budgeting:** https://en.wikipedia.org/wiki/Zero-based_budgeting
-- **Market Analysis:** `/docs/audits/MARKET_GAP_ANALYSIS_2025.md`
+- **Market Analysis:** _(removed — audit reports archived)_
 
 ---
 

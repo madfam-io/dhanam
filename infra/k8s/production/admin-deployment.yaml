@@ -39,6 +39,16 @@ spec:
               value: "production"
             - name: NEXT_PUBLIC_API_URL
               value: "https://api.dhan.am/v1"
+            - name: NEXT_PUBLIC_APP_URL
+              value: "https://app.dhan.am"
+            - name: NEXT_PUBLIC_OIDC_ISSUER
+              value: "https://auth.madfam.io"
+            - name: NEXT_PUBLIC_SENTRY_DSN
+              valueFrom:
+                secretKeyRef:
+                  name: dhanam-secrets
+                  key: SENTRY_DSN
+                  optional: true
           resources:
             requests:
               cpu: "100m"

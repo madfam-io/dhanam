@@ -102,9 +102,7 @@ export function ProviderConnectSheet({
         {/* Security Note */}
         <View style={styles.securityNote}>
           <Ionicons name="shield-checkmark" size={18} color="#10b981" />
-          <Text style={styles.securityText}>
-            Read-only access. We never move your money.
-          </Text>
+          <Text style={styles.securityText}>Read-only access. We never move your money.</Text>
         </View>
 
         <ScrollView showsVerticalScrollIndicator={false}>
@@ -120,9 +118,7 @@ export function ProviderConnectSheet({
               accessibilityRole="button"
               accessibilityLabel={`Connect ${provider.name}`}
             >
-              <View
-                style={[styles.providerIcon, { backgroundColor: `${provider.color}20` }]}
-              >
+              <View style={[styles.providerIcon, { backgroundColor: `${provider.color}20` }]}>
                 <Ionicons name={provider.icon} size={24} color={provider.color} />
               </View>
               <View style={styles.providerInfo}>

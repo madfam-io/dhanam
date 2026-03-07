@@ -41,7 +41,7 @@ Dhanam uses **Enclii** (MADFAM's own deployment platform) for ALL production dep
 
 ### Production URLs
 - Web: `https://app.dhan.am`
-- Admin: `https://admin.dhan.am` (deprecated — admin is in web app)
+- Admin: `https://admin.dhan.am` (standalone admin app)
 - API: `https://api.dhan.am`
 
 ---
@@ -70,7 +70,7 @@ This is the Dhanam Ledger project - a comprehensive budget and wealth tracking a
 **Monorepo Structure (Turborepo + pnpm):**
 ```
 apps/
-├─ admin/         # Next.js 16 admin redirect (see web admin SRE ops center)
+├─ admin/         # Next.js 15 standalone admin dashboard (port 3400)
 ├─ api/           # NestJS (Fastify) backend (port 4010)
 ├─ mobile/        # React Native + Expo app
 └─ web/           # Next.js 15 user dashboard (port 3040)
@@ -188,7 +188,7 @@ Uses the Dhanam package (https://github.com/aldoruizluna/Dhanam) for:
 
 **PostHog Events:** sign_up, onboarding_complete, connect_initiated, connect_success, sync_success, budget_created, rule_created, txn_categorized, alert_fired, view_net_worth, export_data
 
-**Admin Panel (SRE Ops Center):** Lives at `apps/web/(admin)/admin/` — includes system health, queue management, provider dashboards, compliance (GDPR export/delete, retention), deployment status, billing events, user/space management with audit trails.
+**Admin Panel (SRE Ops Center):** Standalone app at `apps/admin/` (production: `admin.dhan.am`). Also accessible via `apps/web/(admin)/admin/` in development (redirects to standalone app in production). Includes system health, queue management, provider dashboards, compliance (GDPR export/delete, retention), deployment status, billing events, user/space management with audit trails.
 
 ## Monitoring & Observability
 

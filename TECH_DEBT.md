@@ -59,7 +59,7 @@ AWS ECS/Fargate infrastructure has been fully removed. Deployment is exclusively
 
 ### TD-004: Billing Secrets Placeholder
 
-**Status**: PLACEHOLDER
+**Status**: MITIGATED
 **Severity**: MEDIUM
 
 **Problem**:
@@ -68,6 +68,14 @@ Billing secrets (`dhanam-billing-secrets`) were created with placeholder values.
 **Current Values**:
 - `STRIPE_MX_SECRET_KEY`: `sk_test_placeholder_update_before_billing`
 - `PADDLE_*`: placeholder values
+
+**Remediation**:
+- Startup validation in `BillingService` now detects placeholder values (containing `placeholder`, starting with `your_` or `your-`) on application boot.
+- In development, each detected placeholder logs a warning so developers know billing features may not work.
+- In production (`NODE_ENV=production`), each detected placeholder logs a critical error and sets `billingDisabled = true`, preventing billing endpoints from operating with invalid credentials.
+- `.env.example` updated to use format hints instead of `your_*` placeholder patterns.
+- K8s secrets template (`infra/k8s/production/secrets-template.yaml`) added for billing credentials.
+- Real credentials are still required before billing features can be used in production.
 
 **Required Action**:
 1. Obtain production Stripe MX credentials
@@ -128,6 +136,26 @@ Created `infra/k8s/argocd/application.yaml` (ArgoCD Application CRD for GitOps s
 
 ---
 
+### TD-010: React 18 Global Pin
+
+**Status**: ACTIVE
+**Severity**: LOW
+
+**Problem**:
+React Native (Expo 54) requires React 18.x. The monorepo uses a pnpm override to pin react to 18.3.1 globally, preventing apps/web and apps/admin from upgrading to React 19.
+
+**Impact**:
+- `apps/mobile/src/lib/react-native-compat.tsx` (92 lines) provides type compatibility shims
+- pnpm `overrides` in root `package.json` pins `react` and `react-dom` to `18.3.1`
+- Next.js 15 features requiring React 19 server components are unavailable
+
+**Removal Criteria**:
+When Expo officially supports React 19, remove the pnpm override and the compat shim.
+
+**Ticket**: DHANAM-010
+
+---
+
 ## Tracking
 
 | ID | Title | Severity | Status | Assigned |
@@ -135,12 +163,13 @@ Created `infra/k8s/argocd/application.yaml` (ArgoCD Application CRD for GitOps s
 | TD-001 | GHCR Container Build Workflow | CRITICAL | RESOLVED | - |
 | TD-002 | Database Provisioning API | HIGH | RESOLVED | - |
 | TD-003 | CI/CD Platform Migration | HIGH | RESOLVED | - |
-| TD-004 | Billing Secrets Placeholder | MEDIUM | PLACEHOLDER | - |
+| TD-004 | Billing Secrets Placeholder | MEDIUM | MITIGATED | - |
 | TD-005 | Enclii Port Mismatch | MEDIUM | RESOLVED | - |
 | TD-006 | JWT Secrets Missing from Template | MEDIUM | RESOLVED | - |
 | TD-007 | Monitoring Stack | MEDIUM | RESOLVED | - |
 | TD-008 | Staging Environment | MEDIUM | RESOLVED | - |
 | TD-009 | ArgoCD Documentation | LOW | RESOLVED | - |
+| TD-010 | React 18 Global Pin | LOW | ACTIVE | - |
 
 ---
 

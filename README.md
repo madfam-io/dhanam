@@ -141,7 +141,7 @@
 ```
 dhanam/
 ├── apps/
-│   ├── admin/        # Next.js 16 admin dashboard (port 3400)
+│   ├── admin/        # Next.js 15 admin dashboard (port 3400)
 │   ├── api/          # NestJS backend API (port 4010)
 │   ├── mobile/       # React Native mobile app (Expo)
 │   └── web/          # Next.js 15 web dashboard (port 3040)
@@ -213,7 +213,7 @@ async login(@Body() dto: LoginDto): Promise<AuthResponse> {
 ### Working with the Frontend
 
 The web app uses:
-- **Next.js 15** with App Router (admin uses Next.js 16)
+- **Next.js 15** with App Router (both web and admin)
 - **Tailwind CSS** for styling
 - **shadcn/ui** components
 - **Zustand** for state management
@@ -335,9 +335,8 @@ Comprehensive documentation is available in the [`docs/`](docs/) directory:
 - [Sentry Setup](docs/SENTRY_SETUP.md) - Error tracking
 - [CI/CD Setup](docs/guides/CICD_IMPLEMENTATION_SUMMARY.md) - Build pipeline
 
-### Reports & Audits
+### Reports
 - [Documentation Index](docs/README.md) - Complete documentation index
-- [Comprehensive Audit 2025](docs/audits/COMPREHENSIVE_AUDIT_REPORT_2025.md) - Latest audit
 - [Implementation Roadmap](docs/guides/IMPLEMENTATION_ROADMAP.md) - Project roadmap
 
 ## LLM & Agent Context

@@ -158,7 +158,6 @@ For detailed architecture documentation:
 - **[Software Specification](docs/architecture/SOFTWARE_SPEC.md)** - Technical specifications
 - **[Infrastructure Guide](docs/INFRASTRUCTURE.md)** - Infrastructure components
 - **[API Documentation](docs/API.md)** - Backend API reference
-- **[Database Audit](docs/audits/DATABASE_ARCHITECTURE_AUDIT.md)** - Schema design review
 
 ## Performance Targets
 

@@ -2,7 +2,7 @@
 
 **Status:** Implemented (Phase 1 - Foundation)
 **Date:** November 20, 2025
-**Related Analysis:** `/docs/audits/MARKET_GAP_ANALYSIS_2025.md`
+**Related Analysis:** _(removed — audit reports archived)_
 
 ## Overview
 
@@ -605,7 +605,7 @@ When a provider recovers from downtime:
 - **Circuit Breaker Pattern:** https://martinfowler.com/bliki/CircuitBreaker.html
 - **Netflix Hystrix:** https://github.com/Netflix/Hystrix
 - **MX Platform API:** https://docs.mx.com/
-- **Market Analysis:** `/docs/audits/MARKET_GAP_ANALYSIS_2025.md`
+- **Market Analysis:** _(removed — audit reports archived)_
 
 ---
 
