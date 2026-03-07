@@ -1,7 +1,13 @@
 'use client';
 
 import { useEffect, useCallback } from 'react';
-import { JanuaProvider, useJanua, useUser } from '@janua/react-sdk';
+import { JanuaProvider, useJanua } from '@janua/react-sdk';
+
+// TODO: Replace with @janua/react-sdk export once useUser is published
+function useUser() {
+  const { user } = useJanua();
+  return { user };
+}
 import { useAuth } from '~/lib/hooks/use-auth';
 import type { UserProfile, AuthTokens, Locale } from '@dhanam/shared';
 
@@ -17,10 +23,7 @@ const januaConfig: React.ComponentProps<typeof JanuaProvider>['config'] = {
  * local auth state management, enabling SSO while preserving existing auth hooks.
  */
 function JanuaAuthSync({ children }: { children: React.ReactNode }) {
-  const {
-    isAuthenticated: januaAuthenticated,
-    isLoading: januaLoading,
-  } = useJanua();
+  const { isAuthenticated: januaAuthenticated, isLoading: januaLoading } = useJanua();
   // useUser() provides richer user data (display_name, avatar, etc.)
   const { user: januaUser } = useUser();
   const { setAuth, clearAuth, isAuthenticated: dhanamAuthenticated, _hasHydrated } = useAuth();

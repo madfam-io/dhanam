@@ -880,6 +880,7 @@ export class BillingService {
         janua_user_id: userId,
         plan,
         source: 'external',
+        ...(product && { product }),
       },
     });
 
@@ -887,7 +888,13 @@ export class BillingService {
       userId: user.id,
       action: 'BILLING_UPGRADE_INITIATED',
       severity: 'medium',
-      metadata: { sessionId: session.id, provider: 'stripe', plan, source: 'external' },
+      metadata: {
+        sessionId: session.id,
+        provider: 'stripe',
+        plan,
+        source: 'external',
+        ...(product && { product }),
+      },
     });
 
     return session.url;

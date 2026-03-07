@@ -693,12 +693,22 @@ describe('BillingService', () => {
       );
 
       expect(result).toBe('https://checkout.stripe.com/pay/cs_test_product');
+      expect(stripe.createCheckoutSession).toHaveBeenCalledWith(
+        expect.objectContaining({
+          metadata: expect.objectContaining({
+            plan: 'enclii_pro',
+            source: 'external',
+            product: 'enclii',
+          }),
+        })
+      );
       expect(audit.log).toHaveBeenCalledWith(
         expect.objectContaining({
           action: 'BILLING_UPGRADE_INITIATED',
           metadata: expect.objectContaining({
             plan: 'enclii_pro',
             source: 'external',
+            product: 'enclii',
           }),
         })
       );

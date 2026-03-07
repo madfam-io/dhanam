@@ -44,10 +44,7 @@ export function DeploymentStatusCard({ status }: DeploymentStatusProps) {
     <Card className="p-6">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Deployment</h3>
-        <Badge
-          className={envColors[status.environment] || envColors.development}
-          variant="outline"
-        >
+        <Badge className={envColors[status.environment] || envColors.development} variant="outline">
           {status.environment}
         </Badge>
       </div>

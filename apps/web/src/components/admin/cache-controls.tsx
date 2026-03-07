@@ -52,7 +52,11 @@ export function CacheControls() {
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPattern(e.target.value)}
           className="flex-1"
         />
-        <Button type="submit" disabled={loading || !pattern.trim()} className="flex items-center space-x-2">
+        <Button
+          type="submit"
+          disabled={loading || !pattern.trim()}
+          className="flex items-center space-x-2"
+        >
           <Trash2 className="h-4 w-4" />
           <span>{loading ? 'Flushing...' : 'Flush'}</span>
         </Button>

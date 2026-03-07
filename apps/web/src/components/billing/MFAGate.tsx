@@ -1,16 +1,26 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { MFAChallenge, useMFA } from '@janua/react-sdk';
 import { useAuth } from '~/lib/hooks/use-auth';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@dhanam/ui';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@dhanam/ui';
 import { useTranslation } from '@dhanam/shared';
+
+// TODO: Replace with @janua/react-sdk exports once useMFA and MFAChallenge are published
+function useMFA() {
+  return {
+    verify: async (_code: string) => {},
+    error: null as Error | null,
+  };
+}
+
+function MFAChallenge(props: {
+  method: string;
+  onVerify: (code: string) => void;
+  onError: (err: Error) => void;
+  showBackupCodeOption?: boolean;
+}) {
+  return <p>MFA not yet available. {props.method}</p>;
+}
 
 interface MFAGateProps {
   /** Content that requires MFA verification to access */
@@ -45,16 +55,10 @@ interface MFAGateProps {
  * />
  * ```
  */
-export function MFAGate({
-  onVerified,
-  open,
-  onOpenChange,
-  title,
-  description,
-}: MFAGateProps) {
-  const { t } = useTranslation('billing');
+export function MFAGate({ onVerified, open, onOpenChange, title, description }: MFAGateProps) {
+  const { t } = useTranslation('common');
   const { user } = useAuth();
-  const { verify, isLoading, error } = useMFA();
+  const { verify, error } = useMFA();
   const [verifyError, setVerifyError] = useState<string | null>(null);
 
   const handleVerify = useCallback(
@@ -84,9 +88,7 @@ export function MFAGate({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>
-            {title || t('mfa.verifyTitle') || 'Verify Your Identity'}
-          </DialogTitle>
+          <DialogTitle>{title || t('mfa.verifyTitle') || 'Verify Your Identity'}</DialogTitle>
           <DialogDescription>
             {description ||
               t('mfa.verifyDescription') ||

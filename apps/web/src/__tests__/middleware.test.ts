@@ -23,7 +23,7 @@ describe('middleware public paths', () => {
     '/terms',
     '/cookies',
     '/security',
-    '/esg',
+    '/esg-methodology',
     '/status',
     '/docs',
   ];
@@ -33,7 +33,7 @@ describe('middleware public paths', () => {
   }
 
   describe('legal pages should be public', () => {
-    const legalPaths = ['/privacy', '/terms', '/cookies', '/security', '/esg', '/status', '/docs'];
+    const legalPaths = ['/privacy', '/terms', '/cookies', '/security', '/esg-methodology', '/status', '/docs'];
 
     for (const path of legalPaths) {
       it(`${path} should be a public path`, () => {

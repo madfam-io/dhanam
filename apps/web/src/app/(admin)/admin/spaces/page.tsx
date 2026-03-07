@@ -137,11 +137,7 @@ export default function SpacesPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setSelectedSpace(space)}
-                      >
+                      <Button variant="outline" size="sm" onClick={() => setSelectedSpace(space)}>
                         View Details
                       </Button>
                     </td>

@@ -15,7 +15,7 @@ const publicPaths = [
   '/terms',
   '/cookies',
   '/security',
-  '/esg',
+  '/esg-methodology',
   '/status',
   '/docs',
 ];

@@ -32,7 +32,7 @@
 | # | Bug | Severity | Status | Details |
 |---|-----|----------|--------|---------|
 | B1 | Demo login API endpoint missing | P0 | PERSISTING | `POST /v1/auth/demo/guest` returns 404. `POST /v1/auth/demo/persona` also fails. Blocks ALL dashboard testing. |
-| B2 | All 7 public pages redirect to login | P0 | PERSISTING | `/privacy`, `/terms`, `/security`, `/esg`, `/cookies`, `/status`, `/docs` all return 307 → `/login`. Middleware fix NOT deployed. |
+| B2 | All 7 public pages redirect to login | P0 | PERSISTING | `/privacy`, `/terms`, `/security`, `/esg-methodology`, `/cookies`, `/status`, `/docs` all return 307 → `/login`. Middleware fix NOT deployed. |
 
 ### HIGH (P1)
 

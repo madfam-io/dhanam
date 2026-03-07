@@ -8,7 +8,7 @@ import { adminApi, type SystemHealth, type Metrics } from '~/lib/api/admin';
 import { HealthStatusCard } from '~/components/admin/health-status-card';
 import { CacheControls } from '~/components/admin/cache-controls';
 import { StatsCard } from '~/components/admin/stats-card';
-import { RefreshCw, Users, Activity, MemoryStick } from 'lucide-react';
+import { RefreshCw, Users, Activity } from 'lucide-react';
 
 export default function SystemHealthPage() {
   const [health, setHealth] = useState<SystemHealth | null>(null);
@@ -18,10 +18,7 @@ export default function SystemHealthPage() {
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const [h, m] = await Promise.all([
-        adminApi.getSystemHealth(),
-        adminApi.getMetrics(),
-      ]);
+      const [h, m] = await Promise.all([adminApi.getSystemHealth(), adminApi.getMetrics()]);
       setHealth(h);
       setMetrics(m);
     } catch (error) {
@@ -40,8 +37,16 @@ export default function SystemHealthPage() {
   }
 
   const services = [
-    { name: 'Database', status: health.database.status, detail: `${health.database.connections} connections` },
-    { name: 'Redis', status: health.redis.status, detail: health.redis.connected ? 'Connected' : 'Disconnected' },
+    {
+      name: 'Database',
+      status: health.database.status,
+      detail: `${health.database.connections} connections`,
+    },
+    {
+      name: 'Redis',
+      status: health.redis.status,
+      detail: health.redis.connected ? 'Connected' : 'Disconnected',
+    },
     { name: 'Job Queues', status: health.queues.status },
     { name: 'Providers', status: health.providers.status },
   ];
@@ -51,7 +56,9 @@ export default function SystemHealthPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">System Health</h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">Monitor system status and performance</p>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">
+            Monitor system status and performance
+          </p>
         </div>
         <Button variant="outline" onClick={loadData} className="flex items-center space-x-2">
           <RefreshCw className="h-4 w-4" />
