@@ -35,6 +35,7 @@
     "expo": "~54.0.33",
     "expo-auth-session": "~5.5.2",
     "expo-camera": "~15.0.10",
+    "expo-constants": "~17.0.8",
     "expo-crypto": "~13.0.2",
     "expo-device": "~8.0.10",
     "expo-font": "~14.0.11",
@@ -62,6 +63,7 @@
   "devDependencies": {
     "@babel/core": "^7.29.0",
     "@dhanam/config": "workspace:*",
+    "@testing-library/react-native": "^12.9.0",
     "@types/jest": "^30.0.0",
     "@types/react": "~19.2.10",
     "@types/react-native": "^0.73.0",
