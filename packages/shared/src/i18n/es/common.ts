@@ -120,6 +120,7 @@ export const common = {
   somethingWentWrong: 'Algo salió mal',
   tryAgain: 'Intentar de nuevo',
   errorOccurred: 'Ocurrió un error',
+  loadFailed: 'No pudimos cargar tus datos. Por favor, intenta de nuevo.',
   pleaseCheck: 'Por favor verifica',
 
   // Success messages
@@ -210,6 +211,17 @@ export const common = {
   version: 'Versión',
   language: 'Idioma',
   timezone: 'Zona horaria',
+
+  // Notifications page
+  notifications: 'Notificaciones',
+  noNotifications: 'Sin notificaciones',
+  unreadCount: '{{count}} sin leer',
+  allCaughtUp: '¡Estás al día!',
+  markAllAsRead: 'Marcar todo como leído',
+  alerts: 'Alertas',
+  insights: 'Insights',
+  reminders: 'Recordatorios',
+  earlier: 'Anteriores',
 
   // Aria labels
   aria: {

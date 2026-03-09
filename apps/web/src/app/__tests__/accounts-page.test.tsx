@@ -29,8 +29,10 @@ jest.mock('lucide-react', () =>
   }),
 );
 
+const mockUseQuery = jest.fn().mockReturnValue({ data: null, isLoading: false, isError: false });
+
 jest.mock('@tanstack/react-query', () => ({
-  useQuery: () => ({ data: null, isLoading: false }),
+  useQuery: (...args: any[]) => mockUseQuery(...args),
   useMutation: () => ({ mutate: jest.fn(), isPending: false }),
   useQueryClient: () => ({ invalidateQueries: jest.fn() }),
 }));
@@ -69,8 +71,26 @@ jest.mock('@/components/providers/bitso-connect', () => ({
 import AccountsPage from '../(dashboard)/accounts/page';
 
 describe('AccountsPage', () => {
+  beforeEach(() => {
+    mockUseQuery.mockReturnValue({ data: null, isLoading: false, isError: false });
+  });
+
   it('should render without crashing', () => {
     const { container } = render(<AccountsPage />);
     expect(container).toBeTruthy();
+  });
+
+  it('should render error state when query fails', () => {
+    mockUseQuery.mockReturnValue({ data: null, isLoading: false, isError: true, error: new Error('API error') });
+    render(<AccountsPage />);
+    expect(screen.getByText('somethingWentWrong')).toBeTruthy();
+    expect(screen.getByText('loadFailed')).toBeTruthy();
+    expect(screen.getByText('tryAgain')).toBeTruthy();
+  });
+
+  it('should render empty state when no accounts exist', () => {
+    mockUseQuery.mockReturnValue({ data: [], isLoading: false, isError: false });
+    render(<AccountsPage />);
+    expect(screen.getByText('empty.title')).toBeTruthy();
   });
 });

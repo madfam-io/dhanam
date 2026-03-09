@@ -120,6 +120,7 @@ export const common = {
   somethingWentWrong: 'Something went wrong',
   tryAgain: 'Try again',
   errorOccurred: 'An error occurred',
+  loadFailed: "We couldn't load your data. Please try again.",
   pleaseCheck: 'Please check',
 
   // Success messages
@@ -210,6 +211,17 @@ export const common = {
   version: 'Version',
   language: 'Language',
   timezone: 'Timezone',
+
+  // Notifications page
+  notifications: 'Notifications',
+  noNotifications: 'No notifications',
+  unreadCount: '{{count}} unread',
+  allCaughtUp: "You're all caught up!",
+  markAllAsRead: 'Mark all as read',
+  alerts: 'Alerts',
+  insights: 'Insights',
+  reminders: 'Reminders',
+  earlier: 'Earlier',
 
   // Aria labels
   aria: {

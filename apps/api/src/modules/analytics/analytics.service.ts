@@ -7,7 +7,7 @@ import {
   AccountBalanceAnalytics,
   PortfolioAllocation,
 } from '@dhanam/shared';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { subDays, startOfDay, eachDayOfInterval, format } from 'date-fns';
 
 import { Currency } from '@db';
@@ -42,6 +42,8 @@ export interface NetWorthByOwnership {
 
 @Injectable()
 export class AnalyticsService {
+  private readonly logger = new Logger(AnalyticsService.name);
+
   constructor(
     private prisma: PrismaService,
     private spacesService: SpacesService,
@@ -61,7 +63,17 @@ export class AnalyticsService {
     targetCurrency?: Currency
   ): Promise<NetWorthResponse> {
     await this.spacesService.verifyUserAccess(userId, spaceId, 'viewer');
+    return this._getNetWorthUnchecked(spaceId, targetCurrency);
+  }
 
+  /**
+   * Internal net worth calculation that skips access verification.
+   * Used by getDashboardData which already verified access once.
+   */
+  private async _getNetWorthUnchecked(
+    spaceId: string,
+    targetCurrency?: Currency
+  ): Promise<NetWorthResponse> {
     // Get space to determine default currency
     const space = await this.prisma.space.findUnique({
       where: { id: spaceId },
@@ -84,6 +96,37 @@ export class AnalyticsService {
       where: { spaceId },
     });
 
+    // Pre-fetch all needed FX rates in parallel (Phase 2.1)
+    const neededPairs = new Set<string>();
+    for (const account of accounts) {
+      const cur = account.currency as Currency;
+      if (cur !== displayCurrency) neededPairs.add(`${cur}:${displayCurrency}`);
+      // DeFi crypto check
+      if (account.type === 'crypto') {
+        const metadata = account.metadata as { defiValueUsd?: number } | null;
+        if (metadata?.defiValueUsd && metadata.defiValueUsd > 0 && displayCurrency !== Currency.USD) {
+          neededPairs.add(`${Currency.USD}:${displayCurrency}`);
+        }
+      }
+    }
+    for (const asset of manualAssets) {
+      const cur = asset.currency as Currency;
+      if (cur !== displayCurrency) neededPairs.add(`${cur}:${displayCurrency}`);
+    }
+
+    const rateMap = new Map<string, number>();
+    await Promise.all(
+      Array.from(neededPairs).map(async (pair) => {
+        const [from, to] = pair.split(':') as [Currency, Currency];
+        rateMap.set(pair, await this.fxRatesService.getExchangeRate(from, to));
+      })
+    );
+
+    const getRate = (from: Currency, to: Currency): number => {
+      if (from === to) return 1;
+      return rateMap.get(`${from}:${to}`) ?? 1;
+    };
+
     // Convert all account balances to target currency
     let totalAssets = 0;
     let totalLiabilities = 0;
@@ -95,11 +138,7 @@ export class AnalyticsService {
       // Convert to target currency if different
       let convertedBalance = balance;
       if (accountCurrency !== displayCurrency) {
-        convertedBalance = await this.fxRatesService.convertAmount(
-          Math.abs(balance),
-          accountCurrency,
-          displayCurrency
-        );
+        convertedBalance = Math.abs(balance) * getRate(accountCurrency, displayCurrency);
         // Preserve sign after conversion
         if (balance < 0) convertedBalance = -convertedBalance;
       }
@@ -117,11 +156,7 @@ export class AnalyticsService {
           // DeFi values are already in USD, convert to target currency if needed
           let defiValue = metadata.defiValueUsd;
           if (displayCurrency !== Currency.USD) {
-            defiValue = await this.fxRatesService.convertAmount(
-              defiValue,
-              Currency.USD,
-              displayCurrency
-            );
+            defiValue = defiValue * getRate(Currency.USD, displayCurrency);
           }
           totalAssets += defiValue;
         }
@@ -135,11 +170,7 @@ export class AnalyticsService {
 
       let convertedValue = value;
       if (assetCurrency !== displayCurrency) {
-        convertedValue = await this.fxRatesService.convertAmount(
-          value,
-          assetCurrency,
-          displayCurrency
-        );
+        convertedValue = value * getRate(assetCurrency, displayCurrency);
       }
 
       totalAssets += convertedValue;
@@ -159,14 +190,37 @@ export class AnalyticsService {
       orderBy: { date: 'asc' },
     });
 
+    // Pre-fetch FX rates for historical valuations
+    for (const v of historicalValuations) {
+      const account = accounts.find((a) => a.id === v.accountId);
+      const valuationCurrency = (v.currency || account?.currency || Currency.MXN) as Currency;
+      if (valuationCurrency !== displayCurrency) {
+        const pairKey = `${valuationCurrency}:${displayCurrency}`;
+        if (!rateMap.has(pairKey)) {
+          neededPairs.add(pairKey);
+        }
+      }
+    }
+
+    // Fetch any additional rates needed for historical valuations
+    const additionalPairs = Array.from(neededPairs).filter((p) => !rateMap.has(p));
+    if (additionalPairs.length > 0) {
+      await Promise.all(
+        additionalPairs.map(async (pair) => {
+          const [from, to] = pair.split(':') as [Currency, Currency];
+          rateMap.set(pair, await this.fxRatesService.getExchangeRate(from, to));
+        })
+      );
+    }
+
     // Convert historical valuations to target currency for consistent trend
-    const trendPromises = historicalValuations.map(async (v) => {
+    const trend = historicalValuations.map((v) => {
       const account = accounts.find((a) => a.id === v.accountId);
       const valuationCurrency = (v.currency || account?.currency || Currency.MXN) as Currency;
       let value = v.value.toNumber();
 
       if (valuationCurrency !== displayCurrency) {
-        value = await this.fxRatesService.convertAmount(value, valuationCurrency, displayCurrency);
+        value = value * getRate(valuationCurrency, displayCurrency);
       }
 
       return {
@@ -174,8 +228,6 @@ export class AnalyticsService {
         value,
       };
     });
-
-    const trend = await Promise.all(trendPromises);
 
     // Calculate change from earliest to latest
     let changeAmount = 0;
@@ -225,6 +277,33 @@ export class AnalyticsService {
       where: { spaceId },
     });
 
+    // Pre-fetch all needed FX rates in parallel (Phase 2.1)
+    const neededPairs = new Set<string>();
+    for (const account of accounts) {
+      const cur = account.currency as Currency;
+      if (cur !== displayCurrency) neededPairs.add(`${cur}:${displayCurrency}`);
+      // DeFi crypto check
+      if (account.type === 'crypto') {
+        const metadata = account.metadata as { defiValueUsd?: number } | null;
+        if (metadata?.defiValueUsd && metadata.defiValueUsd > 0 && displayCurrency !== Currency.USD) {
+          neededPairs.add(`${Currency.USD}:${displayCurrency}`);
+        }
+      }
+    }
+
+    const rateMap = new Map<string, number>();
+    await Promise.all(
+      Array.from(neededPairs).map(async (pair) => {
+        const [from, to] = pair.split(':') as [Currency, Currency];
+        rateMap.set(pair, await this.fxRatesService.getExchangeRate(from, to));
+      })
+    );
+
+    const getRate = (from: Currency, to: Currency): number => {
+      if (from === to) return 1;
+      return rateMap.get(`${from}:${to}`) ?? 1;
+    };
+
     // Initialize totals for each category
     const categories = {
       yours: { assets: 0, liabilities: 0, count: 0 },
@@ -239,11 +318,7 @@ export class AnalyticsService {
       // Convert to target currency if different
       let convertedBalance = balance;
       if (accountCurrency !== displayCurrency) {
-        convertedBalance = await this.fxRatesService.convertAmount(
-          Math.abs(balance),
-          accountCurrency,
-          displayCurrency
-        );
+        convertedBalance = Math.abs(balance) * getRate(accountCurrency, displayCurrency);
         if (balance < 0) convertedBalance = -convertedBalance;
       }
 
@@ -273,11 +348,7 @@ export class AnalyticsService {
         if (metadata?.defiValueUsd && metadata.defiValueUsd > 0) {
           let defiValue = metadata.defiValueUsd;
           if (displayCurrency !== Currency.USD) {
-            defiValue = await this.fxRatesService.convertAmount(
-              defiValue,
-              Currency.USD,
-              displayCurrency
-            );
+            defiValue = defiValue * getRate(Currency.USD, displayCurrency);
           }
           categories[category].assets += defiValue;
         }
@@ -468,7 +539,14 @@ export class AnalyticsService {
 
   async getCashflowForecast(userId: string, spaceId: string, days = 60): Promise<CashflowForecast> {
     await this.spacesService.verifyUserAccess(userId, spaceId, 'viewer');
+    return this._getCashflowForecastUnchecked(spaceId, days);
+  }
 
+  /**
+   * Internal cashflow forecast that skips access verification.
+   * Used by getDashboardData which already verified access once.
+   */
+  private async _getCashflowForecastUnchecked(spaceId: string, days = 60): Promise<CashflowForecast> {
     // Get current liquid account balances
     const liquidAccounts = await this.prisma.account.findMany({
       where: {
@@ -625,6 +703,10 @@ export class AnalyticsService {
       .sort((a, b) => b.amount - a.amount);
   }
 
+  /**
+   * Get income vs expenses for the last N months.
+   * Uses a single GROUP BY query instead of 2*N individual queries.
+   */
   async getIncomeVsExpenses(
     userId: string,
     spaceId: string,
@@ -632,37 +714,45 @@ export class AnalyticsService {
   ): Promise<IncomeVsExpenses[]> {
     await this.spacesService.verifyUserAccess(userId, spaceId, 'viewer');
 
-    const result: IncomeVsExpenses[] = [];
     const today = new Date();
+    const sixMonthsAgo = new Date(today.getFullYear(), today.getMonth() - (months - 1), 1);
 
+    const rawData = await this.prisma.$queryRaw<
+      Array<{ month: string; income: string | null; expenses: string | null }>
+    >`
+      SELECT
+        TO_CHAR(t.date, 'YYYY-MM') as month,
+        SUM(CASE WHEN t.amount > 0 THEN t.amount ELSE 0 END) as income,
+        SUM(CASE WHEN t.amount < 0 THEN ABS(t.amount) ELSE 0 END) as expenses
+      FROM transactions t
+      JOIN accounts a ON t.account_id = a.id
+      WHERE a.space_id = ${spaceId}
+        AND t.date >= ${sixMonthsAgo}
+        AND t.deleted_at IS NULL
+      GROUP BY TO_CHAR(t.date, 'YYYY-MM')
+      ORDER BY month ASC
+    `;
+
+    // Build a map from raw results
+    const dataMap = new Map<string, { income: number; expenses: number }>();
+    for (const row of rawData) {
+      dataMap.set(row.month, {
+        income: parseFloat(row.income ?? '0'),
+        expenses: parseFloat(row.expenses ?? '0'),
+      });
+    }
+
+    // Fill all months (including those with no transactions)
+    const result: IncomeVsExpenses[] = [];
     for (let i = months - 1; i >= 0; i--) {
-      const startDate = new Date(today.getFullYear(), today.getMonth() - i, 1);
-      const endDate = new Date(today.getFullYear(), today.getMonth() - i + 1, 0);
-
-      const [income, expenses] = await Promise.all([
-        this.prisma.transaction.aggregate({
-          where: {
-            account: { spaceId },
-            date: { gte: startDate, lte: endDate },
-            amount: { gt: 0 },
-          },
-          _sum: { amount: true },
-        }),
-        this.prisma.transaction.aggregate({
-          where: {
-            account: { spaceId },
-            date: { gte: startDate, lte: endDate },
-            amount: { lt: 0 },
-          },
-          _sum: { amount: true },
-        }),
-      ]);
-
+      const monthDate = new Date(today.getFullYear(), today.getMonth() - i, 1);
+      const monthKey = monthDate.toISOString().slice(0, 7);
+      const data = dataMap.get(monthKey) || { income: 0, expenses: 0 };
       result.push({
-        month: startDate.toISOString().slice(0, 7),
-        income: income._sum.amount?.toNumber() || 0,
-        expenses: Math.abs(expenses._sum.amount?.toNumber() || 0),
-        net: (income._sum.amount?.toNumber() || 0) + (expenses._sum.amount?.toNumber() || 0),
+        month: monthKey,
+        income: data.income,
+        expenses: data.expenses,
+        net: data.income - data.expenses,
       });
     }
 
@@ -689,7 +779,14 @@ export class AnalyticsService {
 
   async getPortfolioAllocation(userId: string, spaceId: string): Promise<PortfolioAllocation[]> {
     await this.spacesService.verifyUserAccess(userId, spaceId, 'viewer');
+    return this._getPortfolioAllocationUnchecked(spaceId);
+  }
 
+  /**
+   * Internal portfolio allocation that skips access verification.
+   * Used by getDashboardData which already verified access once.
+   */
+  private async _getPortfolioAllocationUnchecked(spaceId: string): Promise<PortfolioAllocation[]> {
     const accounts = await this.prisma.account.findMany({
       where: { spaceId },
     });
@@ -730,65 +827,119 @@ export class AnalyticsService {
   async getDashboardData(userId: string, spaceId: string) {
     await this.spacesService.verifyUserAccess(userId, spaceId, 'viewer');
 
-    // Fetch all data in parallel
-    const [
-      accounts,
-      recentTransactions,
-      budgetsWithSummary,
-      netWorth,
-      cashflowForecast,
-      portfolioAllocation,
-      goals,
-    ] = await Promise.all([
-      // Accounts
-      this.prisma.account.findMany({
-        where: { spaceId },
-        orderBy: { balance: 'desc' },
-      }),
-      // Recent transactions (limit 5)
-      this.prisma.transaction.findMany({
-        where: { account: { spaceId } },
-        orderBy: { date: 'desc' },
-        take: 5,
-        include: { account: true },
-      }),
-      // Budgets with first budget summary
-      this.getBudgetsWithSummary(spaceId),
-      // Net worth
-      this.getNetWorth(userId, spaceId),
-      // Cashflow forecast
-      this.getCashflowForecast(userId, spaceId, 60),
-      // Portfolio allocation
-      this.getPortfolioAllocation(userId, spaceId),
-      // Goals
-      this.prisma.goal.findMany({
-        where: { spaceId },
-        include: {
-          allocations: {
-            include: {
-              account: {
-                select: {
-                  id: true,
-                  name: true,
-                  balance: true,
-                  currency: true,
+    const startTime = performance.now();
+    const timings: Record<string, number> = {};
+
+    // Wrap each sub-query to track timing
+    const timed = async <T>(name: string, fn: () => Promise<T>): Promise<T> => {
+      const t0 = performance.now();
+      try {
+        const result = await fn();
+        timings[name] = Math.round(performance.now() - t0);
+        return result;
+      } catch (e) {
+        timings[name] = Math.round(performance.now() - t0);
+        throw e;
+      }
+    };
+
+    // Fetch all data in parallel with fault tolerance — one sub-query failure
+    // should not crash the entire dashboard endpoint.
+    // Uses _unchecked variants to skip redundant verifyUserAccess calls (Phase 1.1).
+    const results = await Promise.allSettled([
+      // 0: Accounts
+      timed('accounts', () =>
+        this.prisma.account.findMany({
+          where: { spaceId },
+          orderBy: { balance: 'desc' },
+        })
+      ),
+      // 1: Recent transactions (limit 5)
+      timed('transactions', () =>
+        this.prisma.transaction.findMany({
+          where: { account: { spaceId } },
+          orderBy: { date: 'desc' },
+          take: 5,
+          include: { account: true },
+        })
+      ),
+      // 2: Budgets with first budget summary
+      timed('budgets', () => this.getBudgetsWithSummary(spaceId)),
+      // 3: Net worth (unchecked — access already verified above)
+      timed('netWorth', () => this._getNetWorthUnchecked(spaceId)),
+      // 4: Cashflow forecast (unchecked — access already verified above)
+      timed('cashflowForecast', () => this._getCashflowForecastUnchecked(spaceId, 60)),
+      // 5: Portfolio allocation (unchecked — access already verified above)
+      timed('portfolioAllocation', () => this._getPortfolioAllocationUnchecked(spaceId)),
+      // 6: Goals
+      timed('goals', () =>
+        this.prisma.goal.findMany({
+          where: { spaceId },
+          include: {
+            allocations: {
+              include: {
+                account: {
+                  select: {
+                    id: true,
+                    name: true,
+                    balance: true,
+                    currency: true,
+                  },
                 },
               },
             },
           },
-        },
-        orderBy: [{ priority: 'asc' }, { targetDate: 'asc' }],
-        take: 10,
-      }),
+          orderBy: [{ priority: 'asc' }, { targetDate: 'asc' }],
+          take: 10,
+        })
+      ),
     ]);
 
+    timings['total'] = Math.round(performance.now() - startTime);
+    this.logger.log(`Dashboard timings: ${JSON.stringify(timings)}`);
+
+    const sectionNames = [
+      'accounts',
+      'recentTransactions',
+      'budgets',
+      'netWorth',
+      'cashflowForecast',
+      'portfolioAllocation',
+      'goals',
+    ];
+
+    const _errors: string[] = [];
+
+    // Extract results with safe fallbacks
+    const extract = <T>(index: number, fallback: T): T => {
+      const result = results[index];
+      if (result.status === 'fulfilled') return result.value as T;
+      this.logger.error(
+        `getDashboardData: ${sectionNames[index]} failed for space ${spaceId}`,
+        result.reason?.stack || result.reason
+      );
+      _errors.push(sectionNames[index]);
+      return fallback;
+    };
+
+    const accounts = extract<any[]>(0, []);
+    const recentTransactions = extract<any[]>(1, []);
+    const budgetsWithSummary = extract<{ budgets: any[]; summary: any }>(2, {
+      budgets: [],
+      summary: null,
+    });
+    const netWorth = extract<any>(3, null);
+    const cashflowForecast = extract<any>(4, null);
+    const portfolioAllocation = extract<any[]>(5, []);
+    const goals = extract<any[]>(6, []);
+
     return {
-      accounts: accounts.map((a) => ({
+      accounts: accounts.map((a: any) => ({
         ...a,
         balance: a.balance.toNumber(),
       })),
       recentTransactions: {
-        data: recentTransactions.map((t) => ({
+        data: recentTransactions.map((t: any) => ({
           ...t,
           amount: t.amount.toNumber(),
           date: t.date.toISOString(),
@@ -800,7 +951,7 @@ export class AnalyticsService {
       netWorth,
       cashflowForecast,
       portfolioAllocation,
-      goals: goals.map((g) => ({
+      goals: goals.map((g: any) => ({
         ...g,
         targetAmount: g.targetAmount.toNumber(),
         currentProbability: g.currentProbability?.toNumber() ?? null,
@@ -810,7 +961,7 @@ export class AnalyticsService {
         expectedReturn: g.expectedReturn?.toNumber() ?? null,
         volatility: g.volatility?.toNumber() ?? null,
         monthlyContribution: g.monthlyContribution?.toNumber() ?? null,
-        allocations: g.allocations.map((a) => ({
+        allocations: g.allocations.map((a: any) => ({
           ...a,
           percentage: a.percentage.toNumber(),
           account: {
@@ -819,6 +970,7 @@ export class AnalyticsService {
           },
         })),
       })),
+      ...(_errors.length > 0 ? { _errors } : {}),
     };
   }
 

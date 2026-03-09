@@ -7,8 +7,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowRight, CheckCircle2, Sparkles, Loader2 } from 'lucide-react';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '~/lib/hooks/use-auth';
 import { authApi } from '~/lib/api/auth';
+import { useSpaceStore } from '~/stores/space';
 
 const PERSONAS = [
   {
@@ -87,6 +89,7 @@ export default function DemoPage() {
   const searchParams = useSearchParams();
   const analytics = useAnalytics();
   const { setAuth } = useAuth();
+  const queryClient = useQueryClient();
 
   const [loadingPersona, setLoadingPersona] = useState<string | null>(null);
   const [activePersona, setActivePersona] = useState<string | null>(null);
@@ -114,10 +117,16 @@ export default function DemoPage() {
       const result = await authApi.loginAsPersona(personaKey);
       setAuth(result.user as any, result.tokens);
 
+      // Clear stale space data to prevent mismatches with previous persona
+      useSpaceStore.getState().setCurrentSpace(null);
+      useSpaceStore.getState().setSpaces([]);
+
+      // Wipe React Query cache — client-side nav preserves it, causing stale data
+      queryClient.clear();
+
       // Set demo-mode cookie so middleware and layout detect demo mode
       document.cookie = 'demo-mode=true; path=/; max-age=7200; SameSite=Lax';
 
-      // Client-side navigation preserves Zustand state (no rehydration race)
       router.push('/dashboard');
     } catch (err) {
       console.error('Failed to login as persona:', err);

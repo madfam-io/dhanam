@@ -165,6 +165,7 @@ export default function TransactionsPage() {
       return categoriesApi.getCategories(currentSpace.id);
     },
     enabled: !!currentSpace,
+    staleTime: 5 * 60 * 1000, // 5 min — categories are reference data that rarely changes
   });
 
   const createMutation = useMutation({

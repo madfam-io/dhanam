@@ -152,8 +152,9 @@ export interface DashboardData {
   };
   budgets: Budget[];
   currentBudgetSummary: BudgetSummary | null;
-  netWorth: NetWorthResponse;
-  cashflowForecast: CashflowForecast;
+  netWorth: NetWorthResponse | null;
+  cashflowForecast: CashflowForecast | null;
   portfolioAllocation: PortfolioAllocation[];
   goals: Goal[];
+  _errors?: string[];
 }

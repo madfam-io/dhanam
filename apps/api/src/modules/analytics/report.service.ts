@@ -173,21 +173,25 @@ export class ReportService {
             doc.fontSize(20).text('Budget Performance', 50, 50);
             doc.fontSize(12);
 
+            // Batch-fetch all budget-related transactions in a single query
+            const allCategoryIds = budgets.flatMap((b) => b.categories.map((c) => c.id));
+            const allBudgetTransactions = allCategoryIds.length > 0
+              ? await this.prisma.transaction.findMany({
+                  where: {
+                    account: { spaceId },
+                    date: { gte: startDate, lte: endDate },
+                    categoryId: { in: allCategoryIds },
+                  },
+                })
+              : [];
+
             yPos = 100;
             for (const budget of budgets) {
-              // Calculate budget spending
-              const budgetTransactions = await this.prisma.transaction.findMany({
-                where: {
-                  account: { spaceId },
-                  date: {
-                    gte: startDate,
-                    lte: endDate,
-                  },
-                  categoryId: {
-                    in: budget.categories.map((c) => c.id),
-                  },
-                },
-              });
+              // Filter from pre-fetched transactions instead of querying per budget
+              const budgetCategoryIds = new Set(budget.categories.map((c) => c.id));
+              const budgetTransactions = allBudgetTransactions.filter(
+                (t) => t.categoryId && budgetCategoryIds.has(t.categoryId)
+              );
 
               const totalSpent = Math.abs(
                 budgetTransactions

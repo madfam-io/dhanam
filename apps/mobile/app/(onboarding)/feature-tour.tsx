@@ -66,7 +66,7 @@ export default function FeatureTourScreen() {
   const router = useRouter();
   const { completeOnboarding } = useOnboarding();
   const [currentIndex, setCurrentIndex] = useState(0);
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<typeof ScrollView>(null);
 
   const handleNext = () => {
     if (currentIndex < features.length - 1) {

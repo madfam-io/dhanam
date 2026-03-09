@@ -13,6 +13,7 @@ import { Button } from '@dhanam/ui';
 import { ChevronDown, Loader2 } from 'lucide-react';
 import { useAuth } from '~/lib/hooks/use-auth';
 import { authApi } from '~/lib/api/auth';
+import { useSpaceStore } from '~/stores/space';
 import { useTranslation } from '@dhanam/shared';
 
 import { useDemoNavigation } from '~/lib/contexts/demo-navigation-context';
@@ -39,6 +40,9 @@ export function PersonaSwitcher({ currentPersona }: { currentPersona?: string })
     try {
       const result = await authApi.switchPersona(personaKey);
       setAuth(result.user, result.tokens);
+      // Clear stale space data before reload to prevent rehydration race
+      useSpaceStore.getState().setCurrentSpace(null);
+      useSpaceStore.getState().setSpaces([]);
       // Full page reload to reset all state with the new persona's data
       window.location.href = demoHref('/dashboard');
     } catch (error) {

@@ -28,8 +28,10 @@ jest.mock('lucide-react', () =>
   }),
 );
 
+const mockUseQuery = jest.fn().mockReturnValue({ data: null, isLoading: false, isError: false });
+
 jest.mock('@tanstack/react-query', () => ({
-  useQuery: () => ({ data: null, isLoading: false }),
+  useQuery: (...args: any[]) => mockUseQuery(...args),
   useMutation: () => ({ mutate: jest.fn(), isPending: false }),
   useQueryClient: () => ({ invalidateQueries: jest.fn() }),
 }));
@@ -53,8 +55,20 @@ try {
 }
 
 describe('BudgetsPage', () => {
+  beforeEach(() => {
+    mockUseQuery.mockReturnValue({ data: null, isLoading: false, isError: false });
+  });
+
   it('should render without crashing', () => {
     const { container } = render(<BudgetsPage />);
     expect(container).toBeTruthy();
+  });
+
+  it('should render error state when query fails', () => {
+    mockUseQuery.mockReturnValue({ data: null, isLoading: false, isError: true, error: new Error('API error') });
+    const { container } = render(<BudgetsPage />);
+    expect(container.textContent).toContain('somethingWentWrong');
+    expect(container.textContent).toContain('loadFailed');
+    expect(container.textContent).toContain('tryAgain');
   });
 });

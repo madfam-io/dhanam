@@ -27,8 +27,8 @@ export const householdsKeys = {
   members: (id: string) => [...householdsKeys.detail(id), 'members'] as const,
 };
 
-// Default stale time: 30 seconds for household data
-const DEFAULT_STALE_TIME = 30 * 1000;
+// Default stale time: 60 seconds for household data (household config changes infrequently)
+const DEFAULT_STALE_TIME = 60 * 1000;
 
 async function fetchWithAuth(token: string, url: string, options?: RequestInit) {
   const response = await fetch(`${API_BASE_URL}${url}`, {

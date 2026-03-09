@@ -9,7 +9,9 @@ import { Progress } from '@dhanam/ui';
 import { useAuth } from '~/lib/hooks/use-auth';
 import { useSpaceStore } from '~/stores/space';
 import { analyticsApi } from '~/lib/api/analytics';
+import { authApi } from '~/lib/api/auth';
 import { CategorySummary } from '~/lib/api/budgets';
+import { analyticsKeys } from '~/lib/query-keys';
 import { formatCurrency } from '~/lib/utils';
 import { useTranslation } from '@dhanam/shared';
 import {
@@ -23,6 +25,8 @@ import {
   Building2,
   Loader2,
   Gamepad2,
+  AlertCircle,
+  RefreshCw,
 } from 'lucide-react';
 import { SyncStatus } from '@/components/sync/sync-status';
 import { HelpTooltip } from '@/components/demo/help-tooltip';
@@ -42,29 +46,69 @@ export default function DashboardPage() {
   const isGuestDemo = user?.email === 'guest@dhanam.demo';
   const { t } = useTranslation('dashboard');
 
-  const { data: dashboardData, isLoading } = useQuery({
-    queryKey: ['dashboard-data', currentSpace?.id],
+  // Fast data -- accounts, transactions, budgets, goals are simple DB queries
+  const {
+    data: dashboardData,
+    isLoading: isDashboardLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: analyticsKeys.dashboard(currentSpace?.id ?? ''),
     queryFn: () => {
       if (!currentSpace) throw new Error('No current space');
       return analyticsApi.getDashboardData(currentSpace.id);
     },
     enabled: !!currentSpace,
-    staleTime: 30000,
+    staleTime: 30_000,
+    retry: 1,
+  });
+
+  // Slow analytics queries -- independent so cards render progressively as they arrive
+  const { data: netWorthIndependent, isLoading: isNetWorthLoading } = useQuery({
+    queryKey: analyticsKeys.netWorth(currentSpace?.id ?? ''),
+    queryFn: () => analyticsApi.getNetWorth(currentSpace!.id),
+    enabled: !!currentSpace,
+    staleTime: 120_000, // 2 min -- net worth updates less frequently
+  });
+
+  const { data: cashflowIndependent, isLoading: isCashflowLoading } = useQuery({
+    queryKey: analyticsKeys.cashflowForecast(currentSpace?.id ?? ''),
+    queryFn: () => analyticsApi.getCashflowForecast(currentSpace!.id),
+    enabled: !!currentSpace,
+    staleTime: 120_000,
+  });
+
+  const { data: portfolioIndependent, isLoading: isPortfolioLoading } = useQuery({
+    queryKey: analyticsKeys.portfolioAllocation(currentSpace?.id ?? ''),
+    queryFn: () => analyticsApi.getPortfolioAllocation(currentSpace!.id),
+    enabled: !!currentSpace,
+    staleTime: 120_000,
   });
 
   const accounts = dashboardData?.accounts;
   const recentTransactions = dashboardData?.recentTransactions;
   const budgets = dashboardData?.budgets;
   const currentBudgetSummary = dashboardData?.currentBudgetSummary;
-  const netWorthData = dashboardData?.netWorth;
-  const cashflowForecast = dashboardData?.cashflowForecast;
-  const portfolioAllocation = dashboardData?.portfolioAllocation;
   const goals = dashboardData?.goals;
+
+  // Prefer independent query data, fall back to dashboard bundle while loading
+  const netWorthData = netWorthIndependent ?? dashboardData?.netWorth ?? null;
+  const cashflowForecast = cashflowIndependent ?? dashboardData?.cashflowForecast ?? null;
+  const portfolioAllocation =
+    portfolioIndependent ?? dashboardData?.portfolioAllocation ?? [];
+
+  // Unified loading flag for sections that rely on the dashboard bundle
+  const isLoading = isDashboardLoading;
 
   const activeGoals = goals?.filter((g) => g.status === 'active') || [];
 
   if (!currentSpace) {
     return <EmptyState />;
+  }
+
+  if (isError) {
+    return <DashboardErrorState error={error} onRetry={refetch} />;
   }
 
   const totalAssets =
@@ -91,6 +135,20 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       {isDemo && <DemoTour />}
+
+      {dashboardData?._errors && dashboardData._errors.length > 0 && (
+        <div className="flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-950">
+          <AlertCircle className="h-4 w-4 text-amber-600 shrink-0" />
+          <p className="text-sm text-amber-800 dark:text-amber-200 flex-1">
+            {t('cards.error', { defaultValue: 'Some data failed to load' })}:{' '}
+            {dashboardData._errors.join(', ')}
+          </p>
+          <Button variant="ghost" size="sm" onClick={() => refetch()}>
+            <RefreshCw className="h-3 w-3 mr-1" />
+            {t('cards.refresh', { defaultValue: 'Refresh' })}
+          </Button>
+        </div>
+      )}
 
       <div>
         <h2 className="text-3xl font-bold tracking-tight">
@@ -120,7 +178,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {isLoading ? (
+              {isLoading && isNetWorthLoading ? (
                 <Skeleton className="h-8 w-24" />
               ) : (
                 formatCurrency(netWorth, currentSpace.currency)
@@ -307,7 +365,21 @@ export default function DashboardPage() {
       </div>
 
       {/* Cashflow Forecast */}
-      {cashflowForecast ? (
+      {isCashflowLoading && !cashflowForecast ? (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <CardTitle>{t('overview.cashflowForecast')}</CardTitle>
+            </div>
+            <CardDescription>{t('overview.projectedDescription')}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          </CardContent>
+        </Card>
+      ) : cashflowForecast ? (
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
@@ -381,7 +453,19 @@ export default function DashboardPage() {
       )}
 
       {/* Portfolio Allocation */}
-      {portfolioAllocation && portfolioAllocation.length > 0 ? (
+      {isPortfolioLoading && portfolioAllocation.length === 0 ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>{t('overview.portfolioAllocation')}</CardTitle>
+            <CardDescription>{t('overview.portfolioDescription')}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          </CardContent>
+        </Card>
+      ) : portfolioAllocation && portfolioAllocation.length > 0 ? (
         <Card>
           <CardHeader>
             <CardTitle>{t('overview.portfolioAllocation')}</CardTitle>
@@ -664,6 +748,7 @@ export default function DashboardPage() {
 }
 
 function MeetThePersonas() {
+  const { setAuth } = useAuth();
   const personas = [
     {
       key: 'maria',
@@ -697,14 +782,15 @@ function MeetThePersonas() {
 
   const switchPersona = async (key: string) => {
     try {
-      const res = await fetch('/api/auth/switch-persona', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ persona: key }),
-      });
-      if (res.ok) window.location.reload();
-    } catch {}
+      const result = await authApi.switchPersona(key);
+      setAuth(result.user as any, result.tokens);
+      // Clear stale space data before reload to prevent rehydration race
+      useSpaceStore.getState().setCurrentSpace(null);
+      useSpaceStore.getState().setSpaces([]);
+      window.location.href = '/dashboard';
+    } catch (err) {
+      console.error('Failed to switch persona:', err);
+    }
   };
 
   return (
@@ -730,6 +816,28 @@ function MeetThePersonas() {
             </button>
           ))}
         </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function DashboardErrorState({ error, onRetry }: { error: Error | null; onRetry: () => void }) {
+  const { t } = useTranslation('dashboard');
+
+  return (
+    <Card>
+      <CardContent className="flex flex-col items-center justify-center py-10">
+        <AlertCircle className="h-12 w-12 text-destructive mb-4" />
+        <h3 className="text-lg font-semibold mb-2">
+          {t('cards.error', { defaultValue: 'Error loading data' })}
+        </h3>
+        <p className="text-sm text-muted-foreground text-center mb-4">
+          {error?.message || t('cards.error', { defaultValue: 'Something went wrong' })}
+        </p>
+        <Button onClick={onRetry}>
+          <RefreshCw className="h-4 w-4 mr-2" />
+          {t('cards.refresh', { defaultValue: 'Refresh' })}
+        </Button>
       </CardContent>
     </Card>
   );

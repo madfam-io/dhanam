@@ -1200,6 +1200,50 @@ describe('AnalyticsService', () => {
       expect(result.goals[0].volatility).toBeNull();
       expect(result.goals[0].monthlyContribution).toBeNull();
     });
+
+    it('should return partial data when getNetWorth fails', async () => {
+      // Make FxRatesService throw to crash getNetWorth (currency conversion)
+      fxRatesService.convertAmount.mockRejectedValue(new Error('FX rate unavailable'));
+
+      // Add an account with a different currency to trigger conversion
+      prisma.account.findMany.mockResolvedValue([
+        {
+          id: 'acc-1',
+          name: 'Checking',
+          balance: { toNumber: () => 10000 },
+          type: 'checking',
+          currency: 'USD',
+          assetValuations: [],
+        },
+      ] as any);
+
+      const result = await service.getDashboardData(mockUserId, mockSpaceId);
+
+      // Accounts should still be returned (direct Prisma query, not dependent on FX)
+      expect(result.accounts).toHaveLength(1);
+      expect(result.accounts[0].balance).toBe(10000);
+      // netWorth should fall back to null
+      expect(result.netWorth).toBeNull();
+      // _errors should report the failure
+      expect(result._errors).toContain('netWorth');
+    });
+
+    it('should return partial data when getCashflowForecast fails', async () => {
+      // Make transaction.aggregate throw to crash getCashflowForecast
+      prisma.transaction.aggregate.mockRejectedValue(new Error('DB connection lost'));
+
+      const result = await service.getDashboardData(mockUserId, mockSpaceId);
+
+      // Accounts should still be returned
+      expect(result.accounts).toBeDefined();
+      // cashflowForecast should fall back to null
+      expect(result.cashflowForecast).toBeNull();
+      // _errors should report the failure
+      expect(result._errors).toContain('cashflowForecast');
+      // Other sections that don't depend on aggregate should still work
+      expect(result.budgets).toBeDefined();
+      expect(result.goals).toBeDefined();
+    });
   });
 
   describe('getBudgetsWithSummary (via getDashboardData)', () => {

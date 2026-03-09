@@ -52,6 +52,7 @@ const accountTypeIcons: Record<AccountType, React.ElementType> = {
 
 export default function AccountsPage() {
   const { t } = useTranslation('accounts');
+  const { t: tCommon } = useTranslation('common');
   const { currentSpace } = useSpaceStore();
   const queryClient = useQueryClient();
   const [isConnectOpen, setIsConnectOpen] = useState(false);
@@ -68,7 +69,7 @@ export default function AccountsPage() {
     manual: t('provider.manual'),
   };
 
-  const { data: accounts, isLoading } = useQuery({
+  const { data: accounts, isLoading, isError } = useQuery({
     queryKey: ['accounts', currentSpace?.id],
     queryFn: () => {
       if (!currentSpace) throw new Error('No current space');
@@ -223,6 +224,17 @@ export default function AccountsPage() {
         <div className="flex items-center justify-center py-8">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
+      ) : isError ? (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-8">
+            <Building2 className="h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="font-semibold text-lg mb-2">{tCommon('somethingWentWrong')}</h3>
+            <p className="text-muted-foreground text-center mb-4">{tCommon('loadFailed')}</p>
+            <Button onClick={() => queryClient.invalidateQueries({ queryKey: ['accounts', currentSpace?.id] })}>
+              {tCommon('tryAgain')}
+            </Button>
+          </CardContent>
+        </Card>
       ) : accounts?.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-8">

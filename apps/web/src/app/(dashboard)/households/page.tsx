@@ -65,6 +65,8 @@ export default function HouseholdsPage() {
     fetchAccountsByOwnership,
   } = useOwnershipNetWorth();
 
+  const { t: tCommon } = useTranslation('common');
+  const [loadError, setLoadError] = useState(false);
   const [households, setHouseholds] = useState<Household[]>([]);
   const [selectedHousehold, setSelectedHousehold] = useState<Household | null>(null);
   const [netWorth, setNetWorth] = useState<HouseholdNetWorth | null>(null);
@@ -84,11 +86,13 @@ export default function HouseholdsPage() {
   }, []);
 
   const loadHouseholds = async () => {
+    setLoadError(false);
     try {
       const data = await getHouseholds();
       setHouseholds(data);
     } catch (err) {
       console.error('Failed to load households:', err);
+      setLoadError(true);
     }
   };
 
@@ -268,14 +272,28 @@ export default function HouseholdsPage() {
       )}
 
       {/* Loading State */}
-      {loading && households.length === 0 && (
+      {loading && households.length === 0 && !loadError && (
         <div className="flex justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
       )}
 
+      {/* Error State */}
+      {loadError && households.length === 0 && (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-8">
+            <Users className="h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="font-semibold text-lg mb-2">{tCommon('somethingWentWrong')}</h3>
+            <p className="text-muted-foreground text-center mb-4">{tCommon('loadFailed')}</p>
+            <Button onClick={() => loadHouseholds()}>
+              {tCommon('tryAgain')}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Households List */}
-      {!loading && households.length === 0 && (
+      {!loading && !loadError && households.length === 0 && (
         <Card>
           <CardContent className="py-12 text-center">
             <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />

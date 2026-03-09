@@ -33,12 +33,13 @@ export default function BudgetsPage() {
   const { currentSpace } = useSpaceStore();
   const queryClient = useQueryClient();
   const { t } = useTranslation('budgets');
+  const { t: tCommon } = useTranslation('common');
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [selectedBudget, setSelectedBudget] = useState<Budget | null>(null);
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
   const [isRuleManagerOpen, setIsRuleManagerOpen] = useState(false);
 
-  const { data: budgets, isLoading } = useQuery({
+  const { data: budgets, isLoading, isError } = useQuery({
     queryKey: ['budgets', currentSpace?.id],
     queryFn: () => {
       if (!currentSpace) throw new Error('No current space');
@@ -192,6 +193,17 @@ export default function BudgetsPage() {
         <div className="flex items-center justify-center py-8">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
+      ) : isError ? (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-8">
+            <PiggyBank className="h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="font-semibold text-lg mb-2">{tCommon('somethingWentWrong')}</h3>
+            <p className="text-muted-foreground text-center mb-4">{tCommon('loadFailed')}</p>
+            <Button onClick={() => queryClient.invalidateQueries({ queryKey: ['budgets', currentSpace?.id] })}>
+              {tCommon('tryAgain')}
+            </Button>
+          </CardContent>
+        </Card>
       ) : budgets?.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-8">

@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- P1: Accounts page blank on API error — added `isError` handling with retry UI
+- P1: Budgets page blank on API error — added `isError` handling with retry UI
+- P1: Zero-based budget error state too strict — relaxed from auth-only to any error in demo mode
+- P1: Households page silent error catching — added `loadError` state with retry UI
+- P1: Estate Planning page silent error catching — added `loadError` state with retry UI
+- P2: Missing `action.categorize` i18n key on Transactions page (EN/ES/PT-BR)
+- P2: Missing 7 notification i18n keys in EN and ES (`common` namespace)
+- P2: Added `loadFailed` error key to all 3 locales for shared error UI
+
 ### Added
 - Golden-ratio design token system for UI consistency
 - Cookie consent banner (GDPR/LATAM compliance) in root layout

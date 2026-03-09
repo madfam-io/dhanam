@@ -19,8 +19,14 @@ function spacesQueryOptions(persistedSpaces: Space[]) {
       const { setSpaces, setCurrentSpace } = useSpaceStore.getState();
       const spaces = await apiClient.get<Space[]>('/spaces');
       setSpaces(spaces);
-      if (spaces.length > 0 && !useSpaceStore.getState().currentSpace) {
-        setCurrentSpace(spaces[0] || null);
+      const currentSpace = useSpaceStore.getState().currentSpace;
+      if (spaces.length > 0) {
+        const currentStillValid = currentSpace && spaces.some(s => s.id === currentSpace.id);
+        if (!currentStillValid) {
+          setCurrentSpace(spaces[0] ?? null);
+        }
+      } else {
+        setCurrentSpace(null);
       }
       return spaces;
     },

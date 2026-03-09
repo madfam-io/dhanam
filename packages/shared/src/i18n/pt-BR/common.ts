@@ -120,6 +120,7 @@ export const common = {
   somethingWentWrong: 'Algo deu errado',
   tryAgain: 'Tentar novamente',
   errorOccurred: 'Ocorreu um erro',
+  loadFailed: 'Não conseguimos carregar seus dados. Por favor, tente novamente.',
   pleaseCheck: 'Por favor verifique',
 
   // Success messages

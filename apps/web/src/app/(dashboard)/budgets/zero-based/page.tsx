@@ -156,10 +156,8 @@ export default function ZeroBasedBudgetPage() {
   if (error) {
     const isDemoMode = typeof window !== 'undefined' &&
       document.cookie.includes('demo-mode=true');
-    const isAuthError = error instanceof Error &&
-      (error.message.includes('Not a member') || error.message.includes('403'));
 
-    if (isDemoMode && isAuthError) {
+    if (isDemoMode) {
       return (
         <div className="container mx-auto space-y-6 py-6">
           <div>

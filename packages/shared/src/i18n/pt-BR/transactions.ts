@@ -150,6 +150,7 @@ export const transactions = {
   action: {
     edit: 'Editar',
     delete: 'Excluir',
+    categorize: 'Categorizar',
   },
   dialog: {
     create: {

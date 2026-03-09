@@ -1,3 +1,5 @@
+jest.unmock('@/utils/currency');
+
 import {
   formatCurrency,
   getCurrencySymbol,

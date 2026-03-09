@@ -63,6 +63,7 @@ export class DemoDataBuilder {
    * Enrichment pipeline: generates transactions, valuations, goals, assets, ESG,
    * estate planning, recurring patterns, connections, reports, and notifications.
    * Idempotent: checks transaction count before running.
+   * Fault-tolerant: individual builder failures are logged but don't crash the login.
    */
   private async enrichPersona(user: User, personaKey: string): Promise<void> {
     const txnCount = await this.prisma.transaction.count({
@@ -72,20 +73,40 @@ export class DemoDataBuilder {
 
     const ctx = await this.buildContext(user, personaKey);
 
+    const safeRun = async (name: string, fn: () => Promise<void>): Promise<void> => {
+      try {
+        await fn();
+      } catch (e) {
+        console.error(
+          `[DemoData] ${name} failed for ${personaKey}:`,
+          e instanceof Error ? e.message : e,
+        );
+      }
+    };
+
     // Phase 1: Transactions + Valuations
     const txnBuilder = new TransactionsBuilder(this.prisma);
     const analyticsBuilder = new AnalyticsBuilder(this.prisma);
-    await Promise.all([txnBuilder.build(ctx), analyticsBuilder.build(ctx)]);
+    await Promise.all([
+      safeRun('transactions', () => txnBuilder.build(ctx)),
+      safeRun('analytics', () => analyticsBuilder.build(ctx)),
+    ]);
 
     // Phase 2: Goals + Simulations
     const goalsBuilder = new GoalsBuilder(this.prisma);
     const simsBuilder = new SimulationsBuilder(this.prisma);
-    await Promise.all([goalsBuilder.build(ctx), simsBuilder.build(ctx)]);
+    await Promise.all([
+      safeRun('goals', () => goalsBuilder.build(ctx)),
+      safeRun('simulations', () => simsBuilder.build(ctx)),
+    ]);
 
     // Phase 3: Assets + ESG
     const assetsBuilder = new AssetsBuilder(this.prisma);
     const esgBuilder = new ESGBuilder(this.prisma);
-    await Promise.all([assetsBuilder.build(ctx), esgBuilder.build(ctx)]);
+    await Promise.all([
+      safeRun('assets', () => assetsBuilder.build(ctx)),
+      safeRun('esg', () => esgBuilder.build(ctx)),
+    ]);
 
     // Phase 4: Estate + Recurring + Connections + Reports
     const estateBuilder = new EstateBuilder(this.prisma);
@@ -93,10 +114,10 @@ export class DemoDataBuilder {
     const connectionsBuilder = new ConnectionsBuilder(this.prisma);
     const reportsBuilder = new ReportsBuilder(this.prisma);
     await Promise.all([
-      estateBuilder.build(ctx),
-      recurringBuilder.build(ctx),
-      connectionsBuilder.build(ctx),
-      reportsBuilder.build(ctx),
+      safeRun('estate', () => estateBuilder.build(ctx)),
+      safeRun('recurring', () => recurringBuilder.build(ctx)),
+      safeRun('connections', () => connectionsBuilder.build(ctx)),
+      safeRun('reports', () => reportsBuilder.build(ctx)),
     ]);
 
     // Phase 5: Intelligence layer (cashflow, zero-based budgeting, household)
@@ -104,15 +125,18 @@ export class DemoDataBuilder {
     const zeroBasedBuilder = new ZeroBasedBuilder(this.prisma);
     const householdBuilder = new HouseholdBuilder(this.prisma);
     await Promise.all([
-      cashflowBuilder.build(ctx),
-      zeroBasedBuilder.build(ctx),
-      householdBuilder.build(ctx),
+      safeRun('cashflow', () => cashflowBuilder.build(ctx)),
+      safeRun('zero-based', () => zeroBasedBuilder.build(ctx)),
+      safeRun('household', () => householdBuilder.build(ctx)),
     ]);
 
     // Phase 6: Engagement layer (notifications, rules)
     const notificationsBuilder = new NotificationsBuilder(this.prisma);
     const rulesBuilder = new RulesBuilder(this.prisma);
-    await Promise.all([notificationsBuilder.build(ctx), rulesBuilder.build(ctx)]);
+    await Promise.all([
+      safeRun('notifications', () => notificationsBuilder.build(ctx)),
+      safeRun('rules', () => rulesBuilder.build(ctx)),
+    ]);
   }
 
   private async buildContext(user: User, personaKey: string): Promise<DemoContext> {

@@ -17,6 +17,10 @@ import { UpdateSpaceDto } from './dto/update-space.dto';
 
 @Injectable()
 export class SpacesService {
+  private accessCache = new Map<string, { role: string; expiresAt: number }>();
+  private readonly ACCESS_CACHE_TTL = 30_000; // 30 seconds
+  private readonly ACCESS_CACHE_MAX = 1000;
+
   constructor(
     private prisma: PrismaService,
     private logger: LoggerService
@@ -259,6 +263,27 @@ export class SpacesService {
   }
 
   async verifyUserAccess(userId: string, spaceId: string, requiredRole: SpaceRole): Promise<void> {
+    const roleHierarchy: Record<SpaceRole, number> = {
+      owner: 4,
+      admin: 3,
+      member: 2,
+      viewer: 1,
+    };
+
+    const cacheKey = `${userId}:${spaceId}`;
+    const cached = this.accessCache.get(cacheKey);
+
+    if (cached && cached.expiresAt > Date.now()) {
+      const userRoleLevel = roleHierarchy[cached.role as SpaceRole];
+      const requiredRoleLevel = roleHierarchy[requiredRole];
+      if (userRoleLevel < requiredRoleLevel) {
+        throw new ForbiddenException(
+          `Access denied. Required role: ${requiredRole}, user role: ${cached.role}`
+        );
+      }
+      return;
+    }
+
     const userSpace = await this.prisma.userSpace.findUnique({
       where: {
         userId_spaceId: { userId, spaceId },
@@ -269,12 +294,15 @@ export class SpacesService {
       throw new NotFoundException('Space not found or access denied');
     }
 
-    const roleHierarchy: Record<SpaceRole, number> = {
-      owner: 4,
-      admin: 3,
-      member: 2,
-      viewer: 1,
-    };
+    // Cache the result with TTL, evict oldest if at capacity
+    if (this.accessCache.size >= this.ACCESS_CACHE_MAX) {
+      const firstKey = this.accessCache.keys().next().value;
+      if (firstKey) this.accessCache.delete(firstKey);
+    }
+    this.accessCache.set(cacheKey, {
+      role: userSpace.role,
+      expiresAt: Date.now() + this.ACCESS_CACHE_TTL,
+    });
 
     const userRoleLevel = roleHierarchy[userSpace.role];
     const requiredRoleLevel = roleHierarchy[requiredRole];

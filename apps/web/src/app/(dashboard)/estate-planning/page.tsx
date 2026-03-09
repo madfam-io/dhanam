@@ -47,6 +47,8 @@ export default function EstatePlanningPage() {
   } = useWills();
   const { getHouseholds } = useHouseholds();
 
+  const { t: tCommon } = useTranslation('common');
+  const [loadError, setLoadError] = useState(false);
   const [households, setHouseholds] = useState<Array<{ id: string; name: string }>>([]);
   const [selectedHouseholdId, setSelectedHouseholdId] = useState<string | null>(null);
   const [wills, setWills] = useState<Will[]>([]);
@@ -72,6 +74,7 @@ export default function EstatePlanningPage() {
   }, [selectedHouseholdId]);
 
   const loadHouseholds = async () => {
+    setLoadError(false);
     try {
       const data = await getHouseholds();
       setHouseholds(data);
@@ -80,6 +83,7 @@ export default function EstatePlanningPage() {
       }
     } catch (err) {
       console.error('Failed to load households:', err);
+      setLoadError(true);
     }
   };
 
@@ -273,14 +277,28 @@ export default function EstatePlanningPage() {
       )}
 
       {/* Loading State */}
-      {loading && wills.length === 0 && (
+      {loading && wills.length === 0 && !loadError && (
         <div className="flex justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
       )}
 
+      {/* Error State */}
+      {loadError && wills.length === 0 && (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-8">
+            <ScrollText className="h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="font-semibold text-lg mb-2">{tCommon('somethingWentWrong')}</h3>
+            <p className="text-muted-foreground text-center mb-4">{tCommon('loadFailed')}</p>
+            <Button onClick={() => loadHouseholds()}>
+              {tCommon('tryAgain')}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       {/* No Wills State */}
-      {!loading && wills.length === 0 && selectedHouseholdId && (
+      {!loading && !loadError && wills.length === 0 && selectedHouseholdId && (
         <Card>
           <CardContent className="py-12 text-center">
             <ScrollText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />

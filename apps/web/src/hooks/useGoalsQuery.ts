@@ -33,8 +33,8 @@ export const goalsKeys = {
   shared: () => [...goalsKeys.all, 'shared'] as const,
 };
 
-// Default stale time: 30 seconds for goals data
-const DEFAULT_STALE_TIME = 30 * 1000;
+// Default stale time: 60 seconds for goals data (goals change infrequently)
+const DEFAULT_STALE_TIME = 60 * 1000;
 
 async function fetchWithAuth(token: string, endpoint: string, options?: RequestInit) {
   const response = await fetch(`${API_BASE_URL}/goals/${endpoint}`, {
