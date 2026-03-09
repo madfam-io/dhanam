@@ -42,6 +42,23 @@ export const transactions = {
   selectCategory: 'Select category',
   selectMerchant: 'Select merchant',
 
+  // Filter UI (transaction-filters.tsx)
+  filter: {
+    searchPlaceholder: 'Search transactions...',
+    category: 'Category',
+    account: 'Account',
+    allCategories: 'All categories',
+    allAccounts: 'All accounts',
+    allTime: 'All time',
+    thisMonth: 'This month',
+    lastMonth: 'Last month',
+    last90: 'Last 90 days',
+    all: 'All',
+    income: 'Income',
+    expenses: 'Expenses',
+    clear: 'Clear',
+  },
+
   // Sorting
   sortBy: 'Sort by',
   sortByDate: 'Date',

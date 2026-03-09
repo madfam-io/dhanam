@@ -118,7 +118,7 @@ export function PortfolioChart({ data, currency, isLoading }: PortfolioChartProp
       <Card>
         <CardHeader>
           <CardTitle>{t('charts.portfolio.title')}</CardTitle>
-          <CardDescription>{t('common:loading')}</CardDescription>
+          <CardDescription>{t('charts.loading')}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="h-[350px] flex items-center justify-center">

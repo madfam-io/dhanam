@@ -154,6 +154,31 @@ export default function ZeroBasedBudgetPage() {
 
   // Error state
   if (error) {
+    const isDemoMode = typeof window !== 'undefined' &&
+      document.cookie.includes('demo-mode=true');
+    const isAuthError = error instanceof Error &&
+      (error.message.includes('Not a member') || error.message.includes('403'));
+
+    if (isDemoMode && isAuthError) {
+      return (
+        <div className="container mx-auto space-y-6 py-6">
+          <div>
+            <h1 className="text-2xl font-bold">{t('zeroBased.title')}</h1>
+            <p className="text-muted-foreground">{t('zeroBased.description', { name: currentSpace?.name ?? '' })}</p>
+          </div>
+          <div className="flex h-[300px] items-center justify-center rounded-lg border bg-card">
+            <div className="flex flex-col items-center gap-4 text-center">
+              <HelpCircle className="h-12 w-12 text-muted-foreground/50" />
+              <p className="text-lg font-medium">{t('zeroBased.emptyTitle')}</p>
+              <p className="text-sm text-muted-foreground max-w-md">
+                {t('zeroBased.emptyDescription')}
+              </p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="flex h-[calc(100vh-200px)] items-center justify-center">
         <div className="flex flex-col items-center gap-4 text-center">

@@ -35,6 +35,7 @@ export const analytics = {
     connectAccount: 'Conectar cuenta',
   },
   charts: {
+    loading: 'Cargando...',
     incomeExpense: {
       title: 'Ingresos vs Gastos',
       description: 'Comparación mensual con ahorro neto',

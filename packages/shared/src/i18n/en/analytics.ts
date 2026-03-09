@@ -35,6 +35,7 @@ export const analytics = {
     connectAccount: 'Connect Account',
   },
   charts: {
+    loading: 'Loading...',
     incomeExpense: {
       title: 'Income vs Expenses',
       description: 'Monthly comparison with net savings',

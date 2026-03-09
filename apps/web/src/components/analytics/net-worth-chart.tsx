@@ -94,7 +94,7 @@ export function NetWorthChart({ data, currency, isLoading }: NetWorthChartProps)
       <Card>
         <CardHeader>
           <CardTitle>{t('charts.netWorth.title')}</CardTitle>
-          <CardDescription>{t('common:loading')}</CardDescription>
+          <CardDescription>{t('charts.loading')}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="h-[300px] flex items-center justify-center">

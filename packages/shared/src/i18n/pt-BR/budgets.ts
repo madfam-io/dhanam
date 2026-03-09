@@ -262,5 +262,7 @@ export const budgets = {
     errorFallback: 'Por favor tente novamente mais tarde',
     retry: 'Tentar novamente',
     noSpace: 'Selecione um espaço para ver seu orçamento',
+    emptyTitle: 'Sem dados de orçamento ainda',
+    emptyDescription: 'Crie eventos de receita e aloque fundos para começar o orçamento base zero.',
   },
 } as const;

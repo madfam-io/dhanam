@@ -266,5 +266,7 @@ export const budgets = {
     errorFallback: 'Por favor intenta de nuevo más tarde',
     retry: 'Reintentar',
     noSpace: 'Selecciona un espacio para ver tu presupuesto',
+    emptyTitle: 'Sin datos de presupuesto aún',
+    emptyDescription: 'Crea eventos de ingreso y asigna fondos para comenzar el presupuesto base cero.',
   },
 } as const;

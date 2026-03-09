@@ -35,6 +35,7 @@ export const analytics = {
     connectAccount: 'Conectar conta',
   },
   charts: {
+    loading: 'Carregando...',
     incomeExpense: {
       title: 'Receitas vs Despesas',
       description: 'Comparação mensal com economia líquida',

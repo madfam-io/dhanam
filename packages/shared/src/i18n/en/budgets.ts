@@ -266,5 +266,7 @@ export const budgets = {
     errorFallback: 'Please try again later',
     retry: 'Retry',
     noSpace: 'Please select a space to view your budget',
+    emptyTitle: 'No Budget Data Yet',
+    emptyDescription: 'Create income events and allocate funds to start zero-based budgeting.',
   },
 } as const;

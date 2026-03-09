@@ -88,7 +88,7 @@ export function IncomeExpenseChart({ data, currency, isLoading }: IncomeExpenseC
       <Card>
         <CardHeader>
           <CardTitle>{t('charts.incomeExpense.title')}</CardTitle>
-          <CardDescription>{t('common:loading')}</CardDescription>
+          <CardDescription>{t('charts.loading')}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="h-[300px] flex items-center justify-center">
