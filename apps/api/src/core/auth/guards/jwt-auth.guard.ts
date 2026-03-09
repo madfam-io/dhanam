@@ -5,33 +5,44 @@ import { AuthGuard } from '@nestjs/passport';
  * =============================================================================
  * JWT Authentication Guard (Galaxy Ecosystem)
  * =============================================================================
- * Selects authentication strategy based on JANUA_ENABLED environment variable:
+ * When JANUA_ENABLED=true, tries the 'janua' strategy (RS256 via JWKS) first.
+ * If that fails, falls back to the local 'jwt' strategy (HS256) to support
+ * demo tokens issued by the Dhanam API itself.
  *
- * - JANUA_ENABLED=true  → Uses 'janua' strategy (RS256 via JWKS)
- * - JANUA_ENABLED=false → Uses 'jwt' strategy (HS256 local)
- *
- * This enables seamless migration from standalone to Galaxy ecosystem.
+ * When JANUA_ENABLED=false, uses only the local 'jwt' strategy.
  * =============================================================================
  */
 @Injectable()
-export class JwtAuthGuard extends AuthGuard(
-  process.env.JANUA_ENABLED === 'true' ? 'janua' : 'jwt'
-) {
+export class JwtAuthGuard extends AuthGuard('janua') {
   private readonly logger = new Logger(JwtAuthGuard.name);
+  private readonly januaEnabled = process.env.JANUA_ENABLED === 'true';
 
   constructor() {
     super();
-    const strategy = process.env.JANUA_ENABLED === 'true' ? 'janua' : 'jwt';
-    this.logger.log(`JwtAuthGuard using strategy: ${strategy}`);
   }
 
-  canActivate(context: ExecutionContext) {
-    // Add any custom activation logic here
-    return super.canActivate(context);
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    if (!this.januaEnabled) {
+      const localGuard = new (AuthGuard('jwt'))();
+      return localGuard.canActivate(context) as Promise<boolean>;
+    }
+
+    // Janua mode: try Janua RS256 first, fall back to local HS256 for demo tokens
+    try {
+      return await (super.canActivate(context) as Promise<boolean>);
+    } catch (err) {
+      this.logger.debug('Janua strategy failed, trying local JWT strategy');
+      try {
+        const localGuard = new (AuthGuard('jwt'))();
+        return await (localGuard.canActivate(context) as Promise<boolean>);
+      } catch {
+        // Both strategies failed — throw original Janua error
+        throw err;
+      }
+    }
   }
 
   handleRequest(err: any, user: any, info: any, context: ExecutionContext) {
-    // Log authentication failures for debugging
     if (err || !user) {
       this.logger.warn(
         `Authentication failed: ${err?.message || info?.message || 'Unknown error'}`
