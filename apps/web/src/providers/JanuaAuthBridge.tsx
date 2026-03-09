@@ -94,6 +94,47 @@ function JanuaAuthSync({ children }: { children: React.ReactNode }) {
       if (!hasJanuaToken && !isDemoMode) {
         clearAuth();
       }
+    } else if (!januaAuthenticated && !dhanamAuthenticated) {
+      // Neither SDK nor Zustand has auth, but there may be a valid JWT in localStorage
+      // from a direct PKCE login whose Zustand state was cleared (e.g., by old code or a bug).
+      // Recover the session by bootstrapping from the stored token.
+      if (typeof window !== 'undefined') {
+        const accessToken = localStorage.getItem('janua_access_token');
+        const refreshToken = localStorage.getItem('janua_refresh_token');
+        if (accessToken) {
+          try {
+            const parts = accessToken.split('.');
+            if (parts.length === 3 && parts[1]) {
+              const payload = JSON.parse(atob(parts[1]));
+              if (payload.exp * 1000 > Date.now()) {
+                // Token is still valid — bootstrap minimal auth state.
+                // The dashboard layout's refreshUser() will fetch the full profile.
+                const bootstrapUser: UserProfile = {
+                  id: payload.sub,
+                  email: payload.email || '',
+                  name: payload.name || payload.email?.split('@')[0] || 'User',
+                  locale: 'en',
+                  timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                  totpEnabled: false,
+                  emailVerified: payload.email_verified || false,
+                  onboardingCompleted: true,
+                  createdAt: new Date().toISOString(),
+                  updatedAt: new Date().toISOString(),
+                  spaces: [],
+                };
+                const bootstrapTokens: AuthTokens = {
+                  accessToken,
+                  refreshToken: refreshToken || '',
+                  expiresIn: Math.floor((payload.exp * 1000 - Date.now()) / 1000),
+                };
+                setAuth(bootstrapUser, bootstrapTokens);
+              }
+            }
+          } catch {
+            // Invalid JWT — ignore, let normal login redirect happen
+          }
+        }
+      }
     }
   }, [
     januaLoading,
