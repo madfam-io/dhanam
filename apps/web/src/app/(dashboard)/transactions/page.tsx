@@ -114,6 +114,7 @@ function getDateRange(range: TransactionFilterValues['dateRange']): {
 
 export default function TransactionsPage() {
   const { t } = useTranslation('transactions');
+  const { t: tCommon } = useTranslation('common');
   const { currentSpace } = useSpaceStore();
   const queryClient = useQueryClient();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -140,7 +141,7 @@ export default function TransactionsPage() {
     };
   }, [page, filters]);
 
-  const { data: transactionsData, isLoading: isLoadingTransactions } = useQuery({
+  const { data: transactionsData, isLoading: isLoadingTransactions, isError } = useQuery({
     queryKey: ['transactions', currentSpace?.id, apiFilter],
     queryFn: () => {
       if (!currentSpace) throw new Error('No current space');
@@ -363,6 +364,21 @@ export default function TransactionsPage() {
         <div className="flex items-center justify-center py-8">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
+      ) : isError ? (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-8">
+            <Receipt className="h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="font-semibold text-lg mb-2">{tCommon('somethingWentWrong')}</h3>
+            <p className="text-muted-foreground text-center mb-4">{tCommon('loadFailed')}</p>
+            <Button
+              onClick={() =>
+                queryClient.invalidateQueries({ queryKey: ['transactions', currentSpace?.id] })
+              }
+            >
+              {tCommon('tryAgain')}
+            </Button>
+          </CardContent>
+        </Card>
       ) : transactionsData?.data.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-8">

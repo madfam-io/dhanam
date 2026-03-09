@@ -100,9 +100,17 @@ export class ApiClient {
   }
 
   async get<T>(path: string, params?: Record<string, unknown>): Promise<T> {
-    const queryString = params
-      ? '?' + new URLSearchParams(params as Record<string, string>).toString()
-      : '';
+    let queryString = '';
+    if (params) {
+      const filtered: Record<string, string> = {};
+      for (const [key, value] of Object.entries(params)) {
+        if (value !== undefined && value !== null) {
+          filtered[key] = String(value);
+        }
+      }
+      const qs = new URLSearchParams(filtered).toString();
+      if (qs) queryString = '?' + qs;
+    }
     return this.request<T>(`${path}${queryString}`, { method: 'GET' });
   }
 

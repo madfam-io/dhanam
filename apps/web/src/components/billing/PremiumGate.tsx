@@ -44,7 +44,8 @@ export function PremiumGate({
 }: PremiumGateProps) {
   const { user } = useAuth();
   const userTier = (user?.subscriptionTier as SubscriptionTier) || 'community';
-  const hasAccess = TIER_RANK[userTier] >= TIER_RANK[requiredTier];
+  const isDemoUser = user?.email?.endsWith('@dhanam.demo');
+  const hasAccess = isDemoUser || TIER_RANK[userTier] >= TIER_RANK[requiredTier];
 
   if (!hasAccess) {
     return fallback ? (
