@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useState } from 'react';
 import { JanuaProvider, useJanua } from '@janua/react-sdk';
 
 // TODO: Replace with @janua/react-sdk export once useUser is published
@@ -114,6 +114,18 @@ interface JanuaAuthBridgeProps {
  * Place this OUTSIDE of Dhanam's AuthProvider in the provider hierarchy.
  */
 export function JanuaAuthBridge({ children }: JanuaAuthBridgeProps) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Skip JanuaProvider during SSR — it accesses browser APIs (window/localStorage)
+  // that crash server-side rendering and collapse the entire provider tree
+  if (!mounted) {
+    return <>{children}</>;
+  }
+
   return (
     <JanuaProvider config={januaConfig}>
       <JanuaAuthSync>{children}</JanuaAuthSync>
