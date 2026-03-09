@@ -39,7 +39,11 @@ export default function BudgetsPage() {
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
   const [isRuleManagerOpen, setIsRuleManagerOpen] = useState(false);
 
-  const { data: budgets, isLoading, isError } = useQuery({
+  const {
+    data: budgets,
+    isLoading,
+    isError,
+  } = useQuery({
     queryKey: ['budgets', currentSpace?.id],
     queryFn: () => {
       if (!currentSpace) throw new Error('No current space');
@@ -199,7 +203,11 @@ export default function BudgetsPage() {
             <PiggyBank className="h-12 w-12 text-muted-foreground mb-4" />
             <h3 className="font-semibold text-lg mb-2">{tCommon('somethingWentWrong')}</h3>
             <p className="text-muted-foreground text-center mb-4">{tCommon('loadFailed')}</p>
-            <Button onClick={() => queryClient.invalidateQueries({ queryKey: ['budgets', currentSpace?.id] })}>
+            <Button
+              onClick={() =>
+                queryClient.invalidateQueries({ queryKey: ['budgets', currentSpace?.id] })
+              }
+            >
               {tCommon('tryAgain')}
             </Button>
           </CardContent>

@@ -21,7 +21,7 @@ function spacesQueryOptions(persistedSpaces: Space[]) {
       setSpaces(spaces);
       const currentSpace = useSpaceStore.getState().currentSpace;
       if (spaces.length > 0) {
-        const currentStillValid = currentSpace && spaces.some(s => s.id === currentSpace.id);
+        const currentStillValid = currentSpace && spaces.some((s) => s.id === currentSpace.id);
         if (!currentStillValid) {
           setCurrentSpace(spaces[0] ?? null);
         }

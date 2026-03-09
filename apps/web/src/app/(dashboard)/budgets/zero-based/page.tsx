@@ -154,15 +154,16 @@ export default function ZeroBasedBudgetPage() {
 
   // Error state
   if (error) {
-    const isDemoMode = typeof window !== 'undefined' &&
-      document.cookie.includes('demo-mode=true');
+    const isDemoMode = typeof window !== 'undefined' && document.cookie.includes('demo-mode=true');
 
     if (isDemoMode) {
       return (
         <div className="container mx-auto space-y-6 py-6">
           <div>
             <h1 className="text-2xl font-bold">{t('zeroBased.title')}</h1>
-            <p className="text-muted-foreground">{t('zeroBased.description', { name: currentSpace?.name ?? '' })}</p>
+            <p className="text-muted-foreground">
+              {t('zeroBased.description', { name: currentSpace?.name ?? '' })}
+            </p>
           </div>
           <div className="flex h-[300px] items-center justify-center rounded-lg border bg-card">
             <div className="flex flex-col items-center gap-4 text-center">

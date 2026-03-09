@@ -95,8 +95,7 @@ export default function DashboardPage() {
   // Prefer independent query data, fall back to dashboard bundle while loading
   const netWorthData = netWorthIndependent ?? dashboardData?.netWorth ?? null;
   const cashflowForecast = cashflowIndependent ?? dashboardData?.cashflowForecast ?? null;
-  const portfolioAllocation =
-    portfolioIndependent ?? dashboardData?.portfolioAllocation ?? [];
+  const portfolioAllocation = portfolioIndependent ?? dashboardData?.portfolioAllocation ?? [];
 
   // Unified loading flag for sections that rely on the dashboard bundle
   const isLoading = isDashboardLoading;
