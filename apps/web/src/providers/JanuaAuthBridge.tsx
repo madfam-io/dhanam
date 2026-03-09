@@ -81,10 +81,19 @@ function JanuaAuthSync({ children }: { children: React.ReactNode }) {
 
       setAuth(dhanamUser, tokens);
     } else if (!januaAuthenticated && dhanamAuthenticated) {
-      // Janua finished loading and says not authenticated, but Dhanam thinks we are
-      // This means either: Janua logged out, or token was invalid
-      // Clear Dhanam auth to stay in sync
-      clearAuth();
+      // Janua SDK doesn't detect a session, but Dhanam thinks we're authenticated.
+      // This can happen legitimately when:
+      //   1. User logged in via direct PKCE flow (tokens stored manually, not via SDK)
+      //   2. User is in demo mode (authenticated via Dhanam API, not Janua)
+      // Only clear auth if neither case applies.
+      const hasJanuaToken =
+        typeof window !== 'undefined' && localStorage.getItem('janua_access_token');
+      const isDemoMode =
+        typeof document !== 'undefined' && document.cookie.includes('demo-mode=true');
+
+      if (!hasJanuaToken && !isDemoMode) {
+        clearAuth();
+      }
     }
   }, [
     januaLoading,

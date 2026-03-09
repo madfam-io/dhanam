@@ -90,6 +90,7 @@ export default function DemoPage() {
 
   const [loadingPersona, setLoadingPersona] = useState<string | null>(null);
   const [activePersona, setActivePersona] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     analytics.trackPageView('Demo Page', '/demo');
@@ -106,6 +107,7 @@ export default function DemoPage() {
 
   const handlePersonaClick = async (personaKey: string) => {
     setLoadingPersona(personaKey);
+    setError(null);
     analytics.track('demo_persona_selected', { persona: personaKey });
 
     try {
@@ -115,9 +117,11 @@ export default function DemoPage() {
       // Set demo-mode cookie so middleware and layout detect demo mode
       document.cookie = 'demo-mode=true; path=/; max-age=7200; SameSite=Lax';
 
-      window.location.href = '/demo/dashboard';
-    } catch (error) {
-      console.error('Failed to login as persona:', error);
+      // Client-side navigation preserves Zustand state (no rehydration race)
+      router.push('/dashboard');
+    } catch (err) {
+      console.error('Failed to login as persona:', err);
+      setError('Failed to start demo. Please try again.');
       setLoadingPersona(null);
     }
   };
@@ -178,6 +182,18 @@ export default function DemoPage() {
             between them anytime from the dashboard.
           </p>
         </div>
+
+        {error && (
+          <div className="max-w-md mx-auto p-4 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg text-center">
+            <p className="text-sm text-red-700 dark:text-red-400">{error}</p>
+            <button
+              onClick={() => setError(null)}
+              className="mt-2 text-xs text-red-500 hover:text-red-700 underline"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
           {PERSONAS.map((persona) => (

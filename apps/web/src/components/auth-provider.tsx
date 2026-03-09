@@ -33,8 +33,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           try {
             await refreshTokens();
           } catch (error) {
-            console.error('Auto token refresh failed:', error);
-            clearAuth();
+            // Don't immediately clear auth — the access token might still be valid
+            // Let JanuaAuthSync or the next API call handle re-authentication
+            console.warn('Auto token refresh failed, will retry on next API call:', error);
           }
         }, refreshTime);
 
@@ -42,7 +43,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else {
         // Token already expired or expires very soon, try to refresh immediately
         refreshTokens().catch(() => {
-          clearAuth();
+          // Don't clear auth here — let JanuaAuthSync or the next API call handle it
+          console.warn('Token refresh failed, will retry on next API call');
         });
         return;
       }
