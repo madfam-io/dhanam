@@ -3,7 +3,6 @@ import { Inter } from 'next/font/google';
 import { cookies } from 'next/headers';
 import { Providers } from '~/lib/providers';
 import { Toaster } from 'sonner';
-import { CookieConsentBanner } from '~/components/cookie-consent-banner';
 import '~/styles/globals.css';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -90,7 +89,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className={inter.className}>
         <Providers>{children}</Providers>
         <Toaster />
-        <CookieConsentBanner />
       </body>
     </html>
   );
