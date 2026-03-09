@@ -64,7 +64,7 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: https:",
               "font-src 'self' data:",
-              `connect-src 'self' ${process.env.NEXT_PUBLIC_API_URL || 'https://api.dhan.am'} https://us.i.posthog.com ${process.env.NEXT_PUBLIC_OIDC_ISSUER || 'https://auth.madfam.io'} https://challenges.cloudflare.com https://cloudflareinsights.com https://*.ingest.sentry.io`,
+              `connect-src 'self' ${(() => { try { return new URL(process.env.NEXT_PUBLIC_API_URL || 'https://api.dhan.am').origin; } catch { return 'https://api.dhan.am'; } })()} https://us.i.posthog.com ${process.env.NEXT_PUBLIC_OIDC_ISSUER || 'https://auth.madfam.io'} https://challenges.cloudflare.com https://cloudflareinsights.com https://*.ingest.sentry.io`,
               "frame-ancestors 'none'",
               "base-uri 'self'",
               "form-action 'self'",
