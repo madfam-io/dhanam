@@ -146,6 +146,14 @@ failure. Instead it logs a warning and defers re-authentication to `JanuaAuthSyn
 or the next API call. This prevents the dashboard from flashing back to login when
 a refresh attempt fails but the access token is still valid.
 
+Additionally, `JanuaAuthSync` includes a **token recovery** branch: when neither
+`@janua/react-sdk` nor Zustand detects an active session, but a valid (non-expired)
+`janua_access_token` exists in `localStorage`, the component bootstraps a minimal
+auth state from the JWT claims (`sub`, `email`, `name`). The dashboard layout's
+`refreshUser()` effect then fetches the full user profile in the background. This
+handles cases where `clearAuth()` was called (by old code or a bug) but the JWT
+remains valid — the user stays logged in rather than being redirected to `/login`.
+
 ### Security Features
 
 1. **Short-Lived Access Tokens**: 15-minute expiry limits exposure
