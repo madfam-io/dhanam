@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- P1: SSO login yields empty dashboard — race condition between space loading and page rendering
+  - Dashboard layout now calls `useSpaces()` early so child pages have data before rendering
+  - Dashboard page shows loading skeleton while spaces load instead of empty state
+  - Removed synthetic space ID from JanuaAuthBridge (caused ID mismatch with API)
+  - API JIT provisioning wraps user + space creation in `$transaction` to prevent orphaned users
 - P1: Accounts page blank on API error — added `isError` handling with retry UI
 - P1: Budgets page blank on API error — added `isError` handling with retry UI
 - P1: Zero-based budget error state too strict — relaxed from auth-only to any error in demo mode

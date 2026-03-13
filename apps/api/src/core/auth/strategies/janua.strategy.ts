@@ -145,42 +145,49 @@ export class JanuaStrategy extends PassportStrategy(Strategy, 'janua') {
       this.logger.log(`JIT provisioning new user: ${payload.email}`);
 
       try {
-        dhanamUser = await this.prisma.user.create({
-          data: {
-            id: payload.sub, // Use Janua ID as primary key
-            email: payload.email,
-            name: payload.name || payload.email.split('@')[0],
-            locale: payload.locale || 'es',
-            timezone: 'America/Mexico_City', // Default for LATAM-first
-            passwordHash: '', // No local password (SSO only)
-            isActive: true,
-            emailVerified: true, // Janua handles verification
-          },
-          select: {
-            id: true,
-            email: true,
-            name: true,
-            locale: true,
-            isActive: true,
-          },
-        });
+        // Wrap user + space creation in a transaction so both succeed or both roll back.
+        // This prevents orphaned users without spaces.
+        const result = await this.prisma.$transaction(async (tx) => {
+          const newUser = await tx.user.create({
+            data: {
+              id: payload.sub, // Use Janua ID as primary key
+              email: payload.email,
+              name: payload.name || payload.email.split('@')[0],
+              locale: payload.locale || 'es',
+              timezone: 'America/Mexico_City', // Default for LATAM-first
+              passwordHash: '', // No local password (SSO only)
+              isActive: true,
+              emailVerified: true, // Janua handles verification
+            },
+            select: {
+              id: true,
+              email: true,
+              name: true,
+              locale: true,
+              isActive: true,
+            },
+          });
 
-        // Create default personal space for new user
-        await this.prisma.space.create({
-          data: {
-            name: `${dhanamUser.name}'s Personal`,
-            type: 'personal',
-            currency: 'MXN',
-            timezone: 'America/Mexico_City',
-            userSpaces: {
-              create: {
-                userId: dhanamUser.id,
-                role: 'owner',
+          // Create default personal space for new user
+          await tx.space.create({
+            data: {
+              name: `${newUser.name}'s Personal`,
+              type: 'personal',
+              currency: 'MXN',
+              timezone: 'America/Mexico_City',
+              userSpaces: {
+                create: {
+                  userId: newUser.id,
+                  role: 'owner',
+                },
               },
             },
-          },
+          });
+
+          return newUser;
         });
 
+        dhanamUser = result;
         this.logger.log(`Created local user and space for: ${payload.email}`);
       } catch (error) {
         this.logger.error(`Failed to provision user: ${error.message}`);

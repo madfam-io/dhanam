@@ -7,6 +7,7 @@ import { Skeleton } from '@dhanam/ui';
 import { Button } from '@dhanam/ui';
 import { Progress } from '@dhanam/ui';
 import { useAuth } from '~/lib/hooks/use-auth';
+import { useSpaces } from '~/lib/hooks/use-spaces';
 import { useSpaceStore } from '~/stores/space';
 import { analyticsApi } from '~/lib/api/analytics';
 import { authApi } from '~/lib/api/auth';
@@ -43,6 +44,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const { user } = useAuth();
   const { currentSpace } = useSpaceStore();
+  const spacesQuery = useSpaces();
   const isGuestDemo = user?.email === 'guest@dhanam.demo';
   const { t } = useTranslation('dashboard');
 
@@ -103,6 +105,9 @@ export default function DashboardPage() {
   const activeGoals = goals?.filter((g) => g.status === 'active') || [];
 
   if (!currentSpace) {
+    if (spacesQuery.isLoading) {
+      return <SpacesLoadingSkeleton />;
+    }
     return <EmptyState />;
   }
 
@@ -839,6 +844,30 @@ function DashboardErrorState({ error, onRetry }: { error: Error | null; onRetry:
         </Button>
       </CardContent>
     </Card>
+  );
+}
+
+function SpacesLoadingSkeleton() {
+  return (
+    <div className="space-y-6">
+      <div>
+        <Skeleton className="h-9 w-64 mb-2" />
+        <Skeleton className="h-5 w-48" />
+      </div>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Card key={i}>
+            <CardHeader className="pb-2">
+              <Skeleton className="h-4 w-24" />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-8 w-32 mb-2" />
+              <Skeleton className="h-3 w-20" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
   );
 }
 

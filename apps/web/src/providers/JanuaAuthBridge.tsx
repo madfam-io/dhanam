@@ -60,15 +60,8 @@ function JanuaAuthSync({ children }: { children: React.ReactNode }) {
         onboardingCompleted: true, // Assume completed if coming from SSO
         createdAt: januaUser.created_at || new Date().toISOString(),
         updatedAt: januaUser.updated_at || new Date().toISOString(),
-        // Dhanam-specific: default personal space for SSO users
-        spaces: [
-          {
-            id: `personal-${januaUser.id}`,
-            name: 'Personal',
-            type: 'personal',
-            role: 'owner',
-          },
-        ],
+        // Real spaces come from the useSpaces() API call, not from the auth bridge
+        spaces: [],
       };
 
       // Create tokens from Janua session

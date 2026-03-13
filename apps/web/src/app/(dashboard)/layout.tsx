@@ -11,6 +11,7 @@ import { KeyboardShortcuts } from '~/components/keyboard-shortcuts';
 import { PageTransition } from '~/components/motion/page-transition';
 import { DemoNavigationProvider } from '~/lib/contexts/demo-navigation-context';
 import { useAuth } from '~/lib/hooks/use-auth';
+import { useSpaces } from '~/lib/hooks/use-spaces';
 import { authApi } from '~/lib/api/auth';
 
 /**
@@ -42,6 +43,9 @@ function isDemoModeCookie(): boolean {
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, _hasHydrated, user, refreshUser, setAuth } = useAuth();
   const router = useRouter();
+  // Trigger spaces fetch early so child pages have data before rendering.
+  // React Query deduplicates by key, so the header's useSpaces() won't double-fetch.
+  useSpaces();
   // Track if client has hydrated - prevents SSR/client mismatch
   const [hasMounted, setHasMounted] = useState(false);
   const [demoAutoLoginInProgress, setDemoAutoLoginInProgress] = useState(false);

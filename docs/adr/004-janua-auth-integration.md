@@ -154,6 +154,33 @@ auth state from the JWT claims (`sub`, `email`, `name`). The dashboard layout's
 handles cases where `clearAuth()` was called (by old code or a bug) but the JWT
 remains valid — the user stays logged in rather than being redirected to `/login`.
 
+### Space Loading Race Condition Fix (March 2026)
+
+A race condition caused first-time SSO users to see an empty "Get Started" state
+instead of their financial data. Three changes address this:
+
+1. **Early space fetch in layout**: `DashboardLayout` (`apps/web/src/app/(dashboard)/layout.tsx`)
+   now calls `useSpaces()` before rendering child pages. React Query deduplicates
+   by key, so the header's existing `useSpaces()` call does not double-fetch.
+
+2. **Loading skeleton instead of empty state**: The dashboard page now distinguishes
+   "spaces still loading" from "no spaces exist". While spaces load, a skeleton is
+   shown instead of the misleading `<EmptyState />`.
+
+3. **No synthetic space IDs**: `JanuaAuthBridge` previously injected a fake
+   `personal-${januaUser.id}` space into the auth state. This ID never matched the
+   real UUID from JIT provisioning, so `useSpaceStore.currentSpace` would fail to
+   validate against the API response. The bridge now sets `spaces: []` and lets
+   `useSpaces()` populate the store from the API.
+
+### Transactional JIT Provisioning (March 2026)
+
+The Janua strategy's JIT provisioning (`janua.strategy.ts`) now wraps user creation
+and default space creation in a single `prisma.$transaction()`. Previously these were
+separate calls — if space creation failed, the user was left without a space (orphaned).
+The outer try/catch is preserved: if the entire transaction fails, the user still
+receives a valid JWT and the frontend shows "Create First Space".
+
 ### Security Features
 
 1. **Short-Lived Access Tokens**: 15-minute expiry limits exposure

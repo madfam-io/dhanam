@@ -48,12 +48,6 @@ jest.mock('~/lib/hooks/use-auth', () => ({
   }),
 }));
 
-jest.mock('~/stores/space', () => ({
-  useSpaceStore: () => ({
-    currentSpace: { id: 'space-1', name: 'Personal', currency: 'USD' },
-  }),
-}));
-
 jest.mock('~/lib/api/analytics', () => ({
   analyticsApi: { getDashboardData: jest.fn() },
 }));
@@ -104,7 +98,27 @@ jest.mock('@/components/insights/insight-cards', () => ({
 
 import DashboardPage from '../(dashboard)/dashboard/page';
 
+// Allow per-test overrides of useSpaces and useSpaceStore
+let mockUseSpaces: () => any;
+let mockUseSpaceStore: () => any;
+
+jest.mock('~/lib/hooks/use-spaces', () => ({
+  useSpaces: () => mockUseSpaces(),
+}));
+
+jest.mock('~/stores/space', () => ({
+  useSpaceStore: () => mockUseSpaceStore(),
+}));
+
 describe('DashboardPage', () => {
+  beforeEach(() => {
+    // Defaults: spaces loaded, current space set
+    mockUseSpaces = () => ({ data: [{ id: 'space-1', name: 'Personal', currency: 'USD' }], isLoading: false });
+    mockUseSpaceStore = () => ({
+      currentSpace: { id: 'space-1', name: 'Personal', currency: 'USD' },
+    });
+  });
+
   it('should render welcome message with user name', () => {
     render(<DashboardPage />);
 
@@ -131,5 +145,25 @@ describe('DashboardPage', () => {
     render(<DashboardPage />);
 
     expect(screen.getByTestId('sync-status')).toBeInTheDocument();
+  });
+
+  it('should show loading skeleton when spaces are still loading', () => {
+    mockUseSpaces = () => ({ data: undefined, isLoading: true });
+    mockUseSpaceStore = () => ({ currentSpace: null });
+
+    render(<DashboardPage />);
+
+    // Should show skeletons, not the empty state "Get Started" CTA
+    expect(screen.getAllByTestId('skeleton').length).toBeGreaterThan(0);
+    expect(screen.queryByText('emptyState.getStarted')).not.toBeInTheDocument();
+  });
+
+  it('should show empty state when spaces loaded but none exist', () => {
+    mockUseSpaces = () => ({ data: [], isLoading: false });
+    mockUseSpaceStore = () => ({ currentSpace: null });
+
+    render(<DashboardPage />);
+
+    expect(screen.getByText('emptyState.getStarted')).toBeInTheDocument();
   });
 });
