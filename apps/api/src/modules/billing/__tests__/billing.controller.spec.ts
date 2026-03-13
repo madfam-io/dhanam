@@ -5,14 +5,17 @@ import Stripe from 'stripe';
 
 import { BillingController } from '../billing.controller';
 import { BillingService } from '../billing.service';
-import { StripeService } from '../stripe.service';
 import { JanuaBillingService } from '../janua-billing.service';
+import { PricingEngineService } from '../services/pricing-engine.service';
+import { TrialService } from '../services/trial.service';
+import { StripeService } from '../stripe.service';
 
 describe('BillingController', () => {
   let controller: BillingController;
   let billingService: jest.Mocked<BillingService>;
   let stripeService: jest.Mocked<StripeService>;
   let configService: jest.Mocked<ConfigService>;
+  let trialService: jest.Mocked<TrialService>;
 
   const mockUser = {
     id: 'user-123',
@@ -20,6 +23,11 @@ describe('BillingController', () => {
     subscriptionTier: 'community',
     subscriptionStartedAt: null,
     subscriptionExpiresAt: null,
+    trialTier: null,
+    trialEndsAt: null,
+    trialHasCreditCard: false,
+    promoStartedAt: null,
+    promoEndsAt: null,
   };
 
   beforeEach(async () => {
@@ -69,6 +77,32 @@ describe('BillingController', () => {
             cancelSubscription: jest.fn(),
           },
         },
+        {
+          provide: PricingEngineService,
+          useValue: {
+            getPricingForCountry: jest.fn().mockResolvedValue({
+              region: 1,
+              regionName: 'tier1',
+              currency: 'USD',
+              tiers: [],
+              trial: { daysWithoutCC: 3, daysWithCC: 21, promoMonths: 3 },
+            }),
+            getRegionForCountry: jest.fn().mockResolvedValue(1),
+            getPricesForRegion: jest.fn(),
+          },
+        },
+        {
+          provide: TrialService,
+          useValue: {
+            startTrial: jest.fn(),
+            extendTrialWithCC: jest.fn(),
+            endTrial: jest.fn(),
+            startPromo: jest.fn(),
+            isInTrial: jest.fn().mockReturnValue(false),
+            isInPromo: jest.fn().mockReturnValue(false),
+            getEffectiveTier: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
@@ -76,6 +110,7 @@ describe('BillingController', () => {
     billingService = module.get(BillingService) as jest.Mocked<BillingService>;
     stripeService = module.get(StripeService) as jest.Mocked<StripeService>;
     configService = module.get(ConfigService) as jest.Mocked<ConfigService>;
+    trialService = module.get(TrialService) as jest.Mocked<TrialService>;
 
     jest.clearAllMocks();
   });
@@ -224,6 +259,10 @@ describe('BillingController', () => {
         startedAt: null,
         expiresAt: null,
         isActive: false,
+        isInTrial: false,
+        isInPromo: false,
+        trialEndsAt: null,
+        promoEndsAt: null,
       });
     });
 
@@ -236,6 +275,10 @@ describe('BillingController', () => {
         subscriptionTier: 'pro',
         subscriptionStartedAt: new Date('2024-01-01'),
         subscriptionExpiresAt: futureDate,
+        trialTier: null,
+        trialEndsAt: null,
+        promoStartedAt: null,
+        promoEndsAt: null,
       };
 
       const mockRequest = { user: premiumUser };
@@ -247,6 +290,10 @@ describe('BillingController', () => {
         startedAt: premiumUser.subscriptionStartedAt,
         expiresAt: futureDate,
         isActive: true,
+        isInTrial: false,
+        isInPromo: false,
+        trialEndsAt: null,
+        promoEndsAt: null,
       });
     });
 
@@ -259,6 +306,10 @@ describe('BillingController', () => {
         subscriptionTier: 'pro',
         subscriptionStartedAt: new Date('2023-01-01'),
         subscriptionExpiresAt: pastDate,
+        trialTier: null,
+        trialEndsAt: null,
+        promoStartedAt: null,
+        promoEndsAt: null,
       };
 
       const mockRequest = { user: expiredUser };
@@ -266,6 +317,78 @@ describe('BillingController', () => {
       const result = await controller.getSubscriptionStatus(mockRequest);
 
       expect(result.isActive).toBe(false);
+    });
+
+    it('should return subscription status for active premium user', async () => {
+      const futureDate = new Date();
+      futureDate.setFullYear(futureDate.getFullYear() + 1);
+
+      const premiumUser = {
+        ...mockUser,
+        subscriptionTier: 'premium',
+        subscriptionStartedAt: new Date('2024-01-01'),
+        subscriptionExpiresAt: futureDate,
+        trialTier: null,
+        trialEndsAt: null,
+        promoStartedAt: null,
+        promoEndsAt: null,
+      };
+
+      const mockRequest = { user: premiumUser };
+
+      const result = await controller.getSubscriptionStatus(mockRequest);
+
+      expect(result).toEqual({
+        tier: 'premium',
+        startedAt: premiumUser.subscriptionStartedAt,
+        expiresAt: futureDate,
+        isActive: true,
+        isInTrial: false,
+        isInPromo: false,
+        trialEndsAt: null,
+        promoEndsAt: null,
+      });
+    });
+
+    it('should return trial status when user is in trial', async () => {
+      const futureDate = new Date();
+      futureDate.setDate(futureDate.getDate() + 3);
+
+      const trialUser = {
+        ...mockUser,
+        subscriptionTier: 'pro',
+        trialTier: 'pro',
+        trialEndsAt: futureDate,
+      };
+
+      trialService.isInTrial.mockReturnValue(true);
+
+      const mockRequest = { user: trialUser };
+      const result = await controller.getSubscriptionStatus(mockRequest);
+
+      expect(result.isInTrial).toBe(true);
+      expect(result.trialEndsAt).toEqual(futureDate);
+    });
+
+    it('should return promo status when user is in promo', async () => {
+      const now = new Date();
+      const futureDate = new Date();
+      futureDate.setMonth(futureDate.getMonth() + 3);
+
+      const promoUser = {
+        ...mockUser,
+        subscriptionTier: 'pro',
+        promoStartedAt: now,
+        promoEndsAt: futureDate,
+      };
+
+      trialService.isInPromo.mockReturnValue(true);
+
+      const mockRequest = { user: promoUser };
+      const result = await controller.getSubscriptionStatus(mockRequest);
+
+      expect(result.isInPromo).toBe(true);
+      expect(result.promoEndsAt).toEqual(futureDate);
     });
   });
 

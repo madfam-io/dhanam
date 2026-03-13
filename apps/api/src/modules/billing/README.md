@@ -53,33 +53,54 @@ The Billing module handles all payment and subscription operations:
 
 ## Subscription Tiers
 
-| Tier | Price | Features |
-|------|-------|----------|
-| **Free** | $0 | Limited usage (see limits below) |
-| **Premium** | $9.99/mo | Unlimited usage |
+| Tier | Price (USD) | Key Features |
+|------|-------------|-------------|
+| **Community** | $0 | Self-hosted, limited usage |
+| **Essentials** | $4.99/mo | AI categorization, bank sync, 10 sims/day |
+| **Pro** | $11.99/mo | Unlimited usage, all connections, LifeBeat |
+| **Premium** | $19.99/mo | 50K Monte Carlo, 24 scenarios, 25 GB, priority support |
 
-### Usage Limits (Free Tier)
+Regional pricing applies: Tier 2 (25% off), LATAM (45% off), Emerging (65% off).
+Mexico promo: MXN$31/32/33 per month for first 3 months.
 
-| Feature | Daily Limit |
-|---------|-------------|
-| ESG Calculations | 10 |
-| Monte Carlo Simulations | 3 |
-| Goal Probability | 3 |
-| Scenario Analysis | 1 |
-| Portfolio Rebalance | 0 (Premium only) |
-| API Requests | 1,000 |
+### Usage Limits by Tier
+
+| Feature | Community | Essentials | Pro | Premium |
+|---------|-----------|-----------|-----|---------|
+| ESG Calculations | 5/day | 20/day | Unlimited | Unlimited |
+| Monte Carlo Simulations | 2/day | 10/day | Unlimited | Unlimited |
+| Goal Probability | 0 | 5/day | Unlimited | Unlimited |
+| Scenario Analysis | 0 | 3/day | Unlimited | Unlimited |
+| Portfolio Rebalance | 0 | 0 | Unlimited | Unlimited |
+| API Requests | 500/day | 5,000/day | Unlimited | Unlimited |
+| Spaces | 1 | 2 | 5 | 10 |
+| Storage | 0 | 500 MB | 5 GB | 25 GB |
 
 ## API Endpoints
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/billing/upgrade` | POST | Initiate premium upgrade |
-| `/billing/portal` | POST | Create billing portal session |
-| `/billing/usage` | GET | Get current usage statistics |
-| `/billing/history` | GET | Get payment history |
-| `/billing/limits` | GET | Get usage limits configuration |
-| `/billing/webhook/stripe` | POST | Stripe webhook handler |
-| `/billing/webhook/janua` | POST | Janua webhook handler |
+| Endpoint | Method | Auth | Description |
+|----------|--------|------|-------------|
+| `/billing/pricing` | GET | No | Get regional pricing for a country |
+| `/billing/trial/start` | POST | Yes | Start a free trial |
+| `/billing/trial/extend` | POST | Yes | Extend trial with credit card |
+| `/billing/upgrade` | POST | Yes | Initiate subscription upgrade |
+| `/billing/portal` | POST | Yes | Create billing portal session |
+| `/billing/usage` | GET | Yes | Get current usage statistics |
+| `/billing/history` | GET | Yes | Get payment history |
+| `/billing/status` | GET | Yes | Get subscription status (incl. trial/promo) |
+| `/billing/checkout` | GET | No | Public checkout redirect (external apps) |
+| `/billing/webhook` | POST | No | Stripe webhook handler |
+| `/billing/webhook/janua` | POST | No | Janua webhook handler |
+
+## Trial & Promo Flow
+
+```
+1. User registers with plan selection (?plan=pro)
+2. POST /billing/trial/start → 3-day free trial (no CC)
+3. Optional: POST /billing/trial/extend → 21-day trial (with CC)
+4. Trial expires → promo pricing for 3 months (with CC) or downgrade (without CC)
+5. Promo expires → regular regional pricing
+```
 
 ## Upgrade Flow
 
@@ -187,13 +208,21 @@ if (!allowed) {
 # Stripe
 STRIPE_SECRET_KEY=sk_xxx
 STRIPE_WEBHOOK_SECRET=whsec_xxx
-STRIPE_PREMIUM_PRICE_ID=price_xxx
+STRIPE_ESSENTIALS_PRICE_ID=price_xxx
+STRIPE_PREMIUM_PRICE_ID=price_xxx      # Pro tier
+STRIPE_PREMIUM_PLAN_PRICE_ID=price_xxx  # Premium tier
+
+# Regional pricing coupons
+STRIPE_PROMO_COUPON_MX=coupon_xxx
+STRIPE_REGIONAL_COUPON_T2=coupon_xxx
+STRIPE_REGIONAL_COUPON_LATAM=coupon_xxx
+STRIPE_REGIONAL_COUPON_EMERGING=coupon_xxx
 
 # Janua
 JANUA_API_URL=https://api.janua.dev
 JANUA_API_KEY=xxx
 JANUA_WEBHOOK_SECRET=xxx
-DHANAM_WEBHOOK_SECRET=xxx  # For notifying Janua
+DHANAM_WEBHOOK_SECRET=xxx
 
 # General
 WEB_URL=https://app.dhan.am
@@ -237,4 +266,4 @@ stripe listen --forward-to localhost:4010/billing/webhook/stripe
 ---
 
 **Module**: `billing`
-**Last Updated**: January 2025
+**Last Updated**: March 2026

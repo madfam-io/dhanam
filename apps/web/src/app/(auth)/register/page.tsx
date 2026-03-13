@@ -2,25 +2,36 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useMutation } from '@tanstack/react-query';
 import { RegisterForm } from '~/components/forms/register-form';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@dhanam/ui';
 import { Alert, AlertDescription, Button, Separator } from '@dhanam/ui';
 import { useAuth } from '~/lib/hooks/use-auth';
 import { authApi } from '~/lib/api/auth';
+import { billingApi } from '~/lib/api/billing';
 import { ApiError } from '~/lib/api/client';
 import { oauthProviders, loginWithOAuth, isJanuaOAuthEnabled } from '~/lib/janua-oauth';
 
 export default function RegisterPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const selectedPlan = searchParams.get('plan');
   const { setAuth } = useAuth();
   const [error, setError] = useState<string | null>(null);
 
   const registerMutation = useMutation({
     mutationFn: authApi.register,
-    onSuccess: ({ user, tokens }) => {
+    onSuccess: async ({ user, tokens }) => {
       setAuth(user, tokens);
+      // Start trial if a plan was selected
+      if (selectedPlan && ['essentials', 'pro', 'premium'].includes(selectedPlan)) {
+        try {
+          await billingApi.startTrial(selectedPlan);
+        } catch {
+          // Don't block registration if trial start fails
+        }
+      }
       router.push('/onboarding');
     },
     onError: (error: ApiError) => {
@@ -38,7 +49,11 @@ export default function RegisterPage() {
     <Card>
       <CardHeader>
         <CardTitle>Create an account</CardTitle>
-        <CardDescription>Start managing your finances with Dhanam</CardDescription>
+        <CardDescription>
+          {selectedPlan
+            ? `Start your free trial of ${selectedPlan.charAt(0).toUpperCase() + selectedPlan.slice(1)}`
+            : 'Start managing your finances with Dhanam'}
+        </CardDescription>
       </CardHeader>
       <CardContent>
         {error && (

@@ -6,18 +6,21 @@
 export type ProductId = 'enclii' | 'tezca' | 'yantra4d' | 'dhanam';
 
 /** Subscription tier levels */
-export type SubscriptionTier = 'community' | 'essentials' | 'pro' | 'madfam';
+export type SubscriptionTier = 'community' | 'essentials' | 'pro' | 'premium' | 'madfam';
 
 /** Plan slug for checkout and upgrade flows (optionally product-prefixed) */
 export type PlanSlug =
   | 'essentials'
   | 'pro'
+  | 'premium'
   | 'madfam'
   | 'essentials_yearly'
   | 'pro_yearly'
+  | 'premium_yearly'
   | 'madfam_yearly'
   | `${ProductId}_essentials`
   | `${ProductId}_pro`
+  | `${ProductId}_premium`
   | `${ProductId}_madfam`;
 
 /** Supported billing payment providers */

@@ -64,7 +64,7 @@ export function PremiumUpsell({ feature, context = 'generic' }: PremiumUpsellPro
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Pricing Tiers */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {/* Essentials */}
           <div className="border rounded-lg p-4 space-y-3">
             <div className="flex items-center justify-between">
@@ -115,6 +115,34 @@ export function PremiumUpsell({ feature, context = 'generic' }: PremiumUpsellPro
               <li className="flex items-center gap-1.5">
                 <CheckCircle2 className="h-3.5 w-3.5 text-green-600 shrink-0" />
                 Priority support
+              </li>
+            </ul>
+          </div>
+
+          {/* Premium */}
+          <div className="border rounded-lg p-4 space-y-3 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 border-amber-500/30">
+            <div className="flex items-center justify-between">
+              <h4 className="font-semibold text-sm">Premium</h4>
+              <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white">
+                Full Power
+              </Badge>
+            </div>
+            <div className="flex items-baseline gap-1">
+              <span className="text-2xl font-bold">$19.99</span>
+              <span className="text-muted-foreground text-sm">/month</span>
+            </div>
+            <ul className="space-y-1.5 text-sm text-muted-foreground">
+              <li className="flex items-center gap-1.5">
+                <CheckCircle2 className="h-3.5 w-3.5 text-green-600 shrink-0" />
+                Everything in Pro
+              </li>
+              <li className="flex items-center gap-1.5">
+                <CheckCircle2 className="h-3.5 w-3.5 text-green-600 shrink-0" />
+                50K Monte Carlo iterations
+              </li>
+              <li className="flex items-center gap-1.5">
+                <CheckCircle2 className="h-3.5 w-3.5 text-green-600 shrink-0" />
+                25 GB storage
               </li>
             </ul>
           </div>

@@ -69,9 +69,10 @@ export default function LocaleLandingPage() {
     }
   };
 
-  const handleSignUpClick = () => {
-    analytics.track('signup_clicked', { source: 'landing_cta', locale });
-    window.location.href = `${appUrl}/register`;
+  const handleSignUpClick = (plan?: string) => {
+    analytics.track('signup_clicked', { source: 'landing_cta', locale, plan });
+    const planParam = plan ? `?plan=${plan}` : '';
+    window.location.href = `${appUrl}/register${planParam}`;
   };
 
   return (

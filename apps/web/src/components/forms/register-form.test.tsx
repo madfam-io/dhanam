@@ -80,6 +80,7 @@ jest.mock('@dhanam/shared', () => ({
     currency: 'MXN',
     timezone: 'America/Mexico_City',
     region: 'latam',
+    pricingRegion: 3,
   }),
 }));
 

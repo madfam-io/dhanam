@@ -30,10 +30,14 @@ import { SubscriptionGuard } from './guards/subscription.guard';
 import { UsageLimitGuard } from './guards/usage-limit.guard';
 import { UsageTrackingInterceptor } from './interceptors/usage-tracking.interceptor';
 import { JanuaBillingService } from './janua-billing.service';
+import { SubscriptionLifecycleJob } from './jobs/subscription-lifecycle.job';
 // Hybrid Router Services (Stripe MX + Paddle)
 import { PaddleService } from './services/paddle.service';
 import { PaymentRouterService } from './services/payment-router.service';
+import { PriceResolverService } from './services/price-resolver.service';
+import { PricingEngineService } from './services/pricing-engine.service';
 import { StripeMxService } from './services/stripe-mx.service';
+import { TrialService } from './services/trial.service';
 import { StripeService } from './stripe.service';
 
 @Module({
@@ -53,6 +57,12 @@ import { StripeService } from './stripe.service';
     JanuaBillingService,
     StripeService,
 
+    // Pricing & trial lifecycle
+    PriceResolverService,
+    PricingEngineService,
+    TrialService,
+    SubscriptionLifecycleJob,
+
     // Hybrid Router (Stripe MX + Paddle)
     PaymentRouterService,
     StripeMxService,
@@ -70,6 +80,9 @@ import { StripeService } from './stripe.service';
     BillingService,
     JanuaBillingService,
     StripeService,
+    PriceResolverService,
+    PricingEngineService,
+    TrialService,
     PaymentRouterService,
     StripeMxService,
     PaddleService,

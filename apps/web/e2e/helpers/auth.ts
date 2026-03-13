@@ -87,3 +87,63 @@ export async function isAuthenticated(page: Page): Promise<boolean> {
     return tokens !== null;
   });
 }
+
+/**
+ * Register a new user with a plan via the API, then start a trial
+ */
+export async function registerWithPlan(
+  page: Page,
+  userData: { email: string; password: string; name: string },
+  plan: string,
+): Promise<void> {
+  const registerResponse = await page.request.post(`${API_BASE}/auth/register`, {
+    data: {
+      email: userData.email,
+      password: userData.password,
+      name: userData.name,
+    },
+  });
+
+  if (!registerResponse.ok()) {
+    throw new Error(`Registration failed: ${registerResponse.status()}`);
+  }
+
+  const registerData = await registerResponse.json();
+
+  // Store auth tokens in localStorage
+  await page.evaluate(
+    ({ tokens, user }) => {
+      localStorage.setItem('auth_tokens', JSON.stringify(tokens));
+      localStorage.setItem('auth_user', JSON.stringify(user));
+    },
+    { tokens: registerData.tokens, user: registerData.user },
+  );
+
+  // Start trial for the selected plan
+  const trialResponse = await page.request.post(`${API_BASE}/billing/trial/start`, {
+    data: { plan },
+    headers: {
+      Authorization: `Bearer ${registerData.tokens.accessToken}`,
+    },
+  });
+
+  if (!trialResponse.ok()) {
+    console.warn(`Trial start failed: ${trialResponse.status()}, continuing without trial`);
+  }
+}
+
+/**
+ * Set the geo country cookie for regional pricing tests
+ */
+export async function setGeoCountry(page: Page, countryCode: string): Promise<void> {
+  const url = page.url() || 'http://localhost:3040';
+  const domain = new URL(url).hostname;
+  await page.context().addCookies([
+    {
+      name: 'dhanam_geo',
+      value: countryCode,
+      domain,
+      path: '/',
+    },
+  ]);
+}

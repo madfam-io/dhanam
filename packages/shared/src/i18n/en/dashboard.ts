@@ -142,6 +142,16 @@ export const dashboard = {
     budgetProgress: 'Budget Progress',
     goals: 'Financial Goals',
   },
+  trial: {
+    banner: 'Your {{plan}} trial ends in {{days}} days',
+    extendCta: 'Add credit card to extend to 3 weeks',
+    subscribeCta: 'Subscribe Now',
+    expired: 'Your trial has ended',
+  },
+  promo: {
+    banner: 'Enjoying promo pricing — ends {{date}}',
+    regularAfter: 'Regular pricing starts after promo period',
+  },
   savingsStreak: {
     title: 'Savings Streak & Achievements',
     weeksOfPositiveSavings: 'weeks of positive savings',

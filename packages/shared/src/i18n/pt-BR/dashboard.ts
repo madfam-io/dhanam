@@ -142,6 +142,16 @@ export const dashboard = {
     budgetProgress: 'Progresso dos orçamentos',
     goals: 'Metas financeiras',
   },
+  trial: {
+    banner: 'Seu teste do {{plan}} termina em {{days}} dias',
+    extendCta: 'Adicione cartão de crédito para estender para 3 semanas',
+    subscribeCta: 'Assinar Agora',
+    expired: 'Seu teste terminou',
+  },
+  promo: {
+    banner: 'Aproveitando preços promocionais — termina {{date}}',
+    regularAfter: 'Preços regulares começam após o período promocional',
+  },
   savingsStreak: {
     title: 'Sequência de poupança e conquistas',
     weeksOfPositiveSavings: 'semanas de poupança positiva',

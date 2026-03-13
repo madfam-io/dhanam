@@ -282,6 +282,53 @@ async function main() {
 
   console.log('✅ Created business account');
 
+  // Seed pricing regions
+  const pricingRegions = [
+    {
+      name: 'tier1',
+      label: 'US/CA/UK/AU/DE',
+      discount: 0.0,
+      countries: ['US', 'CA', 'GB', 'DE', 'AU', 'NZ', 'CH', 'AT', 'NL', 'IE', 'SE', 'DK', 'NO', 'FI'],
+      currency: 'USD',
+    },
+    {
+      name: 'tier2',
+      label: 'Southern/Eastern Europe & Asia',
+      discount: 0.25,
+      countries: ['ES', 'PT', 'FR', 'IT', 'JP', 'KR', 'GR', 'CZ', 'PL', 'HU'],
+      currency: 'USD',
+    },
+    {
+      name: 'latam',
+      label: 'Latin America',
+      discount: 0.45,
+      countries: ['MX', 'BR', 'CO', 'AR', 'CL', 'PE', 'EC', 'VE', 'UY', 'CR', 'DO', 'GT', 'PA'],
+      currency: 'USD',
+    },
+    {
+      name: 'emerging',
+      label: 'Emerging Markets',
+      discount: 0.65,
+      countries: ['IN', 'NG', 'KE', 'PH', 'VN', 'EG', 'BD', 'PK', 'ID', 'TH', 'ZA', 'GH', 'TZ'],
+      currency: 'USD',
+    },
+  ];
+
+  for (const region of pricingRegions) {
+    await prisma.pricingRegion.upsert({
+      where: { name: region.name },
+      update: {
+        label: region.label,
+        discount: region.discount,
+        countries: region.countries,
+        currency: region.currency,
+      },
+      create: region,
+    });
+  }
+
+  console.log('✅ Seeded pricing regions');
+
   console.log('✨ Database seeded successfully!');
 }
 

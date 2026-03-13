@@ -4,7 +4,7 @@ import { ReactNode } from 'react';
 import { useAuth } from '~/lib/hooks/use-auth';
 import { PremiumUpsell } from './PremiumUpsell';
 
-type SubscriptionTier = 'community' | 'essentials' | 'pro';
+type SubscriptionTier = 'community' | 'essentials' | 'pro' | 'premium';
 
 interface PremiumGateProps {
   children: ReactNode;
@@ -18,14 +18,16 @@ const TIER_RANK: Record<SubscriptionTier, number> = {
   community: 0,
   essentials: 1,
   pro: 2,
+  premium: 3,
 };
 
 /**
  * PremiumGate Component
  *
  * Conditionally renders children based on user's subscription status.
- * Both 'essentials' and 'pro' are recognized as paid tiers.
+ * Tier hierarchy: community < essentials < pro < premium.
  * Use `requiredTier="pro"` for pro-only features (e.g., LifeBeat, household views).
+ * Use `requiredTier="premium"` for premium-only features.
  *
  * Usage:
  * <PremiumGate feature="Monte Carlo Simulations">
@@ -34,6 +36,10 @@ const TIER_RANK: Record<SubscriptionTier, number> = {
  *
  * <PremiumGate feature="LifeBeat" requiredTier="pro">
  *   <LifeBeatComponent />
+ * </PremiumGate>
+ *
+ * <PremiumGate feature="Advanced Analytics" requiredTier="premium">
+ *   <AdvancedAnalyticsComponent />
  * </PremiumGate>
  */
 export function PremiumGate({

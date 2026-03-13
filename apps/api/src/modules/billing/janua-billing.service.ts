@@ -444,6 +444,21 @@ export class JanuaBillingService {
           'Priority support (24hr SLA)',
         ],
       },
+      {
+        id: 'premium',
+        name: 'Premium',
+        price: isMexico ? 329 : 19.99,
+        currency: isMexico ? 'MXN' : 'USD',
+        interval: 'month',
+        features: [
+          'Everything in Pro, plus:',
+          '10 spaces, 25 GB storage',
+          '50,000 Monte Carlo iterations',
+          '24 stress scenarios',
+          'Dedicated priority support',
+          'Advanced analytics',
+        ],
+      },
     ];
   }
 

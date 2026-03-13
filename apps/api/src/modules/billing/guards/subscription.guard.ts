@@ -59,13 +59,14 @@ export class SubscriptionGuard implements CanActivate {
 
   /**
    * Check if user's tier meets the required tier
-   * Tier hierarchy: community < essentials < pro
+   * Tier hierarchy: community < essentials < pro < premium
    */
   private hasRequiredTier(userTier: SubscriptionTier, requiredTier: SubscriptionTier): boolean {
     const tierHierarchy: Record<SubscriptionTier, number> = {
       community: 0,
       essentials: 1,
       pro: 2,
+      premium: 3,
     };
 
     return (tierHierarchy[userTier] ?? 0) >= (tierHierarchy[requiredTier] ?? 0);

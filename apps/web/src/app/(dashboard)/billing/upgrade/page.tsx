@@ -2,80 +2,27 @@
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@dhanam/ui';
+import { Card, CardContent, CardHeader, CardTitle } from '@dhanam/ui';
 import { Button } from '@dhanam/ui';
 import { Badge } from '@dhanam/ui';
-import { CheckCircle2, Loader2, ArrowLeft, Zap, Crown, Sparkles } from 'lucide-react';
-import { billingApi } from '@/lib/api/billing';
+import { CheckCircle2, Loader2, ArrowLeft, Zap, Crown, Sparkles, Star } from 'lucide-react';
+import { billingApi } from '~/lib/api/billing';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { useAnalytics } from '@/hooks/useAnalytics';
+import { useAnalytics } from '~/hooks/useAnalytics';
 
-interface PricingTier {
-  id: string;
-  name: string;
-  price: string;
-  introPrice?: string;
-  priceNote: string;
-  description: string;
-  features: string[];
-  cta: string;
-  popular?: boolean;
-  plan: string;
+function formatPrice(amount: number, currency: string): string {
+  try {
+    return new Intl.NumberFormat(undefined, {
+      style: 'currency',
+      currency,
+      minimumFractionDigits: amount % 1 === 0 ? 0 : 2,
+      maximumFractionDigits: 2,
+    }).format(amount);
+  } catch {
+    return `${currency} ${amount}`;
+  }
 }
-
-const INTRO_PRICE = '$0.99';
-const INTRO_MONTHS = 3;
-
-const PRICING_TIERS: PricingTier[] = [
-  {
-    id: 'essentials',
-    name: 'Essentials',
-    price: '$4.99',
-    introPrice: INTRO_PRICE,
-    priceNote: '/month',
-    description: 'AI categorization and bank sync for growing finances',
-    features: [
-      '20 ESG calculations/day',
-      '10 Monte Carlo simulations/day',
-      '5 goal probability analyses/day',
-      '3 scenario analyses/day',
-      '2 financial spaces',
-      'Bank sync (Belvo + Bitso)',
-      'AI transaction categorization',
-      '5,000 API requests/day',
-      '500 MB storage',
-    ],
-    cta: 'Subscribe to Essentials',
-    popular: true,
-    plan: 'essentials',
-  },
-  {
-    id: 'pro',
-    name: 'Pro',
-    price: '$11.99',
-    introPrice: INTRO_PRICE,
-    priceNote: '/month',
-    description: 'Unlimited access for serious wealth management',
-    features: [
-      'Unlimited ESG calculations',
-      'Unlimited Monte Carlo simulations',
-      'Unlimited goal probability',
-      'Unlimited scenario analysis',
-      'Portfolio rebalancing',
-      '5 financial spaces',
-      'All bank & exchange connections',
-      'AI categorization + LifeBeat',
-      'Household views',
-      'Collectibles valuation',
-      'Unlimited API requests',
-      '5 GB storage',
-      'Priority support',
-    ],
-    cta: 'Subscribe to Pro',
-    plan: 'pro',
-  },
-];
 
 export default function UpgradePage() {
   const router = useRouter();
@@ -87,13 +34,41 @@ export default function UpgradePage() {
     queryFn: () => billingApi.getStatus(),
   });
 
+  const { data: pricing } = useQuery({
+    queryKey: ['billing-pricing'],
+    queryFn: () => {
+      const geoCookie = document.cookie
+        .split('; ')
+        .find((c) => c.startsWith('dhanam_geo='))
+        ?.split('=')[1];
+      return billingApi.getPricing(geoCookie || undefined);
+    },
+  });
+
   const currentTier = status?.tier || 'community';
+  const tierRank: Record<string, number> = { community: 0, essentials: 1, pro: 2, premium: 3 };
+
+  const tiers = pricing?.tiers || [
+    { id: 'essentials', name: 'Essentials', monthlyPrice: 4.99, promoPrice: null, currency: 'USD', features: [
+      '20 ESG calculations/day', '10 Monte Carlo simulations/day', '2 financial spaces',
+      'Bank sync (Belvo + Bitso)', 'AI transaction categorization', '500 MB storage',
+    ]},
+    { id: 'pro', name: 'Pro', monthlyPrice: 11.99, promoPrice: null, currency: 'USD', features: [
+      'Unlimited simulations', '5 financial spaces', 'All bank & exchange connections',
+      'Estate planning & Life Beat', 'Household views', 'Collectibles valuation', '5 GB storage',
+    ]},
+    { id: 'premium', name: 'Premium', monthlyPrice: 19.99, promoPrice: null, currency: 'USD', features: [
+      'Everything in Pro', '10 financial spaces', '50,000 Monte Carlo iterations',
+      '24 stress scenarios', '25 GB storage', 'Dedicated priority support',
+    ]},
+  ];
 
   const handleSubscribe = async (plan: string) => {
     if (plan === currentTier) return;
 
     setLoadingPlan(plan);
-    analytics.trackUpgradeInitiated('premium', plan === 'essentials' ? 4.99 : 11.99);
+    const tier = tiers.find((t) => t.id === plan);
+    analytics.trackUpgradeInitiated('premium', tier?.monthlyPrice || 0);
 
     try {
       const { checkoutUrl } = await billingApi.upgradeToPremium({
@@ -109,7 +84,7 @@ export default function UpgradePage() {
   };
 
   return (
-    <div className="space-y-6 p-6 max-w-4xl">
+    <div className="space-y-6 p-6 max-w-5xl">
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="sm" onClick={() => router.push('/billing')}>
           <ArrowLeft className="h-4 w-4 mr-1" />
@@ -123,35 +98,59 @@ export default function UpgradePage() {
         </div>
       </div>
 
-      {/* Intro offer banner */}
-      <div className="rounded-lg bg-gradient-to-r from-blue-600/10 to-purple-600/10 border border-primary/20 p-4 text-center">
-        <p className="text-sm font-medium">
-          <Sparkles className="inline h-4 w-4 mr-1 text-primary" />
-          Launch offer:{' '}
-          <span className="font-bold">
-            {INTRO_PRICE}/mo for your first {INTRO_MONTHS} months
-          </span>{' '}
-          on any plan
-        </p>
-      </div>
+      {/* Trial/Promo status banner */}
+      {status?.isInTrial && (
+        <div className="rounded-lg bg-blue-600/10 border border-blue-600/20 p-4 text-center">
+          <p className="text-sm font-medium">
+            <Sparkles className="inline h-4 w-4 mr-1 text-blue-600" />
+            You&apos;re on a free trial of{' '}
+            <span className="font-bold capitalize">{currentTier}</span>.
+            {status.trialEndsAt && (
+              <> Trial ends {new Date(status.trialEndsAt).toLocaleDateString()}.</>
+            )}
+          </p>
+        </div>
+      )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {PRICING_TIERS.map((tier) => {
+      {status?.isInPromo && (
+        <div className="rounded-lg bg-gradient-to-r from-blue-600/10 to-purple-600/10 border border-primary/20 p-4 text-center">
+          <p className="text-sm font-medium">
+            <Sparkles className="inline h-4 w-4 mr-1 text-primary" />
+            You&apos;re enjoying promo pricing.
+            {status.promoEndsAt && (
+              <> Promo ends {new Date(status.promoEndsAt).toLocaleDateString()}.</>
+            )}
+          </p>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {tiers.map((tier) => {
           const isCurrent = tier.id === currentTier;
-          const isDowngrade = currentTier === 'pro' && tier.id === 'essentials';
+          const isDowngrade = (tierRank[currentTier] ?? 0) > (tierRank[tier.id] ?? 0);
+          const isPro = tier.id === 'pro';
+          const isPremium = tier.id === 'premium';
 
           return (
             <Card
               key={tier.id}
               className={`relative ${
-                tier.popular ? 'border-primary shadow-lg' : ''
-              } ${isCurrent ? 'ring-2 ring-primary' : ''}`}
+                isPro ? 'border-primary shadow-lg' : ''
+              } ${isPremium ? 'border-amber-500 shadow-lg' : ''} ${isCurrent ? 'ring-2 ring-primary' : ''}`}
             >
-              {tier.popular && !isCurrent && (
+              {isPro && !isCurrent && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                   <Badge className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
                     <Sparkles className="h-3 w-3 mr-1" />
                     Most Popular
+                  </Badge>
+                </div>
+              )}
+              {isPremium && !isCurrent && (
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                  <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white">
+                    <Star className="h-3 w-3 mr-1" />
+                    Premium
                   </Badge>
                 </div>
               )}
@@ -166,26 +165,30 @@ export default function UpgradePage() {
 
               <CardHeader className="pt-8">
                 <CardTitle className="text-xl">{tier.name}</CardTitle>
-                <CardDescription>{tier.description}</CardDescription>
                 <div className="flex items-baseline gap-1 pt-2">
-                  {tier.introPrice && !isCurrent ? (
+                  {tier.promoPrice !== null && !isCurrent ? (
                     <>
-                      <span className="text-3xl font-bold">{tier.introPrice}</span>
+                      <span className="text-3xl font-bold">
+                        {formatPrice(tier.promoPrice, tier.currency)}
+                      </span>
                       <span className="text-muted-foreground text-sm">/mo</span>
                       <span className="text-muted-foreground text-sm ml-2 line-through">
-                        {tier.price}
+                        {formatPrice(tier.monthlyPrice, tier.currency)}
                       </span>
                     </>
                   ) : (
                     <>
-                      <span className="text-3xl font-bold">{tier.price}</span>
-                      <span className="text-muted-foreground text-sm">{tier.priceNote}</span>
+                      <span className="text-3xl font-bold">
+                        {formatPrice(tier.monthlyPrice, tier.currency)}
+                      </span>
+                      <span className="text-muted-foreground text-sm">/mo</span>
                     </>
                   )}
                 </div>
-                {tier.introPrice && !isCurrent && (
+                {tier.promoPrice !== null && !isCurrent && pricing?.trial && (
                   <p className="text-xs text-muted-foreground">
-                    {tier.introPrice}/mo for {INTRO_MONTHS} months, then {tier.price}/mo
+                    Promo for {pricing.trial.promoMonths} months, then{' '}
+                    {formatPrice(tier.monthlyPrice, tier.currency)}/mo
                   </p>
                 )}
               </CardHeader>
@@ -202,20 +205,24 @@ export default function UpgradePage() {
 
                 <Button
                   className={`w-full ${
-                    tier.popular && !isCurrent && !isDowngrade
+                    isPro && !isCurrent && !isDowngrade
                       ? 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700'
+                      : ''
+                  } ${
+                    isPremium && !isCurrent && !isDowngrade
+                      ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600'
                       : ''
                   }`}
                   variant={isCurrent || isDowngrade ? 'outline' : 'default'}
                   disabled={isCurrent || isDowngrade || loadingPlan !== null}
-                  onClick={() => handleSubscribe(tier.plan)}
+                  onClick={() => handleSubscribe(tier.id)}
                 >
-                  {loadingPlan === tier.plan ? (
+                  {loadingPlan === tier.id ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   ) : (
                     !isCurrent && !isDowngrade && <Zap className="mr-2 h-4 w-4" />
                   )}
-                  {isCurrent ? 'Current Plan' : isDowngrade ? 'Downgrade via Portal' : tier.cta}
+                  {isCurrent ? 'Current Plan' : isDowngrade ? 'Downgrade via Portal' : `Subscribe to ${tier.name}`}
                 </Button>
               </CardContent>
             </Card>
@@ -224,7 +231,7 @@ export default function UpgradePage() {
       </div>
 
       <p className="text-xs text-center text-muted-foreground">
-        Cancel anytime. Prices in USD. MXN pricing available at checkout for Mexican users.
+        Cancel anytime. Regional pricing applied automatically.
       </p>
     </div>
   );

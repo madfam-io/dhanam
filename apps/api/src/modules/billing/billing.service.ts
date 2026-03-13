@@ -40,9 +40,10 @@ export interface UpgradeOptions {
  * ## Subscription Tiers
  * - **Community**: Self-hosted users only. NOT available as a SaaS option.
  *   Users who self-host get community features with their own infrastructure.
- *   SaaS users should always have 'essentials' or 'pro' after completing checkout.
+ *   SaaS users should always have 'essentials', 'pro', or 'premium' after completing checkout.
  * - **Essentials**: $4.99/mo — AI categorization, bank sync, 10 simulations/day
  * - **Pro**: $11.99/mo — Unlimited usage, all features
+ * - **Premium**: $19.99/mo — 50K Monte Carlo, 24 scenarios, 25 GB storage, priority support
  *
  * ## Usage Tracking
  * Daily usage metrics tracked per user:
@@ -110,6 +111,14 @@ export class BillingService {
       portfolio_rebalance: Infinity,
       api_request: Infinity,
     },
+    premium: {
+      esg_calculation: Infinity,
+      monte_carlo_simulation: Infinity,
+      goal_probability: Infinity,
+      scenario_analysis: Infinity,
+      portfolio_rebalance: Infinity,
+      api_request: Infinity,
+    },
   };
 
   // Feature limits per tier
@@ -149,6 +158,19 @@ export class BillingService {
       lifeBeat: true,
       householdViews: true,
       collectiblesValuation: true,
+    },
+    premium: {
+      maxSpaces: 10,
+      maxProviderConnections: Infinity,
+      allowedProviders: 'all' as const,
+      mlCategorization: true,
+      monteCarloMaxIterations: 50_000,
+      monteCarloMaxScenarios: 24,
+      storageBytes: 25 * 1024 * 1024 * 1024, // 25 GB
+      lifeBeat: true,
+      householdViews: true,
+      collectiblesValuation: true,
+      prioritySupport: true,
     },
   };
 
@@ -228,7 +250,7 @@ export class BillingService {
     });
 
     const requestedPlan = options.plan || 'pro';
-    const tierRank = { community: 0, essentials: 1, pro: 2 };
+    const tierRank = { community: 0, essentials: 1, pro: 2, premium: 3 };
     const currentRank = tierRank[currentUser?.subscriptionTier as keyof typeof tierRank] ?? 0;
     const requestedRank = tierRank[requestedPlan as keyof typeof tierRank] ?? 2;
 
@@ -347,7 +369,9 @@ export class BillingService {
     const priceId =
       plan === 'essentials'
         ? this.config.get<string>('STRIPE_ESSENTIALS_PRICE_ID')
-        : this.config.get<string>('STRIPE_PREMIUM_PRICE_ID');
+        : plan === 'premium'
+          ? this.config.get<string>('STRIPE_PREMIUM_PLAN_PRICE_ID')
+          : this.config.get<string>('STRIPE_PREMIUM_PRICE_ID');
 
     if (!priceId) {
       throw new Error(`No Stripe price configured for plan: ${plan}`);
@@ -423,10 +447,13 @@ export class BillingService {
       return;
     }
 
+    const plan = (subscription as any).metadata?.plan;
+    const tier = (plan && this.PLAN_TIER_MAP[plan]) || 'pro';
+
     await this.prisma.user.update({
       where: { id: user.id },
       data: {
-        subscriptionTier: 'pro',
+        subscriptionTier: tier as SubscriptionTier,
         subscriptionStartedAt: new Date((subscription as any).current_period_start * 1000),
         subscriptionExpiresAt: new Date((subscription as any).current_period_end * 1000),
         stripeSubscriptionId: subscription.id,
@@ -450,7 +477,7 @@ export class BillingService {
       action: 'SUBSCRIPTION_ACTIVATED',
       severity: 'high',
       metadata: {
-        tier: 'pro',
+        tier,
         subscriptionId: subscription.id,
       },
     });
@@ -687,8 +714,8 @@ export class BillingService {
       return false;
     }
 
-    // Pro users have unlimited usage
-    if (user.subscriptionTier === 'pro') {
+    // Pro and premium users have unlimited usage
+    if (user.subscriptionTier === 'pro' || user.subscriptionTier === 'premium') {
       return true;
     }
 
@@ -808,6 +835,8 @@ export class BillingService {
     essentials_yearly: 'essentials',
     pro: 'pro',
     pro_yearly: 'pro',
+    premium: 'premium',
+    premium_yearly: 'premium',
   };
 
   /**
@@ -869,7 +898,9 @@ export class BillingService {
     const priceId =
       plan === 'essentials'
         ? this.config.get<string>('STRIPE_ESSENTIALS_PRICE_ID')
-        : this.config.get<string>('STRIPE_PREMIUM_PRICE_ID');
+        : plan === 'premium'
+          ? this.config.get<string>('STRIPE_PREMIUM_PLAN_PRICE_ID')
+          : this.config.get<string>('STRIPE_PREMIUM_PRICE_ID');
 
     const session = await this.stripe.createCheckoutSession({
       customerId,
@@ -1033,10 +1064,12 @@ export class BillingService {
       return;
     }
 
+    const tier = (plan_id && this.PLAN_TIER_MAP[plan_id]) || 'pro';
+
     await this.prisma.user.update({
       where: { id: user.id },
       data: {
-        subscriptionTier: 'pro',
+        subscriptionTier: tier as SubscriptionTier,
         subscriptionStartedAt: new Date(),
         billingProvider: provider,
       },
@@ -1067,7 +1100,7 @@ export class BillingService {
    * Handle Janua subscription updated event
    */
   async handleJanuaSubscriptionUpdated(payload: any): Promise<void> {
-    const { customer_id, plan_id: _plan_id, status, provider: _provider } = payload.data;
+    const { customer_id, plan_id, status, provider: _provider } = payload.data;
 
     const user = await this.prisma.user.findFirst({
       where: { januaCustomerId: customer_id },
@@ -1078,7 +1111,8 @@ export class BillingService {
       return;
     }
 
-    const tier = status === 'active' ? 'pro' : 'community';
+    const tier =
+      status === 'active' ? (plan_id && this.PLAN_TIER_MAP[plan_id]) || 'pro' : 'community';
 
     await this.prisma.user.update({
       where: { id: user.id },
@@ -1149,6 +1183,7 @@ export class BillingService {
    */
   async handleJanuaSubscriptionResumed(payload: any): Promise<void> {
     const { customer_id } = payload.data;
+    const plan_id = payload.data?.plan_id;
 
     const user = await this.prisma.user.findFirst({
       where: { januaCustomerId: customer_id },
@@ -1158,9 +1193,10 @@ export class BillingService {
       return;
     }
 
+    const tier = (plan_id && this.PLAN_TIER_MAP[plan_id]) || 'pro';
     await this.prisma.user.update({
       where: { id: user.id },
-      data: { subscriptionTier: 'pro' },
+      data: { subscriptionTier: tier as SubscriptionTier },
     });
 
     this.logger.log(`Janua subscription resumed for user ${user.id}`);
@@ -1171,6 +1207,7 @@ export class BillingService {
    */
   async handleJanuaPaymentSucceeded(payload: any): Promise<void> {
     const { customer_id, amount, currency, provider } = payload.data;
+    const plan_id = payload.data.plan_id;
 
     const user = await this.prisma.user.findFirst({
       where: { januaCustomerId: customer_id },
@@ -1194,9 +1231,10 @@ export class BillingService {
     });
 
     // Ensure subscription is active
+    const tier = (plan_id && this.PLAN_TIER_MAP[plan_id]) || 'pro';
     await this.prisma.user.update({
       where: { id: user.id },
-      data: { subscriptionTier: 'pro' },
+      data: { subscriptionTier: tier as SubscriptionTier },
     });
 
     this.logger.log(`Janua payment succeeded for user ${user.id}: ${currency} ${amount}`);

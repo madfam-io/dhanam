@@ -31,9 +31,11 @@ import { JwtAuthGuard } from '../../core/auth/guards/jwt-auth.guard';
 import { ThrottleAuthGuard } from '../../core/security/guards/throttle-auth.guard';
 
 import { BillingService } from './billing.service';
-import { UpgradeToPremiumDto, CheckoutQueryDto } from './dto';
+import { CheckoutQueryDto, StartTrialDto, UpgradeToPremiumDto } from './dto';
 import { JanuaWebhookPayloadDto, JanuaWebhookEventType } from './dto/janua-webhook.dto';
 import { JanuaBillingService } from './janua-billing.service';
+import { PricingEngineService } from './services/pricing-engine.service';
+import { TrialService } from './services/trial.service';
 import { StripeService } from './stripe.service';
 
 @ApiTags('Billing')
@@ -46,6 +48,8 @@ export class BillingController {
     private billingService: BillingService,
     private stripeService: StripeService,
     private januaBillingService: JanuaBillingService,
+    private pricingEngine: PricingEngineService,
+    private trialService: TrialService,
     private config: ConfigService
   ) {}
 
@@ -144,6 +148,18 @@ export class BillingController {
   }
 
   /**
+   * Get regional pricing for a country.
+   * Public endpoint - no auth required.
+   */
+  @Get('pricing')
+  @ApiOperation({ summary: 'Get regional pricing (public, no auth required)' })
+  @ApiOkResponse({ description: 'Regional pricing retrieved successfully' })
+  async getPricing(@Query('country') country?: string) {
+    const countryCode = country || 'US';
+    return this.pricingEngine.getPricingForCountry(countryCode);
+  }
+
+  /**
    * Get subscription status for the authenticated user
    */
   @Get('status')
@@ -154,6 +170,15 @@ export class BillingController {
   async getSubscriptionStatus(@Req() req: any) {
     const user = req.user;
 
+    const isInTrial = this.trialService.isInTrial({
+      trialTier: user.trialTier,
+      trialEndsAt: user.trialEndsAt,
+    });
+    const isInPromo = this.trialService.isInPromo({
+      promoStartedAt: user.promoStartedAt,
+      promoEndsAt: user.promoEndsAt,
+    });
+
     return {
       tier: user.subscriptionTier,
       startedAt: user.subscriptionStartedAt,
@@ -161,7 +186,38 @@ export class BillingController {
       isActive:
         user.subscriptionTier !== 'community' &&
         (!user.subscriptionExpiresAt || new Date(user.subscriptionExpiresAt) > new Date()),
+      isInTrial,
+      isInPromo,
+      trialEndsAt: user.trialEndsAt,
+      promoEndsAt: user.promoEndsAt,
     };
+  }
+
+  /**
+   * Start a free trial.
+   */
+  @Post('trial/start')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Start a free trial' })
+  @ApiCreatedResponse({ description: 'Trial started successfully' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  async startTrial(@Req() req: any, @Body() dto: StartTrialDto) {
+    const tier = dto.plan as any;
+    await this.trialService.startTrial(req.user.id, tier, false);
+    return { message: 'Trial started', plan: tier, trialDays: 3 };
+  }
+
+  /**
+   * Extend trial by adding credit card.
+   */
+  @Post('trial/extend')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Extend trial with credit card' })
+  @ApiCreatedResponse({ description: 'Trial extended successfully' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  async extendTrial(@Req() req: any) {
+    await this.trialService.extendTrialWithCC(req.user.id);
+    return { message: 'Trial extended to 21 days' };
   }
 
   /**

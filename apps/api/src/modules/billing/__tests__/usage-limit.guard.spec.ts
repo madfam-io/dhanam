@@ -46,7 +46,23 @@ describe('UsageLimitGuard', () => {
                 portfolio_rebalance: 0,
                 api_request: 1000,
               },
+              essentials: {
+                esg_calculation: 20,
+                monte_carlo_simulation: 10,
+                goal_probability: 5,
+                scenario_analysis: 3,
+                portfolio_rebalance: 0,
+                api_request: 5000,
+              },
               pro: {
+                esg_calculation: Infinity,
+                monte_carlo_simulation: Infinity,
+                goal_probability: Infinity,
+                scenario_analysis: Infinity,
+                portfolio_rebalance: Infinity,
+                api_request: Infinity,
+              },
+              premium: {
                 esg_calculation: Infinity,
                 monte_carlo_simulation: Infinity,
                 goal_probability: Infinity,
@@ -211,6 +227,22 @@ describe('UsageLimitGuard', () => {
 
       expect(result).toBe(true);
       expect(billingService.checkUsageLimit).toHaveBeenCalledWith('user-pro', 'monte_carlo_simulation');
+    });
+  });
+
+  describe('premium users', () => {
+    it('should allow unlimited access for premium users', async () => {
+      const context = mockExecutionContext({
+        id: 'user-premium',
+        subscriptionTier: 'premium',
+      });
+      reflector.get.mockReturnValue('monte_carlo_simulation' as UsageMetricType);
+      billingService.checkUsageLimit.mockResolvedValue(true);
+
+      const result = await guard.canActivate(context);
+
+      expect(result).toBe(true);
+      expect(billingService.checkUsageLimit).toHaveBeenCalledWith('user-premium', 'monte_carlo_simulation');
     });
   });
 

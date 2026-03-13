@@ -29,6 +29,11 @@ const TIER_CONFIG = {
     color: 'bg-gradient-to-r from-blue-600 to-purple-600 text-white',
     description: 'Unlimited usage on all features',
   },
+  premium: {
+    label: 'Premium',
+    color: 'bg-gradient-to-r from-amber-500 to-orange-500 text-white',
+    description: 'Everything in Pro plus advanced analytics & priority support',
+  },
 } as const;
 
 function formatDate(dateStr: string | null): string {

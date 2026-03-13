@@ -177,7 +177,7 @@ describe('SubscriptionGuard', () => {
   });
 
   describe('tier hierarchy', () => {
-    it('should correctly implement tier hierarchy (community < essentials < pro)', async () => {
+    it('should correctly implement tier hierarchy (community < essentials < pro < premium)', async () => {
       // Community user cannot access pro
       const communityUserContext = mockExecutionContext({
         id: 'user-community',
@@ -196,6 +196,38 @@ describe('SubscriptionGuard', () => {
 
       const result = await guard.canActivate(proUserContext);
       expect(result).toBe(true);
+    });
+
+    it('should allow premium user access to pro-tier features', async () => {
+      const premiumUserContext = mockExecutionContext({
+        id: 'user-premium',
+        subscriptionTier: 'premium',
+      });
+      reflector.getAllAndOverride.mockReturnValue('pro' as SubscriptionTier);
+
+      const result = await guard.canActivate(premiumUserContext);
+      expect(result).toBe(true);
+    });
+
+    it('should allow premium user access to premium-tier features', async () => {
+      const premiumUserContext = mockExecutionContext({
+        id: 'user-premium',
+        subscriptionTier: 'premium',
+      });
+      reflector.getAllAndOverride.mockReturnValue('premium' as SubscriptionTier);
+
+      const result = await guard.canActivate(premiumUserContext);
+      expect(result).toBe(true);
+    });
+
+    it('should block pro user from premium-tier features', async () => {
+      const proUserContext = mockExecutionContext({
+        id: 'user-pro',
+        subscriptionTier: 'pro',
+      });
+      reflector.getAllAndOverride.mockReturnValue('premium' as SubscriptionTier);
+
+      await expect(guard.canActivate(proUserContext)).rejects.toThrow(PaymentRequiredException);
     });
   });
 });

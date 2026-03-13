@@ -65,6 +65,7 @@ enum SubscriptionTier {
   community    // self-hosted or free cloud trial
   essentials   // $4.99/mo
   pro          // $11.99/mo
+  premium      // $19.99/mo
 }
 
 enum BillingEventType {
@@ -262,6 +263,14 @@ model User {
   januaCustomerId String? @unique @map("janua_customer_id")
   billingProvider String? @map("billing_provider") // 'conekta' | 'polar' | 'stripe' | 'stripe_mx' | 'paddle'
   countryCode     String? @map("country_code") // ISO country code for billing routing
+
+  // Trial & promo fields
+  trialEndsAt         DateTime?         @map("trial_ends_at")
+  trialTier           SubscriptionTier? @map("trial_tier")
+  trialHasCreditCard  Boolean           @default(false) @map("trial_has_credit_card")
+  promoEndsAt         DateTime?         @map("promo_ends_at")
+  promoStartedAt      DateTime?         @map("promo_started_at")
+  pricingRegion       Int?              @map("pricing_region")
 
   // Paddle billing (Merchant of Record for international)
   paddleCustomerId     String? @unique @map("paddle_customer_id")
@@ -478,6 +487,19 @@ model ProviderConnection {
   @@unique([userId, provider, providerUserId])
   @@index([userId])
   @@map("provider_connections")
+}
+
+model PricingRegion {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  label     String
+  discount  Float
+  countries String[]
+  currency  String   @default("USD")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("pricing_regions")
 }
 
 model Space {

@@ -473,7 +473,7 @@ describe('JanuaBillingService', () => {
     it('should return MXN plans for Mexico', async () => {
       const plans = await service.getPlans('MX');
 
-      expect(plans).toHaveLength(3);
+      expect(plans).toHaveLength(4);
 
       const freePlan = plans.find((p) => p.id === 'community');
       expect(freePlan).toMatchObject({
@@ -481,9 +481,15 @@ describe('JanuaBillingService', () => {
         currency: 'MXN',
       });
 
-      const premiumPlan = plans.find((p) => p.id === 'pro');
-      expect(premiumPlan).toMatchObject({
+      const proPlan = plans.find((p) => p.id === 'pro');
+      expect(proPlan).toMatchObject({
         price: 199,
+        currency: 'MXN',
+      });
+
+      const premiumPlan = plans.find((p) => p.id === 'premium');
+      expect(premiumPlan).toMatchObject({
+        price: 329,
         currency: 'MXN',
       });
     });
@@ -491,7 +497,7 @@ describe('JanuaBillingService', () => {
     it('should return USD plans for other countries', async () => {
       const plans = await service.getPlans('US');
 
-      expect(plans).toHaveLength(3);
+      expect(plans).toHaveLength(4);
 
       const freePlan = plans.find((p) => p.id === 'community');
       expect(freePlan).toMatchObject({
@@ -499,9 +505,15 @@ describe('JanuaBillingService', () => {
         currency: 'USD',
       });
 
-      const premiumPlan = plans.find((p) => p.id === 'pro');
-      expect(premiumPlan).toMatchObject({
+      const proPlan = plans.find((p) => p.id === 'pro');
+      expect(proPlan).toMatchObject({
         price: 11.99,
+        currency: 'USD',
+      });
+
+      const premiumPlan = plans.find((p) => p.id === 'premium');
+      expect(premiumPlan).toMatchObject({
+        price: 19.99,
         currency: 'USD',
       });
     });

@@ -33,6 +33,11 @@ export const RequiresEssentials = () => RequiresTier('essentials' as Subscriptio
 export const RequiresPro = () => RequiresTier('pro' as SubscriptionTier);
 
 /**
- * @deprecated Use RequiresPro() instead. Kept for backward compatibility.
+ * Convenience decorator for premium tier
+ */
+export const RequiresPremiumTier = () => RequiresTier('premium' as SubscriptionTier);
+
+/**
+ * @deprecated Use RequiresPro() for pro-tier or RequiresPremiumTier() for premium-tier. Kept for backward compatibility.
  */
 export const RequiresPremium = () => RequiresTier('pro' as SubscriptionTier);
