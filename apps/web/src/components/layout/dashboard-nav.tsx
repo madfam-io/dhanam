@@ -46,12 +46,13 @@ const navigation = [
 export function DashboardNav() {
   const pathname = usePathname();
   const { t } = useTranslation('dashboard');
+  const { t: tc } = useTranslation('common');
   const { demoHref, stripDemoPrefix } = useDemoNavigation();
 
   const normalizedPath = stripDemoPrefix(pathname);
 
   return (
-    <nav className="w-64 border-r bg-background">
+    <nav aria-label={tc('aria.mainNavigation')} className="w-64 border-r bg-background">
       <div className="flex h-full flex-col gap-y-5 overflow-y-auto px-6 pb-4">
         <ul className="flex flex-1 flex-col gap-y-7 pt-6">
           <li>

@@ -18,6 +18,7 @@ import { useTranslation } from '@dhanam/shared';
 
 import { useDemoNavigation } from '~/lib/contexts/demo-navigation-context';
 import { PersonaSwitcher } from '~/components/demo/persona-switcher';
+import { MobileSidebar } from '~/components/layout/mobile-sidebar';
 import { NotificationDropdown } from '~/components/layout/notification-dropdown';
 import { SearchCommand } from '~/components/search/search-command';
 import { ThemeToggle } from '~/components/theme-toggle';
@@ -48,15 +49,16 @@ export function DashboardHeader() {
 
   return (
     <header className="border-b bg-background">
-      <div className="flex h-16 items-center px-6">
-        <div className="flex items-center gap-4">
-          <h1 className="text-2xl font-bold">Dhanam</h1>
+      <div className="flex h-16 items-center px-4 sm:px-6">
+        <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+          <MobileSidebar />
+          <span className="text-2xl font-bold shrink-0">Dhanam</span>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="outline"
-                className="min-w-[200px] justify-between"
+                className="min-w-0 sm:min-w-[200px] justify-between"
                 disabled={spacesLoading && !spaces?.length}
               >
                 {spacesLoading && !spaces?.length ? (
@@ -66,11 +68,13 @@ export function DashboardHeader() {
                   </span>
                 ) : (
                   <>
-                    <span>{currentSpace?.name || t('header.selectSpace')}</span>
+                    <span className="truncate">
+                      {currentSpace?.name || t('header.selectSpace')}
+                    </span>
                     {isPlaceholderData && (
                       <span className="h-2 w-2 rounded-full bg-yellow-500 animate-pulse" />
                     )}
-                    <ChevronDown className="ml-2 h-4 w-4" />
+                    <ChevronDown className="ml-2 h-4 w-4 shrink-0" />
                   </>
                 )}
               </Button>
@@ -102,15 +106,15 @@ export function DashboardHeader() {
           </DropdownMenu>
         </div>
 
-        <div className="ml-auto flex items-center gap-4">
+        <div className="ml-auto flex items-center gap-2 sm:gap-4">
           {currentSpace && (
-            <div data-tour="search-button">
+            <div className="hidden sm:block" data-tour="search-button">
               <SearchCommand spaceId={currentSpace.id} />
             </div>
           )}
 
           {isDemo && (
-            <div data-tour="persona-switcher">
+            <div className="hidden sm:block" data-tour="persona-switcher">
               <PersonaSwitcher currentPersona={currentPersona} />
             </div>
           )}
@@ -124,7 +128,7 @@ export function DashboardHeader() {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="flex items-center gap-2">
                 <User className="h-5 w-5" />
-                <span>{user?.name}</span>
+                <span className="hidden sm:inline">{user?.name}</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">

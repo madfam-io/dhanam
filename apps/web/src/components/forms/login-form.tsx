@@ -17,6 +17,7 @@ interface LoginFormProps {
 export function LoginForm({ onSubmit, isLoading, showTotpField }: LoginFormProps) {
   const [showPassword, setShowPassword] = useState(false);
   const { t } = useTranslation('auth');
+  const { t: tc } = useTranslation('common');
   const { t: tv } = useTranslation('validations');
 
   const loginSchema = useMemo(
@@ -64,7 +65,8 @@ export function LoginForm({ onSubmit, isLoading, showTotpField }: LoginFormProps
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1"
+            aria-label={showPassword ? tc('aria.hidePassword') : tc('aria.showPassword')}
           >
             {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
           </button>

@@ -26,6 +26,11 @@ const authTranslations: Record<string, string> = {
   'placeholders.totpCode': '123456',
 };
 
+const commonTranslations: Record<string, string> = {
+  'aria.showPassword': 'Show password',
+  'aria.hidePassword': 'Hide password',
+};
+
 const validationTranslations: Record<string, string> = {
   emailInvalid: 'Invalid email address',
   passwordMinLength: 'Password must be at least {{min}} characters',
@@ -35,7 +40,12 @@ jest.mock('@dhanam/shared', () => ({
   LoginDto: {},
   useTranslation: (namespace?: string) => ({
     t: (key: string, params?: Record<string, string | number>) => {
-      const map = namespace === 'validations' ? validationTranslations : authTranslations;
+      const map =
+        namespace === 'validations'
+          ? validationTranslations
+          : namespace === 'common'
+            ? commonTranslations
+            : authTranslations;
       let value = map[key] || key;
       if (params) {
         Object.entries(params).forEach(([k, v]) => {
@@ -89,16 +99,19 @@ describe('LoginForm', () => {
 
     // Click toggle to show password
     const toggleButton = passwordInput.parentElement!.querySelector('button')!;
+    expect(toggleButton).toHaveAttribute('aria-label', 'Show password');
     await user.click(toggleButton);
 
     expect(passwordInput).toHaveAttribute('type', 'text');
     expect(screen.getByTestId('eye-off-icon')).toBeInTheDocument();
+    expect(toggleButton).toHaveAttribute('aria-label', 'Hide password');
 
     // Click toggle to hide password again
     await user.click(toggleButton);
 
     expect(passwordInput).toHaveAttribute('type', 'password');
     expect(screen.getByTestId('eye-icon')).toBeInTheDocument();
+    expect(toggleButton).toHaveAttribute('aria-label', 'Show password');
   });
 
   it.skip('should show validation errors for empty fields on submit', async () => {

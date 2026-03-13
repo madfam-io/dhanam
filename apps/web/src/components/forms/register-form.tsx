@@ -109,7 +109,8 @@ export function RegisterForm({ onSubmit, isLoading }: RegisterFormProps) {
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1"
+            aria-label={showPassword ? tc('aria.hidePassword') : tc('aria.showPassword')}
           >
             {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
           </button>
@@ -131,7 +132,8 @@ export function RegisterForm({ onSubmit, isLoading }: RegisterFormProps) {
           <button
             type="button"
             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1"
+            aria-label={showConfirmPassword ? tc('aria.hidePassword') : tc('aria.showPassword')}
           >
             {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
           </button>

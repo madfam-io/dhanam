@@ -11,14 +11,22 @@ jest.mock('@dhanam/shared', () => {
     scenarios: 'Scenarios', reports: 'Reports', billing: 'Billing', settings: 'Settings',
     wealth: 'Wealth', spaces: 'Spaces', help: 'Help',
   };
-  const resolve = (key: string): string => {
+  const commonAria: Record<string, string> = {
+    mainNavigation: 'Main navigation',
+  };
+  const resolve = (key: string, namespace?: string): string => {
+    if (namespace === 'common') {
+      const parts = key.split('.');
+      if (parts[0] === 'aria' && parts[1]) return commonAria[parts[1]] ?? key;
+      return key;
+    }
     const parts = key.split('.');
     if (parts[0] === 'sidebar' && parts[1]) return sidebar[parts[1]] ?? key;
     return key;
   };
   return {
-    useTranslation: () => ({
-      t: (key: string) => resolve(key),
+    useTranslation: (namespace?: string) => ({
+      t: (key: string) => resolve(key, namespace),
       i18n: { language: 'en', changeLanguage: jest.fn() },
     }),
   };
@@ -111,6 +119,13 @@ beforeEach(() => {
 });
 
 describe('DashboardNav', () => {
+  it('renders a nav element with aria-label', () => {
+    render(<DashboardNav />);
+
+    const nav = screen.getByRole('navigation');
+    expect(nav).toHaveAttribute('aria-label', 'Main navigation');
+  });
+
   it('renders all navigation links', () => {
     render(<DashboardNav />);
 

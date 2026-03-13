@@ -47,6 +47,7 @@ export default function DashboardPage() {
   const spacesQuery = useSpaces();
   const isGuestDemo = user?.email === 'guest@dhanam.demo';
   const { t } = useTranslation('dashboard');
+  const { t: tc } = useTranslation('common');
 
   // Fast data -- accounts, transactions, budgets, goals are simple DB queries
   const {
@@ -137,7 +138,7 @@ export default function DashboardPage() {
   const isNonGuestDemo = isDemo && !isGuestDemo;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" aria-live="polite" aria-busy={isLoading}>
       {isDemo && <DemoTour />}
 
       {dashboardData?._errors && dashboardData._errors.length > 0 && (
@@ -155,9 +156,9 @@ export default function DashboardPage() {
       )}
 
       <div>
-        <h2 className="text-3xl font-bold tracking-tight">
+        <h1 className="text-3xl font-bold tracking-tight">
           {t('overview.welcomeBack', { name: user?.name ?? '' })}
-        </h2>
+        </h1>
         <p className="text-muted-foreground">{t('overview.financialOverview')}</p>
       </div>
 
@@ -319,6 +320,9 @@ export default function DashboardPage() {
                         </p>
                       </div>
                       <div className={`font-medium ${account.balance < 0 ? 'text-red-600' : ''}`}>
+                        {account.balance < 0 && (
+                          <span className="sr-only">{tc('aria.negative')}</span>
+                        )}
                         {formatCurrency(account.balance, account.currency)}
                       </div>
                     </div>
@@ -358,6 +362,9 @@ export default function DashboardPage() {
                     <div
                       className={`font-medium ${transaction.amount < 0 ? 'text-red-600' : 'text-green-600'}`}
                     >
+                      <span className="sr-only">
+                        {transaction.amount < 0 ? tc('aria.expense') : tc('aria.income')}
+                      </span>
                       {formatCurrency(transaction.amount, currentSpace.currency)}
                     </div>
                   </div>
@@ -539,8 +546,16 @@ export default function DashboardPage() {
       {/* Persona-Aware Feature Widget */}
       {(user?.email === 'diego@dhanam.demo' || isGuestDemo) && (
         <Card
-          className="cursor-pointer hover:shadow-md transition-shadow"
+          className="cursor-pointer hover:shadow-md transition-shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          role="button"
+          tabIndex={0}
           onClick={() => router.push('/gaming')}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              router.push('/gaming');
+            }
+          }}
         >
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -596,8 +611,16 @@ export default function DashboardPage() {
 
       {user?.email === 'maria@dhanam.demo' && (
         <Card
-          className="cursor-pointer hover:shadow-md transition-shadow"
+          className="cursor-pointer hover:shadow-md transition-shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          role="button"
+          tabIndex={0}
           onClick={() => router.push('/budgets/zero-based')}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              router.push('/budgets/zero-based');
+            }
+          }}
         >
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -635,8 +658,16 @@ export default function DashboardPage() {
 
       {user?.email === 'carlos@dhanam.demo' && (
         <Card
-          className="cursor-pointer hover:shadow-md transition-shadow"
+          className="cursor-pointer hover:shadow-md transition-shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          role="button"
+          tabIndex={0}
           onClick={() => router.push('/households')}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              router.push('/households');
+            }
+          }}
         >
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -674,8 +705,16 @@ export default function DashboardPage() {
 
       {user?.email === 'patricia@dhanam.demo' && (
         <Card
-          className="cursor-pointer hover:shadow-md transition-shadow"
+          className="cursor-pointer hover:shadow-md transition-shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          role="button"
+          tabIndex={0}
           onClick={() => router.push('/estate-planning/life-beat')}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              router.push('/estate-planning/life-beat');
+            }
+          }}
         >
           <CardHeader>
             <CardTitle className="flex items-center gap-2">

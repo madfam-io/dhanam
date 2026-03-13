@@ -228,6 +228,17 @@ export const common = {
     toggleTheme: 'Cambiar tema',
     help: 'Ayuda',
     closeModal: 'Cerrar modal',
+    skipToContent: 'Ir al contenido principal',
+    notifications: 'Notificaciones',
+    showPassword: 'Mostrar contraseña',
+    hidePassword: 'Ocultar contraseña',
+    openSidebar: 'Abrir menú lateral',
+    closeSidebar: 'Cerrar menú lateral',
+    mainNavigation: 'Navegación principal',
+    income: 'Ingreso',
+    expense: 'Gasto',
+    positive: 'Positivo',
+    negative: 'Negativo',
   },
 
   // Search command

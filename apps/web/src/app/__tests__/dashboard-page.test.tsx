@@ -12,9 +12,17 @@ jest.mock('@dhanam/ui', () => ({
   Progress: ({ value }: any) => <div data-testid="progress" data-value={value} />,
 }));
 
+const commonAriaKeys: Record<string, string> = {
+  'aria.income': 'Income',
+  'aria.expense': 'Expense',
+  'aria.negative': 'Negative',
+  'aria.positive': 'Positive',
+};
+
 jest.mock('@dhanam/shared', () => ({
-  useTranslation: () => ({
+  useTranslation: (namespace?: string) => ({
     t: (key: string, params?: any) => {
+      if (namespace === 'common') return commonAriaKeys[key] ?? key;
       if (params?.name) return `Welcome, ${params.name}`;
       return key;
     },
@@ -36,6 +44,8 @@ jest.mock('lucide-react', () => ({
   Building2: (props: any) => <span {...props} />,
   Loader2: (props: any) => <span {...props} />,
   Gamepad2: (props: any) => <span {...props} />,
+  AlertCircle: (props: any) => <span {...props} />,
+  RefreshCw: (props: any) => <span {...props} />,
 }));
 
 jest.mock('@tanstack/react-query', () => ({
@@ -119,10 +129,19 @@ describe('DashboardPage', () => {
     });
   });
 
-  it('should render welcome message with user name', () => {
+  it('should render welcome message as h1 heading', () => {
     render(<DashboardPage />);
 
-    expect(screen.getByText('Welcome, Test User')).toBeInTheDocument();
+    const heading = screen.getByText('Welcome, Test User');
+    expect(heading).toBeInTheDocument();
+    expect(heading.tagName).toBe('H1');
+  });
+
+  it('should have aria-live polite on the main content wrapper', () => {
+    render(<DashboardPage />);
+
+    const wrapper = screen.getByText('Welcome, Test User').closest('[aria-live]');
+    expect(wrapper).toHaveAttribute('aria-live', 'polite');
   });
 
   it('should render key metric cards', () => {

@@ -24,6 +24,9 @@ jest.mock('@dhanam/shared', () => {
 });
 
 // Mock child components with complex dependencies
+jest.mock('~/components/layout/mobile-sidebar', () => ({
+  MobileSidebar: () => <div data-testid="mobile-sidebar" />,
+}));
 jest.mock('~/components/search/search-command', () => ({
   SearchCommand: () => <div data-testid="search-command" />,
 }));
@@ -115,12 +118,13 @@ describe('DashboardHeader', () => {
     jest.clearAllMocks();
   });
 
-  it('should render the header with user info', () => {
+  it('should render the header with user info and mobile sidebar', () => {
     render(<DashboardHeader />);
 
     expect(screen.getByText('Dhanam')).toBeInTheDocument();
     expect(screen.getByText('Aldo Ruiz')).toBeInTheDocument();
     expect(screen.getByText('aldo@madfam.io')).toBeInTheDocument();
+    expect(screen.getByTestId('mobile-sidebar')).toBeInTheDocument();
   });
 
   it('should show the current space name in the selector', () => {

@@ -38,6 +38,8 @@ const authTranslations: Record<string, string> = {
 
 const commonTranslations: Record<string, string> = {
   and: 'and',
+  'aria.showPassword': 'Show password',
+  'aria.hidePassword': 'Hide password',
 };
 
 const validationTranslations: Record<string, string> = {
@@ -110,15 +112,24 @@ describe('RegisterForm', () => {
     expect(screen.getByRole('checkbox')).toBeInTheDocument();
   });
 
-  it('should render password toggle buttons', () => {
+  it('should render password toggle buttons with aria-labels', () => {
     render(<RegisterForm onSubmit={mockOnSubmit} />);
 
     // Initially shows Eye icons (passwords hidden) — one for each password field
     const eyeIcons = screen.getAllByTestId('eye-icon');
     expect(eyeIcons).toHaveLength(2);
+
+    // Both toggle buttons should have "Show password" aria-label initially
+    const toggleButtons = screen.getAllByRole('button').filter((btn) =>
+      btn.getAttribute('aria-label')?.includes('password')
+    );
+    expect(toggleButtons).toHaveLength(2);
+    toggleButtons.forEach((btn) => {
+      expect(btn).toHaveAttribute('aria-label', 'Show password');
+    });
   });
 
-  it('should toggle password visibility on click', async () => {
+  it('should toggle password visibility on click and update aria-label', async () => {
     const user = userEvent.setup();
     render(<RegisterForm onSubmit={mockOnSubmit} />);
 
@@ -128,9 +139,11 @@ describe('RegisterForm', () => {
     // Click toggle (first eye icon belongs to Password field)
     const eyeIcons = screen.getAllByTestId('eye-icon');
     const toggleButton = eyeIcons[0].closest('button')!;
+    expect(toggleButton).toHaveAttribute('aria-label', 'Show password');
     await user.click(toggleButton);
 
     expect(passwordInput).toHaveAttribute('type', 'text');
+    expect(toggleButton).toHaveAttribute('aria-label', 'Hide password');
 
     // Click again to hide
     const eyeOffIcon = screen.getByTestId('eye-off-icon');
@@ -138,6 +151,7 @@ describe('RegisterForm', () => {
     await user.click(toggleAgain);
 
     expect(passwordInput).toHaveAttribute('type', 'password');
+    expect(toggleAgain).toHaveAttribute('aria-label', 'Show password');
   });
 
   it.skip('should show validation errors for empty fields on submit', async () => {

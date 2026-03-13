@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Bell, Check, AlertTriangle, Lightbulb, Trophy, Info } from 'lucide-react';
 import { Button, Popover, PopoverContent, PopoverTrigger } from '@dhanam/ui';
+import { useTranslation } from '@dhanam/shared';
 
 interface Notification {
   id: string;
@@ -38,6 +39,7 @@ export function NotificationDropdown() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
+  const { t } = useTranslation('common');
 
   const { data: notifications = [] } = useQuery<Notification[]>({
     queryKey: ['notifications'],
@@ -66,7 +68,7 @@ export function NotificationDropdown() {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative">
+        <Button variant="ghost" size="icon" className="relative" aria-label={t('aria.notifications')}>
           <Bell className="h-5 w-5" />
           {unreadCount > 0 && (
             <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-red-500 text-[10px] font-bold text-white flex items-center justify-center">

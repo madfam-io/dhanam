@@ -10,6 +10,7 @@ import { DemoTour } from '~/components/demo/demo-tour';
 import { KeyboardShortcuts } from '~/components/keyboard-shortcuts';
 import { PageTransition } from '~/components/motion/page-transition';
 import { DemoNavigationProvider } from '~/lib/contexts/demo-navigation-context';
+import { useTranslation } from '@dhanam/shared';
 import { useAuth } from '~/lib/hooks/use-auth';
 import { useSpaces } from '~/lib/hooks/use-spaces';
 import { authApi } from '~/lib/api/auth';
@@ -21,10 +22,16 @@ import { authApi } from '~/lib/api/auth';
 function DashboardSkeleton() {
   return (
     <div className="min-h-screen bg-background">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:top-4 focus:left-4 focus:rounded-md focus:bg-background focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:shadow-lg focus:ring-2 focus:ring-ring"
+      >
+        Skip to main content
+      </a>
       <div className="h-16 border-b bg-card animate-pulse" />
       <div className="flex">
         <div className="w-64 border-r bg-card animate-pulse hidden md:block" />
-        <main className="flex-1 p-6">
+        <main id="main-content" className="flex-1 p-6">
           <div className="mx-auto max-w-7xl">
             <div className="h-8 w-48 bg-muted rounded animate-pulse mb-4" />
             <div className="h-64 bg-muted rounded animate-pulse" />
@@ -32,6 +39,18 @@ function DashboardSkeleton() {
         </main>
       </div>
     </div>
+  );
+}
+
+function SkipLink() {
+  const { t } = useTranslation('common');
+  return (
+    <a
+      href="#main-content"
+      className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:top-4 focus:left-4 focus:rounded-md focus:bg-background focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:shadow-lg focus:ring-2 focus:ring-ring"
+    >
+      {t('aria.skipToContent')}
+    </a>
   );
 }
 
@@ -109,14 +128,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <DemoNavigationProvider>
       <div className="min-h-screen bg-background">
+        <SkipLink />
         <DashboardHeader />
         <SubscriptionBanner />
         <DemoModeBanner />
         <DemoTour />
         <KeyboardShortcuts />
         <div className="flex">
-          <DashboardNav />
-          <main className="flex-1 p-6">
+          <div className="hidden md:block">
+            <DashboardNav />
+          </div>
+          <main id="main-content" className="flex-1 p-6">
             <div className="mx-auto max-w-7xl">
               <PageTransition>{children}</PageTransition>
             </div>
