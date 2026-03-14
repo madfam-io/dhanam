@@ -132,7 +132,9 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
       const durationSeconds = user?.createdAt
         ? Math.floor((Date.now() - new Date(user.createdAt).getTime()) / 1000)
         : undefined;
-      analytics.trackOnboardingComplete(user?.id, durationSeconds);
+      if (user?.id && durationSeconds !== undefined) {
+        analytics.trackOnboardingComplete(user.id, durationSeconds);
+      }
     } catch (err) {
       setError('Error al completar el onboarding');
       throw err;

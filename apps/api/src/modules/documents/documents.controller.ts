@@ -1,3 +1,4 @@
+import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
 import {
   Controller,
   Get,
@@ -19,8 +20,6 @@ import {
   ApiParam,
 } from '@nestjs/swagger';
 import { Request } from 'express';
-
-import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
 
 import { DocumentsService } from './documents.service';
 import {
@@ -55,7 +54,7 @@ export class DocumentsController {
       req.user!.id,
       dto,
       false,
-      req.user!.subscriptionTier
+      req.user!.subscriptionTier!
     );
   }
 
@@ -81,7 +80,7 @@ export class DocumentsController {
       id,
       dto,
       false,
-      req.user!.subscriptionTier
+      req.user!.subscriptionTier!
     );
   }
 

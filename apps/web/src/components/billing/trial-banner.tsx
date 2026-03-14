@@ -30,14 +30,12 @@ export function TrialBanner() {
         <span className="text-sm">
           <Sparkles className="inline h-3.5 w-3.5 mr-1 text-blue-600" />
           Your <span className="font-semibold capitalize">{status.tier}</span> trial ends in{' '}
-          <span className="font-semibold">{daysLeft} day{daysLeft !== 1 ? 's' : ''}</span>
+          <span className="font-semibold">
+            {daysLeft} day{daysLeft !== 1 ? 's' : ''}
+          </span>
         </span>
         <div className="flex items-center gap-2 ml-4">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => router.push('/billing/upgrade')}
-          >
+          <Button variant="outline" size="sm" onClick={() => router.push('/billing/upgrade')}>
             <CreditCard className="h-3.5 w-3.5 mr-1" />
             Subscribe Now
           </Button>

@@ -34,16 +34,40 @@ export function Pricing({ onSignUpClick }: PricingProps) {
       .find((c) => c.startsWith('dhanam_geo='))
       ?.split('=')[1];
 
-    billingApi.getPricing(geoCookie || undefined).then(setPricing).catch(() => {
-      // Fallback: use static defaults
-    });
+    billingApi
+      .getPricing(geoCookie || undefined)
+      .then(setPricing)
+      .catch(() => {
+        // Fallback: use static defaults
+      });
   }, []);
 
   // Fallback static pricing if API not available
   const tiers = pricing?.tiers || [
-    { id: 'essentials', name: 'Essentials', monthlyPrice: 4.99, promoPrice: null, currency: 'USD', features: [] },
-    { id: 'pro', name: 'Pro', monthlyPrice: 11.99, promoPrice: null, currency: 'USD', features: [] },
-    { id: 'premium', name: 'Premium', monthlyPrice: 19.99, promoPrice: null, currency: 'USD', features: [] },
+    {
+      id: 'essentials',
+      name: 'Essentials',
+      monthlyPrice: 4.99,
+      promoPrice: null,
+      currency: 'USD',
+      features: [],
+    },
+    {
+      id: 'pro',
+      name: 'Pro',
+      monthlyPrice: 11.99,
+      promoPrice: null,
+      currency: 'USD',
+      features: [],
+    },
+    {
+      id: 'premium',
+      name: 'Premium',
+      monthlyPrice: 19.99,
+      promoPrice: null,
+      currency: 'USD',
+      features: [],
+    },
   ];
   const trial = pricing?.trial || { daysWithoutCC: 3, daysWithCC: 21, promoMonths: 3 };
   const hasPromo = tiers.some((t) => t.promoPrice !== null);
@@ -58,7 +82,8 @@ export function Pricing({ onSignUpClick }: PricingProps) {
             <div className="mt-4 inline-flex items-center gap-2 bg-gradient-to-r from-blue-600/10 to-purple-600/10 border border-primary/20 rounded-full px-4 py-2 text-sm">
               <Sparkles className="h-4 w-4 text-primary" />
               <span>
-                Start free for {trial.daysWithoutCC} days — then promo pricing for {trial.promoMonths} months
+                Start free for {trial.daysWithoutCC} days — then promo pricing for{' '}
+                {trial.promoMonths} months
               </span>
             </div>
           )}
@@ -138,7 +163,10 @@ export function Pricing({ onSignUpClick }: PricingProps) {
 
         <p className="text-center text-sm text-muted-foreground mt-6">
           {t('pricing.selfHosted').split('Community')[0]}
-          <a href="https://github.com/aldoruizluna/Dhanam" className="text-primary hover:underline font-medium">
+          <a
+            href="https://github.com/aldoruizluna/Dhanam"
+            className="text-primary hover:underline font-medium"
+          >
             Community edition
           </a>
         </p>

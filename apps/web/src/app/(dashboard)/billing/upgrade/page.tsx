@@ -49,18 +49,52 @@ export default function UpgradePage() {
   const tierRank: Record<string, number> = { community: 0, essentials: 1, pro: 2, premium: 3 };
 
   const tiers = pricing?.tiers || [
-    { id: 'essentials', name: 'Essentials', monthlyPrice: 4.99, promoPrice: null, currency: 'USD', features: [
-      '20 ESG calculations/day', '10 Monte Carlo simulations/day', '2 financial spaces',
-      'Bank sync (Belvo + Bitso)', 'AI transaction categorization', '500 MB storage',
-    ]},
-    { id: 'pro', name: 'Pro', monthlyPrice: 11.99, promoPrice: null, currency: 'USD', features: [
-      'Unlimited simulations', '5 financial spaces', 'All bank & exchange connections',
-      'Estate planning & Life Beat', 'Household views', 'Collectibles valuation', '5 GB storage',
-    ]},
-    { id: 'premium', name: 'Premium', monthlyPrice: 19.99, promoPrice: null, currency: 'USD', features: [
-      'Everything in Pro', '10 financial spaces', '50,000 Monte Carlo iterations',
-      '24 stress scenarios', '25 GB storage', 'Dedicated priority support',
-    ]},
+    {
+      id: 'essentials',
+      name: 'Essentials',
+      monthlyPrice: 4.99,
+      promoPrice: null,
+      currency: 'USD',
+      features: [
+        '20 ESG calculations/day',
+        '10 Monte Carlo simulations/day',
+        '2 financial spaces',
+        'Bank sync (Belvo + Bitso)',
+        'AI transaction categorization',
+        '500 MB storage',
+      ],
+    },
+    {
+      id: 'pro',
+      name: 'Pro',
+      monthlyPrice: 11.99,
+      promoPrice: null,
+      currency: 'USD',
+      features: [
+        'Unlimited simulations',
+        '5 financial spaces',
+        'All bank & exchange connections',
+        'Estate planning & Life Beat',
+        'Household views',
+        'Collectibles valuation',
+        '5 GB storage',
+      ],
+    },
+    {
+      id: 'premium',
+      name: 'Premium',
+      monthlyPrice: 19.99,
+      promoPrice: null,
+      currency: 'USD',
+      features: [
+        'Everything in Pro',
+        '10 financial spaces',
+        '50,000 Monte Carlo iterations',
+        '24 stress scenarios',
+        '25 GB storage',
+        'Dedicated priority support',
+      ],
+    },
   ];
 
   const handleSubscribe = async (plan: string) => {
@@ -222,7 +256,11 @@ export default function UpgradePage() {
                   ) : (
                     !isCurrent && !isDowngrade && <Zap className="mr-2 h-4 w-4" />
                   )}
-                  {isCurrent ? 'Current Plan' : isDowngrade ? 'Downgrade via Portal' : `Subscribe to ${tier.name}`}
+                  {isCurrent
+                    ? 'Current Plan'
+                    : isDowngrade
+                      ? 'Downgrade via Portal'
+                      : `Subscribe to ${tier.name}`}
                 </Button>
               </CardContent>
             </Card>

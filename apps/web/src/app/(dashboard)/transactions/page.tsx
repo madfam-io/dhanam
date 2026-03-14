@@ -141,7 +141,11 @@ export default function TransactionsPage() {
     };
   }, [page, filters]);
 
-  const { data: transactionsData, isLoading: isLoadingTransactions, isError } = useQuery({
+  const {
+    data: transactionsData,
+    isLoading: isLoadingTransactions,
+    isError,
+  } = useQuery({
     queryKey: ['transactions', currentSpace?.id, apiFilter],
     queryFn: () => {
       if (!currentSpace) throw new Error('No current space');

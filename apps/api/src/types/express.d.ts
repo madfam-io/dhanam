@@ -3,6 +3,7 @@ declare global {
     interface User {
       id: string;
       email: string;
+      subscriptionTier?: string;
     }
 
     interface Request {

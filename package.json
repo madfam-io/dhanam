@@ -49,6 +49,8 @@
     ]
   },
   "devDependencies": {
+    "@commitlint/cli": "^20.4.4",
+    "@commitlint/config-conventional": "^20.4.4",
     "@types/node": "^20.11.0",
     "lint-staged": "^16.4.0",
     "prettier": "^3.6.2",
@@ -78,8 +80,7 @@
       "fast-xml-parser": ">=5.3.4",
       "fastify": ">=5.7.2",
       "@isaacs/brace-expansion": ">=5.0.1",
-      "hono": ">=4.11.7",
-      "ioredis": "5.10.0"
+      "hono": ">=4.11.7"
     }
   }
 }

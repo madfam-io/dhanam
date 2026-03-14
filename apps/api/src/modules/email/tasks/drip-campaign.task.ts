@@ -278,7 +278,7 @@ export class DripCampaignTask {
 
   private async getGoalCount(user: any): Promise<number> {
     const count = await this.prisma.goal.count({
-      where: { creatorId: user.id, status: 'active' },
+      where: { createdBy: user.id, status: 'active' },
     });
     return count;
   }
