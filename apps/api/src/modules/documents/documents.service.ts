@@ -5,6 +5,7 @@ import { AuditService } from '@core/audit/audit.service';
 import { PrismaService } from '@core/prisma/prisma.service';
 import { Prisma, DocumentCategory, DocumentStatus } from '@db';
 
+import { BillingService } from '../billing/billing.service';
 import { SpacesService } from '../spaces/spaces.service';
 import { R2StorageService } from '../storage/r2.service';
 
@@ -39,12 +40,14 @@ export class DocumentsService {
     private spacesService: SpacesService,
     private r2Storage: R2StorageService,
     private auditService: AuditService,
-    private csvPreviewService: CsvPreviewService
+    private csvPreviewService: CsvPreviewService,
+    private billing: BillingService
   ) {}
 
   // ──────────────────────────── Quota helpers ────────────────────────────
 
-  async getStorageUsage(spaceId: string): Promise<StorageUsageResult> {
+  async getStorageUsage(spaceId: string, maxStorage?: number): Promise<StorageUsageResult> {
+    const limit = maxStorage ?? MAX_SPACE_STORAGE;
     const result = await this.prisma.document.aggregate({
       where: { spaceId, deletedAt: null },
       _sum: { fileSize: true },
@@ -54,13 +57,18 @@ export class DocumentsService {
     const used = result._sum.fileSize ?? 0;
     return {
       used,
-      limit: MAX_SPACE_STORAGE,
-      remaining: Math.max(0, MAX_SPACE_STORAGE - used),
+      limit: limit === Infinity ? -1 : limit,
+      remaining: limit === Infinity ? Infinity : Math.max(0, limit - used),
       documentCount: result._count,
     };
   }
 
-  private async checkQuota(spaceId: string, bytes: number, isAdmin: boolean): Promise<void> {
+  private async checkQuota(
+    spaceId: string,
+    bytes: number,
+    isAdmin: boolean,
+    userTier?: string
+  ): Promise<void> {
     if (isAdmin) return;
 
     if (bytes > MAX_FILE_SIZE) {
@@ -69,10 +77,14 @@ export class DocumentsService {
       );
     }
 
-    const usage = await this.getStorageUsage(spaceId);
-    if (usage.used + bytes > MAX_SPACE_STORAGE) {
+    const limits = this.billing.getTierLimits(userTier || 'community');
+    const maxStorage = limits.storageBytes;
+    if (maxStorage === Infinity) return;
+
+    const usage = await this.getStorageUsage(spaceId, maxStorage);
+    if (usage.used + bytes > maxStorage) {
       throw new BadRequestException(
-        `Space storage quota exceeded. Used: ${Math.round(usage.used / (1024 * 1024))}MB / ${MAX_SPACE_STORAGE / (1024 * 1024)}MB`
+        `Space storage quota exceeded. Used: ${Math.round(usage.used / (1024 * 1024))}MB / ${Math.round(maxStorage / (1024 * 1024))}MB`
       );
     }
   }
@@ -83,7 +95,8 @@ export class DocumentsService {
     spaceId: string,
     userId: string,
     dto: RequestUploadUrlDto,
-    isAdmin: boolean = false
+    isAdmin: boolean = false,
+    userTier?: string
   ) {
     if (!isAdmin) {
       await this.spacesService.verifyUserAccess(userId, spaceId, 'member');
@@ -95,7 +108,7 @@ export class DocumentsService {
 
     // Soft quota check with estimated size
     if (dto.estimatedSize) {
-      await this.checkQuota(spaceId, dto.estimatedSize, isAdmin);
+      await this.checkQuota(spaceId, dto.estimatedSize, isAdmin, userTier);
     }
 
     const category = dto.category ?? DocumentCategory.general;
@@ -144,7 +157,8 @@ export class DocumentsService {
     userId: string,
     documentId: string,
     dto: ConfirmUploadDto,
-    isAdmin: boolean = false
+    isAdmin: boolean = false,
+    userTier?: string
   ) {
     if (!isAdmin) {
       await this.spacesService.verifyUserAccess(userId, spaceId, 'member');
@@ -169,7 +183,7 @@ export class DocumentsService {
     }
 
     // Hard quota check with actual size
-    await this.checkQuota(spaceId, actualSize, isAdmin);
+    await this.checkQuota(spaceId, actualSize, isAdmin, userTier);
 
     const isCsv = dto.contentType === 'text/csv' || document.contentType === 'text/csv';
     let newStatus: DocumentStatus = DocumentStatus.uploaded;

@@ -34,7 +34,7 @@ export class ProviderConnectionGuard implements CanActivate {
     // Check max connections
     if (tierLimits.maxProviderConnections === 0) {
       throw new PaymentRequiredException(
-        'Provider connections are not available on the Community plan. Upgrade to Essentials or Pro.'
+        'Provider connections are not available on your current plan. Upgrade to Essentials or Pro.'
       );
     }
 

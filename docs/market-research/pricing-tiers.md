@@ -14,25 +14,26 @@
 
 ## Tier 0: Community (Free, Self-Hosted)
 
-The full AGPLv3 codebase on user's own infrastructure.
+The full AGPLv3 codebase on user's own infrastructure. All features are unlimited — the cloud moat is operational convenience (managed API keys, hosted storage, ML inference, support SLA), not feature lockdown.
 
 | Feature | Included |
 |---|---|
 | Budgeting, transactions, net worth | ✅ |
 | Manual account entry (unlimited) | ✅ |
-| Spaces | 1 (personal) |
+| Spaces | Unlimited |
 | Blockchain address tracking | ✅ (read-only) |
-| ESG scoring | ✅ (open-source package) |
-| Monte Carlo | 1K iterations, 3 scenarios |
-| Localization (EN/ES) | ✅ |
-| Provider bank sync (Belvo/Plaid) | BYOK only (bring your own API keys) |
-| AI/ML categorization | ❌ (requires managed pipeline) |
-| Life Beat / Estate | ❌ |
-| Household views | ❌ |
-| Collectibles valuation | ❌ |
+| ESG scoring | ✅ Unlimited (open-source package) |
+| Monte Carlo | 10K iterations, 12 scenarios |
+| Localization (EN/ES/PT-BR) | ✅ |
+| Provider bank sync (Belvo/Plaid) | ✅ BYOK (bring your own API keys) |
+| AI/ML categorization | ✅ (self-hosted inference) |
+| Life Beat / Estate | ✅ (self-managed SMTP) |
+| Household views | ✅ |
+| Collectibles valuation | ✅ (BYOK for valuation APIs) |
+| Document storage | Unlimited (own disk/S3) |
 | Support | Community (GitHub/Discord) |
 
-**Provider API policy**: On cloud-hosted Community (if offered), provider connections are blocked. Self-hosters can bring their own Belvo/Plaid/Bitso API keys via environment variables.
+**Provider API policy**: Self-hosters bring their own Belvo/Plaid/Bitso API keys via environment variables. All features and limits are unlimited since users provide their own infrastructure.
 
 ---
 

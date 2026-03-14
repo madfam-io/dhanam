@@ -454,61 +454,54 @@ describe('BillingService', () => {
       expect(result).toBe(true);
     });
 
-    it('should return true for community users within limit', async () => {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
+    it('should return true for community users (unlimited)', async () => {
       prisma.user.findUnique.mockResolvedValue(mockUser as any);
-      prisma.usageMetric.findUnique.mockResolvedValue({
-        id: 'metric-123',
-        userId: 'user-123',
-        metricType: 'esg_calculation',
-        date: today,
-        count: 3, // Community tier limit is 5
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
 
       const result = await service.checkUsageLimit('user-123', 'esg_calculation');
 
       expect(result).toBe(true);
     });
 
-    it('should return false for community users at limit', async () => {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      prisma.user.findUnique.mockResolvedValue(mockUser as any);
-      prisma.usageMetric.findUnique.mockResolvedValue({
-        id: 'metric-123',
-        userId: 'user-123',
-        metricType: 'esg_calculation',
-        date: today,
-        count: 5, // Community tier limit is 5
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
-
-      const result = await service.checkUsageLimit('user-123', 'esg_calculation');
-
-      expect(result).toBe(false);
-    });
-
-    it('should return false for features not available in community tier', async () => {
+    it('should return true for community users for all features (unlimited)', async () => {
       prisma.user.findUnique.mockResolvedValue(mockUser as any);
 
       const result = await service.checkUsageLimit('user-123', 'portfolio_rebalance');
 
-      expect(result).toBe(false);
+      expect(result).toBe(true);
     });
 
-    it('should return true for users with no usage today', async () => {
+    it('should return true for community users with no usage today', async () => {
       prisma.user.findUnique.mockResolvedValue(mockUser as any);
       prisma.usageMetric.findUnique.mockResolvedValue(null);
 
       const result = await service.checkUsageLimit('user-123', 'esg_calculation');
 
       expect(result).toBe(true);
+    });
+
+    it('should return false for essentials users at limit', async () => {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const essentialsUser = {
+        ...mockUser,
+        id: 'user-essentials',
+        subscriptionTier: 'essentials' as const,
+      };
+      prisma.user.findUnique.mockResolvedValue(essentialsUser as any);
+      prisma.usageMetric.findUnique.mockResolvedValue({
+        id: 'metric-123',
+        userId: 'user-essentials',
+        metricType: 'esg_calculation',
+        date: today,
+        count: 20, // Essentials tier limit is 20
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      const result = await service.checkUsageLimit('user-essentials', 'esg_calculation');
+
+      expect(result).toBe(false);
     });
   });
 
@@ -545,12 +538,12 @@ describe('BillingService', () => {
         date: today,
         tier: 'community',
         usage: {
-          esg_calculation: { used: 5, limit: 5 },
-          monte_carlo_simulation: { used: 2, limit: 2 },
-          goal_probability: { used: 0, limit: 0 },
-          scenario_analysis: { used: 0, limit: 0 },
-          portfolio_rebalance: { used: 0, limit: 0 },
-          api_request: { used: 0, limit: 500 },
+          esg_calculation: { used: 5, limit: -1 },
+          monte_carlo_simulation: { used: 2, limit: -1 },
+          goal_probability: { used: 0, limit: -1 },
+          scenario_analysis: { used: 0, limit: -1 },
+          portfolio_rebalance: { used: 0, limit: -1 },
+          api_request: { used: 0, limit: -1 },
         },
       });
     });
@@ -864,12 +857,12 @@ describe('BillingService', () => {
 
       expect(limits).toEqual({
         community: {
-          esg_calculation: 5,
-          monte_carlo_simulation: 2,
-          goal_probability: 0,
-          scenario_analysis: 0,
-          portfolio_rebalance: 0,
-          api_request: 500,
+          esg_calculation: Infinity,
+          monte_carlo_simulation: Infinity,
+          goal_probability: Infinity,
+          scenario_analysis: Infinity,
+          portfolio_rebalance: Infinity,
+          api_request: Infinity,
         },
         essentials: {
           esg_calculation: 20,

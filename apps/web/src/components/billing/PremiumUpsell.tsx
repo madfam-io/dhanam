@@ -45,11 +45,11 @@ export function PremiumUpsell({ feature, context = 'generic' }: PremiumUpsellPro
   const getDescription = () => {
     switch (context) {
       case 'limit_reached':
-        return `You've used your daily free simulations. Upgrade for more access.`;
+        return `You've reached your daily limit. Upgrade for higher limits.`;
       case 'feature_locked':
-        return `${feature || 'This feature'} is available on paid plans.`;
+        return `${feature || 'This feature'} requires a managed cloud subscription.`;
       default:
-        return 'Get more features and higher limits to unlock your financial potential.';
+        return 'Get higher limits and managed cloud services to simplify your workflow.';
     }
   };
 

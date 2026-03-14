@@ -522,9 +522,9 @@ describe('JanuaBillingService', () => {
       const plans = await service.getPlans('US');
       const freePlan = plans.find((p) => p.id === 'community');
 
-      expect(freePlan?.features).toContain('5 ESG calculations/day');
-      expect(freePlan?.features).toContain('2 Monte Carlo simulations/day');
-      expect(freePlan?.features).toContain('500 API requests/day');
+      expect(freePlan?.features).toContain('Unlimited simulations & ESG');
+      expect(freePlan?.features).toContain('All features included');
+      expect(freePlan?.features).toContain('Self-hosted — bring your own keys');
     });
 
     it('should include correct features for pro plan', async () => {

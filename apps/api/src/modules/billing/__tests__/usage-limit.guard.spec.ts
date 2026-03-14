@@ -39,12 +39,12 @@ describe('UsageLimitGuard', () => {
             checkUsageLimit: jest.fn(),
             getUsageLimits: jest.fn(() => ({
               community: {
-                esg_calculation: 10,
-                monte_carlo_simulation: 3,
-                goal_probability: 3,
-                scenario_analysis: 1,
-                portfolio_rebalance: 0,
-                api_request: 1000,
+                esg_calculation: Infinity,
+                monte_carlo_simulation: Infinity,
+                goal_probability: Infinity,
+                scenario_analysis: Infinity,
+                portfolio_rebalance: Infinity,
+                api_request: Infinity,
               },
               essentials: {
                 esg_calculation: 20,
@@ -125,27 +125,27 @@ describe('UsageLimitGuard', () => {
     it('should throw UsageLimitExceededException when user has exceeded limit', async () => {
       const context = mockExecutionContext({
         id: 'user-123',
-        subscriptionTier: 'community',
+        subscriptionTier: 'essentials',
       });
       reflector.get.mockReturnValue('esg_calculation' as UsageMetricType);
       billingService.checkUsageLimit.mockResolvedValue(false);
 
       await expect(guard.canActivate(context)).rejects.toThrow(UsageLimitExceededException);
       await expect(guard.canActivate(context)).rejects.toThrow(
-        'Daily limit of 10 esg calculation reached. Upgrade to Pro for unlimited access.'
+        'Daily limit of 20 esg calculation reached. Upgrade to Pro for unlimited access.'
       );
     });
 
     it('should format metric type in error message (replace underscores with spaces)', async () => {
       const context = mockExecutionContext({
         id: 'user-123',
-        subscriptionTier: 'community',
+        subscriptionTier: 'essentials',
       });
       reflector.get.mockReturnValue('monte_carlo_simulation' as UsageMetricType);
       billingService.checkUsageLimit.mockResolvedValue(false);
 
       await expect(guard.canActivate(context)).rejects.toThrow(
-        'Daily limit of 3 monte carlo simulation reached. Upgrade to Pro for unlimited access.'
+        'Daily limit of 10 monte carlo simulation reached. Upgrade to Pro for unlimited access.'
       );
     });
 
@@ -174,7 +174,7 @@ describe('UsageLimitGuard', () => {
     it('should get usage limits from billing service when limit exceeded', async () => {
       const context = mockExecutionContext({
         id: 'user-123',
-        subscriptionTier: 'community',
+        subscriptionTier: 'essentials',
       });
       reflector.get.mockReturnValue('goal_probability' as UsageMetricType);
       billingService.checkUsageLimit.mockResolvedValue(false);
@@ -190,13 +190,13 @@ describe('UsageLimitGuard', () => {
     it('should use correct limit from user tier in error message', async () => {
       const context = mockExecutionContext({
         id: 'user-123',
-        subscriptionTier: 'community',
+        subscriptionTier: 'essentials',
       });
       reflector.get.mockReturnValue('scenario_analysis' as UsageMetricType);
       billingService.checkUsageLimit.mockResolvedValue(false);
 
       await expect(guard.canActivate(context)).rejects.toThrow(
-        'Daily limit of 1 scenario analysis reached. Upgrade to Pro for unlimited access.'
+        'Daily limit of 3 scenario analysis reached. Upgrade to Pro for unlimited access.'
       );
     });
 
@@ -247,18 +247,31 @@ describe('UsageLimitGuard', () => {
   });
 
   describe('feature gating', () => {
-    it('should block community users from pro-only features', async () => {
+    it('should block essentials users from pro-only features', async () => {
       const context = mockExecutionContext({
         id: 'user-123',
-        subscriptionTier: 'community',
+        subscriptionTier: 'essentials',
       });
       reflector.get.mockReturnValue('portfolio_rebalance' as UsageMetricType);
-      billingService.checkUsageLimit.mockResolvedValue(false); // Feature not available on community tier
+      billingService.checkUsageLimit.mockResolvedValue(false); // Feature not available on essentials tier
 
       await expect(guard.canActivate(context)).rejects.toThrow(UsageLimitExceededException);
       await expect(guard.canActivate(context)).rejects.toThrow(
         'Daily limit of 0 portfolio rebalance reached. Upgrade to Pro for unlimited access.'
       );
+    });
+
+    it('should allow community users unlimited access to all features', async () => {
+      const context = mockExecutionContext({
+        id: 'user-123',
+        subscriptionTier: 'community',
+      });
+      reflector.get.mockReturnValue('portfolio_rebalance' as UsageMetricType);
+      billingService.checkUsageLimit.mockResolvedValue(true); // Community tier now has Infinity limits
+
+      const result = await guard.canActivate(context);
+
+      expect(result).toBe(true);
     });
   });
 });

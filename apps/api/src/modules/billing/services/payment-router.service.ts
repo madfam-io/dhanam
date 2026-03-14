@@ -354,17 +354,17 @@ export class PaymentRouterService {
         interval: 'month',
         features: isMexico
           ? [
-              '5 cálculos ESG por día',
-              '2 simulaciones Monte Carlo por día',
-              '1 espacio (personal)',
-              '500 peticiones API por día',
+              'Espacios ilimitados (BYOK)',
+              'Simulaciones y ESG ilimitados',
+              'Todas las funciones incluidas',
+              'Auto-hospedaje — trae tus propias claves',
               'Soporte comunitario',
             ]
           : [
-              '5 ESG calculations per day',
-              '2 Monte Carlo simulations per day',
-              '1 space (personal)',
-              '500 API requests per day',
+              'Unlimited spaces (BYOK)',
+              'Unlimited simulations & ESG',
+              'All features included',
+              'Self-hosted — bring your own keys',
               'Community support',
             ],
         provider,

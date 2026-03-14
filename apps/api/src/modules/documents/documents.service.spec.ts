@@ -5,6 +5,7 @@ import { AuditService } from '@core/audit/audit.service';
 import { PrismaService } from '@core/prisma/prisma.service';
 import { DocumentStatus } from '@db';
 
+import { BillingService } from '../billing/billing.service';
 import { SpacesService } from '../spaces/spaces.service';
 import { R2StorageService } from '../storage/r2.service';
 
@@ -20,6 +21,7 @@ describe('DocumentsService', () => {
   let r2Storage: any;
   let auditService: ReturnType<typeof createAuditMock>;
   let csvPreviewService: jest.Mocked<Pick<CsvPreviewService, 'generatePreview'>>;
+  let billingService: any;
 
   const mockDocument = {
     id: 'doc-1',
@@ -83,6 +85,18 @@ describe('DocumentsService', () => {
       }),
     };
 
+    billingService = {
+      getTierLimits: jest.fn((tier: string) => {
+        const limits: Record<string, any> = {
+          community: { storageBytes: Infinity },
+          essentials: { storageBytes: 500 * 1024 * 1024 },
+          pro: { storageBytes: 5 * 1024 * 1024 * 1024 },
+          premium: { storageBytes: 25 * 1024 * 1024 * 1024 },
+        };
+        return limits[tier] || limits.community;
+      }),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DocumentsService,
@@ -91,6 +105,7 @@ describe('DocumentsService', () => {
         { provide: R2StorageService, useValue: r2Storage },
         { provide: AuditService, useValue: auditService },
         { provide: CsvPreviewService, useValue: csvPreviewService },
+        { provide: BillingService, useValue: billingService },
       ],
     }).compile();
 
@@ -164,7 +179,7 @@ describe('DocumentsService', () => {
         filename: 'test.pdf',
         contentType: 'application/pdf',
         estimatedSize: 1000,
-      } as any);
+      } as any, false, 'essentials');
 
       expect(prisma.document.aggregate).toHaveBeenCalled();
     });
@@ -192,7 +207,7 @@ describe('DocumentsService', () => {
       ).rejects.toThrow(BadRequestException);
     });
 
-    it('should throw when space quota exceeded', async () => {
+    it('should throw when space quota exceeded for essentials tier', async () => {
       prisma.document.aggregate.mockResolvedValue({
         _sum: { fileSize: 499 * 1024 * 1024 },
         _count: 100,
@@ -203,8 +218,29 @@ describe('DocumentsService', () => {
           filename: 'test.pdf',
           contentType: 'application/pdf',
           estimatedSize: 10 * 1024 * 1024, // 10MB would exceed 500MB
-        } as any)
+        } as any, false, 'essentials')
       ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should allow unlimited storage for community tier', async () => {
+      prisma.document.aggregate.mockResolvedValue({
+        _sum: { fileSize: 10 * 1024 * 1024 * 1024 }, // 10GB already used
+        _count: 100,
+      });
+      prisma.document.create.mockResolvedValue(mockDocument);
+
+      // Community tier has Infinity storage — quota check skipped entirely
+      // (still subject to per-file 50MB limit)
+      await expect(
+        service.requestUploadUrl('space-1', 'user-1', {
+          filename: 'test.pdf',
+          contentType: 'application/pdf',
+          estimatedSize: 10 * 1024 * 1024, // 10MB (under 50MB per-file limit)
+        } as any, false, 'community')
+      ).resolves.toBeDefined();
+
+      // aggregate should NOT be called since community has Infinity storage
+      expect(prisma.document.aggregate).not.toHaveBeenCalled();
     });
   });
 
@@ -574,6 +610,51 @@ describe('DocumentsService', () => {
 
       await expect(
         service.updateCsvMapping('space-1', 'user-1', 'doc-1', {} as any)
+      ).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  describe('tier-aware storage', () => {
+    it('should return unlimited storage info for community tier', async () => {
+      prisma.document.aggregate.mockResolvedValue({
+        _sum: { fileSize: 1_000_000 },
+        _count: 3,
+      });
+
+      const result = await service.getStorageUsage('space-1', Infinity);
+
+      expect(result.used).toBe(1_000_000);
+      expect(result.limit).toBe(-1); // -1 indicates unlimited
+      expect(result.remaining).toBe(Infinity);
+    });
+
+    it('should return essentials tier storage limit', async () => {
+      prisma.document.aggregate.mockResolvedValue({
+        _sum: { fileSize: 100_000_000 },
+        _count: 10,
+      });
+
+      const essentialsLimit = 500 * 1024 * 1024;
+      const result = await service.getStorageUsage('space-1', essentialsLimit);
+
+      expect(result.used).toBe(100_000_000);
+      expect(result.limit).toBe(essentialsLimit);
+      expect(result.remaining).toBe(essentialsLimit - 100_000_000);
+    });
+
+    it('should enforce pro tier storage limit (5GB)', async () => {
+      prisma.document.aggregate.mockResolvedValue({
+        _sum: { fileSize: 5 * 1024 * 1024 * 1024 - 1024 }, // just under 5GB
+        _count: 50,
+      });
+      prisma.document.findFirst.mockResolvedValue({ ...mockDocument, status: 'pending_upload' });
+      r2Storage.getFileSize.mockResolvedValue(10 * 1024 * 1024); // 10MB
+
+      await expect(
+        service.confirmUpload('space-1', 'user-1', 'doc-1', {
+          filename: 'test.pdf',
+          contentType: 'application/pdf',
+        } as any, false, 'pro')
       ).rejects.toThrow(BadRequestException);
     });
   });

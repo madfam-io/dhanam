@@ -55,7 +55,7 @@ The Billing module handles all payment and subscription operations:
 
 | Tier | Price (USD) | Key Features |
 |------|-------------|-------------|
-| **Community** | $0 | Self-hosted, limited usage |
+| **Community** | $0 | Self-hosted, full features with BYOK |
 | **Essentials** | $4.99/mo | AI categorization, bank sync, 10 sims/day |
 | **Pro** | $11.99/mo | Unlimited usage, all connections, LifeBeat |
 | **Premium** | $19.99/mo | 50K Monte Carlo, 24 scenarios, 25 GB, priority support |
@@ -65,16 +65,20 @@ Mexico promo: MXN$31/32/33 per month for first 3 months.
 
 ### Usage Limits by Tier
 
-| Feature | Community | Essentials | Pro | Premium |
-|---------|-----------|-----------|-----|---------|
-| ESG Calculations | 5/day | 20/day | Unlimited | Unlimited |
-| Monte Carlo Simulations | 2/day | 10/day | Unlimited | Unlimited |
-| Goal Probability | 0 | 5/day | Unlimited | Unlimited |
-| Scenario Analysis | 0 | 3/day | Unlimited | Unlimited |
-| Portfolio Rebalance | 0 | 0 | Unlimited | Unlimited |
-| API Requests | 500/day | 5,000/day | Unlimited | Unlimited |
-| Spaces | 1 | 2 | 5 | 10 |
-| Storage | 0 | 500 MB | 5 GB | 25 GB |
+| Feature | Community (Self-Hosted) | Essentials | Pro | Premium |
+|---------|------------------------|-----------|-----|---------|
+| ESG Calculations | Unlimited | 20/day | Unlimited | Unlimited |
+| Monte Carlo Simulations | Unlimited | 10/day | Unlimited | Unlimited |
+| Goal Probability | Unlimited | 5/day | Unlimited | Unlimited |
+| Scenario Analysis | Unlimited | 3/day | Unlimited | Unlimited |
+| Portfolio Rebalance | Unlimited | 0 | Unlimited | Unlimited |
+| API Requests | Unlimited | 5,000/day | Unlimited | Unlimited |
+| Spaces | Unlimited | 2 | 5 | 10 |
+| Storage | Unlimited (BYOK) | 500 MB | 5 GB | 25 GB |
+
+> **Note:** Community tier is for self-hosted deployments only. All features are unlimited because
+> users provide their own infrastructure, API keys, and storage. Paid tiers gate **managed cloud
+> services** (Dhanam-hosted provider API keys, R2 storage, ML inference), not features.
 
 ## API Endpoints
 

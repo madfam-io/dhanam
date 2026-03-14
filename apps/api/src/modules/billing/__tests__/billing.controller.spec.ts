@@ -210,8 +210,8 @@ describe('BillingController', () => {
         date: new Date('2024-01-15'),
         tier: 'community',
         usage: {
-          esg_calculation: { used: 5, limit: 10 },
-          monte_carlo_simulation: { used: 1, limit: 3 },
+          esg_calculation: { used: 5, limit: -1 },
+          monte_carlo_simulation: { used: 1, limit: -1 },
         },
       };
 

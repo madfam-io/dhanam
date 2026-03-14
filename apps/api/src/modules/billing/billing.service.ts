@@ -38,8 +38,8 @@ export interface UpgradeOptions {
  * - **Stripe**: Fallback/Direct integration
  *
  * ## Subscription Tiers
- * - **Community**: Self-hosted users only. NOT available as a SaaS option.
- *   Users who self-host get community features with their own infrastructure.
+ * - **Community**: Self-hosted edition. Full feature access with BYOK (bring your own keys)
+ *   for provider connections, storage, and ML inference. No managed cloud services.
  *   SaaS users should always have 'essentials', 'pro', or 'premium' after completing checkout.
  * - **Essentials**: $4.99/mo — AI categorization, bank sync, 10 simulations/day
  * - **Pro**: $11.99/mo — Unlimited usage, all features
@@ -88,12 +88,12 @@ export class BillingService {
   // Usage limits per tier
   private readonly usageLimits = {
     community: {
-      esg_calculation: 5,
-      monte_carlo_simulation: 2,
-      goal_probability: 0,
-      scenario_analysis: 0,
-      portfolio_rebalance: 0,
-      api_request: 500,
+      esg_calculation: Infinity,
+      monte_carlo_simulation: Infinity,
+      goal_probability: Infinity,
+      scenario_analysis: Infinity,
+      portfolio_rebalance: Infinity,
+      api_request: Infinity,
     },
     essentials: {
       esg_calculation: 20,
@@ -124,16 +124,16 @@ export class BillingService {
   // Feature limits per tier
   readonly tierLimits = {
     community: {
-      maxSpaces: 1,
-      maxProviderConnections: 0, // cloud-hosted: 0. Self-hosted: unlimited (BYOK)
-      allowedProviders: [] as string[],
-      mlCategorization: false,
-      monteCarloMaxIterations: 1_000,
-      monteCarloMaxScenarios: 3,
-      storageBytes: 0,
-      lifeBeat: false,
-      householdViews: false,
-      collectiblesValuation: false,
+      maxSpaces: Infinity,
+      maxProviderConnections: Infinity, // self-hosted: BYOK (bring your own API keys)
+      allowedProviders: 'all' as const,
+      mlCategorization: true, // self-hosted users run their own inference
+      monteCarloMaxIterations: 10_000,
+      monteCarloMaxScenarios: 12,
+      storageBytes: Infinity, // self-hosted users provide their own storage
+      lifeBeat: true,
+      householdViews: true,
+      collectiblesValuation: true,
     },
     essentials: {
       maxSpaces: 2,

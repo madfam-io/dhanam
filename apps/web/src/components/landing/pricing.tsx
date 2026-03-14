@@ -137,8 +137,8 @@ export function Pricing({ onSignUpClick }: PricingProps) {
         </div>
 
         <p className="text-center text-sm text-muted-foreground mt-6">
-          Looking for self-hosted?{' '}
-          <a href="https://github.com/aldoruizluna/Dhanam" className="text-primary hover:underline">
+          {t('pricing.selfHosted').split('Community')[0]}
+          <a href="https://github.com/aldoruizluna/Dhanam" className="text-primary hover:underline font-medium">
             Community edition
           </a>
         </p>

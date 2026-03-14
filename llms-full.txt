@@ -206,7 +206,7 @@ Clients (Web, Mobile, Admin, Swagger) → API Gateway (Cloudflare Tunnel)
 
 | Module | Description |
 |--------|-------------|
-| billing | Stripe/Paddle subscription management (community/essentials/pro) |
+| billing | Stripe/Paddle subscription management (community/essentials/pro/premium) |
 | admin | User search, read-only impersonation, feature flags, audit trails |
 
 ### Other Modules
@@ -282,7 +282,7 @@ enum Provider        { belvo, plaid, mx, finicity, bitso, blockchain, manual }
 enum ConnectionStatus { active, error, syncing, disconnected }
 enum BudgetPeriod    { monthly, quarterly, yearly }
 enum Currency        { MXN, USD, EUR }
-enum SubscriptionTier { community, essentials, pro }
+enum SubscriptionTier { community, essentials, pro, premium }
 enum ManualAssetType { real_estate, vehicle, domain, private_equity, angel_investment, collectible, art, jewelry, other }
 enum AccountOwnership { individual, joint, trust }
 enum GoalType        { retirement, education, house_purchase, emergency_fund, legacy, travel, business, debt_payoff, other }

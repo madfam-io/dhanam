@@ -50,7 +50,13 @@ export class DocumentsController {
     @Body() dto: RequestUploadUrlDto,
     @Req() req: Request
   ) {
-    return this.documentsService.requestUploadUrl(spaceId, req.user!.id, dto);
+    return this.documentsService.requestUploadUrl(
+      spaceId,
+      req.user!.id,
+      dto,
+      false,
+      req.user!.subscriptionTier
+    );
   }
 
   @Post(':id/confirm')
@@ -69,7 +75,14 @@ export class DocumentsController {
     @Body() dto: ConfirmUploadDto,
     @Req() req: Request
   ) {
-    return this.documentsService.confirmUpload(spaceId, req.user!.id, id, dto);
+    return this.documentsService.confirmUpload(
+      spaceId,
+      req.user!.id,
+      id,
+      dto,
+      false,
+      req.user!.subscriptionTier
+    );
   }
 
   @Get()

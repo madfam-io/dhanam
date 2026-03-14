@@ -435,14 +435,14 @@ describe('PaymentRouterService', () => {
       const plans = service.getPlans('MX');
       const freePlan = plans.find((p) => p.id === 'community');
 
-      expect(freePlan?.features).toContain('5 cálculos ESG por día');
+      expect(freePlan?.features).toContain('Simulaciones y ESG ilimitados');
     });
 
     it('should return English feature descriptions for other countries', () => {
       const plans = service.getPlans('US');
       const freePlan = plans.find((p) => p.id === 'community');
 
-      expect(freePlan?.features).toContain('5 ESG calculations per day');
+      expect(freePlan?.features).toContain('Unlimited simulations & ESG');
     });
   });
 
