@@ -161,12 +161,30 @@ The provider orchestrator (`apps/api/src/modules/providers/orchestrator/`) handl
 
 ## Testing Strategy
 
-- Unit tests for auth, rules engine, and provider adapters
-- Contract tests for all webhook handlers
-- Snapshot tests for ESG score calculations
-- Synthetic monitors for provider connection health
-- Seeded demo Space for manual QA flows
+**API (NestJS):**
+- 3500+ unit tests across 140+ test suites (98%+ coverage)
+- E2E journey tests: core value loop, subscription upgrade, admin operations, provider sync, billing webhooks, estate planning, households
+- Contract tests for Stripe, Plaid, and Belvo webhook schemas (Zod validation)
 - Drip campaign task tests (15 cases: send/skip/idempotency/batch/error-resilience)
+
+**Web (Next.js):**
+- 40+ page-level smoke tests covering all dashboard, legal, auth, billing, and feature pages
+- 25+ component tests for forms, layouts, billing, ESG, and onboarding
+- Playwright E2E: auth flows, dashboard navigation, core user journey, upgrade journey, billing, subscription pricing
+- Accessibility tests (WCAG AA) via @axe-core/playwright on all key pages
+- Visual regression tests via Playwright screenshot comparison
+
+**Admin (Next.js):**
+- 11 component tests + 11 page tests covering all admin dashboard pages
+- Jest + jsdom with same patterns as web app
+
+**Mobile (React Native):**
+- 6 existing test suites with jest-expo
+
+**CI Pipeline (`.github/workflows/ci.yml`):**
+- 6 parallel test jobs: API unit, web unit, mobile unit, admin unit, contract tests, Playwright E2E
+- Playwright runs on main branch and `run-e2e` labeled PRs
+- Contract tests run on all PRs (no services needed)
 
 ## Database Schema Highlights
 

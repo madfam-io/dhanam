@@ -7,7 +7,7 @@
 - Stack: Next.js 15/16, React Native + Expo, NestJS (Fastify), PostgreSQL (Prisma), Redis (BullMQ)
 - Monorepo: Turborepo + pnpm — 4 apps, 6 packages
 - API: 32 fully implemented modules with Swagger docs
-- Test coverage: 80%+ across the codebase
+- Test coverage: 95%+ API, 80%+ frontend, with Playwright E2E and contract tests
 - License: AGPL-3.0
 
 ---
@@ -461,11 +461,11 @@ Database provisioning script: `scripts/provision-db.sh` (calls Enclii API, idemp
 
 ### Testing Strategy
 
-- Unit tests for auth, rules engine, and provider adapters
-- Contract tests for webhook handlers
-- Snapshot tests for ESG score calculations
-- 80%+ coverage target across branches, functions, lines, statements
-- CI: Automated on every push/PR via GitHub Actions + Codecov
+- API: 3500+ unit tests (98%+ coverage), E2E journey tests, contract tests (Stripe/Plaid/Belvo)
+- Web: 500+ unit tests, Playwright E2E (auth, navigation, upgrade, accessibility, visual regression)
+- Admin: 22 test suites covering all components and pages
+- Mobile: 6 test suites with jest-expo
+- CI: 6 parallel test jobs on every PR via GitHub Actions + Codecov
 
 ### PostHog Events
 

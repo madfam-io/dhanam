@@ -277,6 +277,175 @@ jobs:
           flags: unittests
           name: codecov-umbrella
 
+  test-web:
+    name: Test Web
+    needs: [validate]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9
+          run_install: false
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Configure npm registry
+        run: |
+          echo "@madfam:registry=https://npm.madfam.io" >> ~/.npmrc
+          echo "@dhanam:registry=https://npm.madfam.io" >> ~/.npmrc
+          echo "@janua:registry=https://npm.madfam.io" >> ~/.npmrc
+          echo "//npm.madfam.io/:_authToken=${{ secrets.NPM_MADFAM_TOKEN }}" >> ~/.npmrc
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        env:
+          DATABASE_URL: 'postgresql://dummy:dummy@localhost:5432/dummy'
+
+      - name: Generate Prisma Client
+        run: pnpm db:generate
+        env:
+          DATABASE_URL: postgresql://dummy:dummy@localhost:5432/dummy
+
+      - name: Build packages
+        run: pnpm build:packages
+
+      - name: Run web tests
+        working-directory: apps/web
+        run: pnpm test
+
+  test-mobile:
+    name: Test Mobile
+    needs: [validate]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9
+          run_install: false
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Configure npm registry
+        run: |
+          echo "@madfam:registry=https://npm.madfam.io" >> ~/.npmrc
+          echo "@dhanam:registry=https://npm.madfam.io" >> ~/.npmrc
+          echo "@janua:registry=https://npm.madfam.io" >> ~/.npmrc
+          echo "//npm.madfam.io/:_authToken=${{ secrets.NPM_MADFAM_TOKEN }}" >> ~/.npmrc
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        env:
+          DATABASE_URL: 'postgresql://dummy:dummy@localhost:5432/dummy'
+
+      - name: Build packages
+        run: pnpm build:packages
+
+      - name: Run mobile tests
+        working-directory: apps/mobile
+        run: pnpm test
+
+  test-admin:
+    name: Test Admin
+    needs: [validate]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9
+          run_install: false
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Configure npm registry
+        run: |
+          echo "@madfam:registry=https://npm.madfam.io" >> ~/.npmrc
+          echo "@dhanam:registry=https://npm.madfam.io" >> ~/.npmrc
+          echo "@janua:registry=https://npm.madfam.io" >> ~/.npmrc
+          echo "//npm.madfam.io/:_authToken=${{ secrets.NPM_MADFAM_TOKEN }}" >> ~/.npmrc
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        env:
+          DATABASE_URL: 'postgresql://dummy:dummy@localhost:5432/dummy'
+
+      - name: Generate Prisma Client
+        run: pnpm db:generate
+        env:
+          DATABASE_URL: postgresql://dummy:dummy@localhost:5432/dummy
+
+      - name: Build packages
+        run: pnpm build:packages
+
+      - name: Run admin tests
+        working-directory: apps/admin
+        run: pnpm test
+
   build:
     name: Build
     needs: [validate]
@@ -449,6 +618,184 @@ jobs:
         with:
           name: e2e-test-results
           path: apps/api/test-results/
+          retention-days: 7
+
+  contract-tests:
+    name: Contract Tests
+    needs: [validate]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9
+          run_install: false
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Configure npm registry
+        run: |
+          echo "@madfam:registry=https://npm.madfam.io" >> ~/.npmrc
+          echo "@dhanam:registry=https://npm.madfam.io" >> ~/.npmrc
+          echo "@janua:registry=https://npm.madfam.io" >> ~/.npmrc
+          echo "//npm.madfam.io/:_authToken=${{ secrets.NPM_MADFAM_TOKEN }}" >> ~/.npmrc
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        env:
+          DATABASE_URL: 'postgresql://dummy:dummy@localhost:5432/dummy'
+
+      - name: Generate Prisma Client
+        run: pnpm db:generate
+        env:
+          DATABASE_URL: postgresql://dummy:dummy@localhost:5432/dummy
+
+      - name: Run contract tests
+        working-directory: apps/api
+        run: npx jest --config test/contract/jest-contract.json
+
+  playwright:
+    name: Playwright E2E
+    needs: [build]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    if: github.ref == 'refs/heads/main' || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'run-e2e'))
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: dhanam_pw
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9
+          run_install: false
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Configure npm registry
+        run: |
+          echo "@madfam:registry=https://npm.madfam.io" >> ~/.npmrc
+          echo "@dhanam:registry=https://npm.madfam.io" >> ~/.npmrc
+          echo "@janua:registry=https://npm.madfam.io" >> ~/.npmrc
+          echo "//npm.madfam.io/:_authToken=${{ secrets.NPM_MADFAM_TOKEN }}" >> ~/.npmrc
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        env:
+          DATABASE_URL: 'postgresql://test:test@localhost:5432/dhanam_pw'
+
+      - name: Setup Playwright environment
+        run: |
+          cp apps/api/.env.example apps/api/.env
+          echo "DATABASE_URL=postgresql://test:test@localhost:5432/dhanam_pw" >> apps/api/.env
+          echo "REDIS_URL=redis://localhost:6379" >> apps/api/.env
+          echo "JWT_SECRET=$(openssl rand -hex 32)" >> apps/api/.env
+          echo "JWT_REFRESH_SECRET=$(openssl rand -hex 32)" >> apps/api/.env
+          echo "ENCRYPTION_KEY=ci-test-encryption-key-exactly32" >> apps/api/.env
+
+      - name: Generate Prisma Client
+        working-directory: apps/api
+        run: pnpm prisma generate
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/dhanam_pw
+
+      - name: Run database migrations
+        working-directory: apps/api
+        run: pnpm prisma migrate deploy
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/dhanam_pw
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Build packages and web app
+        run: pnpm build:packages && cd apps/web && pnpm build
+
+      - name: Start API server
+        run: cd apps/api && pnpm start:prod &
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/dhanam_pw
+          REDIS_URL: redis://localhost:6379
+          JWT_SECRET: ci-playwright-jwt-secret-32chars
+          JWT_REFRESH_SECRET: ci-playwright-refresh-32chars0
+          NODE_ENV: test
+
+      - name: Run Playwright tests
+        working-directory: apps/web
+        run: npx playwright test --project=chromium
+        env:
+          E2E_BASE_URL: http://localhost:3040
+          CI: true
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: apps/web/playwright-report/
           retention-days: 7
 
   security:
