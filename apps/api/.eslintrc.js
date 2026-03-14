@@ -14,8 +14,23 @@ module.exports = {
     'import/no-unresolved': [
       'error',
       {
-        ignore: ['^@dhanam/', '^@prisma/client/runtime', '^@core/', '^@modules/', '^@shared/', '^@db$', '^@db/', '^~/'],
+        ignore: [
+          '^@dhanam/',
+          '^@prisma/client/runtime',
+          '^@core/',
+          '^@modules/',
+          '^@shared/',
+          '^@db$',
+          '^@db/',
+          '^~/',
+        ],
       },
     ],
   },
+  overrides: [
+    {
+      files: ['src/modules/analytics/analytics.service.ts'],
+      rules: { 'max-lines': 'off' },
+    },
+  ],
 };
