@@ -11,6 +11,7 @@
 ### 1. Database Migrations Strategy ✅ DONE
 
 **Files Created:**
+
 - `apps/api/MIGRATIONS_GUIDE.md` - Comprehensive migration guide
 - `apps/api/prisma/migrations/.gitkeep` - Migrations directory
 - `.github/workflows/check-migrations.yml` - CI/CD migration checks
@@ -18,6 +19,7 @@
 - Updated `turbo.json` with migration tasks
 
 **Commands Available:**
+
 ```bash
 pnpm db:migrate:dev       # Create and apply migration
 pnpm db:migrate:deploy    # Deploy to production
@@ -27,6 +29,7 @@ pnpm db:studio            # Open Prisma Studio
 ```
 
 **Next Steps:**
+
 1. Run `pnpm db:migrate:dev --name initial_schema` to create baseline
 2. Test migration rollback procedures
 3. Update deployment scripts to use `db:migrate:deploy`
@@ -36,6 +39,7 @@ pnpm db:studio            # Open Prisma Studio
 ### 2. Sentry Error Monitoring ✅ DONE
 
 **Files Created:**
+
 - `apps/api/src/core/monitoring/sentry.service.ts` - Sentry service with full feature set
 - `apps/api/src/core/monitoring/sentry.module.ts` - Sentry module
 - Updated `apps/api/src/core/filters/global-exception.filter.ts` - Integrated Sentry
@@ -44,6 +48,7 @@ pnpm db:studio            # Open Prisma Studio
 - Updated `.env.example` with Sentry configuration
 
 **Features Implemented:**
+
 - ✅ Automatic 5xx error capture
 - ✅ Performance monitoring (10% sample rate in prod)
 - ✅ CPU profiling
@@ -54,6 +59,7 @@ pnpm db:studio            # Open Prisma Studio
 - ✅ Sensitive data protection
 
 **Configuration:**
+
 ```bash
 SENTRY_DSN=https://your_key@sentry.io/project_id
 SENTRY_RELEASE=dhanam-api@0.1.0
@@ -61,6 +67,7 @@ SENTRY_ENVIRONMENT=production
 ```
 
 **Next Steps:**
+
 1. Create Sentry project at sentry.io
 2. Set environment variables
 3. Configure alerts in Sentry dashboard
@@ -81,6 +88,7 @@ SENTRY_ENVIRONMENT=production
 **Files to Create/Update:**
 
 1. **Enhanced Jest Configuration**
+
 ```javascript
 // apps/api/jest.config.js - ENHANCE EXISTING
 module.exports = {
@@ -107,6 +115,7 @@ module.exports = {
 ```
 
 2. **Test Helpers**
+
 ```typescript
 // test/helpers/test-database.ts - CREATE
 export class TestDatabase {
@@ -124,23 +133,24 @@ export class TestDatabase {
 
 // test/helpers/test-data-factory.ts - CREATE
 export class TestDataFactory {
-  async createUser(overrides?: Partial<User>): Promise<User>
-  async createSpace(userId: string, overrides?: Partial<Space>): Promise<Space>
-  async createAccount(spaceId: string): Promise<Account>
-  async createTransaction(accountId: string): Promise<Transaction>
-  async createFullSetup(): Promise<{user, space, account, budget, category, transaction}>
+  async createUser(overrides?: Partial<User>): Promise<User>;
+  async createSpace(userId: string, overrides?: Partial<Space>): Promise<Space>;
+  async createAccount(spaceId: string): Promise<Account>;
+  async createTransaction(accountId: string): Promise<Transaction>;
+  async createFullSetup(): Promise<{ user; space; account; budget; category; transaction }>;
 }
 
 // test/helpers/auth-helper.ts - CREATE
 export class AuthHelper {
-  static async generateToken(userId: string): Promise<string>
-  static async createAuthenticatedRequest(user: User)
+  static async generateToken(userId: string): Promise<string>;
+  static async createAuthenticatedRequest(user: User);
 }
 ```
 
 #### Phase 2: Critical Path Tests (Week 1, Days 3-5)
 
 **Priority 1: Transaction Calculations**
+
 ```typescript
 // src/modules/transactions/__tests__/transactions.service.spec.ts
 describe('TransactionsService', () => {
@@ -168,6 +178,7 @@ describe('TransactionsService', () => {
 ```
 
 **Priority 2: Budget Rules Engine**
+
 ```typescript
 // src/modules/budgets/__tests__/rules-engine.spec.ts
 describe('BudgetRulesEngine', () => {
@@ -206,6 +217,7 @@ describe('BudgetRulesEngine', () => {
 ```
 
 **Priority 3: Currency Conversion**
+
 ```typescript
 // src/modules/fx-rates/__tests__/fx-rates.service.spec.ts
 describe('FXRatesService', () => {
@@ -231,6 +243,7 @@ describe('FXRatesService', () => {
 ```
 
 **Priority 4: Auth & Security**
+
 ```typescript
 // src/core/auth/__tests__/auth.service.integration.spec.ts
 describe('AuthService Integration', () => {
@@ -266,10 +279,7 @@ describe('AuthService Integration', () => {
       const user = await factory.createUser();
 
       // Setup TOTP
-      const { secret, qrCodeUrl } = await totpService.setupTotp(
-        user.id,
-        user.email
-      );
+      const { secret, qrCodeUrl } = await totpService.setupTotp(user.id, user.email);
 
       // Generate token
       const token = speakeasy.totp({
@@ -281,9 +291,9 @@ describe('AuthService Integration', () => {
       await totpService.enableTotp(user.id, token);
 
       // Login requires TOTP
-      await expect(
-        service.login({ email: user.email, password: 'password' })
-      ).rejects.toThrow('TOTP code required');
+      await expect(service.login({ email: user.email, password: 'password' })).rejects.toThrow(
+        'TOTP code required'
+      );
 
       // Login with TOTP succeeds
       const result = await service.login({
@@ -300,19 +310,14 @@ describe('AuthService Integration', () => {
 #### Phase 3: Provider Integration Tests (Week 2, Days 1-2)
 
 **Belvo Integration**
+
 ```typescript
 // src/modules/providers/belvo/__tests__/belvo.service.spec.ts
 describe('BelvoService', () => {
   it('should sync 90 days of transactions', async () => {
-    mockBelvo.transactions.retrieve.mockResolvedValue(
-      generateBelvoTransactions(90)
-    );
+    mockBelvo.transactions.retrieve.mockResolvedValue(generateBelvoTransactions(90));
 
-    const result = await service.syncTransactions(
-      spaceId,
-      userId,
-      linkId
-    );
+    const result = await service.syncTransactions(spaceId, userId, linkId);
 
     expect(result).toHaveLength(90);
     // Verify dates are within 90 days
@@ -339,14 +344,12 @@ describe('BelvoService', () => {
     const payload = { event: 'ACCOUNTS_CREATED', link_id: '123' };
     const signature = createHmacSignature(payload, webhookSecret);
 
-    await expect(
-      service.handleWebhook(payload, signature)
-    ).resolves.not.toThrow();
+    await expect(service.handleWebhook(payload, signature)).resolves.not.toThrow();
 
     // Invalid signature
-    await expect(
-      service.handleWebhook(payload, 'invalid')
-    ).rejects.toThrow('Invalid webhook signature');
+    await expect(service.handleWebhook(payload, 'invalid')).rejects.toThrow(
+      'Invalid webhook signature'
+    );
   });
 });
 ```
@@ -354,6 +357,7 @@ describe('BelvoService', () => {
 #### Phase 4: E2E Tests (Week 2, Days 3-5)
 
 **Complete User Flow**
+
 ```typescript
 // test/e2e/complete-user-flow.e2e-spec.ts
 describe('Complete User Flow (E2E)', () => {
@@ -439,9 +443,7 @@ describe('Complete User Flow (E2E)', () => {
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200);
 
-    expect(updatedAccount.body.balance).toBe(
-      account.body.accounts[0].balance - 150
-    );
+    expect(updatedAccount.body.balance).toBe(account.body.accounts[0].balance - 150);
 
     // 8. Verify budget spending updated
     const updatedBudget = await request(app.getHttpServer())
@@ -457,17 +459,18 @@ describe('Complete User Flow (E2E)', () => {
 
 **Coverage Targets by Module:**
 
-| Module | Current | Target | Priority |
-|--------|---------|--------|----------|
-| core/auth | Unknown | 90% | Critical |
-| modules/transactions | Unknown | 85% | Critical |
-| modules/budgets | Unknown | 85% | Critical |
-| modules/providers | Unknown | 80% | High |
-| modules/fx-rates | Unknown | 80% | High |
-| modules/spaces | Unknown | 75% | Medium |
-| modules/analytics | Unknown | 70% | Medium |
+| Module               | Current | Target | Priority |
+| -------------------- | ------- | ------ | -------- |
+| core/auth            | Unknown | 90%    | Critical |
+| modules/transactions | Unknown | 85%    | Critical |
+| modules/budgets      | Unknown | 85%    | Critical |
+| modules/providers    | Unknown | 80%    | High     |
+| modules/fx-rates     | Unknown | 80%    | High     |
+| modules/spaces       | Unknown | 75%    | Medium   |
+| modules/analytics    | Unknown | 70%    | Medium   |
 
 **Commands:**
+
 ```bash
 # Run all tests with coverage
 pnpm test:cov
@@ -486,6 +489,7 @@ pnpm test:e2e
 ```
 
 **Verification:**
+
 ```bash
 # Check coverage meets thresholds
 pnpm test:cov
@@ -506,6 +510,7 @@ pnpm test:cov
 #### Phase 1: Core Translation Files (Week 2, Day 3)
 
 **File Structure:**
+
 ```
 packages/shared/src/i18n/
 ├── index.ts           # Main export
@@ -526,6 +531,7 @@ packages/shared/src/i18n/
 ```
 
 **Spanish Translations (200+ keys):**
+
 ```typescript
 // packages/shared/src/i18n/es/common.ts
 export const common = {
@@ -766,6 +772,7 @@ export const errors = {
 #### Phase 2: Number & Currency Formatting (Week 2, Day 4)
 
 **Locale-aware formatting:**
+
 ```typescript
 // packages/shared/src/utils/formatters.ts
 export const formatCurrency = (
@@ -784,10 +791,7 @@ export const formatCurrency = (
 // Spanish (Mexico): $1,234.56 MXN
 // English (US): MXN $1,234.56
 
-export const formatNumber = (
-  value: number,
-  locale: string = 'es-MX'
-): string => {
+export const formatNumber = (value: number, locale: string = 'es-MX'): string => {
   return new Intl.NumberFormat(locale).format(value);
 };
 
@@ -805,10 +809,7 @@ export const formatDate = (
     day: 'numeric',
   };
 
-  return new Intl.DateTimeFormat(
-    locale,
-    options || defaultOptions
-  ).format(date);
+  return new Intl.DateTimeFormat(locale, options || defaultOptions).format(date);
 };
 
 // Spanish: 17 de noviembre de 2025
@@ -818,6 +819,7 @@ export const formatDate = (
 #### Phase 3: React Hooks & Context (Week 2, Day 5)
 
 **i18n Hook:**
+
 ```typescript
 // packages/shared/src/hooks/useTranslation.ts
 import { useContext } from 'react';
@@ -850,27 +852,26 @@ return (
 ```
 
 **Validation Messages:**
+
 ```typescript
 // packages/shared/src/validations/messages.ts
 export const getValidationMessages = (locale: string) => ({
-  required: locale === 'es'
-    ? '{{field}} es requerido'
-    : '{{field}} is required',
-  email: locale === 'es'
-    ? 'Correo electrónico inválido'
-    : 'Invalid email address',
-  minLength: locale === 'es'
-    ? '{{field}} debe tener al menos {{min}} caracteres'
-    : '{{field}} must be at least {{min}} characters',
-  maxLength: locale === 'es'
-    ? '{{field}} no debe exceder {{max}} caracteres'
-    : '{{field}} must not exceed {{max}} characters',
-  min: locale === 'es'
-    ? '{{field}} debe ser al menos {{min}}'
-    : '{{field}} must be at least {{min}}',
-  max: locale === 'es'
-    ? '{{field}} no debe ser mayor que {{max}}'
-    : '{{field}} must not be greater than {{max}}',
+  required: locale === 'es' ? '{{field}} es requerido' : '{{field}} is required',
+  email: locale === 'es' ? 'Correo electrónico inválido' : 'Invalid email address',
+  minLength:
+    locale === 'es'
+      ? '{{field}} debe tener al menos {{min}} caracteres'
+      : '{{field}} must be at least {{min}} characters',
+  maxLength:
+    locale === 'es'
+      ? '{{field}} no debe exceder {{max}} caracteres'
+      : '{{field}} must not exceed {{max}} characters',
+  min:
+    locale === 'es' ? '{{field}} debe ser al menos {{min}}' : '{{field}} must be at least {{min}}',
+  max:
+    locale === 'es'
+      ? '{{field}} no debe ser mayor que {{max}}'
+      : '{{field}} must not be greater than {{max}}',
 });
 ```
 
@@ -885,6 +886,7 @@ export const getValidationMessages = (locale: string) => ({
 #### Phase 1: PostHog Client Setup (Week 3, Day 1)
 
 **Backend Integration:**
+
 ```typescript
 // apps/api/package.json - ADD
 "dependencies": {
@@ -914,7 +916,7 @@ export class PostHogService implements OnModuleInit {
     this.client = new PostHog(
       this.configService.get('POSTHOG_API_KEY')!,
       {
-        host: this.configService.get('POSTHOG_HOST') || 'https://app.posthog.com',
+        host: this.configService.get('POSTHOG_HOST') || 'https://analytics.enclii.dev',
         flushAt: 20, // Flush every 20 events
         flushInterval: 10000, // Or every 10 seconds
       }
@@ -959,6 +961,7 @@ export class PostHogService implements OnModuleInit {
 ```
 
 **Update Onboarding Analytics:**
+
 ```typescript
 // apps/api/src/modules/onboarding/onboarding.analytics.ts - UPDATE
 import { PostHogService } from '@modules/analytics/posthog.service';
@@ -988,17 +991,22 @@ export class OnboardingAnalytics {
 #### Phase 2: Add Missing Events (Week 3, Day 2)
 
 **Provider Sync Events:**
+
 ```typescript
 // apps/api/src/modules/providers/providers.analytics.ts - CREATE
 @Injectable()
 export class ProvidersAnalytics {
   constructor(private posthog: PostHogService) {}
 
-  async trackSyncSuccess(userId: string, provider: Provider, metadata: {
-    accountCount: number;
-    transactionCount: number;
-    duration: number;
-  }) {
+  async trackSyncSuccess(
+    userId: string,
+    provider: Provider,
+    metadata: {
+      accountCount: number;
+      transactionCount: number;
+      duration: number;
+    }
+  ) {
     await this.posthog.capture({
       distinctId: userId,
       event: 'sync_success',
@@ -1043,17 +1051,21 @@ export class ProvidersAnalytics {
 ```
 
 **Budget & Rules Events:**
+
 ```typescript
 // apps/api/src/modules/budgets/budgets.analytics.ts - CREATE
 @Injectable()
 export class BudgetsAnalytics {
   constructor(private posthog: PostHogService) {}
 
-  async trackBudgetCreated(userId: string, budget: {
-    period: BudgetPeriod;
-    categoriesCount: number;
-    totalAmount: number;
-  }) {
+  async trackBudgetCreated(
+    userId: string,
+    budget: {
+      period: BudgetPeriod;
+      categoriesCount: number;
+      totalAmount: number;
+    }
+  ) {
     await this.posthog.capture({
       distinctId: userId,
       event: 'budget_created',
@@ -1065,10 +1077,13 @@ export class BudgetsAnalytics {
     });
   }
 
-  async trackRuleCreated(userId: string, rule: {
-    ruleType: string;
-    categoryName: string;
-  }) {
+  async trackRuleCreated(
+    userId: string,
+    rule: {
+      ruleType: string;
+      categoryName: string;
+    }
+  ) {
     await this.posthog.capture({
       distinctId: userId,
       event: 'rule_created',
@@ -1079,11 +1094,14 @@ export class BudgetsAnalytics {
     });
   }
 
-  async trackAlertFired(userId: string, alert: {
-    type: 'budget_limit' | 'unusual_spending' | 'large_transaction';
-    categoryName?: string;
-    amount?: number;
-  }) {
+  async trackAlertFired(
+    userId: string,
+    alert: {
+      type: 'budget_limit' | 'unusual_spending' | 'large_transaction';
+      categoryName?: string;
+      amount?: number;
+    }
+  ) {
     await this.posthog.capture({
       distinctId: userId,
       event: 'alert_fired',
@@ -1098,6 +1116,7 @@ export class BudgetsAnalytics {
 ```
 
 **Transaction Events:**
+
 ```typescript
 // apps/api/src/modules/transactions/transactions.analytics.ts - CREATE
 @Injectable()
@@ -1119,11 +1138,7 @@ export class TransactionsAnalytics {
     });
   }
 
-  async trackBulkCategorization(
-    userId: string,
-    count: number,
-    ruleId?: string
-  ) {
+  async trackBulkCategorization(userId: string, count: number, ruleId?: string) {
     await this.posthog.capture({
       distinctId: userId,
       event: 'txn_bulk_categorized',
@@ -1137,6 +1152,7 @@ export class TransactionsAnalytics {
 ```
 
 **Wealth Tracking Events:**
+
 ```typescript
 // apps/api/src/modules/wealth/wealth.analytics.ts - CREATE
 @Injectable()
@@ -1174,6 +1190,7 @@ export class WealthAnalytics {
 #### Phase 3: Frontend Analytics (Week 3, Day 3)
 
 **Web App:**
+
 ```typescript
 // apps/web/package.json - ADD
 "dependencies": {
@@ -1186,7 +1203,7 @@ import posthog from 'posthog-js';
 export const initPostHog = () => {
   if (typeof window !== 'undefined') {
     posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY!, {
-      api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://app.posthog.com',
+      api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://analytics.enclii.dev',
       capture_pageview: true,
       capture_pageleave: true,
       persistence: 'localStorage',
@@ -1209,6 +1226,7 @@ export default function RootLayout({ children }) {
 ```
 
 **Mobile App:**
+
 ```typescript
 // apps/mobile/package.json - ADD
 "dependencies": {
@@ -1221,7 +1239,7 @@ import PostHog from 'posthog-react-native';
 const posthog = new PostHog(
   process.env.EXPO_PUBLIC_POSTHOG_KEY!,
   {
-    host: process.env.EXPO_PUBLIC_POSTHOG_HOST || 'https://app.posthog.com',
+    host: process.env.EXPO_PUBLIC_POSTHOG_HOST || 'https://analytics.enclii.dev',
   }
 );
 
@@ -1246,6 +1264,7 @@ export default function App() {
 **Implementation Overview:**
 
 **Algorithm Design:**
+
 1. Analyze historical transactions (90+ days)
 2. Detect recurring patterns (monthly bills, paychecks)
 3. Calculate income/expense trends
@@ -1253,6 +1272,7 @@ export default function App() {
 5. Include confidence intervals
 
 **File Structure:**
+
 ```
 apps/api/src/modules/forecasting/
 ├── forecasting.module.ts
@@ -1271,6 +1291,7 @@ apps/api/src/modules/forecasting/
 ```
 
 **Key Service Methods:**
+
 ```typescript
 interface ForecastService {
   generateForecast(spaceId: string, options?: ForecastOptions): Promise<CashflowForecast>;
@@ -1305,6 +1326,7 @@ interface WeeklyProjection {
 ```
 
 **Algorithm Pseudocode:**
+
 ```typescript
 async generateForecast(spaceId: string): Promise<CashflowForecast> {
   // 1. Get historical data (90-180 days)
@@ -1374,6 +1396,7 @@ async generateForecast(spaceId: string): Promise<CashflowForecast> {
 ```
 
 **API Endpoint:**
+
 ```typescript
 GET /api/v1/forecasts/:spaceId
 
@@ -1410,6 +1433,7 @@ Response:
 ```
 
 **Testing Requirements:**
+
 - Unit tests for trend calculation
 - Unit tests for recurring detection
 - Integration test for full forecast generation
@@ -1422,11 +1446,13 @@ Response:
 **Estimated Effort:** 2-3 days
 
 **Setup:**
+
 ```bash
 npm install newrelic --save
 ```
 
 **Configuration:**
+
 ```javascript
 // apps/api/newrelic.js
 exports.config = {
@@ -1462,6 +1488,7 @@ require('newrelic');
 **Estimated Effort:** 3 days
 
 **File Structure:**
+
 ```
 infra/load-tests/
 ├── scenarios/
@@ -1477,6 +1504,7 @@ infra/load-tests/
 ```
 
 **Example Test:**
+
 ```javascript
 // infra/load-tests/scenarios/transaction-bulk.js
 import http from 'k6/http';
@@ -1486,11 +1514,11 @@ export const options = {
   stages: [
     { duration: '2m', target: 100 }, // Ramp up to 100 users
     { duration: '5m', target: 100 }, // Stay at 100 users
-    { duration: '2m', target: 0 },   // Ramp down
+    { duration: '2m', target: 0 }, // Ramp down
   ],
   thresholds: {
     http_req_duration: ['p(95)<2000'], // 95% of requests < 2s
-    http_req_failed: ['rate<0.01'],    // Error rate < 1%
+    http_req_failed: ['rate<0.01'], // Error rate < 1%
   },
 };
 
@@ -1498,12 +1526,16 @@ export default function () {
   const BASE_URL = __ENV.API_URL || 'http://localhost:4000/v1';
 
   // Login
-  const loginRes = http.post(`${BASE_URL}/auth/login`, JSON.stringify({
-    email: 'test@example.com',
-    password: 'TestPassword123!',
-  }), {
-    headers: { 'Content-Type': 'application/json' },
-  });
+  const loginRes = http.post(
+    `${BASE_URL}/auth/login`,
+    JSON.stringify({
+      email: 'test@example.com',
+      password: 'TestPassword123!',
+    }),
+    {
+      headers: { 'Content-Type': 'application/json' },
+    }
+  );
 
   check(loginRes, {
     'login successful': (r) => r.status === 200,
@@ -1520,16 +1552,12 @@ export default function () {
     currency: 'MXN',
   }));
 
-  const bulkRes = http.post(
-    `${BASE_URL}/transactions/bulk`,
-    JSON.stringify({ transactions }),
-    {
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-    }
-  );
+  const bulkRes = http.post(`${BASE_URL}/transactions/bulk`, JSON.stringify({ transactions }), {
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+  });
 
   check(bulkRes, {
     'bulk create < 2s': (r) => r.timings.duration < 2000,
@@ -1541,6 +1569,7 @@ export default function () {
 ```
 
 **Run Tests:**
+
 ```bash
 # Install k6
 brew install k6
@@ -1566,6 +1595,7 @@ k6 run --out influxdb=http://localhost:8086/k6 \
 **Features to Implement:**
 
 #### 9.1 Data Export API
+
 ```typescript
 // apps/api/src/modules/users/users.controller.ts
 @Post(':id/export')
@@ -1631,6 +1661,7 @@ async exportUserData(userId: string) {
 ```
 
 #### 9.2 Account Deletion
+
 ```typescript
 @Delete(':id')
 @UseGuards(JwtAuthGuard)
@@ -1670,6 +1701,7 @@ async deleteUser(userId: string) {
 ```
 
 #### 9.3 Privacy Policy & Consent
+
 ```typescript
 // apps/api/prisma/schema.prisma - ADD
 model User {
@@ -1698,6 +1730,7 @@ async updateConsent(@CurrentUser() user: User, @Body() dto: UpdateConsentDto) {
 ```
 
 #### 9.4 Data Retention Policy
+
 ```typescript
 // apps/api/src/modules/jobs/processors/data-retention.processor.ts
 @Processor('data-retention')
@@ -1719,11 +1752,15 @@ export class DataRetentionProcessor {
       await this.emailService.sendInactivityWarning(user.email);
 
       // Schedule deletion in 30 days if no login
-      await this.queue.add('delete-inactive-user', {
-        userId: user.id,
-      }, {
-        delay: 30 * 24 * 60 * 60 * 1000, // 30 days
-      });
+      await this.queue.add(
+        'delete-inactive-user',
+        {
+          userId: user.id,
+        },
+        {
+          delay: 30 * 24 * 60 * 60 * 1000, // 30 days
+        }
+      );
     }
   }
 
@@ -1754,6 +1791,7 @@ export class DataRetentionProcessor {
 **Implementation Strategy:**
 
 **1. AsyncStorage for Offline Data:**
+
 ```typescript
 // apps/mobile/src/lib/offline-storage.ts
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -1767,10 +1805,7 @@ const KEYS = {
 
 export class OfflineStorage {
   static async saveTransactions(transactions: Transaction[]) {
-    await AsyncStorage.setItem(
-      KEYS.TRANSACTIONS,
-      JSON.stringify(transactions)
-    );
+    await AsyncStorage.setItem(KEYS.TRANSACTIONS, JSON.stringify(transactions));
   }
 
   static async getTransactions(): Promise<Transaction[]> {
@@ -1781,10 +1816,7 @@ export class OfflineStorage {
   static async addPendingSync(mutation: PendingMutation) {
     const pending = await this.getPendingSync();
     pending.push(mutation);
-    await AsyncStorage.setItem(
-      KEYS.PENDING_SYNC,
-      JSON.stringify(pending)
-    );
+    await AsyncStorage.setItem(KEYS.PENDING_SYNC, JSON.stringify(pending));
   }
 
   static async getPendingSync(): Promise<PendingMutation[]> {
@@ -1807,6 +1839,7 @@ interface PendingMutation {
 ```
 
 **2. Network Detection:**
+
 ```typescript
 // apps/mobile/src/hooks/useNetworkStatus.ts
 import NetInfo from '@react-native-community/netinfo';
@@ -1817,7 +1850,7 @@ export const useNetworkStatus = () => {
   const [isInternetReachable, setIsInternetReachable] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = NetInfo.addEventListener(state => {
+    const unsubscribe = NetInfo.addEventListener((state) => {
       setIsConnected(state.isConnected ?? false);
       setIsInternetReachable(state.isInternetReachable ?? false);
     });
@@ -1834,6 +1867,7 @@ export const useNetworkStatus = () => {
 ```
 
 **3. Offline Queue:**
+
 ```typescript
 // apps/mobile/src/lib/offline-queue.ts
 export class OfflineQueue {
@@ -1884,6 +1918,7 @@ export class OfflineQueue {
 ```
 
 **4. Usage in Components:**
+
 ```typescript
 // apps/mobile/src/screens/TransactionCreate.tsx
 const TransactionCreate = () => {
@@ -2040,37 +2075,40 @@ const TransactionCreate = () => {
 
 ## 🎯 IMPLEMENTATION PRIORITY MATRIX
 
-| Task | Priority | Effort | Impact | Start Week |
-|------|----------|--------|--------|------------|
-| ✅ Prisma Migrations | Critical | Low | High | Completed |
-| ✅ Sentry Integration | Critical | Low | High | Completed |
-| Test Coverage 80%+ | Critical | High | High | Week 1-2 |
-| Spanish i18n | High | Medium | High | Week 2 |
-| PostHog Complete | High | Low | Medium | Week 3 |
-| Cashflow Forecasting | High | High | High | Week 3-4 |
-| Load Testing | Medium | Medium | Medium | Week 4 |
-| GDPR Compliance | High | Medium | High | Week 4 |
-| APM Integration | Medium | Low | Medium | Week 4 |
-| Mobile Offline | Medium | High | Medium | Future |
-| Security Audit | High | High | Critical | Week 5-6 |
+| Task                  | Priority | Effort | Impact   | Start Week |
+| --------------------- | -------- | ------ | -------- | ---------- |
+| ✅ Prisma Migrations  | Critical | Low    | High     | Completed  |
+| ✅ Sentry Integration | Critical | Low    | High     | Completed  |
+| Test Coverage 80%+    | Critical | High   | High     | Week 1-2   |
+| Spanish i18n          | High     | Medium | High     | Week 2     |
+| PostHog Complete      | High     | Low    | Medium   | Week 3     |
+| Cashflow Forecasting  | High     | High   | High     | Week 3-4   |
+| Load Testing          | Medium   | Medium | Medium   | Week 4     |
+| GDPR Compliance       | High     | Medium | High     | Week 4     |
+| APM Integration       | Medium   | Low    | Medium   | Week 4     |
+| Mobile Offline        | Medium   | High   | Medium   | Future     |
+| Security Audit        | High     | High   | Critical | Week 5-6   |
 
 ---
 
 ## 📊 SUCCESS METRICS
 
 **Week 1-2 Goals:**
+
 - ✅ Database migrations deployed
 - ✅ Sentry capturing production errors
 - ⬜ Test coverage >80% on critical paths
 - ⬜ Spanish translations complete (200+ keys)
 
 **Week 3-4 Goals:**
+
 - ⬜ PostHog tracking all documented events
 - ⬜ Cashflow forecasting API functional
 - ⬜ Load tests passing performance thresholds
 - ⬜ GDPR compliance features deployed
 
 **Week 5-6 Goals:**
+
 - ⬜ External security audit completed
 - ⬜ All critical vulnerabilities resolved
 - ⬜ Production monitoring dashboards live
@@ -2083,6 +2121,7 @@ const TransactionCreate = () => {
 Before deploying to production:
 
 **Infrastructure:**
+
 - [ ] Database migrations tested on staging
 - [ ] Rollback procedure documented and tested
 - [ ] Environment variables set in production
@@ -2096,6 +2135,7 @@ Before deploying to production:
 - [ ] Disaster recovery plan documented
 
 **Code:**
+
 - [ ] All tests passing (unit, integration, E2E)
 - [ ] Test coverage >80%
 - [ ] No critical vulnerabilities (npm audit)
@@ -2104,12 +2144,14 @@ Before deploying to production:
 - [ ] Version tagged in git
 
 **Documentation:**
+
 - [ ] API documentation updated
 - [ ] Deployment guide updated
 - [ ] Runbook for incidents created
 - [ ] On-call rotation scheduled
 
 **Monitoring:**
+
 - [ ] Health check endpoint working
 - [ ] Metrics dashboard created
 - [ ] Error alerts configured
@@ -2121,6 +2163,7 @@ Before deploying to production:
 ## 📚 RESOURCES
 
 **External Documentation:**
+
 - [Prisma Migrations](https://www.prisma.io/docs/concepts/components/prisma-migrate)
 - [Sentry Node.js](https://docs.sentry.io/platforms/node/)
 - [PostHog](https://posthog.com/docs)
@@ -2130,6 +2173,7 @@ Before deploying to production:
 - [React Native Offline](https://github.com/rgommezz/react-native-offline)
 
 **Internal Documentation:**
+
 - `apps/api/MIGRATIONS_GUIDE.md`
 - `docs/SENTRY_SETUP.md`
 - `COMPREHENSIVE_AUDIT_REPORT_2025.md`
@@ -2139,4 +2183,3 @@ Before deploying to production:
 
 **Last Updated:** 2025-11-17
 **Next Review:** Weekly during implementation
-

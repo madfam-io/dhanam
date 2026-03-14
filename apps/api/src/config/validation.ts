@@ -37,7 +37,7 @@ export const validationSchema = Joi.object({
   EMAIL_FROM: Joi.string().email().default('noreply@dhanam.app'),
 
   POSTHOG_API_KEY: Joi.string().optional(),
-  POSTHOG_HOST: Joi.string().uri().default('https://app.posthog.com'),
+  POSTHOG_HOST: Joi.string().uri().default('https://analytics.enclii.dev'),
 
   CORS_ORIGINS: Joi.string().default('http://localhost:3000'),
 });

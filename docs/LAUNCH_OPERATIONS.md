@@ -4,12 +4,12 @@ This runbook covers every step required to take Dhanam from development to produ
 
 **Production URLs:**
 
-| Surface | URL |
-|---------|-----|
-| Web app | `https://app.dhan.am` |
-| API | `https://api.dhan.am` |
-| Admin | `https://admin.dhanam.com` |
-| Auth (Janua) | `https://auth.madfam.io` |
+| Surface      | URL                        |
+| ------------ | -------------------------- |
+| Web app      | `https://app.dhan.am`      |
+| API          | `https://api.dhan.am`      |
+| Admin        | `https://admin.dhanam.com` |
+| Auth (Janua) | `https://auth.madfam.io`   |
 
 **Deployment:** Push to `main` triggers Enclii auto-deploy to bare-metal Kubernetes.
 
@@ -55,32 +55,32 @@ Public Launch                       ████ (Week 7-8)
 
 These items have the longest lead times. Begin all of them on Day 1:
 
-| Item | Lead Time | Blocker For |
-|------|-----------|-------------|
-| Belvo production access | 4-8 weeks | MX financial data aggregation |
-| Plaid production access | 2-4 weeks | US financial data aggregation |
-| RFC registration at SAT | 2-4 weeks | Stripe MX, Paddle, business bank account |
-| Acta Constitutiva (notario) | 2-4 weeks (parallel with RFC) | Apple Developer org, D-U-N-S |
-| IMPI trademark application | 3-6 months (non-blocking) | Nothing at launch; protects brand |
+| Item                        | Lead Time                     | Blocker For                              |
+| --------------------------- | ----------------------------- | ---------------------------------------- |
+| Belvo production access     | 4-8 weeks                     | MX financial data aggregation            |
+| Plaid production access     | 2-4 weeks                     | US financial data aggregation            |
+| RFC registration at SAT     | 2-4 weeks                     | Stripe MX, Paddle, business bank account |
+| Acta Constitutiva (notario) | 2-4 weeks (parallel with RFC) | Apple Developer org, D-U-N-S             |
+| IMPI trademark application  | 3-6 months (non-blocking)     | Nothing at launch; protects brand        |
 
 ### Week 2-3 Starts (depend on RFC or Acta)
 
-| Item | Lead Time | Depends On |
-|------|-----------|------------|
-| Apple D-U-N-S number | 1-2 weeks | Acta Constitutiva |
-| Apple Developer Program | 1 week after D-U-N-S | D-U-N-S number |
-| Paddle seller approval | 2-4 weeks | RFC, business bank account |
-| Stripe MX account | 3-7 days | RFC |
+| Item                    | Lead Time            | Depends On                 |
+| ----------------------- | -------------------- | -------------------------- |
+| Apple D-U-N-S number    | 1-2 weeks            | Acta Constitutiva          |
+| Apple Developer Program | 1 week after D-U-N-S | D-U-N-S number             |
+| Paddle seller approval  | 2-4 weeks            | RFC, business bank account |
+| Stripe MX account       | 3-7 days             | RFC                        |
 
 ### Week 4-6 (infrastructure and store prep)
 
-| Item | Lead Time | Depends On |
-|------|-----------|------------|
-| K8s secrets populated | 1 day | All credentials gathered |
-| DNS records verified | 1 day | Cloudflare access |
-| App Store listing created | 2-3 days | Apple Developer Program |
-| Play Store listing created | 2-3 days | Google Play Developer account |
-| EAS production build | 1 day | App Store + Play Store accounts |
+| Item                       | Lead Time | Depends On                      |
+| -------------------------- | --------- | ------------------------------- |
+| K8s secrets populated      | 1 day     | All credentials gathered        |
+| DNS records verified       | 1 day     | Cloudflare access               |
+| App Store listing created  | 2-3 days  | Apple Developer Program         |
+| Play Store listing created | 2-3 days  | Google Play Developer account   |
+| EAS production build       | 1 day     | App Store + Play Store accounts |
 
 ---
 
@@ -148,6 +148,7 @@ Required for Apple Developer Program enrollment as an organization.
 All four documents below must be written by or reviewed by legal counsel. This section provides content guidelines and required sections to accelerate drafting.
 
 Legal pages are served at:
+
 - `/privacy` -- Aviso de Privacidad
 - `/terms` -- Terms of Service
 - `/cookies` -- Cookie Policy
@@ -269,22 +270,22 @@ Mexico's Ley para Regular las Instituciones de Tecnologia Financiera (Ley Fintec
 
 ### Credentials Summary Table
 
-| Service | Credentials Output | K8s Secret | Lead Time |
-|---------|-------------------|------------|-----------|
-| Janua OIDC | `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET`, `JANUA_API_KEY`, `JANUA_ADMIN_KEY`, `JANUA_WEBHOOK_SECRET`, `DHANAM_WEBHOOK_SECRET` | `dhanam-secrets` | 1 day (internal) |
-| Stripe Mexico | `STRIPE_MX_PUBLISHABLE_KEY`, `STRIPE_MX_SECRET_KEY`, `STRIPE_MX_WEBHOOK_SECRET` + price IDs | `dhanam-billing-secrets` | 3-7 days |
-| Conekta (via Janua) | Routed through Janua billing -- confirm architecture | N/A (Janua-managed) | 1-2 weeks |
-| Paddle | `PADDLE_VENDOR_ID`, `PADDLE_API_KEY`, `PADDLE_CLIENT_TOKEN`, `PADDLE_WEBHOOK_SECRET` | `dhanam-billing-secrets` | 2-4 weeks |
-| Belvo | `BELVO_SECRET_KEY_ID`, `BELVO_SECRET_KEY_PASSWORD`, `BELVO_WEBHOOK_SECRET` | `dhanam-secrets` | 4-8 weeks |
-| Plaid | `PLAID_CLIENT_ID`, `PLAID_SECRET`, `PLAID_WEBHOOK_SECRET` | `dhanam-secrets` | 2-4 weeks |
-| Bitso | `BITSO_API_KEY`, `BITSO_API_SECRET` | `dhanam-secrets` | 1-2 weeks |
-| Zapper | `ZAPPER_API_KEY` | `dhanam-secrets` | 1 day |
-| Zillow | `ZILLOW_API_KEY` (API deprecated 2021 -- see alternatives) | `dhanam-secrets` | TBD |
-| Banxico | `BANXICO_API_TOKEN` | `dhanam-secrets` | 1 day (free) |
-| PostHog | `NEXT_PUBLIC_POSTHOG_KEY`, `POSTHOG_API_KEY` | `dhanam-secrets` | 1 day |
-| Sentry | `SENTRY_DSN` (web + API) | `dhanam-secrets` | 1 day |
-| Email (Resend) | `SMTP_HOST`, `SMTP_USER`, `SMTP_PASSWORD` + SPF/DKIM/DMARC DNS | `dhanam-secrets` | 1-2 days |
-| OneSignal | `EXPO_PUBLIC_ONESIGNAL_APP_ID` | N/A (build-time) | 1 day |
+| Service             | Credentials Output                                                                                                          | K8s Secret               | Lead Time        |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------- | ------------------------ | ---------------- |
+| Janua OIDC          | `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET`, `JANUA_API_KEY`, `JANUA_ADMIN_KEY`, `JANUA_WEBHOOK_SECRET`, `DHANAM_WEBHOOK_SECRET` | `dhanam-secrets`         | 1 day (internal) |
+| Stripe Mexico       | `STRIPE_MX_PUBLISHABLE_KEY`, `STRIPE_MX_SECRET_KEY`, `STRIPE_MX_WEBHOOK_SECRET` + price IDs                                 | `dhanam-billing-secrets` | 3-7 days         |
+| Conekta (via Janua) | Routed through Janua billing -- confirm architecture                                                                        | N/A (Janua-managed)      | 1-2 weeks        |
+| Paddle              | `PADDLE_VENDOR_ID`, `PADDLE_API_KEY`, `PADDLE_CLIENT_TOKEN`, `PADDLE_WEBHOOK_SECRET`                                        | `dhanam-billing-secrets` | 2-4 weeks        |
+| Belvo               | `BELVO_SECRET_KEY_ID`, `BELVO_SECRET_KEY_PASSWORD`, `BELVO_WEBHOOK_SECRET`                                                  | `dhanam-secrets`         | 4-8 weeks        |
+| Plaid               | `PLAID_CLIENT_ID`, `PLAID_SECRET`, `PLAID_WEBHOOK_SECRET`                                                                   | `dhanam-secrets`         | 2-4 weeks        |
+| Bitso               | `BITSO_API_KEY`, `BITSO_API_SECRET`                                                                                         | `dhanam-secrets`         | 1-2 weeks        |
+| Zapper              | `ZAPPER_API_KEY`                                                                                                            | `dhanam-secrets`         | 1 day            |
+| Zillow              | `ZILLOW_API_KEY` (API deprecated 2021 -- see alternatives)                                                                  | `dhanam-secrets`         | TBD              |
+| Banxico             | `BANXICO_API_TOKEN`                                                                                                         | `dhanam-secrets`         | 1 day (free)     |
+| PostHog             | `NEXT_PUBLIC_POSTHOG_KEY`, `POSTHOG_API_KEY`                                                                                | `dhanam-secrets`         | 1 day            |
+| Sentry              | `SENTRY_DSN` (web + API)                                                                                                    | `dhanam-secrets`         | 1 day            |
+| Email (Resend)      | `SMTP_HOST`, `SMTP_USER`, `SMTP_PASSWORD` + SPF/DKIM/DMARC DNS                                                              | `dhanam-secrets`         | 1-2 days         |
+| OneSignal           | `EXPO_PUBLIC_ONESIGNAL_APP_ID`                                                                                              | N/A (build-time)         | 1 day            |
 
 ### 5.1 Janua OIDC (MADFAM SSO)
 
@@ -458,7 +459,7 @@ Mexico's Ley para Regular las Instituciones de Tecnologia Financiera (Ley Fintec
 
 ### 5.11 PostHog (Analytics)
 
-**URL:** [https://app.posthog.com/signup](https://app.posthog.com/signup)
+**URL:** Self-hosted at `https://analytics.enclii.dev` (see [POSTHOG_INTEGRATION.md](../guides/POSTHOG_INTEGRATION.md))
 
 **Steps:**
 
@@ -534,6 +535,7 @@ Mexico's Ley para Regular las Instituciones de Tecnologia Financiera (Ley Fintec
   - SSL required
   - Daily automated backups with 7-day retention
 - [ ] Create the `dhanam` database and dedicated user **via Enclii provisioning API** (required per Law 7 — do not use raw `kubectl exec`):
+
   ```bash
   # Option A: Use the convenience script
   export ENCLII_API_URL=https://api.enclii.com
@@ -544,7 +546,9 @@ Mexico's Ley para Regular las Instituciones de Tecnologia Financiera (Ley Fintec
   # Option B: Use the Enclii CLI
   enclii onboard --db-name dhanam --db-password "${DB_PASSWORD}"
   ```
+
   The API endpoint (`POST /v1/admin/provision/postgres`) is idempotent — it checks `pg_database`/`pg_roles` before creating, and auto-updates PgBouncer config. Requires `POSTGRES_ADMIN_URL` set on `switchyard-api`. See `docs/DEPLOYMENT.md` for full details.
+
 - [ ] Record the connection string: `postgresql://dhanam_user:pass@host:5432/dhanam`
 - [ ] Run migrations: `npx prisma migrate deploy` (from `apps/api/`).
 
@@ -598,9 +602,9 @@ kubectl get secrets -n dhanam
 
 The template defines two Secret resources:
 
-| Secret Name | Contents |
-|-------------|----------|
-| `dhanam-secrets` | `DATABASE_URL`, `REDIS_URL`, `ENCRYPTION_KEY`, `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET`, `NEXTAUTH_SECRET`, `JWT_SECRET`, `JWT_REFRESH_SECRET` |
+| Secret Name              | Contents                                                                                                                                                              |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `dhanam-secrets`         | `DATABASE_URL`, `REDIS_URL`, `ENCRYPTION_KEY`, `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET`, `NEXTAUTH_SECRET`, `JWT_SECRET`, `JWT_REFRESH_SECRET`                          |
 | `dhanam-billing-secrets` | `STRIPE_MX_PUBLISHABLE_KEY`, `STRIPE_MX_SECRET_KEY`, `STRIPE_MX_WEBHOOK_SECRET`, `PADDLE_VENDOR_ID`, `PADDLE_API_KEY`, `PADDLE_CLIENT_TOKEN`, `PADDLE_WEBHOOK_SECRET` |
 
 Add additional provider credentials to `dhanam-secrets` as they are obtained:
@@ -614,23 +618,23 @@ kubectl -n dhanam patch secret dhanam-secrets --type merge -p \
 
 Configure the following CNAME records in Cloudflare, all proxied (orange cloud):
 
-| Type | Name | Target | Proxy |
-|------|------|--------|-------|
-| CNAME | `app` | Enclii tunnel endpoint | Proxied |
-| CNAME | `api` | Enclii tunnel endpoint | Proxied |
-| CNAME | `admin` | Enclii tunnel endpoint (if on `dhan.am`) | Proxied |
-| CNAME | `www` | `dhan.am` | Proxied |
-| CNAME | `@` (apex) | Enclii tunnel endpoint | Proxied |
+| Type  | Name       | Target                                   | Proxy   |
+| ----- | ---------- | ---------------------------------------- | ------- |
+| CNAME | `app`      | Enclii tunnel endpoint                   | Proxied |
+| CNAME | `api`      | Enclii tunnel endpoint                   | Proxied |
+| CNAME | `admin`    | Enclii tunnel endpoint (if on `dhan.am`) | Proxied |
+| CNAME | `www`      | `dhan.am`                                | Proxied |
+| CNAME | `@` (apex) | Enclii tunnel endpoint                   | Proxied |
 
 **Note:** `admin.dhanam.com` is on a separate domain. Configure its CNAME in the `dhanam.com` Cloudflare zone.
 
 **Email DNS records** (in the `dhan.am` zone):
 
-| Type | Name | Value |
-|------|------|-------|
-| TXT | `@` | `v=spf1 include:<email-provider-spf> -all` |
-| CNAME | `<selector>._domainkey` | Provider-supplied DKIM value |
-| TXT | `_dmarc` | `v=DMARC1; p=quarantine; rua=mailto:dmarc@dhan.am` |
+| Type  | Name                    | Value                                              |
+| ----- | ----------------------- | -------------------------------------------------- |
+| TXT   | `@`                     | `v=spf1 include:<email-provider-spf> -all`         |
+| CNAME | `<selector>._domainkey` | Provider-supplied DKIM value                       |
+| TXT   | `_dmarc`                | `v=DMARC1; p=quarantine; rua=mailto:dmarc@dhan.am` |
 
 Replace `<email-provider-spf>` and `<selector>` with values from your email provider (Section 5.13).
 
@@ -681,6 +685,7 @@ kubectl apply -k infra/k8s/production/
 ### 7.1 Apple App Store
 
 **Prerequisites:**
+
 - [ ] D-U-N-S number (Section 2.4)
 - [ ] Apple Developer Program enrollment ($99/year): [https://developer.apple.com/programs/enroll](https://developer.apple.com/programs/enroll)
 
@@ -741,6 +746,7 @@ The EAS configuration is at `apps/mobile/eas.json`.
 ### 7.2 Google Play Store
 
 **Prerequisites:**
+
 - [ ] Google Play Developer account ($25 one-time): [https://play.google.com/console/signup](https://play.google.com/console/signup)
 
 **Play Console Setup:**

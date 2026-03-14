@@ -23,15 +23,15 @@ This implementation transforms Dhanam from a commoditized budget tracking applic
 
 ### Business Impact
 
-| Metric | Value |
-|--------|-------|
-| **Premium Tier Price** | $9.99/month |
-| **Free Tier Limits** | 3 simulations/day |
+| Metric                  | Value                    |
+| ----------------------- | ------------------------ |
+| **Premium Tier Price**  | $9.99/month              |
+| **Free Tier Limits**    | 3 simulations/day        |
 | **Scenarios Available** | 12 (vs competitors' 3-5) |
-| **API Endpoints** | 14 new endpoints |
-| **Premium Features** | 6 locked features |
-| **Lines of Code** | 10,000+ |
-| **Unit Tests** | 110+ |
+| **API Endpoints**       | 14 new endpoints         |
+| **Premium Features**    | 6 locked features        |
+| **Lines of Code**       | 10,000+                  |
+| **Unit Tests**          | 110+                     |
 
 ---
 
@@ -54,12 +54,14 @@ This implementation transforms Dhanam from a commoditized budget tracking applic
 ### Tech Stack
 
 **Backend:**
+
 - NestJS (Fastify) + Prisma + PostgreSQL
 - Redis (BullMQ for background jobs)
 - Stripe SDK v20.0.0
 - jStat v1.9.6 (statistical functions)
 
 **Frontend:**
+
 - Next.js 14 (App Router)
 - React + TypeScript
 - Shadcn UI components
@@ -67,6 +69,7 @@ This implementation transforms Dhanam from a commoditized budget tracking applic
 - PostHog analytics
 
 **Infrastructure:**
+
 - AWS ECS/Fargate
 - Terraform for IaC
 - Docker for local dev
@@ -391,6 +394,7 @@ apps/web/src/
    - Ready for auth context integration
 
 **Usage:**
+
 ```tsx
 <PremiumGate feature="Monte Carlo Simulations">
   <SimulationComponent />
@@ -423,15 +427,15 @@ apps/web/src/
 
 **Key Events Tracked:**
 
-| Event | Trigger | Properties |
-|-------|---------|------------|
-| `goal_created` | New goal created | type, target_amount, months_to_target |
-| `goal_probability_calculated` | Success rate calculated | probability, median_outcome, shortfall |
-| `scenario_comparison` | Scenario simulated | scenario_name, median_impact, worth_stress_testing |
-| `premium_upsell_viewed` | Upsell shown | context, feature |
-| `premium_upsell_clicked` | Upgrade button clicked | context, feature |
-| `monte_carlo_simulation` | Basic simulation run | iterations, months, median_outcome |
-| `retirement_simulation` | Retirement calc run | years_to_retirement, probability, nest_egg |
+| Event                         | Trigger                 | Properties                                         |
+| ----------------------------- | ----------------------- | -------------------------------------------------- |
+| `goal_created`                | New goal created        | type, target_amount, months_to_target              |
+| `goal_probability_calculated` | Success rate calculated | probability, median_outcome, shortfall             |
+| `scenario_comparison`         | Scenario simulated      | scenario_name, median_impact, worth_stress_testing |
+| `premium_upsell_viewed`       | Upsell shown            | context, feature                                   |
+| `premium_upsell_clicked`      | Upgrade button clicked  | context, feature                                   |
+| `monte_carlo_simulation`      | Basic simulation run    | iterations, months, median_outcome                 |
+| `retirement_simulation`       | Retirement calc run     | years_to_retirement, probability, nest_egg         |
 
 **Files Created**: 1 (+ updated 3 components)
 
@@ -446,9 +450,11 @@ All endpoints require JWT authentication via `Authorization: Bearer <token>` hea
 ### Billing Endpoints
 
 #### POST /billing/upgrade
+
 Create Stripe checkout session for premium upgrade.
 
 **Request:**
+
 ```json
 {
   "returnUrl": "https://app.dhanam.io/dashboard"
@@ -456,6 +462,7 @@ Create Stripe checkout session for premium upgrade.
 ```
 
 **Response:**
+
 ```json
 {
   "checkoutUrl": "https://checkout.stripe.com/..."
@@ -463,12 +470,15 @@ Create Stripe checkout session for premium upgrade.
 ```
 
 #### POST /billing/webhook
+
 Handle Stripe webhooks (subscription created, updated, deleted).
 
 **Headers:**
+
 - `stripe-signature`: Webhook signature
 
 **Events Handled:**
+
 - `customer.subscription.created`
 - `customer.subscription.updated`
 - `customer.subscription.deleted`
@@ -480,9 +490,11 @@ Handle Stripe webhooks (subscription created, updated, deleted).
 ### Goals Endpoints
 
 #### POST /goals
+
 Create a new financial goal.
 
 **Request:**
+
 ```json
 {
   "spaceId": "uuid",
@@ -500,9 +512,11 @@ Create a new financial goal.
 **Response:** Goal object
 
 #### GET /goals/:id/progress
+
 Calculate progress toward goal.
 
 **Response:**
+
 ```json
 {
   "goalId": "uuid",
@@ -528,12 +542,14 @@ Calculate progress toward goal.
 ### Simulations Endpoints
 
 #### POST /simulations/monte-carlo
+
 Run basic Monte Carlo simulation.
 
 **Auth:** Premium tier required
 **Usage:** Tracks `monte_carlo_simulation`
 
 **Request:**
+
 ```json
 {
   "initialBalance": 10000,
@@ -546,6 +562,7 @@ Run basic Monte Carlo simulation.
 ```
 
 **Response:**
+
 ```json
 {
   "median": 89523,
@@ -566,12 +583,14 @@ Run basic Monte Carlo simulation.
 ```
 
 #### POST /simulations/goal-probability
+
 Calculate probability of achieving a financial goal.
 
 **Auth:** Premium tier required
 **Usage:** Tracks `goal_probability`
 
 **Request:**
+
 ```json
 {
   "goalId": "uuid",
@@ -585,6 +604,7 @@ Calculate probability of achieving a financial goal.
 ```
 
 **Response:**
+
 ```json
 {
   "probabilityOfSuccess": 0.73,
@@ -602,12 +622,14 @@ Calculate probability of achieving a financial goal.
 ```
 
 #### POST /simulations/retirement
+
 Two-phase retirement simulation.
 
 **Auth:** Premium tier required
 **Usage:** Tracks `monte_carlo_simulation`
 
 **Request:**
+
 ```json
 {
   "initialBalance": 50000,
@@ -624,6 +646,7 @@ Two-phase retirement simulation.
 ```
 
 **Response:**
+
 ```json
 {
   "accumulationPhase": {
@@ -647,6 +670,7 @@ Two-phase retirement simulation.
 ```
 
 #### POST /simulations/scenarios/:scenarioName
+
 Compare baseline vs market scenario.
 
 **Auth:** Premium tier required
@@ -657,10 +681,15 @@ Compare baseline vs market scenario.
 **Request:** Same as `/monte-carlo`
 
 **Response:**
+
 ```json
 {
-  "baseline": { /* SimulationResult */ },
-  "scenario": { /* SimulationResult */ },
+  "baseline": {
+    /* SimulationResult */
+  },
+  "scenario": {
+    /* SimulationResult */
+  },
   "scenarioName": "GREAT_RECESSION",
   "scenarioDescription": "50% decline over 12 months...",
   "comparison": {
@@ -680,6 +709,7 @@ Compare baseline vs market scenario.
 ### Page Components
 
 #### `/goals` - Goals Dashboard
+
 - **Description**: Track multiple financial goals with progress and probability
 - **Features**:
   - Summary cards (total goals, target amount, current value, progress)
@@ -690,6 +720,7 @@ Compare baseline vs market scenario.
 - **Analytics**: Tracks `goal_progress_viewed`, `goal_probability_calculated`
 
 #### `/retirement` - Retirement Calculator
+
 - **Description**: Two-phase retirement planning with Monte Carlo simulation
 - **Features**:
   - Risk tolerance selector (conservative/moderate/aggressive)
@@ -700,6 +731,7 @@ Compare baseline vs market scenario.
 - **Analytics**: Tracks `retirement_simulation`
 
 #### `/scenarios` - Scenario Analysis
+
 - **Description**: Stress test portfolio against 12 market scenarios
 - **Features**:
   - Portfolio configuration form
@@ -712,11 +744,13 @@ Compare baseline vs market scenario.
 ### Reusable Components
 
 #### `<PremiumUpsell />`
+
 - **Props**: `feature?: string`, `context?: 'limit_reached' | 'feature_locked' | 'generic'`
 - **Usage**: Show upgrade prompt to free users
 - **Analytics**: Tracks `premium_upsell_viewed`, `premium_upsell_clicked`
 
 #### `<PremiumGate />`
+
 - **Props**: `children`, `feature?: string`, `fallback?: ReactNode`
 - **Usage**: Conditionally render premium content
 - **Example**:
@@ -727,16 +761,19 @@ Compare baseline vs market scenario.
   ```
 
 #### `<SimulationChart />`
+
 - **Props**: `timeSeries: MonthlySnapshot[]`, `title?: string`, `description?: string`
 - **Usage**: Visualize Monte Carlo projections
 - **Features**: Shaded confidence interval, three percentile lines, formatted tooltips
 
 #### `<RetirementCalculatorForm />`
+
 - **Props**: `onResults: (results) => void`
 - **Usage**: Interactive retirement planning form
 - **Features**: Risk tolerance auto-updates, real-time calculations, tooltips
 
 #### `<RetirementResults />`
+
 - **Props**: `results: RetirementSimulationResult`
 - **Usage**: Display retirement simulation results
 - **Features**: Success rate, phase metrics, recommendations
@@ -758,6 +795,7 @@ sign_up → onboarding_complete → feature_viewed → premium_upsell_viewed →
 ### Event Properties
 
 #### goal_probability_calculated
+
 ```typescript
 {
   goal_id: string,
@@ -769,6 +807,7 @@ sign_up → onboarding_complete → feature_viewed → premium_upsell_viewed →
 ```
 
 #### scenario_comparison
+
 ```typescript
 {
   scenario_name: string,  // "GREAT_RECESSION", etc.
@@ -779,6 +818,7 @@ sign_up → onboarding_complete → feature_viewed → premium_upsell_viewed →
 ```
 
 #### premium_upsell_clicked
+
 ```typescript
 {
   context: 'limit_reached' | 'feature_locked' | 'generic',
@@ -787,6 +827,7 @@ sign_up → onboarding_complete → feature_viewed → premium_upsell_viewed →
 ```
 
 #### drip_email_sent
+
 ```typescript
 {
   campaign: 'activation' | 're-engagement',
@@ -796,9 +837,10 @@ sign_up → onboarding_complete → feature_viewed → premium_upsell_viewed →
 ```
 
 #### onboarding_step_completed / onboarding_step_skipped
+
 ```typescript
 {
-  step: string   // 'welcome', 'preferences', 'connect_accounts', etc.
+  step: string; // 'welcome', 'preferences', 'connect_accounts', etc.
 }
 ```
 
@@ -875,7 +917,7 @@ NEXT_PUBLIC_API_URL="http://localhost:4000"
 
 # PostHog
 NEXT_PUBLIC_POSTHOG_KEY="phc_..."
-NEXT_PUBLIC_POSTHOG_HOST="https://app.posthog.com"
+NEXT_PUBLIC_POSTHOG_HOST="https://analytics.enclii.dev"
 
 # Locale
 NEXT_PUBLIC_DEFAULT_LOCALE="es-MX"
@@ -910,17 +952,20 @@ pnpm dev:web
 ### Production Deployment
 
 1. **Database Migration**:
+
    ```bash
    cd apps/api
    pnpm prisma migrate deploy
    ```
 
 2. **Build Applications**:
+
    ```bash
    pnpm build
    ```
 
 3. **Start Production Servers**:
+
    ```bash
    pnpm start:api
    pnpm start:web
@@ -967,6 +1012,7 @@ pnpm test:db
 ### Manual Testing Checklist
 
 #### Billing Flow
+
 - [ ] Create Stripe checkout session
 - [ ] Complete payment
 - [ ] Verify subscription tier updated
@@ -975,6 +1021,7 @@ pnpm test:db
 - [ ] Verify tier downgrade
 
 #### Goals Flow
+
 - [ ] Create new goal
 - [ ] Add account allocation
 - [ ] View progress (on-track/off-track)
@@ -983,6 +1030,7 @@ pnpm test:db
 - [ ] Delete goal
 
 #### Simulations Flow
+
 - [ ] Run basic Monte Carlo
 - [ ] Calculate goal probability
 - [ ] Run retirement simulation
@@ -992,6 +1040,7 @@ pnpm test:db
 - [ ] Verify premium bypass
 
 #### Analytics Flow
+
 - [ ] Verify PostHog events tracked
 - [ ] Check event properties
 - [ ] Confirm user identification
@@ -1076,6 +1125,7 @@ pnpm test:db
 #### Backend Files Created (35+)
 
 **Billing Module:**
+
 - `billing.controller.ts`
 - `billing.service.ts`
 - `stripe.service.ts`
@@ -1087,6 +1137,7 @@ pnpm test:db
 - `dto/portal.dto.ts`
 
 **Goals Module:**
+
 - `goals.controller.ts`
 - `goals.service.ts`
 - `dto/create-goal.dto.ts`
@@ -1096,6 +1147,7 @@ pnpm test:db
 - `interfaces/goal-progress.interface.ts`
 
 **Simulations Module:**
+
 - `simulations.controller.ts`
 - `simulations.service.ts`
 - `simulations.module.ts`
@@ -1110,22 +1162,26 @@ pnpm test:db
 - `dto/index.ts`
 
 **Database:**
+
 - `prisma/migrations/20251119000001_add_subscription_infrastructure/`
 - `prisma/migrations/20251119000002_add_goal_tracking/`
 
 #### Frontend Files Created (15+)
 
 **Hooks:**
+
 - `hooks/useGoals.ts`
 - `hooks/useSimulations.ts`
 - `hooks/useAnalytics.ts`
 
 **Pages:**
+
 - `app/(dashboard)/goals/page.tsx`
 - `app/(dashboard)/scenarios/page.tsx`
 - `app/(dashboard)/retirement/page.tsx`
 
 **Components:**
+
 - `components/simulations/RetirementCalculatorForm.tsx`
 - `components/simulations/RetirementResults.tsx`
 - `components/simulations/SimulationChart.tsx`
@@ -1133,18 +1189,21 @@ pnpm test:db
 - `components/billing/PremiumGate.tsx`
 
 **Updated:**
+
 - `components/layout/dashboard-nav.tsx`
 - `app.module.ts`
 
 #### Drip Campaign Files Created (8)
 
 **Backend:**
+
 - `apps/api/src/modules/email/tasks/drip-campaign.task.ts`
 - `apps/api/src/modules/email/__tests__/drip-campaign.task.spec.ts`
 - `apps/api/src/modules/email/templates/drip-day-{1,3,7,14}-*.hbs` (4 templates)
 - `apps/api/src/modules/email/templates/drip-reengagement-day-{7,14}.hbs` (2 templates)
 
 **Schema:**
+
 - `DripEvent` model in `prisma/schema.prisma`
 
 #### Documentation (3 files)
@@ -1163,6 +1222,7 @@ pnpm test:db
 **Branch**: `claude/audit-strategy-pivot-016qmW2iALtwYzNLcpwtKzUq`
 
 **Powered by:**
+
 - NestJS
 - Next.js
 - Prisma

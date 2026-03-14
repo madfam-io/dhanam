@@ -50,12 +50,18 @@ describe('PostHogService', () => {
 
   describe('constructor', () => {
     it('should initialize PostHog client with API key', () => {
-      expect(PostHog).toHaveBeenCalledWith('test-api-key', expect.objectContaining({
-        host: 'https://test.posthog.com',
-        flushAt: 20,
-        flushInterval: 10000,
-      }));
-      expect(mockLogger.log).toHaveBeenCalledWith('PostHog analytics initialized', 'PostHogService');
+      expect(PostHog).toHaveBeenCalledWith(
+        'test-api-key',
+        expect.objectContaining({
+          host: 'https://test.posthog.com',
+          flushAt: 20,
+          flushInterval: 10000,
+        })
+      );
+      expect(mockLogger.log).toHaveBeenCalledWith(
+        'PostHog analytics initialized',
+        'PostHogService'
+      );
     });
 
     it('should disable analytics when API key is missing', async () => {
@@ -86,9 +92,12 @@ describe('PostHogService', () => {
 
       moduleDefaultHost.get<PostHogService>(PostHogService);
 
-      expect(PostHog).toHaveBeenCalledWith('test-key', expect.objectContaining({
-        host: 'https://app.posthog.com',
-      }));
+      expect(PostHog).toHaveBeenCalledWith(
+        'test-key',
+        expect.objectContaining({
+          host: 'https://analytics.enclii.dev',
+        })
+      );
     });
   });
 
@@ -162,10 +171,7 @@ describe('PostHogService', () => {
     it('should log user identification', async () => {
       await service.identify('user-123', { email: 'test@example.com' });
 
-      expect(mockLogger.log).toHaveBeenCalledWith(
-        'User identified: user-123',
-        'PostHogService'
-      );
+      expect(mockLogger.log).toHaveBeenCalledWith('User identified: user-123', 'PostHogService');
     });
 
     it('should handle identify errors gracefully', async () => {

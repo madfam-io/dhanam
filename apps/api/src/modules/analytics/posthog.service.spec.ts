@@ -40,14 +40,16 @@ describe('PostHogService', () => {
       });
 
       const module = await Test.createTestingModule({
-        providers: [
-          PostHogService,
-          { provide: ConfigService, useValue: mockConfigService },
-        ],
+        providers: [PostHogService, { provide: ConfigService, useValue: mockConfigService }],
       }).compile();
 
       service = module.get<PostHogService>(PostHogService);
-      service['logger'] = { log: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() } as any;
+      service['logger'] = {
+        log: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+        debug: jest.fn(),
+      } as any;
 
       await service.onModuleInit();
 
@@ -66,19 +68,21 @@ describe('PostHogService', () => {
       });
 
       const module = await Test.createTestingModule({
-        providers: [
-          PostHogService,
-          { provide: ConfigService, useValue: mockConfigService },
-        ],
+        providers: [PostHogService, { provide: ConfigService, useValue: mockConfigService }],
       }).compile();
 
       service = module.get<PostHogService>(PostHogService);
-      service['logger'] = { log: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() } as any;
+      service['logger'] = {
+        log: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+        debug: jest.fn(),
+      } as any;
 
       await service.onModuleInit();
 
       expect(PostHog).toHaveBeenCalledWith('test-api-key', {
-        host: 'https://us.i.posthog.com',
+        host: 'https://analytics.enclii.dev',
         flushAt: 20,
         flushInterval: 10000,
       });
@@ -88,14 +92,16 @@ describe('PostHogService', () => {
       mockConfigService.get.mockReturnValue(undefined);
 
       const module = await Test.createTestingModule({
-        providers: [
-          PostHogService,
-          { provide: ConfigService, useValue: mockConfigService },
-        ],
+        providers: [PostHogService, { provide: ConfigService, useValue: mockConfigService }],
       }).compile();
 
       service = module.get<PostHogService>(PostHogService);
-      service['logger'] = { log: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() } as any;
+      service['logger'] = {
+        log: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+        debug: jest.fn(),
+      } as any;
 
       await service.onModuleInit();
 
@@ -110,14 +116,16 @@ describe('PostHogService', () => {
       });
 
       const module = await Test.createTestingModule({
-        providers: [
-          PostHogService,
-          { provide: ConfigService, useValue: mockConfigService },
-        ],
+        providers: [PostHogService, { provide: ConfigService, useValue: mockConfigService }],
       }).compile();
 
       service = module.get<PostHogService>(PostHogService);
-      service['logger'] = { log: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() } as any;
+      service['logger'] = {
+        log: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+        debug: jest.fn(),
+      } as any;
 
       await service.onModuleInit();
 
@@ -130,14 +138,16 @@ describe('PostHogService', () => {
       mockConfigService.get.mockReturnValue('test-api-key');
 
       const module = await Test.createTestingModule({
-        providers: [
-          PostHogService,
-          { provide: ConfigService, useValue: mockConfigService },
-        ],
+        providers: [PostHogService, { provide: ConfigService, useValue: mockConfigService }],
       }).compile();
 
       service = module.get<PostHogService>(PostHogService);
-      service['logger'] = { log: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() } as any;
+      service['logger'] = {
+        log: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+        debug: jest.fn(),
+      } as any;
 
       await service.onModuleInit();
       await service.onModuleDestroy();
@@ -149,14 +159,16 @@ describe('PostHogService', () => {
       mockConfigService.get.mockReturnValue(undefined);
 
       const module = await Test.createTestingModule({
-        providers: [
-          PostHogService,
-          { provide: ConfigService, useValue: mockConfigService },
-        ],
+        providers: [PostHogService, { provide: ConfigService, useValue: mockConfigService }],
       }).compile();
 
       service = module.get<PostHogService>(PostHogService);
-      service['logger'] = { log: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() } as any;
+      service['logger'] = {
+        log: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+        debug: jest.fn(),
+      } as any;
 
       await service.onModuleInit();
 
@@ -169,14 +181,16 @@ describe('PostHogService', () => {
       mockConfigService.get.mockReturnValue('test-api-key');
 
       const module = await Test.createTestingModule({
-        providers: [
-          PostHogService,
-          { provide: ConfigService, useValue: mockConfigService },
-        ],
+        providers: [PostHogService, { provide: ConfigService, useValue: mockConfigService }],
       }).compile();
 
       service = module.get<PostHogService>(PostHogService);
-      service['logger'] = { log: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() } as any;
+      service['logger'] = {
+        log: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+        debug: jest.fn(),
+      } as any;
 
       await service.onModuleInit();
     });
@@ -229,10 +243,7 @@ describe('PostHogService', () => {
       // Reinitialize without API key
       mockConfigService.get.mockReturnValue(undefined);
       const disabledModule = await Test.createTestingModule({
-        providers: [
-          PostHogService,
-          { provide: ConfigService, useValue: mockConfigService },
-        ],
+        providers: [PostHogService, { provide: ConfigService, useValue: mockConfigService }],
       }).compile();
       const disabledService = disabledModule.get<PostHogService>(PostHogService);
       disabledService['logger'] = {
@@ -285,14 +296,16 @@ describe('PostHogService', () => {
       mockConfigService.get.mockReturnValue('test-api-key');
 
       const module = await Test.createTestingModule({
-        providers: [
-          PostHogService,
-          { provide: ConfigService, useValue: mockConfigService },
-        ],
+        providers: [PostHogService, { provide: ConfigService, useValue: mockConfigService }],
       }).compile();
 
       service = module.get<PostHogService>(PostHogService);
-      service['logger'] = { log: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() } as any;
+      service['logger'] = {
+        log: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+        debug: jest.fn(),
+      } as any;
 
       await service.onModuleInit();
     });
@@ -322,10 +335,7 @@ describe('PostHogService', () => {
     it('should not identify when PostHog is disabled', async () => {
       mockConfigService.get.mockReturnValue(undefined);
       const disabledModule = await Test.createTestingModule({
-        providers: [
-          PostHogService,
-          { provide: ConfigService, useValue: mockConfigService },
-        ],
+        providers: [PostHogService, { provide: ConfigService, useValue: mockConfigService }],
       }).compile();
       const disabledService = disabledModule.get<PostHogService>(PostHogService);
       await disabledService.onModuleInit();
@@ -357,14 +367,16 @@ describe('PostHogService', () => {
       mockConfigService.get.mockReturnValue('test-api-key');
 
       const module = await Test.createTestingModule({
-        providers: [
-          PostHogService,
-          { provide: ConfigService, useValue: mockConfigService },
-        ],
+        providers: [PostHogService, { provide: ConfigService, useValue: mockConfigService }],
       }).compile();
 
       service = module.get<PostHogService>(PostHogService);
-      service['logger'] = { log: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() } as any;
+      service['logger'] = {
+        log: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+        debug: jest.fn(),
+      } as any;
 
       await service.onModuleInit();
     });
@@ -394,14 +406,16 @@ describe('PostHogService', () => {
       mockConfigService.get.mockReturnValue('test-api-key');
 
       const module = await Test.createTestingModule({
-        providers: [
-          PostHogService,
-          { provide: ConfigService, useValue: mockConfigService },
-        ],
+        providers: [PostHogService, { provide: ConfigService, useValue: mockConfigService }],
       }).compile();
 
       service = module.get<PostHogService>(PostHogService);
-      service['logger'] = { log: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() } as any;
+      service['logger'] = {
+        log: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+        debug: jest.fn(),
+      } as any;
 
       await service.onModuleInit();
     });
@@ -429,14 +443,16 @@ describe('PostHogService', () => {
       mockConfigService.get.mockReturnValue('test-api-key');
 
       const module = await Test.createTestingModule({
-        providers: [
-          PostHogService,
-          { provide: ConfigService, useValue: mockConfigService },
-        ],
+        providers: [PostHogService, { provide: ConfigService, useValue: mockConfigService }],
       }).compile();
 
       service = module.get<PostHogService>(PostHogService);
-      service['logger'] = { log: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() } as any;
+      service['logger'] = {
+        log: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+        debug: jest.fn(),
+      } as any;
 
       await service.onModuleInit();
     });
@@ -472,10 +488,7 @@ describe('PostHogService', () => {
     it('should not group when PostHog is disabled', async () => {
       mockConfigService.get.mockReturnValue(undefined);
       const disabledModule = await Test.createTestingModule({
-        providers: [
-          PostHogService,
-          { provide: ConfigService, useValue: mockConfigService },
-        ],
+        providers: [PostHogService, { provide: ConfigService, useValue: mockConfigService }],
       }).compile();
       const disabledService = disabledModule.get<PostHogService>(PostHogService);
       await disabledService.onModuleInit();
@@ -490,9 +503,7 @@ describe('PostHogService', () => {
         throw new Error('Group failed');
       });
 
-      await expect(
-        service.group('user-123', 'company', 'company-456')
-      ).resolves.not.toThrow();
+      await expect(service.group('user-123', 'company', 'company-456')).resolves.not.toThrow();
     });
   });
 
@@ -501,14 +512,16 @@ describe('PostHogService', () => {
       mockConfigService.get.mockReturnValue('test-api-key');
 
       const module = await Test.createTestingModule({
-        providers: [
-          PostHogService,
-          { provide: ConfigService, useValue: mockConfigService },
-        ],
+        providers: [PostHogService, { provide: ConfigService, useValue: mockConfigService }],
       }).compile();
 
       service = module.get<PostHogService>(PostHogService);
-      service['logger'] = { log: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() } as any;
+      service['logger'] = {
+        log: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+        debug: jest.fn(),
+      } as any;
 
       await service.onModuleInit();
     });
@@ -557,14 +570,16 @@ describe('PostHogService', () => {
       mockConfigService.get.mockReturnValue('test-api-key');
 
       const module = await Test.createTestingModule({
-        providers: [
-          PostHogService,
-          { provide: ConfigService, useValue: mockConfigService },
-        ],
+        providers: [PostHogService, { provide: ConfigService, useValue: mockConfigService }],
       }).compile();
 
       service = module.get<PostHogService>(PostHogService);
-      service['logger'] = { log: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() } as any;
+      service['logger'] = {
+        log: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+        debug: jest.fn(),
+      } as any;
 
       await service.onModuleInit();
     });
@@ -578,10 +593,7 @@ describe('PostHogService', () => {
     it('should not throw when client is not initialized', async () => {
       mockConfigService.get.mockReturnValue(undefined);
       const disabledModule = await Test.createTestingModule({
-        providers: [
-          PostHogService,
-          { provide: ConfigService, useValue: mockConfigService },
-        ],
+        providers: [PostHogService, { provide: ConfigService, useValue: mockConfigService }],
       }).compile();
       const disabledService = disabledModule.get<PostHogService>(PostHogService);
       await disabledService.onModuleInit();
@@ -595,14 +607,16 @@ describe('PostHogService', () => {
       mockConfigService.get.mockReturnValue('test-api-key');
 
       const module = await Test.createTestingModule({
-        providers: [
-          PostHogService,
-          { provide: ConfigService, useValue: mockConfigService },
-        ],
+        providers: [PostHogService, { provide: ConfigService, useValue: mockConfigService }],
       }).compile();
 
       service = module.get<PostHogService>(PostHogService);
-      service['logger'] = { log: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() } as any;
+      service['logger'] = {
+        log: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+        debug: jest.fn(),
+      } as any;
 
       await service.onModuleInit();
 
@@ -613,14 +627,16 @@ describe('PostHogService', () => {
       mockConfigService.get.mockReturnValue(undefined);
 
       const module = await Test.createTestingModule({
-        providers: [
-          PostHogService,
-          { provide: ConfigService, useValue: mockConfigService },
-        ],
+        providers: [PostHogService, { provide: ConfigService, useValue: mockConfigService }],
       }).compile();
 
       service = module.get<PostHogService>(PostHogService);
-      service['logger'] = { log: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() } as any;
+      service['logger'] = {
+        log: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+        debug: jest.fn(),
+      } as any;
 
       await service.onModuleInit();
 
@@ -634,14 +650,16 @@ describe('PostHogService', () => {
       });
 
       const module = await Test.createTestingModule({
-        providers: [
-          PostHogService,
-          { provide: ConfigService, useValue: mockConfigService },
-        ],
+        providers: [PostHogService, { provide: ConfigService, useValue: mockConfigService }],
       }).compile();
 
       service = module.get<PostHogService>(PostHogService);
-      service['logger'] = { log: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() } as any;
+      service['logger'] = {
+        log: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+        debug: jest.fn(),
+      } as any;
 
       await service.onModuleInit();
 

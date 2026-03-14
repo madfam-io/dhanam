@@ -25,10 +25,12 @@ Dhanam Ledger now includes comprehensive analytics tracking using [PostHog](http
 **Location:** `apps/api/src/core/analytics/`
 
 **Files:**
+
 - `posthog.service.ts` - PostHog client service
 - `analytics.module.ts` - Global analytics module
 
 **Integration:**
+
 ```typescript
 import { PostHogService } from '@core/analytics/posthog.service';
 
@@ -53,6 +55,7 @@ export class YourService {
 **Integration:**
 
 1. **Wrap your app with PostHogProvider:**
+
 ```tsx
 // app/layout.tsx
 import PostHogProvider from '@/providers/PostHogProvider';
@@ -61,9 +64,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body>
-        <PostHogProvider>
-          {children}
-        </PostHogProvider>
+        <PostHogProvider>{children}</PostHogProvider>
       </body>
     </html>
   );
@@ -71,6 +72,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 ```
 
 2. **Use the analytics helper in components:**
+
 ```tsx
 'use client';
 
@@ -106,14 +108,17 @@ export function MyComponent() {
 The following 11 key events are tracked across the application:
 
 ### 1. **sign_up** - User Registration
+
 **When:** User completes registration
 **Properties:**
+
 - `email`: User's email
 - `name`: User's name
 - `locale`: User's preferred locale (es/en)
 - `registrationMethod`: 'email' or 'oauth'
 
 **Backend Example:**
+
 ```typescript
 await this.posthog.trackSignUp(user.id, {
   email: user.email,
@@ -123,6 +128,7 @@ await this.posthog.trackSignUp(user.id, {
 ```
 
 **Frontend Example:**
+
 ```typescript
 analytics.trackSignUp(user.id, {
   email: user.email,
@@ -134,12 +140,15 @@ analytics.trackSignUp(user.id, {
 ---
 
 ### 2. **onboarding_complete** - Onboarding Completion
+
 **When:** User completes the onboarding flow
 **Properties:**
+
 - `stepsCompleted`: Number of onboarding steps completed
 - `timeToComplete`: Time taken in milliseconds
 
 **Backend Example:**
+
 ```typescript
 await this.posthog.trackOnboardingComplete(userId, {
   stepsCompleted: 5,
@@ -150,13 +159,16 @@ await this.posthog.trackOnboardingComplete(userId, {
 ---
 
 ### 3. **connect_initiated** - Bank Connection Started
+
 **When:** User initiates connection to a financial provider
 **Properties:**
+
 - `provider`: 'belvo' | 'plaid' | 'bitso'
 - `spaceId`: Space ID
 - `spaceType`: 'personal' | 'business'
 
 **Backend Example:**
+
 ```typescript
 await this.posthog.trackConnectInitiated(userId, {
   provider: 'belvo',
@@ -168,13 +180,16 @@ await this.posthog.trackConnectInitiated(userId, {
 ---
 
 ### 4. **connect_success** - Bank Connection Successful
+
 **When:** Bank connection completes successfully
 **Properties:**
+
 - `provider`: 'belvo' | 'plaid' | 'bitso'
 - `accountsLinked`: Number of accounts linked
 - `spaceId`: Space ID
 
 **Backend Example:**
+
 ```typescript
 await this.posthog.trackConnectSuccess(userId, {
   provider: 'belvo',
@@ -186,14 +201,17 @@ await this.posthog.trackConnectSuccess(userId, {
 ---
 
 ### 5. **sync_success** - Account Sync Completed
+
 **When:** Account synchronization completes
 **Properties:**
+
 - `provider`: Provider name
 - `accountId`: Account ID
 - `transactionsAdded`: Number of new transactions
 - `syncDuration`: Time taken in milliseconds
 
 **Backend Example:**
+
 ```typescript
 await this.posthog.trackSyncSuccess(userId, {
   provider: 'belvo',
@@ -206,8 +224,10 @@ await this.posthog.trackSyncSuccess(userId, {
 ---
 
 ### 6. **budget_created** - Budget Created
+
 **When:** User creates a new budget
 **Properties:**
+
 - `budgetId`: Budget ID
 - `spaceId`: Space ID
 - `period`: 'weekly' | 'monthly' | 'quarterly' | 'yearly'
@@ -216,6 +236,7 @@ await this.posthog.trackSyncSuccess(userId, {
 - `currency`: Currency code
 
 **Backend Example:**
+
 ```typescript
 await this.posthog.trackBudgetCreated(userId, {
   budgetId: 'budget-123',
@@ -230,14 +251,17 @@ await this.posthog.trackBudgetCreated(userId, {
 ---
 
 ### 7. **rule_created** - Categorization Rule Created
+
 **When:** User creates an auto-categorization rule
 **Properties:**
+
 - `ruleId`: Rule ID
 - `spaceId`: Space ID
 - `matchType`: 'contains' | 'starts_with' | 'ends_with' | 'exact'
 - `categoryId`: Category ID
 
 **Backend Example:**
+
 ```typescript
 await this.posthog.trackRuleCreated(userId, {
   ruleId: 'rule-123',
@@ -250,14 +274,17 @@ await this.posthog.trackRuleCreated(userId, {
 ---
 
 ### 8. **txn_categorized** - Transaction Categorized
+
 **When:** A transaction is categorized (manually or automatically)
 **Properties:**
+
 - `transactionId`: Transaction ID
 - `categoryId`: Category ID
 - `isAutomatic`: Whether categorization was automatic
 - `spaceId`: Space ID
 
 **Backend Example:**
+
 ```typescript
 await this.posthog.trackTransactionCategorized(userId, {
   transactionId: 'txn-123',
@@ -270,8 +297,10 @@ await this.posthog.trackTransactionCategorized(userId, {
 ---
 
 ### 9. **alert_fired** - Budget Alert Triggered
+
 **When:** A budget threshold alert is triggered
 **Properties:**
+
 - `budgetId`: Budget ID
 - `categoryId`: Category ID
 - `spaceId`: Space ID
@@ -279,6 +308,7 @@ await this.posthog.trackTransactionCategorized(userId, {
 - `alertType`: 'warning' | 'exceeded'
 
 **Backend Example:**
+
 ```typescript
 await this.posthog.trackAlertFired(userId, {
   budgetId: 'budget-123',
@@ -292,14 +322,17 @@ await this.posthog.trackAlertFired(userId, {
 ---
 
 ### 10. **view_net_worth** - Wealth Tracking Viewed
+
 **When:** User views the net worth dashboard
 **Properties:**
+
 - `spaceId`: Space ID
 - `totalNetWorth`: Total net worth
 - `currency`: Currency code
 - `accountsCount`: Number of accounts
 
 **Backend Example:**
+
 ```typescript
 await this.posthog.trackViewNetWorth(userId, {
   spaceId: 'space-123',
@@ -310,6 +343,7 @@ await this.posthog.trackViewNetWorth(userId, {
 ```
 
 **Frontend Example:**
+
 ```typescript
 analytics.trackViewNetWorth({
   spaceId: currentSpace.id,
@@ -322,14 +356,17 @@ analytics.trackViewNetWorth({
 ---
 
 ### 11. **export_data** - Data Export
+
 **When:** User exports data (CSV, PDF, JSON)
 **Properties:**
+
 - `exportType`: 'csv' | 'pdf' | 'json'
 - `dataType`: 'transactions' | 'budgets' | 'reports' | 'all'
 - `recordsExported`: Number of records
 - `spaceId`: Space ID
 
 **Backend Example:**
+
 ```typescript
 await this.posthog.trackExportData(userId, {
   exportType: 'csv',
@@ -348,7 +385,7 @@ await this.posthog.trackExportData(userId, {
 ```bash
 # Analytics (PostHog)
 POSTHOG_API_KEY=your_posthog_api_key
-POSTHOG_HOST=https://app.posthog.com
+POSTHOG_HOST=https://analytics.enclii.dev
 ```
 
 ### Frontend (.env.local)
@@ -356,7 +393,7 @@ POSTHOG_HOST=https://app.posthog.com
 ```bash
 # Analytics (PostHog)
 NEXT_PUBLIC_POSTHOG_KEY=your_posthog_project_key
-NEXT_PUBLIC_POSTHOG_HOST=https://app.posthog.com
+NEXT_PUBLIC_POSTHOG_HOST=https://analytics.enclii.dev
 ```
 
 ---
@@ -373,6 +410,7 @@ NEXT_PUBLIC_POSTHOG_HOST=https://app.posthog.com
 ### 2. Get API Keys
 
 **For Backend (Server-Side):**
+
 1. Go to Project Settings
 2. Copy your **Project API Key**
 3. Add to `apps/api/.env`:
@@ -381,6 +419,7 @@ NEXT_PUBLIC_POSTHOG_HOST=https://app.posthog.com
    ```
 
 **For Frontend (Client-Side):**
+
 1. Go to Project Settings
 2. Copy your **Project API Key** (same as backend)
 3. Add to `apps/web/.env.local`:
@@ -391,6 +430,7 @@ NEXT_PUBLIC_POSTHOG_HOST=https://app.posthog.com
 ### 3. Verify Integration
 
 **Backend:**
+
 ```bash
 cd apps/api
 pnpm dev
@@ -400,6 +440,7 @@ pnpm dev
 ```
 
 **Frontend:**
+
 ```bash
 cd apps/web
 pnpm dev
@@ -415,6 +456,7 @@ pnpm dev
 ### GDPR Compliance
 
 PostHog integration includes:
+
 - ✅ Respect for Do Not Track (DNT) headers
 - ✅ Opt-out capability
 - ✅ Data anonymization options
@@ -424,6 +466,7 @@ PostHog integration includes:
 ### User Consent
 
 Recommended implementation:
+
 ```typescript
 // Check user consent before initializing
 if (user.hasConsent) {
@@ -438,6 +481,7 @@ if (user.hasConsent) {
 ### Data Retention
 
 Configure in PostHog dashboard:
+
 - Settings → Data Management → Data Retention
 - Recommended: 90 days for event data
 
@@ -448,12 +492,10 @@ Configure in PostHog dashboard:
 PostHog supports feature flags for A/B testing and gradual rollouts.
 
 **Backend Example:**
+
 ```typescript
 // Check if a feature is enabled for a user
-const isFeatureEnabled = await this.posthog.isFeatureEnabled(
-  userId,
-  'new_dashboard_ui'
-);
+const isFeatureEnabled = await this.posthog.isFeatureEnabled(userId, 'new_dashboard_ui');
 
 if (isFeatureEnabled) {
   // Show new UI
@@ -461,6 +503,7 @@ if (isFeatureEnabled) {
 ```
 
 **Frontend Example:**
+
 ```typescript
 const posthog = usePostHog();
 
@@ -480,6 +523,7 @@ return <OldDashboard />;
 Session recording is **disabled by default** for privacy. Users can opt-in.
 
 **Enable for a user:**
+
 ```typescript
 // Frontend
 const posthog = usePostHog();
@@ -490,6 +534,7 @@ if (userConsentedToRecording) {
 ```
 
 **Disable:**
+
 ```typescript
 posthog.stopSessionRecording();
 ```
@@ -501,6 +546,7 @@ posthog.stopSessionRecording();
 ### Development Mode
 
 In development, PostHog runs in debug mode:
+
 ```typescript
 if (process.env.NODE_ENV === 'development') {
   posthog.debug(); // Logs all events to console
@@ -510,8 +556,9 @@ if (process.env.NODE_ENV === 'development') {
 ### Test Events
 
 Send a test event:
+
 ```bash
-curl -X POST https://app.posthog.com/capture/ \
+curl -X POST https://analytics.enclii.dev/capture/ \
   -H 'Content-Type: application/json' \
   -d '{
     "api_key": "your_api_key",
@@ -529,9 +576,10 @@ curl -X POST https://app.posthog.com/capture/ \
 
 ### PostHog Dashboard
 
-View analytics at: https://app.posthog.com/project/{your_project_id}
+View analytics at: https://analytics.enclii.dev/project/{your_project_id}
 
 **Key Dashboards:**
+
 - **Insights**: Event trends, funnels, retention
 - **Persons**: User profiles and properties
 - **Session Recordings**: Opt-in user sessions
@@ -557,12 +605,14 @@ View analytics at: https://app.posthog.com/project/{your_project_id}
 ### Backend: Events Not Appearing
 
 **Check:**
+
 1. POSTHOG_API_KEY is set correctly
 2. PostHog service logs show "initialized"
 3. Network connectivity to posthog.com
 4. Events are being flushed (10s intervals)
 
 **Force flush:**
+
 ```typescript
 await this.posthog.flush();
 ```
@@ -570,12 +620,14 @@ await this.posthog.flush();
 ### Frontend: PostHog Not Loading
 
 **Check:**
+
 1. NEXT_PUBLIC_POSTHOG_KEY is set
 2. Browser console for errors
 3. PostHog is not blocked by ad-blockers
 4. Network tab shows requests to posthog.com
 
 **Debug mode:**
+
 ```typescript
 posthog.debug(); // In browser console
 ```
@@ -585,6 +637,7 @@ posthog.debug(); // In browser console
 ## Best Practices
 
 ### DO:
+
 - ✅ Track high-value events (sign-ups, conversions, key features)
 - ✅ Include relevant context in event properties
 - ✅ Respect user privacy settings
@@ -592,6 +645,7 @@ posthog.debug(); // In browser console
 - ✅ Batch events for performance
 
 ### DON'T:
+
 - ❌ Track PII (passwords, credit cards, etc.)
 - ❌ Track every single user interaction (be selective)
 - ❌ Block critical user flows if PostHog fails
@@ -622,12 +676,14 @@ posthog.debug(); // In browser console
 ### Disable Analytics
 
 **Backend:**
+
 ```bash
 # Remove from .env
 # POSTHOG_API_KEY=...
 ```
 
 **Frontend:**
+
 ```bash
 # Remove from .env.local
 # NEXT_PUBLIC_POSTHOG_KEY=...
@@ -650,6 +706,7 @@ Service will gracefully degrade (no-op mode).
 ## Summary
 
 **Implemented:**
+
 - ✅ Backend PostHog service with 11 key events
 - ✅ Frontend PostHog provider with React hooks
 - ✅ Type-safe event tracking helpers
@@ -658,10 +715,12 @@ Service will gracefully degrade (no-op mode).
 - ✅ Comprehensive documentation
 
 **Dependencies Added:**
+
 - `posthog-node` (5.11.2) - Backend SDK
 - `posthog-js` (1.294.0) - Frontend SDK
 
 **Files Created:**
+
 - `apps/api/src/core/analytics/posthog.service.ts` (337 lines)
 - `apps/api/src/core/analytics/analytics.module.ts` (17 lines)
 - `apps/api/src/core/core.module.ts` (updated)

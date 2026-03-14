@@ -4,7 +4,8 @@ import 'reflect-metadata';
 // Mock environment variables for testing (only if not already set by CI)
 process.env.NODE_ENV = 'test';
 // Use development database for E2E tests (matches docker-compose.yml)
-process.env.DATABASE_URL = process.env.DATABASE_URL || 'postgresql://dhanam:localdev@localhost:5432/dhanam';
+process.env.DATABASE_URL =
+  process.env.DATABASE_URL || 'postgresql://dhanam:localdev@localhost:5432/dhanam';
 // Redis (no password for local development)
 process.env.REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
 process.env.REDIS_HOST = process.env.REDIS_HOST || 'localhost';
@@ -16,10 +17,11 @@ process.env.JWT_ACCESS_EXPIRY = process.env.JWT_ACCESS_EXPIRY || '15m';
 process.env.JWT_REFRESH_EXPIRY = process.env.JWT_REFRESH_EXPIRY || '30d';
 process.env.ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'test-encryption-key-exactly-32!!'; // Must be exactly 32 chars
 process.env.POSTHOG_API_KEY = process.env.POSTHOG_API_KEY || 'test-posthog-api-key';
-process.env.POSTHOG_HOST = process.env.POSTHOG_HOST || 'https://app.posthog.com';
+process.env.POSTHOG_HOST = process.env.POSTHOG_HOST || 'https://analytics.enclii.dev';
 process.env.SENTRY_DSN = process.env.SENTRY_DSN || '';
 process.env.BELVO_SECRET_KEY_ID = process.env.BELVO_SECRET_KEY_ID || 'test-belvo-secret';
-process.env.BELVO_SECRET_KEY_PASSWORD = process.env.BELVO_SECRET_KEY_PASSWORD || 'test-belvo-password';
+process.env.BELVO_SECRET_KEY_PASSWORD =
+  process.env.BELVO_SECRET_KEY_PASSWORD || 'test-belvo-password';
 process.env.PLAID_CLIENT_ID = process.env.PLAID_CLIENT_ID || 'test-plaid-client';
 process.env.PLAID_SECRET = process.env.PLAID_SECRET || 'test-plaid-secret';
 
