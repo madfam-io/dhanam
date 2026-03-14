@@ -74,13 +74,19 @@
       "react": "18.3.1",
       "react-dom": "18.3.1",
       "@remix-run/router": ">=1.23.2",
-      "tar": ">=7.5.7",
+      "tar": ">=7.5.11",
       "diff": ">=7.0.0",
       "lodash": ">=4.17.23",
       "fast-xml-parser": ">=5.3.4",
-      "fastify": ">=5.7.2",
+      "fastify": ">=5.8.2",
       "@isaacs/brace-expansion": ">=5.0.1",
-      "hono": ">=4.11.7"
+      "hono": ">=4.12.7",
+      "@hono/node-server": ">=1.19.10",
+      "serialize-javascript": ">=7.0.3",
+      "undici": ">=6.24.0",
+      "ajv@>=8.0.0 <8.12.3": ">=8.12.3",
+      "dompurify": ">=3.2.3",
+      "flatted": ">=3.4.0"
     }
   }
 }
