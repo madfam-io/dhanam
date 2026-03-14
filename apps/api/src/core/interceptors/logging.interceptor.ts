@@ -27,9 +27,14 @@ export class LoggingInterceptor implements NestInterceptor {
             ip,
             userAgent,
             userId,
-            responseSize: data != null
-              ? (Array.isArray(data) ? `~${data.length} items` : typeof data === 'object' ? `~${Object.keys(data as object).length} keys` : 'scalar')
-              : 0,
+            responseSize:
+              data != null
+                ? Array.isArray(data)
+                  ? `~${data.length} items`
+                  : typeof data === 'object'
+                    ? `~${Object.keys(data as object).length} keys`
+                    : 'scalar'
+                : 0,
           });
         },
         error: (error) => {

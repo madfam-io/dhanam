@@ -104,7 +104,11 @@ export class AnalyticsService {
       // DeFi crypto check
       if (account.type === 'crypto') {
         const metadata = account.metadata as { defiValueUsd?: number } | null;
-        if (metadata?.defiValueUsd && metadata.defiValueUsd > 0 && displayCurrency !== Currency.USD) {
+        if (
+          metadata?.defiValueUsd &&
+          metadata.defiValueUsd > 0 &&
+          displayCurrency !== Currency.USD
+        ) {
           neededPairs.add(`${Currency.USD}:${displayCurrency}`);
         }
       }
@@ -285,7 +289,11 @@ export class AnalyticsService {
       // DeFi crypto check
       if (account.type === 'crypto') {
         const metadata = account.metadata as { defiValueUsd?: number } | null;
-        if (metadata?.defiValueUsd && metadata.defiValueUsd > 0 && displayCurrency !== Currency.USD) {
+        if (
+          metadata?.defiValueUsd &&
+          metadata.defiValueUsd > 0 &&
+          displayCurrency !== Currency.USD
+        ) {
           neededPairs.add(`${Currency.USD}:${displayCurrency}`);
         }
       }
@@ -546,7 +554,10 @@ export class AnalyticsService {
    * Internal cashflow forecast that skips access verification.
    * Used by getDashboardData which already verified access once.
    */
-  private async _getCashflowForecastUnchecked(spaceId: string, days = 60): Promise<CashflowForecast> {
+  private async _getCashflowForecastUnchecked(
+    spaceId: string,
+    days = 60
+  ): Promise<CashflowForecast> {
     // Get current liquid account balances
     const liquidAccounts = await this.prisma.account.findMany({
       where: {

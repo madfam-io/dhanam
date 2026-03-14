@@ -175,15 +175,16 @@ export class ReportService {
 
             // Batch-fetch all budget-related transactions in a single query
             const allCategoryIds = budgets.flatMap((b) => b.categories.map((c) => c.id));
-            const allBudgetTransactions = allCategoryIds.length > 0
-              ? await this.prisma.transaction.findMany({
-                  where: {
-                    account: { spaceId },
-                    date: { gte: startDate, lte: endDate },
-                    categoryId: { in: allCategoryIds },
-                  },
-                })
-              : [];
+            const allBudgetTransactions =
+              allCategoryIds.length > 0
+                ? await this.prisma.transaction.findMany({
+                    where: {
+                      account: { spaceId },
+                      date: { gte: startDate, lte: endDate },
+                      categoryId: { in: allCategoryIds },
+                    },
+                  })
+                : [];
 
             yPos = 100;
             for (const budget of budgets) {

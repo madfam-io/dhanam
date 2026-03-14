@@ -79,7 +79,7 @@ export class DemoDataBuilder {
       } catch (e) {
         console.error(
           `[DemoData] ${name} failed for ${personaKey}:`,
-          e instanceof Error ? e.message : e,
+          e instanceof Error ? e.message : e
         );
       }
     };
