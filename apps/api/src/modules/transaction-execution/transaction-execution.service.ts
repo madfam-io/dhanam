@@ -1,6 +1,9 @@
 import * as crypto from 'crypto';
 
+import type { InputJsonValue } from '@db';
+import { Prisma as _Prisma } from '@db';
 import {
+  Inject,
   Injectable,
   NotFoundException,
   ForbiddenException,
@@ -10,11 +13,8 @@ import {
 } from '@nestjs/common';
 import { addDays, isAfter } from 'date-fns';
 
-import type { InputJsonValue } from '@db';
-import { Prisma as _Prisma } from '@db';
-
 import { AuditService } from '../../core/audit/audit.service';
-import { TotpService } from '../../core/auth/totp.service';
+import { MFA_PROVIDER, MfaProvider } from '../../core/auth/providers';
 import { PrismaService } from '../../core/prisma/prisma.service';
 import { SpacesService } from '../spaces/spaces.service';
 
@@ -47,7 +47,7 @@ export class TransactionExecutionService {
   constructor(
     private prisma: PrismaService,
     private auditService: AuditService,
-    private totpService: TotpService,
+    @Inject(MFA_PROVIDER) private mfaProvider: MfaProvider,
     private spacesService: SpacesService,
     private providerFactory: ProviderFactoryService
   ) {}
@@ -901,7 +901,7 @@ export class TransactionExecutionService {
   }
 
   /**
-   * Helper: Validate OTP code using TotpService
+   * Helper: Validate OTP code using MfaProvider
    * Validates against user's TOTP secret or backup codes
    */
   private async validateOtp(userId: string, otpCode: string): Promise<boolean> {
@@ -923,7 +923,7 @@ export class TransactionExecutionService {
 
     // Try TOTP validation first (6-digit codes)
     if (/^\d{6}$/.test(otpCode)) {
-      const isValid = this.totpService.verifyToken(user.totpSecret, otpCode);
+      const isValid = this.mfaProvider.verifyToken(user.totpSecret, otpCode);
       if (isValid) {
         return true;
       }
@@ -931,7 +931,7 @@ export class TransactionExecutionService {
 
     // Fall back to backup code validation (8-character hex codes)
     if (/^[A-F0-9]{8}$/i.test(otpCode)) {
-      const isValidBackup = await this.totpService.verifyBackupCode(userId, otpCode.toUpperCase());
+      const isValidBackup = await this.mfaProvider.verifyBackupCode(userId, otpCode.toUpperCase());
       if (isValidBackup) {
         this.logger.log(`User ${userId} used backup code for transaction verification`);
         return true;

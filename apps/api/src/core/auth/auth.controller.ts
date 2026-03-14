@@ -1,3 +1,6 @@
+import { AuditService } from '@core/audit/audit.service';
+import { SecurityConfigService } from '@core/config/security.config';
+import { ThrottleAuthGuard } from '@core/security/guards/throttle-auth.guard';
 import {
   LoginDto,
   RegisterDto,
@@ -18,29 +21,27 @@ import {
   Ip,
   Headers,
   Res,
+  Inject,
   UnauthorizedException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { FastifyReply } from 'fastify';
 
-import { AuditService } from '@core/audit/audit.service';
-import { SecurityConfigService } from '@core/config/security.config';
-import { ThrottleAuthGuard } from '@core/security/guards/throttle-auth.guard';
-
-import { AuthService } from './auth.service';
 import { CurrentUser, AuthenticatedUser } from './decorators/current-user.decorator';
 import { DemoAuthService } from './demo-auth.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { GuestAuthService } from './guest-auth.service';
-import { TotpService } from './totp.service';
+import { AUTH_PROVIDER, AuthProvider, MFA_PROVIDER, MfaProvider } from './providers';
 
 @ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
   constructor(
-    private authService: AuthService,
-    private totpService: TotpService,
+    @Inject(AUTH_PROVIDER)
+    private authProvider: AuthProvider,
+    @Inject(MFA_PROVIDER)
+    private mfaProvider: MfaProvider,
     private auditService: AuditService,
     private guestAuthService: GuestAuthService,
     private demoAuthService: DemoAuthService,
@@ -66,7 +67,7 @@ export class AuthController {
     @Headers('user-agent') userAgent: string,
     @Res({ passthrough: true }) res: FastifyReply
   ): Promise<{ tokens: { accessToken: string; expiresIn: number } }> {
-    const tokens = await this.authService.register(dto);
+    const tokens = await this.authProvider.register(dto);
 
     // Set refresh token as httpOnly cookie
     res.setCookie('refresh_token', tokens.refreshToken, {
@@ -110,7 +111,7 @@ export class AuthController {
     @Res({ passthrough: true }) res: FastifyReply
   ): Promise<{ tokens: { accessToken: string; expiresIn: number } }> {
     try {
-      const tokens = await this.authService.login(dto);
+      const tokens = await this.authProvider.login(dto);
 
       // Set refresh token as httpOnly cookie
       res.setCookie('refresh_token', tokens.refreshToken, {
@@ -276,7 +277,7 @@ export class AuthController {
       throw new UnauthorizedException('Refresh token required');
     }
 
-    const tokens = await this.authService.refreshTokens({ refreshToken });
+    const tokens = await this.authProvider.refreshTokens(refreshToken);
 
     // Set new refresh token cookie
     res.setCookie('refresh_token', tokens.refreshToken, {
@@ -311,7 +312,7 @@ export class AuthController {
     }
 
     if (refreshToken) {
-      await this.authService.logout(refreshToken);
+      await this.authProvider.logout(refreshToken);
     }
 
     // Clear refresh token cookie
@@ -332,7 +333,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Request password reset' })
   @ApiResponse({ status: 200, description: 'Reset email sent if user exists' })
   async forgotPassword(@Body() dto: ForgotPasswordDto): Promise<{ message: string }> {
-    await this.authService.forgotPassword(dto);
+    await this.authProvider.forgotPassword(dto);
     return { message: 'If the email exists, a reset link has been sent' };
   }
 
@@ -348,7 +349,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Reset password with token' })
   @ApiResponse({ status: 200, description: 'Password reset successful' })
   async resetPassword(@Body() dto: ResetPasswordDto): Promise<{ message: string }> {
-    await this.authService.resetPassword(dto);
+    await this.authProvider.resetPassword(dto);
     return { message: 'Password reset successful' };
   }
 
@@ -365,7 +366,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Setup TOTP 2FA' })
   @ApiResponse({ status: 201, description: 'TOTP setup initiated' })
   async setupTotp(@CurrentUser() user: AuthenticatedUser) {
-    const setup = await this.totpService.setupTotp(user.userId, user.email);
+    const setup = await this.mfaProvider.setupTotp(user.userId, user.email);
     return setup;
   }
 
@@ -380,7 +381,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Enable TOTP 2FA' })
   @ApiResponse({ status: 200, description: 'TOTP enabled successfully' })
   async enableTotp(@CurrentUser() user: AuthenticatedUser, @Body() body: { token: string }) {
-    await this.totpService.enableTotp(user.userId, body.token);
+    await this.mfaProvider.enableTotp(user.userId, body.token);
     return { message: 'TOTP enabled successfully' };
   }
 
@@ -395,7 +396,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Disable TOTP 2FA' })
   @ApiResponse({ status: 200, description: 'TOTP disabled successfully' })
   async disableTotp(@CurrentUser() user: AuthenticatedUser, @Body() body: { token: string }) {
-    await this.totpService.disableTotp(user.userId, body.token);
+    await this.mfaProvider.disableTotp(user.userId, body.token);
     return { message: 'TOTP disabled successfully' };
   }
 
@@ -404,8 +405,8 @@ export class AuthController {
   @ApiOperation({ summary: 'Generate TOTP backup codes' })
   @ApiResponse({ status: 201, description: 'Backup codes generated' })
   async generateBackupCodes(@CurrentUser() user: AuthenticatedUser) {
-    const codes = this.totpService.generateBackupCodes();
-    await this.totpService.storeBackupCodes(user.userId, codes);
+    const codes = this.mfaProvider.generateBackupCodes();
+    await this.mfaProvider.storeBackupCodes(user.userId, codes);
     return { codes };
   }
 }

@@ -3,7 +3,7 @@ import { BadRequestException, NotFoundException, ConflictException } from '@nest
 import { TransactionExecutionService } from '../transaction-execution.service';
 import { PrismaService } from '../../../core/prisma/prisma.service';
 import { AuditService } from '../../../core/audit/audit.service';
-import { TotpService } from '../../../core/auth/totp.service';
+import { MFA_PROVIDER } from '../../../core/auth/providers';
 import { SpacesService } from '../../spaces/spaces.service';
 import { ProviderFactoryService } from '../providers/provider-factory.service';
 import { CreateOrderDto, OrderType, OrderPriority, ExecutionProvider } from '../dto/create-order.dto';
@@ -105,12 +105,13 @@ describe('TransactionExecutionService', () => {
           },
         },
         {
-          provide: TotpService,
+          provide: MFA_PROVIDER,
           useValue: {
-            verifyToken: jest.fn().mockImplementation((secret: string, token: string) => {
+            verifyToken: jest.fn().mockImplementation((_secret: string, token: string) => {
               // Simple mock: 6-digit codes are valid
               return /^\d{6}$/.test(token);
             }),
+            verifyBackupCode: jest.fn().mockResolvedValue(false),
             generateSecret: jest.fn().mockReturnValue('mock-secret'),
             generateQRCodeURL: jest.fn().mockReturnValue('mock-qr-url'),
           },
@@ -326,9 +327,9 @@ describe('TransactionExecutionService', () => {
         otpVerified: true,
       });
 
-      // Mock totpService to verify the OTP code
-      const totpService = service['totpService'];
-      jest.spyOn(totpService, 'verifyToken').mockReturnValue(true);
+      // Mock mfaProvider to verify the OTP code
+      const mfaProvider = service['mfaProvider'];
+      jest.spyOn(mfaProvider, 'verifyToken').mockReturnValue(true);
 
       const result = await service.verifyOrder(
         mockOrder.id,

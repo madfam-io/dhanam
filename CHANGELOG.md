@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - **Analytics wiring**: PostHog event tracking wired into 12 frontend components — login (identifyUser), register (trackSignUp), logout (posthog.reset), onboarding steps, provider connections (Belvo/Plaid/Bitso), dashboard (trackViewNetWorth), category correction (trackTxnCategorized), budget creation (trackBudgetCreated)
 - **Lifecycle drip campaigns**: Automated email sequences via `DripCampaignTask` with 2 daily cron jobs — activation drips (day 1/3/7/14) and re-engagement drips (day 7/14 inactive). Backed by `DripEvent` Prisma model with idempotent unique constraint, 6 Handlebars templates, and PostHog tracking
+- **Auth provider separation (A1-A2)**: Extracted auth logic into `AuthProvider`/`MfaProvider` interfaces with `LocalAuthProvider` and `JanuaAuthProvider` implementations. `AUTH_MODE` env var (`local`|`janua`) selects the active provider at module init. `JwtAuthGuard` tries Janua RS256 first, falls back to local HS256 for demo/guest tokens. Security settings page links to Janua account in SSO mode. Frontend `auth.ts` supports both local and Janua auth endpoints
 - Golden-ratio design token system for UI consistency
 - Cookie consent banner (GDPR/LATAM compliance) in root layout
 - Mobile hamburger menu on landing page navigation
@@ -34,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Billing success page `trackUpgradeCompleted` sending hardcoded `price: 0` — now reads from URL query params with fallback to plan default
+- Security settings page violating React rules of hooks — hooks called after early return for Janua mode; moved hooks above conditional return
 - RangeError in Bitso webhook signature verification
 - www.dhan.am redirect including port number (`url.host` → `url.hostname`)
 - Duplicate H1 on landing page (nav brand changed from `<h1>` to `<span>`)

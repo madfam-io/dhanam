@@ -1,28 +1,39 @@
 import { Injectable, ExecutionContext, Logger } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 
+import { AuthMode } from '../providers';
+
 /**
  * =============================================================================
  * JWT Authentication Guard (Galaxy Ecosystem)
  * =============================================================================
- * When JANUA_ENABLED=true, tries the 'janua' strategy (RS256 via JWKS) first.
+ * When AUTH_MODE=janua, tries the 'janua' strategy (RS256 via JWKS) first.
  * If that fails, falls back to the local 'jwt' strategy (HS256) to support
- * demo tokens issued by the Dhanam API itself.
+ * demo/guest tokens issued by the Dhanam API itself.
  *
- * When JANUA_ENABLED=false, uses only the local 'jwt' strategy.
+ * When AUTH_MODE=local, uses only the local 'jwt' strategy.
  * =============================================================================
  */
+
+function resolveAuthMode(): AuthMode {
+  if (process.env.AUTH_MODE === 'janua' || process.env.AUTH_MODE === 'local') {
+    return process.env.AUTH_MODE;
+  }
+  // Backwards compat: fall back to JANUA_ENABLED
+  return process.env.JANUA_ENABLED === 'true' ? 'janua' : 'local';
+}
+
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('janua') {
   private readonly logger = new Logger(JwtAuthGuard.name);
-  private readonly januaEnabled = process.env.JANUA_ENABLED === 'true';
+  private readonly authMode: AuthMode = resolveAuthMode();
 
   constructor() {
     super();
   }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    if (!this.januaEnabled) {
+    if (this.authMode === 'local') {
       const localGuard = new (AuthGuard('jwt'))();
       return localGuard.canActivate(context) as Promise<boolean>;
     }

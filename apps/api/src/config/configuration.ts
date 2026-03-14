@@ -18,9 +18,20 @@ export const configuration = () => ({
   },
 
   // ==========================================================================
+  // Auth Mode Configuration
+  // ==========================================================================
+  // AUTH_MODE supersedes JANUA_ENABLED:
+  //   'janua' = Janua OIDC (production, Galaxy ecosystem)
+  //   'local' = standalone local auth (self-hosted / development)
+  // Falls back to JANUA_ENABLED for backwards compatibility.
+  authMode: (process.env.AUTH_MODE ||
+    (process.env.JANUA_ENABLED === 'true' ? 'janua' : 'local')) as 'janua' | 'local',
+
+  // ==========================================================================
   // Janua OIDC Configuration (Galaxy Ecosystem)
   // ==========================================================================
   janua: {
+    // Deprecated: use AUTH_MODE instead
     enabled: process.env.JANUA_ENABLED === 'true',
     issuer: process.env.JANUA_ISSUER,
     jwksUri: process.env.JANUA_JWKS_URI,

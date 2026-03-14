@@ -7,20 +7,24 @@ import { Button } from '@dhanam/ui';
 import { Badge } from '@dhanam/ui';
 import { Alert, AlertDescription } from '@dhanam/ui';
 import { Separator } from '@dhanam/ui';
-import { Shield, Smartphone, Key, AlertTriangle, Check, Loader2 } from 'lucide-react';
+import { Shield, Smartphone, Key, AlertTriangle, Check, Loader2, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslation } from '@dhanam/shared';
 import { TotpSetup } from '~/components/auth/totp-setup';
+import { isJanuaAuthMode, getJanuaUrl } from '~/lib/api/auth';
 
 export function SecuritySettings() {
   const [showTotpSetup, setShowTotpSetup] = useState(false);
   const queryClient = useQueryClient();
   const { t } = useTranslation('settings');
   const { t: tCommon } = useTranslation('common');
+  const januaMode = isJanuaAuthMode();
 
+  // Hooks must be called unconditionally (React rules of hooks)
   const { data: totpStatus, isLoading } = useQuery({
     queryKey: ['totp-status'],
-    queryFn: () => ({ enabled: false, backupCodesRemaining: 0 }), // Mock for now
+    queryFn: () => ({ enabled: false, backupCodesRemaining: 0 }),
+    enabled: !januaMode,
   });
 
   const disableTotpMutation = useMutation({
@@ -37,7 +41,6 @@ export function SecuritySettings() {
   const generateBackupCodesMutation = useMutation({
     mutationFn: () => Promise.resolve({ backupCodes: ['CODE1', 'CODE2'] }),
     onSuccess: (data) => {
-      // Show backup codes in a modal or download them
       const codes = data.backupCodes.join('\n');
       const blob = new Blob([codes], { type: 'text/plain' });
       const url = URL.createObjectURL(blob);
@@ -57,6 +60,50 @@ export function SecuritySettings() {
   const handleTotpSuccess = () => {
     queryClient.invalidateQueries({ queryKey: ['totp-status'] });
   };
+
+  // In Janua mode, link to Janua account settings instead of inline TOTP setup
+  if (januaMode) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h3 className="text-lg font-medium">{t('securityPage.title')}</h3>
+          <p className="text-sm text-muted-foreground">{t('securityPage.description')}</p>
+        </div>
+
+        <Separator />
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5" />
+              {t('securityPage.twoFactorTitle')}
+            </CardTitle>
+            <CardDescription>{t('securityPage.twoFactorDescription')}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Alert>
+              <Shield className="h-4 w-4" />
+              <AlertDescription>
+                Security settings are managed through your MADFAM account.
+              </AlertDescription>
+            </Alert>
+            <div className="mt-4">
+              <Button asChild>
+                <a
+                  href={`${getJanuaUrl()}/account/security`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <ExternalLink className="mr-2 h-4 w-4" />
+                  Manage Security Settings
+                </a>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
