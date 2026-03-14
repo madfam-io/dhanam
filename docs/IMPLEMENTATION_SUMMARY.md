@@ -786,6 +786,22 @@ sign_up → onboarding_complete → feature_viewed → premium_upsell_viewed →
 }
 ```
 
+#### drip_email_sent
+```typescript
+{
+  campaign: 'activation' | 're-engagement',
+  step: string,      // 'day-1-connect', 'day-7-summary', etc.
+  template: string   // template name
+}
+```
+
+#### onboarding_step_completed / onboarding_step_skipped
+```typescript
+{
+  step: string   // 'welcome', 'preferences', 'connect_accounts', etc.
+}
+```
+
 ### Recommended Dashboards
 
 1. **Conversion Funnel**:
@@ -1119,6 +1135,17 @@ pnpm test:db
 **Updated:**
 - `components/layout/dashboard-nav.tsx`
 - `app.module.ts`
+
+#### Drip Campaign Files Created (8)
+
+**Backend:**
+- `apps/api/src/modules/email/tasks/drip-campaign.task.ts`
+- `apps/api/src/modules/email/__tests__/drip-campaign.task.spec.ts`
+- `apps/api/src/modules/email/templates/drip-day-{1,3,7,14}-*.hbs` (4 templates)
+- `apps/api/src/modules/email/templates/drip-reengagement-day-{7,14}.hbs` (2 templates)
+
+**Schema:**
+- `DripEvent` model in `prisma/schema.prisma`
 
 #### Documentation (3 files)
 

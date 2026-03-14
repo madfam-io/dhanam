@@ -13,6 +13,7 @@ import { Plus, Loader2, Settings, TestTube, CheckCircle, XCircle, ArrowUpDown } 
 import { toast } from 'sonner';
 import { rulesApi, CreateRuleDto, TestRuleDto } from '@/lib/api/rules';
 import { categoriesApi } from '@/lib/api/categories';
+import { useAnalytics } from '@/hooks/useAnalytics';
 import { useTranslation } from '@dhanam/shared';
 
 interface RuleManagerProps {
@@ -23,6 +24,7 @@ interface RuleManagerProps {
 
 export function RuleManager({ open, onOpenChange, spaceId }: RuleManagerProps) {
   const { t } = useTranslation('budgets');
+  const { trackRuleCreated } = useAnalytics();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [testResult, setTestResult] = useState<{
     matchCount: number;
@@ -44,9 +46,10 @@ export function RuleManager({ open, onOpenChange, spaceId }: RuleManagerProps) {
 
   const createRuleMutation = useMutation({
     mutationFn: (data: CreateRuleDto) => rulesApi.createRule(spaceId, data),
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['transaction-rules', spaceId] });
       setIsCreateOpen(false);
+      trackRuleCreated(data.id, data.categoryId, data.pattern);
       toast.success(t('rules.toast.ruleCreated'));
     },
     onError: () => {

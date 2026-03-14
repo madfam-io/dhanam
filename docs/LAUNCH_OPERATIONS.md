@@ -795,6 +795,7 @@ eas build --platform android --profile production
 - [ ] Payment methods: card only (OXXO/SPEI enabled in Week 7).
 - [ ] Monitor:
   - PostHog funnels: sign_up > onboarding_complete > connect_success > view_net_worth
+  - PostHog drip campaign events: drip_email_sent, onboarding_step_completed, onboarding_step_skipped, connect_failed
   - Sentry error rates
   - API p95 latency via Grafana dashboards
   - User feedback via Coforma (`https://coforma.madfam.io`)

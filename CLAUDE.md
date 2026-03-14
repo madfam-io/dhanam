@@ -166,6 +166,7 @@ The provider orchestrator (`apps/api/src/modules/providers/orchestrator/`) handl
 - Snapshot tests for ESG score calculations
 - Synthetic monitors for provider connection health
 - Seeded demo Space for manual QA flows
+- Drip campaign task tests (15 cases: send/skip/idempotency/batch/error-resilience)
 
 ## Database Schema Highlights
 
@@ -186,7 +187,7 @@ Uses the Dhanam package (https://github.com/aldoruizluna/Dhanam) for:
 
 ## Admin & Analytics
 
-**PostHog Events:** sign_up, onboarding_complete, connect_initiated, connect_success, sync_success, budget_created, rule_created, txn_categorized, alert_fired, view_net_worth, export_data
+**PostHog Events:** sign_up, onboarding_complete, connect_initiated, connect_success, sync_success, budget_created, rule_created, txn_categorized, alert_fired, view_net_worth, export_data, drip_email_sent, onboarding_step_completed, onboarding_step_skipped, connect_failed
 
 **Admin Panel (SRE Ops Center):** Standalone app at `apps/admin/` (production: `admin.dhan.am`). Also accessible via `apps/web/(admin)/admin/` in development (redirects to standalone app in production). Includes system health, queue management, provider dashboards, compliance (GDPR export/delete, retention), deployment status, billing events, user/space management with audit trails.
 

@@ -218,7 +218,7 @@ Clients (Web, Mobile, Admin, Swagger) → API Gateway (Cloudflare Tunnel)
 | households | Household management with yours/mine/ours views |
 | fx-rates | Banxico FX rate fetching and caching (MXN/USD/EUR) |
 | storage | Cloudflare R2 document storage for asset attachments |
-| email | Transactional email service (weekly summaries, monthly reports) |
+| email | Transactional email + lifecycle drip campaigns (activation day 1/3/7/14, re-engagement day 7/14) |
 | onboarding | User onboarding flow management |
 | search | Natural language search across financial data |
 
@@ -238,6 +238,8 @@ POST /v1/auth/2fa/verify     # Verify TOTP code
 ```
 
 Token lifecycle: access token (15min), refresh token (30d, rotates on use). 2FA required for admin operations.
+
+Auth mode controlled by `AUTH_MODE` env var (`local` for self-hosted, `janua` for MADFAM SSO). Both modes implement the same `AuthProvider`/`MfaProvider` interfaces.
 
 ### Spaces
 
@@ -289,7 +291,7 @@ enum GoalType        { retirement, education, house_purchase, emergency_fund, le
 enum GoalStatus      { active, paused, achieved, abandoned }
 ```
 
-Key models: User → SpaceMember → Space → Account → Transaction, Space → Budget → Category (with rules), DailyValuation snapshots, EsgScore, AuditLog.
+Key models: User → SpaceMember → Space → Account → Transaction, Space → Budget → Category (with rules), DailyValuation snapshots, EsgScore, AuditLog, DripEvent.
 
 Full schema: `apps/api/prisma/schema.prisma`
 
@@ -467,7 +469,7 @@ Database provisioning script: `scripts/provision-db.sh` (calls Enclii API, idemp
 
 ### PostHog Events
 
-Tracked events: sign_up, onboarding_complete, connect_initiated, connect_success, sync_success, budget_created, rule_created, txn_categorized, alert_fired, view_net_worth, export_data.
+Tracked events: sign_up, onboarding_complete, connect_initiated, connect_success, sync_success, budget_created, rule_created, txn_categorized, alert_fired, view_net_worth, export_data, drip_email_sent, onboarding_step_completed, onboarding_step_skipped, connect_failed.
 
 ### Machine-Readable Metadata
 
