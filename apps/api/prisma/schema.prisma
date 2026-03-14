@@ -306,12 +306,30 @@ model User {
   reportShares        ReportShare[]              @relation("ReportShares")
   reportInvites       ReportShare[]              @relation("ReportInvites")
   reportShareTokens   ReportShareToken[]         @relation("ReportShareTokens")
+  dripEvents          DripEvent[]
 
   @@index([onboardingCompleted, createdAt(sort: Desc)])
   @@index([lastLoginAt(sort: Desc)])
   @@index([lastActivityAt])
   @@index([lifeBeatEnabled])
   @@map("users")
+}
+
+model DripEvent {
+  id        String    @id @default(uuid())
+  userId    String    @map("user_id")
+  campaign  String // 'activation', 're-engagement'
+  step      String // 'day-1-connect', 'day-3-budget', etc.
+  sentAt    DateTime  @default(now()) @map("sent_at")
+  openedAt  DateTime? @map("opened_at")
+  clickedAt DateTime? @map("clicked_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, campaign, step])
+  @@index([userId])
+  @@index([campaign, step])
+  @@map("drip_events")
 }
 
 model UserPreferences {

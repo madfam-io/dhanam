@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import posthog from 'posthog-js';
 import { AuthTokens, UserProfile, Locale } from '@dhanam/shared';
 import { apiClient } from '../api/client';
 import { authApi } from '../api/auth';
@@ -72,6 +73,9 @@ export const useAuth = create<AuthState>()(
           }
         }
         clearAuth();
+        if (typeof window !== 'undefined' && posthog.__loaded) {
+          posthog.reset();
+        }
       },
 
       refreshTokens: async () => {

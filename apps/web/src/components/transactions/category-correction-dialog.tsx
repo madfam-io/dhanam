@@ -17,6 +17,7 @@ import { Badge } from '@dhanam/ui';
 import { Loader2, Sparkles, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSpaceStore } from '@/stores/space';
+import { useAnalytics } from '@/hooks/useAnalytics';
 import { categoriesApi } from '@/lib/api/categories';
 import { mlApi } from '@/lib/api/ml';
 
@@ -41,6 +42,7 @@ export function CategoryCorrectionDialog({
 }: CategoryCorrectionDialogProps) {
   const { currentSpace } = useSpaceStore();
   const queryClient = useQueryClient();
+  const analytics = useAnalytics();
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
     transaction.categoryId
   );
@@ -72,7 +74,8 @@ export function CategoryCorrectionDialog({
       if (!currentSpace) throw new Error('No current space');
       return mlApi.correctCategory(currentSpace.id, transaction.id, categoryId, applyToFuture);
     },
-    onSuccess: () => {
+    onSuccess: (_data, categoryId) => {
+      analytics.trackTxnCategorized(transaction.id, categoryId, 'manual');
       // Invalidate relevant queries
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       queryClient.invalidateQueries({ queryKey: ['ml-learned-patterns'] });

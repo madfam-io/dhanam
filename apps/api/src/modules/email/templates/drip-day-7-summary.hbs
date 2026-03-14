@@ -1,0 +1,75 @@
+{{> header subject="Your First Week with Dhanam"}}
+
+<h2 style="margin: 0 0 20px; color: #1a73e8; font-size: 24px;">Your first {{daysSinceSignup}} days in review</h2>
+
+<p style="margin: 0 0 20px;">Hi {{name}},</p>
+
+<p style="margin: 0 0 25px;">Here's a snapshot of what you've accomplished so far:</p>
+
+<!-- Stats Grid -->
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" style="width: 100%; margin: 0 0 25px;">
+  <tr>
+    <td style="width: 48%; padding: 18px; background-color: #e3f2fd; border-radius: 6px; text-align: center; vertical-align: top;">
+      <p style="margin: 0; color: #1a73e8; font-size: 28px; font-weight: 700;">{{accountCount}}</p>
+      <p style="margin: 4px 0 0; color: #1976d2; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">Accounts Connected</p>
+    </td>
+    <td style="width: 4%;"></td>
+    <td style="width: 48%; padding: 18px; background-color: #e8f5e9; border-radius: 6px; text-align: center; vertical-align: top;">
+      <p style="margin: 0; color: #16a34a; font-size: 28px; font-weight: 700;">{{transactionCount}}</p>
+      <p style="margin: 4px 0 0; color: #15803d; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">Transactions Tracked</p>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="3" style="height: 10px;"></td>
+  </tr>
+  <tr>
+    <td style="width: 48%; padding: 18px; background-color: #fef3c7; border-radius: 6px; text-align: center; vertical-align: top;">
+      <p style="margin: 0; color: #d97706; font-size: 28px; font-weight: 700;">{{budgetCount}}</p>
+      <p style="margin: 4px 0 0; color: #b45309; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">Budgets Created</p>
+    </td>
+    <td style="width: 4%;"></td>
+    <td style="width: 48%; padding: 18px; background-color: #f3e8ff; border-radius: 6px; text-align: center; vertical-align: top;">
+      <p style="margin: 0; color: #7c3aed; font-size: 28px; font-weight: 700;">{{#if hasGoals}}Yes{{else}}Not yet{{/if}}</p>
+      <p style="margin: 4px 0 0; color: #6d28d9; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">Financial Goals</p>
+    </td>
+  </tr>
+</table>
+
+<!-- Suggestions based on what's missing -->
+<div style="margin: 25px 0; padding: 18px; background-color: #f9fafb; border-radius: 6px;">
+  <h3 style="margin: 0 0 12px; color: #333; font-size: 16px;">Suggested next steps:</h3>
+  <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="width: 100%;">
+    {{#unless accountCount}}
+    <tr>
+      <td style="padding: 6px 0; color: #555; font-size: 14px; line-height: 1.5;">
+        <span style="color: #1a73e8; font-weight: 600;">Connect accounts</span> -- Link a bank or crypto wallet to start tracking automatically.
+      </td>
+    </tr>
+    {{/unless}}
+    {{#unless budgetCount}}
+    <tr>
+      <td style="padding: 6px 0; color: #555; font-size: 14px; line-height: 1.5;">
+        <span style="color: #1a73e8; font-weight: 600;">Create a budget</span> -- Set spending limits and get alerts before you overshoot.
+      </td>
+    </tr>
+    {{/unless}}
+    {{#unless hasGoals}}
+    <tr>
+      <td style="padding: 6px 0; color: #555; font-size: 14px; line-height: 1.5;">
+        <span style="color: #1a73e8; font-weight: 600;">Set a financial goal</span> -- Track progress toward savings, debt payoff, or investment targets.
+      </td>
+    </tr>
+    {{/unless}}
+    <tr>
+      <td style="padding: 6px 0; color: #555; font-size: 14px; line-height: 1.5;">
+        <span style="color: #1a73e8; font-weight: 600;">Explore net worth</span> -- See your full financial picture across all accounts.
+      </td>
+    </tr>
+  </table>
+</div>
+
+{{> button text="Go to Dashboard" url=(concat appUrl "/dashboard")}}
+
+<p style="margin: 30px 0 0; color: #666; font-size: 14px;">You're building a great financial habit. Keep it up!</p>
+
+{{> footer}}

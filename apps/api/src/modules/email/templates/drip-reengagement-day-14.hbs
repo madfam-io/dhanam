@@ -1,0 +1,42 @@
+{{> header subject="Your accounts have been busy"}}
+
+<h2 style="margin: 0 0 20px; color: #1a73e8; font-size: 24px;">A lot has happened in {{daysInactive}} days</h2>
+
+<p style="margin: 0 0 20px;">Hi {{name}},</p>
+
+<p style="margin: 0 0 25px;">While you've been away, your connected accounts kept syncing. Here's what's waiting for you:</p>
+
+<!-- Data highlights -->
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" style="width: 100%; margin: 25px 0;">
+  <tr>
+    {{#if unreviewedCount}}
+    <td style="width: 48%; padding: 20px; background-color: #fff7ed; border-radius: 6px; text-align: center; border: 1px solid #fed7aa; vertical-align: top;">
+      <p style="margin: 0; color: #d97706; font-size: 32px; font-weight: 700;">{{unreviewedCount}}</p>
+      <p style="margin: 6px 0 0; color: #92400e; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">Unreviewed Transactions</p>
+    </td>
+    <td style="width: 4%;"></td>
+    {{/if}}
+    {{#if totalBalance}}
+    <td style="{{#unless unreviewedCount}}width: 100%;{{else}}width: 48%;{{/unless}} padding: 20px; background-color: #e8f5e9; border-radius: 6px; text-align: center; border: 1px solid #bbf7d0; vertical-align: top;">
+      <p style="margin: 0; color: #16a34a; font-size: 32px; font-weight: 700;">{{totalBalance}}</p>
+      <p style="margin: 6px 0 0; color: #15803d; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">Current Balance</p>
+    </td>
+    {{/if}}
+  </tr>
+</table>
+
+{{#if unreviewedCount}}
+<div style="margin: 0 0 25px; padding: 16px; background-color: #f9fafb; border-radius: 6px;">
+  <p style="margin: 0; color: #555; font-size: 14px; line-height: 1.6;">
+    You have <strong>{{unreviewedCount}}</strong> transactions that could use a quick review. Confirming categories takes seconds and keeps your budgets and reports accurate.
+  </p>
+</div>
+{{/if}}
+
+<p style="margin: 0 0 10px; color: #555; font-size: 15px; line-height: 1.6;">Your data is always here, organized and ready. Log in to see the full picture -- your spending trends, budget status, and net worth are all up to date.</p>
+
+{{> button text="See What's New" url=(concat appUrl "/dashboard")}}
+
+<p style="margin: 30px 0 0; color: #666; font-size: 14px;">Want fewer emails? Adjust your preferences in <a href="{{appUrl}}/settings/notifications" style="color: #1a73e8; text-decoration: none;">notification settings</a>.</p>
+
+{{> footer}}

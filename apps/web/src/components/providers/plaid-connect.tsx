@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@dhanam/ui';
 import { Loader2, Shield, CreditCard, Building2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslation } from '@dhanam/shared';
+import { useAnalytics } from '@/hooks/useAnalytics';
 import { plaidApi } from '@/lib/api/plaid';
 
 // Plaid Link types
@@ -119,6 +120,7 @@ interface PlaidConnectProps {
 
 export function PlaidConnect({ open, onOpenChange, spaceId, onSuccess }: PlaidConnectProps) {
   const { t } = useTranslation('accounts');
+  const analytics = useAnalytics();
   const [linkToken, setLinkToken] = useState<string | null>(null);
   const [plaidHandler, setPlaidHandler] = useState<{
     open: () => void;
@@ -160,6 +162,7 @@ export function PlaidConnect({ open, onOpenChange, spaceId, onSuccess }: PlaidCo
   const linkAccountMutation = useMutation({
     mutationFn: (publicToken: string) => plaidApi.linkAccount(spaceId, { publicToken }),
     onSuccess: (data) => {
+      analytics.trackConnectSuccess('plaid', data.accountsCount);
       toast.success(
         t(
           data.accountsCount > 1
@@ -171,7 +174,8 @@ export function PlaidConnect({ open, onOpenChange, spaceId, onSuccess }: PlaidCo
       onSuccess();
       onOpenChange(false);
     },
-    onError: () => {
+    onError: (error) => {
+      analytics.track('connect_failed', { provider: 'plaid', error: String(error) });
       toast.error(t('providers.plaid.linkFailed'));
     },
   });
@@ -206,6 +210,7 @@ export function PlaidConnect({ open, onOpenChange, spaceId, onSuccess }: PlaidCo
   }, [isScriptLoaded, linkToken, onPlaidSuccess, onPlaidExit, plaidHandler]);
 
   const handleConnect = () => {
+    analytics.trackConnectInitiated('plaid');
     if (!linkToken) {
       createLinkTokenMutation.mutate();
     } else if (plaidHandler) {

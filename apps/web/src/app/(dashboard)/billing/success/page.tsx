@@ -4,12 +4,13 @@ import { useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@dhanam/ui';
 import { Button } from '@dhanam/ui';
 import { CheckCircle2, ArrowRight } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAnalytics } from '@/hooks/useAnalytics';
 
 export default function BillingSuccessPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const queryClient = useQueryClient();
   const analytics = useAnalytics();
 
@@ -19,7 +20,8 @@ export default function BillingSuccessPage() {
     queryClient.invalidateQueries({ queryKey: ['billing-history'] });
     queryClient.invalidateQueries({ queryKey: ['user'] });
 
-    analytics.trackUpgradeCompleted('premium', 0, 'stripe');
+    const price = parseFloat(searchParams.get('amount') || '0') || 4.99;
+    analytics.trackUpgradeCompleted('premium', price, 'stripe');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

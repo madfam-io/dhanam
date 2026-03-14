@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/lib/hooks/use-auth';
 import { onboardingApi } from '@/lib/api/onboarding';
+import { useAnalytics } from '@/hooks/useAnalytics';
 
 export interface OnboardingStep {
   id: string;
@@ -86,6 +87,7 @@ interface OnboardingProviderProps {
 
 export function OnboardingProvider({ children }: OnboardingProviderProps) {
   const { user } = useAuth();
+  const analytics = useAnalytics();
   const [status, setStatus] = useState<OnboardingStatus | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -115,6 +117,7 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
       setError(null);
       const response = await onboardingApi.updateStep(step, data);
       setStatus(response);
+      analytics.track('onboarding_step_completed', { step, data });
     } catch (err) {
       setError('Error al actualizar el paso del onboarding');
       throw err;
@@ -126,6 +129,10 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
       setError(null);
       const response = await onboardingApi.complete(skipOptional);
       setStatus(response);
+      const durationSeconds = user?.createdAt
+        ? Math.floor((Date.now() - new Date(user.createdAt).getTime()) / 1000)
+        : undefined;
+      analytics.trackOnboardingComplete(user?.id, durationSeconds);
     } catch (err) {
       setError('Error al completar el onboarding');
       throw err;
@@ -137,6 +144,7 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
       setError(null);
       const response = await onboardingApi.skipStep(step);
       setStatus(response);
+      analytics.track('onboarding_step_skipped', { step });
     } catch (err) {
       setError('Error al saltar el paso');
       throw err;

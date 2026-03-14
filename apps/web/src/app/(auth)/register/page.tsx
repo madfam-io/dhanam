@@ -12,18 +12,22 @@ import { authApi } from '~/lib/api/auth';
 import { billingApi } from '~/lib/api/billing';
 import { ApiError } from '~/lib/api/client';
 import { oauthProviders, loginWithOAuth, isJanuaOAuthEnabled } from '~/lib/janua-oauth';
+import { useAnalytics } from '~/hooks/useAnalytics';
 
 export default function RegisterPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const selectedPlan = searchParams.get('plan');
   const { setAuth } = useAuth();
+  const analytics = useAnalytics();
   const [error, setError] = useState<string | null>(null);
 
   const registerMutation = useMutation({
     mutationFn: authApi.register,
     onSuccess: async ({ user, tokens }) => {
       setAuth(user, tokens);
+      analytics.trackSignUp(user.id, user.email, 'email');
+      analytics.identifyUser(user.id, { email: user.email, name: user.name, locale: user.locale });
       // Start trial if a plan was selected
       if (selectedPlan && ['essentials', 'pro', 'premium'].includes(selectedPlan)) {
         try {

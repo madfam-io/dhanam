@@ -10,6 +10,7 @@ import { Alert, AlertDescription } from '@dhanam/ui';
 import { Loader2, Shield, Building2, MapPin, Globe } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslation } from '@dhanam/shared';
+import { useAnalytics } from '~/hooks/useAnalytics';
 import { belvoApi } from '~/lib/api/belvo';
 
 const BELVO_INSTITUTIONS = [
@@ -60,6 +61,7 @@ interface BelvoConnectProps {
 
 export function BelvoConnect({ open, onOpenChange, spaceId, onSuccess }: BelvoConnectProps) {
   const { t } = useTranslation('accounts');
+  const analytics = useAnalytics();
   const [institution, setInstitution] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -68,6 +70,7 @@ export function BelvoConnect({ open, onOpenChange, spaceId, onSuccess }: BelvoCo
     mutationFn: (data: { institution: string; username: string; password: string }) =>
       belvoApi.linkAccount(spaceId, data),
     onSuccess: (data) => {
+      analytics.trackConnectSuccess('belvo', data.accountsCount);
       const selectedBank = BELVO_INSTITUTIONS.find((bank) => bank.code === institution);
       toast.success(
         t(
@@ -84,6 +87,7 @@ export function BelvoConnect({ open, onOpenChange, spaceId, onSuccess }: BelvoCo
       setPassword('');
     },
     onError: (error: unknown) => {
+      analytics.track('connect_failed', { provider: 'belvo', error: String(error) });
       const errorCode =
         error && typeof error === 'object' && 'code' in error && typeof error.code === 'string'
           ? error.code
@@ -102,6 +106,7 @@ export function BelvoConnect({ open, onOpenChange, spaceId, onSuccess }: BelvoCo
 
   const handleConnect = () => {
     if (institution && username && password) {
+      analytics.trackConnectInitiated('belvo');
       linkAccountMutation.mutate({ institution, username, password });
     }
   };

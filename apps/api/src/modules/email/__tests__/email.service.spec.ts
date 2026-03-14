@@ -21,6 +21,7 @@ jest.mock('fs/promises', () => ({
 jest.mock('handlebars', () => ({
   compile: jest.fn().mockReturnValue((context: any) => `<html>${context.userName}</html>`),
   registerPartial: jest.fn(),
+  registerHelper: jest.fn(),
 }));
 
 describe('EmailService', () => {

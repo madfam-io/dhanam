@@ -1,15 +1,15 @@
+import { PrismaModule } from '@core/prisma/prisma.module';
+import { AnalyticsModule } from '@modules/analytics/analytics.module';
 import { HttpModule } from '@nestjs/axios';
 import { BullModule } from '@nestjs/bull';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 
-import { PrismaModule } from '@core/prisma/prisma.module';
-import { AnalyticsModule } from '@modules/analytics/analytics.module';
-
 import { EmailController } from './email.controller';
 import { EmailProcessor } from './email.processor';
 import { EmailService } from './email.service';
 import { JanuaEmailService } from './janua-email.service';
+import { DripCampaignTask } from './tasks/drip-campaign.task';
 import { MonthlyReportTask } from './tasks/monthly-report.task';
 import { WeeklySummaryTask } from './tasks/weekly-summary.task';
 
@@ -42,6 +42,7 @@ import { WeeklySummaryTask } from './tasks/weekly-summary.task';
     EmailProcessor,
     WeeklySummaryTask,
     MonthlyReportTask,
+    DripCampaignTask,
   ],
   exports: [EmailService, JanuaEmailService],
 })

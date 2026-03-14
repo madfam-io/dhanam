@@ -45,6 +45,26 @@ jest.mock('~/stores/space', () => ({
 jest.mock('~/lib/utils', () => ({
   formatCurrency: (amount: number) => `$${amount.toFixed(2)}`,
   cn: (...args: any[]) => args.filter(Boolean).join(' '),
+  formatDate: (date: any) => String(date),
+}));
+
+jest.mock('@/hooks/useAnalytics', () => ({
+  useAnalytics: () => ({
+    trackBudgetCreated: jest.fn(),
+    track: jest.fn(),
+  }),
+}));
+
+jest.mock('sonner', () => ({
+  toast: { success: jest.fn(), error: jest.fn() },
+}));
+
+jest.mock('@/components/budgets/rule-manager', () => ({
+  RuleManager: () => <div data-testid="rule-manager" />,
+}));
+
+jest.mock('@/components/budgets/budget-analytics', () => ({
+  BudgetAnalytics: () => <div data-testid="budget-analytics" />,
 }));
 
 let BudgetsPage: React.ComponentType;

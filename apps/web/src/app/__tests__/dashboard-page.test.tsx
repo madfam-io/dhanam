@@ -106,6 +106,13 @@ jest.mock('@/components/insights/insight-cards', () => ({
   InsightCards: () => <div data-testid="insight-cards" />,
 }));
 
+jest.mock('~/hooks/useAnalytics', () => ({
+  useAnalytics: () => ({
+    trackViewNetWorth: jest.fn(),
+    track: jest.fn(),
+  }),
+}));
+
 import DashboardPage from '../(dashboard)/dashboard/page';
 
 // Allow per-test overrides of useSpaces and useSpaceStore

@@ -87,6 +87,12 @@ export class EmailService {
       'monthly-report',
       'onboarding-complete',
       'email-verification',
+      'drip-day-1-connect',
+      'drip-day-3-budget',
+      'drip-day-7-summary',
+      'drip-day-14-trial',
+      'drip-reengagement-day-7',
+      'drip-reengagement-day-14',
     ];
 
     for (const template of templates) {
@@ -104,6 +110,9 @@ export class EmailService {
   }
 
   private async registerPartials() {
+    // Register custom helpers for template conditionals
+    handlebars.registerHelper('eq', (a: any, b: any) => a === b);
+
     const partialsDir = path.join(this.templatesDir, 'partials');
     try {
       const files = await fs.readdir(partialsDir);

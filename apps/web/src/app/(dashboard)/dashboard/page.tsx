@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@dhanam/ui';
@@ -29,6 +30,7 @@ import {
   AlertCircle,
   RefreshCw,
 } from 'lucide-react';
+import { useAnalytics } from '~/hooks/useAnalytics';
 import { SyncStatus } from '@/components/sync/sync-status';
 import { HelpTooltip } from '@/components/demo/help-tooltip';
 import { AnalyticsEmptyState } from '@/components/demo/analytics-empty-state';
@@ -46,6 +48,8 @@ export default function DashboardPage() {
   const { currentSpace } = useSpaceStore();
   const spacesQuery = useSpaces();
   const isGuestDemo = user?.email === 'guest@dhanam.demo';
+  const analytics = useAnalytics();
+  const netWorthTracked = useRef(false);
   const { t } = useTranslation('dashboard');
   const { t: tc } = useTranslation('common');
 
@@ -104,6 +108,13 @@ export default function DashboardPage() {
   const isLoading = isDashboardLoading;
 
   const activeGoals = goals?.filter((g) => g.status === 'active') || [];
+
+  useEffect(() => {
+    if (netWorthData?.netWorth != null && !netWorthTracked.current) {
+      netWorthTracked.current = true;
+      analytics.trackViewNetWorth(netWorthData.netWorth);
+    }
+  }, [netWorthData, analytics]);
 
   if (!currentSpace) {
     if (spacesQuery.isLoading) {

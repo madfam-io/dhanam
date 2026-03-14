@@ -26,12 +26,14 @@ import { Budget, BudgetPeriod } from '@dhanam/shared';
 import { useTranslation } from '@dhanam/shared';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { toast } from 'sonner';
+import { useAnalytics } from '@/hooks/useAnalytics';
 import { RuleManager } from '@/components/budgets/rule-manager';
 import { BudgetAnalytics } from '@/components/budgets/budget-analytics';
 
 export default function BudgetsPage() {
   const { currentSpace } = useSpaceStore();
   const queryClient = useQueryClient();
+  const analytics = useAnalytics();
   const { t } = useTranslation('budgets');
   const { t: tCommon } = useTranslation('common');
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -66,7 +68,8 @@ export default function BudgetsPage() {
       if (!currentSpace) throw new Error('No current space');
       return budgetsApi.createBudget(currentSpace.id, data);
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      analytics.trackBudgetCreated(data.id, data.name, 0);
       queryClient.invalidateQueries({ queryKey: ['budgets', currentSpace?.id] });
       setIsCreateOpen(false);
       toast.success(t('toast.budgetCreated'));

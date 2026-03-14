@@ -1,0 +1,30 @@
+{{> header subject="Connect Your Accounts to Get Started"}}
+
+<h2 style="margin: 0 0 20px; color: #1a73e8; font-size: 24px;">Your finances, all in one place</h2>
+
+<p style="margin: 0 0 20px;">Hi {{name}},</p>
+
+<p style="margin: 0 0 20px;">Welcome to your first full day with {{appName}}! The quickest way to unlock everything is to connect your financial accounts. It only takes a couple of minutes.</p>
+
+<!-- Benefits -->
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" style="width: 100%; margin: 25px 0;">
+  <tr>
+    <td style="width: 48%; padding: 16px; background-color: #e3f2fd; border-radius: 6px; vertical-align: top;">
+      <p style="margin: 0 0 6px; font-weight: 600; color: #1a73e8; font-size: 15px;">Auto-Categorization</p>
+      <p style="margin: 0; color: #555; font-size: 14px; line-height: 1.5;">Transactions are tagged automatically using AI so you never have to sort them by hand.</p>
+    </td>
+    <td style="width: 4%;"></td>
+    <td style="width: 48%; padding: 16px; background-color: #e8f5e9; border-radius: 6px; vertical-align: top;">
+      <p style="margin: 0 0 6px; font-weight: 600; color: #16a34a; font-size: 15px;">Real-Time Sync</p>
+      <p style="margin: 0; color: #555; font-size: 14px; line-height: 1.5;">Balances and transactions update automatically, keeping your picture accurate every day.</p>
+    </td>
+  </tr>
+</table>
+
+<p style="margin: 0 0 10px;">We support bank accounts, credit cards, crypto wallets, and investment accounts through our secure, read-only integrations.</p>
+
+{{> button text="Connect Your First Account" url=(concat appUrl "/accounts")}}
+
+<p style="margin: 30px 0 0; color: #666; font-size: 14px;">Your data is encrypted end-to-end and we never store your login credentials. <a href="{{appUrl}}/security" style="color: #1a73e8; text-decoration: none;">Learn about our security</a>.</p>
+
+{{> footer}}

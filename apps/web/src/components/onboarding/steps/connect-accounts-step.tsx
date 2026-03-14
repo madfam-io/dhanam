@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useOnboarding } from '../onboarding-provider';
+import { useAnalytics } from '@/hooks/useAnalytics';
 import { Button } from '@dhanam/ui';
 import { Card, CardContent, CardHeader, CardTitle } from '@dhanam/ui';
 import {
@@ -56,11 +57,12 @@ const providers = [
 export function ConnectAccountsStep() {
   const router = useRouter();
   const { updateStep, skipStep } = useOnboarding();
+  const analytics = useAnalytics();
   const [isLoading, setIsLoading] = useState(false);
   const [isSkipping, setIsSkipping] = useState(false);
 
   const handleConnectProvider = (providerId: string) => {
-    // Navigate to provider connection page
+    analytics.trackConnectInitiated(providerId as 'belvo' | 'plaid' | 'bitso');
     router.push(`/accounts/connect/${providerId}?onboarding=true`);
   };
 

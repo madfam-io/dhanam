@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslation } from '@dhanam/shared';
+import { useAnalytics } from '@/hooks/useAnalytics';
 import { bitsoApi } from '@/lib/api/bitso';
 
 const SUPPORTED_CRYPTOCURRENCIES = [
@@ -42,6 +43,7 @@ interface BitsoConnectProps {
 
 export function BitsoConnect({ open, onOpenChange, spaceId, onSuccess }: BitsoConnectProps) {
   const { t } = useTranslation('accounts');
+  const analytics = useAnalytics();
   const [formData, setFormData] = useState({
     apiKey: '',
     apiSecret: '',
@@ -56,6 +58,7 @@ export function BitsoConnect({ open, onOpenChange, spaceId, onSuccess }: BitsoCo
   const connectMutation = useMutation({
     mutationFn: () => bitsoApi.connectAccount(spaceId, formData),
     onSuccess: (data) => {
+      analytics.trackConnectSuccess('bitso', data.accountsCount);
       toast.success(
         t(
           data.accountsCount !== 1
@@ -70,6 +73,7 @@ export function BitsoConnect({ open, onOpenChange, spaceId, onSuccess }: BitsoCo
       setFormData({ apiKey: '', apiSecret: '', autoSync: true });
     },
     onError: (error: unknown) => {
+      analytics.track('connect_failed', { provider: 'bitso', error: String(error) });
       const message =
         error &&
         typeof error === 'object' &&
@@ -93,6 +97,7 @@ export function BitsoConnect({ open, onOpenChange, spaceId, onSuccess }: BitsoCo
       toast.error(t('providers.bitso.missingCredentials'));
       return;
     }
+    analytics.trackConnectInitiated('bitso');
     connectMutation.mutate();
   };
 

@@ -56,6 +56,14 @@ jest.mock('@/lib/utils', () => ({
   cn: (...args: any[]) => args.filter(Boolean).join(' '),
 }));
 
+// Mock analytics
+jest.mock('@/hooks/useAnalytics', () => ({
+  useAnalytics: () => ({
+    trackTxnCategorized: jest.fn(),
+    track: jest.fn(),
+  }),
+}));
+
 // Mock UI components
 jest.mock('@dhanam/ui', () => ({
   Button: ({ children, onClick, disabled, variant, size }: any) => (

@@ -1,0 +1,64 @@
+{{> header subject="Your finances are waiting for you"}}
+
+<h2 style="margin: 0 0 20px; color: #1a73e8; font-size: 24px;">It's been {{daysInactive}} days -- let's catch up</h2>
+
+<p style="margin: 0 0 20px;">Hi {{name}},</p>
+
+<p style="margin: 0 0 25px;">Your accounts have been syncing in the background while you were away. Here are three things you can do right now, each in under 5 minutes:</p>
+
+<!-- Quick Wins -->
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" style="width: 100%; margin: 25px 0;">
+  <tr>
+    <td style="padding: 16px; background-color: #e3f2fd; border-radius: 6px; margin-bottom: 10px;">
+      <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="width: 100%;">
+        <tr>
+          <td style="width: 40px; vertical-align: top;">
+            <p style="margin: 0; font-size: 22px; line-height: 1;">1.</p>
+          </td>
+          <td style="vertical-align: top;">
+            <p style="margin: 0 0 4px; font-weight: 600; color: #1a73e8; font-size: 15px;">Review recent transactions</p>
+            <p style="margin: 0; color: #555; font-size: 14px; line-height: 1.5;">Confirm or fix categories on your latest activity to keep your reports accurate.</p>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+  <tr><td style="height: 10px;"></td></tr>
+  <tr>
+    <td style="padding: 16px; background-color: #e8f5e9; border-radius: 6px;">
+      <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="width: 100%;">
+        <tr>
+          <td style="width: 40px; vertical-align: top;">
+            <p style="margin: 0; font-size: 22px; line-height: 1;">2.</p>
+          </td>
+          <td style="vertical-align: top;">
+            <p style="margin: 0 0 4px; font-weight: 600; color: #16a34a; font-size: 15px;">Check your budget status</p>
+            <p style="margin: 0; color: #555; font-size: 14px; line-height: 1.5;">See where you stand this month and adjust limits if your spending has shifted.</p>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+  <tr><td style="height: 10px;"></td></tr>
+  <tr>
+    <td style="padding: 16px; background-color: #fef3c7; border-radius: 6px;">
+      <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="width: 100%;">
+        <tr>
+          <td style="width: 40px; vertical-align: top;">
+            <p style="margin: 0; font-size: 22px; line-height: 1;">3.</p>
+          </td>
+          <td style="vertical-align: top;">
+            <p style="margin: 0 0 4px; font-weight: 600; color: #d97706; font-size: 15px;">Glance at your net worth</p>
+            <p style="margin: 0; color: #555; font-size: 14px; line-height: 1.5;">Your balances have been updating -- see how your overall picture has changed.</p>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+{{> button text="Open Your Dashboard" url=(concat appUrl "/dashboard")}}
+
+<p style="margin: 30px 0 0; color: #666; font-size: 14px;">A quick check-in each week is all it takes to stay on track.</p>
+
+{{> footer}}

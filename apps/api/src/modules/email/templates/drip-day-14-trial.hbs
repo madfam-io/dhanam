@@ -1,0 +1,56 @@
+{{> header subject="Your Trial is Ending Soon"}}
+
+<h2 style="margin: 0 0 20px; color: #d97706; font-size: 24px;">Your {{tier}} trial ends in {{daysRemaining}} days</h2>
+
+<p style="margin: 0 0 20px;">Hi {{name}},</p>
+
+<p style="margin: 0 0 25px;">You've been exploring {{appName}} and we want to make sure you don't lose access to the features you've been using. Here's what changes when your trial ends:</p>
+
+<!-- Feature Comparison Table -->
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" style="width: 100%; margin: 25px 0; border-collapse: collapse;">
+  <tr style="background-color: #f9fafb;">
+    <th style="padding: 12px 14px; text-align: left; font-size: 14px; font-weight: 600; color: #374151; border-bottom: 2px solid #e5e7eb;">Feature</th>
+    <th style="padding: 12px 14px; text-align: center; font-size: 14px; font-weight: 600; color: #374151; border-bottom: 2px solid #e5e7eb;">Community</th>
+    <th style="padding: 12px 14px; text-align: center; font-size: 14px; font-weight: 600; color: #1a73e8; border-bottom: 2px solid #1a73e8; background-color: #e3f2fd;">Premium</th>
+  </tr>
+  <tr>
+    <td style="padding: 10px 14px; border-bottom: 1px solid #e5e7eb; font-size: 14px; color: #555;">Connected accounts</td>
+    <td style="padding: 10px 14px; border-bottom: 1px solid #e5e7eb; text-align: center; font-size: 14px; color: #555;">2</td>
+    <td style="padding: 10px 14px; border-bottom: 1px solid #e5e7eb; text-align: center; font-size: 14px; color: #1a73e8; font-weight: 600; background-color: #f0f7ff;">Unlimited</td>
+  </tr>
+  <tr>
+    <td style="padding: 10px 14px; border-bottom: 1px solid #e5e7eb; font-size: 14px; color: #555;">Transaction history</td>
+    <td style="padding: 10px 14px; border-bottom: 1px solid #e5e7eb; text-align: center; font-size: 14px; color: #555;">90 days</td>
+    <td style="padding: 10px 14px; border-bottom: 1px solid #e5e7eb; text-align: center; font-size: 14px; color: #1a73e8; font-weight: 600; background-color: #f0f7ff;">Full history</td>
+  </tr>
+  <tr>
+    <td style="padding: 10px 14px; border-bottom: 1px solid #e5e7eb; font-size: 14px; color: #555;">Budgets</td>
+    <td style="padding: 10px 14px; border-bottom: 1px solid #e5e7eb; text-align: center; font-size: 14px; color: #555;">3</td>
+    <td style="padding: 10px 14px; border-bottom: 1px solid #e5e7eb; text-align: center; font-size: 14px; color: #1a73e8; font-weight: 600; background-color: #f0f7ff;">Unlimited</td>
+  </tr>
+  <tr>
+    <td style="padding: 10px 14px; border-bottom: 1px solid #e5e7eb; font-size: 14px; color: #555;">Cashflow forecasting</td>
+    <td style="padding: 10px 14px; border-bottom: 1px solid #e5e7eb; text-align: center; font-size: 14px; color: #999;">--</td>
+    <td style="padding: 10px 14px; border-bottom: 1px solid #e5e7eb; text-align: center; font-size: 14px; color: #16a34a; font-weight: 600; background-color: #f0f7ff;">60-day forecast</td>
+  </tr>
+  <tr>
+    <td style="padding: 10px 14px; border-bottom: 1px solid #e5e7eb; font-size: 14px; color: #555;">DeFi tracking</td>
+    <td style="padding: 10px 14px; border-bottom: 1px solid #e5e7eb; text-align: center; font-size: 14px; color: #999;">--</td>
+    <td style="padding: 10px 14px; border-bottom: 1px solid #e5e7eb; text-align: center; font-size: 14px; color: #16a34a; font-weight: 600; background-color: #f0f7ff;">7 networks</td>
+  </tr>
+  <tr>
+    <td style="padding: 10px 14px; font-size: 14px; color: #555;">Monte Carlo projections</td>
+    <td style="padding: 10px 14px; text-align: center; font-size: 14px; color: #999;">--</td>
+    <td style="padding: 10px 14px; text-align: center; font-size: 14px; color: #16a34a; font-weight: 600; background-color: #f0f7ff;">10-30 years</td>
+  </tr>
+</table>
+
+<div style="margin: 25px 0; padding: 16px; background-color: #fff7ed; border-radius: 6px; border-left: 4px solid #d97706;">
+  <p style="margin: 0; color: #92400e; font-size: 14px; line-height: 1.5;">After your trial, your account will move to the <strong>Community</strong> tier. Your data is safe -- you can upgrade anytime to restore full access.</p>
+</div>
+
+{{> button text="Upgrade to Premium" url=(concat appUrl "/billing/upgrade") buttonColor="#1a73e8"}}
+
+<p style="margin: 30px 0 0; color: #666; font-size: 14px;">Questions about plans? <a href="mailto:{{supportEmail}}" style="color: #1a73e8; text-decoration: none;">Reach out to our team</a> and we'll help you choose.</p>
+
+{{> footer}}

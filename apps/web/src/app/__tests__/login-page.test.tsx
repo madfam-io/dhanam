@@ -44,6 +44,13 @@ jest.mock('~/lib/api/client', () => ({
   ApiError: class ApiError extends Error {},
 }));
 
+jest.mock('~/hooks/useAnalytics', () => ({
+  useAnalytics: () => ({
+    identifyUser: jest.fn(),
+    track: jest.fn(),
+  }),
+}));
+
 jest.mock('~/components/forms/login-form', () => ({
   LoginForm: ({ onSubmit }: any) => (
     <form data-testid="login-form" onSubmit={(e) => { e.preventDefault(); onSubmit({}); }}>

@@ -11,6 +11,7 @@ import { useAuth } from '~/lib/hooks/use-auth';
 import { authApi } from '~/lib/api/auth';
 import { ApiError } from '~/lib/api/client';
 import { useTranslation } from '@dhanam/shared';
+import { useAnalytics } from '~/hooks/useAnalytics';
 import { LocaleSwitcher } from '~/components/locale-switcher';
 import {
   oauthProviders,
@@ -23,6 +24,7 @@ export default function LoginPage() {
   const router = useRouter();
   const { setAuth } = useAuth();
   const { t } = useTranslation('auth');
+  const analytics = useAnalytics();
   const [error, setError] = useState<string | null>(null);
   const [showTotpField, setShowTotpField] = useState(false);
 
@@ -30,6 +32,7 @@ export default function LoginPage() {
     mutationFn: authApi.login,
     onSuccess: ({ user, tokens }) => {
       setAuth(user, tokens);
+      analytics.identifyUser(user.id, { email: user.email, name: user.name, locale: user.locale });
       router.push('/dashboard');
     },
     onError: (error: ApiError) => {

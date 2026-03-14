@@ -1,0 +1,41 @@
+{{> header subject="Create Your First Budget"}}
+
+<h2 style="margin: 0 0 20px; color: #1a73e8; font-size: 24px;">Take control of your spending</h2>
+
+<p style="margin: 0 0 20px;">Hi {{name}},</p>
+
+{{#if accountCount}}
+<div style="margin: 0 0 20px; padding: 14px 18px; background-color: #e8f5e9; border-radius: 6px; border-left: 4px solid #16a34a;">
+  <p style="margin: 0; color: #15803d; font-size: 15px;">You've connected <strong>{{accountCount}}</strong> {{#if (gt accountCount 1)}}accounts{{else}}account{{/if}} -- your transaction data is ready to work with.</p>
+</div>
+{{/if}}
+
+<p style="margin: 0 0 20px;">A budget is the single most effective tool for staying on top of your money. {{appName}} makes it simple: set a few spending limits and we handle the tracking for you.</p>
+
+<!-- How it works -->
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" style="width: 100%; margin: 25px 0; border-collapse: collapse;">
+  <tr>
+    <td style="padding: 14px; border-bottom: 1px solid #e5e7eb; vertical-align: top;">
+      <p style="margin: 0 0 4px; font-weight: 600; color: #333; font-size: 15px;">1. Pick your categories</p>
+      <p style="margin: 0; color: #666; font-size: 14px;">Choose from groceries, dining, transport, entertainment, and more.</p>
+    </td>
+  </tr>
+  <tr>
+    <td style="padding: 14px; border-bottom: 1px solid #e5e7eb; vertical-align: top;">
+      <p style="margin: 0 0 4px; font-weight: 600; color: #333; font-size: 15px;">2. Set monthly limits</p>
+      <p style="margin: 0; color: #666; font-size: 14px;">Define how much you want to spend in each category.</p>
+    </td>
+  </tr>
+  <tr>
+    <td style="padding: 14px; vertical-align: top;">
+      <p style="margin: 0 0 4px; font-weight: 600; color: #333; font-size: 15px;">3. Get smart alerts</p>
+      <p style="margin: 0; color: #666; font-size: 14px;">We notify you before you overshoot, not after.</p>
+    </td>
+  </tr>
+</table>
+
+{{> button text="Create Your First Budget" url=(concat appUrl "/budgets")}}
+
+<p style="margin: 30px 0 0; color: #666; font-size: 14px;">Most users set up their first budget in under 3 minutes.</p>
+
+{{> footer}}

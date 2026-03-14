@@ -12,7 +12,13 @@ export type EmailTemplate =
   | 'sync-completed'
   | 'sync-failed'
   | 'weekly-summary'
-  | 'monthly-report';
+  | 'monthly-report'
+  | 'drip-day-1-connect'
+  | 'drip-day-3-budget'
+  | 'drip-day-7-summary'
+  | 'drip-day-14-trial'
+  | 'drip-reengagement-day-7'
+  | 'drip-reengagement-day-14';
 
 export interface EmailJobData {
   to: string;

@@ -33,12 +33,24 @@ jest.mock('~/lib/api/client', () => ({
   ApiError: class ApiError extends Error {},
 }));
 
+jest.mock('~/hooks/useAnalytics', () => ({
+  useAnalytics: () => ({
+    trackSignUp: jest.fn(),
+    identifyUser: jest.fn(),
+    track: jest.fn(),
+  }),
+}));
+
 jest.mock('~/components/forms/register-form', () => ({
   RegisterForm: ({ onSubmit }: any) => (
     <form data-testid="register-form" onSubmit={(e) => { e.preventDefault(); onSubmit({}); }}>
       <button type="submit">Register</button>
     </form>
   ),
+}));
+
+jest.mock('~/lib/api/billing', () => ({
+  billingApi: { startTrial: jest.fn() },
 }));
 
 jest.mock('~/lib/janua-oauth', () => ({
