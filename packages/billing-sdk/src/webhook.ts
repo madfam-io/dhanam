@@ -14,7 +14,7 @@ import type { DhanamWebhookPayload } from './types';
 export async function verifyWebhookSignature(
   rawBody: string,
   signature: string,
-  secret: string,
+  secret: string
 ): Promise<boolean> {
   // --- Web Crypto path (works in Edge, Cloudflare Workers, Deno, modern Node) ---
   if (globalThis.crypto?.subtle) {
@@ -24,7 +24,7 @@ export async function verifyWebhookSignature(
       encoder.encode(secret),
       { name: 'HMAC', hash: 'SHA-256' },
       false,
-      ['sign'],
+      ['sign']
     );
     const mac = await globalThis.crypto.subtle.sign('HMAC', key, encoder.encode(rawBody));
     const expected = bufferToHex(mac);
@@ -34,15 +34,9 @@ export async function verifyWebhookSignature(
   // --- Node.js crypto fallback ---
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const crypto = require('crypto') as typeof import('crypto');
-  const expected = crypto
-    .createHmac('sha256', secret)
-    .update(rawBody)
-    .digest('hex');
+  const expected = crypto.createHmac('sha256', secret).update(rawBody).digest('hex');
 
-  return crypto.timingSafeEqual(
-    Buffer.from(expected),
-    Buffer.from(signature),
-  );
+  return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(signature));
 }
 
 /**
@@ -57,7 +51,7 @@ export async function verifyWebhookSignature(
 export async function parseWebhookPayload(
   rawBody: string,
   signature?: string,
-  secret?: string,
+  secret?: string
 ): Promise<DhanamWebhookPayload> {
   if (signature && secret) {
     const valid = await verifyWebhookSignature(rawBody, signature, secret);

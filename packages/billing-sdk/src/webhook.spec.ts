@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 
-import { parseWebhookPayload, verifyWebhookSignature } from './webhook';
 import { DhanamWebhookEventType } from './types';
+import { parseWebhookPayload, verifyWebhookSignature } from './webhook';
 
 function sign(body: string, secret: string): string {
   return crypto.createHmac('sha256', secret).update(body).digest('hex');
@@ -62,9 +62,9 @@ describe('parseWebhookPayload', () => {
   });
 
   it('throws on invalid signature', async () => {
-    await expect(
-      parseWebhookPayload(samplePayload, 'invalid', secret),
-    ).rejects.toThrow('Invalid webhook signature');
+    await expect(parseWebhookPayload(samplePayload, 'invalid', secret)).rejects.toThrow(
+      'Invalid webhook signature'
+    );
   });
 
   it('parses without verification when no signature provided', async () => {

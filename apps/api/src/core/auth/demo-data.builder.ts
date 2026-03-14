@@ -1,6 +1,5 @@
-import { startOfMonth, endOfMonth } from 'date-fns';
-
 import { Currency, SpaceType, BudgetPeriod, Provider, User } from '@db';
+import { startOfMonth, endOfMonth } from 'date-fns';
 
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -78,7 +77,9 @@ export class DemoDataBuilder {
         await fn();
       } catch (e) {
         console.error(
-          `[DemoData] ${name} failed for ${personaKey}:`,
+          '[DemoData] %s failed for %s:',
+          String(name),
+          String(personaKey),
           e instanceof Error ? e.message : e
         );
       }

@@ -31,8 +31,10 @@ export class DhanamClient {
   private readonly _fetch: typeof globalThis.fetch;
 
   constructor(config: DhanamClientConfig) {
-    // Strip trailing slash
-    this.baseUrl = config.baseUrl.replace(/\/+$/, '');
+    // Strip trailing slashes
+    let url = config.baseUrl;
+    while (url.endsWith('/')) url = url.slice(0, -1);
+    this.baseUrl = url;
     this.tokenOrFn = config.token;
     this._fetch = config.fetch ?? globalThis.fetch;
   }
@@ -96,15 +98,11 @@ export class DhanamClient {
     return this.tokenOrFn;
   }
 
-  private async request<T>(
-    method: 'GET' | 'POST',
-    path: string,
-    body?: unknown,
-  ): Promise<T> {
+  private async request<T>(method: 'GET' | 'POST', path: string, body?: unknown): Promise<T> {
     const token = await this.resolveToken();
 
     const headers: Record<string, string> = {
-      'Accept': 'application/json',
+      Accept: 'application/json',
     };
 
     if (token) {
@@ -130,16 +128,13 @@ export class DhanamClient {
       }
 
       if (res.status === 401) {
-        throw new DhanamAuthError(
-          `Authentication failed: ${res.statusText}`,
-          parsed,
-        );
+        throw new DhanamAuthError(`Authentication failed: ${res.statusText}`, parsed);
       }
 
       throw new DhanamApiError(
         `Dhanam API error: ${res.status} ${res.statusText}`,
         res.status,
-        parsed,
+        parsed
       );
     }
 

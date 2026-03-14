@@ -12,9 +12,9 @@ This document outlines our security policy, including how to report vulnerabilit
 
 We actively maintain and provide security updates for the following versions:
 
-| Version | Supported          | Status |
-| ------- | ------------------ | ------ |
-| 1.x.x   | :white_check_mark: | Active development |
+| Version | Supported          | Status                                |
+| ------- | ------------------ | ------------------------------------- |
+| 1.x.x   | :white_check_mark: | Active development                    |
 | < 1.0   | :x:                | Beta - not recommended for production |
 
 ---
@@ -81,13 +81,13 @@ Email: [Your email]
 
 We are committed to responding to security reports promptly:
 
-| Timeline | Action |
-|----------|--------|
-| **24 hours** | Initial acknowledgment of your report |
+| Timeline     | Action                                             |
+| ------------ | -------------------------------------------------- |
+| **24 hours** | Initial acknowledgment of your report              |
 | **72 hours** | Preliminary assessment and severity classification |
-| **7 days** | Detailed response with remediation plan |
-| **30 days** | Fix deployed to production (for critical issues) |
-| **90 days** | Public disclosure (coordinated with reporter) |
+| **7 days**   | Detailed response with remediation plan            |
+| **30 days**  | Fix deployed to production (for critical issues)   |
+| **90 days**  | Public disclosure (coordinated with reporter)      |
 
 **Note**: Timeline may vary based on the complexity and severity of the issue.
 
@@ -97,12 +97,12 @@ We are committed to responding to security reports promptly:
 
 We use the following severity levels based on CVSS v3.1:
 
-| Severity | CVSS Score | Description | Example |
-|----------|------------|-------------|---------|
-| **Critical** | 9.0-10.0 | Requires immediate action | Remote code execution, authentication bypass |
-| **High** | 7.0-8.9 | Requires urgent attention | SQL injection, privilege escalation |
-| **Medium** | 4.0-6.9 | Should be addressed soon | XSS, CSRF, information disclosure |
-| **Low** | 0.1-3.9 | Can be scheduled | Minor information leaks, low-impact issues |
+| Severity     | CVSS Score | Description               | Example                                      |
+| ------------ | ---------- | ------------------------- | -------------------------------------------- |
+| **Critical** | 9.0-10.0   | Requires immediate action | Remote code execution, authentication bypass |
+| **High**     | 7.0-8.9    | Requires urgent attention | SQL injection, privilege escalation          |
+| **Medium**   | 4.0-6.9    | Should be addressed soon  | XSS, CSRF, information disclosure            |
+| **Low**      | 0.1-3.9    | Can be scheduled          | Minor information leaks, low-impact issues   |
 
 ---
 
@@ -190,13 +190,99 @@ Dhanam Ledger implements multiple layers of security:
 
 This section documents security vulnerabilities that we have consciously accepted after careful risk analysis. Each entry includes the rationale for acceptance and ongoing monitoring strategy.
 
-*No accepted security risks at this time.*
+_No accepted security risks at this time._
 
 ---
 
 ## Resolved Security Risks
 
 This section documents security vulnerabilities that have been mitigated or resolved.
+
+### CodeQL #104 — Type Confusion via Parameter Tampering (Search Controller)
+
+**Status:** Resolved
+**Date Resolved:** 2026-03-14
+**File:** `apps/api/src/modules/search/search.controller.ts`
+**Severity:** CRITICAL
+
+**Original Issue:**
+
+- NestJS `@Query('q')` can return `string | string[]` when a query parameter appears multiple times
+- The search controller passed the raw value to `getSuggestions()` which called `.length` and `.toLowerCase()`, both of which break on arrays
+- An attacker could craft a request with `?q=foo&q=bar` to trigger unexpected behavior
+
+**Resolution:**
+
+- Added explicit type coercion: `typeof query === 'string' ? query : String(query ?? '')`
+- Ensures the value is always a string before passing to the service layer
+
+### CodeQL #116 — Polynomial ReDoS (Billing SDK)
+
+**Status:** Resolved
+**Date Resolved:** 2026-03-14
+**File:** `packages/billing-sdk/src/client.ts`
+**Severity:** HIGH
+
+**Original Issue:**
+
+- Regex `/\/+$/` used on user-provided `baseUrl` to strip trailing slashes
+- CodeQL flagged potential polynomial backtracking on adversarial input
+
+**Resolution:**
+
+- Replaced regex with iterative `while (url.endsWith('/'))` loop
+- Zero regex overhead, deterministic O(n) performance
+
+### CodeQL #132 — Tainted Format String (Demo Data Builder)
+
+**Status:** Resolved
+**Date Resolved:** 2026-03-14
+**File:** `apps/api/src/core/auth/demo-data.builder.ts`
+**Severity:** HIGH
+
+**Original Issue:**
+
+- Template literal in `console.error` included `personaKey` from request input
+- CodeQL flagged as tainted format string (technically a false positive for template literals, but resolved for compliance)
+
+**Resolution:**
+
+- Changed from template literal to `%s` format string with separate `String()` args
+- Explicit string substitution prevents any potential injection
+
+### CVE-2025-69873 (ajv ReDoS)
+
+**Status:** Resolved
+**Date Resolved:** 2026-03-14
+**Package:** `ajv@<8.18.0`
+**Severity:** MODERATE
+
+**Resolution:**
+
+- Updated pnpm override from `"ajv@>=8.0.0 <8.12.3": ">=8.12.3"` to `"ajv@>=8.0.0 <8.18.0": ">=8.18.0"`
+
+### CVE-2026-31808, CVE-2026-32630 (file-type)
+
+**Status:** Resolved
+**Date Resolved:** 2026-03-14
+**Package:** `file-type@<21.3.2`
+**Severity:** MODERATE
+
+**Resolution:**
+
+- Added pnpm override `"file-type": ">=21.3.2"`
+- Also resolves Trivy code scanning alerts #129 and #133
+
+### CVE-2026-3449 (@tootallnate/once)
+
+**Status:** Resolved
+**Date Resolved:** 2026-03-14
+**Package:** `@tootallnate/once`
+**Severity:** LOW
+
+**Resolution:**
+
+- Added pnpm override `"@tootallnate/once": ">=3.0.1"`
 
 ### CVE-2025-57319 (fast-redact Prototype Pollution)
 
@@ -207,18 +293,21 @@ This section documents security vulnerabilities that have been mitigated or reso
 **Type:** Prototype Pollution
 
 **Original Issue:**
+
 - CVE-2025-57319 reported a prototype pollution vulnerability in fast-redact's `nestedRestore` function
 - fast-redact was a transitive dependency through Pino 8.x (our logging library)
 - Vulnerability affected undocumented internal utility functions
 - The CVE was disputed by maintainers, but remained in our dependency tree
 
 **Resolution:**
+
 - Upgraded Pino from 8.x to 10.x via pnpm override (`pino: ">=10.1.0"`)
 - Pino 10.x replaced fast-redact with `@pinojs/redact`, completely eliminating the vulnerable package
 - No application code changes required - Pino's public API remains compatible
 - The upgrade also provides improved logging performance and features
 
 **Benefits:**
+
 - ✅ Eliminates CVE-2025-57319 entirely (no longer using fast-redact)
 - ✅ Improves logging performance with newer Pino version
 - ✅ Future-proofs the logging stack with actively maintained dependencies
@@ -228,10 +317,10 @@ This section documents security vulnerabilities that have been mitigated or reso
 
 ## Security Audit History
 
-| Date | Auditor | Scope | Findings | Status |
-|------|---------|-------|----------|--------|
-| 2025-11-15 | Internal | Comprehensive codebase audit | 29 critical issues | Fixed |
-| TBD | External | Third-party security audit | - | Planned |
+| Date       | Auditor  | Scope                        | Findings           | Status  |
+| ---------- | -------- | ---------------------------- | ------------------ | ------- |
+| 2025-11-15 | Internal | Comprehensive codebase audit | 29 critical issues | Fixed   |
+| TBD        | External | Third-party security audit   | -                  | Planned |
 
 ---
 
@@ -265,7 +354,7 @@ We are considering implementing a bug bounty program in the future. For now, we 
 
 We recognize the following security researchers for their responsible disclosure:
 
-*Coming soon - be the first to contribute!*
+_Coming soon - be the first to contribute!_
 
 ---
 
@@ -293,5 +382,5 @@ This security policy is provided in good faith. We reserve the right to modify t
 
 ---
 
-**Last Updated**: November 19, 2025
-**Policy Version**: 1.1.0
+**Last Updated**: March 14, 2026
+**Policy Version**: 1.2.0

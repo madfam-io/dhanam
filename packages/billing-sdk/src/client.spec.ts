@@ -23,12 +23,22 @@ describe('DhanamClient', () => {
         returnUrl: 'https://app.dhan.am/success',
       });
       expect(url).toBe(
-        'https://api.dhan.am/billing/checkout?plan=essentials&user_id=usr_123&return_url=https%3A%2F%2Fapp.dhan.am%2Fsuccess',
+        'https://api.dhan.am/billing/checkout?plan=essentials&user_id=usr_123&return_url=https%3A%2F%2Fapp.dhan.am%2Fsuccess'
       );
     });
 
     it('strips trailing slash from baseUrl', () => {
       const client = new DhanamClient({ baseUrl: 'https://api.dhan.am/' });
+      const url = client.buildCheckoutUrl({
+        plan: 'pro',
+        userId: 'usr_1',
+        returnUrl: 'http://localhost:3000',
+      });
+      expect(url).toContain('https://api.dhan.am/billing/checkout?');
+    });
+
+    it('strips multiple trailing slashes from baseUrl', () => {
+      const client = new DhanamClient({ baseUrl: 'https://api.dhan.am///' });
       const url = client.buildCheckoutUrl({
         plan: 'pro',
         userId: 'usr_1',
@@ -104,7 +114,7 @@ describe('DhanamClient', () => {
         expect.any(String),
         expect.objectContaining({
           headers: expect.objectContaining({ Authorization: 'Bearer dynamic_token' }),
-        }),
+        })
       );
     });
 
@@ -202,7 +212,12 @@ describe('DhanamClient', () => {
     });
 
     it('works without a token for unauthenticated calls', async () => {
-      const fetch = mockFetch(200, { tier: 'community', isActive: true, startedAt: null, expiresAt: null });
+      const fetch = mockFetch(200, {
+        tier: 'community',
+        isActive: true,
+        startedAt: null,
+        expiresAt: null,
+      });
       const client = new DhanamClient({ baseUrl, fetch });
 
       const result = await client.getStatus();
@@ -210,7 +225,7 @@ describe('DhanamClient', () => {
         expect.any(String),
         expect.objectContaining({
           headers: { Accept: 'application/json' },
-        }),
+        })
       );
       expect(result.tier).toBe('community');
     });

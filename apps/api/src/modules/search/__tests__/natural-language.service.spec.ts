@@ -331,7 +331,11 @@ describe('NaturalLanguageService', () => {
 
       await service.search('space-123', 'user-123', 'how much this month');
 
-      expect(spacesService.verifyUserAccess).toHaveBeenCalledWith('user-123', 'space-123', 'viewer');
+      expect(spacesService.verifyUserAccess).toHaveBeenCalledWith(
+        'user-123',
+        'space-123',
+        'viewer'
+      );
     });
 
     it('should return search result with parsed query', async () => {
@@ -363,7 +367,11 @@ describe('NaturalLanguageService', () => {
     it('should execute count query for "how many" intent', async () => {
       prisma.transaction.count.mockResolvedValue(15);
 
-      const result = await service.search('space-123', 'user-123', 'how many transactions this week');
+      const result = await service.search(
+        'space-123',
+        'user-123',
+        'how many transactions this week'
+      );
 
       expect(result.query.intent).toBe('count_transactions');
       expect(result.data.count).toBe(15);
@@ -404,7 +412,11 @@ describe('NaturalLanguageService', () => {
         { amount: -30, category: { name: 'Transport' } },
       ] as any);
 
-      const result = await service.search('space-123', 'user-123', 'spending breakdown by category');
+      const result = await service.search(
+        'space-123',
+        'user-123',
+        'spending breakdown by category'
+      );
 
       expect(result.query.intent).toBe('category_breakdown');
       expect(result.data.breakdown).toBeDefined();
@@ -427,7 +439,11 @@ describe('NaturalLanguageService', () => {
     it('should verify user access', async () => {
       await service.getSuggestions('space-123', 'user-123', '');
 
-      expect(spacesService.verifyUserAccess).toHaveBeenCalledWith('user-123', 'space-123', 'viewer');
+      expect(spacesService.verifyUserAccess).toHaveBeenCalledWith(
+        'user-123',
+        'space-123',
+        'viewer'
+      );
     });
 
     it('should return default suggestions for empty query', async () => {
@@ -435,6 +451,15 @@ describe('NaturalLanguageService', () => {
 
       expect(result.length).toBeGreaterThan(0);
       expect(result.length).toBeLessThanOrEqual(5);
+    });
+
+    it('should handle array query parameter gracefully', async () => {
+      const result = await service.getSuggestions(
+        'space-123',
+        'user-123',
+        String(['food', 'drink'])
+      );
+      expect(result.length).toBeGreaterThanOrEqual(0);
     });
 
     it('should filter suggestions based on partial query', async () => {
