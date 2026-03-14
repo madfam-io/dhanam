@@ -1,20 +1,22 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 
-jest.mock('@dhanam/ui', () =>
-  new Proxy(
-    {},
-    {
-      get: (_, prop) => {
-        if (prop === '__esModule') return true;
-        return ({ children, ...props }: any) => (
-          <div data-testid={String(prop).toLowerCase()} {...props}>
-            {children}
-          </div>
-        );
-      },
-    },
-  ),
+jest.mock(
+  '@dhanam/ui',
+  () =>
+    new Proxy(
+      {},
+      {
+        get: (_, prop) => {
+          if (prop === '__esModule') return true;
+          return ({ children, ...props }: any) => (
+            <div data-testid={String(prop).toLowerCase()} {...props}>
+              {children}
+            </div>
+          );
+        },
+      }
+    )
 );
 
 jest.mock('@dhanam/shared', () => ({
@@ -25,16 +27,18 @@ jest.mock('@dhanam/shared', () => ({
   }),
 }));
 
-jest.mock('lucide-react', () =>
-  new Proxy(
-    {},
-    {
-      get: (_, prop) => {
-        if (prop === '__esModule') return true;
-        return (props: any) => <span data-testid={`icon-${String(prop)}`} {...props} />;
-      },
-    },
-  ),
+jest.mock(
+  'lucide-react',
+  () =>
+    new Proxy(
+      {},
+      {
+        get: (_, prop) => {
+          if (prop === '__esModule') return true;
+          return (props: any) => <span data-testid={`icon-${String(prop)}`} {...props} />;
+        },
+      }
+    )
 );
 
 jest.mock('@tanstack/react-query', () => ({
@@ -82,7 +86,7 @@ jest.mock('@/components/compliance-actions', () => ({
   ),
 }));
 
-import CompliancePage from '../../(dashboard)/compliance/page';
+import CompliancePage from '../(dashboard)/compliance/page';
 
 describe('CompliancePage', () => {
   it('should render the Compliance heading', () => {
@@ -93,7 +97,7 @@ describe('CompliancePage', () => {
   it('should render the subtitle text', () => {
     render(<CompliancePage />);
     expect(
-      screen.getByText('GDPR data export and deletion, data retention policy execution'),
+      screen.getByText('GDPR data export and deletion, data retention policy execution')
     ).toBeInTheDocument();
   });
 

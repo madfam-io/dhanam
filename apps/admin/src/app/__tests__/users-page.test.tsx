@@ -1,20 +1,22 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 
-jest.mock('@dhanam/ui', () =>
-  new Proxy(
-    {},
-    {
-      get: (_, prop) => {
-        if (prop === '__esModule') return true;
-        return ({ children, ...props }: any) => (
-          <div data-testid={String(prop).toLowerCase()} {...props}>
-            {children}
-          </div>
-        );
-      },
-    },
-  ),
+jest.mock(
+  '@dhanam/ui',
+  () =>
+    new Proxy(
+      {},
+      {
+        get: (_, prop) => {
+          if (prop === '__esModule') return true;
+          return ({ children, ...props }: any) => (
+            <div data-testid={String(prop).toLowerCase()} {...props}>
+              {children}
+            </div>
+          );
+        },
+      }
+    )
 );
 
 jest.mock('@dhanam/shared', () => ({
@@ -25,16 +27,18 @@ jest.mock('@dhanam/shared', () => ({
   }),
 }));
 
-jest.mock('lucide-react', () =>
-  new Proxy(
-    {},
-    {
-      get: (_, prop) => {
-        if (prop === '__esModule') return true;
-        return (props: any) => <span data-testid={`icon-${String(prop)}`} {...props} />;
-      },
-    },
-  ),
+jest.mock(
+  'lucide-react',
+  () =>
+    new Proxy(
+      {},
+      {
+        get: (_, prop) => {
+          if (prop === '__esModule') return true;
+          return (props: any) => <span data-testid={`icon-${String(prop)}`} {...props} />;
+        },
+      }
+    )
 );
 
 jest.mock('@tanstack/react-query', () => ({
@@ -79,7 +83,7 @@ jest.mock('@/components/user-details-modal', () => ({
   UserDetailsModal: () => <div data-testid="user-details-modal" />,
 }));
 
-import UsersPage from '../../(dashboard)/users/page';
+import UsersPage from '../(dashboard)/users/page';
 
 describe('UsersPage', () => {
   it('should render the Users heading', () => {

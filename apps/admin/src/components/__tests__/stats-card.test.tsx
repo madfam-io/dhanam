@@ -1,37 +1,41 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 
-jest.mock('@dhanam/ui', () =>
-  new Proxy(
-    {},
-    {
-      get: (_, prop) => {
-        if (prop === '__esModule') return true;
-        return ({ children, className, ...props }: any) => (
-          <div data-testid={String(prop).toLowerCase()} className={className} {...props}>
-            {children}
-          </div>
-        );
-      },
-    }
-  )
+jest.mock(
+  '@dhanam/ui',
+  () =>
+    new Proxy(
+      {},
+      {
+        get: (_, prop) => {
+          if (prop === '__esModule') return true;
+          return ({ children, className, ...props }: any) => (
+            <div data-testid={String(prop).toLowerCase()} className={className} {...props}>
+              {children}
+            </div>
+          );
+        },
+      }
+    )
 );
 
-jest.mock('lucide-react', () =>
-  new Proxy(
-    {},
-    {
-      get: (_, prop) => {
-        if (prop === '__esModule') return true;
-        return (props: any) => <span data-testid={`icon-${String(prop)}`} {...props} />;
-      },
-    }
-  )
+jest.mock(
+  'lucide-react',
+  () =>
+    new Proxy(
+      {},
+      {
+        get: (_, prop) => {
+          if (prop === '__esModule') return true;
+          return (props: any) => <span data-testid={`icon-${String(prop)}`} {...props} />;
+        },
+      }
+    )
 );
 
 import { StatsCard } from '../stats-card';
 
-const FakeIcon = (props: any) => <span data-testid="icon-fake" {...props} />;
+const FakeIcon = ((props: any) => <span data-testid="icon-fake" {...props} />) as any;
 
 describe('StatsCard', () => {
   it('renders the title and value', () => {

@@ -1,20 +1,22 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 
-jest.mock('@dhanam/ui', () =>
-  new Proxy(
-    {},
-    {
-      get: (_, prop) => {
-        if (prop === '__esModule') return true;
-        return ({ children, ...props }: any) => (
-          <div data-testid={String(prop).toLowerCase()} {...props}>
-            {children}
-          </div>
-        );
-      },
-    },
-  ),
+jest.mock(
+  '@dhanam/ui',
+  () =>
+    new Proxy(
+      {},
+      {
+        get: (_, prop) => {
+          if (prop === '__esModule') return true;
+          return ({ children, ...props }: any) => (
+            <div data-testid={String(prop).toLowerCase()} {...props}>
+              {children}
+            </div>
+          );
+        },
+      }
+    )
 );
 
 jest.mock('@dhanam/shared', () => ({
@@ -25,16 +27,18 @@ jest.mock('@dhanam/shared', () => ({
   }),
 }));
 
-jest.mock('lucide-react', () =>
-  new Proxy(
-    {},
-    {
-      get: (_, prop) => {
-        if (prop === '__esModule') return true;
-        return (props: any) => <span data-testid={`icon-${String(prop)}`} {...props} />;
-      },
-    },
-  ),
+jest.mock(
+  'lucide-react',
+  () =>
+    new Proxy(
+      {},
+      {
+        get: (_, prop) => {
+          if (prop === '__esModule') return true;
+          return (props: any) => <span data-testid={`icon-${String(prop)}`} {...props} />;
+        },
+      }
+    )
 );
 
 jest.mock('@tanstack/react-query', () => ({
@@ -89,7 +93,7 @@ jest.mock('@/components/provider-status-table', () => ({
   ),
 }));
 
-import ProvidersPage from '../../(dashboard)/providers/page';
+import ProvidersPage from '../(dashboard)/providers/page';
 
 describe('ProvidersPage', () => {
   it('should render skeleton initially while loading', () => {
@@ -106,7 +110,7 @@ describe('ProvidersPage', () => {
   it('should render the subtitle text after data loads', async () => {
     render(<ProvidersPage />);
     expect(
-      await screen.findByText('Monitor financial data provider connections and rate limits'),
+      await screen.findByText('Monitor financial data provider connections and rate limits')
     ).toBeInTheDocument();
   });
 

@@ -1,20 +1,22 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 
-jest.mock('@dhanam/ui', () =>
-  new Proxy(
-    {},
-    {
-      get: (_, prop) => {
-        if (prop === '__esModule') return true;
-        return ({ children, ...props }: any) => (
-          <div data-testid={String(prop).toLowerCase()} {...props}>
-            {children}
-          </div>
-        );
-      },
-    },
-  ),
+jest.mock(
+  '@dhanam/ui',
+  () =>
+    new Proxy(
+      {},
+      {
+        get: (_, prop) => {
+          if (prop === '__esModule') return true;
+          return ({ children, ...props }: any) => (
+            <div data-testid={String(prop).toLowerCase()} {...props}>
+              {children}
+            </div>
+          );
+        },
+      }
+    )
 );
 
 jest.mock('@dhanam/shared', () => ({
@@ -25,16 +27,18 @@ jest.mock('@dhanam/shared', () => ({
   }),
 }));
 
-jest.mock('lucide-react', () =>
-  new Proxy(
-    {},
-    {
-      get: (_, prop) => {
-        if (prop === '__esModule') return true;
-        return (props: any) => <span data-testid={`icon-${String(prop)}`} {...props} />;
-      },
-    },
-  ),
+jest.mock(
+  'lucide-react',
+  () =>
+    new Proxy(
+      {},
+      {
+        get: (_, prop) => {
+          if (prop === '__esModule') return true;
+          return (props: any) => <span data-testid={`icon-${String(prop)}`} {...props} />;
+        },
+      }
+    )
 );
 
 jest.mock('@tanstack/react-query', () => ({
@@ -108,7 +112,7 @@ jest.mock('@/components/stats-card', () => ({
   ),
 }));
 
-import SystemHealthPage from '../../(dashboard)/system-health/page';
+import SystemHealthPage from '../(dashboard)/system-health/page';
 
 describe('SystemHealthPage', () => {
   it('should render skeleton initially while loading', () => {
@@ -124,9 +128,7 @@ describe('SystemHealthPage', () => {
 
   it('should render the subtitle text after data loads', async () => {
     render(<SystemHealthPage />);
-    expect(
-      await screen.findByText('Monitor system status and performance'),
-    ).toBeInTheDocument();
+    expect(await screen.findByText('Monitor system status and performance')).toBeInTheDocument();
   });
 
   it('should render the Refresh button after data loads', async () => {
