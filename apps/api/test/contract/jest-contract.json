@@ -1,0 +1,15 @@
+{
+  "moduleFileExtensions": ["js", "json", "ts"],
+  "rootDir": "../..",
+  "testRegex": ".contract.spec.ts$",
+  "transform": {
+    "^.+\\.(t|j)s$": "ts-jest"
+  },
+  "moduleNameMapper": {
+    "^@modules/(.*)$": "<rootDir>/src/modules/$1",
+    "^@core/(.*)$": "<rootDir>/src/core/$1",
+    "^@db$": "<rootDir>/node_modules/.prisma/client"
+  },
+  "testEnvironment": "node",
+  "maxWorkers": 1
+}

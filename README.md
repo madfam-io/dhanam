@@ -250,7 +250,7 @@ http://localhost:4010/docs
 
 ## Testing
 
-We maintain 90%+ test coverage on the API with comprehensive unit, integration, and E2E tests.
+We maintain 90%+ test coverage on the API with comprehensive unit, integration, and E2E tests. Frontend apps have full page-level smoke tests and Playwright E2E coverage.
 
 ```bash
 # Run all tests
@@ -259,21 +259,27 @@ pnpm test
 # Run tests with coverage report
 pnpm test:cov
 
-# Run E2E tests
+# Run E2E tests (requires DB + Redis)
 pnpm test:e2e
+
+# Run contract tests (no services needed)
+cd apps/api && pnpm test:contract
+
+# Run Playwright E2E (starts dev server automatically)
+cd apps/web && npx playwright test
 
 # Run tests in watch mode
 pnpm test:watch
-
-# Simulate CI environment locally
-./scripts/test-ci.sh
 ```
 
 ### Test Infrastructure
 
-- **Test Helpers**: Database management, authentication utilities, data factories
-- **Coverage Target**: 80%+ across branches, functions, lines, and statements
-- **CI/CD**: Automated testing on every push and PR via GitHub Actions
+- **API**: 3500+ unit tests, E2E journey tests, contract tests for Stripe/Plaid/Belvo
+- **Web**: 500+ unit tests across 65 suites, 9 Playwright E2E specs including accessibility (WCAG AA)
+- **Admin**: 22 test suites covering all 11 components and 11 pages
+- **Mobile**: 6 test suites with jest-expo
+- **CI/CD**: 6 parallel test jobs (API, web, mobile, admin, contract, Playwright) on every PR
+- **Coverage Target**: 95%+ on API, 80%+ on frontend
 - **Coverage Reporting**: Integrated with Codecov for trend tracking
 
 For detailed testing documentation, see:

@@ -59,6 +59,7 @@
     "@sentry/nextjs": "^9.15.0"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.10.0",
     "@dhanam/config": "workspace:*",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.0",

@@ -16,6 +16,13 @@ export default defineConfig({
     video: 'retain-on-failure',
   },
 
+  expect: {
+    toHaveScreenshot: {
+      maxDiffPixelRatio: 0.01,
+      threshold: 0.2,
+    },
+  },
+
   projects: [
     {
       name: 'chromium',

@@ -7,7 +7,10 @@
     "build": "next build",
     "start": "next start -p 3400",
     "lint": "eslint ./src --ext .ts,.tsx --no-error-on-unmatched-pattern",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
   },
   "dependencies": {
     "@dhanam/shared": "workspace:*",
@@ -40,10 +43,16 @@
   },
   "devDependencies": {
     "@dhanam/config": "workspace:*",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/jest": "^30.0.0",
     "@types/node": "^20.11.0",
     "@types/react": "^18.2.48",
     "@types/react-dom": "^18.2.18",
     "autoprefixer": "^10.4.24",
+    "jest": "^30.0.4",
+    "jest-environment-jsdom": "^30.0.4",
     "postcss": "^8.5.6",
     "tailwindcss": "3.4.17",
     "typescript": "^5.9.3"
