@@ -119,11 +119,11 @@ All planned features from the competitive parity roadmap have been implemented:
 ```bash
 # Backend (apps/api/.env)
 POSTHOG_API_KEY=phc_your_project_key
-POSTHOG_HOST=https://analytics.enclii.dev
+POSTHOG_HOST=https://analytics.madfam.io
 
 # Frontend (apps/web/.env.local)
 NEXT_PUBLIC_POSTHOG_KEY=phc_your_project_key
-NEXT_PUBLIC_POSTHOG_HOST=https://analytics.enclii.dev
+NEXT_PUBLIC_POSTHOG_HOST=https://analytics.madfam.io
 ```
 
 **Already in `.env.example`:** ✅ Yes (lines 71-72)

@@ -917,7 +917,7 @@ NEXT_PUBLIC_API_URL="http://localhost:4000"
 
 # PostHog
 NEXT_PUBLIC_POSTHOG_KEY="phc_..."
-NEXT_PUBLIC_POSTHOG_HOST="https://analytics.enclii.dev"
+NEXT_PUBLIC_POSTHOG_HOST="https://analytics.madfam.io"
 
 # Locale
 NEXT_PUBLIC_DEFAULT_LOCALE="es-MX"

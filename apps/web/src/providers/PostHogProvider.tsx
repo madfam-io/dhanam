@@ -19,7 +19,7 @@ function getConsentCookie(): string | null {
 
 if (typeof window !== 'undefined') {
   const apiKey = process.env.NEXT_PUBLIC_POSTHOG_KEY;
-  const host = process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://analytics.enclii.dev';
+  const host = process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://analytics.madfam.io';
   const consent = getConsentCookie();
 
   if (apiKey && consent !== 'rejected') {

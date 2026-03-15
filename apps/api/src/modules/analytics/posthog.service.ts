@@ -32,14 +32,14 @@ export class PostHogService implements OnModuleInit, OnModuleDestroy {
 
     try {
       this.client = new PostHog(this.configService.get('POSTHOG_API_KEY')!, {
-        host: this.configService.get('POSTHOG_HOST') || 'https://analytics.enclii.dev',
+        host: this.configService.get('POSTHOG_HOST') || 'https://analytics.madfam.io',
         flushAt: 20, // Flush every 20 events
         flushInterval: 10000, // Or every 10 seconds
       });
 
       this.logger.log('✅ PostHog analytics initialized');
       this.logger.log(
-        `PostHog Host: ${this.configService.get('POSTHOG_HOST') || 'https://analytics.enclii.dev'}`
+        `PostHog Host: ${this.configService.get('POSTHOG_HOST') || 'https://analytics.madfam.io'}`
       );
     } catch (error) {
       this.logger.error('Failed to initialize PostHog:', error);

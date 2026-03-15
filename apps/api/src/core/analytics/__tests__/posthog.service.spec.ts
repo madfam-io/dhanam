@@ -95,7 +95,7 @@ describe('PostHogService', () => {
       expect(PostHog).toHaveBeenCalledWith(
         'test-key',
         expect.objectContaining({
-          host: 'https://analytics.enclii.dev',
+          host: 'https://analytics.madfam.io',
         })
       );
     });

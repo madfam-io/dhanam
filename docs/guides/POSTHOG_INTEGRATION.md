@@ -385,7 +385,7 @@ await this.posthog.trackExportData(userId, {
 ```bash
 # Analytics (PostHog)
 POSTHOG_API_KEY=your_posthog_api_key
-POSTHOG_HOST=https://analytics.enclii.dev
+POSTHOG_HOST=https://analytics.madfam.io
 ```
 
 ### Frontend (.env.local)
@@ -393,7 +393,7 @@ POSTHOG_HOST=https://analytics.enclii.dev
 ```bash
 # Analytics (PostHog)
 NEXT_PUBLIC_POSTHOG_KEY=your_posthog_project_key
-NEXT_PUBLIC_POSTHOG_HOST=https://analytics.enclii.dev
+NEXT_PUBLIC_POSTHOG_HOST=https://analytics.madfam.io
 ```
 
 ---
@@ -558,7 +558,7 @@ if (process.env.NODE_ENV === 'development') {
 Send a test event:
 
 ```bash
-curl -X POST https://analytics.enclii.dev/capture/ \
+curl -X POST https://analytics.madfam.io/capture/ \
   -H 'Content-Type: application/json' \
   -d '{
     "api_key": "your_api_key",
@@ -576,7 +576,7 @@ curl -X POST https://analytics.enclii.dev/capture/ \
 
 ### PostHog Dashboard
 
-View analytics at: https://analytics.enclii.dev/project/{your_project_id}
+View analytics at: https://analytics.madfam.io/project/{your_project_id}
 
 **Key Dashboards:**
 

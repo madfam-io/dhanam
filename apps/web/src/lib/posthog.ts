@@ -23,7 +23,7 @@ export const initPostHog = (): void => {
   }
 
   const apiKey = process.env.NEXT_PUBLIC_POSTHOG_KEY;
-  const host = process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://analytics.enclii.dev';
+  const host = process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://analytics.madfam.io';
 
   if (!apiKey) {
     console.warn('⚠️  PostHog API key not configured - analytics disabled');

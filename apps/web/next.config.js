@@ -60,7 +60,7 @@ const nextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://analytics.enclii.dev https://challenges.cloudflare.com https://static.cloudflareinsights.com",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://analytics.madfam.io https://challenges.cloudflare.com https://static.cloudflareinsights.com",
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: https:",
               "font-src 'self' data:",
@@ -70,7 +70,7 @@ const nextConfig = {
                 } catch {
                   return 'https://api.dhan.am';
                 }
-              })()} https://analytics.enclii.dev ${process.env.NEXT_PUBLIC_OIDC_ISSUER || 'https://auth.madfam.io'} https://challenges.cloudflare.com https://cloudflareinsights.com https://*.ingest.sentry.io`,
+              })()} https://analytics.madfam.io ${process.env.NEXT_PUBLIC_OIDC_ISSUER || 'https://auth.madfam.io'} https://challenges.cloudflare.com https://cloudflareinsights.com https://*.ingest.sentry.io`,
               "frame-ancestors 'none'",
               "base-uri 'self'",
               "form-action 'self'",

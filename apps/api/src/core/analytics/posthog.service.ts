@@ -28,7 +28,7 @@ export class PostHogService implements OnModuleDestroy {
 
   constructor(private logger: LoggerService) {
     const apiKey = process.env.POSTHOG_API_KEY;
-    const host = process.env.POSTHOG_HOST || 'https://analytics.enclii.dev';
+    const host = process.env.POSTHOG_HOST || 'https://analytics.madfam.io';
 
     if (!apiKey) {
       this.logger.warn('PostHog API key not configured. Analytics disabled.', 'PostHogService');

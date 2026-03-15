@@ -82,7 +82,7 @@ describe('PostHogService', () => {
       await service.onModuleInit();
 
       expect(PostHog).toHaveBeenCalledWith('test-api-key', {
-        host: 'https://analytics.enclii.dev',
+        host: 'https://analytics.madfam.io',
         flushAt: 20,
         flushInterval: 10000,
       });

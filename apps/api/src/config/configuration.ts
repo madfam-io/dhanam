@@ -87,7 +87,7 @@ export const configuration = () => ({
   monitoring: {
     posthog: {
       apiKey: process.env.POSTHOG_API_KEY,
-      host: process.env.POSTHOG_HOST || 'https://analytics.enclii.dev',
+      host: process.env.POSTHOG_HOST || 'https://analytics.madfam.io',
     },
   },
 

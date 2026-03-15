@@ -916,7 +916,7 @@ export class PostHogService implements OnModuleInit {
     this.client = new PostHog(
       this.configService.get('POSTHOG_API_KEY')!,
       {
-        host: this.configService.get('POSTHOG_HOST') || 'https://analytics.enclii.dev',
+        host: this.configService.get('POSTHOG_HOST') || 'https://analytics.madfam.io',
         flushAt: 20, // Flush every 20 events
         flushInterval: 10000, // Or every 10 seconds
       }
@@ -1203,7 +1203,7 @@ import posthog from 'posthog-js';
 export const initPostHog = () => {
   if (typeof window !== 'undefined') {
     posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY!, {
-      api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://analytics.enclii.dev',
+      api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://analytics.madfam.io',
       capture_pageview: true,
       capture_pageleave: true,
       persistence: 'localStorage',
@@ -1239,7 +1239,7 @@ import PostHog from 'posthog-react-native';
 const posthog = new PostHog(
   process.env.EXPO_PUBLIC_POSTHOG_KEY!,
   {
-    host: process.env.EXPO_PUBLIC_POSTHOG_HOST || 'https://analytics.enclii.dev',
+    host: process.env.EXPO_PUBLIC_POSTHOG_HOST || 'https://analytics.madfam.io',
   }
 );
 
