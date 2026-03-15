@@ -173,7 +173,7 @@ The provider orchestrator (`apps/api/src/modules/providers/orchestrator/`) handl
 
 **API (NestJS):**
 
-- 3650+ unit tests across 146+ test suites (98%+ coverage)
+- 3656+ unit tests across 146+ test suites (98%+ coverage)
 - E2E journey tests: core value loop, subscription upgrade, admin operations, provider sync, billing webhooks, estate planning, households
 - Contract tests for Stripe, Plaid, and Belvo webhook schemas (Zod validation)
 - Drip campaign task tests (15 cases: send/skip/idempotency/batch/error-resilience)

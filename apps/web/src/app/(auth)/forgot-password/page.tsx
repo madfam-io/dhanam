@@ -6,12 +6,13 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button, Input, Label } from '@dhanam/ui';
 import { useTranslation } from '@dhanam/shared';
 import { LocaleSwitcher } from '~/components/locale-switcher';
-import { getJanuaApiUrl } from '~/lib/janua-oauth';
+
+const JANUA_URL = process.env.NEXT_PUBLIC_JANUA_API_URL || 'https://auth.madfam.io';
 
 export default function ForgotPasswordPage() {
   const { t } = useTranslation('auth');
   const [email, setEmail] = useState('');
-  const januaResetUrl = `${getJanuaApiUrl()}/reset-password`;
+  const januaResetUrl = `${JANUA_URL}/reset-password`;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

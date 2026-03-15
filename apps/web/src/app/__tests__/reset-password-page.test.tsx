@@ -33,10 +33,6 @@ jest.mock('~/components/locale-switcher', () => ({
   LocaleSwitcher: () => <div data-testid="locale-switcher" />,
 }));
 
-jest.mock('~/lib/janua-oauth', () => ({
-  getJanuaApiUrl: () => 'https://api.janua.dev',
-}));
-
 const mockSearchParams = new URLSearchParams();
 jest.mock('next/navigation', () => ({
   useSearchParams: () => mockSearchParams,

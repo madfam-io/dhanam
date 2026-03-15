@@ -10,7 +10,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@dhanam/ui';
-import { Settings, User, LogOut, ChevronDown, Shield } from 'lucide-react';
+import { Settings, LogOut, ChevronDown, Shield } from 'lucide-react';
+import { UserButton } from '@janua/react-sdk';
 import { useAuth } from '~/lib/hooks/use-auth';
 import { useSpaces } from '~/lib/hooks/use-spaces';
 import { useSpaceStore } from '~/stores/space';
@@ -124,10 +125,11 @@ export function DashboardHeader() {
 
           <NotificationDropdown />
 
+          <UserButton afterSignOutUrl="/login" showName={false} />
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="flex items-center gap-2">
-                <User className="h-5 w-5" />
                 <span className="hidden sm:inline">{user?.name}</span>
               </Button>
             </DropdownMenuTrigger>

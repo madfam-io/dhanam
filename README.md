@@ -13,6 +13,7 @@
 ## Features
 
 ### Core Financial Management
+
 - 💰 **Multi-Space Management** - Separate personal and business finances
 - 🏦 **Bank Integration** - Connect with Belvo (Mexico), Plaid (US), and Bitso (crypto)
 - 📊 **Budget Tracking** - Category-based budgets with alerts and rules
@@ -20,11 +21,13 @@
 - 🌱 **ESG Scoring** - Environmental, Social, and Governance metrics for crypto
 
 ### Smart Categorization
+
 - 🤖 **AI-Powered Categorization** - Machine learning with learning loop
 - 🔄 **Merchant Normalization** - Fuzzy matching for consistent categorization
 - 📝 **User Corrections** - Train the model with your preferences
 
 ### Advanced Wealth Tracking
+
 - 🌐 **DeFi/Web3 Portfolios** - Zapper integration for Uniswap, Aave, Compound, Curve, Lido, and more
 - 🏠 **Zillow Real Estate** - Automated property valuations via Zestimate
 - 👟 **Collectibles Valuation** - Automated market pricing for sneakers, watches, art, wine, coins, cards, and cars
@@ -32,10 +35,12 @@
 - 👥 **Yours/Mine/Ours Views** - Household ownership filtering and breakdown
 
 ### Estate Planning
+
 - 📜 **Digital Wills** - Beneficiary designations and executor management
 - 💓 **Life Beat** - Dead man's switch with 30/60/90 day escalation for executor access
 
 ### Platform & Security
+
 - 📱 **Multi-Platform** - Web dashboard and mobile app
 - 🔒 **Security First** - Janua SSO (OIDC/PKCE), 2FA, and encrypted data storage
 - 🌎 **LATAM Focused** - Spanish/English support with MXN/USD currencies
@@ -43,18 +48,21 @@
 
 ## Production Status
 
-| Service | Domain | Status |
-|---------|--------|--------|
-| Web Dashboard | `dhanam.com` | ✅ Running on Enclii |
-| API Backend | Internal | ✅ Running on Enclii |
-| Admin Panel | `admin.dhanam.com` | ✅ Running on Enclii |
+| Service       | Domain             | Status               |
+| ------------- | ------------------ | -------------------- |
+| Web Dashboard | `dhanam.com`       | ✅ Running on Enclii |
+| API Backend   | Internal           | ✅ Running on Enclii |
+| Admin Panel   | `admin.dhanam.com` | ✅ Running on Enclii |
 
-**Authentication**: Janua SSO with OAuth 2.0/OIDC (PKCE flow enforced)
-- Client ID: `dhanam-ledger`
+**Authentication**: Janua SSO via `@janua/react-sdk` (OIDC with PKCE, handled by SDK)
+
+- Client ID: `jnc_uE2zp9ume_Fd6jMl1elL6wqjiECM711t`
 - Issuer: `https://auth.madfam.io`
 - Social logins: GitHub, Google via Janua
+- Auth mode: `AUTH_MODE=janua` (production default)
 
 **Infrastructure**: 2-Node Hetzner Cluster via [Enclii PaaS](https://github.com/madfam-org/enclii)
+
 - Production workloads on "The Sanctuary" (AX41-NVMe)
 - CI/CD builds on "The Forge" (CPX11)
 - Zero-trust ingress via Cloudflare Tunnel
@@ -79,14 +87,16 @@
 ### Development Setup
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/yourusername/dhanam.git
    cd dhanam
    ```
 
 2. **Configure NPM Registry**
-   
+
    Dhanam uses MADFAM's private npm registry for internal packages. Create or update your `.npmrc`:
+
    ```bash
    # Add to your project's .npmrc or ~/.npmrc
    @madfam:registry=https://npm.madfam.io
@@ -94,21 +104,25 @@
    @janua:registry=https://npm.madfam.io
    //npm.madfam.io/:_authToken=${NPM_MADFAM_TOKEN}
    ```
-   
+
    Set the `NPM_MADFAM_TOKEN` environment variable with your registry token.
 
 3. **Install dependencies**
+
    ```bash
    pnpm install
    ```
 
 4. **Start infrastructure**
+
    ```bash
    pnpm dev:infra
    ```
+
    This starts PostgreSQL, Redis, and Mailhog in Docker containers.
 
 5. **Set up environment variables**
+
    ```bash
    # Copy example env files
    cp apps/api/.env.example apps/api/.env
@@ -116,17 +130,21 @@
    ```
 
 6. **Run database migrations**
+
    ```bash
    pnpm db:push
    ```
 
 7. **Seed the database (optional)**
+
    ```bash
    pnpm db:seed
    ```
+
    This creates a demo user (demo@dhanam.app / demo123) with sample data.
 
 8. **Start development servers**
+
    ```bash
    pnpm dev
    ```
@@ -177,6 +195,7 @@ dhanam/
 ### Creating a new feature
 
 1. Create a feature branch
+
    ```bash
    git checkout -b feature/your-feature-name
    ```
@@ -184,6 +203,7 @@ dhanam/
 2. Make your changes following the existing patterns
 
 3. Run tests and linting
+
    ```bash
    pnpm test
    pnpm lint
@@ -197,11 +217,13 @@ dhanam/
 ### Working with the API
 
 The API uses a modular architecture with:
+
 - **Core modules**: Infrastructure (Prisma, Redis, Crypto, Logger)
 - **Feature modules**: Auth, Users, Spaces, Accounts, etc.
 - **Shared code**: DTOs, guards, decorators
 
 Example API endpoint:
+
 ```typescript
 @Post('login')
 @ApiOperation({ summary: 'Login user' })
@@ -213,6 +235,7 @@ async login(@Body() dto: LoginDto): Promise<AuthResponse> {
 ### Working with the Frontend
 
 The web app uses:
+
 - **Next.js 15** with App Router (both web and admin)
 - **Tailwind CSS** for styling
 - **shadcn/ui** components
@@ -220,17 +243,18 @@ The web app uses:
 - **React Query** for server state
 
 Example component:
+
 ```typescript
-export function LoginForm() {
-  const { setAuth } = useAuth();
-  const mutation = useMutation({
-    mutationFn: authApi.login,
-    onSuccess: ({ user, tokens }) => {
-      setAuth(user, tokens);
-      router.push('/dashboard');
-    },
-  });
-  // ...
+// Login page uses @janua/react-sdk for SSO authentication
+import { SignIn } from '@janua/react-sdk';
+
+export default function LoginPage() {
+  return (
+    <Card>
+      <SignIn redirectUrl="/dashboard" />
+      <Button onClick={guestLogin}>Try Live Demo</Button>
+    </Card>
+  );
 }
 ```
 
@@ -283,6 +307,7 @@ pnpm test:watch
 - **Coverage Reporting**: Integrated with Codecov for trend tracking
 
 For detailed testing documentation, see:
+
 - [Test Coverage Guide](apps/api/TEST_COVERAGE_GUIDE.md) - Comprehensive testing guide
 - [Test Summary](docs/testing/TEST_SUMMARY.md) - Testing approach overview
 - [Test Results](docs/testing/TEST_RESULTS.md) - Latest test results
@@ -313,6 +338,7 @@ For complete deployment instructions, see [Deployment Guide](docs/DEPLOYMENT.md)
 ## Admin Panel (SRE Ops Center)
 
 The admin panel at `apps/web/(admin)/admin/` provides:
+
 - System health monitoring (DB, Redis, queues, providers)
 - Queue management (stats, retry failed, clear)
 - Provider dashboard (health, latency, rate limits)
@@ -324,11 +350,13 @@ The admin panel at `apps/web/(admin)/admin/` provides:
 Comprehensive documentation is available in the [`docs/`](docs/) directory:
 
 ### Getting Started
+
 - [Development Guide](docs/DEVELOPMENT.md) - Local development setup
 - [API Documentation](docs/API.md) - Backend API reference
 - [Mobile App Guide](docs/MOBILE.md) - React Native development
 
 ### Architecture & Design
+
 - [Architecture Overview](ARCHITECTURE.md) - High-level system design
 - [Full Architecture Details](docs/architecture/ARCHITECTURE.md) - Complete architecture
 - [Software Specification](docs/architecture/SOFTWARE_SPEC.md) - Technical specs
@@ -336,12 +364,14 @@ Comprehensive documentation is available in the [`docs/`](docs/) directory:
 - [API Specification](API_SPECIFICATION.yaml) - OpenAPI spec
 
 ### Operations & Deployment
+
 - [Deployment Guide](docs/DEPLOYMENT.md) - Production deployment
 - [Admin Dashboard](docs/ADMIN_DASHBOARD.md) - Admin features
 - [Sentry Setup](docs/SENTRY_SETUP.md) - Error tracking
 - [CI/CD Setup](docs/guides/CICD_IMPLEMENTATION_SUMMARY.md) - Build pipeline
 
 ### Reports
+
 - [Documentation Index](docs/README.md) - Complete documentation index
 - [Implementation Roadmap](docs/guides/IMPLEMENTATION_ROADMAP.md) - Project roadmap
 

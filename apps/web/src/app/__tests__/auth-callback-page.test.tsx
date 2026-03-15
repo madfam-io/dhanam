@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, act } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 
 const mockPush = jest.fn();
 const mockGet = jest.fn();
@@ -10,21 +10,17 @@ jest.mock('next/navigation', () => ({
 }));
 
 jest.mock('@dhanam/shared', () => ({
-  useTranslation: (ns?: string) => ({
+  useTranslation: () => ({
     t: (key: string) => key,
     locale: 'en',
     setLocale: jest.fn(),
   }),
 }));
 
-const mockExchangeCodeForTokens = jest.fn();
-const mockGetStoredCodeVerifier = jest.fn();
-const mockClearStoredCodeVerifier = jest.fn();
+const mockUseAuth = jest.fn();
 
-jest.mock('~/lib/janua-oauth', () => ({
-  exchangeCodeForTokens: (...args: any[]) => mockExchangeCodeForTokens(...args),
-  getStoredCodeVerifier: () => mockGetStoredCodeVerifier(),
-  clearStoredCodeVerifier: () => mockClearStoredCodeVerifier(),
+jest.mock('@janua/react-sdk', () => ({
+  useAuth: (...args: any[]) => mockUseAuth(...args),
 }));
 
 import AuthCallbackPage from '../auth/callback/page';
@@ -34,8 +30,7 @@ describe('AuthCallbackPage', () => {
     jest.clearAllMocks();
     jest.useFakeTimers();
     mockGet.mockReturnValue(null);
-    mockGetStoredCodeVerifier.mockReturnValue(null);
-    // Suppress console.error for expected OAuth errors
+    mockUseAuth.mockReturnValue({ isSignedIn: false, isLoaded: false });
     jest.spyOn(console, 'error').mockImplementation(() => {});
   });
 
@@ -44,81 +39,59 @@ describe('AuthCallbackPage', () => {
     jest.restoreAllMocks();
   });
 
-  it('should render error state when no code is present', () => {
+  it('should render loading spinner while SDK processes callback', () => {
+    mockUseAuth.mockReturnValue({ isSignedIn: false, isLoaded: false });
+
     render(<AuthCallbackPage />);
-    // Without an authorization code, the page shows an error
-    expect(screen.getByText('signInFailed')).toBeInTheDocument();
-    expect(screen.getByText('noAuthorizationCode')).toBeInTheDocument();
+
+    expect(screen.getByText('completingSignIn')).toBeInTheDocument();
+    expect(screen.getByText('verifyingCredentials')).toBeInTheDocument();
   });
 
-  it('should show error state when OAuth error param is present', async () => {
+  it('should show error state when OAuth error param is present', () => {
     mockGet.mockImplementation((key: string) => {
       if (key === 'error') return 'access_denied';
       if (key === 'error_description') return 'User denied access';
       return null;
     });
 
-    await act(async () => {
-      render(<AuthCallbackPage />);
-    });
+    render(<AuthCallbackPage />);
 
     expect(screen.getByText('signInFailed')).toBeInTheDocument();
     expect(screen.getByText('User denied access')).toBeInTheDocument();
   });
 
-  it('should show error state when authorization code is missing', async () => {
-    // No code, no error params
-    mockGet.mockReturnValue(null);
+  it('should redirect to dashboard when SDK finishes authentication', () => {
+    mockUseAuth.mockReturnValue({ isSignedIn: true, isLoaded: true });
 
-    await act(async () => {
-      render(<AuthCallbackPage />);
-    });
+    render(<AuthCallbackPage />);
 
-    expect(screen.getByText('signInFailed')).toBeInTheDocument();
-    expect(screen.getByText('noAuthorizationCode')).toBeInTheDocument();
+    expect(mockPush).toHaveBeenCalledWith('/dashboard');
   });
 
-  it('should show error state when PKCE code verifier is missing', async () => {
+  it('should redirect to custom state path when provided', () => {
     mockGet.mockImplementation((key: string) => {
-      if (key === 'code') return 'auth-code-123';
+      if (key === 'state') return '/onboarding';
       return null;
     });
-    mockGetStoredCodeVerifier.mockReturnValue(null);
+    mockUseAuth.mockReturnValue({ isSignedIn: true, isLoaded: true });
 
-    await act(async () => {
-      render(<AuthCallbackPage />);
-    });
+    render(<AuthCallbackPage />);
 
-    expect(screen.getByText('signInFailed')).toBeInTheDocument();
-    expect(screen.getByText('sessionExpiredRetry')).toBeInTheDocument();
+    expect(mockPush).toHaveBeenCalledWith('/onboarding');
   });
 
-  it('should show success state on successful token exchange', async () => {
+  it('should redirect to login with error on OAuth error after timeout', () => {
     mockGet.mockImplementation((key: string) => {
-      if (key === 'code') return 'auth-code-123';
+      if (key === 'error') return 'server_error';
+      if (key === 'error_description') return 'Internal server error';
       return null;
     });
-    mockGetStoredCodeVerifier.mockReturnValue('verifier-xyz');
-    mockExchangeCodeForTokens.mockResolvedValue({
-      access_token: 'access-token-abc',
-      refresh_token: 'refresh-token-def',
-    });
 
-    // Mock localStorage
-    const setItemSpy = jest.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {});
-    Object.defineProperty(document, 'cookie', {
-      writable: true,
-      value: '',
-    });
+    render(<AuthCallbackPage />);
 
-    await act(async () => {
-      render(<AuthCallbackPage />);
-    });
+    jest.advanceTimersByTime(2000);
 
-    expect(screen.getByText('signInSuccessful')).toBeInTheDocument();
-    expect(screen.getByText('redirectingToDashboard')).toBeInTheDocument();
-    expect(mockClearStoredCodeVerifier).toHaveBeenCalled();
-
-    setItemSpy.mockRestore();
+    expect(mockPush).toHaveBeenCalledWith('/login?error=Internal%20server%20error');
   });
 });

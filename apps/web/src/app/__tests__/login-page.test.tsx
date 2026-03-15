@@ -3,7 +3,11 @@ import { render, screen } from '@testing-library/react';
 
 // Mock all UI components
 jest.mock('@dhanam/ui', () => ({
-  Card: ({ children, ...props }: any) => <div data-testid="card" {...props}>{children}</div>,
+  Card: ({ children, ...props }: any) => (
+    <div data-testid="card" {...props}>
+      {children}
+    </div>
+  ),
   CardHeader: ({ children }: any) => <div>{children}</div>,
   CardTitle: ({ children }: any) => <h2>{children}</h2>,
   CardDescription: ({ children }: any) => <p>{children}</p>,
@@ -51,33 +55,26 @@ jest.mock('~/hooks/useAnalytics', () => ({
   }),
 }));
 
-jest.mock('~/components/forms/login-form', () => ({
-  LoginForm: ({ onSubmit }: any) => (
-    <form data-testid="login-form" onSubmit={(e) => { e.preventDefault(); onSubmit({}); }}>
-      <button type="submit">Submit</button>
-    </form>
-  ),
-}));
-
 jest.mock('~/components/locale-switcher', () => ({
   LocaleSwitcher: () => <div data-testid="locale-switcher" />,
 }));
 
-jest.mock('~/lib/janua-oauth', () => ({
-  oauthProviders: [],
-  loginWithOAuth: jest.fn(),
-  loginWithJanuaSSO: jest.fn(),
-  isJanuaOAuthEnabled: () => false,
+jest.mock('@janua/react-sdk', () => ({
+  SignIn: ({ redirectUrl }: any) => (
+    <div data-testid="janua-sign-in" data-redirect-url={redirectUrl}>
+      Janua Sign In
+    </div>
+  ),
 }));
 
 import LoginPage from '../(auth)/login/page';
 
 describe('LoginPage', () => {
-  it('should render the login form', () => {
+  it('should render the Janua SignIn component', () => {
     render(<LoginPage />);
 
-    expect(screen.getByText('loginTitle')).toBeInTheDocument();
-    expect(screen.getByTestId('login-form')).toBeInTheDocument();
+    expect(screen.getByTestId('janua-sign-in')).toBeInTheDocument();
+    expect(screen.getByTestId('janua-sign-in')).toHaveAttribute('data-redirect-url', '/dashboard');
   });
 
   it('should render locale switcher', () => {

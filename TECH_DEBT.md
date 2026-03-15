@@ -175,6 +175,35 @@ When Expo officially supports React 19, remove the pnpm override and the compat 
 | TD-008 | Staging Environment               | MEDIUM   | RESOLVED  | -        |
 | TD-009 | ArgoCD Documentation              | LOW      | RESOLVED  | -        |
 | TD-010 | React 18 Global Pin               | LOW      | ACTIVE    | -        |
+| TD-011 | Janua SSO Full SDK Integration    | HIGH     | RESOLVED  | -        |
+
+---
+
+### TD-011: Janua SSO Full SDK Integration
+
+**Status**: RESOLVED
+**Severity**: HIGH
+
+**Problem**:
+Backend `AUTH_MODE` defaulted to `local`; the `@janua/react-sdk` bridge used fragile manual
+`localStorage.getItem('janua_access_token')` reads and JWT parsing with `atob()`. Auth pages
+used custom PKCE code instead of SDK components. `admin.dhan.am` was missing from CORS origins.
+
+**Resolution (March 2026)**:
+
+- Set `AUTH_MODE=janua` in production K8s deployment and `NEXT_PUBLIC_AUTH_MODE=janua` in Enclii build args
+- Added `admin.dhan.am` and `www.dhan.am` to `CORS_ORIGINS`
+- Rewrote `JanuaAuthBridge` to use SDK hooks (`useAuth`, `useSession`, `useUser`) instead of `localStorage`
+- Replaced login page with SDK's `<SignIn />` component
+- Replaced register page with SDK's `<SignUp />` component
+- Added `<UserButton />` to dashboard header
+- Simplified auth callback page (SDK handles PKCE exchange internally)
+- Deleted `janua-oauth.ts` (185 lines of manual PKCE helpers) and server-side OAuth callback route (110 lines)
+- Removed dead `isJanuaAuthMode()`/`getJanuaUrl()` redirect branches from `auth.ts`
+- Updated comprehensive type stubs for `@janua/react-sdk` (SDK doesn't ship `.d.ts`)
+- All 64 web test suites pass, 0 typecheck errors, 0 lint errors
+
+**Ticket**: DHANAM-011
 
 ---
 

@@ -1,54 +1,42 @@
 'use client';
 
 import { useEffect, useCallback, useState } from 'react';
-import { JanuaProvider, useJanua } from '@janua/react-sdk';
-
-// TODO: Replace with @janua/react-sdk export once useUser is published
-function useUser() {
-  const { user } = useJanua();
-  return { user };
-}
+import { JanuaProvider, useAuth as useJanuaAuth, useSession, useUser } from '@janua/react-sdk';
 import { useAuth } from '~/lib/hooks/use-auth';
 import type { UserProfile, AuthTokens, Locale } from '@dhanam/shared';
 
 const januaConfig: React.ComponentProps<typeof JanuaProvider>['config'] = {
   baseURL: process.env.NEXT_PUBLIC_JANUA_API_URL || 'http://localhost:3001',
+  clientId: process.env.NEXT_PUBLIC_OIDC_CLIENT_ID || 'dhanam-web',
+  redirectUri: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3040'}/auth/callback`,
   debug: process.env.NODE_ENV !== 'production',
 };
 
 /**
  * JanuaAuthSync - Syncs Janua SSO state with Dhanam's existing auth store
  *
- * This component bridges Janua's centralized identity system with Dhanam's
- * local auth state management, enabling SSO while preserving existing auth hooks.
+ * Uses SDK hooks (useAuth, useSession, useUser) instead of manual
+ * localStorage/JWT parsing. Preserves the Zustand setAuth() call so
+ * all 38+ consumer components and the middleware cookie continue working.
  */
 function JanuaAuthSync({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated: januaAuthenticated, isLoading: januaLoading } = useJanua();
-  // useUser() provides richer user data (display_name, avatar, etc.)
+  const { isSignedIn, isLoaded: authLoaded } = useJanuaAuth();
+  const { session } = useSession();
   const { user: januaUser } = useUser();
   const { setAuth, clearAuth, isAuthenticated: dhanamAuthenticated, _hasHydrated } = useAuth();
 
   const syncAuthState = useCallback(() => {
-    // Don't make any auth decisions while Janua is still loading
-    // This prevents race conditions where we'd clear auth before Janua validates the token
-    if (januaLoading) {
+    // Don't make auth decisions until both SDK and Zustand are ready
+    if (!authLoaded || !_hasHydrated) {
       return;
     }
 
-    // CRITICAL: Wait for Zustand hydration before modifying auth state
-    // This prevents clearAuth() from interfering with the hydration process
-    if (!_hasHydrated) {
-      return;
-    }
-
-    if (januaAuthenticated && januaUser) {
-      // Map Janua locale to Dhanam Locale ('en' | 'es')
+    if (isSignedIn && januaUser) {
       const mapLocale = (januaLocale?: string): Locale => {
         if (januaLocale?.startsWith('es')) return 'es';
         return 'en';
       };
 
-      // Map Janua user (snake_case) to Dhanam UserProfile (camelCase)
       const dhanamUser: UserProfile = {
         id: januaUser.id,
         email: januaUser.email,
@@ -57,86 +45,41 @@ function JanuaAuthSync({ children }: { children: React.ReactNode }) {
         timezone: januaUser.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
         totpEnabled: januaUser.mfa_enabled || false,
         emailVerified: januaUser.email_verified || false,
-        onboardingCompleted: true, // Assume completed if coming from SSO
+        onboardingCompleted: true,
         createdAt: januaUser.created_at || new Date().toISOString(),
         updatedAt: januaUser.updated_at || new Date().toISOString(),
-        // Real spaces come from the useSpaces() API call, not from the auth bridge
         spaces: [],
       };
 
-      // Create tokens from Janua session
+      // Get tokens from SDK session instead of localStorage
       const tokens: AuthTokens = {
-        accessToken: localStorage.getItem('janua_access_token') || `janua_session_${januaUser.id}`,
-        refreshToken:
-          localStorage.getItem('janua_refresh_token') || `janua_refresh_${januaUser.id}`,
-        expiresIn: 15 * 60, // 15 minutes in seconds
+        accessToken: session?.accessToken || '',
+        refreshToken: session?.refreshToken || '',
+        expiresIn: session?.expiresAt
+          ? Math.floor((session.expiresAt - Date.now()) / 1000)
+          : 15 * 60,
       };
 
       setAuth(dhanamUser, tokens);
-    } else if (!januaAuthenticated && dhanamAuthenticated) {
-      // Janua SDK doesn't detect a session, but Dhanam thinks we're authenticated.
-      // This can happen legitimately when:
-      //   1. User logged in via direct PKCE flow (tokens stored manually, not via SDK)
-      //   2. User is in demo mode (authenticated via Dhanam API, not Janua)
-      // Only clear auth if neither case applies.
-      const hasJanuaToken =
-        typeof window !== 'undefined' && localStorage.getItem('janua_access_token');
+    } else if (!isSignedIn && dhanamAuthenticated) {
+      // SDK says not signed in, but Dhanam thinks we are.
+      // Preserve auth for demo mode users (authenticated via Dhanam API, not Janua).
       const isDemoMode =
         typeof document !== 'undefined' && document.cookie.includes('demo-mode=true');
 
-      if (!hasJanuaToken && !isDemoMode) {
+      if (!isDemoMode) {
         clearAuth();
-      }
-    } else if (!januaAuthenticated && !dhanamAuthenticated) {
-      // Neither SDK nor Zustand has auth, but there may be a valid JWT in localStorage
-      // from a direct PKCE login whose Zustand state was cleared (e.g., by old code or a bug).
-      // Recover the session by bootstrapping from the stored token.
-      if (typeof window !== 'undefined') {
-        const accessToken = localStorage.getItem('janua_access_token');
-        const refreshToken = localStorage.getItem('janua_refresh_token');
-        if (accessToken) {
-          try {
-            const parts = accessToken.split('.');
-            if (parts.length === 3 && parts[1]) {
-              const payload = JSON.parse(atob(parts[1]));
-              if (payload.exp * 1000 > Date.now()) {
-                // Token is still valid — bootstrap minimal auth state.
-                // The dashboard layout's refreshUser() will fetch the full profile.
-                const bootstrapUser: UserProfile = {
-                  id: payload.sub,
-                  email: payload.email || '',
-                  name: payload.name || payload.email?.split('@')[0] || 'User',
-                  locale: 'en',
-                  timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-                  totpEnabled: false,
-                  emailVerified: payload.email_verified || false,
-                  onboardingCompleted: true,
-                  createdAt: new Date().toISOString(),
-                  updatedAt: new Date().toISOString(),
-                  spaces: [],
-                };
-                const bootstrapTokens: AuthTokens = {
-                  accessToken,
-                  refreshToken: refreshToken || '',
-                  expiresIn: Math.floor((payload.exp * 1000 - Date.now()) / 1000),
-                };
-                setAuth(bootstrapUser, bootstrapTokens);
-              }
-            }
-          } catch {
-            // Invalid JWT — ignore, let normal login redirect happen
-          }
-        }
       }
     }
   }, [
-    januaLoading,
-    januaAuthenticated,
+    authLoaded,
+    _hasHydrated,
+    isSignedIn,
     januaUser,
+    session,
     dhanamAuthenticated,
     setAuth,
     clearAuth,
-    _hasHydrated,
   ]);
 
   useEffect(() => {
@@ -164,7 +107,6 @@ export function JanuaAuthBridge({ children }: JanuaAuthBridgeProps) {
   }, []);
 
   // Skip JanuaProvider during SSR — it accesses browser APIs (window/localStorage)
-  // that crash server-side rendering and collapse the entire provider tree
   if (!mounted) {
     return <>{children}</>;
   }
@@ -175,6 +117,3 @@ export function JanuaAuthBridge({ children }: JanuaAuthBridgeProps) {
     </JanuaProvider>
   );
 }
-
-// Re-export Janua hooks for direct usage if needed
-export { useJanua, useUser };

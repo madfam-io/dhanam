@@ -8,65 +8,28 @@ jest.mock('@dhanam/ui', () => ({
   CardDescription: ({ children }: any) => <p>{children}</p>,
   CardContent: ({ children }: any) => <div>{children}</div>,
   CardFooter: ({ children }: any) => <div>{children}</div>,
-  Alert: ({ children }: any) => <div role="alert">{children}</div>,
-  AlertDescription: ({ children }: any) => <span>{children}</span>,
-  Button: ({ children, ...props }: any) => <button {...props}>{children}</button>,
-  Separator: () => <hr />,
 }));
 
-jest.mock('@tanstack/react-query', () => ({
-  useMutation: () => ({
-    mutate: jest.fn(),
-    isPending: false,
-  }),
+jest.mock('~/components/locale-switcher', () => ({
+  LocaleSwitcher: () => <div data-testid="locale-switcher" />,
 }));
 
-jest.mock('~/lib/hooks/use-auth', () => ({
-  useAuth: () => ({ setAuth: jest.fn() }),
-}));
-
-jest.mock('~/lib/api/auth', () => ({
-  authApi: { register: jest.fn() },
-}));
-
-jest.mock('~/lib/api/client', () => ({
-  ApiError: class ApiError extends Error {},
-}));
-
-jest.mock('~/hooks/useAnalytics', () => ({
-  useAnalytics: () => ({
-    trackSignUp: jest.fn(),
-    identifyUser: jest.fn(),
-    track: jest.fn(),
-  }),
-}));
-
-jest.mock('~/components/forms/register-form', () => ({
-  RegisterForm: ({ onSubmit }: any) => (
-    <form data-testid="register-form" onSubmit={(e) => { e.preventDefault(); onSubmit({}); }}>
-      <button type="submit">Register</button>
-    </form>
+jest.mock('@janua/react-sdk', () => ({
+  SignUp: ({ redirectUrl }: any) => (
+    <div data-testid="janua-sign-up" data-redirect-url={redirectUrl}>
+      Janua Sign Up
+    </div>
   ),
-}));
-
-jest.mock('~/lib/api/billing', () => ({
-  billingApi: { startTrial: jest.fn() },
-}));
-
-jest.mock('~/lib/janua-oauth', () => ({
-  oauthProviders: [],
-  loginWithOAuth: jest.fn(),
-  isJanuaOAuthEnabled: () => false,
 }));
 
 import RegisterPage from '../(auth)/register/page';
 
 describe('RegisterPage', () => {
-  it('should render the register form', () => {
+  it('should render the Janua SignUp component', () => {
     render(<RegisterPage />);
 
-    expect(screen.getByText('Create an account')).toBeInTheDocument();
-    expect(screen.getByTestId('register-form')).toBeInTheDocument();
+    expect(screen.getByTestId('janua-sign-up')).toBeInTheDocument();
+    expect(screen.getByTestId('janua-sign-up')).toHaveAttribute('data-redirect-url', '/onboarding');
   });
 
   it('should render sign in link', () => {

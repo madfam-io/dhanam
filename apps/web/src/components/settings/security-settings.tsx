@@ -11,14 +11,16 @@ import { Shield, Smartphone, Key, AlertTriangle, Check, Loader2, ExternalLink } 
 import { toast } from 'sonner';
 import { useTranslation } from '@dhanam/shared';
 import { TotpSetup } from '~/components/auth/totp-setup';
-import { isJanuaAuthMode, getJanuaUrl } from '~/lib/api/auth';
+
+const AUTH_MODE = process.env.NEXT_PUBLIC_AUTH_MODE || 'local';
+const JANUA_URL = process.env.NEXT_PUBLIC_JANUA_API_URL || 'https://auth.madfam.io';
 
 export function SecuritySettings() {
   const [showTotpSetup, setShowTotpSetup] = useState(false);
   const queryClient = useQueryClient();
   const { t } = useTranslation('settings');
   const { t: tCommon } = useTranslation('common');
-  const januaMode = isJanuaAuthMode();
+  const januaMode = AUTH_MODE === 'janua';
 
   // Hooks must be called unconditionally (React rules of hooks)
   const { data: totpStatus, isLoading } = useQuery({
@@ -89,11 +91,7 @@ export function SecuritySettings() {
             </Alert>
             <div className="mt-4">
               <Button asChild>
-                <a
-                  href={`${getJanuaUrl()}/account/security`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
+                <a href={`${JANUA_URL}/account/security`} target="_blank" rel="noopener noreferrer">
                   <ExternalLink className="mr-2 h-4 w-4" />
                   Manage Security Settings
                 </a>

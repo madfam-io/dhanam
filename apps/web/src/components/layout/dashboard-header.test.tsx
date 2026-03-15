@@ -37,7 +37,11 @@ jest.mock('~/components/theme-toggle', () => ({
   ThemeToggle: () => <div data-testid="theme-toggle" />,
 }));
 jest.mock('~/components/layout/notification-dropdown', () => ({
-  NotificationDropdown: () => <div data-testid="notification-dropdown"><span data-testid="icon-bell">Bell</span></div>,
+  NotificationDropdown: () => (
+    <div data-testid="notification-dropdown">
+      <span data-testid="icon-bell">Bell</span>
+    </div>
+  ),
 }));
 
 // Mock next/navigation
@@ -65,10 +69,14 @@ jest.mock('@dhanam/ui', () => ({
 jest.mock('lucide-react', () => ({
   Bell: () => <span data-testid="icon-bell">Bell</span>,
   Settings: () => <span data-testid="icon-settings">Settings</span>,
-  User: () => <span data-testid="icon-user">User</span>,
   LogOut: () => <span data-testid="icon-logout">LogOut</span>,
   ChevronDown: () => <span data-testid="icon-chevron-down">ChevronDown</span>,
   Shield: () => <span data-testid="icon-shield">Shield</span>,
+}));
+
+// Mock @janua/react-sdk
+jest.mock('@janua/react-sdk', () => ({
+  UserButton: () => <div data-testid="janua-user-button">User Button</div>,
 }));
 
 // Mock hooks and stores

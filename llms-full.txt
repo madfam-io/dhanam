@@ -42,7 +42,7 @@ Dhanam Ledger unifies personal and business financial management with ESG crypto
 | API Backend | api.dhan.am | Running on Enclii |
 | Admin Panel | admin.dhan.am | Running on Enclii |
 
-Authentication: Janua SSO with OAuth 2.0/OIDC (PKCE flow enforced), client ID `dhanam-ledger`, issuer `https://auth.madfam.io`.
+Authentication: Janua SSO via `@janua/react-sdk` (OIDC with PKCE handled by SDK), `AUTH_MODE=janua` (production default), client ID `jnc_uE2zp9ume_Fd6jMl1elL6wqjiECM711t`, issuer `https://auth.madfam.io`.
 Infrastructure: 2-node Hetzner cluster via Enclii PaaS — "The Sanctuary" (AX41-NVMe, production) and "The Forge" (CPX11, builds). Zero-trust ingress via Cloudflare Tunnel.
 
 ---
@@ -239,7 +239,7 @@ POST /v1/auth/2fa/verify     # Verify TOTP code
 
 Token lifecycle: access token (15min), refresh token (30d, rotates on use). 2FA required for admin operations.
 
-Auth mode controlled by `AUTH_MODE` env var (`local` for self-hosted, `janua` for MADFAM SSO). Both modes implement the same `AuthProvider`/`MfaProvider` interfaces.
+Auth mode controlled by `AUTH_MODE` env var (`janua` for production MADFAM SSO, `local` for self-hosted dev). Frontend uses `@janua/react-sdk` `<SignIn />` and `<SignUp />` components when `NEXT_PUBLIC_AUTH_MODE=janua`. Both modes implement the same `AuthProvider`/`MfaProvider` interfaces.
 
 ### Spaces
 
@@ -395,7 +395,7 @@ All production deployments via Enclii, MADFAM's PaaS:
 
 ### Authentication & Authorization
 
-- Janua SSO (OIDC/PKCE) for all auth flows
+- Janua SSO via `@janua/react-sdk` (OIDC/PKCE handled by SDK) for all auth flows
 - JWT access tokens (15min) + rotating refresh tokens (30d)
 - TOTP 2FA via TOTP (required for admin, optional for users)
 - Argon2id password hashing (64MB memory cost)

@@ -4,7 +4,8 @@ import posthog from 'posthog-js';
 import { AuthTokens, UserProfile, Locale } from '@dhanam/shared';
 import { apiClient } from '../api/client';
 import { authApi } from '../api/auth';
-import { getJanuaApiUrl } from '../janua-oauth';
+
+const JANUA_API_URL = process.env.NEXT_PUBLIC_JANUA_API_URL || 'https://auth.madfam.io';
 
 interface AuthState {
   user: UserProfile | null;
@@ -117,7 +118,7 @@ export const useAuth = create<AuthState>()(
           }
 
           // Fallback to Janua if Dhanam API fails (e.g., user not synced yet)
-          const januaApiUrl = getJanuaApiUrl();
+          const januaApiUrl = JANUA_API_URL;
           const response = await fetch(`${januaApiUrl}/api/v1/auth/me`, {
             headers: {
               Authorization: `Bearer ${tokens.accessToken}`,

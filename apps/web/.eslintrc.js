@@ -4,7 +4,7 @@ module.exports = {
     tsconfigRootDir: __dirname,
     project: './tsconfig.json',
   },
-  ignorePatterns: ['**/*.test.tsx', '**/*.test.ts'],
+  ignorePatterns: ['**/*.test.tsx', '**/*.test.ts', 'src/__mocks__/**'],
   rules: {
     // Modern React handles character escaping automatically
     // Using actual quotes/apostrophes is cleaner than HTML entities

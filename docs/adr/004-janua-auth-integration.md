@@ -1,6 +1,7 @@
 # ADR-004: Janua Authentication Integration
 
 ## Status
+
 **Accepted** - January 2025
 
 ## Context
@@ -14,6 +15,7 @@ Dhanam is part of the MADFAM ecosystem of products (Dhanam, Enclii, Copernic, et
 5. **Developer Experience**: Standard OAuth 2.0 / OIDC flows
 
 Options considered:
+
 1. **Custom Auth**: Build authentication from scratch
 2. **Auth0**: Industry standard, expensive at scale
 3. **Clerk**: Modern DX, limited enterprise features
@@ -72,35 +74,35 @@ Use **Janua** (MADFAM's internal SSO platform) for all authentication and author
 ### Authentication Flow
 
 ```
-1. User visits app.dhan.am
-2. Redirect to auth.madfam.io/authorize
-3. User authenticates (password + optional 2FA)
-4. Redirect back with authorization code
-5. Backend exchanges code for tokens
-6. JWT stored in httpOnly cookie
-7. Subsequent requests include JWT
-8. JwtAuthGuard validates on each request
+1. User visits app.dhan.am/login
+2. @janua/react-sdk <SignIn /> component renders
+3. User authenticates via Janua (email/password, social, or 2FA)
+4. SDK handles PKCE: redirect to auth.madfam.io/authorize → callback with ?code=
+5. SDK exchanges authorization code for tokens internally
+6. JanuaAuthBridge syncs tokens to Zustand store → sets auth-storage cookie
+7. Subsequent API requests include JWT in Authorization header
+8. JwtAuthGuard validates on each request; JIT provisions user if new
 ```
 
 ### Token Strategy
 
-| Token Type | Lifetime | Storage | Purpose |
-|------------|----------|---------|---------|
+| Token Type         | Lifetime   | Storage         | Purpose            |
+| ------------------ | ---------- | --------------- | ------------------ |
 | Access Token (JWT) | 15 minutes | httpOnly cookie | API authentication |
-| Refresh Token | 30 days | httpOnly cookie | Token renewal |
-| ID Token | 15 minutes | Not stored | Initial user info |
+| Refresh Token      | 30 days    | httpOnly cookie | Token renewal      |
+| ID Token           | 15 minutes | Not stored      | Initial user info  |
 
 ### JWT Claims
 
 ```typescript
 interface JanuaJwtPayload {
-  sub: string;           // User ID
+  sub: string; // User ID
   email: string;
   email_verified: boolean;
   name: string;
-  aud: string;           // Per-client audience (e.g., 'dhanam-api')
-  org_id: string;        // Janua organization (maps to Space)
-  roles: string[];       // ['user', 'admin', 'premium']
+  aud: string; // Per-client audience (e.g., 'dhanam-api')
+  org_id: string; // Janua organization (maps to Space)
+  roles: string[]; // ['user', 'admin', 'premium']
   tier: 'community' | 'pro' | 'enterprise';
   sub_status: 'active' | 'inactive' | 'suspended';
   is_admin: boolean;
@@ -108,7 +110,7 @@ interface JanuaJwtPayload {
   iat: number;
   exp: number;
   iss: 'https://auth.madfam.io';
-  jti: string;           // Unique token identifier
+  jti: string; // Unique token identifier
 }
 ```
 
@@ -122,37 +124,34 @@ Tezca) cannot be used to access Dhanam's API.
 **Default**: `JANUA_AUDIENCE=dhanam-api` (set in `.env.example` and as fallback in
 `janua.strategy.ts`)
 
-### SDK Migration
+### SDK Integration (March 2026)
 
-As of February 2026, the frontend uses `@janua/react-sdk` (replacing the earlier
-`janua-sdk-stub.tsx`). The real SDK provides PKCE, automatic token refresh, and
-proactive session management. The `JanuaAuthBridge` component in
-`apps/web/src/providers/JanuaAuthBridge.tsx` syncs Janua auth state with Dhanam's
-local Zustand auth store.
+The frontend uses `@janua/react-sdk@0.1.1` for all authentication UI and state
+management. The SDK provides `<SignIn />`, `<SignUp />`, and `<UserButton />`
+components that handle PKCE, social login, token refresh, and session management
+internally.
 
-### Auth State Guard (March 2026)
+**Auth pages**: Login and register pages render SDK components instead of custom
+forms. The SDK handles the full OIDC flow (PKCE code exchange, token storage,
+session refresh) without custom PKCE helpers. The auth callback page
+(`/auth/callback`) is a simple loading spinner — the SDK's `JanuaProvider`
+intercepts the `?code=` parameter and exchanges it automatically.
 
-The `JanuaAuthSync` component inside `JanuaAuthBridge` guards against clearing
-valid auth sessions that `@janua/react-sdk` cannot detect. Two legitimate cases:
+**Bridge architecture**: The `JanuaAuthBridge` component in
+`apps/web/src/providers/JanuaAuthBridge.tsx` wraps `JanuaProvider` and syncs
+Janua auth state with Dhanam's local Zustand store via `JanuaAuthSync`. This
+component uses SDK hooks (`useAuth`, `useSession`, `useUser`) to read auth state
+and calls Zustand's `setAuth(user, tokens)` to keep the `auth-storage` cookie
+and all 38+ consumer components working unchanged.
 
-1. **Direct PKCE login**: Tokens stored in `localStorage` via the auth callback
-   (not through the SDK's session management). Detected via presence of
-   `janua_access_token` in `localStorage`.
-2. **Demo mode**: User authenticated via Dhanam's demo API, not Janua SSO.
-   Detected via `demo-mode=true` cookie.
+**Demo mode**: The bridge preserves authentication for demo users (authenticated
+via Dhanam's demo API, not Janua SSO). Detected via `demo-mode=true` cookie.
+When the SDK reports no active session but the demo cookie is present, auth is
+not cleared.
 
-The `AuthProvider` (token refresh timer) no longer calls `clearAuth()` on refresh
-failure. Instead it logs a warning and defers re-authentication to `JanuaAuthSync`
-or the next API call. This prevents the dashboard from flashing back to login when
-a refresh attempt fails but the access token is still valid.
-
-Additionally, `JanuaAuthSync` includes a **token recovery** branch: when neither
-`@janua/react-sdk` nor Zustand detects an active session, but a valid (non-expired)
-`janua_access_token` exists in `localStorage`, the component bootstraps a minimal
-auth state from the JWT claims (`sub`, `email`, `name`). The dashboard layout's
-`refreshUser()` effect then fetches the full user profile in the background. This
-handles cases where `clearAuth()` was called (by old code or a bug) but the JWT
-remains valid — the user stays logged in rather than being redirected to `/login`.
+**Dashboard header**: The `<UserButton />` component from the SDK is rendered in
+the dashboard header alongside the existing dropdown menu, providing Janua-managed
+profile settings, security, and logout.
 
 ### Space Loading Race Condition Fix (March 2026)
 
@@ -192,6 +191,7 @@ receives a valid JWT and the frontend shows "Create First Space".
 ## Consequences
 
 ### Positive
+
 - **Unified Identity**: Single login for all MADFAM products
 - **Cost Savings**: No external auth provider fees
 - **Full Control**: Can add features specific to financial apps
@@ -199,12 +199,14 @@ receives a valid JWT and the frontend shows "Create First Space".
 - **Compliance**: Direct control over audit and compliance
 
 ### Negative
+
 - **Development Overhead**: Janua team must maintain auth infrastructure
 - **Single Point of Failure**: Janua outage affects all MADFAM products
 - **Feature Velocity**: May lag behind commercial auth providers
 - **Expertise Required**: Security expertise needed in-house
 
 ### Mitigations
+
 - Janua deployed with high availability (multi-region)
 - Regular security audits by external firm
 - Feature roadmap aligned with MADFAM product needs
@@ -213,6 +215,7 @@ receives a valid JWT and the frontend shows "Create First Space".
 ## Implementation
 
 ### Configuration
+
 ```env
 # .env
 JANUA_ISSUER=https://auth.madfam.io
@@ -222,6 +225,7 @@ JANUA_JWKS_URL=https://auth.madfam.io/.well-known/jwks.json
 ```
 
 ### NestJS Integration
+
 ```typescript
 // apps/api/src/core/auth/guards/jwt-auth.guard.ts
 @Injectable()
@@ -246,16 +250,20 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 ```
 
 ### Billing Integration
+
 Janua also handles billing provider routing (see JanuaBillingService):
+
 - Creates customers in correct payment provider
 - Manages subscription lifecycle
 - Unified webhooks for payment events
 
 ## Related Decisions
+
 - [ADR-005](./005-enclii-deployment.md): Enclii deployment (also uses Janua)
 - [ADR-001](./001-nestjs-fastify.md): NestJS guards architecture
 
 ## References
+
 - [Janua Documentation](https://docs.janua.dev) (internal)
 - [OAuth 2.0 Specification](https://oauth.net/2/)
 - [OpenID Connect Core](https://openid.net/specs/openid-connect-core-1_0.html)

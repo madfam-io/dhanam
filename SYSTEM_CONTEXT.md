@@ -25,12 +25,11 @@ Dhanam uses **Janua** for all authentication via OIDC:
 | `NEXT_PUBLIC_OIDC_CLIENT_ID` | `jnc_uE2zp9ume_Fd6jMl1elL6wqjiECM711t` |
 | `NEXT_PUBLIC_JANUA_API_URL`  | `https://api.janua.dev`                |
 
-### SSO Button Logic
+### SSO Integration
 
-The "Sign in with Janua SSO" button visibility is controlled by:
-
-- File: `apps/web/src/lib/janua-oauth.ts:168-170`
-- Requires: `NEXT_PUBLIC_JANUA_API_URL` to be set
+Authentication UI is provided by `@janua/react-sdk` components (`<SignIn />`, `<SignUp />`, `<UserButton />`).
+The SDK is configured in `apps/web/src/providers/JanuaAuthBridge.tsx` and syncs Janua auth state
+with Dhanam's local Zustand store. Auth mode is controlled by `AUTH_MODE` env var (`janua` in production).
 
 ## Kubernetes Resources
 
@@ -72,10 +71,10 @@ The deployment requires `ghcr-credentials` for pulling images from GitHub Contai
 curl -s https://app.dhan.am/api/health
 ```
 
-### Verify SSO button should be visible
+### Verify Janua SSO is reachable
 
 ```bash
-# If this returns a valid response, SSO button should appear
+# If this returns a valid response, SSO components should work
 curl -s https://api.janua.dev/health
 ```
 

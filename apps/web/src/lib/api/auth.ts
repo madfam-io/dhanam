@@ -9,32 +9,12 @@ import {
 
 import { apiClient } from './client';
 
-const AUTH_MODE = process.env.NEXT_PUBLIC_AUTH_MODE || 'local';
-const JANUA_URL = process.env.NEXT_PUBLIC_JANUA_API_URL || 'https://auth.madfam.io';
-
-export function isJanuaAuthMode(): boolean {
-  return AUTH_MODE === 'janua';
-}
-
-export function getJanuaUrl(): string {
-  return JANUA_URL;
-}
-
 export const authApi = {
   async register(data: RegisterDto): Promise<AuthResponse> {
-    if (isJanuaAuthMode()) {
-      window.location.href = `${JANUA_URL}/register`;
-      // Never resolves — browser navigates away
-      return new Promise(() => {});
-    }
     return apiClient.post<AuthResponse>('/auth/register', data);
   },
 
   async login(data: LoginDto): Promise<AuthResponse> {
-    if (isJanuaAuthMode()) {
-      window.location.href = `${JANUA_URL}/login`;
-      return new Promise(() => {});
-    }
     return apiClient.post<AuthResponse>('/auth/login', data);
   },
 
@@ -47,10 +27,6 @@ export const authApi = {
   },
 
   async logout(refreshToken: string): Promise<void> {
-    if (isJanuaAuthMode()) {
-      window.location.href = `${JANUA_URL}/logout`;
-      return;
-    }
     return apiClient.post('/auth/logout', { refreshToken });
   },
 
@@ -59,10 +35,6 @@ export const authApi = {
   },
 
   async changePassword(data: ChangePasswordDto): Promise<void> {
-    if (isJanuaAuthMode()) {
-      window.location.href = `${JANUA_URL}/account/security`;
-      return;
-    }
     return apiClient.post('/auth/password', data);
   },
 

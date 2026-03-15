@@ -27,10 +27,6 @@ jest.mock('~/components/locale-switcher', () => ({
   LocaleSwitcher: () => <div data-testid="locale-switcher" />,
 }));
 
-jest.mock('~/lib/janua-oauth', () => ({
-  getJanuaApiUrl: () => 'https://api.janua.dev',
-}));
-
 import ForgotPasswordPage from '../(auth)/forgot-password/page';
 
 describe('ForgotPasswordPage', () => {

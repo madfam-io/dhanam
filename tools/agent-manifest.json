@@ -56,10 +56,9 @@
   },
 
   "criticalConfiguration": {
-    "ssoButton": {
-      "path": "apps/web/src/lib/janua-oauth.ts",
-      "lines": "168-170",
-      "description": "SSO button visibility controlled by NEXT_PUBLIC_JANUA_API_URL"
+    "ssoIntegration": {
+      "path": "apps/web/src/providers/JanuaAuthBridge.tsx",
+      "description": "Janua SDK bridge syncs SSO state with Dhanam Zustand auth store. Login/register use @janua/react-sdk SignIn/SignUp components."
     },
     "oidcConfig": {
       "issuer": "https://auth.madfam.io",
@@ -130,8 +129,10 @@
 
   "authModes": {
     "envVar": "AUTH_MODE",
+    "default": "janua",
     "options": ["local", "janua"],
-    "interfaces": ["AuthProvider", "MfaProvider"]
+    "interfaces": ["AuthProvider", "MfaProvider"],
+    "frontendSdk": "@janua/react-sdk@0.1.1"
   },
 
   "llmContext": {

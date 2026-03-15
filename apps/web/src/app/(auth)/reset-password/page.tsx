@@ -6,14 +6,15 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Alert, AlertDescription, Button } from '@dhanam/ui';
 import { useTranslation } from '@dhanam/shared';
 import { LocaleSwitcher } from '~/components/locale-switcher';
-import { getJanuaApiUrl } from '~/lib/janua-oauth';
+
+const JANUA_URL = process.env.NEXT_PUBLIC_JANUA_API_URL || 'https://auth.madfam.io';
 
 export default function ResetPasswordPage() {
   const { t } = useTranslation('auth');
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
 
-  const januaResetUrl = `${getJanuaApiUrl()}/reset-password`;
+  const januaResetUrl = `${JANUA_URL}/reset-password`;
 
   if (!token) {
     // No token — redirect to Janua SSO reset confirmation

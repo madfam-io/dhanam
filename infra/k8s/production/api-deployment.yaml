@@ -305,9 +305,13 @@ spec:
                   name: dhanam-provider-secrets
                   key: ZAPPER_API_KEY
 
+            # Auth mode
+            - name: AUTH_MODE
+              value: "janua"
+
             # CORS
             - name: CORS_ORIGINS
-              value: "https://app.dhan.am,https://dhan.am"
+              value: "https://app.dhan.am,https://admin.dhan.am,https://dhan.am,https://www.dhan.am"
 
           resources:
             requests:
