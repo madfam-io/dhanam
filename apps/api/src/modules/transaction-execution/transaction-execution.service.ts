@@ -1,7 +1,5 @@
 import * as crypto from 'crypto';
 
-import type { InputJsonValue } from '@db';
-import { Prisma as _Prisma } from '@db';
 import {
   Inject,
   Injectable,
@@ -12,6 +10,9 @@ import {
   Logger,
 } from '@nestjs/common';
 import { addDays, isAfter } from 'date-fns';
+
+import type { InputJsonValue } from '@db';
+import { Prisma as _Prisma } from '@db';
 
 import { AuditService } from '../../core/audit/audit.service';
 import { MFA_PROVIDER, MfaProvider } from '../../core/auth/providers';

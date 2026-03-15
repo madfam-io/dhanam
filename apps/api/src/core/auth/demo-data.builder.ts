@@ -1,5 +1,6 @@
-import { Currency, SpaceType, BudgetPeriod, Provider, User } from '@db';
 import { startOfMonth, endOfMonth } from 'date-fns';
+
+import { Currency, SpaceType, BudgetPeriod, Provider, User } from '@db';
 
 import { PrismaService } from '../prisma/prisma.service';
 
