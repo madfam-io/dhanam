@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { Logger } from '@nestjs/common';
 
+import { EventsService } from '../../../core/events/events.service';
 import { ProviderOrchestratorService } from './provider-orchestrator.service';
 import { CircuitBreakerService } from './circuit-breaker.service';
 import { ProviderSelectionService } from '../../ml/provider-selection.service';
@@ -38,6 +39,12 @@ describe('ProviderOrchestratorService', () => {
     selectOptimalProvider: jest.fn(),
   };
 
+  const mockEventsService = {
+    emit: jest.fn(),
+    subscribe: jest.fn(),
+    getActiveConnectionCount: jest.fn().mockReturnValue(0),
+  };
+
   // Mock provider implementation
   const mockProvider: IFinancialProvider = {
     name: 'plaid' as any,
@@ -64,6 +71,10 @@ describe('ProviderOrchestratorService', () => {
         {
           provide: ProviderSelectionService,
           useValue: mockProviderSelection,
+        },
+        {
+          provide: EventsService,
+          useValue: mockEventsService,
         },
       ],
     }).compile();
@@ -127,7 +138,7 @@ describe('ProviderOrchestratorService', () => {
       mockPrisma.institutionProviderMapping.findFirst.mockResolvedValue(mockMapping);
       mockCircuitBreaker.isCircuitOpen
         .mockResolvedValueOnce(false) // plaid: closed
-        .mockResolvedValueOnce(true)  // mx: open
+        .mockResolvedValueOnce(true) // mx: open
         .mockResolvedValueOnce(false); // finicity: closed
 
       const providers = await service.getAvailableProviders('inst-123', 'US');
@@ -255,17 +266,11 @@ describe('ProviderOrchestratorService', () => {
         expect.any(String),
         expect.any(Number)
       );
-      expect(mockCircuitBreaker.recordSuccess).toHaveBeenCalledWith(
-        'mx',
-        'US',
-        expect.any(Number)
-      );
+      expect(mockCircuitBreaker.recordSuccess).toHaveBeenCalledWith('mx', 'US', expect.any(Number));
     });
 
     it('should return failure when all providers fail', async () => {
-      (mockProvider.createLink as jest.Mock).mockRejectedValue(
-        new Error('Auth failed')
-      );
+      (mockProvider.createLink as jest.Mock).mockRejectedValue(new Error('Auth failed'));
 
       const result = await service.executeWithFailover(
         'createLink',
@@ -301,8 +306,8 @@ describe('ProviderOrchestratorService', () => {
 
       // Plaid circuit is open, mx is closed
       mockCircuitBreaker.isCircuitOpen
-        .mockResolvedValueOnce(true)   // plaid: open (main check)
-        .mockResolvedValueOnce(false)  // mx: closed (backup check)
+        .mockResolvedValueOnce(true) // plaid: open (main check)
+        .mockResolvedValueOnce(false) // mx: closed (backup check)
         .mockResolvedValueOnce(false); // finicity: closed (backup check)
 
       const result = await service.executeWithFailover(
@@ -510,7 +515,7 @@ describe('ProviderOrchestratorService', () => {
     it('should filter out providers with open circuit breakers', async () => {
       mockCircuitBreaker.isCircuitOpen
         .mockResolvedValueOnce(false) // mx: closed
-        .mockResolvedValueOnce(true);  // finicity: open
+        .mockResolvedValueOnce(true); // finicity: open
 
       const backups = await service['getBackupProviders']('plaid' as any, 'US');
 
@@ -640,9 +645,7 @@ describe('ProviderOrchestratorService', () => {
     });
 
     it('should handle ML selection failures gracefully', async () => {
-      mockProviderSelection.selectOptimalProvider.mockRejectedValue(
-        new Error('ML service down')
-      );
+      mockProviderSelection.selectOptimalProvider.mockRejectedValue(new Error('ML service down'));
       (mockProvider.createLink as jest.Mock).mockResolvedValue({ linkToken: 'token' });
 
       const result = await service.executeWithFailover(

@@ -79,6 +79,7 @@ apps/
 ### Enums
 
 #### HouseholdType
+
 ```typescript
 enum HouseholdType {
   family       // Nuclear or extended family
@@ -89,6 +90,7 @@ enum HouseholdType {
 ```
 
 #### RelationshipType
+
 ```typescript
 enum RelationshipType {
   spouse        // Married or domestic partner
@@ -132,6 +134,7 @@ model Household {
 ```
 
 **Key Features**:
+
 - Supports multiple household types (family, trust, estate, partnership)
 - Configurable base currency for consolidated reporting
 - Optional description for context
@@ -164,6 +167,7 @@ model HouseholdMember {
 ```
 
 **Key Features**:
+
 - Unique constraint prevents duplicate memberships
 - `isMinor` flag for minors (age-based planning)
 - `accessStartDate` for when minors gain access (e.g., age 18)
@@ -172,6 +176,7 @@ model HouseholdMember {
 #### Updated Models
 
 ##### User
+
 ```prisma
 model User {
   // ... existing fields
@@ -181,6 +186,7 @@ model User {
 ```
 
 ##### Space
+
 ```prisma
 model Space {
   // ... existing fields
@@ -190,6 +196,7 @@ model Space {
 ```
 
 ##### Goal
+
 ```prisma
 model Goal {
   // ... existing fields
@@ -203,16 +210,19 @@ model Goal {
 ## API Endpoints
 
 ### Base URL
+
 ```
-http://localhost:4000/households
+http://localhost:4010/households
 ```
 
 ### Authentication
+
 All endpoints require JWT authentication via `Authorization: Bearer <token>` header.
 
 ### Endpoints
 
 #### 1. Create Household
+
 ```http
 POST /households
 Content-Type: application/json
@@ -227,6 +237,7 @@ Authorization: Bearer <token>
 ```
 
 **Response** (201):
+
 ```json
 {
   "id": "uuid",
@@ -248,18 +259,21 @@ Authorization: Bearer <token>
 ```
 
 **Business Logic**:
+
 - Creator is automatically added as the first member
 - Default relationship is "other" (user can update later)
 
 ---
 
 #### 2. Get All Households
+
 ```http
 GET /households
 Authorization: Bearer <token>
 ```
 
 **Response** (200):
+
 ```json
 [
   {
@@ -280,18 +294,21 @@ Authorization: Bearer <token>
 ```
 
 **Business Logic**:
+
 - Returns only households where the user is a member
 - Includes member count and aggregate counts
 
 ---
 
 #### 3. Get Household by ID
+
 ```http
 GET /households/:id
 Authorization: Bearer <token>
 ```
 
 **Response** (200):
+
 ```json
 {
   "id": "uuid",
@@ -335,12 +352,14 @@ Authorization: Bearer <token>
 ```
 
 **Access Control**:
+
 - User must be a member of the household
 - Returns 404 if not found or no access
 
 ---
 
 #### 4. Update Household
+
 ```http
 PUT /households/:id
 Content-Type: application/json
@@ -353,6 +372,7 @@ Authorization: Bearer <token>
 ```
 
 **Response** (200):
+
 ```json
 {
   "id": "uuid",
@@ -363,12 +383,14 @@ Authorization: Bearer <token>
 ```
 
 **Business Logic**:
+
 - All fields are optional
 - Only members can update
 
 ---
 
 #### 5. Delete Household
+
 ```http
 DELETE /households/:id
 Authorization: Bearer <token>
@@ -377,6 +399,7 @@ Authorization: Bearer <token>
 **Response** (204): No content
 
 **Business Logic**:
+
 - Cannot delete household with associated spaces or goals
 - Returns 400 if spaces or goals exist
 - Must remove dependencies first
@@ -384,12 +407,14 @@ Authorization: Bearer <token>
 ---
 
 #### 6. Get Household Net Worth
+
 ```http
 GET /households/:id/net-worth
 Authorization: Bearer <token>
 ```
 
 **Response** (200):
+
 ```json
 {
   "totalNetWorth": 150000,
@@ -416,6 +441,7 @@ Authorization: Bearer <token>
 ```
 
 **Business Logic**:
+
 - Aggregates all spaces linked to the household
 - Assets: checking, savings, investment, crypto accounts
 - Liabilities: credit card balances (negative amounts)
@@ -424,12 +450,14 @@ Authorization: Bearer <token>
 ---
 
 #### 7. Get Household Goal Summary
+
 ```http
 GET /households/:id/goals/summary
 Authorization: Bearer <token>
 ```
 
 **Response** (200):
+
 ```json
 {
   "totalGoals": 5,
@@ -445,12 +473,14 @@ Authorization: Bearer <token>
 ```
 
 **Business Logic**:
+
 - Aggregates all goals linked to the household
 - Groups by goal type for analysis
 
 ---
 
 #### 8. Add Member to Household
+
 ```http
 POST /households/:id/members
 Content-Type: application/json
@@ -466,6 +496,7 @@ Authorization: Bearer <token>
 ```
 
 **Response** (201):
+
 ```json
 {
   "id": "member-uuid",
@@ -485,6 +516,7 @@ Authorization: Bearer <token>
 ```
 
 **Business Logic**:
+
 - User must exist in the system
 - Cannot add duplicate members (unique constraint)
 - Validates relationship type
@@ -492,6 +524,7 @@ Authorization: Bearer <token>
 ---
 
 #### 9. Update Member
+
 ```http
 PUT /households/:id/members/:memberId
 Content-Type: application/json
@@ -504,6 +537,7 @@ Authorization: Bearer <token>
 ```
 
 **Response** (200):
+
 ```json
 {
   "id": "member-uuid",
@@ -516,6 +550,7 @@ Authorization: Bearer <token>
 ---
 
 #### 10. Remove Member
+
 ```http
 DELETE /households/:id/members/:memberId
 Authorization: Bearer <token>
@@ -524,6 +559,7 @@ Authorization: Bearer <token>
 **Response** (204): No content
 
 **Business Logic**:
+
 - Cannot remove the last member (returns 400)
 - Must delete household instead if last member
 
@@ -534,11 +570,13 @@ Authorization: Bearer <token>
 ### React Hook: `useHouseholds`
 
 **Import**:
+
 ```typescript
 import { useHouseholds } from '@/hooks/useHouseholds';
 ```
 
 **Usage**:
+
 ```typescript
 const {
   loading,
@@ -619,6 +657,7 @@ import type {
 **Scenario**: The Smith family wants to track wealth across 3 generations.
 
 **Setup**:
+
 1. Create household "Smith Family" (type: family)
 2. Add members:
    - Grandpa (relationship: grandparent)
@@ -635,6 +674,7 @@ import type {
    - "Grandchildren education fund" (type: education)
 
 **Benefits**:
+
 - Consolidated net worth view across all generations
 - Goal tracking for shared family objectives
 - Prepare for estate planning (future feature)
@@ -646,6 +686,7 @@ import type {
 **Scenario**: High-net-worth individual creates a trust for estate planning.
 
 **Setup**:
+
 1. Create household "Johnson Trust" (type: trust)
 2. Add members:
    - Primary (relationship: trustee)
@@ -656,6 +697,7 @@ import type {
 4. Set beneficiary allocations (future feature)
 
 **Benefits**:
+
 - Clear trust structure visualization
 - Track trust assets separately from personal
 - Foundation for digital will feature
@@ -667,6 +709,7 @@ import type {
 **Scenario**: Two business partners want to track shared business assets.
 
 **Setup**:
+
 1. Create household "Tech Startup LLC" (type: partnership)
 2. Add members:
    - Partner 1 (relationship: partner)
@@ -677,6 +720,7 @@ import type {
    - "Exit strategy" (type: business)
 
 **Benefits**:
+
 - Partnership-level financial tracking
 - Shared goal management
 - Clear ownership structure
@@ -695,13 +739,14 @@ import type {
 - ❌ **No public access**: Households are private by default
 
 **Implementation**:
+
 ```typescript
 // Every service method checks membership
 const household = await this.prisma.household.findFirst({
   where: {
     id: householdId,
     members: {
-      some: { userId },  // Ensures user is a member
+      some: { userId }, // Ensures user is a member
     },
   },
 });
@@ -727,6 +772,7 @@ await this.audit.log({
 ```
 
 **Audit Actions**:
+
 - `HOUSEHOLD_CREATED`
 - `HOUSEHOLD_UPDATED`
 - `HOUSEHOLD_DELETED`
@@ -737,11 +783,13 @@ await this.audit.log({
 ### Data Protection
 
 **Sensitive Data**:
+
 - User date of birth (optional, for age-based planning)
 - Household financial aggregations
 - Relationship details
 
 **Protection**:
+
 - ✅ JWT authentication required
 - ✅ Member-based authorization
 - ✅ Audit logging for all changes
@@ -787,6 +835,7 @@ await this.audit.log({
    - ✅ Summarizes goals by type/status
 
 **Run Tests**:
+
 ```bash
 cd apps/api
 pnpm test households.service.spec.ts
@@ -799,6 +848,7 @@ pnpm test households.service.spec.ts
 ### Phase 1: Estate Planning (12-16 weeks)
 
 **Features**:
+
 - Will & Testament model
 - Beneficiary designation percentages
 - Executor/trustee management
@@ -806,6 +856,7 @@ pnpm test households.service.spec.ts
 - Inheritance planning calculator
 
 **Schema**:
+
 ```prisma
 model Will {
   id               String
@@ -825,6 +876,7 @@ model BeneficiaryDesignation {
 ```
 
 **Business Value**:
+
 - High willingness-to-pay feature
 - Sticky (users won't switch)
 - Legal compliance required
@@ -834,6 +886,7 @@ model BeneficiaryDesignation {
 ### Phase 2: Income Smoothing (6-8 weeks)
 
 **Features**:
+
 - Detect irregular income (gig economy)
 - Calculate income volatility score
 - "Safe-to-spend" buffer algorithm
@@ -847,6 +900,7 @@ Freelancer with irregular income gets personalized budget recommendations based 
 ### Phase 3: Portfolio Rebalancing (4-5 weeks)
 
 **Features**:
+
 - Household-level asset allocation targets
 - Drift detection across all accounts
 - Suggest rebalancing trades
@@ -860,6 +914,7 @@ Multi-generational family maintains 60/40 stocks/bonds allocation across all mem
 ### Phase 4: Tax-Loss Harvesting (4-6 weeks)
 
 **Features**:
+
 - Identify tax-loss opportunities
 - Suggest replacement securities
 - Calculate tax savings
@@ -877,6 +932,7 @@ High-net-worth household optimizes tax efficiency across all investment accounts
 **File**: `apps/api/prisma/migrations/20251119000003_add_household_models/migration.sql`
 
 **To apply**:
+
 ```bash
 cd apps/api
 pnpm db:migrate:dev
@@ -885,6 +941,7 @@ pnpm db:migrate:deploy
 ```
 
 **Migration includes**:
+
 - ✅ Create HouseholdType enum
 - ✅ Create RelationshipType enum
 - ✅ Create households table
@@ -899,6 +956,7 @@ pnpm db:migrate:deploy
 **Not recommended** - Household features have no backwards-incompatible changes.
 
 If needed:
+
 ```sql
 -- Remove columns
 ALTER TABLE users DROP COLUMN date_of_birth;
@@ -918,24 +976,25 @@ DROP TYPE HouseholdType;
 
 ## API Reference Summary
 
-| Method | Endpoint | Purpose |
-|--------|----------|---------|
-| POST | `/households` | Create household |
-| GET | `/households` | List user's households |
-| GET | `/households/:id` | Get household details |
-| PUT | `/households/:id` | Update household |
-| DELETE | `/households/:id` | Delete household |
-| GET | `/households/:id/net-worth` | Get net worth aggregation |
-| GET | `/households/:id/goals/summary` | Get goal summary |
-| POST | `/households/:id/members` | Add member |
-| PUT | `/households/:id/members/:memberId` | Update member |
-| DELETE | `/households/:id/members/:memberId` | Remove member |
+| Method | Endpoint                            | Purpose                   |
+| ------ | ----------------------------------- | ------------------------- |
+| POST   | `/households`                       | Create household          |
+| GET    | `/households`                       | List user's households    |
+| GET    | `/households/:id`                   | Get household details     |
+| PUT    | `/households/:id`                   | Update household          |
+| DELETE | `/households/:id`                   | Delete household          |
+| GET    | `/households/:id/net-worth`         | Get net worth aggregation |
+| GET    | `/households/:id/goals/summary`     | Get goal summary          |
+| POST   | `/households/:id/members`           | Add member                |
+| PUT    | `/households/:id/members/:memberId` | Update member             |
+| DELETE | `/households/:id/members/:memberId` | Remove member             |
 
 ---
 
 ## Support
 
 For questions or issues:
+
 - Technical: See API tests for usage examples
 - Business: Refer to Blue Ocean Pivot Roadmap
 - Security: Review audit logs and access control section

@@ -49,6 +49,7 @@ describe('AnalyticsService', () => {
             goal: {
               findMany: jest.fn().mockResolvedValue([]),
             },
+            $queryRaw: jest.fn().mockResolvedValue([]),
           },
         },
         {
@@ -60,7 +61,9 @@ describe('AnalyticsService', () => {
         {
           provide: FxRatesService,
           useValue: {
-            convertAmount: jest.fn().mockImplementation((amount: number) => Promise.resolve(amount)),
+            convertAmount: jest
+              .fn()
+              .mockImplementation((amount: number) => Promise.resolve(amount)),
             getExchangeRate: jest.fn().mockResolvedValue(1),
           },
         },
@@ -123,7 +126,11 @@ describe('AnalyticsService', () => {
       expect(result.totalLiabilities).toBe(5000); // |-5000|
       expect(result.netWorth).toBe(55000); // 60000 - 5000
       expect(result.currency).toBe(Currency.MXN);
-      expect(spacesService.verifyUserAccess).toHaveBeenCalledWith(mockUserId, mockSpaceId, 'viewer');
+      expect(spacesService.verifyUserAccess).toHaveBeenCalledWith(
+        mockUserId,
+        mockSpaceId,
+        'viewer'
+      );
     });
 
     it('should include historical trend data', async () => {
@@ -219,7 +226,11 @@ describe('AnalyticsService', () => {
       // Weekly expenses = 27000 / (90/7) ≈ 2100
       expect(result.summary.totalIncome).toBeGreaterThan(0);
       expect(result.summary.totalExpenses).toBeGreaterThan(0);
-      expect(spacesService.verifyUserAccess).toHaveBeenCalledWith(mockUserId, mockSpaceId, 'viewer');
+      expect(spacesService.verifyUserAccess).toHaveBeenCalledWith(
+        mockUserId,
+        mockSpaceId,
+        'viewer'
+      );
     });
 
     it('should handle custom forecast periods', async () => {
@@ -308,7 +319,12 @@ describe('AnalyticsService', () => {
       prisma.transaction.groupBy.mockResolvedValue(mockTransactions as any);
       prisma.category.findMany.mockResolvedValue(mockCategories as any);
 
-      const result = await service.getSpendingByCategory(mockUserId, mockSpaceId, startDate, endDate);
+      const result = await service.getSpendingByCategory(
+        mockUserId,
+        mockSpaceId,
+        startDate,
+        endDate
+      );
 
       expect(result).toHaveLength(2);
       expect(result[0].categoryName).toBe('Groceries');
@@ -316,7 +332,11 @@ describe('AnalyticsService', () => {
       expect(result[0].transactionCount).toBe(10);
       expect(result[1].categoryName).toBe('Transportation');
       expect(result[1].amount).toBe(3000);
-      expect(spacesService.verifyUserAccess).toHaveBeenCalledWith(mockUserId, mockSpaceId, 'viewer');
+      expect(spacesService.verifyUserAccess).toHaveBeenCalledWith(
+        mockUserId,
+        mockSpaceId,
+        'viewer'
+      );
     });
 
     it('should sort categories by amount descending', async () => {
@@ -384,19 +404,14 @@ describe('AnalyticsService', () => {
 
   describe('getIncomeVsExpenses', () => {
     it('should return monthly income vs expenses', async () => {
-      prisma.transaction.aggregate
-        .mockResolvedValueOnce({
-          _sum: { amount: { toNumber: () => 10000 } },
-        } as any)
-        .mockResolvedValueOnce({
-          _sum: { amount: { toNumber: () => -8000 } },
-        } as any)
-        .mockResolvedValueOnce({
-          _sum: { amount: { toNumber: () => 12000 } },
-        } as any)
-        .mockResolvedValueOnce({
-          _sum: { amount: { toNumber: () => -9000 } },
-        } as any);
+      const now = new Date();
+      const month1 = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString().slice(0, 7);
+      const month2 = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 7);
+
+      (prisma.$queryRaw as jest.Mock).mockResolvedValue([
+        { month: month1, income: '10000', expenses: '8000' },
+        { month: month2, income: '12000', expenses: '9000' },
+      ]);
 
       const result = await service.getIncomeVsExpenses(mockUserId, mockSpaceId, 2);
 
@@ -407,17 +422,15 @@ describe('AnalyticsService', () => {
       expect(result[1].income).toBe(12000);
       expect(result[1].expenses).toBe(9000);
       expect(result[1].net).toBe(3000);
-      expect(spacesService.verifyUserAccess).toHaveBeenCalledWith(mockUserId, mockSpaceId, 'viewer');
+      expect(spacesService.verifyUserAccess).toHaveBeenCalledWith(
+        mockUserId,
+        mockSpaceId,
+        'viewer'
+      );
     });
 
     it('should handle months with no data', async () => {
-      prisma.transaction.aggregate
-        .mockResolvedValueOnce({
-          _sum: { amount: null },
-        } as any)
-        .mockResolvedValueOnce({
-          _sum: { amount: null },
-        } as any);
+      (prisma.$queryRaw as jest.Mock).mockResolvedValue([]);
 
       const result = await service.getIncomeVsExpenses(mockUserId, mockSpaceId, 1);
 
@@ -428,10 +441,7 @@ describe('AnalyticsService', () => {
     });
 
     it('should format month correctly', async () => {
-      prisma.transaction.aggregate
-        .mockResolvedValue({
-          _sum: { amount: { toNumber: () => 0 } },
-        } as any);
+      (prisma.$queryRaw as jest.Mock).mockResolvedValue([]);
 
       const result = await service.getIncomeVsExpenses(mockUserId, mockSpaceId, 1);
 
@@ -471,7 +481,11 @@ describe('AnalyticsService', () => {
       expect(result[0].currency).toBe(Currency.MXN);
       expect(result[1].accountName).toBe('Checking');
       expect(result[1].balance).toBe(10000);
-      expect(spacesService.verifyUserAccess).toHaveBeenCalledWith(mockUserId, mockSpaceId, 'viewer');
+      expect(spacesService.verifyUserAccess).toHaveBeenCalledWith(
+        mockUserId,
+        mockSpaceId,
+        'viewer'
+      );
     });
 
     it('should handle accounts without last sync date', async () => {
@@ -539,9 +553,9 @@ describe('AnalyticsService', () => {
     });
 
     it('should convert DeFi value from USD to target currency', async () => {
-      fxRatesService.convertAmount.mockImplementation(async (amount, from, to) => {
-        if (from === 'USD' && to === 'MXN') return amount * 17; // Mock USD to MXN
-        return amount;
+      fxRatesService.getExchangeRate.mockImplementation(async (from, to) => {
+        if (from === 'USD' && to === 'MXN') return 17;
+        return 1;
       });
 
       const mockAccounts = [
@@ -602,9 +616,9 @@ describe('AnalyticsService', () => {
     });
 
     it('should convert manual assets from different currencies', async () => {
-      fxRatesService.convertAmount.mockImplementation(async (amount, from, to) => {
-        if (from === 'USD' && to === 'MXN') return amount * 17;
-        return amount;
+      fxRatesService.getExchangeRate.mockImplementation(async (from, to) => {
+        if (from === 'USD' && to === 'MXN') return 17;
+        return 1;
       });
 
       prisma.account.findMany.mockResolvedValue([]);
@@ -1026,9 +1040,7 @@ describe('AnalyticsService', () => {
     });
 
     it('should use absolute values for balances', async () => {
-      const mockAccounts = [
-        { id: 'acc-1', balance: { toNumber: () => -5000 }, type: 'credit' },
-      ];
+      const mockAccounts = [{ id: 'acc-1', balance: { toNumber: () => -5000 }, type: 'credit' }];
 
       prisma.account.findMany.mockResolvedValue(mockAccounts as any);
 
@@ -1083,12 +1095,14 @@ describe('AnalyticsService', () => {
     });
 
     it('should limit recent transactions to 5', async () => {
-      const mockTransactions = Array(10).fill(null).map((_, i) => ({
-        id: `txn-${i}`,
-        amount: { toNumber: () => -100 },
-        date: new Date(),
-        account: { id: 'acc-1' },
-      }));
+      const mockTransactions = Array(10)
+        .fill(null)
+        .map((_, i) => ({
+          id: `txn-${i}`,
+          amount: { toNumber: () => -100 },
+          date: new Date(),
+          account: { id: 'acc-1' },
+        }));
 
       (prisma.transaction as any).findMany.mockResolvedValue(mockTransactions);
 
@@ -1203,7 +1217,7 @@ describe('AnalyticsService', () => {
 
     it('should return partial data when getNetWorth fails', async () => {
       // Make FxRatesService throw to crash getNetWorth (currency conversion)
-      fxRatesService.convertAmount.mockRejectedValue(new Error('FX rate unavailable'));
+      fxRatesService.getExchangeRate.mockRejectedValue(new Error('FX rate unavailable'));
 
       // Add an account with a different currency to trigger conversion
       prisma.account.findMany.mockResolvedValue([
@@ -1628,9 +1642,9 @@ describe('AnalyticsService', () => {
 
   describe('currency conversion', () => {
     it('should convert account balances to target currency', async () => {
-      fxRatesService.convertAmount.mockImplementation(async (amount, from, to) => {
-        if (from === 'USD' && to === 'MXN') return amount * 17;
-        return amount;
+      fxRatesService.getExchangeRate.mockImplementation(async (from, to) => {
+        if (from === 'USD' && to === 'MXN') return 17;
+        return 1;
       });
 
       const mockAccounts = [
@@ -1649,11 +1663,11 @@ describe('AnalyticsService', () => {
       const result = await service.getNetWorth(mockUserId, mockSpaceId);
 
       expect(result.totalAssets).toBe(17000);
-      expect(fxRatesService.convertAmount).toHaveBeenCalledWith(1000, 'USD', 'MXN');
+      expect(fxRatesService.getExchangeRate).toHaveBeenCalledWith('USD', 'MXN');
     });
 
     it('should preserve negative sign after currency conversion', async () => {
-      fxRatesService.convertAmount.mockImplementation(async (amount) => amount * 17);
+      fxRatesService.getExchangeRate.mockResolvedValue(17);
 
       const mockAccounts = [
         {
@@ -1675,9 +1689,9 @@ describe('AnalyticsService', () => {
     });
 
     it('should convert historical valuations to target currency', async () => {
-      fxRatesService.convertAmount.mockImplementation(async (amount, from, to) => {
-        if (from === 'USD' && to === 'MXN') return amount * 17;
-        return amount;
+      fxRatesService.getExchangeRate.mockImplementation(async (from, to) => {
+        if (from === 'USD' && to === 'MXN') return 17;
+        return 1;
       });
 
       const mockAccounts = [
@@ -1725,6 +1739,104 @@ describe('AnalyticsService', () => {
       expect(result.currency).toBe(Currency.USD);
       // No conversion needed since account is already in USD
       expect(result.totalAssets).toBe(1000);
+    });
+  });
+
+  describe('getConsolidatedNetWorth', () => {
+    it('should consolidate net worth across multiple spaces', async () => {
+      // Mock userSpace.findMany returning 2 spaces
+      (prisma as any).userSpace = {
+        findMany: jest.fn().mockResolvedValue([
+          { spaceId: 'space-1', space: { name: 'Personal', currency: 'MXN' } },
+          { spaceId: 'space-2', space: { name: 'Business', currency: 'USD' } },
+        ]),
+      };
+
+      // First space: MXN accounts
+      prisma.account.findMany
+        .mockResolvedValueOnce([
+          {
+            id: 'acc-1',
+            balance: { toNumber: () => 50000 },
+            type: 'checking',
+            currency: 'MXN',
+            assetValuations: [],
+          },
+        ] as any)
+        .mockResolvedValueOnce([
+          {
+            id: 'acc-2',
+            balance: { toNumber: () => 1000 },
+            type: 'checking',
+            currency: 'USD',
+            assetValuations: [],
+          },
+        ] as any);
+
+      prisma.manualAsset.findMany.mockResolvedValue([]);
+      prisma.assetValuation.findMany.mockResolvedValue([]);
+
+      // Mock FX rate for USD->MXN
+      fxRatesService.getExchangeRate.mockImplementation(async (from, to) => {
+        if (from === 'USD' && to === 'MXN') return 17;
+        return 1;
+      });
+
+      const result = await service.getConsolidatedNetWorth(mockUserId, Currency.MXN);
+
+      expect(result.currency).toBe(Currency.MXN);
+      expect(result.spaces).toHaveLength(2);
+      expect(result.spaces[0].spaceName).toBe('Personal');
+      expect(result.spaces[1].spaceName).toBe('Business');
+      // Space 1: 50000 MXN
+      expect(result.spaces[0].assets).toBe(50000);
+      // Space 2: 1000 USD * 17 = 17000 MXN
+      expect(result.spaces[1].assets).toBe(17000);
+      // Total: 50000 + 17000 = 67000
+      expect(result.totalNetWorth).toBe(67000);
+    });
+
+    it('should handle spaces with net worth errors gracefully', async () => {
+      (prisma as any).userSpace = {
+        findMany: jest.fn().mockResolvedValue([
+          { spaceId: 'space-1', space: { name: 'Personal', currency: 'MXN' } },
+          { spaceId: 'space-2', space: { name: 'Broken', currency: 'USD' } },
+        ]),
+      };
+
+      // First space works
+      prisma.account.findMany
+        .mockResolvedValueOnce([
+          {
+            id: 'acc-1',
+            balance: { toNumber: () => 10000 },
+            type: 'checking',
+            currency: 'MXN',
+            assetValuations: [],
+          },
+        ] as any)
+        // Second space throws
+        .mockRejectedValueOnce(new Error('DB error'));
+
+      prisma.manualAsset.findMany.mockResolvedValue([]);
+      prisma.assetValuation.findMany.mockResolvedValue([]);
+
+      const result = await service.getConsolidatedNetWorth(mockUserId, Currency.MXN);
+
+      // Should still return data from the working space
+      expect(result.spaces).toHaveLength(1);
+      expect(result.totalNetWorth).toBe(10000);
+    });
+
+    it('should return empty when user has no spaces', async () => {
+      (prisma as any).userSpace = {
+        findMany: jest.fn().mockResolvedValue([]),
+      };
+
+      const result = await service.getConsolidatedNetWorth(mockUserId, Currency.MXN);
+
+      expect(result.spaces).toHaveLength(0);
+      expect(result.totalNetWorth).toBe(0);
     });
   });
 });

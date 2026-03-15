@@ -1,4 +1,8 @@
--- Row Level Security Policies for Dhanam
+-- Row Level Security Policies for Dhanam (REFERENCE COPY)
+-- NOTE: The authoritative source is the Prisma migration at:
+--   apps/api/prisma/migrations/20260315000000_add_rls_policies/migration.sql
+-- This file is kept for documentation purposes only.
+--
 -- Apply after schema migration. Requires superuser or table owner.
 -- These policies enforce tenant isolation at the database level.
 

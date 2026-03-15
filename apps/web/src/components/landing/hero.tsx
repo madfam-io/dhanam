@@ -37,7 +37,7 @@ export function Hero({ onLiveDemoClick, onSignUpClick }: HeroProps) {
             {t('hero.cta')}
             <ArrowRight className="h-4 w-4" />
           </Button>
-          <Button size="lg" variant="outline" onClick={onSignUpClick} className="gap-2">
+          <Button size="lg" variant="outline" onClick={() => onSignUpClick()} className="gap-2">
             {t('hero.ctaSecondary')}
           </Button>
         </div>

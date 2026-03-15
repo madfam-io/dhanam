@@ -1,0 +1,70 @@
+# =============================================================================
+# Synthetic Health Check CronJob for Dhanam
+# =============================================================================
+# Runs every 5 minutes to verify API and Web endpoints are healthy.
+# Exits non-zero on failure so Kubernetes marks the Job as failed,
+# which surfaces in kube_job_status_failed for Alertmanager to pick up.
+#
+# Health endpoints:
+#   - API:  http://dhanam-api.dhanam.svc.cluster.local/health  (port 80 -> 4300)
+#   - Web:  http://dhanam-web.dhanam.svc.cluster.local/api/health  (port 80 -> 4200)
+#
+# NOTE: Services expose port 80 via ClusterIP; use port 80 here, not the
+#       container targetPort.
+# =============================================================================
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: dhanam-synthetic-healthcheck
+  namespace: dhanam
+  labels:
+    app: dhanam
+    component: synthetic-healthcheck
+spec:
+  schedule: "*/5 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    metadata:
+      labels:
+        app: dhanam
+        component: synthetic-healthcheck
+    spec:
+      backoffLimit: 1
+      activeDeadlineSeconds: 60
+      template:
+        metadata:
+          labels:
+            app: dhanam
+            component: synthetic-healthcheck
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: healthcheck
+              image: curlimages/curl:8.7.1
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 16Mi
+                limits:
+                  cpu: 50m
+                  memory: 32Mi
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  set -e
+                  echo "=== Dhanam Synthetic Health Check ==="
+                  echo ""
+                  echo "Checking API health..."
+                  curl -sf --max-time 10 \
+                    http://dhanam-api.dhanam.svc.cluster.local/health \
+                    || { echo "FAIL: API health check returned non-200"; exit 1; }
+                  echo ""
+                  echo "Checking Web health..."
+                  curl -sf --max-time 10 \
+                    http://dhanam-web.dhanam.svc.cluster.local/api/health \
+                    || { echo "FAIL: Web health check returned non-200"; exit 1; }
+                  echo ""
+                  echo "All health checks passed."

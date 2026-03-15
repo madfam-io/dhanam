@@ -4,7 +4,7 @@
 
 The Dhanam Ledger API is a RESTful API built with NestJS and Fastify, providing comprehensive financial management capabilities with ESG crypto insights.
 
-**Base URL**: `https://api.dhanam.io/v1` (Production) | `http://localhost:4000` (Development)
+**Base URL**: `https://api.dhan.am/v1` (Production) | `http://localhost:4010` (Development)
 
 **API Version**: v1.0.0
 
@@ -19,6 +19,7 @@ Authorization: Bearer <access_token>
 ```
 
 ### Token Lifecycle
+
 - **Access Token**: 15 minutes lifetime
 - **Refresh Token**: 30 days lifetime, rotates on use
 - **2FA Required**: For admin operations and sensitive actions
@@ -26,6 +27,7 @@ Authorization: Bearer <access_token>
 ### Authentication Endpoints
 
 #### POST /auth/login
+
 Login with email and password.
 
 ```json
@@ -36,6 +38,7 @@ Login with email and password.
 ```
 
 **Response:**
+
 ```json
 {
   "user": {
@@ -54,6 +57,7 @@ Login with email and password.
 ```
 
 #### POST /auth/refresh
+
 Refresh access token using refresh token.
 
 ```json
@@ -63,9 +67,11 @@ Refresh access token using refresh token.
 ```
 
 #### POST /auth/logout
+
 Logout and invalidate tokens.
 
 #### POST /auth/register
+
 Create new user account.
 
 ```json
@@ -84,9 +90,11 @@ Create new user account.
 Spaces represent isolated financial environments (Personal/Business).
 
 #### GET /spaces
+
 List user's spaces.
 
 **Response:**
+
 ```json
 [
   {
@@ -99,7 +107,7 @@ List user's spaces.
       {
         "id": "acc_123",
         "name": "Chase Checking",
-        "balance": 2500.00,
+        "balance": 2500.0,
         "provider": "plaid"
       }
     ]
@@ -108,6 +116,7 @@ List user's spaces.
 ```
 
 #### POST /spaces
+
 Create a new space.
 
 ```json
@@ -119,9 +128,11 @@ Create a new space.
 ```
 
 #### PUT /spaces/:id
+
 Update space details.
 
 #### DELETE /spaces/:id
+
 Delete space (admin only).
 
 ### Accounts
@@ -129,14 +140,17 @@ Delete space (admin only).
 Financial accounts connected through various providers.
 
 #### GET /accounts
+
 List accounts for a space.
 
 **Query Parameters:**
+
 - `spaceId` (required): Space identifier
 - `provider`: Filter by provider (plaid, belvo, bitso, manual)
 - `type`: Filter by account type (checking, savings, credit, crypto, investment)
 
 **Response:**
+
 ```json
 [
   {
@@ -145,7 +159,7 @@ List accounts for a space.
     "type": "checking",
     "provider": "plaid",
     "currency": "USD",
-    "balance": 2500.00,
+    "balance": 2500.0,
     "lastSyncedAt": "2024-01-01T12:00:00Z",
     "isActive": true,
     "metadata": {
@@ -158,6 +172,7 @@ List accounts for a space.
 ```
 
 #### POST /accounts/sync
+
 Trigger manual account synchronization.
 
 ```json
@@ -168,6 +183,7 @@ Trigger manual account synchronization.
 ```
 
 #### PUT /accounts/:id
+
 Update account settings.
 
 ```json
@@ -178,6 +194,7 @@ Update account settings.
 ```
 
 #### DELETE /accounts/:id
+
 Disconnect account.
 
 ### Transactions
@@ -185,9 +202,11 @@ Disconnect account.
 Financial transactions with auto-categorization.
 
 #### GET /transactions
+
 List transactions for a space.
 
 **Query Parameters:**
+
 - `spaceId` (required): Space identifier
 - `accountId`: Filter by account
 - `categoryId`: Filter by category
@@ -199,6 +218,7 @@ List transactions for a space.
 - `search`: Search in description and merchant name
 
 **Response:**
+
 ```json
 {
   "transactions": [
@@ -224,7 +244,7 @@ List transactions for a space.
         "address": "123 Main St, New York, NY",
         "coordinates": {
           "lat": 40.7128,
-          "lon": -74.0060
+          "lon": -74.006
         }
       },
       "tags": ["business-expense", "client-meeting"]
@@ -240,13 +260,14 @@ List transactions for a space.
 ```
 
 #### POST /transactions
+
 Create manual transaction.
 
 ```json
 {
   "spaceId": "space_123",
   "accountId": "acc_123",
-  "amount": -25.50,
+  "amount": -25.5,
   "description": "Coffee with client",
   "merchantName": "Local Café",
   "date": "2024-01-01T14:30:00Z",
@@ -256,6 +277,7 @@ Create manual transaction.
 ```
 
 #### PUT /transactions/:id
+
 Update transaction (categorization, tags).
 
 ```json
@@ -267,6 +289,7 @@ Update transaction (categorization, tags).
 ```
 
 #### POST /transactions/categorize
+
 Bulk categorize transactions using rules.
 
 ```json
@@ -282,20 +305,23 @@ Bulk categorize transactions using rules.
 Budget management with category-based tracking.
 
 #### GET /budgets
+
 List budgets for a space.
 
 **Query Parameters:**
+
 - `spaceId` (required): Space identifier
 - `period`: Filter by period (monthly, quarterly, yearly)
 - `status`: Filter by status (active, exceeded, completed)
 
 **Response:**
+
 ```json
 [
   {
     "id": "budget_123",
     "name": "Monthly Food Budget",
-    "amount": 800.00,
+    "amount": 800.0,
     "spent": 456.78,
     "remaining": 343.22,
     "currency": "USD",
@@ -307,13 +333,13 @@ List budgets for a space.
       {
         "id": "cat_123",
         "name": "Groceries",
-        "allocated": 500.00,
+        "allocated": 500.0,
         "spent": 278.45
       },
       {
-        "id": "cat_124", 
+        "id": "cat_124",
         "name": "Restaurants",
-        "allocated": 300.00,
+        "allocated": 300.0,
         "spent": 178.33
       }
     ],
@@ -326,13 +352,14 @@ List budgets for a space.
 ```
 
 #### POST /budgets
+
 Create new budget.
 
 ```json
 {
   "spaceId": "space_123",
   "name": "Q1 Marketing Budget",
-  "amount": 5000.00,
+  "amount": 5000.0,
   "period": "quarterly",
   "startDate": "2024-01-01",
   "endDate": "2024-03-31",
@@ -342,9 +369,11 @@ Create new budget.
 ```
 
 #### PUT /budgets/:id
+
 Update budget.
 
 #### DELETE /budgets/:id
+
 Delete budget.
 
 ### Categories
@@ -352,9 +381,11 @@ Delete budget.
 Transaction categories with auto-categorization rules.
 
 #### GET /categories
+
 List categories for a space.
 
 **Response:**
+
 ```json
 [
   {
@@ -385,6 +416,7 @@ List categories for a space.
 ```
 
 #### POST /categories
+
 Create new category.
 
 ```json
@@ -406,9 +438,11 @@ Create new category.
 ```
 
 #### PUT /categories/:id
+
 Update category.
 
 #### DELETE /categories/:id
+
 Delete category.
 
 ## Provider Integrations
@@ -416,6 +450,7 @@ Delete category.
 ### Plaid (US Banking)
 
 #### POST /providers/plaid/create-link
+
 Create Plaid Link token for account connection.
 
 ```json
@@ -426,6 +461,7 @@ Create Plaid Link token for account connection.
 ```
 
 **Response:**
+
 ```json
 {
   "linkToken": "link-sandbox-12345...",
@@ -434,6 +470,7 @@ Create Plaid Link token for account connection.
 ```
 
 #### POST /providers/plaid/exchange-token
+
 Exchange public token for access token after Plaid Link.
 
 ```json
@@ -458,11 +495,13 @@ Exchange public token for access token after Plaid Link.
 ```
 
 #### POST /providers/plaid/webhook
+
 Plaid webhook handler (internal use).
 
 ### Belvo (Mexican Banking)
 
 #### POST /providers/belvo/create-link
+
 Create Belvo Link session.
 
 ```json
@@ -473,6 +512,7 @@ Create Belvo Link session.
 ```
 
 #### POST /providers/belvo/connect
+
 Connect Belvo account with credentials.
 
 ```json
@@ -485,11 +525,13 @@ Connect Belvo account with credentials.
 ```
 
 #### POST /providers/belvo/webhook
+
 Belvo webhook handler (internal use).
 
 ### Bitso (Cryptocurrency)
 
 #### POST /providers/bitso/connect
+
 Connect Bitso account with API credentials.
 
 ```json
@@ -501,6 +543,7 @@ Connect Bitso account with API credentials.
 ```
 
 **Response:**
+
 ```json
 {
   "accounts": [
@@ -509,7 +552,7 @@ Connect Bitso account with API credentials.
       "name": "Bitcoin",
       "symbol": "BTC",
       "balance": 0.025,
-      "balanceUSD": 1250.00
+      "balanceUSD": 1250.0
     }
   ],
   "message": "Successfully connected Bitso account"
@@ -517,6 +560,7 @@ Connect Bitso account with API credentials.
 ```
 
 #### POST /providers/bitso/sync
+
 Sync Bitso account balances.
 
 ## ESG Scoring
@@ -524,12 +568,15 @@ Sync Bitso account balances.
 Environmental, Social, and Governance scoring for cryptocurrency assets.
 
 #### GET /esg/scores
+
 Get ESG scores for a space's crypto assets.
 
 **Query Parameters:**
+
 - `spaceId` (required): Space identifier
 
 **Response:**
+
 ```json
 {
   "portfolioScore": {
@@ -551,11 +598,11 @@ Get ESG scores for a space's crypto assets.
       "energyIntensity": 707000,
       "carbonFootprint": 345.6,
       "balance": 0.025,
-      "balanceUSD": 1250.00,
+      "balanceUSD": 1250.0,
       "weight": 0.6
     },
     {
-      "symbol": "ETH", 
+      "symbol": "ETH",
       "name": "Ethereum",
       "environmental": 75,
       "social": 80,
@@ -565,7 +612,7 @@ Get ESG scores for a space's crypto assets.
       "energyIntensity": 35,
       "carbonFootprint": 2.1,
       "balance": 5.5,
-      "balanceUSD": 8250.00,
+      "balanceUSD": 8250.0,
       "weight": 0.4
     }
   ],
@@ -587,9 +634,11 @@ Get ESG scores for a space's crypto assets.
 ```
 
 #### GET /esg/methodology
+
 Get ESG scoring methodology documentation.
 
 **Response:**
+
 ```json
 {
   "version": "2.0",
@@ -615,12 +664,7 @@ Get ESG scoring methodology documentation.
     },
     "governance": {
       "weight": 0.3,
-      "factors": [
-        "Protocol governance",
-        "Transparency",
-        "Regulatory compliance",
-        "Risk management"
-      ]
+      "factors": ["Protocol governance", "Transparency", "Regulatory compliance", "Risk management"]
     }
   },
   "grading": {
@@ -639,15 +683,18 @@ Get ESG scoring methodology documentation.
 Machine learning-powered transaction categorization with learning loop.
 
 ### GET /ml/corrections
+
 List category corrections for a space.
 
 **Query Parameters:**
+
 - `spaceId` (required): Space identifier
 - `status`: Filter by status (pending, applied, rejected)
 - `limit`: Number of results (default: 50)
 - `offset`: Pagination offset
 
 **Response:**
+
 ```json
 {
   "corrections": [
@@ -672,6 +719,7 @@ List category corrections for a space.
 ```
 
 ### POST /ml/corrections
+
 Submit a category correction to train the ML model.
 
 ```json
@@ -683,6 +731,7 @@ Submit a category correction to train the ML model.
 ```
 
 **Response:**
+
 ```json
 {
   "correctionId": "corr_123",
@@ -692,9 +741,11 @@ Submit a category correction to train the ML model.
 ```
 
 ### POST /ml/retrain
+
 Trigger a manual ML model retrain (admin only).
 
 **Response:**
+
 ```json
 {
   "jobId": "job_789",
@@ -710,14 +761,17 @@ Trigger a manual ML model retrain (admin only).
 Track DeFi protocol positions via Zapper API integration.
 
 ### GET /defi/positions
+
 List DeFi positions for a space.
 
 **Query Parameters:**
+
 - `spaceId` (required): Space identifier
 - `protocol`: Filter by protocol (uniswap, aave, compound, etc.)
 - `network`: Filter by network (ethereum, polygon, arbitrum, etc.)
 
 **Response:**
+
 ```json
 {
   "positions": [
@@ -731,37 +785,38 @@ List DeFi positions for a space.
         {
           "symbol": "ETH",
           "balance": 1.5,
-          "balanceUSD": 3750.00
+          "balanceUSD": 3750.0
         },
         {
           "symbol": "USDC",
           "balance": 3500,
-          "balanceUSD": 3500.00
+          "balanceUSD": 3500.0
         }
       ],
-      "totalValueUSD": 7250.00,
-      "unrealizedGain": 450.00,
+      "totalValueUSD": 7250.0,
+      "unrealizedGain": 450.0,
       "apy": 12.5,
       "lastUpdated": "2025-01-15T10:00:00Z"
     }
   ],
   "summary": {
-    "totalValueUSD": 45000.00,
+    "totalValueUSD": 45000.0,
     "byProtocol": {
-      "uniswap-v3": 15000.00,
-      "aave-v3": 20000.00,
-      "lido": 10000.00
+      "uniswap-v3": 15000.0,
+      "aave-v3": 20000.0,
+      "lido": 10000.0
     },
     "byNetwork": {
-      "ethereum": 35000.00,
-      "polygon": 7000.00,
-      "arbitrum": 3000.00
+      "ethereum": 35000.0,
+      "polygon": 7000.0,
+      "arbitrum": 3000.0
     }
   }
 }
 ```
 
 ### POST /defi/wallets
+
 Connect a wallet address for DeFi tracking.
 
 ```json
@@ -774,6 +829,7 @@ Connect a wallet address for DeFi tracking.
 ```
 
 ### POST /defi/sync
+
 Trigger a manual sync of DeFi positions.
 
 ```json
@@ -790,12 +846,15 @@ Trigger a manual sync of DeFi positions.
 Dead man's switch functionality for estate planning.
 
 ### GET /estate-planning/life-beat/config
+
 Get Life Beat configuration for a household.
 
 **Query Parameters:**
+
 - `householdId` (required): Household identifier
 
 **Response:**
+
 ```json
 {
   "enabled": true,
@@ -810,6 +869,7 @@ Get Life Beat configuration for a household.
 ```
 
 ### PUT /estate-planning/life-beat/config
+
 Update Life Beat configuration.
 
 ```json
@@ -824,6 +884,7 @@ Update Life Beat configuration.
 ```
 
 ### POST /estate-planning/life-beat/check-in
+
 Record a check-in to reset the escalation timer.
 
 ```json
@@ -833,6 +894,7 @@ Record a check-in to reset the escalation timer.
 ```
 
 **Response:**
+
 ```json
 {
   "lastCheckIn": "2025-01-15T10:00:00Z",
@@ -842,6 +904,7 @@ Record a check-in to reset the escalation timer.
 ```
 
 ### POST /estate-planning/life-beat/emergency-access
+
 Grant emergency access to executor (triggered by escalation).
 
 ```json
@@ -860,18 +923,20 @@ Grant emergency access to executor (triggered by escalation).
 Automated real estate valuations for manual assets.
 
 ### GET /manual-assets/:id/zillow/estimate
+
 Get Zillow Zestimate for a real estate asset.
 
 **Response:**
+
 ```json
 {
-  "zestimate": 875000.00,
-  "rentZestimate": 4200.00,
+  "zestimate": 875000.0,
+  "rentZestimate": 4200.0,
   "currency": "USD",
   "lastUpdated": "2025-01-14T00:00:00Z",
   "valuationRange": {
-    "low": 830000.00,
-    "high": 920000.00
+    "low": 830000.0,
+    "high": 920000.0
   },
   "propertyDetails": {
     "bedrooms": 3,
@@ -883,6 +948,7 @@ Get Zillow Zestimate for a real estate asset.
 ```
 
 ### POST /manual-assets/:id/zillow/lookup
+
 Look up Zillow data by address.
 
 ```json
@@ -895,13 +961,15 @@ Look up Zillow data by address.
 ```
 
 ### POST /manual-assets/:id/zillow/sync
+
 Sync current Zestimate to asset valuation.
 
 **Response:**
+
 ```json
 {
-  "previousValue": 850000.00,
-  "newValue": 875000.00,
+  "previousValue": 850000.0,
+  "newValue": 875000.0,
   "source": "Zillow Zestimate",
   "valuationCreated": true
 }
@@ -914,9 +982,11 @@ Sync current Zestimate to asset valuation.
 Automated market valuations for collectible assets (sneakers, watches, art, wine, coins, trading cards, classic cars).
 
 ### GET /manual-assets/collectibles/categories
+
 Get available collectible categories and provider status.
 
 **Response:**
+
 ```json
 [
   { "category": "sneaker", "provider": "sneaks", "available": true },
@@ -931,6 +1001,7 @@ Get available collectible categories and provider status.
 ```
 
 ### GET /manual-assets/collectibles/search
+
 Search collectible catalog by category.
 
 **Query Parameters:**
@@ -941,6 +1012,7 @@ Search collectible catalog by category.
 | limit | number | No | Max results (default 10) |
 
 **Response:**
+
 ```json
 [
   {
@@ -958,9 +1030,11 @@ Search collectible catalog by category.
 ```
 
 ### POST /manual-assets/:id/collectible/link
+
 Link a manual asset to a collectible catalog item for automatic valuations.
 
 **Body:**
+
 ```json
 {
   "externalId": "CW2288-111",
@@ -970,12 +1044,15 @@ Link a manual asset to a collectible catalog item for automatic valuations.
 ```
 
 ### POST /manual-assets/:id/collectible/unlink
+
 Remove collectible provider link from an asset.
 
 ### POST /manual-assets/:id/collectible/refresh
+
 Manually refresh the valuation from the linked provider.
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -991,6 +1068,7 @@ Manually refresh the valuation from the linked provider.
 Multi-platform gaming asset tracking with staking, P2E earnings, guild management, and governance.
 
 ### GET /gaming/portfolio
+
 Get aggregated gaming portfolio for a space.
 
 **Query Parameters:**
@@ -999,6 +1077,7 @@ Get aggregated gaming portfolio for a space.
 | spaceId | string | Yes | Space identifier |
 
 **Response:**
+
 ```json
 {
   "platforms": [
@@ -1015,9 +1094,7 @@ Get aggregated gaming portfolio for a space.
       "monthlyEarningsUsd": 503
     }
   ],
-  "earnings": [
-    { "platform": "sandbox", "source": "staking", "amountUsd": 48, "color": "#F1C40F" }
-  ],
+  "earnings": [{ "platform": "sandbox", "source": "staking", "amountUsd": 48, "color": "#F1C40F" }],
   "guilds": [
     {
       "platform": "axie",
@@ -1032,13 +1109,29 @@ Get aggregated gaming portfolio for a space.
     { "chain": "polygon", "totalValueUsd": 14550, "platformCount": 1, "platforms": ["sandbox"] }
   ],
   "parcels": [
-    { "coordinates": "(-12, 45)", "size": "3x3", "rentalStatus": "rented", "monthlyRental": 150, "platform": "The Sandbox" }
+    {
+      "coordinates": "(-12, 45)",
+      "size": "3x3",
+      "rentalStatus": "rented",
+      "monthlyRental": 150,
+      "platform": "The Sandbox"
+    }
   ],
   "nfts": [
-    { "name": "BAYC #7291", "collection": "Bored Ape Yacht Club", "currentValue": 18500, "acquisitionCost": 32000 }
+    {
+      "name": "BAYC #7291",
+      "collection": "Bored Ape Yacht Club",
+      "currentValue": 18500,
+      "acquisitionCost": 32000
+    }
   ],
   "proposals": [
-    { "id": "SIP-42", "title": "Creator Fund Allocation Q1 2026", "status": "active", "dao": "Sandbox DAO" }
+    {
+      "id": "SIP-42",
+      "title": "Creator Fund Allocation Q1 2026",
+      "status": "active",
+      "dao": "Sandbox DAO"
+    }
   ],
   "totalVotesCast": 14,
   "votingPower": 15000,
@@ -1047,9 +1140,11 @@ Get aggregated gaming portfolio for a space.
 ```
 
 ### GET /gaming/platforms
+
 List supported gaming platforms.
 
 ### GET /gaming/earnings
+
 Get earnings streams by platform and source.
 
 **Query Parameters:**
@@ -1059,9 +1154,11 @@ Get earnings streams by platform and source.
 | period | string | No | Time period (e.g. `30d`, `90d`) |
 
 ### GET /gaming/nfts
+
 Get all gaming NFTs for a space.
 
 ### GET /gaming/:platform/positions
+
 Get positions for a specific gaming platform.
 
 ---
@@ -1071,14 +1168,17 @@ Get positions for a specific gaming platform.
 10-30 year cashflow forecasting with Monte Carlo simulation.
 
 ### GET /projections/long-term
+
 Get long-term projection for a space.
 
 **Query Parameters:**
+
 - `spaceId` (required): Space identifier
 - `years`: Projection horizon (10, 20, 30) - default: 30
 - `scenarios`: Number of Monte Carlo runs (100-10000) - default: 1000
 
 **Response:**
+
 ```json
 {
   "projection": {
@@ -1123,6 +1223,7 @@ Get long-term projection for a space.
 ```
 
 ### POST /projections/long-term
+
 Create a custom projection with specific parameters.
 
 ```json
@@ -1157,9 +1258,11 @@ Create a custom projection with specific parameters.
 ```
 
 ### GET /projections/scenarios
+
 List saved projection scenarios.
 
 ### POST /projections/scenarios/compare
+
 Compare multiple projection scenarios.
 
 ```json
@@ -1175,6 +1278,7 @@ Compare multiple projection scenarios.
 Cloudflare R2 storage for manual asset attachments.
 
 ### POST /manual-assets/:id/documents/presign
+
 Get a presigned URL for document upload.
 
 ```json
@@ -1186,6 +1290,7 @@ Get a presigned URL for document upload.
 ```
 
 **Response:**
+
 ```json
 {
   "uploadUrl": "https://r2.example.com/presigned/...",
@@ -1195,9 +1300,11 @@ Get a presigned URL for document upload.
 ```
 
 ### GET /manual-assets/:id/documents
+
 List documents attached to an asset.
 
 **Response:**
+
 ```json
 {
   "documents": [
@@ -1215,6 +1322,7 @@ List documents attached to an asset.
 ```
 
 ### DELETE /manual-assets/:id/documents/:docId
+
 Delete a document attachment.
 
 ---
@@ -1222,25 +1330,28 @@ Delete a document attachment.
 ## Analytics & Reporting
 
 ### GET /analytics/dashboard
+
 Get dashboard analytics for a space.
 
 **Query Parameters:**
+
 - `spaceId` (required): Space identifier
 - `period`: Time period (7d, 30d, 90d, 1y)
 
 **Response:**
+
 ```json
 {
   "netWorth": {
-    "current": 125000.00,
-    "change": 2500.00,
+    "current": 125000.0,
+    "change": 2500.0,
     "changePercent": 2.04,
     "trend": "up"
   },
   "cashFlow": {
-    "income": 8500.00,
-    "expenses": 6200.00,
-    "net": 2300.00,
+    "income": 8500.0,
+    "expenses": 6200.0,
+    "net": 2300.0,
     "period": "30d"
   },
   "accounts": {
@@ -1270,28 +1381,27 @@ Get dashboard analytics for a space.
 ```
 
 ### GET /analytics/forecast
+
 Get 60-day cashflow forecast.
 
 **Response:**
+
 ```json
 {
   "forecast": [
     {
       "week": "2024-01-01",
-      "projectedIncome": 2125.00,
-      "projectedExpenses": 1850.00,
-      "netFlow": 275.00,
+      "projectedIncome": 2125.0,
+      "projectedExpenses": 1850.0,
+      "netFlow": 275.0,
       "confidence": 0.85
     }
   ],
   "summary": {
-    "totalProjectedIncome": 17000.00,
-    "totalProjectedExpenses": 14800.00,
-    "netCashFlow": 2200.00,
-    "riskFactors": [
-      "High seasonal spending variation",
-      "Irregular income patterns"
-    ]
+    "totalProjectedIncome": 17000.0,
+    "totalProjectedExpenses": 14800.0,
+    "netCashFlow": 2200.0,
+    "riskFactors": ["High seasonal spending variation", "Irregular income patterns"]
   }
 }
 ```
@@ -1400,8 +1510,8 @@ Triggered when budget thresholds are exceeded:
   "data": {
     "budgetId": "budget_123",
     "spaceId": "space_123",
-    "currentSpent": 850.00,
-    "budgetAmount": 1000.00,
+    "currentSpent": 850.0,
+    "budgetAmount": 1000.0,
     "threshold": 80,
     "percentageSpent": 85
   }
@@ -1421,7 +1531,7 @@ import { DhanamAPI } from '@dhanam/sdk';
 
 const dhanam = new DhanamAPI({
   apiKey: 'your_api_key',
-  baseURL: 'https://api.dhanam.io/v1'
+  baseURL: 'https://api.dhanam.io/v1',
 });
 
 // Get spaces
@@ -1430,7 +1540,7 @@ const spaces = await dhanam.spaces.list();
 // Get transactions
 const transactions = await dhanam.transactions.list({
   spaceId: 'space_123',
-  limit: 50
+  limit: 50,
 });
 ```
 
@@ -1478,6 +1588,7 @@ Test API endpoints in sandbox mode:
 ### Mock Data
 
 The sandbox environment includes:
+
 - Sample transactions across multiple categories
 - Pre-configured budgets and categories
 - Mock ESG scoring data

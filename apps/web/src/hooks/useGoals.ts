@@ -174,7 +174,7 @@ export function useGoals() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<GoalsError | null>(null);
 
-  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4010';
 
   const handleRequest = async <T>(
     method: 'GET' | 'POST' | 'PUT' | 'DELETE',

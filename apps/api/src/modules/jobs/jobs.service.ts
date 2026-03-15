@@ -1,11 +1,19 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { Cron, CronExpression } from '@nestjs/schedule';
-import * as Sentry from '@sentry/node';
-
 import { PrismaService } from '@core/prisma/prisma.service';
 import { RulesService } from '@modules/categories/rules.service';
 import { BitsoService } from '@modules/providers/bitso/bitso.service';
 import { BlockchainService } from '@modules/providers/blockchain/blockchain.service';
+import { Injectable, Logger } from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule';
+import * as Sentry from '@sentry/node';
+
+/** Emails of the 5 base demo persona templates — never deleted by cleanup. */
+const DEMO_PERSONA_EMAILS = [
+  'guest@dhanam.demo',
+  'maria@dhanam.demo',
+  'carlos@dhanam.demo',
+  'patricia@dhanam.demo',
+  'diego@dhanam.demo',
+] as const;
 
 @Injectable()
 export class JobsService {
@@ -279,6 +287,47 @@ export class JobsService {
         `Daily snapshots complete: ${snapshotsCreated} snapshots for ${spaces.length} spaces (${errors} errors)`
       );
       return { snapshotsCreated, spaces: spaces.length, errors };
+    });
+  }
+
+  // Run daily at 3:30 AM - cleanup stale demo accounts
+  @Cron('0 30 3 * * *')
+  async cleanupDemoAccounts(): Promise<void> {
+    await this.withJobTracking('cleanup-demo-accounts', async () => {
+      this.logger.log('Starting demo account cleanup');
+
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+      // Find stale demo users: email ends with @dhanam.demo, not updated in 7 days,
+      // and not one of the 5 preserved persona templates
+      const staleUsers = await this.prisma.user.findMany({
+        where: {
+          email: {
+            endsWith: '@dhanam.demo',
+            notIn: [...DEMO_PERSONA_EMAILS],
+          },
+          updatedAt: {
+            lt: sevenDaysAgo,
+          },
+        },
+        select: { id: true, email: true },
+      });
+
+      if (staleUsers.length === 0) {
+        this.logger.log('No stale demo accounts to clean up');
+        return { deleted: 0 };
+      }
+
+      const staleUserIds = staleUsers.map((u) => u.id);
+
+      // Cascade-delete via Prisma (schema onDelete: Cascade handles spaces/accounts/transactions)
+      const result = await this.prisma.user.deleteMany({
+        where: { id: { in: staleUserIds } },
+      });
+
+      this.logger.log(`Demo account cleanup complete: ${result.count} stale demo accounts deleted`);
+
+      return { deleted: result.count };
     });
   }
 

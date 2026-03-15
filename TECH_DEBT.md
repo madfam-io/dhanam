@@ -1,6 +1,6 @@
 # Dhanam Tech Debt Log
 
-> **Last Updated**: 2026-03-03
+> **Last Updated**: 2026-03-15
 > **Context**: Production Readiness — Enterprise Hardening
 
 ---
@@ -66,10 +66,12 @@ AWS ECS/Fargate infrastructure has been fully removed. Deployment is exclusively
 Billing secrets (`dhanam-billing-secrets`) were created with placeholder values. Real Stripe/Paddle credentials need to be configured before billing features work.
 
 **Current Values**:
+
 - `STRIPE_MX_SECRET_KEY`: `sk_test_placeholder_update_before_billing`
 - `PADDLE_*`: placeholder values
 
 **Remediation**:
+
 - Startup validation in `BillingService` now detects placeholder values (containing `placeholder`, starting with `your_` or `your-`) on application boot.
 - In development, each detected placeholder logs a warning so developers know billing features may not work.
 - In production (`NODE_ENV=production`), each detected placeholder logs a critical error and sets `billingDisabled = true`, preventing billing endpoints from operating with invalid credentials.
@@ -78,9 +80,11 @@ Billing secrets (`dhanam-billing-secrets`) were created with placeholder values.
 - Real credentials are still required before billing features can be used in production.
 
 **Required Action**:
+
 1. Obtain production Stripe MX credentials
 2. Obtain production Paddle credentials
 3. Update secrets: `kubectl -n dhanam edit secret dhanam-billing-secrets`
+4. Follow the step-by-step runbook at `docs/CREDENTIAL_ONBOARDING.md`
 
 **Ticket**: DHANAM-003
 
@@ -145,6 +149,7 @@ Created `infra/k8s/argocd/application.yaml` (ArgoCD Application CRD for GitOps s
 React Native (Expo 54) requires React 18.x. The monorepo uses a pnpm override to pin react to 18.3.1 globally, preventing apps/web and apps/admin from upgrading to React 19.
 
 **Impact**:
+
 - `apps/mobile/src/lib/react-native-compat.tsx` (92 lines) provides type compatibility shims
 - pnpm `overrides` in root `package.json` pins `react` and `react-dom` to `18.3.1`
 - Next.js 15 features requiring React 19 server components are unavailable
@@ -158,19 +163,19 @@ When Expo officially supports React 19, remove the pnpm override and the compat 
 
 ## Tracking
 
-| ID | Title | Severity | Status | Assigned |
-|----|-------|----------|--------|----------|
-| TD-001 | GHCR Container Build Workflow | CRITICAL | RESOLVED | - |
-| TD-002 | Database Provisioning API | HIGH | RESOLVED | - |
-| TD-003 | CI/CD Platform Migration | HIGH | RESOLVED | - |
-| TD-004 | Billing Secrets Placeholder | MEDIUM | MITIGATED | - |
-| TD-005 | Enclii Port Mismatch | MEDIUM | RESOLVED | - |
-| TD-006 | JWT Secrets Missing from Template | MEDIUM | RESOLVED | - |
-| TD-007 | Monitoring Stack | MEDIUM | RESOLVED | - |
-| TD-008 | Staging Environment | MEDIUM | RESOLVED | - |
-| TD-009 | ArgoCD Documentation | LOW | RESOLVED | - |
-| TD-010 | React 18 Global Pin | LOW | ACTIVE | - |
+| ID     | Title                             | Severity | Status    | Assigned |
+| ------ | --------------------------------- | -------- | --------- | -------- |
+| TD-001 | GHCR Container Build Workflow     | CRITICAL | RESOLVED  | -        |
+| TD-002 | Database Provisioning API         | HIGH     | RESOLVED  | -        |
+| TD-003 | CI/CD Platform Migration          | HIGH     | RESOLVED  | -        |
+| TD-004 | Billing Secrets Placeholder       | MEDIUM   | MITIGATED | -        |
+| TD-005 | Enclii Port Mismatch              | MEDIUM   | RESOLVED  | -        |
+| TD-006 | JWT Secrets Missing from Template | MEDIUM   | RESOLVED  | -        |
+| TD-007 | Monitoring Stack                  | MEDIUM   | RESOLVED  | -        |
+| TD-008 | Staging Environment               | MEDIUM   | RESOLVED  | -        |
+| TD-009 | ArgoCD Documentation              | LOW      | RESOLVED  | -        |
+| TD-010 | React 18 Global Pin               | LOW      | ACTIVE    | -        |
 
 ---
 
-*This document is maintained per Law 7 (API Mandate) requirements. All bare-metal workarounds must be logged here.*
+_This document is maintained per Law 7 (API Mandate) requirements. All bare-metal workarounds must be logged here._

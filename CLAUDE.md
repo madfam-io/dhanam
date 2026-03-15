@@ -32,6 +32,7 @@ Dhanam uses **Enclii** (MADFAM's own deployment platform) for ALL production dep
 **To deploy**: Simply push to main. Enclii handles everything automatically.
 
 **GitHub Actions Workflows** (`.github/workflows/`):
+
 - `ci.yml`, `lint.yml`, `test-coverage.yml` - CI/CD quality gates (run on all PRs)
 - `check-migrations.yml` - Database migration validation
 - `publish-packages.yml` - Tag-triggered npm publish to npm.madfam.io (manual dispatch with dry-run)
@@ -40,6 +41,7 @@ Dhanam uses **Enclii** (MADFAM's own deployment platform) for ALL production dep
 - Primary production deployment is via **Enclii auto-deploy**, not GitHub Actions
 
 ### Production URLs
+
 - Web: `https://app.dhan.am`
 - Admin: `https://admin.dhan.am` (standalone admin app)
 - API: `https://api.dhan.am`
@@ -51,6 +53,7 @@ Dhanam uses **Enclii** (MADFAM's own deployment platform) for ALL production dep
 This is the Dhanam Ledger project - a comprehensive budget and wealth tracking application that unifies personal and business financial management with ESG crypto insights. It targets LATAM-first users with multilingual support (English/Spanish/Portuguese).
 
 **Core Features:**
+
 - Personal and business budgeting with category caps and rules-based auto-categorization
 - AI-powered transaction categorization with machine learning and user correction loop
 - Wealth tracking with net worth calculations and asset allocation views
@@ -68,6 +71,7 @@ This is the Dhanam Ledger project - a comprehensive budget and wealth tracking a
 ## Architecture
 
 **Monorepo Structure (Turborepo + pnpm):**
+
 ```
 apps/
 ├─ admin/         # Next.js 15 standalone admin dashboard (port 3400)
@@ -90,6 +94,7 @@ infra/
 ```
 
 **Tech Stack:**
+
 - Frontend: Next.js (React), React Native + Expo
 - Backend: NestJS (Fastify), Prisma + PostgreSQL, Redis (BullMQ)
 - Infrastructure: Enclii (bare metal K8s)
@@ -122,6 +127,7 @@ turbo test        # Turborepo test
 ## Key Implementation Guidelines
 
 **Security First:**
+
 - All provider tokens (Belvo, Plaid, Bitso) must be encrypted at rest using AES-256-GCM
 - Implement Argon2id for password hashing with breach checks
 - Use short-lived JWT (≤15m) with rotating refresh tokens (≤30d)
@@ -129,24 +135,28 @@ turbo test        # Turborepo test
 - Webhook HMAC verification for all provider integrations
 
 **Data Architecture:**
+
 - Multi-tenant via Spaces (Personal + Business entities)
 - Normalize all financial data into common schema regardless of provider
-- Daily valuation snapshots for wealth tracking trends  
+- Daily valuation snapshots for wealth tracking trends
 - Rules engine for transaction auto-categorization
 - ESG scores computed via Dhanam package and cached
 
 **Localization:**
+
 - Default Spanish (ES) for Mexico region, English elsewhere, Portuguese (pt-BR) available
 - Currency formatting for MXN/USD/EUR with Banxico FX rates
 - All user-facing text must support i18n via packages/shared/i18n
 
 **Performance Requirements:**
+
 - Page loads <1.5s p95
 - Manual account refresh <15s
-- Bulk transaction operations (100+ items) <2s p95  
+- Bulk transaction operations (100+ items) <2s p95
 - Background sync every hour via BullMQ queues
 
 **Provider Integration Patterns:**
+
 - **Belvo** (Mexico): OAuth flow → encrypted token storage → 90+ day transaction history
 - **Plaid** (US): Link flow → webhook updates → balance/transaction sync
 - **MX** (US/Canada): Aggregation API → multi-institution support
@@ -162,12 +172,14 @@ The provider orchestrator (`apps/api/src/modules/providers/orchestrator/`) handl
 ## Testing Strategy
 
 **API (NestJS):**
-- 3500+ unit tests across 140+ test suites (98%+ coverage)
+
+- 3650+ unit tests across 146+ test suites (98%+ coverage)
 - E2E journey tests: core value loop, subscription upgrade, admin operations, provider sync, billing webhooks, estate planning, households
 - Contract tests for Stripe, Plaid, and Belvo webhook schemas (Zod validation)
 - Drip campaign task tests (15 cases: send/skip/idempotency/batch/error-resilience)
 
 **Web (Next.js):**
+
 - 40+ page-level smoke tests covering all dashboard, legal, auth, billing, and feature pages
 - 25+ component tests for forms, layouts, billing, ESG, and onboarding
 - Playwright E2E: auth flows, dashboard navigation, core user journey, upgrade journey, billing, subscription pricing
@@ -175,13 +187,16 @@ The provider orchestrator (`apps/api/src/modules/providers/orchestrator/`) handl
 - Visual regression tests via Playwright screenshot comparison
 
 **Admin (Next.js):**
+
 - 11 component tests + 11 page tests covering all admin dashboard pages
 - Jest + jsdom with same patterns as web app
 
 **Mobile (React Native):**
+
 - 6 existing test suites with jest-expo
 
 **CI Pipeline (`.github/workflows/ci.yml`):**
+
 - 6 parallel test jobs: API unit, web unit, mobile unit, admin unit, contract tests, Playwright E2E
 - Playwright runs on main branch and `run-e2e` labeled PRs
 - Contract tests run on all PRs (no services needed)
@@ -189,6 +204,7 @@ The provider orchestrator (`apps/api/src/modules/providers/orchestrator/`) handl
 ## Database Schema Highlights
 
 Key entities and relationships:
+
 - Users → Spaces (1:many) → Accounts → Transactions
 - Spaces → Budgets → Categories (with rules)
 - Daily valuation snapshots for wealth trends
@@ -198,6 +214,7 @@ Key entities and relationships:
 ## ESG Integration
 
 Uses the Dhanam package (https://github.com/aldoruizluna/Dhanam) for:
+
 - Crypto asset ESG composite scoring (E/S/G components)
 - Environmental impact metrics (energy intensity estimates)
 - Transparent methodology page with sources and limitations
@@ -220,6 +237,7 @@ Uses the Dhanam package (https://github.com/aldoruizluna/Dhanam) for:
 ## Environment Setup
 
 Each app requires environment configuration:
+
 - API: Database, Redis, JWT keys, provider credentials (Belvo/Plaid/Bitso), Banxico API
 - Web: API URL, PostHog key, default locale
 - Mobile: Same as web for Expo public variables

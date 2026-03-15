@@ -1,10 +1,11 @@
+import { RedisModule } from '@core/redis/redis.module';
 import { RATE_LIMIT_WINDOWS } from '@dhanam/shared';
 import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ThrottlerModule, ThrottlerStorage } from '@nestjs/throttler';
 import Redis from 'ioredis';
 
-import { RedisModule } from '@core/redis/redis.module';
+export { SubscriptionThrottleGuard } from './guards/subscription-throttle.guard';
 
 /**
  * Redis-backed rate limiting storage for distributed deployments.

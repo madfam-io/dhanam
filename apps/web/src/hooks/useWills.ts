@@ -133,7 +133,7 @@ export function useWills() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4010';
 
   const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
     const response = await fetch(`${API_BASE_URL}${url}`, {

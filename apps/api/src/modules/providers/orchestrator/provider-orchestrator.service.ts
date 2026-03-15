@@ -1,7 +1,7 @@
+import { Provider } from '@db';
 import { Injectable, Logger } from '@nestjs/common';
 
-import { Provider } from '@db';
-
+import { EventsService } from '../../../core/events/events.service';
 import { PrismaService } from '../../../core/prisma/prisma.service';
 import { ProviderSelectionService } from '../../ml/provider-selection.service';
 
@@ -65,7 +65,8 @@ export class ProviderOrchestratorService {
   constructor(
     private prisma: PrismaService,
     private circuitBreaker: CircuitBreakerService,
-    private providerSelection: ProviderSelectionService
+    private providerSelection: ProviderSelectionService,
+    private eventsService: EventsService
   ) {}
 
   /**
@@ -279,6 +280,11 @@ export class ProviderOrchestratorService {
 
         this.logger.log(`✅ ${operation} succeeded with ${provider} in ${responseTimeMs}ms`);
 
+        // Emit real-time events to the connected user (SSE)
+        if (params.userId) {
+          this.emitRealtimeEvents(operation, params.userId, provider, params.accountId);
+        }
+
         return {
           success: true,
           data: result,
@@ -338,6 +344,41 @@ export class ProviderOrchestratorService {
       responseTimeMs: Date.now() - startTime,
       failoverUsed: providersToTry.length > 1,
     };
+  }
+
+  /**
+   * Emit real-time SSE events to the user after a successful provider operation.
+   *
+   * Maps provider operations to the appropriate event types:
+   * - syncTransactions -> sync.complete + transaction.new
+   * - getAccounts      -> sync.complete + balance.updated
+   * - exchangeToken    -> sync.complete
+   * - createLink       -> (no event — link creation is not a data sync)
+   */
+  private emitRealtimeEvents(
+    operation: string,
+    userId: string,
+    provider: Provider,
+    accountId?: string
+  ): void {
+    try {
+      const base = { provider, accountId };
+
+      if (operation === 'syncTransactions') {
+        this.eventsService.emit(userId, 'sync.complete', { ...base, operation });
+        this.eventsService.emit(userId, 'transaction.new', base);
+        this.eventsService.emit(userId, 'balance.updated', base);
+      } else if (operation === 'getAccounts') {
+        this.eventsService.emit(userId, 'sync.complete', { ...base, operation });
+        this.eventsService.emit(userId, 'balance.updated', base);
+      } else if (operation === 'exchangeToken') {
+        this.eventsService.emit(userId, 'sync.complete', { ...base, operation });
+      }
+      // createLink does not emit — no data changed yet
+    } catch (error) {
+      // Never let event emission break the main flow
+      this.logger.warn(`Failed to emit realtime event for ${operation}: ${error}`);
+    }
   }
 
   /**

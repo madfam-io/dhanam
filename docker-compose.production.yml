@@ -40,7 +40,7 @@ services:
       SMTP_FROM: ${SMTP_FROM}
       LOG_LEVEL: ${LOG_LEVEL:-info}
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:4000/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:4010/health"]
       interval: 30s
       timeout: 10s
       retries: 3

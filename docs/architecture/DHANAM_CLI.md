@@ -15,6 +15,7 @@ chmod +x ./dhanam
 ## Features
 
 ### 🚀 Single Command Startup
+
 - **`./dhanam up`** - Starts everything automatically:
   - Docker infrastructure (PostgreSQL, Redis, Mailhog, LocalStack)
   - Installs all dependencies
@@ -25,6 +26,7 @@ chmod +x ./dhanam
   - Ready in ~60-90 seconds
 
 ### 🎭 Demo User Personas
+
 The platform includes multiple pre-configured user personas for testing:
 
 1. **Guest Access** (No login required)
@@ -57,6 +59,7 @@ The platform includes multiple pre-configured user personas for testing:
    - Audit log access
 
 ### 📊 Pre-Seeded Demo Data
+
 - 90 days of transaction history
 - Multiple account types (checking, savings, credit, crypto, investment)
 - Realistic Mexican market data (OXXO, Soriana, BBVA, etc.)
@@ -68,6 +71,7 @@ The platform includes multiple pre-configured user personas for testing:
 ## Commands
 
 ### Core Commands
+
 ```bash
 ./dhanam up       # Start everything
 ./dhanam down     # Stop everything
@@ -80,7 +84,9 @@ The platform includes multiple pre-configured user personas for testing:
 ### Command Details
 
 #### `up` / `start`
+
 Performs complete platform initialization:
+
 1. Checks prerequisites (Node, Docker, pnpm)
 2. Creates environment files
 3. Starts Docker services
@@ -92,13 +98,17 @@ Performs complete platform initialization:
 9. Starts servers
 
 #### `down` / `stop`
+
 Gracefully shuts down:
+
 - Stops application servers
 - Stops Docker containers
 - Preserves data for next startup
 
 #### `status`
+
 Shows health of all components:
+
 - Docker infrastructure
 - API server
 - Web dashboard
@@ -106,19 +116,24 @@ Shows health of all components:
 - Redis cache
 
 #### `demo`
+
 - Checks if platform is running
 - Auto-starts if needed
 - Opens browser to demo page
 
 #### `reset` / `clean`
+
 Complete cleanup (with confirmation):
+
 - Removes all Docker volumes
 - Cleans build artifacts
 - Deletes node_modules
 - Resets to fresh state
 
 #### `logs` / `log`
+
 Interactive log viewer:
+
 1. API Server logs
 2. Web Dashboard logs
 3. Docker services logs
@@ -128,17 +143,18 @@ Interactive log viewer:
 
 After running `./dhanam up`:
 
-| Service | URL | Description |
-|---------|-----|-------------|
-| Web Dashboard | http://localhost:3000 | Main application |
-| API Docs | http://localhost:4000/api | Swagger documentation |
-| Database Admin | http://localhost:8080 | Adminer interface |
-| Email Viewer | http://localhost:8025 | Mailhog UI |
-| Redis Commander | http://localhost:8081 | Redis management |
+| Service         | URL                       | Description           |
+| --------------- | ------------------------- | --------------------- |
+| Web Dashboard   | http://localhost:3000     | Main application      |
+| API Docs        | http://localhost:4010/api | Swagger documentation |
+| Database Admin  | http://localhost:8080     | Adminer interface     |
+| Email Viewer    | http://localhost:8025     | Mailhog UI            |
+| Redis Commander | http://localhost:8081     | Redis management      |
 
 ## Environment Configuration
 
 The CLI automatically creates `.env` files with:
+
 - Database connections
 - JWT secrets (auto-generated)
 - Email configuration (Mailhog)
@@ -149,6 +165,7 @@ The CLI automatically creates `.env` files with:
 ## Prerequisites
 
 The CLI checks for:
+
 - Node.js v20+
 - pnpm 8+
 - Docker & Docker Compose
@@ -158,6 +175,7 @@ Missing pnpm will be auto-installed. Docker must be installed manually.
 ## Troubleshooting
 
 ### Platform won't start
+
 ```bash
 ./dhanam status    # Check component health
 ./dhanam logs      # View error logs
@@ -165,7 +183,9 @@ Missing pnpm will be auto-installed. Docker must be installed manually.
 ```
 
 ### Port conflicts
+
 Default ports used:
+
 - 3000: Web dashboard
 - 4000: API server
 - 5432: PostgreSQL
@@ -175,6 +195,7 @@ Default ports used:
 - 8081: Redis Commander
 
 ### Docker issues
+
 ```bash
 docker compose -f docker-compose.local.yml ps  # Check containers
 docker compose -f docker-compose.local.yml logs # View Docker logs
@@ -207,6 +228,7 @@ docker compose -f docker-compose.local.yml logs # View Docker logs
 ## Architecture
 
 The CLI orchestrates:
+
 ```
 ┌─────────────────────────────────────┐
 │           ./dhanam CLI              │
@@ -241,6 +263,7 @@ The CLI orchestrates:
 ## Support
 
 For issues or questions:
+
 1. Check logs: `./dhanam logs`
 2. Review status: `./dhanam status`
 3. Clean restart: `./dhanam reset && ./dhanam up`

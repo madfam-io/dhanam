@@ -59,6 +59,10 @@ describe('JobsService', () => {
             assetValuation: {
               create: jest.fn(),
             },
+            user: {
+              findMany: jest.fn(),
+              deleteMany: jest.fn(),
+            },
           },
         },
         {
@@ -168,7 +172,11 @@ describe('JobsService', () => {
     it('should sync blockchain wallets for users with read-only accounts', async () => {
       const accounts = [
         mockAccountWithMetadata,
-        { ...mockAccountWithMetadata, id: 'account-2', space: { userSpaces: [{ userId: 'user-789' }] } },
+        {
+          ...mockAccountWithMetadata,
+          id: 'account-2',
+          space: { userSpaces: [{ userId: 'user-789' }] },
+        },
       ];
       prisma.account.findMany.mockResolvedValue(accounts as any);
       blockchainService.syncWallets.mockResolvedValue(undefined);
@@ -193,7 +201,11 @@ describe('JobsService', () => {
     it('should continue syncing even if one user fails', async () => {
       const accounts = [
         mockAccountWithMetadata,
-        { ...mockAccountWithMetadata, id: 'account-2', space: { userSpaces: [{ userId: 'user-789' }] } },
+        {
+          ...mockAccountWithMetadata,
+          id: 'account-2',
+          space: { userSpaces: [{ userId: 'user-789' }] },
+        },
       ];
       prisma.account.findMany.mockResolvedValue(accounts as any);
       blockchainService.syncWallets
@@ -261,6 +273,92 @@ describe('JobsService', () => {
       prisma.space.findMany.mockRejectedValue(new Error('Database error'));
 
       await expect(service.generateValuationSnapshots()).resolves.not.toThrow();
+    });
+  });
+
+  describe('cleanupDemoAccounts', () => {
+    const eightDaysAgo = new Date(Date.now() - 8 * 24 * 60 * 60 * 1000);
+    const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000);
+
+    it('should delete demo accounts older than 7 days', async () => {
+      const staleUsers = [
+        { id: 'stale-1', email: 'session-abc@dhanam.demo' },
+        { id: 'stale-2', email: 'session-xyz@dhanam.demo' },
+      ];
+      (prisma.user.findMany as jest.Mock).mockResolvedValue(staleUsers);
+      (prisma.user.deleteMany as jest.Mock).mockResolvedValue({ count: 2 });
+
+      await service.cleanupDemoAccounts();
+
+      expect(prisma.user.findMany).toHaveBeenCalledWith({
+        where: {
+          email: {
+            endsWith: '@dhanam.demo',
+            notIn: [
+              'guest@dhanam.demo',
+              'maria@dhanam.demo',
+              'carlos@dhanam.demo',
+              'patricia@dhanam.demo',
+              'diego@dhanam.demo',
+            ],
+          },
+          updatedAt: {
+            lt: expect.any(Date),
+          },
+        },
+        select: { id: true, email: true },
+      });
+      expect(prisma.user.deleteMany).toHaveBeenCalledWith({
+        where: { id: { in: ['stale-1', 'stale-2'] } },
+      });
+    });
+
+    it('should preserve persona template accounts', async () => {
+      // The findMany query excludes persona emails via notIn, so they never appear
+      (prisma.user.findMany as jest.Mock).mockResolvedValue([]);
+      (prisma.user.deleteMany as jest.Mock).mockResolvedValue({ count: 0 });
+
+      await service.cleanupDemoAccounts();
+
+      expect(prisma.user.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            email: expect.objectContaining({
+              notIn: [
+                'guest@dhanam.demo',
+                'maria@dhanam.demo',
+                'carlos@dhanam.demo',
+                'patricia@dhanam.demo',
+                'diego@dhanam.demo',
+              ],
+            }),
+          }),
+        })
+      );
+      // deleteMany should not be called when no stale users found
+      expect(prisma.user.deleteMany).not.toHaveBeenCalled();
+    });
+
+    it('should not delete recently active demo accounts', async () => {
+      // Recently active accounts are filtered out by the updatedAt < 7 days ago condition
+      (prisma.user.findMany as jest.Mock).mockResolvedValue([]);
+
+      await service.cleanupDemoAccounts();
+
+      expect(prisma.user.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            updatedAt: { lt: expect.any(Date) },
+          }),
+        })
+      );
+      expect(prisma.user.deleteMany).not.toHaveBeenCalled();
+    });
+
+    it('should handle errors gracefully', async () => {
+      (prisma.user.findMany as jest.Mock).mockRejectedValue(new Error('Database error'));
+
+      await expect(service.cleanupDemoAccounts()).resolves.not.toThrow();
     });
   });
 

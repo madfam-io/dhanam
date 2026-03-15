@@ -1523,7 +1523,7 @@ export const options = {
 };
 
 export default function () {
-  const BASE_URL = __ENV.API_URL || 'http://localhost:4000/v1';
+  const BASE_URL = __ENV.API_URL || 'http://localhost:4010/v1';
 
   // Login
   const loginRes = http.post(

@@ -1,9 +1,7 @@
-import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
-
 import { AuditModule } from '@core/audit/audit.module';
 import { AuthModule } from '@core/auth/auth.module';
 import { CoreModule } from '@core/core.module';
+import { EventsModule } from '@core/events/events.module';
 import { MonitoringModule } from '@core/monitoring/monitoring.module';
 import { RateLimitingModule } from '@core/security/rate-limiting.module';
 import { AccountsModule } from '@modules/accounts/accounts.module';
@@ -33,6 +31,8 @@ import { SubscriptionsModule } from '@modules/subscriptions/subscriptions.module
 import { TransactionExecutionModule } from '@modules/transaction-execution/transaction-execution.module';
 import { TransactionsModule } from '@modules/transactions/transactions.module';
 import { UsersModule } from '@modules/users/users.module';
+import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 
 import { configuration } from './config/configuration';
 import { validationSchema } from './config/validation';
@@ -46,6 +46,7 @@ import { validationSchema } from './config/validation';
       cache: true,
     }),
     CoreModule,
+    EventsModule,
     AuthModule,
     RateLimitingModule,
     AuditModule,

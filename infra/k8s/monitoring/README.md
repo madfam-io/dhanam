@@ -4,22 +4,23 @@ Kubernetes manifests for Prometheus, Alertmanager, and Grafana on the Dhanam clu
 
 ## Contents
 
-| File | Purpose |
-|------|---------|
-| `namespace.yaml` | `dhanam-monitoring` namespace |
-| `service-monitors.yaml` | ServiceMonitor CRDs — scrapes `/metrics` on port 4300 |
-| `prometheus-rules.yaml` | PrometheusRule CRD — alert rules for API, DB, Redis, queues |
-| `alertmanager-config.yaml` | Alertmanager K8s Secret with routing and receiver config |
-| `alertmanager-secrets-template.yaml` | Documents required secrets and how to obtain them |
-| `grafana-dashboards-configmap.yaml` | Auto-provisioned Grafana dashboards (request rate, error rate, p95 latency, etc.) |
-| `kustomization.yaml` | Kustomize entrypoint for the monitoring overlay |
+| File                                 | Purpose                                                                           |
+| ------------------------------------ | --------------------------------------------------------------------------------- |
+| `namespace.yaml`                     | `dhanam-monitoring` namespace                                                     |
+| `service-monitors.yaml`              | ServiceMonitor CRDs — scrapes `/metrics` on port 4300                             |
+| `prometheus-rules.yaml`              | PrometheusRule CRD — alert rules for API, DB, Redis, queues                       |
+| `alertmanager-config.yaml`           | Alertmanager K8s Secret with routing and receiver config                          |
+| `alertmanager-secrets-template.yaml` | Template for `alertmanager-webhook-secrets` Secret (Slack/PagerDuty URLs)         |
+| `grafana-dashboards-configmap.yaml`  | Auto-provisioned Grafana dashboards (request rate, error rate, p95 latency, etc.) |
+| `synthetic-cronjob.yaml`             | CronJob (every 5 min) that hits API and Web health endpoints                      |
+| `kustomization.yaml`                 | Kustomize entrypoint for the monitoring overlay                                   |
 
 ## Alert Routing
 
-| Severity | Channel | Repeat Interval | Examples |
-|----------|---------|-----------------|----------|
-| critical | `#dhanam-alerts-critical` | 1 hour | Pod crashes, DB down, auth failure spikes |
-| warning | `#dhanam-alerts` | 12 hours | High p95 latency, queue depth, memory pressure |
+| Severity | Channel                   | Repeat Interval | Examples                                       |
+| -------- | ------------------------- | --------------- | ---------------------------------------------- |
+| critical | `#dhanam-alerts-critical` | 1 hour          | Pod crashes, DB down, auth failure spikes      |
+| warning  | `#dhanam-alerts`          | 12 hours        | High p95 latency, queue depth, memory pressure |
 
 Critical alerts inhibit matching warning alerts (same alertname + namespace).
 
@@ -33,19 +34,25 @@ Critical alerts inhibit matching warning alerts (same alertname + namespace).
 
 ## Deployment
 
-1. Open `alertmanager-config.yaml`.
-2. Replace all `REPLACE_WITH_*` markers with real webhook URLs:
-   - `REPLACE_WITH_SLACK_CRITICAL_WEBHOOK_URL` -- critical channel webhook
-   - `REPLACE_WITH_SLACK_WARNING_WEBHOOK_URL` -- warning channel webhook
-   - (Optional) Uncomment PagerDuty block, replace `REPLACE_WITH_PAGERDUTY_SERVICE_KEY`
-3. Apply the manifests:
+1. Copy `alertmanager-secrets-template.yaml` to `alertmanager-secrets.yaml`.
+2. Replace all `REPLACE_WITH_*` values in the copy with real webhook URLs:
+   - `SLACK_CRITICAL_WEBHOOK_URL` -- critical channel webhook
+   - `SLACK_WARNING_WEBHOOK_URL` -- warning channel webhook
+   - (Optional) Uncomment `PAGERDUTY_SERVICE_KEY` and fill in the integration key
+3. Apply the webhook secrets first, then the rest:
 
 ```bash
+kubectl apply -f infra/k8s/monitoring/alertmanager-secrets.yaml
 kubectl apply -k infra/k8s/monitoring/
 ```
 
-Or apply individually:
+4. Mount the `alertmanager-webhook-secrets` Secret into your Alertmanager pod at
+   `/etc/alertmanager/secrets/` (see comments in `alertmanager-config.yaml` for the
+   volume mount snippet).
 
-```bash
-kubectl apply -f infra/k8s/monitoring/alertmanager-config.yaml
-```
+## Synthetic Health Checks
+
+A CronJob (`dhanam-synthetic-healthcheck`) runs every 5 minutes in the `dhanam`
+namespace. It curls the API and Web health endpoints and exits non-zero on failure.
+Failed jobs surface via `kube_job_status_failed` metrics, which Alertmanager can
+pick up through existing PodRestart/Job alert rules.

@@ -15,7 +15,7 @@ services:
       dockerfile: apps/api/Dockerfile
     container_name: dhanam-api
     ports:
-      - '8500:3000'
+      - '4010:3000'
     volumes:
       - ./apps/api:/app/apps/api
       - ./packages:/app/packages
@@ -37,7 +37,7 @@ services:
       - SMTP_SECURE=false
       # App Config
       - LOG_LEVEL=debug
-      - CORS_ORIGINS=http://localhost:3030,http://localhost:8500
+      - CORS_ORIGINS=http://localhost:3040,http://localhost:4010
     networks:
       - madfam-shared-network
     depends_on:
@@ -56,14 +56,14 @@ services:
       dockerfile: apps/web/Dockerfile
     container_name: dhanam-web
     ports:
-      - '3030:3000'
+      - '3040:3000'
     volumes:
       - ./apps/web:/app/apps/web
       - ./packages:/app/packages
       - /app/node_modules
     environment:
       - NODE_ENV=development
-      - VITE_API_BASE_URL=http://localhost:8500
+      - VITE_API_BASE_URL=http://localhost:4010
       # Janua Auth (frontend)
       - VITE_JANUA_ENABLED=true
       - VITE_JANUA_URL=http://localhost:8001

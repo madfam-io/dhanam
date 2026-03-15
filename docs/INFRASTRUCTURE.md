@@ -23,26 +23,26 @@ A comprehensive preferences system has been added to store user-specific setting
 model UserPreferences {
   id                    String        @id @default(uuid())
   userId                String        @unique @map("user_id")
-  
+
   // Notification preferences
   emailNotifications    Boolean       @default(true)
   transactionAlerts     Boolean       @default(true)
   budgetAlerts          Boolean       @default(true)
   weeklyReports         Boolean       @default(true)
   monthlyReports        Boolean       @default(true)
-  
+
   // Privacy preferences
   dataSharing           Boolean       @default(false)
   analyticsTracking     Boolean       @default(true)
-  
+
   // Display preferences
   dashboardLayout       String        @default("standard")
   themeMode             String        @default("light")
-  
+
   // Financial preferences
   defaultCurrency       Currency      @default(MXN)
   autoCategorizeTxns    Boolean       @default(true)
-  
+
   // ESG preferences
   esgScoreVisibility    Boolean       @default(true)
   sustainabilityAlerts  Boolean       @default(false)
@@ -90,6 +90,7 @@ apps/api/
 ### Running Tests
 
 #### Unit Tests
+
 ```bash
 # Run all unit tests
 pnpm test
@@ -105,6 +106,7 @@ pnpm test preferences.service.spec.ts
 ```
 
 #### E2E Tests
+
 ```bash
 # Start infrastructure first
 pnpm dev:infra
@@ -121,6 +123,7 @@ pnpm test:e2e:cov
 ```
 
 #### Test Runner Script
+
 ```bash
 # Run all tests with proper setup
 ./scripts/test-runner.sh
@@ -249,13 +252,14 @@ await this.auditService.log({
   entityType: 'feature_flag',
   entityId: key,
   userId: adminUserId,
-  metadata: { oldValue, newValue }
+  metadata: { oldValue, newValue },
 });
 ```
 
 ### Metrics
 
 Key metrics tracked:
+
 - API response times
 - Database query performance
 - Queue processing times
@@ -266,10 +270,10 @@ Key metrics tracked:
 
 ```bash
 # Check system health
-curl http://localhost:4000/health
+curl http://localhost:4010/health
 
 # Detailed health with dependencies
-curl http://localhost:4000/health/ready
+curl http://localhost:4010/health/ready
 ```
 
 ## Security Considerations
@@ -313,16 +317,18 @@ curl http://localhost:4000/health/ready
 
 ```typescript
 // Helmet configuration for production
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      scriptSrc: ["'self'"],
-      imgSrc: ["'self'", "data:", "https:"],
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        scriptSrc: ["'self'"],
+        imgSrc: ["'self'", 'data:', 'https:'],
+      },
     },
-  },
-}));
+  })
+);
 ```
 
 ## Deployment Considerations
@@ -330,6 +336,7 @@ app.use(helmet({
 ### Environment Variables
 
 Required for production:
+
 ```env
 # Database
 DATABASE_URL=postgresql://...
@@ -449,10 +456,11 @@ dhanam-documents/
 ### Common Issues
 
 1. **Tests failing locally**
+
    ```bash
    # Ensure services are running
    pnpm dev:infra
-   
+
    # Reset test database
    pnpm db:reset
    ```
@@ -487,6 +495,7 @@ pnpm build --verbose
 ---
 
 For more information, see:
+
 - [API Documentation](./API.md)
 - [Development Guide](./DEVELOPMENT.md)
 - [Security Policy](./SECURITY.md)

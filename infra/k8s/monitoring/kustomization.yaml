@@ -7,3 +7,4 @@ resources:
   - prometheus-rules.yaml
   - alertmanager-config.yaml
   - grafana-dashboards-configmap.yaml
+  - synthetic-cronjob.yaml

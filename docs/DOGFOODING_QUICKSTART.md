@@ -17,6 +17,7 @@ docker compose -f docker-compose.local.yml ps
 ```
 
 **Services started:**
+
 - PostgreSQL: `localhost:5432` (user: dhanam, pass: localdev)
 - Redis: `localhost:6379`
 - MailHog: `localhost:8025` (email UI) / `localhost:1025` (SMTP)
@@ -51,16 +52,19 @@ pnpm dev
 ```
 
 **Apps running:**
-- API: http://localhost:4000 (Swagger docs at /docs)
+
+- API: http://localhost:4010 (Swagger docs at /docs)
 - Web: http://localhost:3000
 
 ### 5. Login
 
 **MADFAM Admin Account:**
+
 - Email: `finance@madfam.org`
 - Password: `madfam123`
 
 **Demo Account:**
+
 - Email: `demo@dhanam.app`
 - Password: `demo123`
 
@@ -71,6 +75,7 @@ pnpm dev
 The MADFAM seed creates a pre-configured business space with ecosystem-aligned categories:
 
 ### Revenue Categories
+
 - 💰 Revenue: sim4d Studio
 - 💰 Revenue: Primavera3D
 - 💰 Revenue: Fortuna
@@ -78,11 +83,13 @@ The MADFAM seed creates a pre-configured business space with ecosystem-aligned c
 - 💰 Revenue: Consulting
 
 ### Expense Categories (by Layer)
+
 - **SOIL (Infrastructure)**: Janua Auth, Enclii CLI, Cloud hosting
 - **STEM (Shared)**: geom-core, AVALA, Design system
 - **FRUIT (Products)**: Product-specific development costs
 
 ### Pre-configured Features
+
 - FY2025 Operations Budget
 - Cost center tracking by product
 - MXN/USD multi-currency support
@@ -135,6 +142,7 @@ docker compose -f docker-compose.dev.yml up -d
 ```
 
 This connects to:
+
 - Shared PostgreSQL with dedicated `dhanam_db` database
 - Shared Redis (DB index 3)
 - Shared MinIO for file storage
@@ -159,6 +167,7 @@ pnpm db:push
 ### Port Conflicts
 
 If ports are in use, modify `docker-compose.local.yml`:
+
 - PostgreSQL: Change `5432:5432`
 - Redis: Change `6379:6379`
 - Web: Set `PORT=3001` in `.env.local`
@@ -177,6 +186,7 @@ npx prisma migrate reset --force
 ### View Emails
 
 All emails are captured by MailHog:
+
 - Open http://localhost:8025
 - See registration confirmations, password resets, etc.
 
@@ -185,6 +195,7 @@ All emails are captured by MailHog:
 ## Feature Status for Dogfooding
 
 ### Ready ✅
+
 - User registration/login
 - Space management (personal/business)
 - Budget creation and tracking
@@ -194,12 +205,14 @@ All emails are captured by MailHog:
 - Multi-currency support
 
 ### In Progress 🔄
+
 - Bank integrations (Belvo/Plaid) - sandbox mode
 - ESG scoring for crypto
 - Goal tracking
 - Household management
 
 ### Not Yet Available ❌
+
 - Mobile app (React Native)
 - Premium billing (Stripe)
 - Full localization (Spanish incomplete)
@@ -209,9 +222,10 @@ All emails are captured by MailHog:
 ## Feedback
 
 Report issues or suggestions:
+
 - GitHub Issues: https://github.com/madfam-io/dhanam/issues
 - Tag with `dogfooding` label
 
 ---
 
-*Last updated: November 2025*
+_Last updated: November 2025_

@@ -1,7 +1,6 @@
+import { Currency } from '@db';
 import { SEARCH_DEFAULTS } from '@dhanam/shared';
 import { Injectable, Logger } from '@nestjs/common';
-
-import { Currency } from '@db';
 
 import { PrismaService } from '../../core/prisma/prisma.service';
 import { SpacesService } from '../spaces/spaces.service';
@@ -926,9 +925,49 @@ export class NaturalLanguageService {
     return suggestions.slice(0, 3);
   }
 
-  /**
-   * Get search suggestions based on partial query
-   */
+  /** Fuzzy search transactions using pg_trgm similarity(). */
+  async fuzzySearchTransactions(
+    spaceId: string,
+    userId: string,
+    searchTerm: string,
+    limit = 20,
+    threshold = 0.3
+  ): Promise<TransactionResult[]> {
+    await this.spacesService.verifyUserAccess(userId, spaceId, 'viewer');
+    type FuzzyRow = {
+      id: string;
+      date: Date;
+      amount: string;
+      merchant: string | null;
+      description: string;
+      currency: string;
+      category_name: string | null;
+      relevance: number;
+    };
+    const results = await this.prisma.$queryRaw<FuzzyRow[]>`
+      SELECT t.id, t.date, t.amount::text, t.merchant, t.description, t.currency,
+        c.name as category_name,
+        GREATEST(COALESCE(similarity(t.description, ${searchTerm}), 0),
+                 COALESCE(similarity(t.merchant, ${searchTerm}), 0)) as relevance
+      FROM transactions t
+      JOIN accounts a ON t.account_id = a.id
+      LEFT JOIN categories c ON t.category_id = c.id
+      WHERE a.space_id = ${spaceId} AND t.deleted_at IS NULL
+        AND (similarity(t.description, ${searchTerm}) > ${threshold}
+          OR similarity(t.merchant, ${searchTerm}) > ${threshold})
+      ORDER BY relevance DESC LIMIT ${limit}`;
+    return results.map((r) => ({
+      id: r.id,
+      date: r.date.toISOString(),
+      amount: parseFloat(r.amount),
+      merchant: r.merchant,
+      description: r.description,
+      category: r.category_name,
+      currency: r.currency as Currency,
+    }));
+  }
+
+  /** Get search suggestions based on partial query */
   async getSuggestions(spaceId: string, userId: string, partialQuery: string): Promise<string[]> {
     await this.spacesService.verifyUserAccess(userId, spaceId, 'viewer');
 

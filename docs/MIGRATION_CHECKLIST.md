@@ -10,17 +10,19 @@
 ### 1. Janua OIDC Client Registration
 
 - [ ] **Register Dhanam in Janua Admin**
+
   ```
   Client ID: dhanam-api
   Client Type: Confidential
   Redirect URIs:
     - https://app.dhanam.io/api/auth/callback/janua
-    - http://localhost:3000/api/auth/callback/janua (dev)
+    - http://localhost:3040/api/auth/callback/janua (dev)
   Allowed Scopes: openid profile email
   Token Endpoint Auth: client_secret_basic
   ```
 
 - [ ] **Verify OIDC Discovery**
+
   ```bash
   curl https://auth.madfam.io/.well-known/openid-configuration | jq .
   ```
@@ -76,6 +78,7 @@
 ### 3. Database & Infrastructure
 
 - [ ] **Create Dhanam Database**
+
   ```sql
   CREATE DATABASE dhanam;
   CREATE USER dhanam_user WITH ENCRYPTED PASSWORD '<secure-password>';
@@ -89,15 +92,18 @@
   - REDIS_URL: `redis://redis.data.svc.cluster.local:6379/0`
 
 - [ ] **Generate Encryption Key** (32 bytes hex)
+
   ```bash
   openssl rand -hex 32
   ```
+
   - ENCRYPTION_KEY: `_______________`
 
 - [ ] **Generate NextAuth Secret**
   ```bash
   openssl rand -base64 32
   ```
+
   - NEXTAUTH_SECRET: `_______________`
 
 ---
@@ -105,6 +111,7 @@
 ### 4. Container Images
 
 - [ ] **Build API Image**
+
   ```bash
   cd apps/api
   docker build -f apps/api/Dockerfile -t ghcr.io/madfam-org/dhanam/api:latest .
@@ -112,6 +119,7 @@
   ```
 
 - [ ] **Build Web Image**
+
   ```bash
   docker build -f apps/web/Dockerfile -t ghcr.io/madfam-org/dhanam/web:latest .
   docker push ghcr.io/madfam-org/dhanam/web:latest
@@ -134,6 +142,7 @@ kubectl apply -f infra/k8s/production/namespace.yaml
 ```
 
 **Verify:**
+
 ```bash
 kubectl get namespace dhanam
 ```
@@ -154,6 +163,7 @@ kubectl apply -f infra/k8s/production/secrets.yaml
 ```
 
 **Verify:**
+
 ```bash
 kubectl get secrets -n dhanam
 # Should show: dhanam-secrets, dhanam-billing-secrets
@@ -168,12 +178,14 @@ kubectl apply -f infra/k8s/production/api-deployment.yaml
 ```
 
 **Verify:**
+
 ```bash
 kubectl get pods -n dhanam -l app=dhanam-api
 kubectl logs -n dhanam -l app=dhanam-api --tail=50
 ```
 
 **Health Check:**
+
 ```bash
 kubectl port-forward -n dhanam svc/dhanam-api 4300:80
 curl http://localhost:4300/health
@@ -188,15 +200,17 @@ kubectl apply -f infra/k8s/production/web-deployment.yaml
 ```
 
 **Verify:**
+
 ```bash
 kubectl get pods -n dhanam -l app=dhanam-web
 kubectl logs -n dhanam -l app=dhanam-web --tail=50
 ```
 
 **Health Check:**
+
 ```bash
 kubectl port-forward -n dhanam svc/dhanam-web 3300:80
-curl http://localhost:3300/api/health
+curl http://localhost:3040/api/health
 ```
 
 ---
@@ -221,11 +235,13 @@ Edit `cloudflared-unified.yaml` in cloudflare-tunnel namespace:
 ```
 
 **Restart Cloudflared:**
+
 ```bash
 kubectl rollout restart deployment/cloudflared -n cloudflare-tunnel
 ```
 
 **Option B: Cloudflare Dashboard**
+
 1. Navigate to Zero Trust → Networks → Tunnels
 2. Select your tunnel
 3. Add public hostnames for app.dhanam.io and api.dhanam.io
@@ -236,8 +252,8 @@ kubectl rollout restart deployment/cloudflared -n cloudflare-tunnel
 
 In Cloudflare Dashboard for dhanam.io:
 
-| Type  | Name | Content                       | Proxy |
-|-------|------|-------------------------------|-------|
+| Type  | Name | Content                        | Proxy |
+| ----- | ---- | ------------------------------ | ----- |
 | CNAME | app  | `<tunnel-id>.cfargotunnel.com` | Yes   |
 | CNAME | api  | `<tunnel-id>.cfargotunnel.com` | Yes   |
 
@@ -318,6 +334,7 @@ pg_restore -h <host> -U dhanam_user -d dhanam backup_YYYYMMDD.dump
 ### Prometheus Metrics
 
 API exposes metrics at `/metrics` on port 4300:
+
 - `dhanam_http_requests_total`
 - `dhanam_billing_transactions_total`
 - `dhanam_sync_duration_seconds`
@@ -325,6 +342,7 @@ API exposes metrics at `/metrics` on port 4300:
 ### Grafana Dashboards
 
 Import dashboards for:
+
 - [ ] API performance (request latency, error rates)
 - [ ] Billing metrics (transactions, revenue)
 - [ ] User activity (signups, active users)
@@ -332,6 +350,7 @@ Import dashboards for:
 ### Alerts
 
 Configure alerts for:
+
 - [ ] API error rate > 1%
 - [ ] Response latency p95 > 2s
 - [ ] Pod restarts > 3 in 5 minutes
@@ -353,21 +372,21 @@ Configure alerts for:
 
 ## Migration Sign-Off
 
-| Phase | Status | Verified By | Date |
-|-------|--------|-------------|------|
-| Janua OIDC Integration | [ ] | | |
-| Billing Module (Stripe MX) | [ ] | | |
-| Billing Module (Paddle) | [ ] | | |
-| K8s Deployment | [ ] | | |
-| Cloudflare Routing | [ ] | | |
-| Health Checks | [ ] | | |
-| Security Review | [ ] | | |
+| Phase                      | Status | Verified By | Date |
+| -------------------------- | ------ | ----------- | ---- |
+| Janua OIDC Integration     | [ ]    |             |      |
+| Billing Module (Stripe MX) | [ ]    |             |      |
+| Billing Module (Paddle)    | [ ]    |             |      |
+| K8s Deployment             | [ ]    |             |      |
+| Cloudflare Routing         | [ ]    |             |      |
+| Health Checks              | [ ]    |             |      |
+| Security Review            | [ ]    |             |      |
 
 **Approved for Production:** [ ]
 
-**Deployment Lead:** _______________
+**Deployment Lead:** ******\_\_\_******
 
-**Date:** _______________
+**Date:** ******\_\_\_******
 
 ---
 
@@ -375,24 +394,24 @@ Configure alerts for:
 
 ### Endpoints
 
-| Service | Internal | External |
-|---------|----------|----------|
-| API | dhanam-api.dhanam.svc.cluster.local:80 | api.dhanam.io |
-| Web | dhanam-web.dhanam.svc.cluster.local:80 | app.dhanam.io |
+| Service | Internal                               | External      |
+| ------- | -------------------------------------- | ------------- |
+| API     | dhanam-api.dhanam.svc.cluster.local:80 | api.dhanam.io |
+| Web     | dhanam-web.dhanam.svc.cluster.local:80 | app.dhanam.io |
 
 ### Ports (MADFAM Block)
 
 | Service | Container Port | Service Port |
-|---------|---------------|--------------|
-| API | 4300 | 80 |
-| Web | 3300 | 80 |
+| ------- | -------------- | ------------ |
+| API     | 4300           | 80           |
+| Web     | 3300           | 80           |
 
 ### Namespaces
 
-| Resource | Namespace |
-|----------|-----------|
-| Dhanam workloads | dhanam |
-| Secrets | dhanam |
+| Resource          | Namespace         |
+| ----------------- | ----------------- |
+| Dhanam workloads  | dhanam            |
+| Secrets           | dhanam            |
 | Cloudflare tunnel | cloudflare-tunnel |
-| Shared Redis | data |
-| Shared PostgreSQL | data |
+| Shared Redis      | data              |
+| Shared PostgreSQL | data              |

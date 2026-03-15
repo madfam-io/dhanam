@@ -155,7 +155,7 @@ export function useSimulations() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<SimulationsError | null>(null);
 
-  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4010';
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleRequest = async <T>(endpoint: string, config: any): Promise<T | null> => {

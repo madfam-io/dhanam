@@ -1,3 +1,4 @@
+import { Currency } from '@db';
 import {
   ANALYTICS,
   NetWorthResponse,
@@ -9,8 +10,6 @@ import {
 } from '@dhanam/shared';
 import { Injectable, Logger } from '@nestjs/common';
 import { subDays, startOfDay, eachDayOfInterval, format } from 'date-fns';
-
-import { Currency } from '@db';
 
 import { PrismaService } from '../../core/prisma/prisma.service';
 import { FxRatesService } from '../fx-rates/fx-rates.service';
@@ -829,6 +828,74 @@ export class AnalyticsService {
         accountCount: typedData.count,
       };
     });
+  }
+
+  /**
+   * Get consolidated net worth across all of a user's spaces.
+   * Converts each space's net worth to the specified base currency.
+   * @param userId - The user ID
+   * @param baseCurrency - Target currency for consolidation (defaults to MXN)
+   */
+  async getConsolidatedNetWorth(
+    userId: string,
+    baseCurrency: Currency = Currency.MXN
+  ): Promise<{
+    totalNetWorth: number;
+    totalAssets: number;
+    totalLiabilities: number;
+    currency: Currency;
+    spaces: Array<{
+      spaceId: string;
+      spaceName: string;
+      netWorth: number;
+      assets: number;
+      liabilities: number;
+      originalCurrency: Currency;
+    }>;
+  }> {
+    // Find all spaces the user belongs to
+    const userSpaces = await this.prisma.userSpace.findMany({
+      where: { userId },
+      include: { space: true },
+    });
+
+    let totalAssets = 0;
+    let totalLiabilities = 0;
+    const spaces: Array<{
+      spaceId: string;
+      spaceName: string;
+      netWorth: number;
+      assets: number;
+      liabilities: number;
+      originalCurrency: Currency;
+    }> = [];
+
+    // Calculate net worth for each space
+    for (const us of userSpaces) {
+      try {
+        const nw = await this._getNetWorthUnchecked(us.spaceId, baseCurrency);
+        totalAssets += nw.totalAssets;
+        totalLiabilities += nw.totalLiabilities;
+        spaces.push({
+          spaceId: us.spaceId,
+          spaceName: us.space.name,
+          netWorth: nw.netWorth,
+          assets: nw.totalAssets,
+          liabilities: nw.totalLiabilities,
+          originalCurrency: (us.space.currency as Currency) || Currency.MXN,
+        });
+      } catch (err) {
+        this.logger.warn(`Failed to calculate net worth for space ${us.spaceId}: ${err}`);
+      }
+    }
+
+    return {
+      totalNetWorth: Math.round((totalAssets - totalLiabilities) * 100) / 100,
+      totalAssets: Math.round(totalAssets * 100) / 100,
+      totalLiabilities: Math.round(totalLiabilities * 100) / 100,
+      currency: baseCurrency,
+      spaces,
+    };
   }
 
   /**

@@ -12,6 +12,7 @@ Before you begin, ensure you have the following installed:
 - **Git**
 
 ### Optional but recommended:
+
 - **AWS CLI** (for LocalStack interaction)
 - **PostgreSQL client** (for database access)
 - **Redis CLI** (for cache inspection)
@@ -47,6 +48,7 @@ pnpm dev
 ```
 
 This will:
+
 1. Set up Docker containers (PostgreSQL, Redis, LocalStack, etc.)
 2. Install all dependencies
 3. Run database migrations
@@ -106,6 +108,7 @@ docker-compose ps
 ```
 
 Available services:
+
 - **PostgreSQL**: `localhost:5432`
 - **Redis**: `localhost:6379`
 - **LocalStack**: `localhost:4566`
@@ -140,8 +143,8 @@ pnpm prisma studio
 pnpm dev
 
 # Run specific apps
-pnpm dev:api    # Backend API (http://localhost:4000)
-pnpm dev:web    # Web app (http://localhost:3000)
+pnpm dev:api    # Backend API (http://localhost:4010)
+pnpm dev:web    # Web app (http://localhost:3040)
 pnpm dev:mobile # Mobile app (Expo)
 
 # Build packages
@@ -187,7 +190,8 @@ pnpm prisma studio
 ### Swagger Documentation
 
 The API documentation is available at:
-- Local: http://localhost:4000/api
+
+- Local: http://localhost:4010/api
 - Staging: https://api-staging.dhanam.io/api
 - Production: https://api.dhanam.io/api
 
@@ -197,28 +201,31 @@ The API uses JWT authentication with refresh tokens:
 
 ```bash
 # Login
-curl -X POST http://localhost:4000/auth/login \
+curl -X POST http://localhost:4010/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email": "user@example.com", "password": "password"}'
 
 # Use the access token in subsequent requests
-curl http://localhost:4000/users/me \
+curl http://localhost:4010/users/me \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 
 ### Provider Integrations
 
 #### Belvo (Mexico)
+
 - Sandbox credentials are pre-configured
 - Test institutions: `sandbox_mx`
 - Test user: `test_user` / `test_password`
 
 #### Plaid (US)
+
 - Sandbox credentials are pre-configured
 - Test institutions: Chase, Bank of America
 - Test user: `user_good` / `pass_good`
 
 #### Bitso (Crypto)
+
 - Requires API key configuration
 - Sandbox mode available
 
@@ -242,6 +249,7 @@ pnpm start
 ```
 
 Key features:
+
 - Server-side rendering
 - API route handlers
 - Tailwind CSS styling
@@ -309,9 +317,9 @@ Monitor database queries:
 docker exec -it dhanam-postgres psql -U dhanam -d dhanam_dev
 
 # View recent queries
-SELECT query, calls, mean_exec_time 
-FROM pg_stat_statements 
-ORDER BY mean_exec_time DESC 
+SELECT query, calls, mean_exec_time
+FROM pg_stat_statements
+ORDER BY mean_exec_time DESC
 LIMIT 10;
 ```
 
@@ -333,6 +341,7 @@ KEYS *
 ### Common Issues
 
 #### Port already in use
+
 ```bash
 # Find process using port
 lsof -i :3000  # or :4000 for API
@@ -342,6 +351,7 @@ kill -9 <PID>
 ```
 
 #### Docker issues
+
 ```bash
 # Reset Docker environment
 docker-compose down -v
@@ -350,6 +360,7 @@ docker system prune -a
 ```
 
 #### Database connection issues
+
 ```bash
 # Check PostgreSQL logs
 docker logs dhanam-postgres
@@ -359,6 +370,7 @@ psql postgresql://dhanam:dhanam_dev_password@localhost:5432/dhanam_dev
 ```
 
 #### Dependency issues
+
 ```bash
 # Clear all caches
 pnpm store prune

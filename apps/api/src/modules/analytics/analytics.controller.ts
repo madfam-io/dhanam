@@ -1,3 +1,5 @@
+import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
+import { Currency } from '@db';
 import {
   NetWorthResponse,
   CashflowForecast,
@@ -19,9 +21,6 @@ import {
   ApiParam,
   ApiQuery,
 } from '@nestjs/swagger';
-
-import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
-import { Currency } from '@db';
 
 import {
   NetWorthHistoryPoint,
@@ -46,6 +45,20 @@ export class AnalyticsController {
     private readonly anomalyService: AnomalyService,
     private readonly longTermForecastService: LongTermForecastService
   ) {}
+
+  @Get('consolidated-net-worth')
+  @ApiOperation({ summary: 'Get consolidated net worth across all user spaces' })
+  @ApiQuery({
+    name: 'currency',
+    required: false,
+    description: 'Base currency for consolidation (e.g., MXN, USD)',
+  })
+  @ApiOkResponse({ description: 'Consolidated net worth retrieved successfully' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  async getConsolidatedNetWorth(@Request() req: any, @Query('currency') currency?: string) {
+    const baseCurrency = currency ? (currency.toUpperCase() as Currency) : undefined;
+    return this.analyticsService.getConsolidatedNetWorth(req.user!.userId, baseCurrency);
+  }
 
   @Get(':spaceId/net-worth')
   @ApiOperation({ summary: 'Get net worth for a space (with multi-currency conversion)' })

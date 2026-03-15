@@ -15,15 +15,21 @@
   },
 
   "ports": {
-    "api": 8500,
-    "web": 3300,
-    "admin": 3301
+    "api": 4010,
+    "web": 3040,
+    "admin": 3400
   },
 
   "kubernetes": {
     "namespace": "dhanam",
     "deployments": ["dhanam-api", "dhanam-web", "dhanam-admin"],
-    "secrets": ["dhanam-secrets", "dhanam-billing-secrets", "ghcr-credentials"],
+    "secrets": [
+      "dhanam-secrets",
+      "dhanam-billing-secrets",
+      "dhanam-provider-secrets",
+      "dhanam-janua-secrets",
+      "ghcr-credentials"
+    ],
     "manifests": {
       "api": "infra/k8s/production/api-deployment.yaml",
       "web": "infra/k8s/production/web-deployment.yaml",
@@ -104,10 +110,21 @@
   "analytics": {
     "provider": "PostHog",
     "events": [
-      "sign_up", "onboarding_complete", "connect_initiated", "connect_success",
-      "sync_success", "budget_created", "rule_created", "txn_categorized",
-      "alert_fired", "view_net_worth", "export_data",
-      "drip_email_sent", "onboarding_step_completed", "onboarding_step_skipped", "connect_failed"
+      "sign_up",
+      "onboarding_complete",
+      "connect_initiated",
+      "connect_success",
+      "sync_success",
+      "budget_created",
+      "rule_created",
+      "txn_categorized",
+      "alert_fired",
+      "view_net_worth",
+      "export_data",
+      "drip_email_sent",
+      "onboarding_step_completed",
+      "onboarding_step_skipped",
+      "connect_failed"
     ]
   },
 

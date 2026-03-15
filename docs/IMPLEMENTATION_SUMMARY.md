@@ -913,7 +913,7 @@ PORT="4000"
 
 ```bash
 # API
-NEXT_PUBLIC_API_URL="http://localhost:4000"
+NEXT_PUBLIC_API_URL="http://localhost:4010"
 
 # PostHog
 NEXT_PUBLIC_POSTHOG_KEY="phc_..."
