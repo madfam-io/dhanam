@@ -91,27 +91,28 @@ export class LunchMoneyClient {
       end_date: endDate,
       debit_as_negative: 'true',
     });
-    return data.transactions;
+    return data.transactions || [];
   }
 
   async getAllTransactions(startDate: string, endDate: string): Promise<LMTransaction[]> {
     // Fetch in monthly batches to avoid API limits
+    // Use UTC to avoid timezone-related off-by-one bugs
     const allTransactions: LMTransaction[] = [];
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    const current = new Date(start);
+    const end = new Date(endDate + 'T12:00:00Z');
+    const current = new Date(startDate + 'T12:00:00Z');
 
     while (current <= end) {
       const batchStart = current.toISOString().slice(0, 10);
-      const batchEnd = new Date(current.getFullYear(), current.getMonth() + 1, 0);
-      const batchEndStr = batchEnd > end ? endDate : batchEnd.toISOString().slice(0, 10);
+      // Last day of current month (UTC)
+      const lastDay = new Date(Date.UTC(current.getUTCFullYear(), current.getUTCMonth() + 1, 0));
+      const batchEndStr = lastDay > end ? endDate : lastDay.toISOString().slice(0, 10);
 
       console.log(`  Fetching transactions ${batchStart} to ${batchEndStr}...`);
       const batch = await this.getTransactions(batchStart, batchEndStr);
       allTransactions.push(...batch);
 
-      current.setMonth(current.getMonth() + 1);
-      current.setDate(1);
+      current.setUTCMonth(current.getUTCMonth() + 1);
+      current.setUTCDate(1);
     }
 
     return allTransactions;

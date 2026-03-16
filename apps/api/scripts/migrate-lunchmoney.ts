@@ -17,6 +17,10 @@
  *   cd apps/api && LUNCHMONEY_API_TOKEN=xxx pnpm tsx scripts/migrate-lunchmoney.ts
  */
 
+import 'dotenv/config';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { Pool } from 'pg';
+
 import { PrismaClient, RecurringStatus } from '../generated/prisma';
 
 import { IdMap } from '../src/modules/migration/lunchmoney/id-map';
@@ -29,7 +33,9 @@ import {
   mapRecurringItem,
 } from '../src/modules/migration/lunchmoney/lunchmoney-mapper';
 
-const prisma = new PrismaClient();
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
 const DRY_RUN = process.env.DRY_RUN === 'true';
 const START_DATE = process.env.START_DATE || '2024-01-01';
 const TODAY = new Date().toISOString().slice(0, 10);
@@ -93,7 +99,7 @@ async function main() {
   if (!budget && !DRY_RUN) {
     budget = await prisma.budget.create({
       data: {
-        spaceId,
+        space: { connect: { id: spaceId } },
         name: 'Monthly Budget',
         period: 'monthly',
         startDate: new Date(
@@ -142,7 +148,7 @@ async function main() {
       } else {
         const created = await prisma.category.create({
           data: {
-            budgetId: budget.id,
+            budget: { connect: { id: budget.id } },
             name,
             budgetedAmount: 0,
             description: lmCat.description,
@@ -150,7 +156,7 @@ async function main() {
             excludeFromBudget: lmCat.exclude_from_budget,
             excludeFromTotals: lmCat.exclude_from_totals,
             groupName: groupName,
-            sortOrder: lmCat.order,
+            sortOrder: lmCat.order ?? 0,
           },
         });
         idMap.set('category', lmCat.id, created.id);
@@ -184,7 +190,7 @@ async function main() {
       } else {
         const created = await prisma.tag.create({
           data: {
-            spaceId,
+            space: { connect: { id: spaceId } },
             name: lmTag.name,
             description: lmTag.description,
           },
@@ -233,11 +239,13 @@ async function main() {
         idMap.set(`account_${mapping.type}`, mapping.lmId, existing.id);
         log('ACCOUNTS', `  Exists: ${mapping.data.name} → ${existing.id}`);
       } else {
+        const { providerAccountId, institutionName, metadata, ...accountFields } = mapping.data;
         const created = await prisma.account.create({
           data: {
-            spaceId,
-            ...mapping.data,
-            metadata: mapping.data.metadata as any,
+            space: { connect: { id: spaceId } },
+            providerAccountId,
+            ...accountFields,
+            metadata: { ...(metadata as any), institutionName } as any,
           },
         });
         idMap.set(`account_${mapping.type}`, mapping.lmId, created.id);
@@ -295,14 +303,14 @@ async function main() {
       }
 
       const txData: any = {
-        accountId,
+        account: { connect: { id: accountId } },
         providerTransactionId,
         amount: parseFloat(lmTx.amount),
         currency: mapCurrency(lmTx.currency),
         description: lmTx.payee || lmTx.original_name || 'Unknown',
         merchant: lmTx.payee || null,
-        categoryId: categoryId || null,
-        date: new Date(lmTx.date),
+        ...(categoryId ? { category: { connect: { id: categoryId } } } : {}),
+        date: new Date(lmTx.date + 'T12:00:00Z'),
         pending: lmTx.is_pending,
         reviewed: lmTx.status === 'cleared',
         reviewedAt: lmTx.status === 'cleared' ? new Date() : null,
@@ -317,18 +325,18 @@ async function main() {
 
       // Create tag associations
       if (lmTx.tags && lmTx.tags.length > 0) {
-        const tagData = lmTx.tags
-          .map((t) => {
-            const tagId = idMap.get('tag', t.id);
-            return tagId ? { transactionId: created.id, tagId } : null;
-          })
-          .filter(Boolean) as { transactionId: string; tagId: string }[];
-
-        if (tagData.length > 0) {
-          await prisma.transactionTag.createMany({
-            data: tagData,
-            skipDuplicates: true,
-          });
+        for (const t of lmTx.tags) {
+          const tagId = idMap.get('tag', t.id);
+          if (tagId) {
+            await prisma.transactionTag
+              .create({
+                data: {
+                  transaction: { connect: { id: created.id } },
+                  tag: { connect: { id: tagId } },
+                },
+              })
+              .catch(() => {}); // Skip duplicates
+          }
         }
       }
 
@@ -372,14 +380,14 @@ async function main() {
       if (!existing) {
         await prisma.transactionRule.create({
           data: {
-            spaceId,
+            space: { connect: { id: spaceId } },
             name: `Auto: ${pattern.merchant}`,
             conditions: {
               field: 'merchant',
               operator: 'equals',
               value: pattern.merchant,
             },
-            categoryId: pattern.categoryId,
+            category: { connect: { id: pattern.categoryId } },
             priority: 0,
             enabled: true,
           },
@@ -392,7 +400,7 @@ async function main() {
 
   // Step 6: Recurring Items
   log('RECURRING', 'Fetching recurring items from LunchMoney...');
-  const lmRecurring = await client.getRecurringItems();
+  const lmRecurring = (await client.getRecurringItems()) || [];
   log('RECURRING', `Found ${lmRecurring.length} recurring items`);
 
   for (const item of lmRecurring) {
@@ -416,13 +424,13 @@ async function main() {
 
         await prisma.recurringTransaction.create({
           data: {
-            spaceId,
+            space: { connect: { id: spaceId } },
             merchantName: mapped.merchantName,
             expectedAmount: mapped.expectedAmount,
             currency: mapped.currency,
             frequency: mapped.frequency,
             status: item.type === 'cleared' ? RecurringStatus.confirmed : RecurringStatus.detected,
-            categoryId: categoryId || null,
+            ...(categoryId ? { category: { connect: { id: categoryId } } } : {}),
             notes: mapped.notes,
             metadata: mapped.metadata as any,
             lastOccurrence: new Date(item.billing_date),
@@ -500,4 +508,5 @@ main()
   })
   .finally(async () => {
     await prisma.$disconnect();
+    await pool.end();
   });
