@@ -673,7 +673,8 @@ export class AnalyticsService {
     userId: string,
     spaceId: string,
     startDate: Date,
-    endDate: Date
+    endDate: Date,
+    budgetId?: string
   ): Promise<SpendingByCategory[]> {
     await this.spacesService.verifyUserAccess(userId, spaceId, 'viewer');
 
@@ -684,7 +685,9 @@ export class AnalyticsService {
         date: { gte: startDate, lte: endDate },
         amount: { lt: 0 },
         excludeFromTotals: false,
-        OR: [{ category: { is: null } }, { category: { excludeFromTotals: false } }],
+        ...(budgetId
+          ? { category: { budgetId, excludeFromTotals: false } }
+          : { OR: [{ category: { is: null } }, { category: { excludeFromTotals: false } }] }),
       },
       _sum: { amount: true },
       _count: true,
@@ -729,31 +732,52 @@ export class AnalyticsService {
   async getIncomeVsExpenses(
     userId: string,
     spaceId: string,
-    months = 6
+    months = 6,
+    budgetId?: string
   ): Promise<IncomeVsExpenses[]> {
     await this.spacesService.verifyUserAccess(userId, spaceId, 'viewer');
 
     const today = new Date();
     const sixMonthsAgo = new Date(today.getFullYear(), today.getMonth() - (months - 1), 1);
 
-    const rawData = await this.prisma.$queryRaw<
-      Array<{ month: string; income: string | null; expenses: string | null }>
-    >`
-      SELECT
-        TO_CHAR(t.date, 'YYYY-MM') as month,
-        SUM(CASE WHEN t.amount > 0 THEN t.amount ELSE 0 END) as income,
-        SUM(CASE WHEN t.amount < 0 THEN ABS(t.amount) ELSE 0 END) as expenses
-      FROM transactions t
-      JOIN accounts a ON t.account_id = a.id
-      LEFT JOIN categories c ON t.category_id = c.id
-      WHERE a.space_id = ${spaceId}
-        AND t.date >= ${sixMonthsAgo}
-        AND t.deleted_at IS NULL
-        AND t.exclude_from_totals = false
-        AND (c.exclude_from_totals IS NULL OR c.exclude_from_totals = false)
-      GROUP BY TO_CHAR(t.date, 'YYYY-MM')
-      ORDER BY month ASC
-    `;
+    const rawData = budgetId
+      ? await this.prisma.$queryRaw<
+          Array<{ month: string; income: string | null; expenses: string | null }>
+        >`
+          SELECT
+            TO_CHAR(t.date, 'YYYY-MM') as month,
+            SUM(CASE WHEN t.amount > 0 THEN t.amount ELSE 0 END) as income,
+            SUM(CASE WHEN t.amount < 0 THEN ABS(t.amount) ELSE 0 END) as expenses
+          FROM transactions t
+          JOIN accounts a ON t.account_id = a.id
+          LEFT JOIN categories c ON t.category_id = c.id
+          WHERE a.space_id = ${spaceId}
+            AND t.date >= ${sixMonthsAgo}
+            AND t.deleted_at IS NULL
+            AND t.exclude_from_totals = false
+            AND (c.exclude_from_totals IS NULL OR c.exclude_from_totals = false)
+            AND c.budget_id = ${budgetId}
+          GROUP BY TO_CHAR(t.date, 'YYYY-MM')
+          ORDER BY month ASC
+        `
+      : await this.prisma.$queryRaw<
+          Array<{ month: string; income: string | null; expenses: string | null }>
+        >`
+          SELECT
+            TO_CHAR(t.date, 'YYYY-MM') as month,
+            SUM(CASE WHEN t.amount > 0 THEN t.amount ELSE 0 END) as income,
+            SUM(CASE WHEN t.amount < 0 THEN ABS(t.amount) ELSE 0 END) as expenses
+          FROM transactions t
+          JOIN accounts a ON t.account_id = a.id
+          LEFT JOIN categories c ON t.category_id = c.id
+          WHERE a.space_id = ${spaceId}
+            AND t.date >= ${sixMonthsAgo}
+            AND t.deleted_at IS NULL
+            AND t.exclude_from_totals = false
+            AND (c.exclude_from_totals IS NULL OR c.exclude_from_totals = false)
+          GROUP BY TO_CHAR(t.date, 'YYYY-MM')
+          ORDER BY month ASC
+        `;
 
     // Build a map from raw results
     const dataMap = new Map<string, { income: number; expenses: number }>();
@@ -1066,12 +1090,18 @@ export class AnalyticsService {
 
   // ── Delegated query methods (implemented in AnalyticsQueryService) ──
 
-  async getStatistics(userId: string, spaceId: string, startDate: Date, endDate: Date) {
-    return this.analyticsQueryService.getStatistics(userId, spaceId, startDate, endDate);
+  async getStatistics(
+    userId: string,
+    spaceId: string,
+    startDate: Date,
+    endDate: Date,
+    budgetId?: string
+  ) {
+    return this.analyticsQueryService.getStatistics(userId, spaceId, startDate, endDate, budgetId);
   }
 
-  async getAnnualTrends(userId: string, spaceId: string, months = 12) {
-    return this.analyticsQueryService.getAnnualTrends(userId, spaceId, months);
+  async getAnnualTrends(userId: string, spaceId: string, months = 12, budgetId?: string) {
+    return this.analyticsQueryService.getAnnualTrends(userId, spaceId, months, budgetId);
   }
 
   async executeQuery(
@@ -1088,13 +1118,20 @@ export class AnalyticsService {
       amountMin?: number;
       amountMax?: number;
       aggregation?: 'sum' | 'count' | 'average';
+      budgetId?: string;
     }
   ) {
     return this.analyticsQueryService.executeQuery(userId, spaceId, params);
   }
 
-  async getCalendarData(userId: string, spaceId: string, year: number, month: number) {
-    return this.analyticsQueryService.getCalendarData(userId, spaceId, year, month);
+  async getCalendarData(
+    userId: string,
+    spaceId: string,
+    year: number,
+    month: number,
+    budgetId?: string
+  ) {
+    return this.analyticsQueryService.getCalendarData(userId, spaceId, year, month, budgetId);
   }
 
   private async getBudgetsWithSummary(spaceId: string) {

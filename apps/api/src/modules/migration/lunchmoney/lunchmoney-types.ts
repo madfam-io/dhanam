@@ -151,3 +151,13 @@ export interface LMBudget {
   config: any;
   recurring: any;
 }
+
+export interface LMUser {
+  user_name: string;
+  user_email: string;
+  user_id: number;
+  account_id: number;
+  budget_name: string;
+  primary_currency: string;
+  api_key_label: string | null;
+}

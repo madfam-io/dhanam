@@ -69,8 +69,8 @@ This is the Dhanam Ledger project - a comprehensive budget and wealth tracking a
 - Transaction tagging with bulk assign/remove operations
 - Transaction review status tracking (reviewed/unreviewed workflow)
 - Merchant management with rename and merge operations
-- Advanced analytics: statistics, annual trends, calendar view, flexible ad-hoc query engine
-- LunchMoney data migration with idempotent import script
+- Advanced analytics: statistics, annual trends, calendar view, flexible ad-hoc query engine (all with optional `budgetId` filter for multi-budget isolation)
+- LunchMoney data migration with idempotent multi-budget import (one run per LM API token, shared accounts deduplicated)
 - TOTP 2FA security with JWT + rotating refresh tokens
 
 ## Architecture
@@ -217,7 +217,7 @@ Key entities and relationships:
 - Categories have `isIncome`, `excludeFromBudget`, `excludeFromTotals` flags and `groupName`/`sortOrder` for hierarchy
 - Transactions have `excludeFromTotals` flag for per-transaction exclusion from analytics
 - Analytics queries respect exclusion flags at both category and transaction level
-- Budget periods: MONTHLY, QUARTERLY, ANNUAL
+- Budget periods: MONTHLY, QUARTERLY, ANNUAL; Budget has optional `metadata` JSON (used for LunchMoney origin tracking)
 - Daily valuation snapshots for wealth trends
 - ESG asset scores linked to crypto accounts
 - Audit logs for all sensitive operations

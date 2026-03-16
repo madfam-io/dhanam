@@ -262,9 +262,30 @@ describe('AnalyticsController', () => {
         'user-123',
         spaceId,
         new Date('2026-01-01'),
-        new Date('2026-01-31')
+        new Date('2026-01-31'),
+        undefined
       );
       expect(result).toEqual(mockResult);
+    });
+
+    it('should pass budgetId when provided', async () => {
+      analyticsService.getSpendingByCategory.mockResolvedValue([] as any);
+
+      await controller.getSpendingByCategory(
+        mockReq,
+        spaceId,
+        '2026-01-01',
+        '2026-01-31',
+        'budget-123'
+      );
+
+      expect(analyticsService.getSpendingByCategory).toHaveBeenCalledWith(
+        'user-123',
+        spaceId,
+        new Date('2026-01-01'),
+        new Date('2026-01-31'),
+        'budget-123'
+      );
     });
   });
 
@@ -275,7 +296,12 @@ describe('AnalyticsController', () => {
 
       const result = await controller.getIncomeVsExpenses(mockReq, spaceId, '12');
 
-      expect(analyticsService.getIncomeVsExpenses).toHaveBeenCalledWith('user-123', spaceId, 12);
+      expect(analyticsService.getIncomeVsExpenses).toHaveBeenCalledWith(
+        'user-123',
+        spaceId,
+        12,
+        undefined
+      );
       expect(result).toEqual(mockResult);
     });
 
@@ -284,7 +310,25 @@ describe('AnalyticsController', () => {
 
       await controller.getIncomeVsExpenses(mockReq, spaceId, undefined);
 
-      expect(analyticsService.getIncomeVsExpenses).toHaveBeenCalledWith('user-123', spaceId, 6);
+      expect(analyticsService.getIncomeVsExpenses).toHaveBeenCalledWith(
+        'user-123',
+        spaceId,
+        6,
+        undefined
+      );
+    });
+
+    it('should pass budgetId when provided', async () => {
+      analyticsService.getIncomeVsExpenses.mockResolvedValue([] as any);
+
+      await controller.getIncomeVsExpenses(mockReq, spaceId, '6', 'budget-123');
+
+      expect(analyticsService.getIncomeVsExpenses).toHaveBeenCalledWith(
+        'user-123',
+        spaceId,
+        6,
+        'budget-123'
+      );
     });
   });
 
@@ -335,9 +379,24 @@ describe('AnalyticsController', () => {
         'user-123',
         spaceId,
         new Date('2026-01-01'),
-        new Date('2026-03-31')
+        new Date('2026-03-31'),
+        undefined
       );
       expect(result).toEqual(mockResult);
+    });
+
+    it('should pass budgetId when provided', async () => {
+      analyticsService.getStatistics.mockResolvedValue({} as any);
+
+      await controller.getStatistics(mockReq, spaceId, '2026-01-01', '2026-03-31', 'budget-123');
+
+      expect(analyticsService.getStatistics).toHaveBeenCalledWith(
+        'user-123',
+        spaceId,
+        new Date('2026-01-01'),
+        new Date('2026-03-31'),
+        'budget-123'
+      );
     });
   });
 
@@ -348,7 +407,12 @@ describe('AnalyticsController', () => {
 
       const result = await controller.getAnnualTrends(mockReq, spaceId, '24');
 
-      expect(analyticsService.getAnnualTrends).toHaveBeenCalledWith('user-123', spaceId, 24);
+      expect(analyticsService.getAnnualTrends).toHaveBeenCalledWith(
+        'user-123',
+        spaceId,
+        24,
+        undefined
+      );
       expect(result).toEqual(mockResult);
     });
 
@@ -357,7 +421,25 @@ describe('AnalyticsController', () => {
 
       await controller.getAnnualTrends(mockReq, spaceId, undefined);
 
-      expect(analyticsService.getAnnualTrends).toHaveBeenCalledWith('user-123', spaceId, 12);
+      expect(analyticsService.getAnnualTrends).toHaveBeenCalledWith(
+        'user-123',
+        spaceId,
+        12,
+        undefined
+      );
+    });
+
+    it('should pass budgetId when provided', async () => {
+      analyticsService.getAnnualTrends.mockResolvedValue([] as any);
+
+      await controller.getAnnualTrends(mockReq, spaceId, '12', 'budget-123');
+
+      expect(analyticsService.getAnnualTrends).toHaveBeenCalledWith(
+        'user-123',
+        spaceId,
+        12,
+        'budget-123'
+      );
     });
   });
 
@@ -368,8 +450,28 @@ describe('AnalyticsController', () => {
 
       const result = await controller.getCalendarData(mockReq, spaceId, '2026', '3');
 
-      expect(analyticsService.getCalendarData).toHaveBeenCalledWith('user-123', spaceId, 2026, 3);
+      expect(analyticsService.getCalendarData).toHaveBeenCalledWith(
+        'user-123',
+        spaceId,
+        2026,
+        3,
+        undefined
+      );
       expect(result).toEqual(mockResult);
+    });
+
+    it('should pass budgetId when provided', async () => {
+      analyticsService.getCalendarData.mockResolvedValue({} as any);
+
+      await controller.getCalendarData(mockReq, spaceId, '2026', '3', 'budget-123');
+
+      expect(analyticsService.getCalendarData).toHaveBeenCalledWith(
+        'user-123',
+        spaceId,
+        2026,
+        3,
+        'budget-123'
+      );
     });
   });
 

@@ -137,11 +137,13 @@ export const analyticsApi = {
   getSpendingByCategory: async (
     spaceId: string,
     startDate?: string,
-    endDate?: string
+    endDate?: string,
+    budgetId?: string
   ): Promise<SpendingByCategory[]> => {
     const params: Record<string, string> = {};
     if (startDate) params.startDate = startDate;
     if (endDate) params.endDate = endDate;
+    if (budgetId) params.budgetId = budgetId;
 
     return apiClient.get<SpendingByCategory[]>(
       `/analytics/${spaceId}/spending-by-category`,
@@ -152,8 +154,14 @@ export const analyticsApi = {
   /**
    * Get income vs expenses trend
    */
-  getIncomeVsExpenses: async (spaceId: string, months?: number): Promise<IncomeVsExpenses[]> => {
-    const params = months ? { months: months.toString() } : {};
+  getIncomeVsExpenses: async (
+    spaceId: string,
+    months?: number,
+    budgetId?: string
+  ): Promise<IncomeVsExpenses[]> => {
+    const params: Record<string, string> = {};
+    if (months) params.months = months.toString();
+    if (budgetId) params.budgetId = budgetId;
     return apiClient.get<IncomeVsExpenses[]>(`/analytics/${spaceId}/income-vs-expenses`, params);
   },
 
@@ -214,30 +222,43 @@ export const analyticsApi = {
   getStatistics: async (
     spaceId: string,
     startDate: string,
-    endDate: string
+    endDate: string,
+    budgetId?: string
   ): Promise<StatisticsData> => {
-    return apiClient.get<StatisticsData>(`/analytics/${spaceId}/statistics`, {
-      startDate,
-      endDate,
-    });
+    const params: Record<string, string> = { startDate, endDate };
+    if (budgetId) params.budgetId = budgetId;
+    return apiClient.get<StatisticsData>(`/analytics/${spaceId}/statistics`, params);
   },
 
   /**
    * Get annual/multi-month trend data (income, expenses, net, savings rate per month)
    */
-  getAnnualTrends: async (spaceId: string, months?: number): Promise<TrendMonth[]> => {
-    const params = months ? { months: months.toString() } : {};
+  getAnnualTrends: async (
+    spaceId: string,
+    months?: number,
+    budgetId?: string
+  ): Promise<TrendMonth[]> => {
+    const params: Record<string, string> = {};
+    if (months) params.months = months.toString();
+    if (budgetId) params.budgetId = budgetId;
     return apiClient.get<TrendMonth[]>(`/analytics/${spaceId}/trends`, params);
   },
 
   /**
    * Get calendar data for a given month (transaction count and net per day)
    */
-  getCalendarData: async (spaceId: string, year: number, month: number): Promise<CalendarDay[]> => {
-    return apiClient.get<CalendarDay[]>(`/analytics/${spaceId}/calendar`, {
+  getCalendarData: async (
+    spaceId: string,
+    year: number,
+    month: number,
+    budgetId?: string
+  ): Promise<CalendarDay[]> => {
+    const params: Record<string, string> = {
       year: year.toString(),
       month: month.toString(),
-    });
+    };
+    if (budgetId) params.budgetId = budgetId;
+    return apiClient.get<CalendarDay[]>(`/analytics/${spaceId}/calendar`, params);
   },
 
   /**

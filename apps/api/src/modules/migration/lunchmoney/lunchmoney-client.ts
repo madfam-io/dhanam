@@ -7,6 +7,7 @@ import {
   LMTransaction,
   LMRecurringItem,
   LMBudget,
+  LMUser,
 } from './lunchmoney-types';
 
 const BASE_URL = 'https://dev.lunchmoney.app';
@@ -128,5 +129,9 @@ export class LunchMoneyClient {
       start_date: startDate,
       end_date: endDate,
     });
+  }
+
+  async getMe(): Promise<LMUser> {
+    return this.request<LMUser>('/v1/me');
   }
 }

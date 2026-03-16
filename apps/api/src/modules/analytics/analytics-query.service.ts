@@ -20,7 +20,8 @@ export class AnalyticsQueryService {
     spaceId: string,
     startDate: Date,
     endDate: Date,
-    limit = 10
+    limit = 10,
+    budgetId?: string
   ) {
     await this.spacesService.verifyUserAccess(userId, spaceId, 'viewer');
 
@@ -31,7 +32,9 @@ export class AnalyticsQueryService {
         amount: { lt: 0 },
         deletedAt: null,
         excludeFromTotals: false,
-        OR: [{ category: { is: null } }, { category: { excludeFromTotals: false } }],
+        ...(budgetId
+          ? { category: { budgetId, excludeFromTotals: false } }
+          : { OR: [{ category: { is: null } }, { category: { excludeFromTotals: false } }] }),
       },
       orderBy: { amount: 'asc' }, // Most negative = largest expense
       take: limit,
@@ -57,7 +60,8 @@ export class AnalyticsQueryService {
     spaceId: string,
     startDate: Date,
     endDate: Date,
-    limit = 10
+    limit = 10,
+    budgetId?: string
   ) {
     await this.spacesService.verifyUserAccess(userId, spaceId, 'viewer');
 
@@ -70,7 +74,9 @@ export class AnalyticsQueryService {
         merchant: { not: null },
         deletedAt: null,
         excludeFromTotals: false,
-        OR: [{ category: { is: null } }, { category: { excludeFromTotals: false } }],
+        ...(budgetId
+          ? { category: { budgetId, excludeFromTotals: false } }
+          : { OR: [{ category: { is: null } }, { category: { excludeFromTotals: false } }] }),
       },
       _sum: { amount: true },
       _count: { id: true },
@@ -95,7 +101,8 @@ export class AnalyticsQueryService {
     spaceId: string,
     startDate: Date,
     endDate: Date,
-    limit = 10
+    limit = 10,
+    budgetId?: string
   ) {
     await this.spacesService.verifyUserAccess(userId, spaceId, 'viewer');
 
@@ -108,7 +115,7 @@ export class AnalyticsQueryService {
         categoryId: { not: null },
         deletedAt: null,
         excludeFromTotals: false,
-        category: { excludeFromTotals: false },
+        category: { excludeFromTotals: false, ...(budgetId && { budgetId }) },
       },
       _sum: { amount: true },
       _count: { id: true },
@@ -140,13 +147,19 @@ export class AnalyticsQueryService {
   /**
    * Get statistics summary (combined view)
    */
-  async getStatistics(userId: string, spaceId: string, startDate: Date, endDate: Date) {
+  async getStatistics(
+    userId: string,
+    spaceId: string,
+    startDate: Date,
+    endDate: Date,
+    budgetId?: string
+  ) {
     await this.spacesService.verifyUserAccess(userId, spaceId, 'viewer');
 
     const [topPurchases, topMerchants, topCategories, totals] = await Promise.all([
-      this.getTopPurchases(userId, spaceId, startDate, endDate, 10),
-      this.getTopMerchants(userId, spaceId, startDate, endDate, 10),
-      this.getTopCategories(userId, spaceId, startDate, endDate, 10),
+      this.getTopPurchases(userId, spaceId, startDate, endDate, 10, budgetId),
+      this.getTopMerchants(userId, spaceId, startDate, endDate, 10, budgetId),
+      this.getTopCategories(userId, spaceId, startDate, endDate, 10, budgetId),
       this.prisma.transaction.aggregate({
         where: {
           account: { spaceId },
@@ -170,31 +183,52 @@ export class AnalyticsQueryService {
   /**
    * Get annual trends with savings rate
    */
-  async getAnnualTrends(userId: string, spaceId: string, months = 12) {
+  async getAnnualTrends(userId: string, spaceId: string, months = 12, budgetId?: string) {
     await this.spacesService.verifyUserAccess(userId, spaceId, 'viewer');
 
     const today = new Date();
     const startDate = new Date(today.getFullYear(), today.getMonth() - (months - 1), 1);
 
-    const rawData = await this.prisma.$queryRaw<
-      Array<{ month: string; income: string | null; expenses: string | null; count: string }>
-    >`
-      SELECT
-        TO_CHAR(t.date, 'YYYY-MM') as month,
-        SUM(CASE WHEN t.amount > 0 THEN t.amount ELSE 0 END) as income,
-        SUM(CASE WHEN t.amount < 0 THEN ABS(t.amount) ELSE 0 END) as expenses,
-        COUNT(*)::text as count
-      FROM transactions t
-      JOIN accounts a ON t.account_id = a.id
-      LEFT JOIN categories c ON t.category_id = c.id
-      WHERE a.space_id = ${spaceId}
-        AND t.date >= ${startDate}
-        AND t.deleted_at IS NULL
-        AND t.exclude_from_totals = false
-        AND (c.exclude_from_totals IS NULL OR c.exclude_from_totals = false)
-      GROUP BY TO_CHAR(t.date, 'YYYY-MM')
-      ORDER BY month ASC
-    `;
+    const rawData = budgetId
+      ? await this.prisma.$queryRaw<
+          Array<{ month: string; income: string | null; expenses: string | null; count: string }>
+        >`
+          SELECT
+            TO_CHAR(t.date, 'YYYY-MM') as month,
+            SUM(CASE WHEN t.amount > 0 THEN t.amount ELSE 0 END) as income,
+            SUM(CASE WHEN t.amount < 0 THEN ABS(t.amount) ELSE 0 END) as expenses,
+            COUNT(*)::text as count
+          FROM transactions t
+          JOIN accounts a ON t.account_id = a.id
+          LEFT JOIN categories c ON t.category_id = c.id
+          WHERE a.space_id = ${spaceId}
+            AND t.date >= ${startDate}
+            AND t.deleted_at IS NULL
+            AND t.exclude_from_totals = false
+            AND (c.exclude_from_totals IS NULL OR c.exclude_from_totals = false)
+            AND c.budget_id = ${budgetId}
+          GROUP BY TO_CHAR(t.date, 'YYYY-MM')
+          ORDER BY month ASC
+        `
+      : await this.prisma.$queryRaw<
+          Array<{ month: string; income: string | null; expenses: string | null; count: string }>
+        >`
+          SELECT
+            TO_CHAR(t.date, 'YYYY-MM') as month,
+            SUM(CASE WHEN t.amount > 0 THEN t.amount ELSE 0 END) as income,
+            SUM(CASE WHEN t.amount < 0 THEN ABS(t.amount) ELSE 0 END) as expenses,
+            COUNT(*)::text as count
+          FROM transactions t
+          JOIN accounts a ON t.account_id = a.id
+          LEFT JOIN categories c ON t.category_id = c.id
+          WHERE a.space_id = ${spaceId}
+            AND t.date >= ${startDate}
+            AND t.deleted_at IS NULL
+            AND t.exclude_from_totals = false
+            AND (c.exclude_from_totals IS NULL OR c.exclude_from_totals = false)
+          GROUP BY TO_CHAR(t.date, 'YYYY-MM')
+          ORDER BY month ASC
+        `;
 
     const dataMap = new Map<string, { income: number; expenses: number; count: number }>();
     for (const row of rawData) {
@@ -263,6 +297,7 @@ export class AnalyticsQueryService {
       amountMin?: number;
       amountMax?: number;
       aggregation?: 'sum' | 'count' | 'average';
+      budgetId?: string;
     }
   ) {
     await this.spacesService.verifyUserAccess(userId, spaceId, 'viewer');
@@ -272,7 +307,9 @@ export class AnalyticsQueryService {
       date: { gte: params.startDate, lte: params.endDate },
       deletedAt: null,
       excludeFromTotals: false,
-      OR: [{ category: { is: null } }, { category: { excludeFromTotals: false } }],
+      ...(params.budgetId
+        ? { category: { budgetId: params.budgetId, excludeFromTotals: false } }
+        : { OR: [{ category: { is: null } }, { category: { excludeFromTotals: false } }] }),
     };
 
     if (params.categoryIds?.length) {
@@ -392,7 +429,13 @@ export class AnalyticsQueryService {
   /**
    * Get transactions grouped by day for calendar view
    */
-  async getCalendarData(userId: string, spaceId: string, year: number, month: number) {
+  async getCalendarData(
+    userId: string,
+    spaceId: string,
+    year: number,
+    month: number,
+    budgetId?: string
+  ) {
     await this.spacesService.verifyUserAccess(userId, spaceId, 'viewer');
 
     const startDate = new Date(year, month - 1, 1);
@@ -404,7 +447,9 @@ export class AnalyticsQueryService {
         date: { gte: startDate, lte: endDate },
         deletedAt: null,
         excludeFromTotals: false,
-        OR: [{ category: { is: null } }, { category: { excludeFromTotals: false } }],
+        ...(budgetId
+          ? { category: { budgetId, excludeFromTotals: false } }
+          : { OR: [{ category: { is: null } }, { category: { excludeFromTotals: false } }] }),
       },
       include: { account: true, category: true },
       orderBy: { date: 'asc' },

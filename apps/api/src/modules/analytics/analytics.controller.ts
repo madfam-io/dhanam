@@ -180,6 +180,11 @@ export class AnalyticsController {
     required: true,
     description: 'End date for the analysis period (ISO 8601)',
   })
+  @ApiQuery({
+    name: 'budgetId',
+    required: false,
+    description: "Filter by budget (only transactions in this budget's categories)",
+  })
   @ApiOkResponse({ description: 'Spending by category retrieved successfully' })
   @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
   @ApiForbiddenResponse({ description: 'User lacks access to this space' })
@@ -189,13 +194,15 @@ export class AnalyticsController {
     @Request() req: any,
     @Param('spaceId') spaceId: string,
     @Query('startDate') startDate: string,
-    @Query('endDate') endDate: string
+    @Query('endDate') endDate: string,
+    @Query('budgetId') budgetId?: string
   ): Promise<SpendingByCategory[]> {
     return this.analyticsService.getSpendingByCategory(
       req.user!.userId,
       spaceId,
       new Date(startDate),
-      new Date(endDate)
+      new Date(endDate),
+      budgetId
     );
   }
 
@@ -207,6 +214,11 @@ export class AnalyticsController {
     required: false,
     description: 'Number of months to analyze (default: 6)',
   })
+  @ApiQuery({
+    name: 'budgetId',
+    required: false,
+    description: "Filter by budget (only transactions in this budget's categories)",
+  })
   @ApiOkResponse({ description: 'Income vs expenses trend retrieved successfully' })
   @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
   @ApiForbiddenResponse({ description: 'User lacks access to this space' })
@@ -214,12 +226,14 @@ export class AnalyticsController {
   async getIncomeVsExpenses(
     @Request() req: any,
     @Param('spaceId') spaceId: string,
-    @Query('months') months?: string
+    @Query('months') months?: string,
+    @Query('budgetId') budgetId?: string
   ): Promise<IncomeVsExpenses[]> {
     return this.analyticsService.getIncomeVsExpenses(
       req.user!.userId,
       spaceId,
-      months ? parseInt(months, 10) : 6
+      months ? parseInt(months, 10) : 6,
+      budgetId
     );
   }
 
@@ -267,6 +281,7 @@ export class AnalyticsController {
   @ApiParam({ name: 'spaceId', description: 'Space UUID' })
   @ApiQuery({ name: 'startDate', required: true, description: 'Start date (ISO 8601)' })
   @ApiQuery({ name: 'endDate', required: true, description: 'End date (ISO 8601)' })
+  @ApiQuery({ name: 'budgetId', required: false, description: 'Filter by budget' })
   @ApiOkResponse({ description: 'Statistics retrieved successfully' })
   @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
   @ApiForbiddenResponse({ description: 'User lacks access to this space' })
@@ -274,13 +289,15 @@ export class AnalyticsController {
     @Request() req: any,
     @Param('spaceId') spaceId: string,
     @Query('startDate') startDate: string,
-    @Query('endDate') endDate: string
+    @Query('endDate') endDate: string,
+    @Query('budgetId') budgetId?: string
   ) {
     return this.analyticsService.getStatistics(
       req.user!.userId,
       spaceId,
       new Date(startDate),
-      new Date(endDate)
+      new Date(endDate),
+      budgetId
     );
   }
 
@@ -288,18 +305,21 @@ export class AnalyticsController {
   @ApiOperation({ summary: 'Get annual trends with savings rate' })
   @ApiParam({ name: 'spaceId', description: 'Space UUID' })
   @ApiQuery({ name: 'months', required: false, description: 'Number of months (default: 12)' })
+  @ApiQuery({ name: 'budgetId', required: false, description: 'Filter by budget' })
   @ApiOkResponse({ description: 'Trends retrieved successfully' })
   @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
   @ApiForbiddenResponse({ description: 'User lacks access to this space' })
   async getAnnualTrends(
     @Request() req: any,
     @Param('spaceId') spaceId: string,
-    @Query('months') months?: string
+    @Query('months') months?: string,
+    @Query('budgetId') budgetId?: string
   ) {
     return this.analyticsService.getAnnualTrends(
       req.user!.userId,
       spaceId,
-      months ? parseInt(months, 10) : 12
+      months ? parseInt(months, 10) : 12,
+      budgetId
     );
   }
 
@@ -308,6 +328,7 @@ export class AnalyticsController {
   @ApiParam({ name: 'spaceId', description: 'Space UUID' })
   @ApiQuery({ name: 'year', required: true, description: 'Year (e.g. 2026)' })
   @ApiQuery({ name: 'month', required: true, description: 'Month (1-12)' })
+  @ApiQuery({ name: 'budgetId', required: false, description: 'Filter by budget' })
   @ApiOkResponse({ description: 'Calendar data retrieved successfully' })
   @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
   @ApiForbiddenResponse({ description: 'User lacks access to this space' })
@@ -315,13 +336,15 @@ export class AnalyticsController {
     @Request() req: any,
     @Param('spaceId') spaceId: string,
     @Query('year') year: string,
-    @Query('month') month: string
+    @Query('month') month: string,
+    @Query('budgetId') budgetId?: string
   ) {
     return this.analyticsService.getCalendarData(
       req.user!.userId,
       spaceId,
       parseInt(year, 10),
-      parseInt(month, 10)
+      parseInt(month, 10),
+      budgetId
     );
   }
 
@@ -347,6 +370,7 @@ export class AnalyticsController {
       amountMin?: number;
       amountMax?: number;
       aggregation?: 'sum' | 'count' | 'average';
+      budgetId?: string;
     }
   ) {
     return this.analyticsService.executeQuery(req.user!.userId, spaceId, {

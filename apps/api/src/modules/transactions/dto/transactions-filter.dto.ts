@@ -22,6 +22,13 @@ export class TransactionsFilterDto {
   @IsUUID()
   categoryId?: string;
 
+  @ApiPropertyOptional({
+    description: "Filter by budget (transactions in this budget's categories)",
+  })
+  @IsOptional()
+  @IsUUID()
+  budgetId?: string;
+
   @ApiPropertyOptional({ description: 'Filter by tag IDs (transactions with ANY of these tags)' })
   @IsOptional()
   @IsArray()

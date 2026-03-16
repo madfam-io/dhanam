@@ -25,6 +25,7 @@ export class TransactionsService {
       account: { spaceId },
       ...(filter.accountId && { accountId: filter.accountId }),
       ...(filter.categoryId && { categoryId: filter.categoryId }),
+      ...(filter.budgetId && { category: { budgetId: filter.budgetId } }),
       ...(filter.startDate && { date: { gte: filter.startDate } }),
       ...(filter.endDate && { date: { lte: filter.endDate } }),
       ...(filter.minAmount && { amount: { gte: filter.minAmount } }),

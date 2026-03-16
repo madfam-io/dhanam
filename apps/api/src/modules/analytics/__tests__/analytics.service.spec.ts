@@ -1864,4 +1864,110 @@ describe('AnalyticsService', () => {
       expect(result.totalNetWorth).toBe(0);
     });
   });
+
+  describe('budgetId filter', () => {
+    it('getSpendingByCategory should pass budgetId to groupBy where clause', async () => {
+      const startDate = new Date('2024-01-01');
+      const endDate = new Date('2024-01-31');
+
+      prisma.transaction.groupBy.mockResolvedValue([]);
+      prisma.category.findMany.mockResolvedValue([]);
+
+      await service.getSpendingByCategory(
+        mockUserId,
+        mockSpaceId,
+        startDate,
+        endDate,
+        'budget-123'
+      );
+
+      expect(prisma.transaction.groupBy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            category: { budgetId: 'budget-123', excludeFromTotals: false },
+          }),
+        })
+      );
+    });
+
+    it('getSpendingByCategory without budgetId should use OR clause', async () => {
+      const startDate = new Date('2024-01-01');
+      const endDate = new Date('2024-01-31');
+
+      prisma.transaction.groupBy.mockResolvedValue([]);
+      prisma.category.findMany.mockResolvedValue([]);
+
+      await service.getSpendingByCategory(mockUserId, mockSpaceId, startDate, endDate);
+
+      expect(prisma.transaction.groupBy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            OR: [{ category: { is: null } }, { category: { excludeFromTotals: false } }],
+          }),
+        })
+      );
+    });
+
+    it('getIncomeVsExpenses should accept budgetId param', async () => {
+      (prisma.$queryRaw as jest.Mock).mockResolvedValue([]);
+
+      await service.getIncomeVsExpenses(mockUserId, mockSpaceId, 6, 'budget-123');
+
+      expect(prisma.$queryRaw).toHaveBeenCalled();
+      expect(spacesService.verifyUserAccess).toHaveBeenCalledWith(
+        mockUserId,
+        mockSpaceId,
+        'viewer'
+      );
+    });
+
+    it('getStatistics should pass budgetId through to query service', async () => {
+      const mockQueryService = module.get(
+        AnalyticsQueryService
+      ) as jest.Mocked<AnalyticsQueryService>;
+      const startDate = new Date('2024-01-01');
+      const endDate = new Date('2024-01-31');
+
+      await service.getStatistics(mockUserId, mockSpaceId, startDate, endDate, 'budget-123');
+
+      expect(mockQueryService.getStatistics).toHaveBeenCalledWith(
+        mockUserId,
+        mockSpaceId,
+        startDate,
+        endDate,
+        'budget-123'
+      );
+    });
+
+    it('getAnnualTrends should pass budgetId through to query service', async () => {
+      const mockQueryService = module.get(
+        AnalyticsQueryService
+      ) as jest.Mocked<AnalyticsQueryService>;
+
+      await service.getAnnualTrends(mockUserId, mockSpaceId, 12, 'budget-123');
+
+      expect(mockQueryService.getAnnualTrends).toHaveBeenCalledWith(
+        mockUserId,
+        mockSpaceId,
+        12,
+        'budget-123'
+      );
+    });
+
+    it('getCalendarData should pass budgetId through to query service', async () => {
+      const mockQueryService = module.get(
+        AnalyticsQueryService
+      ) as jest.Mocked<AnalyticsQueryService>;
+
+      await service.getCalendarData(mockUserId, mockSpaceId, 2026, 3, 'budget-123');
+
+      expect(mockQueryService.getCalendarData).toHaveBeenCalledWith(
+        mockUserId,
+        mockSpaceId,
+        2026,
+        3,
+        'budget-123'
+      );
+    });
+  });
 });

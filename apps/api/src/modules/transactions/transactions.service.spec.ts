@@ -1484,4 +1484,36 @@ describe('TransactionsService', () => {
       ]);
     });
   });
+
+  // ---------------------------------------------------------------------------
+  // budgetId filter
+  // ---------------------------------------------------------------------------
+  describe('findAll with budgetId filter', () => {
+    it('should filter transactions by budget via category relation', async () => {
+      prisma.transaction.findMany.mockResolvedValue([]);
+      prisma.transaction.count.mockResolvedValue(0);
+
+      const filter: TransactionsFilterDto = { budgetId: 'budget-456' };
+      await service.findAll(mockSpace.id, mockUser.id, filter);
+
+      expect(prisma.transaction.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            category: { budgetId: 'budget-456' },
+          }),
+        })
+      );
+    });
+
+    it('should not include category budget filter when budgetId is not provided', async () => {
+      prisma.transaction.findMany.mockResolvedValue([]);
+      prisma.transaction.count.mockResolvedValue(0);
+
+      const filter: TransactionsFilterDto = {};
+      await service.findAll(mockSpace.id, mockUser.id, filter);
+
+      const calledWith = prisma.transaction.findMany.mock.calls[0][0] as any;
+      expect(calledWith.where.category).toBeUndefined();
+    });
+  });
 });

@@ -56,9 +56,15 @@ async function main() {
   const client = new LunchMoneyClient(token);
   const idMap = new IdMap();
 
+  // Identify current LM budget profile
+  const me = await client.getMe();
+  const budgetName = process.env.LUNCHMONEY_BUDGET_LABEL || me.budget_name;
+  const lmAccountId = me.account_id;
+
   console.log('========================================');
   console.log('  LunchMoney → Dhanam Migration');
   console.log(`  Target user: ${targetEmail}`);
+  console.log(`  LM budget: "${budgetName}" (account_id=${lmAccountId})`);
   console.log(`  Date range: ${START_DATE} → ${TODAY}`);
   console.log(`  Dry run: ${DRY_RUN}`);
   console.log('========================================\n');
@@ -90,24 +96,61 @@ async function main() {
   const lmCategories = await client.getCategories();
   log('CATEGORIES', `Found ${lmCategories.length} categories`);
 
-  // Find or create budget
+  // Find or create budget by LM origin metadata
+  // 1. Try matching by LM metadata
   let budget = await prisma.budget.findFirst({
-    where: { spaceId },
-    orderBy: { createdAt: 'desc' },
+    where: {
+      spaceId,
+      metadata: { path: ['lunchMoneyAccountId'], equals: lmAccountId },
+    },
   });
 
+  // 2. Legacy fixup: rename "Monthly Budget" from first migration run
+  if (!budget) {
+    budget = await prisma.budget.findFirst({
+      where: { spaceId, name: 'Monthly Budget' },
+    });
+    if (budget && !DRY_RUN) {
+      budget = await prisma.budget.update({
+        where: { id: budget.id },
+        data: {
+          name: budgetName,
+          metadata: {
+            lunchMoneyBudgetName: budgetName,
+            lunchMoneyAccountId: lmAccountId,
+            migratedAt: new Date().toISOString(),
+          },
+        },
+      });
+      log('INIT', `Renamed legacy "Monthly Budget" → "${budgetName}"`);
+    }
+  }
+
+  // 3. Try matching by name
+  if (!budget) {
+    budget = await prisma.budget.findFirst({
+      where: { spaceId, name: budgetName },
+    });
+  }
+
+  // 4. Create new budget for this LM profile
   if (!budget && !DRY_RUN) {
     budget = await prisma.budget.create({
       data: {
         space: { connect: { id: spaceId } },
-        name: 'Monthly Budget',
+        name: budgetName,
         period: 'monthly',
         startDate: new Date(
           `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-01`
         ),
+        metadata: {
+          lunchMoneyBudgetName: budgetName,
+          lunchMoneyAccountId: lmAccountId,
+          migratedAt: new Date().toISOString(),
+        },
       },
     });
-    log('CATEGORIES', `Created budget "${budget.name}"`);
+    log('INIT', `Created budget "${budgetName}"`);
   }
 
   // Build group name map: groupId → clean group name
@@ -352,15 +395,17 @@ async function main() {
 
   log('TRANSACTIONS', `Created: ${txCreated}, Skipped: ${txSkipped}`);
 
-  // Step 5: Auto-generate rules from transaction patterns
+  // Step 5: Auto-generate rules from transaction patterns (scoped to this budget's categories)
   log('RULES', 'Generating rules from transaction patterns...');
   if (!DRY_RUN) {
+    const currentBudgetCategoryIds = Array.from(idMap.getAll('category').values());
+
     const patterns = await prisma.transaction.groupBy({
       by: ['merchant', 'categoryId'],
       where: {
         account: { spaceId },
         merchant: { not: null },
-        categoryId: { not: null },
+        categoryId: { in: currentBudgetCategoryIds },
       },
       _count: { id: true },
       having: { id: { _count: { gte: 3 } } },
@@ -370,10 +415,11 @@ async function main() {
     for (const pattern of patterns) {
       if (!pattern.merchant || !pattern.categoryId) continue;
 
+      const ruleName = `Auto: [${budgetName}] ${pattern.merchant}`;
       const existing = await prisma.transactionRule.findFirst({
         where: {
           spaceId,
-          name: `Auto: ${pattern.merchant}`,
+          name: ruleName,
         },
       });
 
@@ -381,7 +427,7 @@ async function main() {
         await prisma.transactionRule.create({
           data: {
             space: { connect: { id: spaceId } },
-            name: `Auto: ${pattern.merchant}`,
+            name: ruleName,
             conditions: {
               field: 'merchant',
               operator: 'equals',

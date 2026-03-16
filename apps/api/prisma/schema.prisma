@@ -903,6 +903,7 @@ model Budget {
   customEndDay    Int?         @map("custom_end_day")
   income          Decimal      @default(0) @db.Decimal(19, 4)
   rolloverEnabled Boolean      @default(false) @map("rollover_enabled")
+  metadata        Json?
   createdAt       DateTime     @default(now()) @map("created_at")
   updatedAt       DateTime     @updatedAt @map("updated_at")
 
