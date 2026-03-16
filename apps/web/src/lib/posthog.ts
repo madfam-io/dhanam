@@ -34,10 +34,10 @@ export const initPostHog = (): void => {
   try {
     posthog.init(apiKey, {
       api_host: host,
-      capture_pageview: true, // Automatically capture page views
+      capture_pageview: false, // Handled by PostHogProvider on route change
       capture_pageleave: true, // Capture when users leave pages
       persistence: 'localStorage', // Store user data in localStorage
-      autocapture: true, // Automatically capture clicks, form submissions, etc.
+      autocapture: false, // Disabled to reduce memory pressure; use explicit trackEvent()
       disable_session_recording: false, // Enable session recording
       session_recording: {
         maskAllInputs: true, // Mask input fields for privacy
