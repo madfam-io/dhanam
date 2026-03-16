@@ -1,6 +1,15 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsString, IsNumber, IsDate, IsOptional, IsUUID, IsObject } from 'class-validator';
+import {
+  IsString,
+  IsNumber,
+  IsDate,
+  IsOptional,
+  IsUUID,
+  IsObject,
+  IsArray,
+  IsBoolean,
+} from 'class-validator';
 
 export class UpdateTransactionDto {
   @ApiPropertyOptional()
@@ -28,6 +37,17 @@ export class UpdateTransactionDto {
   @IsOptional()
   @IsUUID()
   categoryId?: string;
+
+  @ApiPropertyOptional({ description: 'Tag IDs to set on this transaction (replaces existing)' })
+  @IsOptional()
+  @IsArray()
+  @IsUUID('4', { each: true })
+  tagIds?: string[];
+
+  @ApiPropertyOptional({ description: 'Mark transaction as reviewed' })
+  @IsOptional()
+  @IsBoolean()
+  reviewed?: boolean;
 
   @ApiPropertyOptional()
   @IsOptional()

@@ -10,6 +10,13 @@ if ! pnpm jest --passWithNoTests --testPathPattern="nonexistent" 2>&1 | head -5 
 fi
 cd - > /dev/null
 
+# Check file sizes on staged files (>= 800 lines = error, >= 600 = warn)
+echo "Checking file sizes..."
+node scripts/check-file-sizes.js --staged || {
+  echo "❌ Files exceed 800 line limit. Refactor before committing."
+  exit 1
+}
+
 # Run linting on staged files
 pnpm lint-staged || {
   echo "❌ Lint errors found. Please fix them before committing."

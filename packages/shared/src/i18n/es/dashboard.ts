@@ -25,6 +25,9 @@ export const dashboard = {
     retirement: 'Retiro',
     scenarios: 'Escenarios',
     billing: 'Facturación',
+    calendar: 'Calendario',
+    statistics: 'Estadísticas',
+    trends: 'Tendencias',
   },
   header: {
     greeting: 'Hola, {{name}}',
@@ -48,11 +51,13 @@ export const dashboard = {
     welcomeBack: 'Bienvenido, {{name}}',
     financialOverview: 'Aquí tienes un resumen de tu estado financiero',
     netWorth: 'Patrimonio neto',
-    netWorthTooltip: 'Valor total de tus activos (ahorros, inversiones, cripto) menos pasivos (tarjetas de crédito, préstamos). Se actualiza en tiempo real al sincronizar tus cuentas.',
+    netWorthTooltip:
+      'Valor total de tus activos (ahorros, inversiones, cripto) menos pasivos (tarjetas de crédito, préstamos). Se actualiza en tiempo real al sincronizar tus cuentas.',
     totalAssets: 'Activos totales',
     totalLiabilities: 'Pasivos totales',
     budgetUsage: 'Uso de Presupuesto',
-    budgetUsageTooltip: 'Seguimiento de gastos contra tu presupuesto mensual por categorías. Dhanam categoriza automáticamente las transacciones para ayudarte a mantenerte en control.',
+    budgetUsageTooltip:
+      'Seguimiento de gastos contra tu presupuesto mensual por categorías. Dhanam categoriza automáticamente las transacciones para ayudarte a mantenerte en control.',
     noBudget: 'Sin presupuesto',
     remaining: '{{amount}} restante',
     createBudgetToTrack: 'Crea un presupuesto para rastrear',
@@ -79,7 +84,8 @@ export const dashboard = {
     vs90Days: 'vs. 90 días',
     vsLastMonth: 'vs. mes anterior',
     cashflowForecast: 'Pronóstico de Flujo de Caja (60 días)',
-    cashflowTooltip: 'Predicción con IA de tus ingresos y gastos para los próximos 60 días basada en patrones históricos. Te ayuda a anticipar faltantes de efectivo y planificar.',
+    cashflowTooltip:
+      'Predicción con IA de tus ingresos y gastos para los próximos 60 días basada en patrones históricos. Te ayuda a anticipar faltantes de efectivo y planificar.',
     projectedIncome: 'Ingresos Proyectados',
     projectedExpenses: 'Gastos Proyectados',
     netCashflow: 'Flujo Neto',
@@ -90,7 +96,8 @@ export const dashboard = {
     portfolioDescription: 'Distribución de activos en tus cuentas',
     financialGoals: 'Metas Financieras',
     goalsDescription: 'Probabilidad de alcanzar tus metas con simulaciones Monte Carlo',
-    goalsTooltip: 'Cada meta muestra la probabilidad de éxito basada en 10,000 simulaciones Monte Carlo, considerando tus ahorros actuales, contribuciones mensuales y volatilidad del mercado.',
+    goalsTooltip:
+      'Cada meta muestra la probabilidad de éxito basada en 10,000 simulaciones Monte Carlo, considerando tus ahorros actuales, contribuciones mensuales y volatilidad del mercado.',
     viewAllGoals: 'Ver Todas las Metas',
     gamingAssets: 'Activos de Gaming',
     gamingDescription: 'Holdings metaverso, NFTs y staking',

@@ -41,6 +41,72 @@ export interface AccountWithOwnership extends Account {
   ownershipCategory: 'yours' | 'mine' | 'ours';
 }
 
+// Statistics types
+export interface StatisticsData {
+  totalTransactions: number;
+  totalAmount: number;
+  topPurchases: {
+    id: string;
+    description: string;
+    amount: number;
+    date: string;
+    merchant: string | null;
+  }[];
+  topMerchants: {
+    merchant: string;
+    totalAmount: number;
+    transactionCount: number;
+  }[];
+  topCategories: {
+    categoryId: string;
+    categoryName: string;
+    totalAmount: number;
+    transactionCount: number;
+  }[];
+}
+
+// Trend types
+export interface TrendMonth {
+  month: string;
+  income: number;
+  expenses: number;
+  net: number;
+  savingsRate: number;
+}
+
+// Calendar types
+export interface CalendarDay {
+  date: string;
+  transactionCount: number;
+  netAmount: number;
+  transactions?: {
+    id: string;
+    description: string;
+    amount: number;
+    merchant: string | null;
+  }[];
+}
+
+// Query types
+export interface AnalyticsQueryParams {
+  startDate: string;
+  endDate: string;
+  groupBy: 'month' | 'category' | 'merchant' | 'account' | 'tag';
+  categoryId?: string;
+  merchant?: string;
+  accountId?: string;
+  tagId?: string;
+}
+
+export interface AnalyticsQueryResult {
+  groupKey: string;
+  groupLabel: string;
+  totalAmount: number;
+  transactionCount: number;
+  income: number;
+  expenses: number;
+}
+
 export const analyticsApi = {
   /**
    * Get net worth analysis for a space
@@ -140,6 +206,48 @@ export const analyticsApi = {
       `/analytics/${spaceId}/accounts-by-ownership`,
       params
     );
+  },
+
+  /**
+   * Get statistics for a date range (top purchases, merchants, categories)
+   */
+  getStatistics: async (
+    spaceId: string,
+    startDate: string,
+    endDate: string
+  ): Promise<StatisticsData> => {
+    return apiClient.get<StatisticsData>(`/analytics/${spaceId}/statistics`, {
+      startDate,
+      endDate,
+    });
+  },
+
+  /**
+   * Get annual/multi-month trend data (income, expenses, net, savings rate per month)
+   */
+  getAnnualTrends: async (spaceId: string, months?: number): Promise<TrendMonth[]> => {
+    const params = months ? { months: months.toString() } : {};
+    return apiClient.get<TrendMonth[]>(`/analytics/${spaceId}/trends`, params);
+  },
+
+  /**
+   * Get calendar data for a given month (transaction count and net per day)
+   */
+  getCalendarData: async (spaceId: string, year: number, month: number): Promise<CalendarDay[]> => {
+    return apiClient.get<CalendarDay[]>(`/analytics/${spaceId}/calendar`, {
+      year: year.toString(),
+      month: month.toString(),
+    });
+  },
+
+  /**
+   * Execute an ad-hoc analytics query with grouping and filters
+   */
+  executeQuery: async (
+    spaceId: string,
+    params: AnalyticsQueryParams
+  ): Promise<AnalyticsQueryResult[]> => {
+    return apiClient.post<AnalyticsQueryResult[]>(`/analytics/${spaceId}/query`, params);
   },
 };
 

@@ -5,6 +5,7 @@ import { PrismaModule } from '../../core/prisma/prisma.module';
 import { FxRatesModule } from '../fx-rates/fx-rates.module';
 import { SpacesModule } from '../spaces/spaces.module';
 
+import { AnalyticsQueryService } from './analytics-query.service';
 import { AnalyticsController } from './analytics.controller';
 import { AnalyticsService } from './analytics.service';
 import { AnomalyService } from './anomaly.service';
@@ -30,6 +31,7 @@ import { WealthAnalytics } from './wealth.analytics';
     ReportSharingController,
   ],
   providers: [
+    AnalyticsQueryService,
     AnalyticsService,
     ReportService,
     PostHogService,

@@ -25,6 +25,9 @@ export const dashboard = {
     retirement: 'Aposentadoria',
     scenarios: 'Cenários',
     billing: 'Faturamento',
+    calendar: 'Calendário',
+    statistics: 'Estatísticas',
+    trends: 'Tendências',
   },
   header: {
     greeting: 'Olá, {{name}}',
@@ -48,11 +51,13 @@ export const dashboard = {
     welcomeBack: 'Bem-vindo, {{name}}',
     financialOverview: 'Aqui está um resumo da sua situação financeira',
     netWorth: 'Patrimônio líquido',
-    netWorthTooltip: 'Valor total dos seus ativos (poupança, investimentos, cripto) menos passivos (cartões de crédito, empréstimos). Atualizado em tempo real ao sincronizar suas contas.',
+    netWorthTooltip:
+      'Valor total dos seus ativos (poupança, investimentos, cripto) menos passivos (cartões de crédito, empréstimos). Atualizado em tempo real ao sincronizar suas contas.',
     totalAssets: 'Ativos totais',
     totalLiabilities: 'Passivos totais',
     budgetUsage: 'Uso do Orçamento',
-    budgetUsageTooltip: 'Acompanhamento de gastos contra seu orçamento mensal por categorias. O Dhanam categoriza automaticamente as transações para ajudá-lo a manter o controle.',
+    budgetUsageTooltip:
+      'Acompanhamento de gastos contra seu orçamento mensal por categorias. O Dhanam categoriza automaticamente as transações para ajudá-lo a manter o controle.',
     noBudget: 'Sem orçamento',
     remaining: '{{amount}} restante',
     createBudgetToTrack: 'Crie um orçamento para acompanhar',
@@ -79,7 +84,8 @@ export const dashboard = {
     vs90Days: 'vs. 90 dias',
     vsLastMonth: 'vs. mês anterior',
     cashflowForecast: 'Previsão de Fluxo de Caixa (60 dias)',
-    cashflowTooltip: 'Previsão com IA das suas receitas e despesas para os próximos 60 dias baseada em padrões históricos. Ajuda a antecipar faltas de caixa e planejar.',
+    cashflowTooltip:
+      'Previsão com IA das suas receitas e despesas para os próximos 60 dias baseada em padrões históricos. Ajuda a antecipar faltas de caixa e planejar.',
     projectedIncome: 'Receitas Projetadas',
     projectedExpenses: 'Gastos Projetados',
     netCashflow: 'Fluxo Líquido',
@@ -90,7 +96,8 @@ export const dashboard = {
     portfolioDescription: 'Distribuição de ativos nas suas contas',
     financialGoals: 'Metas Financeiras',
     goalsDescription: 'Probabilidade de alcançar suas metas com simulações Monte Carlo',
-    goalsTooltip: 'Cada meta mostra a probabilidade de sucesso baseada em 10.000 simulações Monte Carlo, considerando sua poupança atual, contribuições mensais e volatilidade do mercado.',
+    goalsTooltip:
+      'Cada meta mostra a probabilidade de sucesso baseada em 10.000 simulações Monte Carlo, considerando sua poupança atual, contribuições mensais e volatilidade do mercado.',
     viewAllGoals: 'Ver Todas as Metas',
     gamingAssets: 'Ativos de Gaming',
     gamingDescription: 'Holdings metaverso, NFTs e staking',

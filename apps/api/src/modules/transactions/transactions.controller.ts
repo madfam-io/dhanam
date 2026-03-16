@@ -1,3 +1,4 @@
+import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
 import {
   Controller,
   Get,
@@ -23,8 +24,6 @@ import {
 } from '@nestjs/swagger';
 import { Request } from 'express';
 
-import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
-
 import { CreateTransactionDto, UpdateTransactionDto, TransactionsFilterDto } from './dto';
 import { TransactionsService } from './transactions.service';
 
@@ -47,6 +46,26 @@ export class TransactionsController {
     @Req() req: Request
   ) {
     return this.transactionsService.findAll(spaceId, req.user!.id, filter);
+  }
+
+  @Get('unreviewed-count')
+  @ApiOperation({ summary: 'Get count of unreviewed transactions' })
+  @ApiParam({ name: 'spaceId', description: 'Space UUID' })
+  @ApiOkResponse({ description: 'Unreviewed transaction count' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiForbiddenResponse({ description: 'User lacks access to this space' })
+  getUnreviewedCount(@Param('spaceId') spaceId: string, @Req() req: Request) {
+    return this.transactionsService.getUnreviewedCount(spaceId, req.user!.id);
+  }
+
+  @Get('merchants')
+  @ApiOperation({ summary: 'Get aggregated merchant list with transaction counts' })
+  @ApiParam({ name: 'spaceId', description: 'Space UUID' })
+  @ApiOkResponse({ description: 'List of merchants with counts' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiForbiddenResponse({ description: 'User lacks access to this space' })
+  getMerchants(@Param('spaceId') spaceId: string, @Req() req: Request) {
+    return this.transactionsService.getMerchants(spaceId, req.user!.id);
   }
 
   @Get(':id')
@@ -123,6 +142,66 @@ export class TransactionsController {
       req.user!.id,
       body.transactionIds,
       body.categoryId
+    );
+  }
+
+  @Post('bulk-review')
+  @ApiOperation({ summary: 'Bulk review/unreview transactions' })
+  @ApiParam({ name: 'spaceId', description: 'Space UUID' })
+  @ApiOkResponse({ description: 'Transactions review status updated' })
+  @ApiBadRequestResponse({ description: 'Invalid request body' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiForbiddenResponse({ description: 'User lacks access to this space' })
+  bulkReview(
+    @Param('spaceId') spaceId: string,
+    @Body() body: { transactionIds: string[]; reviewed: boolean },
+    @Req() req: Request
+  ) {
+    return this.transactionsService.bulkReview(
+      spaceId,
+      req.user!.id,
+      body.transactionIds,
+      body.reviewed
+    );
+  }
+
+  @Post('merchants/rename')
+  @ApiOperation({ summary: 'Rename a merchant across all transactions' })
+  @ApiParam({ name: 'spaceId', description: 'Space UUID' })
+  @ApiOkResponse({ description: 'Merchant renamed successfully' })
+  @ApiBadRequestResponse({ description: 'Invalid request body' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiForbiddenResponse({ description: 'User lacks access to this space' })
+  renameMerchant(
+    @Param('spaceId') spaceId: string,
+    @Body() body: { oldName: string; newName: string },
+    @Req() req: Request
+  ) {
+    return this.transactionsService.renameMerchant(
+      spaceId,
+      req.user!.id,
+      body.oldName,
+      body.newName
+    );
+  }
+
+  @Post('merchants/merge')
+  @ApiOperation({ summary: 'Merge multiple merchant names into one' })
+  @ApiParam({ name: 'spaceId', description: 'Space UUID' })
+  @ApiOkResponse({ description: 'Merchants merged successfully' })
+  @ApiBadRequestResponse({ description: 'Invalid request body' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiForbiddenResponse({ description: 'User lacks access to this space' })
+  mergeMerchants(
+    @Param('spaceId') spaceId: string,
+    @Body() body: { sourceNames: string[]; targetName: string },
+    @Req() req: Request
+  ) {
+    return this.transactionsService.mergeMerchants(
+      spaceId,
+      req.user!.id,
+      body.sourceNames,
+      body.targetName
     );
   }
 }

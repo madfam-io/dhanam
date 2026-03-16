@@ -25,6 +25,9 @@ export const dashboard = {
     retirement: 'Retirement',
     scenarios: 'Scenarios',
     billing: 'Billing',
+    calendar: 'Calendar',
+    statistics: 'Statistics',
+    trends: 'Trends',
   },
   header: {
     greeting: 'Hi, {{name}}',
@@ -48,11 +51,13 @@ export const dashboard = {
     welcomeBack: 'Welcome back, {{name}}',
     financialOverview: "Here's an overview of your financial status",
     netWorth: 'Net Worth',
-    netWorthTooltip: 'Total value of all your assets (savings, investments, crypto) minus liabilities (credit cards, loans). Updated in real-time as your accounts sync.',
+    netWorthTooltip:
+      'Total value of all your assets (savings, investments, crypto) minus liabilities (credit cards, loans). Updated in real-time as your accounts sync.',
     totalAssets: 'Total Assets',
     totalLiabilities: 'Total Liabilities',
     budgetUsage: 'Budget Usage',
-    budgetUsageTooltip: 'Track spending against your monthly budget across categories. Dhanam auto-categorizes transactions using smart rules to help you stay on track.',
+    budgetUsageTooltip:
+      'Track spending against your monthly budget across categories. Dhanam auto-categorizes transactions using smart rules to help you stay on track.',
     noBudget: 'No budget',
     remaining: '{{amount}} remaining',
     createBudgetToTrack: 'Create a budget to track',
@@ -79,7 +84,8 @@ export const dashboard = {
     vs90Days: 'vs. 90 days',
     vsLastMonth: 'vs. last month',
     cashflowForecast: '60-Day Cashflow Forecast',
-    cashflowTooltip: 'AI-powered prediction of your income and expenses for the next 60 days based on historical patterns. Helps you anticipate cash shortages and plan ahead.',
+    cashflowTooltip:
+      'AI-powered prediction of your income and expenses for the next 60 days based on historical patterns. Helps you anticipate cash shortages and plan ahead.',
     projectedIncome: 'Projected Income',
     projectedExpenses: 'Projected Expenses',
     netCashflow: 'Net Cashflow',
@@ -90,7 +96,8 @@ export const dashboard = {
     portfolioDescription: 'Asset distribution across your accounts',
     financialGoals: 'Financial Goals',
     goalsDescription: 'Track probability of achieving your goals with Monte Carlo simulations',
-    goalsTooltip: 'Each goal shows success probability based on 10,000 Monte Carlo simulations, considering your current savings, monthly contributions, and market volatility.',
+    goalsTooltip:
+      'Each goal shows success probability based on 10,000 Monte Carlo simulations, considering your current savings, monthly contributions, and market volatility.',
     viewAllGoals: 'View All Goals',
     gamingAssets: 'Gaming Assets',
     gamingDescription: 'Metaverse holdings, NFTs, and staking',

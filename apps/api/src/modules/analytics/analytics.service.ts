@@ -15,6 +15,8 @@ import { PrismaService } from '../../core/prisma/prisma.service';
 import { FxRatesService } from '../fx-rates/fx-rates.service';
 import { SpacesService } from '../spaces/spaces.service';
 
+import { AnalyticsQueryService } from './analytics-query.service';
+
 export interface NetWorthHistoryPoint {
   date: string;
   netWorth: number;
@@ -46,7 +48,8 @@ export class AnalyticsService {
   constructor(
     private prisma: PrismaService,
     private spacesService: SpacesService,
-    private fxRatesService: FxRatesService
+    private fxRatesService: FxRatesService,
+    private analyticsQueryService: AnalyticsQueryService
   ) {}
 
   /**
@@ -1050,6 +1053,39 @@ export class AnalyticsService {
       })),
       ...(_errors.length > 0 ? { _errors } : {}),
     };
+  }
+
+  // ── Delegated query methods (implemented in AnalyticsQueryService) ──
+
+  async getStatistics(userId: string, spaceId: string, startDate: Date, endDate: Date) {
+    return this.analyticsQueryService.getStatistics(userId, spaceId, startDate, endDate);
+  }
+
+  async getAnnualTrends(userId: string, spaceId: string, months = 12) {
+    return this.analyticsQueryService.getAnnualTrends(userId, spaceId, months);
+  }
+
+  async executeQuery(
+    userId: string,
+    spaceId: string,
+    params: {
+      startDate: Date;
+      endDate: Date;
+      groupBy: 'month' | 'category' | 'merchant' | 'account' | 'tag';
+      categoryIds?: string[];
+      tagIds?: string[];
+      merchantNames?: string[];
+      accountIds?: string[];
+      amountMin?: number;
+      amountMax?: number;
+      aggregation?: 'sum' | 'count' | 'average';
+    }
+  ) {
+    return this.analyticsQueryService.executeQuery(userId, spaceId, params);
+  }
+
+  async getCalendarData(userId: string, spaceId: string, year: number, month: number) {
+    return this.analyticsQueryService.getCalendarData(userId, spaceId, year, month);
   }
 
   private async getBudgetsWithSummary(spaceId: string) {

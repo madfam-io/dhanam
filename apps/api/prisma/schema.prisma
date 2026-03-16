@@ -50,6 +50,8 @@ enum ConnectionStatus {
 }
 
 enum BudgetPeriod {
+  weekly
+  biweekly
   monthly
   quarterly
   yearly
@@ -59,13 +61,14 @@ enum Currency {
   MXN
   USD
   EUR
+  CAD
 }
 
 enum SubscriptionTier {
-  community    // self-hosted or free cloud trial
-  essentials   // $4.99/mo
-  pro          // $11.99/mo
-  premium      // $19.99/mo
+  community // self-hosted or free cloud trial
+  essentials // $4.99/mo
+  pro // $11.99/mo
+  premium // $19.99/mo
 }
 
 enum BillingEventType {
@@ -265,19 +268,19 @@ model User {
   countryCode     String? @map("country_code") // ISO country code for billing routing
 
   // Trial & promo fields
-  trialEndsAt         DateTime?         @map("trial_ends_at")
-  trialTier           SubscriptionTier? @map("trial_tier")
-  trialHasCreditCard  Boolean           @default(false) @map("trial_has_credit_card")
-  promoEndsAt         DateTime?         @map("promo_ends_at")
-  promoStartedAt      DateTime?         @map("promo_started_at")
-  pricingRegion       Int?              @map("pricing_region")
+  trialEndsAt        DateTime?         @map("trial_ends_at")
+  trialTier          SubscriptionTier? @map("trial_tier")
+  trialHasCreditCard Boolean           @default(false) @map("trial_has_credit_card")
+  promoEndsAt        DateTime?         @map("promo_ends_at")
+  promoStartedAt     DateTime?         @map("promo_started_at")
+  pricingRegion      Int?              @map("pricing_region")
 
   // Paddle billing (Merchant of Record for international)
   paddleCustomerId     String? @unique @map("paddle_customer_id")
   paddleSubscriptionId String? @unique @map("paddle_subscription_id")
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
   deletedAt DateTime? @map("deleted_at")
 
   // Relations
@@ -389,15 +392,15 @@ model UserPreferences {
 }
 
 model UserNotification {
-  id        String   @id @default(uuid())
-  userId    String   @map("user_id")
-  type      String   // connection_error, connection_reauth, connection_degraded, budget_alert, etc.
+  id        String    @id @default(uuid())
+  userId    String    @map("user_id")
+  type      String // connection_error, connection_reauth, connection_degraded, budget_alert, etc.
   title     String
   message   String
-  metadata  Json?    // Flexible payload for notification-specific data
-  read      Boolean  @default(false)
+  metadata  Json? // Flexible payload for notification-specific data
+  read      Boolean   @default(false)
   readAt    DateTime? @map("read_at")
-  createdAt DateTime @default(now()) @map("created_at")
+  createdAt DateTime  @default(now()) @map("created_at")
 
   // Relations
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -410,12 +413,12 @@ model UserNotification {
 
 // Life Beat (Dead Man's Switch) - Inactivity Alerts
 model InactivityAlert {
-  id         String   @id @default(uuid())
-  userId     String   @map("user_id")
-  alertLevel Int      @map("alert_level") // Days of inactivity: 30, 60, 90
-  sentAt     DateTime @default(now()) @map("sent_at")
-  channel    String   @default("email") // email, sms, push
-  responded  Boolean  @default(false)
+  id          String    @id @default(uuid())
+  userId      String    @map("user_id")
+  alertLevel  Int       @map("alert_level") // Days of inactivity: 30, 60, 90
+  sentAt      DateTime  @default(now()) @map("sent_at")
+  channel     String    @default("email") // email, sms, push
+  responded   Boolean   @default(false)
   respondedAt DateTime? @map("responded_at")
 
   // Relations
@@ -429,19 +432,19 @@ model InactivityAlert {
 
 // Executor assignments for Life Beat
 model ExecutorAssignment {
-  id              String   @id @default(uuid())
-  userId          String   @map("user_id") // Account holder
-  executorEmail   String   @map("executor_email")
-  executorName    String   @map("executor_name")
-  executorUserId  String?  @map("executor_user_id") // If executor is also a user
-  relationship    String   // spouse, child, sibling, attorney, financial_advisor, other
-  priority        Int      @default(1) // Order of notification (1 = first)
-  verified        Boolean  @default(false)
+  id              String    @id @default(uuid())
+  userId          String    @map("user_id") // Account holder
+  executorEmail   String    @map("executor_email")
+  executorName    String    @map("executor_name")
+  executorUserId  String?   @map("executor_user_id") // If executor is also a user
+  relationship    String // spouse, child, sibling, attorney, financial_advisor, other
+  priority        Int       @default(1) // Order of notification (1 = first)
+  verified        Boolean   @default(false)
   verifiedAt      DateTime? @map("verified_at")
-  accessGranted   Boolean  @default(false) @map("access_granted")
+  accessGranted   Boolean   @default(false) @map("access_granted")
   accessGrantedAt DateTime? @map("access_granted_at")
   accessExpiresAt DateTime? @map("access_expires_at")
-  accessToken     String?  @unique @map("access_token") // Secure one-time access token
+  accessToken     String?   @unique @map("access_token") // Secure one-time access token
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -461,7 +464,7 @@ model ExecutorAssignment {
 model ExecutorAccessLog {
   id                   String   @id @default(uuid())
   executorAssignmentId String   @map("executor_assignment_id")
-  action               String   // viewed_accounts, viewed_transactions, downloaded_report, etc.
+  action               String // viewed_accounts, viewed_transactions, downloaded_report, etc.
   resourceType         String?  @map("resource_type") // account, transaction, report
   resourceId           String?  @map("resource_id")
   ipAddress            String?  @map("ip_address")
@@ -548,6 +551,7 @@ model Space {
   savedReports       SavedReport[]
   generatedReports   GeneratedReport[]
   cashflowForecasts  CashflowForecast[]
+  tags               Tag[]
 
   @@index([householdId])
   @@index([deletedAt])
@@ -637,21 +641,23 @@ model Connection {
 }
 
 model Transaction {
-  id                    String   @id @default(uuid())
-  accountId             String   @map("account_id")
-  providerTransactionId String?  @map("provider_transaction_id")
-  amount                Decimal  @db.Decimal(19, 4)
+  id                    String    @id @default(uuid())
+  accountId             String    @map("account_id")
+  providerTransactionId String?   @map("provider_transaction_id")
+  amount                Decimal   @db.Decimal(19, 4)
   currency              Currency
   description           String
   merchant              String?
-  categoryId            String?  @map("category_id")
-  recurringId           String?  @map("recurring_id")
-  date                  DateTime @db.Date
-  pending               Boolean  @default(false)
-  isSplit               Boolean  @default(false) @map("is_split") // Transaction split between users
+  categoryId            String?   @map("category_id")
+  recurringId           String?   @map("recurring_id")
+  date                  DateTime  @db.Date
+  pending               Boolean   @default(false)
+  isSplit               Boolean   @default(false) @map("is_split") // Transaction split between users
+  reviewed              Boolean   @default(false)
+  reviewedAt            DateTime? @map("reviewed_at")
   metadata              Json?
-  createdAt             DateTime @default(now()) @map("created_at")
-  updatedAt             DateTime @updatedAt @map("updated_at")
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
   deletedAt             DateTime? @map("deleted_at")
 
   // Relations
@@ -659,6 +665,7 @@ model Transaction {
   category  Category?             @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   recurring RecurringTransaction? @relation(fields: [recurringId], references: [id], onDelete: SetNull)
   splits    TransactionSplit[]
+  tags      TransactionTag[]
 
   @@unique([accountId, providerTransactionId])
   @@index([accountId, date(sort: Desc)])
@@ -781,7 +788,7 @@ model Category {
   updatedAt       DateTime @updatedAt @map("updated_at")
 
   // Relations
-  budget       Budget              @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+  budget       Budget             @relation(fields: [budgetId], references: [id], onDelete: Cascade)
   transactions Transaction[]
   rules        TransactionRule[]
   allocations  IncomeAllocation[]
@@ -865,6 +872,7 @@ model TransactionRule {
   name       String
   conditions Json
   categoryId String?  @map("category_id")
+  actions    Json? // Multi-action support: [{type: 'set_tag', tagId: '...'}, {type: 'set_merchant', value: '...'}]
   priority   Int      @default(0)
   enabled    Boolean  @default(true)
   createdAt  DateTime @default(now()) @map("created_at")
@@ -885,6 +893,8 @@ model Budget {
   period          BudgetPeriod
   startDate       DateTime     @map("start_date") @db.Date
   endDate         DateTime?    @map("end_date") @db.Date
+  customStartDay  Int?         @map("custom_start_day")
+  customEndDay    Int?         @map("custom_end_day")
   income          Decimal      @default(0) @db.Decimal(19, 4)
   rolloverEnabled Boolean      @default(false) @map("rollover_enabled")
   createdAt       DateTime     @default(now()) @map("created_at")
@@ -961,7 +971,7 @@ model ManualAsset {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   // Relations
-  space            Space                    @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  space            Space                   @relation(fields: [spaceId], references: [id], onDelete: Cascade)
   valuationHistory ManualAssetValuation[]
   cashFlows        PrivateEquityCashFlow[]
 
@@ -1011,13 +1021,13 @@ model PrivateEquityCashFlow {
 }
 
 model AuditLog {
-  id         String   @id @default(uuid())
-  userId     String?  @map("user_id")
-  action     String
-  resource   String?
-  resourceId String?  @map("resource_id")
-  metadata   String? // JSON string
-  ipAddress  String?  @map("ip_address")
+  id          String    @id @default(uuid())
+  userId      String?   @map("user_id")
+  action      String
+  resource    String?
+  resourceId  String?   @map("resource_id")
+  metadata    String? // JSON string
+  ipAddress   String?   @map("ip_address")
   userAgent   String?   @map("user_agent")
   severity    String    @default("low") // low, medium, high, critical
   timestamp   DateTime  @default(now())
@@ -1748,17 +1758,17 @@ model TransactionSplit {
 
 // Category Correction (ML Learning Loop)
 model CategoryCorrection {
-  id                String   @id @default(uuid())
-  spaceId           String   @map("space_id")
-  transactionId     String   @map("transaction_id")
-  originalCategoryId String? @map("original_category_id")
-  correctedCategoryId String @map("corrected_category_id")
-  merchantPattern   String?  @map("merchant_pattern") // Normalized merchant name for pattern learning
-  descriptionPattern String? @map("description_pattern") // Key terms from description
-  confidence        Decimal? @db.Decimal(3, 2) // Original prediction confidence (0.00 to 1.00)
-  createdBy         String   @map("created_by") // User who made the correction
-  appliedToFuture   Boolean  @default(true) @map("applied_to_future") // Whether to apply to future similar transactions
-  createdAt         DateTime @default(now()) @map("created_at")
+  id                  String   @id @default(uuid())
+  spaceId             String   @map("space_id")
+  transactionId       String   @map("transaction_id")
+  originalCategoryId  String?  @map("original_category_id")
+  correctedCategoryId String   @map("corrected_category_id")
+  merchantPattern     String?  @map("merchant_pattern") // Normalized merchant name for pattern learning
+  descriptionPattern  String?  @map("description_pattern") // Key terms from description
+  confidence          Decimal? @db.Decimal(3, 2) // Original prediction confidence (0.00 to 1.00)
+  createdBy           String   @map("created_by") // User who made the correction
+  appliedToFuture     Boolean  @default(true) @map("applied_to_future") // Whether to apply to future similar transactions
+  createdAt           DateTime @default(now()) @map("created_at")
 
   @@index([spaceId, merchantPattern])
   @@index([spaceId, createdAt(sort: Desc)])
@@ -1794,10 +1804,10 @@ model SavedReport {
   createdBy   String       @map("created_by")
   name        String
   description String?
-  type        String       // monthly_spending, quarterly_net_worth, annual_tax, custom
-  schedule    String?      // cron expression or null for on-demand
+  type        String // monthly_spending, quarterly_net_worth, annual_tax, custom
+  schedule    String? // cron expression or null for on-demand
   format      ReportFormat @default(pdf)
-  filters     Json?        // { startDate, endDate, categories, accounts }
+  filters     Json? // { startDate, endDate, categories, accounts }
   enabled     Boolean      @default(true)
   isShared    Boolean      @default(false) @map("is_shared")
   lastRunAt   DateTime?    @map("last_run_at")
@@ -1885,7 +1895,7 @@ model CashflowForecast {
   spaceId     String   @map("space_id")
   startDate   DateTime @map("start_date") @db.Date
   endDate     DateTime @map("end_date") @db.Date
-  weeks       Json     // Array of { weekStart, income, expenses, net, balance }
+  weeks       Json // Array of { weekStart, income, expenses, net, balance }
   confidence  Float    @default(0.85)
   generatedAt DateTime @default(now()) @map("generated_at")
 
@@ -1958,11 +1968,42 @@ model Document {
   updatedAt     DateTime         @updatedAt @map("updated_at")
   deletedAt     DateTime?        @map("deleted_at")
 
-  space         Space            @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  space Space @relation(fields: [spaceId], references: [id], onDelete: Cascade)
 
   @@index([spaceId, status])
   @@index([spaceId, category])
   @@index([spaceId, createdAt(sort: Desc)])
   @@index([uploadedBy])
   @@map("documents")
+}
+
+// Tags system for transaction labeling (independent of categories)
+model Tag {
+  id          String   @id @default(uuid())
+  spaceId     String   @map("space_id")
+  name        String
+  description String?
+  color       String?
+  sortOrder   Int      @default(0) @map("sort_order")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  space        Space            @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  transactions TransactionTag[]
+
+  @@unique([spaceId, name])
+  @@index([spaceId, sortOrder])
+  @@map("tags")
+}
+
+model TransactionTag {
+  transactionId String @map("transaction_id")
+  tagId         String @map("tag_id")
+
+  transaction Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  tag         Tag         @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([transactionId, tagId])
+  @@index([tagId])
+  @@map("transaction_tags")
 }

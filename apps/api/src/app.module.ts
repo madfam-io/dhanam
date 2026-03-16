@@ -28,6 +28,7 @@ import { SearchModule } from '@modules/search/search.module';
 import { SimulationsModule } from '@modules/simulations/simulations.module';
 import { SpacesModule } from '@modules/spaces/spaces.module';
 import { SubscriptionsModule } from '@modules/subscriptions/subscriptions.module';
+import { TagsModule } from '@modules/tags/tags.module';
 import { TransactionExecutionModule } from '@modules/transaction-execution/transaction-execution.module';
 import { TransactionsModule } from '@modules/transactions/transactions.module';
 import { UsersModule } from '@modules/users/users.module';
@@ -78,6 +79,7 @@ import { validationSchema } from './config/validation';
     RecurringModule,
     SubscriptionsModule,
     SearchModule,
+    TagsModule,
   ],
 })
 export class AppModule {}

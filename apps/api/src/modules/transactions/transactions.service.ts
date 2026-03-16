@@ -1,7 +1,6 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
-
 import type { InputJsonValue } from '@db';
 import { Transaction, Prisma } from '@db';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 
 import { PrismaService } from '../../core/prisma/prisma.service';
 import { SpacesService } from '../spaces/spaces.service';
@@ -31,6 +30,11 @@ export class TransactionsService {
       ...(filter.minAmount && { amount: { gte: filter.minAmount } }),
       ...(filter.maxAmount && { amount: { lte: filter.maxAmount } }),
       ...(filter.merchant && { merchant: { contains: filter.merchant, mode: 'insensitive' } }),
+      ...(filter.reviewed !== undefined && { reviewed: filter.reviewed }),
+      ...(filter.tagIds &&
+        filter.tagIds.length > 0 && {
+          tags: { some: { tagId: { in: filter.tagIds } } },
+        }),
       ...(filter.search && {
         OR: [
           { description: { contains: filter.search, mode: 'insensitive' } },
@@ -56,6 +60,7 @@ export class TransactionsService {
         include: {
           account: true,
           category: true,
+          tags: { include: { tag: true } },
         },
       }),
       this.prisma.transaction.count({ where }),
@@ -80,6 +85,7 @@ export class TransactionsService {
       include: {
         account: true,
         category: true,
+        tags: { include: { tag: true } },
       },
     });
 
@@ -128,11 +134,23 @@ export class TransactionsService {
         description: dto.description,
         merchant: dto.merchant,
         categoryId: dto.categoryId,
+        reviewed: dto.reviewed ?? false,
+        reviewedAt: dto.reviewed ? new Date() : null,
         metadata: dto.metadata as InputJsonValue,
+        ...(dto.tagIds &&
+          dto.tagIds.length > 0 && {
+            tags: {
+              createMany: {
+                data: dto.tagIds.map((tagId) => ({ tagId })),
+                skipDuplicates: true,
+              },
+            },
+          }),
       },
       include: {
         account: true,
         category: true,
+        tags: { include: { tag: true } },
       },
     });
 
@@ -186,6 +204,19 @@ export class TransactionsService {
       });
     }
 
+    // Handle tag updates if provided
+    if (dto.tagIds !== undefined) {
+      await this.prisma.transactionTag.deleteMany({
+        where: { transactionId },
+      });
+      if (dto.tagIds.length > 0) {
+        await this.prisma.transactionTag.createMany({
+          data: dto.tagIds.map((tagId) => ({ transactionId, tagId })),
+          skipDuplicates: true,
+        });
+      }
+    }
+
     const transaction = await this.prisma.transaction.update({
       where: { id: transactionId },
       data: {
@@ -194,11 +225,16 @@ export class TransactionsService {
         ...(dto.description && { description: dto.description }),
         ...(dto.merchant !== undefined && { merchant: dto.merchant }),
         ...(dto.categoryId !== undefined && { categoryId: dto.categoryId }),
+        ...(dto.reviewed !== undefined && {
+          reviewed: dto.reviewed,
+          reviewedAt: dto.reviewed ? new Date() : null,
+        }),
         ...(dto.metadata && { metadata: dto.metadata as InputJsonValue }),
       },
       include: {
         account: true,
         category: true,
+        tags: { include: { tag: true } },
       },
     });
 
@@ -273,9 +309,118 @@ export class TransactionsService {
       include: {
         account: true,
         category: true,
+        tags: { include: { tag: true } },
       },
     });
 
     return transactions;
+  }
+
+  async bulkReview(
+    spaceId: string,
+    userId: string,
+    transactionIds: string[],
+    reviewed: boolean
+  ): Promise<{ updated: number }> {
+    await this.spacesService.verifyUserAccess(userId, spaceId, 'member');
+
+    // Verify all transactions belong to space
+    const transactionCount = await this.prisma.transaction.count({
+      where: {
+        id: { in: transactionIds },
+        account: { spaceId },
+      },
+    });
+
+    if (transactionCount !== transactionIds.length) {
+      throw new ForbiddenException('Some transactions not found or do not belong to this space');
+    }
+
+    const result = await this.prisma.transaction.updateMany({
+      where: { id: { in: transactionIds } },
+      data: {
+        reviewed,
+        reviewedAt: reviewed ? new Date() : null,
+      },
+    });
+
+    return { updated: result.count };
+  }
+
+  async getUnreviewedCount(spaceId: string, userId: string): Promise<number> {
+    await this.spacesService.verifyUserAccess(userId, spaceId, 'viewer');
+
+    return this.prisma.transaction.count({
+      where: {
+        account: { spaceId },
+        reviewed: false,
+      },
+    });
+  }
+
+  async getMerchants(
+    spaceId: string,
+    userId: string
+  ): Promise<{ merchant: string; count: number; firstDate: Date | null; lastDate: Date | null }[]> {
+    await this.spacesService.verifyUserAccess(userId, spaceId, 'viewer');
+
+    const results = await this.prisma.transaction.groupBy({
+      by: ['merchant'],
+      where: {
+        account: { spaceId },
+        merchant: { not: null },
+      },
+      _count: { id: true },
+      _min: { date: true },
+      _max: { date: true },
+      orderBy: { _count: { id: 'desc' } },
+    });
+
+    return results
+      .filter((r) => r.merchant !== null)
+      .map((r) => ({
+        merchant: r.merchant!,
+        count: r._count.id,
+        firstDate: r._min.date,
+        lastDate: r._max.date,
+      }));
+  }
+
+  async renameMerchant(
+    spaceId: string,
+    userId: string,
+    oldName: string,
+    newName: string
+  ): Promise<{ updated: number }> {
+    await this.spacesService.verifyUserAccess(userId, spaceId, 'member');
+
+    const result = await this.prisma.transaction.updateMany({
+      where: {
+        account: { spaceId },
+        merchant: oldName,
+      },
+      data: { merchant: newName },
+    });
+
+    return { updated: result.count };
+  }
+
+  async mergeMerchants(
+    spaceId: string,
+    userId: string,
+    sourceNames: string[],
+    targetName: string
+  ): Promise<{ updated: number }> {
+    await this.spacesService.verifyUserAccess(userId, spaceId, 'member');
+
+    const result = await this.prisma.transaction.updateMany({
+      where: {
+        account: { spaceId },
+        merchant: { in: sourceNames },
+      },
+      data: { merchant: targetName },
+    });
+
+    return { updated: result.count };
   }
 }

@@ -1,6 +1,15 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type, Transform } from 'class-transformer';
-import { IsOptional, IsUUID, IsDate, IsNumber, IsIn, Min } from 'class-validator';
+import {
+  IsOptional,
+  IsUUID,
+  IsDate,
+  IsNumber,
+  IsIn,
+  Min,
+  IsBoolean,
+  IsArray,
+} from 'class-validator';
 
 export class TransactionsFilterDto {
   @ApiPropertyOptional()
@@ -12,6 +21,18 @@ export class TransactionsFilterDto {
   @IsOptional()
   @IsUUID()
   categoryId?: string;
+
+  @ApiPropertyOptional({ description: 'Filter by tag IDs (transactions with ANY of these tags)' })
+  @IsOptional()
+  @IsArray()
+  @IsUUID('4', { each: true })
+  tagIds?: string[];
+
+  @ApiPropertyOptional({ description: 'Filter by review status' })
+  @IsOptional()
+  @Transform(({ value }) => value === 'true' || value === true)
+  @IsBoolean()
+  reviewed?: boolean;
 
   @ApiPropertyOptional()
   @IsOptional()

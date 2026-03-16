@@ -262,6 +262,100 @@ export class AnalyticsController {
     return this.analyticsService.getDashboardData(req.user!.userId, spaceId);
   }
 
+  @Get(':spaceId/statistics')
+  @ApiOperation({ summary: 'Get statistics: top purchases, merchants, categories' })
+  @ApiParam({ name: 'spaceId', description: 'Space UUID' })
+  @ApiQuery({ name: 'startDate', required: true, description: 'Start date (ISO 8601)' })
+  @ApiQuery({ name: 'endDate', required: true, description: 'End date (ISO 8601)' })
+  @ApiOkResponse({ description: 'Statistics retrieved successfully' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiForbiddenResponse({ description: 'User lacks access to this space' })
+  async getStatistics(
+    @Request() req: any,
+    @Param('spaceId') spaceId: string,
+    @Query('startDate') startDate: string,
+    @Query('endDate') endDate: string
+  ) {
+    return this.analyticsService.getStatistics(
+      req.user!.userId,
+      spaceId,
+      new Date(startDate),
+      new Date(endDate)
+    );
+  }
+
+  @Get(':spaceId/trends')
+  @ApiOperation({ summary: 'Get annual trends with savings rate' })
+  @ApiParam({ name: 'spaceId', description: 'Space UUID' })
+  @ApiQuery({ name: 'months', required: false, description: 'Number of months (default: 12)' })
+  @ApiOkResponse({ description: 'Trends retrieved successfully' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiForbiddenResponse({ description: 'User lacks access to this space' })
+  async getAnnualTrends(
+    @Request() req: any,
+    @Param('spaceId') spaceId: string,
+    @Query('months') months?: string
+  ) {
+    return this.analyticsService.getAnnualTrends(
+      req.user!.userId,
+      spaceId,
+      months ? parseInt(months, 10) : 12
+    );
+  }
+
+  @Get(':spaceId/calendar')
+  @ApiOperation({ summary: 'Get transactions grouped by day for calendar view' })
+  @ApiParam({ name: 'spaceId', description: 'Space UUID' })
+  @ApiQuery({ name: 'year', required: true, description: 'Year (e.g. 2026)' })
+  @ApiQuery({ name: 'month', required: true, description: 'Month (1-12)' })
+  @ApiOkResponse({ description: 'Calendar data retrieved successfully' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiForbiddenResponse({ description: 'User lacks access to this space' })
+  async getCalendarData(
+    @Request() req: any,
+    @Param('spaceId') spaceId: string,
+    @Query('year') year: string,
+    @Query('month') month: string
+  ) {
+    return this.analyticsService.getCalendarData(
+      req.user!.userId,
+      spaceId,
+      parseInt(year, 10),
+      parseInt(month, 10)
+    );
+  }
+
+  @Post(':spaceId/query')
+  @ApiOperation({ summary: 'Execute flexible ad-hoc query for analysis' })
+  @ApiParam({ name: 'spaceId', description: 'Space UUID' })
+  @ApiOkResponse({ description: 'Query results retrieved successfully' })
+  @ApiBadRequestResponse({ description: 'Invalid query parameters' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiForbiddenResponse({ description: 'User lacks access to this space' })
+  async executeQuery(
+    @Request() req: any,
+    @Param('spaceId') spaceId: string,
+    @Body()
+    body: {
+      startDate: string;
+      endDate: string;
+      groupBy: 'month' | 'category' | 'merchant' | 'account' | 'tag';
+      categoryIds?: string[];
+      tagIds?: string[];
+      merchantNames?: string[];
+      accountIds?: string[];
+      amountMin?: number;
+      amountMax?: number;
+      aggregation?: 'sum' | 'count' | 'average';
+    }
+  ) {
+    return this.analyticsService.executeQuery(req.user!.userId, spaceId, {
+      ...body,
+      startDate: new Date(body.startDate),
+      endDate: new Date(body.endDate),
+    });
+  }
+
   @Get(':spaceId/anomalies')
   @ApiOperation({ summary: 'Detect spending anomalies' })
   @ApiParam({ name: 'spaceId', description: 'The space ID to detect anomalies for' })

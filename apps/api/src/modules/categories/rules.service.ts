@@ -1,14 +1,21 @@
-import { Injectable, Logger } from '@nestjs/common';
-
 import { PrismaService } from '@core/prisma/prisma.service';
 import { Transaction } from '@db';
+import { Injectable, Logger } from '@nestjs/common';
+
+export interface RuleAction {
+  type: 'set_category' | 'set_tag' | 'set_merchant' | 'link_recurring';
+  categoryId?: string;
+  tagId?: string;
+  value?: string;
+}
 
 export interface CategoryRule {
   id: string;
-  categoryId: string;
+  categoryId: string | null;
   name: string;
   priority: number;
   conditions: RuleCondition[];
+  actions: RuleAction[];
   enabled: boolean;
 }
 
@@ -275,12 +282,21 @@ export class RulesService {
   }
 
   private transformRule(rule: any): CategoryRule {
+    // Build actions from legacy categoryId and new actions field
+    let actions: RuleAction[] = [];
+    if (rule.actions) {
+      actions = rule.actions as RuleAction[];
+    } else if (rule.categoryId) {
+      actions = [{ type: 'set_category', categoryId: rule.categoryId }];
+    }
+
     return {
       id: rule.id,
       categoryId: rule.categoryId,
       name: rule.name,
       priority: rule.priority,
       conditions: rule.conditions as RuleCondition[],
+      actions,
       enabled: rule.enabled,
     };
   }

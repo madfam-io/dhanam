@@ -66,6 +66,11 @@ This is the Dhanam Ledger project - a comprehensive budget and wealth tracking a
 - Zillow integration for automated real estate valuations
 - Yours/Mine/Ours household ownership views
 - Document storage via Cloudflare R2 for manual asset attachments
+- Transaction tagging with bulk assign/remove operations
+- Transaction review status tracking (reviewed/unreviewed workflow)
+- Merchant management with rename and merge operations
+- Advanced analytics: statistics, annual trends, calendar view, flexible ad-hoc query engine
+- LunchMoney data migration with idempotent import script
 - TOTP 2FA security with JWT + rotating refresh tokens
 
 ## Architecture
@@ -145,7 +150,7 @@ turbo test        # Turborepo test
 **Localization:**
 
 - Default Spanish (ES) for Mexico region, English elsewhere, Portuguese (pt-BR) available
-- Currency formatting for MXN/USD/EUR with Banxico FX rates
+- Currency formatting for MXN/USD/EUR/CAD with Banxico FX rates
 - All user-facing text must support i18n via packages/shared/i18n
 
 **Performance Requirements:**
@@ -173,14 +178,14 @@ The provider orchestrator (`apps/api/src/modules/providers/orchestrator/`) handl
 
 **API (NestJS):**
 
-- 3656+ unit tests across 146+ test suites (98%+ coverage)
+- 3900+ unit tests across 152+ test suites (98%+ coverage)
 - E2E journey tests: core value loop, subscription upgrade, admin operations, provider sync, billing webhooks, estate planning, households
 - Contract tests for Stripe, Plaid, and Belvo webhook schemas (Zod validation)
 - Drip campaign task tests (15 cases: send/skip/idempotency/batch/error-resilience)
 
 **Web (Next.js):**
 
-- 40+ page-level smoke tests covering all dashboard, legal, auth, billing, and feature pages
+- 46+ page-level smoke tests covering all dashboard, legal, auth, billing, analytics, and feature pages
 - 25+ component tests for forms, layouts, billing, ESG, and onboarding
 - Playwright E2E: auth flows, dashboard navigation, core user journey, upgrade journey, billing, subscription pricing
 - Accessibility tests (WCAG AA) via @axe-core/playwright on all key pages
@@ -206,7 +211,10 @@ The provider orchestrator (`apps/api/src/modules/providers/orchestrator/`) handl
 Key entities and relationships:
 
 - Users → Spaces (1:many) → Accounts → Transactions
+- Transactions ↔ Tags (many:many via TransactionTag)
+- Spaces → Tags (1:many)
 - Spaces → Budgets → Categories (with rules)
+- Budget periods: MONTHLY, QUARTERLY, ANNUAL
 - Daily valuation snapshots for wealth trends
 - ESG asset scores linked to crypto accounts
 - Audit logs for all sensitive operations

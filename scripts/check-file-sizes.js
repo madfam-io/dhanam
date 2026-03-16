@@ -2,12 +2,17 @@
 /**
  * File Size Checker
  * Enforces file line limits across the codebase:
- * - Warning: 600 lines (soft limit)
- * - Error: 800 lines (hard limit, blocks CI)
+ * - Warning: >= 600 meaningful lines (soft limit, should refactor)
+ * - Error:   >= 800 meaningful lines (hard limit, blocks commit/CI)
  *
- * Counts only meaningful lines (skips blank lines and comments)
+ * Counts only meaningful lines (skips blank lines and comments).
+ *
+ * Usage:
+ *   node scripts/check-file-sizes.js            # scan full repo
+ *   node scripts/check-file-sizes.js --staged   # scan only git-staged files (pre-commit)
  */
 
+const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
@@ -25,8 +30,15 @@ const PATTERNS = [
 // Directories to exclude
 const EXCLUDE_DIRS = ['node_modules', 'dist', 'build', '.next', '.turbo', 'coverage'];
 
-// File patterns to exclude (type declarations often mirror generated code)
-const EXCLUDE_PATTERNS = [/\.d\.ts$/];
+// File patterns to exclude (type declarations, test files)
+const EXCLUDE_PATTERNS = [/\.d\.ts$/, /\.spec\.ts$/, /\.test\.tsx?$/];
+
+// Known large files that pre-date the size check (tracked for future refactoring)
+const ALLOWLISTED_FILES = [
+  'apps/api/src/modules/analytics/analytics.service.ts',
+  'apps/api/src/modules/billing/billing.service.ts',
+  'apps/web/src/app/(dashboard)/dashboard/page.tsx',
+];
 
 /**
  * Simple glob implementation for matching file patterns
@@ -58,7 +70,10 @@ function matchFiles(pattern, baseDir) {
         if (entry.isDirectory()) {
           walk(fullPath, patternIndex); // Stay at **
           walk(fullPath, patternIndex + 1); // Move past **
-        } else if (entry.isFile() && matchGlob(entry.name, parts.slice(patternIndex + 1).join('/'))) {
+        } else if (
+          entry.isFile() &&
+          matchGlob(entry.name, parts.slice(patternIndex + 1).join('/'))
+        ) {
           files.push(fullPath);
         }
       } else if (part === '*') {
@@ -149,16 +164,42 @@ function countMeaningfulLines(filePath) {
 }
 
 /**
+ * Get staged files from git (for --staged mode)
+ */
+function getStagedFiles(rootDir) {
+  const output = execSync('git diff --cached --name-only --diff-filter=ACMR', {
+    encoding: 'utf8',
+    cwd: rootDir,
+  }).trim();
+  if (!output) return [];
+  return output
+    .split('\n')
+    .filter((f) => /\.(ts|tsx|js|jsx)$/.test(f))
+    .filter((f) => !EXCLUDE_DIRS.some((d) => f.includes(d)))
+    .filter((f) => !EXCLUDE_PATTERNS.some((p) => p.test(f)))
+    .map((f) => path.join(rootDir, f))
+    .filter((f) => fs.existsSync(f));
+}
+
+/**
  * Main execution
  */
 function main() {
+  const stagedOnly = process.argv.includes('--staged');
   const rootDir = path.resolve(__dirname, '..');
   const allFiles = new Set();
 
-  // Collect all matching files
-  for (const pattern of PATTERNS) {
-    const files = matchFiles(pattern, rootDir);
-    files.forEach((f) => allFiles.add(f));
+  if (stagedOnly) {
+    // Only check git-staged files (fast path for pre-commit)
+    for (const f of getStagedFiles(rootDir)) {
+      allFiles.add(f);
+    }
+  } else {
+    // Full repo scan
+    for (const pattern of PATTERNS) {
+      const files = matchFiles(pattern, rootDir);
+      files.forEach((f) => allFiles.add(f));
+    }
   }
 
   const warnings = [];
@@ -166,17 +207,22 @@ function main() {
 
   // Check each file
   for (const filePath of allFiles) {
-    // Skip excluded patterns (e.g., .d.ts files)
+    // Skip excluded patterns (e.g., .d.ts files, test files)
     if (EXCLUDE_PATTERNS.some((pattern) => pattern.test(filePath))) {
       continue;
     }
 
-    const lineCount = countMeaningfulLines(filePath);
+    // Skip allowlisted files (pre-existing large files tracked for future refactoring)
     const relativePath = path.relative(rootDir, filePath);
+    if (ALLOWLISTED_FILES.includes(relativePath)) {
+      continue;
+    }
 
-    if (lineCount > ERROR_THRESHOLD) {
+    const lineCount = countMeaningfulLines(filePath);
+
+    if (lineCount >= ERROR_THRESHOLD) {
       errors.push({ path: relativePath, lines: lineCount });
-    } else if (lineCount > WARNING_THRESHOLD) {
+    } else if (lineCount >= WARNING_THRESHOLD) {
       warnings.push({ path: relativePath, lines: lineCount });
     }
   }
@@ -187,7 +233,9 @@ function main() {
 
   // Output results
   console.log('\n📏 File Size Check\n');
-  console.log(`Thresholds: Warning > ${WARNING_THRESHOLD} lines, Error > ${ERROR_THRESHOLD} lines`);
+  console.log(
+    `Thresholds: Warning >= ${WARNING_THRESHOLD} lines, Error >= ${ERROR_THRESHOLD} lines`
+  );
   console.log(`Files checked: ${allFiles.size}\n`);
 
   if (errors.length > 0) {

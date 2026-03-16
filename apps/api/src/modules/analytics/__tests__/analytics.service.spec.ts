@@ -4,6 +4,7 @@ import { Currency } from '@dhanam/shared';
 import { PrismaService } from '../../../core/prisma/prisma.service';
 import { SpacesService } from '../../spaces/spaces.service';
 import { FxRatesService } from '../../fx-rates/fx-rates.service';
+import { AnalyticsQueryService } from '../analytics-query.service';
 import { AnalyticsService } from '../analytics.service';
 
 describe('AnalyticsService', () => {
@@ -65,6 +66,30 @@ describe('AnalyticsService', () => {
               .fn()
               .mockImplementation((amount: number) => Promise.resolve(amount)),
             getExchangeRate: jest.fn().mockResolvedValue(1),
+          },
+        },
+        {
+          provide: AnalyticsQueryService,
+          useValue: {
+            getStatistics: jest.fn().mockResolvedValue({
+              topPurchases: [],
+              topMerchants: [],
+              topCategories: [],
+              totalTransactions: 0,
+              totalAmount: 0,
+            }),
+            getAnnualTrends: jest.fn().mockResolvedValue({
+              months: [],
+              summary: {
+                totalIncome: 0,
+                totalExpenses: 0,
+                totalNet: 0,
+                totalTransactions: 0,
+                overallSavingsRate: 0,
+              },
+            }),
+            executeQuery: jest.fn().mockResolvedValue([]),
+            getCalendarData: jest.fn().mockResolvedValue({ year: 2026, month: 1, days: [] }),
           },
         },
       ],

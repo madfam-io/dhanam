@@ -22,18 +22,23 @@ import {
   Landmark,
   Gamepad2,
   CreditCard,
+  Calendar,
+  BarChart3,
 } from 'lucide-react';
 
 const navigation = [
   { key: 'dashboard' as const, href: '/dashboard', icon: LayoutDashboard },
   { key: 'accounts' as const, href: '/accounts', icon: Wallet },
   { key: 'transactions' as const, href: '/transactions', icon: Receipt },
+  { key: 'calendar' as const, href: '/transactions/calendar', icon: Calendar },
   { key: 'budgets' as const, href: '/budgets', icon: PiggyBank },
   { key: 'zeroBased' as const, href: '/budgets/zero-based', icon: Landmark },
   { key: 'goals' as const, href: '/goals', icon: Target },
   { key: 'households' as const, href: '/households', icon: Users },
   { key: 'estatePlanning' as const, href: '/estate-planning', icon: ScrollText },
   { key: 'analytics' as const, href: '/analytics', icon: TrendingUp },
+  { key: 'statistics' as const, href: '/analytics/statistics', icon: BarChart3 },
+  { key: 'trends' as const, href: '/analytics/trends', icon: TrendingUp },
   { key: 'esgInsights' as const, href: '/esg', icon: Leaf },
   { key: 'gaming' as const, href: '/gaming', icon: Gamepad2 },
   { key: 'retirement' as const, href: '/retirement', icon: Target },

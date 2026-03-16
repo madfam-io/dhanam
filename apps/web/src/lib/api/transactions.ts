@@ -8,6 +8,8 @@ export interface CreateTransactionDto {
   description: string;
   merchant?: string;
   categoryId?: string;
+  tagIds?: string[];
+  reviewed?: boolean;
   metadata?: Record<string, unknown>;
 }
 
@@ -17,12 +19,16 @@ export interface UpdateTransactionDto {
   description?: string;
   merchant?: string;
   categoryId?: string;
+  tagIds?: string[];
+  reviewed?: boolean;
   metadata?: Record<string, unknown>;
 }
 
 export interface TransactionsFilterDto {
   accountId?: string;
   categoryId?: string;
+  tagIds?: string[];
+  reviewed?: boolean;
   search?: string;
   startDate?: Date;
   endDate?: Date;
@@ -32,6 +38,14 @@ export interface TransactionsFilterDto {
   sortOrder?: 'asc' | 'desc';
   page?: number;
   limit?: number;
+}
+
+export interface MerchantInfo {
+  name: string;
+  transactionCount: number;
+  firstSeen: string;
+  lastSeen: string;
+  totalAmount: number;
 }
 
 export interface TransactionsResponse {
@@ -80,6 +94,47 @@ export const transactionsApi = {
     return apiClient.post<Transaction[]>(`/spaces/${spaceId}/transactions/bulk-categorize`, {
       transactionIds,
       categoryId,
+    });
+  },
+
+  bulkReview: async (
+    spaceId: string,
+    transactionIds: string[],
+    reviewed: boolean
+  ): Promise<{ updated: number }> => {
+    return apiClient.post<{ updated: number }>(`/spaces/${spaceId}/transactions/bulk-review`, {
+      transactionIds,
+      reviewed,
+    });
+  },
+
+  getUnreviewedCount: async (spaceId: string): Promise<{ count: number }> => {
+    return apiClient.get<{ count: number }>(`/spaces/${spaceId}/transactions/unreviewed-count`);
+  },
+
+  getMerchants: async (spaceId: string): Promise<MerchantInfo[]> => {
+    return apiClient.get<MerchantInfo[]>(`/spaces/${spaceId}/transactions/merchants`);
+  },
+
+  renameMerchant: async (
+    spaceId: string,
+    oldName: string,
+    newName: string
+  ): Promise<{ updated: number }> => {
+    return apiClient.post<{ updated: number }>(`/spaces/${spaceId}/transactions/merchants/rename`, {
+      oldName,
+      newName,
+    });
+  },
+
+  mergeMerchants: async (
+    spaceId: string,
+    sourceNames: string[],
+    targetName: string
+  ): Promise<{ merged: number }> => {
+    return apiClient.post<{ merged: number }>(`/spaces/${spaceId}/transactions/merchants/merge`, {
+      sourceNames,
+      targetName,
     });
   },
 };

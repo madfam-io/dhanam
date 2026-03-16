@@ -4,7 +4,7 @@ module.exports = {
     tsconfigRootDir: __dirname,
     project: './tsconfig.json',
   },
-  ignorePatterns: ['test/**/*.ts', '**/*.spec.ts', '**/__tests__/**/*.ts'],
+  ignorePatterns: ['test/**/*.ts', '**/*.spec.ts', '**/__tests__/**/*.ts', 'scripts/**/*.ts'],
   rules: {
     // Disable warnings that are acceptable in this codebase
     '@typescript-eslint/no-explicit-any': 'off',
