@@ -2,6 +2,17 @@ import { AccountType, Currency, RecurrenceFrequency, Provider } from '@db';
 
 import { LMAsset, LMPlaidAccount, LMCrypto, LMRecurringItem } from './lunchmoney-types';
 
+/** Decode common HTML entities returned by the LunchMoney API */
+export function decodeHtmlEntities(str: string): string {
+  return str
+    .replace(/&amp;/g, '&')
+    .replace(/&#x27;/g, "'")
+    .replace(/&#39;/g, "'")
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"');
+}
+
 export function mapCurrency(lmCurrency: string): Currency {
   const normalized = lmCurrency.toUpperCase();
   switch (normalized) {
@@ -75,7 +86,7 @@ export function mapAssetToAccount(asset: LMAsset) {
   return {
     provider: Provider.manual,
     providerAccountId: `lm-asset-${asset.id}`,
-    name: asset.display_name || asset.name,
+    name: decodeHtmlEntities(asset.display_name || asset.name),
     type: mapAssetType(asset.type_name),
     subtype: asset.subtypeName || undefined,
     currency: mapCurrency(asset.currency),
@@ -89,7 +100,7 @@ export function mapPlaidAccountToAccount(plaid: LMPlaidAccount) {
   return {
     provider: Provider.manual, // Can't migrate linked accounts
     providerAccountId: `lm-plaid-${plaid.id}`,
-    name: plaid.display_name || plaid.name,
+    name: decodeHtmlEntities(plaid.display_name || plaid.name),
     type: mapPlaidAccountType(plaid.type, plaid.subtype),
     subtype: plaid.subtype || undefined,
     currency: mapCurrency(plaid.currency),
@@ -108,7 +119,7 @@ export function mapCryptoToAccount(crypto: LMCrypto) {
   return {
     provider: Provider.manual,
     providerAccountId: `lm-crypto-${crypto.id}`,
-    name: crypto.display_name || crypto.name,
+    name: decodeHtmlEntities(crypto.display_name || crypto.name),
     type: AccountType.crypto,
     currency: mapCurrency(crypto.currency),
     balance: parseFloat(crypto.balance),

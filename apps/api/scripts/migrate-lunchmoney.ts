@@ -31,6 +31,7 @@ import {
   mapPlaidAccountToAccount,
   mapCryptoToAccount,
   mapRecurringItem,
+  decodeHtmlEntities,
 } from '../src/modules/migration/lunchmoney/lunchmoney-mapper';
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
@@ -58,7 +59,7 @@ async function main() {
 
   // Identify current LM budget profile
   const me = await client.getMe();
-  const budgetName = process.env.LUNCHMONEY_BUDGET_LABEL || me.budget_name;
+  const budgetName = process.env.LUNCHMONEY_BUDGET_LABEL || decodeHtmlEntities(me.budget_name);
   const lmAccountId = me.account_id;
 
   console.log('========================================');
