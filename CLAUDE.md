@@ -214,6 +214,9 @@ Key entities and relationships:
 - Transactions ↔ Tags (many:many via TransactionTag)
 - Spaces → Tags (1:many)
 - Spaces → Budgets → Categories (with rules)
+- Categories have `isIncome`, `excludeFromBudget`, `excludeFromTotals` flags and `groupName`/`sortOrder` for hierarchy
+- Transactions have `excludeFromTotals` flag for per-transaction exclusion from analytics
+- Analytics queries respect exclusion flags at both category and transaction level
 - Budget periods: MONTHLY, QUARTERLY, ANNUAL
 - Daily valuation snapshots for wealth trends
 - ESG asset scores linked to crypto accounts

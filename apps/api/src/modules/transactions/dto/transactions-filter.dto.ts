@@ -83,6 +83,12 @@ export class TransactionsFilterDto {
   @IsOptional()
   merchant?: string;
 
+  @ApiPropertyOptional({ description: 'Filter by exclude from totals flag' })
+  @IsOptional()
+  @Transform(({ value }) => value === 'true' || value === true)
+  @IsBoolean()
+  excludeFromTotals?: boolean;
+
   @ApiPropertyOptional({ default: 20, minimum: 1, maximum: 100 })
   @IsOptional()
   @IsNumber()

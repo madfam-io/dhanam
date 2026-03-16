@@ -104,12 +104,32 @@ async function main() {
     log('CATEGORIES', `Created budget "${budget.name}"`);
   }
 
+  // Build group name map: groupId → clean group name
+  const groupNameMap = new Map<number, string>();
+  for (const lmCat of lmCategories) {
+    if (lmCat.is_group) {
+      // Strip "[A] " prefix used by LunchMoney for archived groups
+      const cleanName = lmCat.name.replace(/^\[A\]\s*/, '');
+      groupNameMap.set(lmCat.id, cleanName);
+    }
+  }
+
+  // Detect duplicate child names across groups (need "GroupName / ChildName" fallback)
+  const childNameCounts = new Map<string, number>();
+  for (const lmCat of lmCategories) {
+    if (!lmCat.is_group) {
+      childNameCounts.set(lmCat.name, (childNameCounts.get(lmCat.name) || 0) + 1);
+    }
+  }
+
   for (const lmCat of lmCategories) {
     if (lmCat.is_group) continue; // Skip group headers, handle children
 
-    const name = lmCat.group_id
-      ? `${lmCategories.find((c) => c.id === lmCat.group_id)?.name || 'Other'} / ${lmCat.name}`
-      : lmCat.name;
+    const groupName = lmCat.group_id ? groupNameMap.get(lmCat.group_id) || null : null;
+
+    // Use "GroupName / ChildName" only when the child name is duplicated across groups
+    const isDuplicate = (childNameCounts.get(lmCat.name) || 0) > 1;
+    const name = isDuplicate && groupName ? `${groupName} / ${lmCat.name}` : lmCat.name;
 
     if (!DRY_RUN && budget) {
       const existing = await prisma.category.findFirst({
@@ -126,13 +146,24 @@ async function main() {
             name,
             budgetedAmount: 0,
             description: lmCat.description,
+            isIncome: lmCat.is_income,
+            excludeFromBudget: lmCat.exclude_from_budget,
+            excludeFromTotals: lmCat.exclude_from_totals,
+            groupName: groupName,
+            sortOrder: lmCat.order,
           },
         });
         idMap.set('category', lmCat.id, created.id);
-        log('CATEGORIES', `  Created: ${name} → ${created.id}`);
+        log(
+          'CATEGORIES',
+          `  Created: ${name} (group=${groupName || 'none'}, income=${lmCat.is_income}, excludeBudget=${lmCat.exclude_from_budget}, excludeTotals=${lmCat.exclude_from_totals}) → ${created.id}`
+        );
       }
     } else {
-      log('CATEGORIES', `  Would create: ${name}`);
+      log(
+        'CATEGORIES',
+        `  Would create: ${name} (group=${groupName || 'none'}, income=${lmCat.is_income}, excludeTotals=${lmCat.exclude_from_totals})`
+      );
     }
   }
 

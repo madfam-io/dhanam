@@ -291,7 +291,7 @@ enum GoalType        { retirement, education, house_purchase, emergency_fund, le
 enum GoalStatus      { active, paused, achieved, abandoned }
 ```
 
-Key models: User → SpaceMember → Space → Account → Transaction, Space → Budget → Category (with rules), DailyValuation snapshots, EsgScore, AuditLog, DripEvent.
+Key models: User → SpaceMember → Space → Account → Transaction, Space → Budget → Category (with rules, isIncome/excludeFromBudget/excludeFromTotals flags, groupName hierarchy), Transaction (excludeFromTotals flag), DailyValuation snapshots, EsgScore, AuditLog, DripEvent.
 
 Full schema: `apps/api/prisma/schema.prisma`
 

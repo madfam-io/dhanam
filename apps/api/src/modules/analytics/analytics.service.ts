@@ -630,23 +630,27 @@ export class AnalyticsService {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
-    // Get income transactions (positive amounts)
+    // Get income transactions (positive amounts), excluding transfers/excluded categories
     const incomeData = await this.prisma.transaction.aggregate({
       where: {
         account: { spaceId },
         date: { gte: startDate },
         amount: { gt: 0 },
+        excludeFromTotals: false,
+        OR: [{ category: { is: null } }, { category: { excludeFromTotals: false } }],
       },
       _sum: { amount: true },
       _count: true,
     });
 
-    // Get expense transactions (negative amounts)
+    // Get expense transactions (negative amounts), excluding transfers/excluded categories
     const expenseData = await this.prisma.transaction.aggregate({
       where: {
         account: { spaceId },
         date: { gte: startDate },
         amount: { lt: 0 },
+        excludeFromTotals: false,
+        OR: [{ category: { is: null } }, { category: { excludeFromTotals: false } }],
       },
       _sum: { amount: true },
       _count: true,
@@ -679,6 +683,8 @@ export class AnalyticsService {
         account: { spaceId },
         date: { gte: startDate, lte: endDate },
         amount: { lt: 0 },
+        excludeFromTotals: false,
+        OR: [{ category: { is: null } }, { category: { excludeFromTotals: false } }],
       },
       _sum: { amount: true },
       _count: true,
@@ -739,9 +745,12 @@ export class AnalyticsService {
         SUM(CASE WHEN t.amount < 0 THEN ABS(t.amount) ELSE 0 END) as expenses
       FROM transactions t
       JOIN accounts a ON t.account_id = a.id
+      LEFT JOIN categories c ON t.category_id = c.id
       WHERE a.space_id = ${spaceId}
         AND t.date >= ${sixMonthsAgo}
         AND t.deleted_at IS NULL
+        AND t.exclude_from_totals = false
+        AND (c.exclude_from_totals IS NULL OR c.exclude_from_totals = false)
       GROUP BY TO_CHAR(t.date, 'YYYY-MM')
       ORDER BY month ASC
     `;
@@ -1126,8 +1135,9 @@ export class AnalyticsService {
       },
     });
 
-    // Calculate category summaries
-    const categories = currentBudget.categories.map((category) => {
+    // Calculate category summaries (exclude categories marked as excludeFromBudget)
+    const budgetCategories = currentBudget.categories.filter((c) => !c.excludeFromBudget);
+    const categories = budgetCategories.map((category) => {
       const categoryTransactions = transactions.filter((t) => t.categoryId === category.id);
       const spent = categoryTransactions.reduce((sum, t) => sum + Math.abs(t.amount.toNumber()), 0);
       const budgetedAmount = category.budgetedAmount.toNumber();
@@ -1155,11 +1165,8 @@ export class AnalyticsService {
     });
 
     const totalIncome = currentBudget.income.toNumber();
-    const totalBudgeted = currentBudget.categories.reduce(
-      (sum, c) => sum + c.budgetedAmount.toNumber(),
-      0
-    );
-    const totalCarryover = currentBudget.categories.reduce(
+    const totalBudgeted = budgetCategories.reduce((sum, c) => sum + c.budgetedAmount.toNumber(), 0);
+    const totalCarryover = budgetCategories.reduce(
       (sum, c) => sum + c.carryoverAmount.toNumber(),
       0
     );

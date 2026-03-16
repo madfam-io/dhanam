@@ -53,4 +53,9 @@ export class UpdateTransactionDto {
   @IsOptional()
   @IsObject()
   metadata?: Record<string, any>;
+
+  @ApiPropertyOptional({ description: 'Exclude from totals (e.g. transfers)' })
+  @IsOptional()
+  @IsBoolean()
+  excludeFromTotals?: boolean;
 }

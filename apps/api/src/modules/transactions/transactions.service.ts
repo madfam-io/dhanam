@@ -35,6 +35,9 @@ export class TransactionsService {
         filter.tagIds.length > 0 && {
           tags: { some: { tagId: { in: filter.tagIds } } },
         }),
+      ...(filter.excludeFromTotals !== undefined && {
+        excludeFromTotals: filter.excludeFromTotals,
+      }),
       ...(filter.search && {
         OR: [
           { description: { contains: filter.search, mode: 'insensitive' } },
@@ -136,6 +139,7 @@ export class TransactionsService {
         categoryId: dto.categoryId,
         reviewed: dto.reviewed ?? false,
         reviewedAt: dto.reviewed ? new Date() : null,
+        excludeFromTotals: dto.excludeFromTotals ?? false,
         metadata: dto.metadata as InputJsonValue,
         ...(dto.tagIds &&
           dto.tagIds.length > 0 && {
@@ -229,6 +233,7 @@ export class TransactionsService {
           reviewed: dto.reviewed,
           reviewedAt: dto.reviewed ? new Date() : null,
         }),
+        ...(dto.excludeFromTotals !== undefined && { excludeFromTotals: dto.excludeFromTotals }),
         ...(dto.metadata && { metadata: dto.metadata as InputJsonValue }),
       },
       include: {

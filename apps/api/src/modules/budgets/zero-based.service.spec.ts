@@ -26,6 +26,11 @@ describe('ZeroBasedService', () => {
     name: 'Groceries',
     budgetedAmount: createDecimal(500),
     carryoverAmount: createDecimal(50),
+    isIncome: false,
+    excludeFromBudget: false,
+    excludeFromTotals: false,
+    groupName: null,
+    sortOrder: 0,
     allocations: [],
     goal: null,
     budgetId: testBudgetId,
@@ -471,7 +476,11 @@ describe('ZeroBasedService', () => {
       prismaMock.budget.findFirst.mockResolvedValue({
         ...mockBudget,
         categories: [
-          { ...mockFromCategory, carryoverAmount: createDecimal(0), allocations: [{ amount: createDecimal(50) }] },
+          {
+            ...mockFromCategory,
+            carryoverAmount: createDecimal(0),
+            allocations: [{ amount: createDecimal(50) }],
+          },
           { ...mockToCategory, allocations: [] },
         ],
       });

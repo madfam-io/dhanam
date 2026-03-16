@@ -59,7 +59,10 @@ export class TestDataFactory {
     });
   }
 
-  async createTransaction(accountId: string, overrides: Partial<Transaction> = {}): Promise<Transaction> {
+  async createTransaction(
+    accountId: string,
+    overrides: Partial<Transaction> = {}
+  ): Promise<Transaction> {
     return this.prisma.transaction.create({
       data: {
         accountId,
@@ -91,6 +94,11 @@ export class TestDataFactory {
         budgetId,
         name: overrides.name || 'Test Category',
         budgetedAmount: overrides.budgetedAmount || 1000,
+        isIncome: overrides.isIncome ?? false,
+        excludeFromBudget: overrides.excludeFromBudget ?? false,
+        excludeFromTotals: overrides.excludeFromTotals ?? false,
+        groupName: overrides.groupName ?? null,
+        sortOrder: overrides.sortOrder ?? 0,
         ...overrides,
       },
     });

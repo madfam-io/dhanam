@@ -43,6 +43,11 @@ describe('CategoriesService', () => {
     budgetId: 'budget-123',
     name: 'Groceries',
     budgetedAmount: createDecimal(500),
+    isIncome: false,
+    excludeFromBudget: false,
+    excludeFromTotals: false,
+    groupName: null,
+    sortOrder: 0,
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -111,7 +116,7 @@ describe('CategoriesService', () => {
           budget: true,
           _count: { select: { transactions: true } },
         },
-        orderBy: { name: 'asc' },
+        orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
         skip: 0,
         take: 50,
       });
@@ -121,13 +126,9 @@ describe('CategoriesService', () => {
     });
 
     it('should throw ForbiddenException if user lacks access', async () => {
-      spacesService.verifyUserAccess.mockRejectedValue(
-        new ForbiddenException('No access')
-      );
+      spacesService.verifyUserAccess.mockRejectedValue(new ForbiddenException('No access'));
 
-      await expect(
-        service.findAll(mockSpace.id, mockUser.id)
-      ).rejects.toThrow(ForbiddenException);
+      await expect(service.findAll(mockSpace.id, mockUser.id)).rejects.toThrow(ForbiddenException);
     });
 
     it('should return empty array if no categories exist', async () => {
@@ -146,11 +147,7 @@ describe('CategoriesService', () => {
         { ...mockCategory, _count: { transactions: 3 } },
       ] as any);
 
-      const result = await service.findByBudget(
-        mockSpace.id,
-        mockUser.id,
-        mockBudget.id
-      );
+      const result = await service.findByBudget(mockSpace.id, mockUser.id, mockBudget.id);
 
       expect(prisma.budget.findFirst).toHaveBeenCalledWith({
         where: { id: mockBudget.id, spaceId: mockSpace.id },
@@ -158,7 +155,7 @@ describe('CategoriesService', () => {
       expect(prisma.category.findMany).toHaveBeenCalledWith({
         where: { budgetId: mockBudget.id },
         include: { _count: { select: { transactions: true } } },
-        orderBy: { name: 'asc' },
+        orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
       });
       expect(result).toHaveLength(1);
     });
@@ -180,11 +177,7 @@ describe('CategoriesService', () => {
         _count: { transactions: 10 },
       } as any);
 
-      const result = await service.findOne(
-        mockSpace.id,
-        mockUser.id,
-        mockCategory.id
-      );
+      const result = await service.findOne(mockSpace.id, mockUser.id, mockCategory.id);
 
       expect(spacesService.verifyUserAccess).toHaveBeenCalled();
       expect(result.name).toBe('Groceries');
@@ -194,9 +187,9 @@ describe('CategoriesService', () => {
     it('should throw NotFoundException if category not found', async () => {
       prisma.category.findFirst.mockResolvedValue(null);
 
-      await expect(
-        service.findOne(mockSpace.id, mockUser.id, 'wrong-id')
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.findOne(mockSpace.id, mockUser.id, 'wrong-id')).rejects.toThrow(
+        NotFoundException
+      );
     });
   });
 
@@ -218,11 +211,7 @@ describe('CategoriesService', () => {
         _count: { transactions: 0 },
       } as any);
 
-      const result = await service.create(
-        mockSpace.id,
-        mockUser.id,
-        createDto
-      );
+      const result = await service.create(mockSpace.id, mockUser.id, createDto);
 
       expect(prisma.budget.findFirst).toHaveBeenCalledWith({
         where: { id: createDto.budgetId, spaceId: mockSpace.id },
@@ -244,9 +233,9 @@ describe('CategoriesService', () => {
     it('should throw ForbiddenException if budget does not belong to space', async () => {
       prisma.budget.findFirst.mockResolvedValue(null);
 
-      await expect(
-        service.create(mockSpace.id, mockUser.id, createDto)
-      ).rejects.toThrow(ForbiddenException);
+      await expect(service.create(mockSpace.id, mockUser.id, createDto)).rejects.toThrow(
+        ForbiddenException
+      );
     });
 
     it('should require editor role to create category', async () => {
@@ -254,9 +243,9 @@ describe('CategoriesService', () => {
         new ForbiddenException('Requires editor role')
       );
 
-      await expect(
-        service.create(mockSpace.id, mockUser.id, createDto)
-      ).rejects.toThrow(ForbiddenException);
+      await expect(service.create(mockSpace.id, mockUser.id, createDto)).rejects.toThrow(
+        ForbiddenException
+      );
     });
   });
 
@@ -280,12 +269,7 @@ describe('CategoriesService', () => {
         _count: { transactions: 5 },
       } as any);
 
-      const result = await service.update(
-        mockSpace.id,
-        mockUser.id,
-        mockCategory.id,
-        updateDto
-      );
+      const result = await service.update(mockSpace.id, mockUser.id, mockCategory.id, updateDto);
 
       expect(prisma.category.update).toHaveBeenCalledWith({
         where: { id: mockCategory.id },
@@ -324,12 +308,7 @@ describe('CategoriesService', () => {
       } as any);
 
       const partialDto = { budgetedAmount: 700 };
-      const result = await service.update(
-        mockSpace.id,
-        mockUser.id,
-        mockCategory.id,
-        partialDto
-      );
+      const result = await service.update(mockSpace.id, mockUser.id, mockCategory.id, partialDto);
 
       expect(result.budgetedAmount).toBe(700);
     });
@@ -359,9 +338,9 @@ describe('CategoriesService', () => {
     it('should throw NotFoundException if category not found', async () => {
       prisma.category.findFirst.mockResolvedValue(null);
 
-      await expect(
-        service.remove(mockSpace.id, mockUser.id, 'wrong-id')
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.remove(mockSpace.id, mockUser.id, 'wrong-id')).rejects.toThrow(
+        NotFoundException
+      );
     });
 
     it('should require editor role to delete category', async () => {
@@ -369,9 +348,9 @@ describe('CategoriesService', () => {
         new ForbiddenException('Requires editor role')
       );
 
-      await expect(
-        service.remove(mockSpace.id, mockUser.id, mockCategory.id)
-      ).rejects.toThrow(ForbiddenException);
+      await expect(service.remove(mockSpace.id, mockUser.id, mockCategory.id)).rejects.toThrow(
+        ForbiddenException
+      );
     });
   });
 
@@ -386,11 +365,7 @@ describe('CategoriesService', () => {
 
       prisma.category.findFirst.mockResolvedValue(categoryWithDecimal as any);
 
-      const result = await service.findOne(
-        mockSpace.id,
-        mockUser.id,
-        mockCategory.id
-      );
+      const result = await service.findOne(mockSpace.id, mockUser.id, mockCategory.id);
 
       expect(result.budgetedAmount).toBe(123.45);
     });
@@ -419,11 +394,7 @@ describe('CategoriesService', () => {
         _count: { transactions: 0 },
       } as any);
 
-      const result = await service.findOne(
-        mockSpace.id,
-        mockUser.id,
-        mockCategory.id
-      );
+      const result = await service.findOne(mockSpace.id, mockUser.id, mockCategory.id);
 
       expect(typeof result.createdAt).toBe('string');
       expect(typeof result.updatedAt).toBe('string');

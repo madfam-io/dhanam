@@ -656,6 +656,7 @@ model Transaction {
   reviewed              Boolean   @default(false)
   reviewedAt            DateTime? @map("reviewed_at")
   metadata              Json?
+  excludeFromTotals     Boolean   @default(false) @map("exclude_from_totals")
   createdAt             DateTime  @default(now()) @map("created_at")
   updatedAt             DateTime  @updatedAt @map("updated_at")
   deletedAt             DateTime? @map("deleted_at")
@@ -776,16 +777,21 @@ model Subscription {
 }
 
 model Category {
-  id              String   @id @default(uuid())
-  budgetId        String   @map("budget_id")
-  name            String
-  budgetedAmount  Decimal  @map("budgeted_amount") @db.Decimal(19, 4)
-  carryoverAmount Decimal  @default(0) @map("carryover_amount") @db.Decimal(19, 4)
-  icon            String?
-  color           String?
-  description     String?
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
+  id                String   @id @default(uuid())
+  budgetId          String   @map("budget_id")
+  name              String
+  budgetedAmount    Decimal  @map("budgeted_amount") @db.Decimal(19, 4)
+  carryoverAmount   Decimal  @default(0) @map("carryover_amount") @db.Decimal(19, 4)
+  icon              String?
+  color             String?
+  description       String?
+  isIncome          Boolean  @default(false) @map("is_income")
+  excludeFromBudget Boolean  @default(false) @map("exclude_from_budget")
+  excludeFromTotals Boolean  @default(false) @map("exclude_from_totals")
+  groupName         String?  @map("group_name")
+  sortOrder         Int      @default(0) @map("sort_order")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
 
   // Relations
   budget       Budget             @relation(fields: [budgetId], references: [id], onDelete: Cascade)

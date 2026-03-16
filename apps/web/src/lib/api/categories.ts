@@ -8,6 +8,11 @@ export interface CreateCategoryDto {
   color?: string;
   icon?: string;
   description?: string;
+  isIncome?: boolean;
+  excludeFromBudget?: boolean;
+  excludeFromTotals?: boolean;
+  groupName?: string;
+  sortOrder?: number;
 }
 
 export interface UpdateCategoryDto {
@@ -16,6 +21,11 @@ export interface UpdateCategoryDto {
   color?: string;
   icon?: string;
   description?: string;
+  isIncome?: boolean;
+  excludeFromBudget?: boolean;
+  excludeFromTotals?: boolean;
+  groupName?: string;
+  sortOrder?: number;
 }
 
 export const categoriesApi = {

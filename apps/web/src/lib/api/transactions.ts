@@ -11,6 +11,7 @@ export interface CreateTransactionDto {
   tagIds?: string[];
   reviewed?: boolean;
   metadata?: Record<string, unknown>;
+  excludeFromTotals?: boolean;
 }
 
 export interface UpdateTransactionDto {
@@ -22,6 +23,7 @@ export interface UpdateTransactionDto {
   tagIds?: string[];
   reviewed?: boolean;
   metadata?: Record<string, unknown>;
+  excludeFromTotals?: boolean;
 }
 
 export interface TransactionsFilterDto {

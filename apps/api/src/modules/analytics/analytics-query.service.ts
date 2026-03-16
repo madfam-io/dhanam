@@ -30,6 +30,8 @@ export class AnalyticsQueryService {
         date: { gte: startDate, lte: endDate },
         amount: { lt: 0 },
         deletedAt: null,
+        excludeFromTotals: false,
+        OR: [{ category: { is: null } }, { category: { excludeFromTotals: false } }],
       },
       orderBy: { amount: 'asc' }, // Most negative = largest expense
       take: limit,
@@ -67,6 +69,8 @@ export class AnalyticsQueryService {
         amount: { lt: 0 },
         merchant: { not: null },
         deletedAt: null,
+        excludeFromTotals: false,
+        OR: [{ category: { is: null } }, { category: { excludeFromTotals: false } }],
       },
       _sum: { amount: true },
       _count: { id: true },
@@ -103,6 +107,8 @@ export class AnalyticsQueryService {
         amount: { lt: 0 },
         categoryId: { not: null },
         deletedAt: null,
+        excludeFromTotals: false,
+        category: { excludeFromTotals: false },
       },
       _sum: { amount: true },
       _count: { id: true },
@@ -180,9 +186,12 @@ export class AnalyticsQueryService {
         COUNT(*)::text as count
       FROM transactions t
       JOIN accounts a ON t.account_id = a.id
+      LEFT JOIN categories c ON t.category_id = c.id
       WHERE a.space_id = ${spaceId}
         AND t.date >= ${startDate}
         AND t.deleted_at IS NULL
+        AND t.exclude_from_totals = false
+        AND (c.exclude_from_totals IS NULL OR c.exclude_from_totals = false)
       GROUP BY TO_CHAR(t.date, 'YYYY-MM')
       ORDER BY month ASC
     `;
@@ -262,6 +271,8 @@ export class AnalyticsQueryService {
       account: { spaceId },
       date: { gte: params.startDate, lte: params.endDate },
       deletedAt: null,
+      excludeFromTotals: false,
+      OR: [{ category: { is: null } }, { category: { excludeFromTotals: false } }],
     };
 
     if (params.categoryIds?.length) {
@@ -392,6 +403,8 @@ export class AnalyticsQueryService {
         account: { spaceId },
         date: { gte: startDate, lte: endDate },
         deletedAt: null,
+        excludeFromTotals: false,
+        OR: [{ category: { is: null } }, { category: { excludeFromTotals: false } }],
       },
       include: { account: true, category: true },
       orderBy: { date: 'asc' },

@@ -11,6 +11,7 @@ export interface Transaction {
   categoryId?: UUID;
   date: string;
   pending: boolean;
+  excludeFromTotals?: boolean;
   metadata?: Record<string, any>;
   createdAt: string;
   updatedAt: string;
@@ -24,6 +25,11 @@ export interface Category {
   color?: string;
   parentId?: UUID;
   parent?: Category;
+  isIncome?: boolean;
+  excludeFromBudget?: boolean;
+  excludeFromTotals?: boolean;
+  groupName?: string;
+  sortOrder?: number;
   createdAt: string;
   updatedAt: string;
 }

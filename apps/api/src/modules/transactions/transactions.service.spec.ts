@@ -60,6 +60,7 @@ describe('TransactionsService', () => {
     categoryId: mockCategory.id,
     reviewed: false,
     reviewedAt: null,
+    excludeFromTotals: false,
     metadata: null,
     createdAt: new Date(),
     updatedAt: new Date(),

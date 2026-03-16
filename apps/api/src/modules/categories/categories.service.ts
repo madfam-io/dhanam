@@ -32,7 +32,7 @@ export class CategoriesService {
           select: { transactions: true },
         },
       },
-      orderBy: { name: 'asc' },
+      orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
       skip,
       take,
     });
@@ -74,7 +74,7 @@ export class CategoriesService {
           select: { transactions: true },
         },
       },
-      orderBy: { name: 'asc' },
+      orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
     });
 
     return categories.map((category) => ({
@@ -156,6 +156,11 @@ export class CategoriesService {
         color: dto.color || this.generateRandomColor(),
         icon: dto.icon,
         description: dto.description,
+        ...(dto.isIncome !== undefined && { isIncome: dto.isIncome }),
+        ...(dto.excludeFromBudget !== undefined && { excludeFromBudget: dto.excludeFromBudget }),
+        ...(dto.excludeFromTotals !== undefined && { excludeFromTotals: dto.excludeFromTotals }),
+        ...(dto.groupName !== undefined && { groupName: dto.groupName }),
+        ...(dto.sortOrder !== undefined && { sortOrder: dto.sortOrder }),
       },
       include: {
         budget: true,
@@ -198,6 +203,11 @@ export class CategoriesService {
         ...(dto.color && { color: dto.color }),
         ...(dto.icon !== undefined && { icon: dto.icon }),
         ...(dto.description !== undefined && { description: dto.description }),
+        ...(dto.isIncome !== undefined && { isIncome: dto.isIncome }),
+        ...(dto.excludeFromBudget !== undefined && { excludeFromBudget: dto.excludeFromBudget }),
+        ...(dto.excludeFromTotals !== undefined && { excludeFromTotals: dto.excludeFromTotals }),
+        ...(dto.groupName !== undefined && { groupName: dto.groupName }),
+        ...(dto.sortOrder !== undefined && { sortOrder: dto.sortOrder }),
       },
       include: {
         budget: true,
