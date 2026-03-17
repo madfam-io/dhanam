@@ -13,9 +13,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     if (!_hasHydrated) return;
 
     if (!isAuthenticated) {
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://app.dhan.am';
-      const returnUrl = typeof window !== 'undefined' ? encodeURIComponent(window.location.href) : '';
-      window.location.href = `${appUrl}/login?from=${returnUrl}`;
+      const from = window.location.pathname;
+      window.location.href = from !== '/' ? `/login?from=${encodeURIComponent(from)}` : '/login';
       return;
     }
 

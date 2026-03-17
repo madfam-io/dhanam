@@ -5,14 +5,20 @@ export function middleware(request: NextRequest) {
   const authCookie = request.cookies.get('auth-storage');
 
   if (!authCookie) {
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://app.dhan.am';
-    const returnUrl = encodeURIComponent(request.url);
-    return NextResponse.redirect(`${appUrl}/login?from=${returnUrl}`);
+    const loginUrl = new URL('/login', request.url);
+
+    // Use pathname only to avoid leaking internal addresses (e.g. 0.0.0.0:3400)
+    const pathname = request.nextUrl.pathname;
+    if (pathname !== '/') {
+      loginUrl.searchParams.set('from', pathname);
+    }
+
+    return NextResponse.redirect(loginUrl);
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|login).*)'],
 };

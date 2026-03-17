@@ -38,8 +38,7 @@ export const useAdminAuth = create<AdminAuthState>()(
           const domainAttr = isProduction ? ' Domain=.dhan.am;' : '';
           document.cookie = `auth-storage=; path=/;${domainAttr} max-age=0; SameSite=Lax`;
         }
-        const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://app.dhan.am';
-        window.location.href = `${appUrl}/login`;
+        window.location.href = '/login';
       },
     }),
     {
@@ -53,9 +52,8 @@ export const useAdminAuth = create<AdminAuthState>()(
         try {
           if (state?.token) {
             apiClient.setTokens({ accessToken: state.token });
-            const isAdmin = state.user?.spaces?.some(
-              (s) => s.role === 'admin' || s.role === 'owner'
-            ) ?? false;
+            const isAdmin =
+              state.user?.spaces?.some((s) => s.role === 'admin' || s.role === 'owner') ?? false;
             useAdminAuth.setState({ isAdmin });
           }
         } catch (error) {
