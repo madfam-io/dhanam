@@ -4,7 +4,13 @@ const { withSentryConfig } = require('@sentry/nextjs');
 const nextConfig = {
   output: 'standalone',
   reactStrictMode: true,
-  transpilePackages: ['@dhanam/shared', '@dhanam/ui', '@janua/ui', '@janua/react-sdk'],
+  transpilePackages: [
+    '@dhanam/shared',
+    '@dhanam/ui',
+    '@janua/ui',
+    '@janua/react-sdk',
+    '@janua/typescript-sdk',
+  ],
 
   env: {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'https://api.dhan.am/v1',
