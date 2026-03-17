@@ -254,3 +254,11 @@ Each app requires environment configuration:
 - Mobile: Same as web for Expo public variables
 
 The application targets 99.9% availability with RTO 4h and daily backups.
+
+## Known Local Dev Issues
+
+- **Janua SDK (typescript-sdk@0.1.1)**: Published with incomplete build — `generateCodeVerifier` and other PKCE utils exist in `src/` but missing from `dist/`. Workaround: patched at runtime in `node_modules` (not committed). Needs Janua-side republish.
+- **Janua SSR safety**: `@janua/react-sdk` components (`SignIn`, `SignUp`, `UserButton`) call `useJanua()` which crashes during SSR. Fixed with `next/dynamic` + `JanuaErrorBoundary` in login/register pages and dashboard header.
+- **API CORS for local dev**: `.env` `CORS_ORIGINS` must include the web dev port (e.g. `http://localhost:3040`).
+- **API PORT**: Local API runs on port from `.env` (`PORT=8500`), not 4010. Set `NEXT_PUBLIC_API_URL=http://localhost:8500/v1` for the web app.
+- **Prisma migration**: After schema changes, run `npx prisma db push` against a running database before the API starts.

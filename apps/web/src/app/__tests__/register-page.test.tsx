@@ -22,6 +22,26 @@ jest.mock('@janua/react-sdk', () => ({
   ),
 }));
 
+// next/dynamic: resolve the import factory synchronously in tests
+jest.mock('next/dynamic', () => {
+  return (loader: () => Promise<any>) => {
+    let Comp: any = null;
+    loader()
+      .then((resolved: any) => {
+        Comp = resolved;
+      })
+      .catch(() => {});
+    const DynamicWrapper = (props: any) => {
+      if (!Comp) {
+        const mock = jest.requireMock('@janua/react-sdk');
+        Comp = mock.SignUp || mock.SignIn || (() => null);
+      }
+      return <Comp {...props} />;
+    };
+    return DynamicWrapper;
+  };
+});
+
 import RegisterPage from '../(auth)/register/page';
 
 describe('RegisterPage', () => {

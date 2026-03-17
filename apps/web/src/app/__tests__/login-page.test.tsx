@@ -67,6 +67,30 @@ jest.mock('@janua/react-sdk', () => ({
   ),
 }));
 
+// next/dynamic: resolve the import factory synchronously in tests
+jest.mock('next/dynamic', () => {
+  return (loader: () => Promise<any>) => {
+    let Comp: any = () => null;
+    // The loader is () => import('@janua/react-sdk').then(mod => mod.SignIn)
+    // In test env with jest mocks, require resolves synchronously
+    loader()
+      .then((resolved: any) => {
+        Comp = resolved;
+      })
+      .catch(() => {});
+    // Return a wrapper that renders whatever the loader resolved
+    const DynamicWrapper = (props: any) => {
+      // Fallback: try to get SignIn from the mock directly
+      if (Comp === null || Comp === undefined) {
+        const mock = jest.requireMock('@janua/react-sdk');
+        Comp = mock.SignIn || mock.SignUp || (() => null);
+      }
+      return <Comp {...props} />;
+    };
+    return DynamicWrapper;
+  };
+});
+
 import LoginPage from '../(auth)/login/page';
 
 describe('LoginPage', () => {

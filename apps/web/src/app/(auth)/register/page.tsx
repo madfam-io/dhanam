@@ -2,7 +2,12 @@
 
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { SignUp } from '@janua/react-sdk';
+import dynamic from 'next/dynamic';
+
+const SignUp = dynamic(() => import('@janua/react-sdk').then((mod) => mod.SignUp), {
+  ssr: false,
+  loading: () => <div className="h-10 animate-pulse bg-muted rounded" />,
+});
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@dhanam/ui';
 import { LocaleSwitcher } from '~/components/locale-switcher';
 

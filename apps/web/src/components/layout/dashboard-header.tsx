@@ -11,7 +11,11 @@ import {
   DropdownMenuTrigger,
 } from '@dhanam/ui';
 import { Settings, LogOut, ChevronDown, Shield } from 'lucide-react';
-import { UserButton } from '@janua/react-sdk';
+import dynamic from 'next/dynamic';
+
+const UserButton = dynamic(() => import('@janua/react-sdk').then((mod) => mod.UserButton), {
+  ssr: false,
+});
 import { useAuth } from '~/lib/hooks/use-auth';
 import { useSpaces } from '~/lib/hooks/use-spaces';
 import { useSpaceStore } from '~/stores/space';
