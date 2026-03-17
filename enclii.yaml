@@ -19,3 +19,37 @@ spec:
       environment: production
     - name: app.dhan.am
       environment: production
+  network:
+    services:
+      - name: dhanam-web
+        port: 4200
+        ingress: [cloudflare-tunnel]
+        egress: [dns, https]
+      - name: dhanam-api
+        port: 4300
+        ingress: [cloudflare-tunnel]
+        egress: [dns, https, postgres, redis]
+      - name: dhanam-admin
+        port: 3400
+        ingress: [cloudflare-tunnel]
+        egress: [dns, https]
+  quota:
+    requests:
+      cpu: "8"
+      memory: 8Gi
+    limits:
+      cpu: "16"
+      memory: 16Gi
+    container:
+      default:
+        cpu: "500m"
+        memory: "512Mi"
+      defaultRequest:
+        cpu: "50m"
+        memory: "64Mi"
+      max:
+        cpu: "4"
+        memory: "4Gi"
+      min:
+        cpu: "10m"
+        memory: "16Mi"
