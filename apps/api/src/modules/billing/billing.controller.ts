@@ -63,7 +63,7 @@ export class BillingController {
   @Throttle({ default: { limit: 10, ttl: 60000 } }) // 10 requests per minute per IP
   @ApiOperation({ summary: 'Redirect to payment checkout (public, no auth)' })
   async publicCheckout(@Query() query: CheckoutQueryDto, @Res() reply: FastifyReply) {
-    const allowedHosts = [/\.madfam\.io$/, /\.dhan\.am$/, /\.enclii\.com$/];
+    const allowedHosts = [/\.madfam\.io$/, /\.dhan\.am$/, /\.enclii\.dev$/, /\.enclii\.com$/];
 
     if (process.env.NODE_ENV !== 'production') {
       allowedHosts.push(/^localhost(:\d+)?$/);

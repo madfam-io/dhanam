@@ -620,9 +620,7 @@ describe('BillingController', () => {
         undefined
       );
       expect(mockReply.status).toHaveBeenCalledWith(302);
-      expect(mockReply.redirect).toHaveBeenCalledWith(
-        'https://checkout.stripe.com/pay/cs_test123'
-      );
+      expect(mockReply.redirect).toHaveBeenCalledWith('https://checkout.stripe.com/pay/cs_test123');
     });
 
     it('should pass product query param to billing service', async () => {
@@ -634,7 +632,7 @@ describe('BillingController', () => {
         {
           user_id: 'user-123',
           plan: 'enclii_pro',
-          return_url: 'https://app.enclii.com/billing',
+          return_url: 'https://app.enclii.dev/billing',
           product: 'enclii',
         } as any,
         mockReply
@@ -643,7 +641,7 @@ describe('BillingController', () => {
       expect(billingService.createExternalCheckout).toHaveBeenCalledWith(
         'user-123',
         'enclii_pro',
-        'https://app.enclii.com/billing',
+        'https://app.enclii.dev/billing',
         'enclii'
       );
     });

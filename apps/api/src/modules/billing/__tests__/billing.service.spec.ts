@@ -160,7 +160,10 @@ describe('BillingService', () => {
         couponId: undefined,
       });
       expect(audit.log).toHaveBeenCalled();
-      expect(result).toEqual({ checkoutUrl: 'https://checkout.stripe.com/pay/cs_test123', provider: 'stripe' });
+      expect(result).toEqual({
+        checkoutUrl: 'https://checkout.stripe.com/pay/cs_test123',
+        provider: 'stripe',
+      });
     });
 
     it('should use existing Stripe customer ID if available', async () => {
@@ -366,7 +369,10 @@ describe('BillingService', () => {
 
       const userWithStripe = { ...mockProUser, stripeCustomerId: 'cus_test123' };
       prisma.user.findUnique.mockResolvedValue(userWithStripe as any);
-      prisma.user.update.mockResolvedValue({ ...userWithStripe, subscriptionTier: 'community' } as any);
+      prisma.user.update.mockResolvedValue({
+        ...userWithStripe,
+        subscriptionTier: 'community',
+      } as any);
       prisma.billingEvent.create.mockResolvedValue({} as any);
 
       await service.handleSubscriptionCancelled(mockEvent);
@@ -647,7 +653,10 @@ describe('BillingService', () => {
 
       stripe.createCustomer.mockResolvedValue(mockCustomer);
       stripe.createCheckoutSession.mockResolvedValue(mockSession);
-      prisma.user.update.mockResolvedValue({ ...userWithCountry, stripeCustomerId: 'cus_new123' } as any);
+      prisma.user.update.mockResolvedValue({
+        ...userWithCountry,
+        stripeCustomerId: 'cus_new123',
+      } as any);
 
       const result = await service.createExternalCheckout(
         'user-123',
@@ -718,7 +727,10 @@ describe('BillingService', () => {
 
       stripe.createCustomer.mockResolvedValue(mockCustomer);
       stripe.createCheckoutSession.mockResolvedValue(mockSession);
-      prisma.user.update.mockResolvedValue({ ...userWithCountry, stripeCustomerId: 'cus_new123' } as any);
+      prisma.user.update.mockResolvedValue({
+        ...userWithCountry,
+        stripeCustomerId: 'cus_new123',
+      } as any);
 
       const result = await service.createExternalCheckout(
         'user-123',
