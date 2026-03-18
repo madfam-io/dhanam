@@ -127,6 +127,7 @@ export default function DemoPage() {
       // Set demo-mode cookie so middleware and layout detect demo mode
       document.cookie = 'demo-mode=true; path=/; max-age=7200; SameSite=Lax';
 
+      // Client-side navigation preserves Zustand state (no rehydration race)
       router.push('/dashboard');
     } catch (err) {
       console.error('Failed to login as persona:', err);

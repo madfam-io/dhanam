@@ -180,6 +180,22 @@ separate calls — if space creation failed, the user was left without a space (
 The outer try/catch is preserved: if the entire transaction fails, the user still
 receives a valid JWT and the frontend shows "Create First Space".
 
+### Auth State Guard (March 2026)
+
+The `JanuaAuthSync` component inside `JanuaAuthBridge` guards against clearing
+valid auth sessions that `@janua/react-sdk` cannot detect. Two legitimate cases:
+
+1. **Direct PKCE login**: Tokens stored in `localStorage` via the auth callback
+   (not through the SDK's session management). Detected via presence of
+   `janua_access_token` in `localStorage`.
+2. **Demo mode**: User authenticated via Dhanam's demo API, not Janua SSO.
+   Detected via `demo-mode=true` cookie.
+
+The `AuthProvider` (token refresh timer) no longer calls `clearAuth()` on refresh
+failure. Instead it logs a warning and defers re-authentication to `JanuaAuthSync`
+or the next API call. This prevents the dashboard from flashing back to login when
+a refresh attempt fails but the access token is still valid.
+
 ### Security Features
 
 1. **Short-Lived Access Tokens**: 15-minute expiry limits exposure
