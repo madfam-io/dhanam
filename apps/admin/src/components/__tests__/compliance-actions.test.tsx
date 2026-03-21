@@ -1,32 +1,41 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 
-jest.mock('@dhanam/ui', () =>
-  new Proxy(
-    {},
-    {
-      get: (_, prop) => {
-        if (prop === '__esModule') return true;
-        return ({ children, ...props }: any) => (
-          <div data-testid={String(prop).toLowerCase()} {...props}>
-            {children}
-          </div>
-        );
-      },
-    },
-  ),
+jest.mock(
+  '@dhanam/ui',
+  () =>
+    new Proxy(
+      {},
+      {
+        get: (_, prop) => {
+          if (prop === '__esModule') return true;
+          const name = String(prop);
+          // Input must render as <input> so fireEvent.change and toHaveValue work
+          if (name === 'Input') {
+            return (props: any) => <input data-testid="input" {...props} />;
+          }
+          return ({ children, ...props }: any) => (
+            <div data-testid={name.toLowerCase()} {...props}>
+              {children}
+            </div>
+          );
+        },
+      }
+    )
 );
 
-jest.mock('lucide-react', () =>
-  new Proxy(
-    {},
-    {
-      get: (_, prop) => {
-        if (prop === '__esModule') return true;
-        return (props: any) => <span data-testid={`icon-${String(prop)}`} {...props} />;
-      },
-    },
-  ),
+jest.mock(
+  'lucide-react',
+  () =>
+    new Proxy(
+      {},
+      {
+        get: (_, prop) => {
+          if (prop === '__esModule') return true;
+          return (props: any) => <span data-testid={`icon-${String(prop)}`} {...props} />;
+        },
+      }
+    )
 );
 
 jest.mock('@/lib/api/admin', () => ({

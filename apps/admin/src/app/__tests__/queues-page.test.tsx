@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 
 jest.mock(
   '@dhanam/ui',
@@ -97,7 +97,10 @@ describe('QueuesPage', () => {
 
   it('should render the Refresh button', async () => {
     render(<QueuesPage />);
-    expect(await screen.findByText('Refresh')).toBeInTheDocument();
+    // Wait for async state transitions to settle, then check for Refresh
+    await waitFor(() => {
+      expect(screen.getByText('Refresh')).toBeInTheDocument();
+    });
   });
 
   it('should show empty state when no queues available', async () => {

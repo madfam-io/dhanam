@@ -2,16 +2,18 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { usePathname } from 'next/navigation';
 
-jest.mock('lucide-react', () =>
-  new Proxy(
-    {},
-    {
-      get: (_, prop) => {
-        if (prop === '__esModule') return true;
-        return (props: any) => <span data-testid={`icon-${String(prop)}`} {...props} />;
-      },
-    }
-  )
+jest.mock(
+  'lucide-react',
+  () =>
+    new Proxy(
+      {},
+      {
+        get: (_, prop) => {
+          if (prop === '__esModule') return true;
+          return (props: any) => <span data-testid={`icon-${String(prop)}`} {...props} />;
+        },
+      }
+    )
 );
 
 import { AdminNav } from '../admin-nav';
@@ -27,7 +29,13 @@ describe('AdminNav', () => {
     expect(screen.getByText('Overview')).toBeInTheDocument();
     expect(screen.getByText('SRE')).toBeInTheDocument();
     expect(screen.getByText('Data')).toBeInTheDocument();
-    expect(screen.getByText('Analytics')).toBeInTheDocument();
+    // "Analytics" appears as both section label and link; match the section label specifically
+    const analyticsLabels = screen.getAllByText('Analytics');
+    expect(analyticsLabels.length).toBeGreaterThanOrEqual(1);
+    const sectionLabel = analyticsLabels.find(
+      (el) => el.tagName === 'P' && el.classList.contains('uppercase')
+    );
+    expect(sectionLabel).toBeTruthy();
     expect(screen.getByText('Compliance')).toBeInTheDocument();
   });
 
@@ -44,7 +52,10 @@ describe('AdminNav', () => {
     expect(screen.getByText('Feature Flags')).toBeInTheDocument();
     expect(screen.getByText('Audit Logs')).toBeInTheDocument();
     expect(screen.getByText('Billing Events')).toBeInTheDocument();
-    expect(screen.getByText('Analytics')).toBeInTheDocument();
+    // "Analytics" appears as both section label and link; match the nav link specifically
+    const analyticsElements = screen.getAllByText('Analytics');
+    const analyticsLink = analyticsElements.find((el) => el.closest('a') !== null);
+    expect(analyticsLink).toBeTruthy();
     expect(screen.getByText('GDPR & Retention')).toBeInTheDocument();
   });
 
@@ -69,9 +80,7 @@ describe('AdminNav', () => {
   it('renders the correct total number of nav items', () => {
     render(<AdminNav />);
 
-    const allLinks = screen
-      .getAllByRole('link')
-      .filter((link) => link.closest('nav'));
+    const allLinks = screen.getAllByRole('link').filter((link) => link.closest('nav'));
     // 1 (Overview) + 4 (SRE) + 3 (Data) + 3 (Analytics) + 1 (Compliance) = 12
     expect(allLinks).toHaveLength(12);
   });
