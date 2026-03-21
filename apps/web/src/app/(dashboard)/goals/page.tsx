@@ -30,12 +30,13 @@ import { ShareManagementPanel } from '@/components/goals/share-management-panel'
 
 export default function GoalsPage() {
   const { t } = useTranslation('goals');
+  const { t: tCommon } = useTranslation('common');
   const {
     getGoalsBySpace,
     getGoalSummary,
     getGoalProgress,
     loading: _loading,
-    error: _error,
+    error,
   } = useGoals();
   const { calculateGoalProbability } = useSimulations();
   const analytics = useAnalytics();
@@ -167,6 +168,27 @@ export default function GoalsPage() {
         <div className="flex items-center justify-center h-[400px]">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto py-8 space-y-8">
+        <div>
+          <h1 className="text-4xl font-bold tracking-tight">{t('main.financialGoals')}</h1>
+          <p className="text-muted-foreground mt-2">{t('page.description')}</p>
+        </div>
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-8">
+            <Target className="h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="font-semibold text-lg mb-2">{tCommon('somethingWentWrong')}</h3>
+            <p className="text-muted-foreground text-center mb-4">{tCommon('loadFailed')}</p>
+            <Button onClick={() => loadGoals()}>
+              {tCommon('tryAgain')}
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }

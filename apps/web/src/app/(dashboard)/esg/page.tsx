@@ -13,18 +13,25 @@ import type { PortfolioEsgAnalysis, EsgTrends } from '@/hooks/useEsg';
 
 export default function EsgPage() {
   const { t } = useTranslation('esg');
+  const { t: tCommon } = useTranslation('common');
   const { getPortfolioAnalysis, getTrends, loading } = useEsg();
   const [portfolioAnalysis, setPortfolioAnalysis] = useState<PortfolioEsgAnalysis | null>(null);
   const [trends, setTrends] = useState<EsgTrends | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [hasError, setHasError] = useState(false);
 
   const loadData = async () => {
     setRefreshing(true);
-    const [analysisData, trendsData] = await Promise.all([getPortfolioAnalysis(), getTrends()]);
-
-    if (analysisData) setPortfolioAnalysis(analysisData);
-    if (trendsData) setTrends(trendsData);
-    setRefreshing(false);
+    setHasError(false);
+    try {
+      const [analysisData, trendsData] = await Promise.all([getPortfolioAnalysis(), getTrends()]);
+      if (analysisData) setPortfolioAnalysis(analysisData);
+      if (trendsData) setTrends(trendsData);
+    } catch {
+      setHasError(true);
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   useEffect(() => {
@@ -61,7 +68,18 @@ export default function EsgPage() {
         </Button>
       </div>
 
-      {loading && !portfolioAnalysis ? (
+      {hasError ? (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-8">
+            <Leaf className="h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="font-semibold text-lg mb-2">{tCommon('somethingWentWrong')}</h3>
+            <p className="text-muted-foreground text-center mb-4">{tCommon('loadFailed')}</p>
+            <Button onClick={handleRefresh}>
+              {tCommon('tryAgain')}
+            </Button>
+          </CardContent>
+        </Card>
+      ) : loading && !portfolioAnalysis ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-16">
             <Loader2 className="h-12 w-12 animate-spin text-muted-foreground mb-4" />

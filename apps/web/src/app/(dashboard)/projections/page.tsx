@@ -52,6 +52,7 @@ function getRiskColor(score: number): string {
 
 export default function ProjectionsPage() {
   const { t } = useTranslation('projections');
+  const { t: tCommon } = useTranslation('common');
   const currentSpaceId = useSpaceStore((state) => state.currentSpace?.id);
   const [isLoading, setIsLoading] = useState(false);
   const [isComparing, setIsComparing] = useState(false);
@@ -61,6 +62,7 @@ export default function ProjectionsPage() {
     baseline: ProjectionResult;
     scenarios: { scenario: WhatIfScenario; result: ProjectionResult }[];
   } | null>(null);
+  const [hasError, setHasError] = useState(false);
 
   // Form state
   const [config, setConfig] = useState<CreateProjectionDto>({
@@ -91,6 +93,7 @@ export default function ProjectionsPage() {
         const templates = await projectionsApi.getScenarioTemplates(currentSpaceId);
         setScenarioTemplates(templates);
       } catch (error) {
+        setHasError(true);
         console.error('Failed to load scenario templates:', error);
       }
     };
@@ -101,6 +104,7 @@ export default function ProjectionsPage() {
     if (!currentSpaceId) return;
     setIsLoading(true);
     try {
+      setHasError(false);
       const result = await projectionsApi.generateProjection(currentSpaceId, {
         ...config,
         lifeEvents,
@@ -108,6 +112,7 @@ export default function ProjectionsPage() {
       setProjection(result);
       setComparisonResults(null);
     } catch (error) {
+      setHasError(true);
       console.error('Failed to generate projection:', error);
     } finally {
       setIsLoading(false);
@@ -166,6 +171,19 @@ export default function ProjectionsPage() {
             )}
           </Button>
         </div>
+
+        {hasError && (
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-8">
+              <AlertTriangle className="h-12 w-12 text-muted-foreground mb-4" />
+              <h3 className="font-semibold text-lg mb-2">{tCommon('somethingWentWrong')}</h3>
+              <p className="text-muted-foreground text-center mb-4">{tCommon('loadFailed')}</p>
+              <Button onClick={() => { setHasError(false); generateProjection(); }}>
+                {tCommon('tryAgain')}
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
         <div className="grid gap-6 lg:grid-cols-3">
           {/* Configuration Panel */}
