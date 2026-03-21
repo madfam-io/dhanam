@@ -18,12 +18,13 @@ import { Loader2, Info } from 'lucide-react';
 import { useSimulations, type RetirementConfig } from '@/hooks/useSimulations';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
-interface RetirementCalculatorFormProps {
+export interface RetirementCalculatorFormProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onResults: (results: any) => void;
+  onError?: () => void;
 }
 
-export function RetirementCalculatorForm({ onResults }: RetirementCalculatorFormProps) {
+export function RetirementCalculatorForm({ onResults, onError }: RetirementCalculatorFormProps) {
   const { simulateRetirement, getRecommendedAllocation, loading, error } = useSimulations();
 
   const [riskTolerance, setRiskTolerance] = useState<'conservative' | 'moderate' | 'aggressive'>(
@@ -67,6 +68,8 @@ export function RetirementCalculatorForm({ onResults }: RetirementCalculatorForm
     const results = await simulateRetirement(inputs);
     if (results) {
       onResults(results);
+    } else {
+      onError?.();
     }
   };
 
