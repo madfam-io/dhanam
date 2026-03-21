@@ -78,9 +78,7 @@ export class DemoDataBuilder {
         await fn();
       } catch (e) {
         console.error(
-          '[DemoData] %s failed for %s:',
-          String(name),
-          String(personaKey),
+          `[DemoData] ${String(name)} failed for ${String(personaKey)}:`,
           e instanceof Error ? e.message : e
         );
       }

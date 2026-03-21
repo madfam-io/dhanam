@@ -32,8 +32,7 @@ export class DhanamClient {
 
   constructor(config: DhanamClientConfig) {
     // Strip trailing slashes
-    let url = config.baseUrl;
-    while (url.endsWith('/')) url = url.slice(0, -1);
+    const url = config.baseUrl.replace(/\/+$/, '');
     this.baseUrl = url;
     this.tokenOrFn = config.token;
     this._fetch = config.fetch ?? globalThis.fetch;

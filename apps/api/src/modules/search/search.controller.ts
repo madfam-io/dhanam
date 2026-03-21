@@ -1,4 +1,4 @@
-import { Controller, Get, Query, UseGuards, Param, Req } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards, Param, Req, BadRequestException } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
@@ -32,6 +32,7 @@ export class SearchController {
   @ApiOkResponse({ description: 'Search results returned successfully' })
   @ApiBadRequestResponse({ description: 'Query parameter is required' })
   async search(@Param('spaceId') spaceId: string, @Query('q') query: string, @Req() req: Request) {
+    if (Array.isArray(query)) throw new BadRequestException('q must be a single string');
     return this.nlService.search(spaceId, req.user!.id, String(query || ''));
   }
 
@@ -45,10 +46,11 @@ export class SearchController {
     @Query('q') query?: string,
     @Req() req?: Request
   ) {
+    if (Array.isArray(query)) throw new BadRequestException('q must be a single string');
     return this.nlService.getSuggestions(
       spaceId,
       req!.user!.id,
-      typeof query === 'string' ? query : String(query ?? '')
+      String(query ?? '')
     );
   }
 }
