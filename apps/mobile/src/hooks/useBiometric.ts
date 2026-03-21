@@ -41,7 +41,7 @@ export function useBiometric(): BiometricHook {
         isEnabled,
       });
     } catch (error) {
-      console.error('Error checking biometric status:', error);
+      if (__DEV__) console.error('Error checking biometric status:', error);
       setBiometricState({
         isAvailable: false,
         isEnrolled: false,
@@ -85,7 +85,7 @@ export function useBiometric(): BiometricHook {
         return { success: false, error };
       }
     } catch (error) {
-      console.error('Biometric authentication error:', error);
+      if (__DEV__) console.error('Biometric authentication error:', error);
       return {
         success: false,
         error: 'An unexpected error occurred during authentication',

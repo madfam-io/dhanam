@@ -310,7 +310,7 @@ export function handleDeepLink(url: string, isAuthenticated: boolean): boolean {
   const parsed = parseDeepLink(url);
 
   if (!parsed) {
-    console.warn(`No route matched for deep link: ${url}`);
+    if (__DEV__) console.warn(`No route matched for deep link: ${url}`);
     return false;
   }
 

@@ -98,7 +98,7 @@ export function getNotificationColor(type: NotificationType): string {
  */
 export async function registerForPushNotifications(): Promise<string | null> {
   if (!Device.isDevice) {
-    console.warn('Push notifications require a physical device');
+    if (__DEV__) console.warn('Push notifications require a physical device');
     return null;
   }
 
@@ -113,7 +113,7 @@ export async function registerForPushNotifications(): Promise<string | null> {
   }
 
   if (finalStatus !== 'granted') {
-    console.warn('Push notification permission not granted');
+    if (__DEV__) console.warn('Push notification permission not granted');
     return null;
   }
 
@@ -163,7 +163,7 @@ export async function registerForPushNotifications(): Promise<string | null> {
       deviceId: Constants.installationId || 'unknown',
     });
   } catch (error) {
-    console.error('Failed to register push token with backend:', error);
+    if (__DEV__) console.error('Failed to register push token with backend:', error);
   }
 
   return token;
@@ -176,7 +176,7 @@ export async function unregisterPushNotifications(): Promise<void> {
   try {
     await apiClient.delete('/notifications/unregister');
   } catch (error) {
-    console.error('Failed to unregister push token:', error);
+    if (__DEV__) console.error('Failed to unregister push token:', error);
   }
 }
 

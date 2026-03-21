@@ -46,7 +46,7 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
       setStatus(response);
     } catch (err: unknown) {
       setError('Error al cargar el estado del onboarding');
-      console.error('Error fetching onboarding status:', err);
+      if (__DEV__) console.error('Error fetching onboarding status:', err);
     } finally {
       setIsLoading(false);
     }

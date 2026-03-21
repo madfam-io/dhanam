@@ -27,8 +27,8 @@ module.exports = {
     'no-console': 'off', // Allow console in mobile for debugging
     'react-hooks/exhaustive-deps': 'warn',
 
-    // Allow workspace imports
-    'import/no-unresolved': ['error', { ignore: ['^@dhanam/'] }],
+    // Allow workspace and path alias imports
+    'import/no-unresolved': ['error', { ignore: ['^@dhanam/', '^@/'] }],
   },
   ignorePatterns: [
     '.eslintrc.js',

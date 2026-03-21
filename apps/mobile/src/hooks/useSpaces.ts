@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 
-import { apiClient } from '@/services/api';
-
 import { useAuth } from './useAuth';
+
+import { apiClient } from '@/services/api';
 
 export interface Space {
   id: string;
@@ -31,7 +31,7 @@ export function useSpaces() {
         setCurrentSpace(response.data[0]);
       }
     } catch (error) {
-      console.error('Failed to load spaces:', error);
+      if (__DEV__) console.error('Failed to load spaces:', error);
     } finally {
       setLoading(false);
     }
@@ -50,7 +50,7 @@ export function useSpaces() {
       setSpaces((prev) => [...prev, newSpace]);
       return newSpace;
     } catch (error) {
-      console.error('Failed to create space:', error);
+      if (__DEV__) console.error('Failed to create space:', error);
       throw error;
     }
   };

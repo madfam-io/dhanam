@@ -124,7 +124,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         },
       });
     } catch (error) {
-      console.error('Token refresh failed:', error);
+      if (__DEV__) console.error('Token refresh failed:', error);
       await clearStoredAuth();
       dispatch({ type: 'CLEAR_AUTH' });
       router.replace('/(auth)/welcome');
@@ -172,7 +172,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         dispatch({ type: 'SET_LOADING', payload: false });
       }
     } catch (error) {
-      console.error('Failed to load stored auth:', error);
+      if (__DEV__) console.error('Failed to load stored auth:', error);
       await clearStoredAuth();
       dispatch({ type: 'CLEAR_AUTH' });
     }
@@ -243,7 +243,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         });
       }
     } catch (error) {
-      console.error('Logout error:', error);
+      if (__DEV__) console.error('Logout error:', error);
     } finally {
       await clearStoredAuth();
       dispatch({ type: 'CLEAR_AUTH' });
@@ -263,7 +263,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Update stored user data
       await AsyncStorage.setItem(USER_KEY, JSON.stringify(response.data));
     } catch (error) {
-      console.error('Failed to refresh user:', error);
+      if (__DEV__) console.error('Failed to refresh user:', error);
       throw error;
     }
   }, [state.accessToken]);
@@ -281,7 +281,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Update stored user data
         await AsyncStorage.setItem(USER_KEY, JSON.stringify(response.data));
       } catch (error) {
-        console.error('Failed to update profile:', error);
+        if (__DEV__) console.error('Failed to update profile:', error);
         throw error;
       }
     },
