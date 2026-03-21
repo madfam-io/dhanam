@@ -1,6 +1,6 @@
 # Dhanam Tech Debt Log
 
-> **Last Updated**: 2026-03-15
+> **Last Updated**: 2026-03-21
 > **Context**: Production Readiness — Enterprise Hardening
 
 ---
@@ -176,6 +176,8 @@ When Expo officially supports React 19, remove the pnpm override and the compat 
 | TD-009 | ArgoCD Documentation              | LOW      | RESOLVED  | -        |
 | TD-010 | React 18 Global Pin               | LOW      | ACTIVE    | -        |
 | TD-011 | Janua SSO Full SDK Integration    | HIGH     | RESOLVED  | -        |
+| TD-012 | CodeQL Security Findings          | CRITICAL | RESOLVED  | -        |
+| TD-013 | Dashboard Blank Screens on Error  | HIGH     | RESOLVED  | -        |
 
 ---
 
@@ -204,6 +206,43 @@ used custom PKCE code instead of SDK components. `admin.dhan.am` was missing fro
 - All 64 web test suites pass, 0 typecheck errors, 0 lint errors
 
 **Ticket**: DHANAM-011
+
+---
+
+### TD-012: CodeQL Security Findings
+
+**Status**: RESOLVED
+**Severity**: CRITICAL/HIGH
+
+**Problem**:
+CodeQL flagged 3 security issues:
+
+1. **CRITICAL**: Type confusion in search controller — `@Query('q')` could receive an array, bypassing validation
+2. **HIGH**: Polynomial ReDoS in billing-sdk — `while (url.endsWith('/'))` loop on user-controlled input
+3. **HIGH**: Tainted format string in demo-data builder — `console.error('%s', ...)` with user-derived values
+
+**Resolution (March 2026)**:
+
+- Added `Array.isArray(query)` guard with `BadRequestException` in search controller
+- Replaced `while` loop with single `replace(/\/+$/, '')` regex in billing-sdk client
+- Replaced `%s` format specifiers with template literal in demo-data builder
+
+**Ticket**: DHANAM-012
+
+---
+
+### TD-013: Dashboard Blank Screens on API Error
+
+**Status**: RESOLVED
+**Severity**: HIGH
+
+**Problem**:
+9 dashboard pages showed blank screens when API requests failed. Users had no indication of failure and no way to retry.
+
+**Resolution (March 2026)**:
+Added error states with retry buttons to all 10 affected pages (analytics, goals, projections, scenarios, assets, gaming, notifications, reports, retirement, ESG), following the existing pattern from the accounts page.
+
+**Ticket**: DHANAM-013
 
 ---
 

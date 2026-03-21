@@ -170,7 +170,7 @@ turbo test        # Turborepo test
 - **Blockchain** (on-chain): ETH/BTC/xPub address tracking (non-custodial, no secrets)
 - **Zapper** (DeFi): API integration → protocol positions across 7 networks (Ethereum, Polygon, Arbitrum, Optimism, Base, Avalanche, BSC)
 - **Zillow** (Real Estate): Property valuation API → automated Zestimate updates for manual assets
-- **Collectibles** (sneakers/watches/art/wine/coins/cards/cars): Adapter-based valuation → sneaks-api (free, sneakers), scaffolded for WatchCharts, Artsy, Wine-Searcher, PCGS, PSA, Hagerty, KicksDB
+- **Collectibles** (sneakers/watches/art/wine/coins/cards/cars): Adapter-based valuation → sneaks-api (free, sneakers), Artsy (art, OAuth2), Hagerty (classic cars, API key), KicksDB (sneakers); scaffolded for WatchCharts, Wine-Searcher, PCGS, PSA
 
 The provider orchestrator (`apps/api/src/modules/providers/orchestrator/`) handles failover and multi-provider redundancy.
 
@@ -195,6 +195,7 @@ The provider orchestrator (`apps/api/src/modules/providers/orchestrator/`) handl
 
 - 11 component tests + 11 page tests covering all admin dashboard pages
 - Jest + jsdom with same patterns as web app
+- Playwright E2E: 34 test cases across dashboard, compliance/GDPR, queue management, system health
 
 **Mobile (React Native):**
 
@@ -202,7 +203,7 @@ The provider orchestrator (`apps/api/src/modules/providers/orchestrator/`) handl
 
 **CI Pipeline (`.github/workflows/ci.yml`):**
 
-- 6 parallel test jobs: API unit, web unit, mobile unit, admin unit, contract tests, Playwright E2E
+- 7 parallel test jobs: API unit, web unit, mobile unit, admin unit, contract tests, Playwright E2E (web), Playwright E2E (admin)
 - Playwright runs on main branch and `run-e2e` labeled PRs
 - Contract tests run on all PRs (no services needed)
 
