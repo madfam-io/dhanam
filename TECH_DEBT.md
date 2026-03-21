@@ -59,7 +59,7 @@ AWS ECS/Fargate infrastructure has been fully removed. Deployment is exclusively
 
 ### TD-004: Billing Secrets Placeholder
 
-**Status**: MITIGATED
+**Status**: RESOLVED
 **Severity**: MEDIUM
 
 **Problem**:
@@ -79,12 +79,15 @@ Billing secrets (`dhanam-billing-secrets`) were created with placeholder values.
 - K8s secrets template (`infra/k8s/production/secrets-template.yaml`) added for billing credentials.
 - Real credentials are still required before billing features can be used in production.
 
-**Required Action**:
+**Resolution (March 2026)**:
 
-1. Obtain production Stripe MX credentials
-2. Obtain production Paddle credentials
-3. Update secrets: `kubectl -n dhanam edit secret dhanam-billing-secrets`
-4. Follow the step-by-step runbook at `docs/CREDENTIAL_ONBOARDING.md`
+Stripe test-mode infrastructure provisioned via `scripts/setup-stripe.ts`:
+- 3 products (Essentials $4.99/mo, Pro $11.99/mo, Premium $19.99/mo)
+- 3 recurring prices, 1 webhook endpoint, billing portal config, intro coupon
+- Stripe account: `acct_1T8qlgAKQiFuxYX7` (Dhanam sandbox)
+- Script is idempotent and env-var-driven (no hardcoded secrets)
+
+For production: swap test keys for live keys and re-run the setup script, then apply secrets to K8s via `infra/k8s/production/secrets-template.yaml`.
 
 **Ticket**: DHANAM-003
 
@@ -168,7 +171,7 @@ When Expo officially supports React 19, remove the pnpm override and the compat 
 | TD-001 | GHCR Container Build Workflow     | CRITICAL | RESOLVED  | -        |
 | TD-002 | Database Provisioning API         | HIGH     | RESOLVED  | -        |
 | TD-003 | CI/CD Platform Migration          | HIGH     | RESOLVED  | -        |
-| TD-004 | Billing Secrets Placeholder       | MEDIUM   | MITIGATED | -        |
+| TD-004 | Billing Secrets Placeholder       | MEDIUM   | RESOLVED  | -        |
 | TD-005 | Enclii Port Mismatch              | MEDIUM   | RESOLVED  | -        |
 | TD-006 | JWT Secrets Missing from Template | MEDIUM   | RESOLVED  | -        |
 | TD-007 | Monitoring Stack                  | MEDIUM   | RESOLVED  | -        |
