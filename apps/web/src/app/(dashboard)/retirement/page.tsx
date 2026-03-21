@@ -13,7 +13,17 @@ import { Info } from 'lucide-react';
 
 export default function RetirementPage() {
   const { t } = useTranslation('projections');
+  const { t: tCommon } = useTranslation('common');
   const [results, setResults] = useState<RetirementSimulationResult | null>(null);
+  const [hasError, setHasError] = useState(false);
+
+  const handleResults = (result: RetirementSimulationResult) => {
+    setHasError(false);
+    setResults(result);
+  };
+  const handleError = () => {
+    setHasError(true);
+  };
 
   return (
     <PremiumGate feature="Retirement Planning Tools">
@@ -29,10 +39,18 @@ export default function RetirementPage() {
           <AlertDescription>{t('retirement.howItWorksBody')}</AlertDescription>
         </Alert>
 
+        {hasError && (
+          <Alert variant="destructive">
+            <Info className="h-4 w-4" />
+            <AlertTitle>{tCommon('somethingWentWrong')}</AlertTitle>
+            <AlertDescription>{tCommon('loadFailed')}</AlertDescription>
+          </Alert>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column: Calculator Form */}
           <div className="lg:col-span-1">
-            <RetirementCalculatorForm onResults={setResults} />
+            <RetirementCalculatorForm onResults={handleResults} onError={handleError} />
           </div>
 
           {/* Right Column: Results */}

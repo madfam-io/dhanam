@@ -42,6 +42,7 @@ const SCENARIOS = [
 
 export default function ScenariosPage() {
   const { t } = useTranslation('projections');
+  const { t: tCommon } = useTranslation('common');
   const { compareScenarios, loading, error } = useSimulations();
   const analytics = useAnalytics();
 
@@ -104,6 +105,16 @@ export default function ScenariosPage() {
           <h1 className="text-4xl font-bold tracking-tight">{t('scenarios.page.title')}</h1>
           <p className="text-muted-foreground mt-2">{t('scenarios.page.description')}</p>
         </div>
+
+        {error && !comparison && (
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-8">
+              <TrendingDown className="h-12 w-12 text-muted-foreground mb-4" />
+              <h3 className="font-semibold text-lg mb-2">{tCommon('somethingWentWrong')}</h3>
+              <p className="text-muted-foreground text-center mb-4">{tCommon('loadFailed')}</p>
+            </CardContent>
+          </Card>
+        )}
 
         <Alert>
           <Info className="h-4 w-4" />

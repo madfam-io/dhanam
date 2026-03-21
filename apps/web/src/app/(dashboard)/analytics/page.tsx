@@ -1,6 +1,6 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, Button } from '@dhanam/ui';
 import { Skeleton } from '@dhanam/ui';
 import {
@@ -30,10 +30,12 @@ import { useTranslation } from '@dhanam/shared';
 
 export default function AnalyticsPage() {
   const { currentSpace } = useSpaceStore();
+  const queryClient = useQueryClient();
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const { t } = useTranslation('analytics');
+  const { t: tCommon } = useTranslation('common');
 
-  const { data: netWorthData, isLoading: isLoadingNetWorth } = useQuery({
+  const { data: netWorthData, isLoading: isLoadingNetWorth, isError: isErrorNetWorth } = useQuery({
     queryKey: ['net-worth', currentSpace?.id],
     queryFn: () => {
       if (!currentSpace) throw new Error('No current space');
@@ -42,7 +44,7 @@ export default function AnalyticsPage() {
     enabled: !!currentSpace,
   });
 
-  const { data: netWorthHistory, isLoading: isLoadingNetWorthHistory } = useQuery({
+  const { data: netWorthHistory, isLoading: isLoadingNetWorthHistory, isError: isErrorHistory } = useQuery({
     queryKey: ['net-worth-history', currentSpace?.id],
     queryFn: () => {
       if (!currentSpace) throw new Error('No current space');
@@ -51,7 +53,7 @@ export default function AnalyticsPage() {
     enabled: !!currentSpace,
   });
 
-  const { data: spendingData, isLoading: isLoadingSpending } = useQuery({
+  const { data: spendingData, isLoading: isLoadingSpending, isError: isErrorSpending } = useQuery({
     queryKey: ['spending-by-category', currentSpace?.id],
     queryFn: () => {
       if (!currentSpace) throw new Error('No current space');
@@ -62,7 +64,7 @@ export default function AnalyticsPage() {
     enabled: !!currentSpace,
   });
 
-  const { data: incomeVsExpenses, isLoading: isLoadingIncomeExpenses } = useQuery({
+  const { data: incomeVsExpenses, isLoading: isLoadingIncomeExpenses, isError: isErrorIncome } = useQuery({
     queryKey: ['income-vs-expenses', currentSpace?.id],
     queryFn: () => {
       if (!currentSpace) throw new Error('No current space');
@@ -71,7 +73,7 @@ export default function AnalyticsPage() {
     enabled: !!currentSpace,
   });
 
-  const { data: cashflowForecast, isLoading: isLoadingCashflow } = useQuery({
+  const { data: cashflowForecast, isLoading: isLoadingCashflow, isError: isErrorCashflow } = useQuery({
     queryKey: ['cashflow-forecast', currentSpace?.id],
     queryFn: () => {
       if (!currentSpace) throw new Error('No current space');
@@ -80,7 +82,7 @@ export default function AnalyticsPage() {
     enabled: !!currentSpace,
   });
 
-  const { data: portfolioAllocation, isLoading: isLoadingPortfolio } = useQuery({
+  const { data: portfolioAllocation, isLoading: isLoadingPortfolio, isError: isErrorPortfolio } = useQuery({
     queryKey: ['portfolio-allocation', currentSpace?.id],
     queryFn: () => {
       if (!currentSpace) throw new Error('No current space');
@@ -99,6 +101,38 @@ export default function AnalyticsPage() {
         <p className="text-muted-foreground text-sm max-w-sm">
           {t('emptyState.selectSpacePrompt')}
         </p>
+      </div>
+    );
+  }
+
+  const hasError = isErrorNetWorth || isErrorHistory || isErrorSpending || isErrorIncome || isErrorCashflow || isErrorPortfolio;
+
+  if (hasError) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
+          <p className="text-muted-foreground">{t('description')}</p>
+        </div>
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-8">
+            <TrendingUp className="h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="font-semibold text-lg mb-2">{tCommon('somethingWentWrong')}</h3>
+            <p className="text-muted-foreground text-center mb-4">{tCommon('loadFailed')}</p>
+            <Button
+              onClick={() => {
+                queryClient.invalidateQueries({ queryKey: ['net-worth', currentSpace?.id] });
+                queryClient.invalidateQueries({ queryKey: ['net-worth-history', currentSpace?.id] });
+                queryClient.invalidateQueries({ queryKey: ['spending-by-category', currentSpace?.id] });
+                queryClient.invalidateQueries({ queryKey: ['income-vs-expenses', currentSpace?.id] });
+                queryClient.invalidateQueries({ queryKey: ['cashflow-forecast', currentSpace?.id] });
+                queryClient.invalidateQueries({ queryKey: ['portfolio-allocation', currentSpace?.id] });
+              }}
+            >
+              {tCommon('tryAgain')}
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }

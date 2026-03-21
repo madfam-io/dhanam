@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Button, Tabs, TabsContent, TabsList, TabsTrigger } from '@dhanam/ui';
+import { Button, Card, CardContent, Tabs, TabsContent, TabsList, TabsTrigger } from '@dhanam/ui';
 import { Bell, Check, AlertTriangle, Lightbulb, Trophy, Info, Clock } from 'lucide-react';
 import { useTranslation } from '@dhanam/shared';
 
@@ -64,11 +64,11 @@ export default function NotificationsPage() {
   const queryClient = useQueryClient();
   const { t } = useTranslation('common');
 
-  const { data: notifications = [] } = useQuery<Notification[]>({
+  const { data: notifications = [], isError } = useQuery<Notification[]>({
     queryKey: ['notifications-all'],
     queryFn: async () => {
       const res = await fetch('/api/notifications?limit=50', { credentials: 'include' });
-      if (!res.ok) return [];
+      if (!res.ok) throw new Error('Failed to load notifications');
       return res.json();
     },
   });
@@ -150,6 +150,20 @@ export default function NotificationsPage() {
         )}
       </div>
 
+      {isError ? (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-8">
+            <Bell className="h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="font-semibold text-lg mb-2">{t('somethingWentWrong')}</h3>
+            <p className="text-muted-foreground text-center mb-4">{t('loadFailed')}</p>
+            <Button
+              onClick={() => queryClient.invalidateQueries({ queryKey: ['notifications-all'] })}
+            >
+              {t('tryAgain')}
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
       <Tabs defaultValue="all">
         <TabsList>
           <TabsTrigger value="all">{t('all')}</TabsTrigger>
@@ -171,6 +185,7 @@ export default function NotificationsPage() {
           {renderNotificationList(notifications.filter((n) => typeToTab[n.type] === 'reminders'))}
         </TabsContent>
       </Tabs>
+      )}
     </div>
   );
 }

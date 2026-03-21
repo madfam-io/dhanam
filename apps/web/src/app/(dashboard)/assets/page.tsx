@@ -96,17 +96,21 @@ function formatCurrency(amount: number, currency: string): string {
 
 export default function AssetsPage() {
   const { t } = useTranslation('assets');
+  const { t: tCommon } = useTranslation('common');
   const currentSpaceId = useSpaceStore((state) => state.currentSpace?.id);
   const [assets, setAssets] = useState<ManualAsset[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [hasError, setHasError] = useState(false);
 
   const fetchAssets = useCallback(async () => {
     if (!currentSpaceId) return;
     try {
+      setHasError(false);
       const data = await apiClient.get<ManualAsset[]>(`/spaces/${currentSpaceId}/manual-assets`);
       setAssets(data);
     } catch (error) {
+      setHasError(true);
       console.error('Failed to fetch assets:', error);
     } finally {
       setIsLoading(false);
@@ -140,6 +144,27 @@ export default function AssetsPage() {
             ))}
           </div>
         </div>
+      </div>
+    );
+  }
+
+  if (hasError) {
+    return (
+      <div className="container mx-auto py-8 space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold">{t('page.title')}</h1>
+          <p className="text-muted-foreground">{t('page.description')}</p>
+        </div>
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-8">
+            <Building2 className="h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="font-semibold text-lg mb-2">{tCommon('somethingWentWrong')}</h3>
+            <p className="text-muted-foreground text-center mb-4">{tCommon('loadFailed')}</p>
+            <Button onClick={() => fetchAssets()}>
+              {tCommon('tryAgain')}
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }

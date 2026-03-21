@@ -104,7 +104,7 @@ export default function ReportsPage() {
     },
   ];
 
-  const { data: availableReports, isLoading } = useQuery({
+  const { data: availableReports, isLoading, isError: isErrorReports } = useQuery({
     queryKey: ['available-reports', currentSpace?.id],
     queryFn: () => {
       if (!currentSpace) throw new Error('No current space');
@@ -113,7 +113,7 @@ export default function ReportsPage() {
     enabled: !!currentSpace,
   });
 
-  const { data: savedReports, isLoading: loadingSaved } = useQuery({
+  const { data: savedReports, isLoading: loadingSaved, isError: isErrorSaved } = useQuery({
     queryKey: ['saved-reports', currentSpace?.id],
     queryFn: () => {
       if (!currentSpace) throw new Error('No current space');
@@ -122,7 +122,7 @@ export default function ReportsPage() {
     enabled: !!currentSpace,
   });
 
-  const { data: sharedWithMe, isLoading: loadingShared } = useQuery({
+  const { data: sharedWithMe, isLoading: loadingShared, isError: isErrorShared } = useQuery({
     queryKey: ['shared-reports'],
     queryFn: () => reportsApi.getSharedWithMe(),
     enabled: !!currentSpace,
@@ -246,6 +246,35 @@ export default function ReportsPage() {
         <p className="text-muted-foreground text-sm max-w-sm">
           {t('emptyState.selectSpacePrompt')}
         </p>
+      </div>
+    );
+  }
+
+  const hasError = isErrorReports || isErrorSaved || isErrorShared;
+
+  if (hasError) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
+          <p className="text-muted-foreground">{t('description')}</p>
+        </div>
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-8">
+            <FileText className="h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="font-semibold text-lg mb-2">{tCommon('somethingWentWrong')}</h3>
+            <p className="text-muted-foreground text-center mb-4">{tCommon('loadFailed')}</p>
+            <Button
+              onClick={() => {
+                queryClient.invalidateQueries({ queryKey: ['available-reports', currentSpace?.id] });
+                queryClient.invalidateQueries({ queryKey: ['saved-reports', currentSpace?.id] });
+                queryClient.invalidateQueries({ queryKey: ['shared-reports'] });
+              }}
+            >
+              {tCommon('tryAgain')}
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
