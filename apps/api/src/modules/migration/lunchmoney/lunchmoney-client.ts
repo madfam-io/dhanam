@@ -1,3 +1,5 @@
+import { Logger } from '@nestjs/common';
+
 import {
   LMCategory,
   LMTag,
@@ -13,6 +15,7 @@ import {
 const BASE_URL = 'https://dev.lunchmoney.app';
 
 export class LunchMoneyClient {
+  private readonly logger = new Logger(LunchMoneyClient.name);
   private token: string;
   private delayMs: number;
 
@@ -51,7 +54,7 @@ export class LunchMoneyClient {
         return (await response.json()) as T;
       } catch (err) {
         lastError = err as Error;
-        console.warn(`LM API attempt ${attempt + 1} failed for ${path}: ${lastError.message}`);
+        this.logger.warn(`LM API attempt ${attempt + 1} failed for ${path}: ${lastError.message}`);
       }
     }
 
@@ -108,7 +111,7 @@ export class LunchMoneyClient {
       const lastDay = new Date(Date.UTC(current.getUTCFullYear(), current.getUTCMonth() + 1, 0));
       const batchEndStr = lastDay > end ? endDate : lastDay.toISOString().slice(0, 10);
 
-      console.log(`  Fetching transactions ${batchStart} to ${batchEndStr}...`);
+      this.logger.log(`Fetching transactions ${batchStart} to ${batchEndStr}...`);
       const batch = await this.getTransactions(batchStart, batchEndStr);
       allTransactions.push(...batch);
 

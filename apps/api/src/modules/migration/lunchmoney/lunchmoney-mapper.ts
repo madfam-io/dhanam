@@ -1,6 +1,9 @@
 import { AccountType, Currency, RecurrenceFrequency, Provider } from '@db';
+import { Logger } from '@nestjs/common';
 
 import { LMAsset, LMPlaidAccount, LMCrypto, LMRecurringItem } from './lunchmoney-types';
+
+const logger = new Logger('LunchMoneyMapper');
 
 /** Decode common HTML entities returned by the LunchMoney API */
 export function decodeHtmlEntities(str: string): string {
@@ -25,7 +28,7 @@ export function mapCurrency(lmCurrency: string): Currency {
     case 'CAD':
       return Currency.CAD;
     default:
-      console.warn(`Unknown currency "${lmCurrency}", defaulting to MXN`);
+      logger.warn(`Unknown currency "${lmCurrency}", defaulting to MXN`);
       return Currency.MXN;
   }
 }

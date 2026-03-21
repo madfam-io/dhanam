@@ -1,6 +1,6 @@
-import { startOfMonth, endOfMonth } from 'date-fns';
-
 import { Currency, SpaceType, BudgetPeriod, Provider, User } from '@db';
+import { Logger } from '@nestjs/common';
+import { startOfMonth, endOfMonth } from 'date-fns';
 
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -34,6 +34,7 @@ interface GeoDefaults {
  * to fill transactions, goals, assets, ESG scores, estate planning, etc.
  */
 export class DemoDataBuilder {
+  private readonly logger = new Logger(DemoDataBuilder.name);
   constructor(private prisma: PrismaService) {}
 
   async buildPersona(personaKey: string, geo: GeoDefaults): Promise<User> {
@@ -77,9 +78,8 @@ export class DemoDataBuilder {
       try {
         await fn();
       } catch (e) {
-        console.error(
-          `[DemoData] ${String(name)} failed for ${String(personaKey)}:`,
-          e instanceof Error ? e.message : e
+        this.logger.error(
+          `${String(name)} failed for ${String(personaKey)}: ${e instanceof Error ? e.message : e}`
         );
       }
     };

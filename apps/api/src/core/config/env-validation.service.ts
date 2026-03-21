@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 
 interface RequiredEnvVar {
   name: string;
@@ -8,6 +8,7 @@ interface RequiredEnvVar {
 
 @Injectable()
 export class EnvValidationService implements OnModuleInit {
+  private readonly logger = new Logger(EnvValidationService.name);
   private readonly requiredVars: RequiredEnvVar[] = [
     {
       name: 'JWT_SECRET',
@@ -68,8 +69,7 @@ export class EnvValidationService implements OnModuleInit {
       throw new Error(errorMessage);
     }
 
-    // eslint-disable-next-line no-console
-    console.log('✅ Environment validation passed');
+    this.logger.log('Environment validation passed');
   }
 
   /**

@@ -1,12 +1,12 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import type { User } from '@db';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as Sentry from '@sentry/node';
 import { nodeProfilingIntegration } from '@sentry/profiling-node';
 
-import type { User } from '@db';
-
 @Injectable()
 export class SentryService implements OnModuleInit {
+  private readonly logger = new Logger(SentryService.name);
   private readonly isEnabled: boolean;
 
   constructor(private readonly configService: ConfigService) {
@@ -15,8 +15,7 @@ export class SentryService implements OnModuleInit {
 
   onModuleInit() {
     if (!this.isEnabled) {
-      // eslint-disable-next-line no-console
-      console.log('⚠️  Sentry not configured - error monitoring disabled');
+      this.logger.warn('Sentry not configured - error monitoring disabled');
       return;
     }
 
@@ -91,8 +90,7 @@ export class SentryService implements OnModuleInit {
       },
     });
 
-    // eslint-disable-next-line no-console
-    console.log(`✅ Sentry initialized for ${environment} environment`);
+    this.logger.log(`Sentry initialized for ${environment} environment`);
   }
 
   /**

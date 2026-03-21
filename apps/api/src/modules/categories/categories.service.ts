@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, ForbiddenException } from '@nestjs/common';
 
 import { PrismaService } from '../../core/prisma/prisma.service';
 import { SpacesService } from '../spaces/spaces.service';
@@ -7,6 +7,8 @@ import { CreateCategoryDto, UpdateCategoryDto } from './dto';
 
 @Injectable()
 export class CategoriesService {
+  private readonly logger = new Logger(CategoriesService.name);
+
   constructor(
     private prisma: PrismaService,
     private spacesService: SpacesService
@@ -103,14 +105,14 @@ export class CategoriesService {
     });
 
     if (!category) {
-      console.error(
+      this.logger.error(
         `Category ${categoryId} not found in space ${spaceId}. Checking raw existence...`
       );
       const raw = await this.prisma.category.findUnique({
         where: { id: categoryId },
         include: { budget: true },
       });
-      console.error('Raw category:', raw);
+      this.logger.error(`Raw category: ${JSON.stringify(raw)}`);
       throw new NotFoundException('Category not found');
     }
 
@@ -260,12 +262,14 @@ export class CategoriesService {
         where: { id: category.budgetId },
       });
     } catch (e) {
-      console.error('Error finding budget', e);
+      this.logger.error('Error finding budget', e instanceof Error ? e.stack : String(e));
       throw e;
     }
 
     if (!budget) {
-      console.error(`Budget not found for category ${categoryId} (budgetId: ${category.budgetId})`);
+      this.logger.error(
+        `Budget not found for category ${categoryId} (budgetId: ${category.budgetId})`
+      );
       throw new NotFoundException('Budget not found');
     }
 

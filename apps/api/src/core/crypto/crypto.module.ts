@@ -1,6 +1,8 @@
-import { Module } from '@nestjs/common';
+import { Logger, Module } from '@nestjs/common';
 
 import { CryptoService } from './crypto.service';
+
+const logger = new Logger('CryptoModule');
 
 @Module({
   providers: [
@@ -9,8 +11,7 @@ import { CryptoService } from './crypto.service';
       useFactory: () => {
         const provider = process.env.KMS_PROVIDER || 'local';
         if (provider !== 'local') {
-          // Future: AWS KMS or Vault providers
-          console.warn(`KMS_PROVIDER=${provider} not yet implemented, falling back to local`);
+          logger.warn(`KMS_PROVIDER=${provider} not yet implemented, falling back to local`);
         }
         return new CryptoService();
       },

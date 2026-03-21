@@ -41,15 +41,19 @@ fi
 
 # Run tests on changed API files to catch failures before CI
 if git diff --cached --name-only | grep -q "apps/api/"; then
-  echo "🧪 Running tests on affected API files..."
-  cd apps/api
-  # Run jest with bail flag to stop on first failure, --passWithNoTests for files without tests
-  if ! pnpm jest --bail --passWithNoTests --findRelatedTests $(git diff --cached --name-only | grep "apps/api/" | sed 's|apps/api/||g' | tr '\n' ' ') 2>/dev/null; then
-    echo "❌ Test failures detected. Please fix them before committing."
-    exit 1
+  if [ -z "$DATABASE_URL" ]; then
+    echo "⚠️  DATABASE_URL not set — skipping API tests (run pnpm dev:infra first)"
+  else
+    echo "🧪 Running tests on affected API files..."
+    cd apps/api
+    # Run jest with bail flag to stop on first failure, --passWithNoTests for files without tests
+    if ! pnpm jest --bail --passWithNoTests --findRelatedTests $(git diff --cached --name-only | grep "apps/api/" | sed 's|apps/api/||g' | tr '\n' ' ') 2>/dev/null; then
+      echo "❌ Test failures detected. Please fix them before committing."
+      exit 1
+    fi
+    cd - > /dev/null
+    echo "✅ API tests passed"
   fi
-  cd - > /dev/null
-  echo "✅ API tests passed"
 fi
 
 # Check for schema drift if Prisma files changed
