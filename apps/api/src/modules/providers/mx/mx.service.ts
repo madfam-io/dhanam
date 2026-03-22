@@ -1,7 +1,7 @@
 import * as crypto from 'crypto';
 
-import type { InputJsonValue } from '@db';
 import { Provider, AccountType, Currency, Prisma as _Prisma } from '@db';
+import type { InputJsonValue } from '@db';
 import { PROVIDER_DEFAULTS } from '@dhanam/shared';
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';

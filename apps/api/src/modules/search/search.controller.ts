@@ -1,3 +1,4 @@
+import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
 import { Controller, Get, Query, UseGuards, Param, Req, BadRequestException } from '@nestjs/common';
 import {
   ApiTags,
@@ -11,8 +12,6 @@ import {
   ApiBadRequestResponse,
 } from '@nestjs/swagger';
 import { Request } from 'express';
-
-import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
 
 import { NaturalLanguageService } from './natural-language.service';
 
@@ -47,10 +46,6 @@ export class SearchController {
     @Req() req?: Request
   ) {
     if (Array.isArray(query)) throw new BadRequestException('q must be a single string');
-    return this.nlService.getSuggestions(
-      spaceId,
-      req!.user!.id,
-      String(query ?? '')
-    );
+    return this.nlService.getSuggestions(spaceId, req!.user!.id, String(query ?? ''));
   }
 }
