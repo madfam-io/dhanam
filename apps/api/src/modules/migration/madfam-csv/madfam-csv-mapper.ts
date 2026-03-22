@@ -136,7 +136,7 @@ export function parseGroupAndCategory(
  * Only "Financiamiento" is income (treasury/capital inflows).
  */
 export function isIncomeGroup(groupName: string): boolean {
-  return groupName === 'Financiamiento';
+  return groupName.startsWith('Financiamiento');
 }
 
 /**

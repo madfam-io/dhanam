@@ -250,6 +250,10 @@ describe('madfam-csv-mapper', () => {
       expect(isIncomeGroup('Financiamiento')).toBe(true);
     });
 
+    it('returns true for Financiamiento (Tesorería)', () => {
+      expect(isIncomeGroup('Financiamiento (Tesorería)')).toBe(true);
+    });
+
     it('returns false for I+D', () => {
       expect(isIncomeGroup('I+D')).toBe(false);
     });
