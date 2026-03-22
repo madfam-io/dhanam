@@ -82,6 +82,7 @@ Billing secrets (`dhanam-billing-secrets`) were created with placeholder values.
 **Resolution (March 2026)**:
 
 Stripe test-mode infrastructure provisioned via `scripts/setup-stripe.ts`:
+
 - 3 products (Essentials $4.99/mo, Pro $11.99/mo, Premium $19.99/mo)
 - 3 recurring prices, 1 webhook endpoint, billing portal config, intro coupon
 - Stripe account: `acct_1T8qlgAKQiFuxYX7` (Dhanam sandbox)
@@ -166,21 +167,29 @@ When Expo officially supports React 19, remove the pnpm override and the compat 
 
 ## Tracking
 
-| ID     | Title                             | Severity | Status    | Assigned |
-| ------ | --------------------------------- | -------- | --------- | -------- |
-| TD-001 | GHCR Container Build Workflow     | CRITICAL | RESOLVED  | -        |
-| TD-002 | Database Provisioning API         | HIGH     | RESOLVED  | -        |
-| TD-003 | CI/CD Platform Migration          | HIGH     | RESOLVED  | -        |
-| TD-004 | Billing Secrets Placeholder       | MEDIUM   | RESOLVED  | -        |
-| TD-005 | Enclii Port Mismatch              | MEDIUM   | RESOLVED  | -        |
-| TD-006 | JWT Secrets Missing from Template | MEDIUM   | RESOLVED  | -        |
-| TD-007 | Monitoring Stack                  | MEDIUM   | RESOLVED  | -        |
-| TD-008 | Staging Environment               | MEDIUM   | RESOLVED  | -        |
-| TD-009 | ArgoCD Documentation              | LOW      | RESOLVED  | -        |
-| TD-010 | React 18 Global Pin               | LOW      | ACTIVE    | -        |
-| TD-011 | Janua SSO Full SDK Integration    | HIGH     | RESOLVED  | -        |
-| TD-012 | CodeQL Security Findings          | CRITICAL | RESOLVED  | -        |
-| TD-013 | Dashboard Blank Screens on Error  | HIGH     | RESOLVED  | -        |
+| ID     | Title                             | Severity | Status   | Assigned |
+| ------ | --------------------------------- | -------- | -------- | -------- |
+| TD-001 | GHCR Container Build Workflow     | CRITICAL | RESOLVED | -        |
+| TD-002 | Database Provisioning API         | HIGH     | RESOLVED | -        |
+| TD-003 | CI/CD Platform Migration          | HIGH     | RESOLVED | -        |
+| TD-004 | Billing Secrets Placeholder       | MEDIUM   | RESOLVED | -        |
+| TD-005 | Enclii Port Mismatch              | MEDIUM   | RESOLVED | -        |
+| TD-006 | JWT Secrets Missing from Template | MEDIUM   | RESOLVED | -        |
+| TD-007 | Monitoring Stack                  | MEDIUM   | RESOLVED | -        |
+| TD-008 | Staging Environment               | MEDIUM   | RESOLVED | -        |
+| TD-009 | ArgoCD Documentation              | LOW      | RESOLVED | -        |
+| TD-010 | React 18 Global Pin               | LOW      | ACTIVE   | -        |
+| TD-011 | Janua SSO Full SDK Integration    | HIGH     | RESOLVED | -        |
+| TD-012 | CodeQL Security Findings          | CRITICAL | RESOLVED | -        |
+| TD-013 | Dashboard Blank Screens on Error  | HIGH     | RESOLVED | -        |
+| TD-014 | Admin Test Failures               | MEDIUM   | RESOLVED | -        |
+| TD-015 | API Raw Console Logging           | MEDIUM   | RESOLVED | -        |
+| TD-016 | Mobile Config & Console Hygiene   | MEDIUM   | RESOLVED | -        |
+| TD-017 | ESLint-Disable Audit              | LOW      | RESOLVED | -        |
+| TD-018 | Pre-commit Hook Without DB Guard  | MEDIUM   | RESOLVED | -        |
+| TD-019 | Loose `any` Types in API          | MEDIUM   | RESOLVED | -        |
+| TD-020 | Backup/Restore Runbook            | MEDIUM   | RESOLVED | -        |
+| TD-021 | Mobile Unit Test Coverage         | LOW      | ACTIVE   | -        |
 
 ---
 
@@ -246,6 +255,128 @@ CodeQL flagged 3 security issues:
 Added error states with retry buttons to all 10 affected pages (analytics, goals, projections, scenarios, assets, gaming, notifications, reports, retirement, ESG), following the existing pattern from the accounts page.
 
 **Ticket**: DHANAM-013
+
+---
+
+### TD-014: Admin Test Failures
+
+**Status**: RESOLVED
+**Severity**: MEDIUM
+
+**Problem**:
+4 pre-existing test failures across 3 admin test files: `@dhanam/ui` Proxy mock rendered `<div>` for `Input` (breaking `fireEvent.change`), async race condition in queues page, and duplicate 'Analytics' text matching in nav.
+
+**Resolution (March 2026)**:
+
+- Render `Input` as `<input>` in Proxy mock
+- Replace `findByText` with `waitFor`+`getByText` for async state transitions
+- Use `getAllByText` with element type filtering for 'Analytics'
+
+---
+
+### TD-015: API Raw Console Logging
+
+**Status**: RESOLVED
+**Severity**: MEDIUM
+
+**Problem**:
+~15 raw `console.log/warn/error` calls in 7 API production source files bypassed NestJS structured logging.
+
+**Resolution (March 2026)**:
+Replaced all calls with `Logger` from `@nestjs/common`. Each service/class uses `private readonly logger = new Logger(ClassName.name)`.
+
+---
+
+### TD-016: Mobile Config & Console Hygiene
+
+**Status**: RESOLVED
+**Severity**: MEDIUM
+
+**Problem**:
+
+- Production API URL pointed to `api.dhanam.app` instead of `api.dhan.am`
+- 3 unused deps (`@reduxjs/toolkit`, `react-redux`, `zustand`) installed but never imported
+- 16 unguarded `console.error/warn` calls in production mobile code
+- ESLint `import/no-unresolved` didn't recognize `@/` path aliases
+
+**Resolution (March 2026)**:
+Fixed API URL, removed unused deps, wrapped console calls with `__DEV__` guards, added `@/` to ESLint ignore patterns. Added ADR-006 documenting React Context + React Query decision.
+
+---
+
+### TD-017: ESLint-Disable Audit
+
+**Status**: RESOLVED
+**Severity**: LOW
+
+**Problem**:
+~85 `eslint-disable` comments across ~55 files, most without justification.
+
+**Resolution (March 2026)**:
+
+- ~25 suppressions removed (violations fixed or `any` replaced with proper types)
+- ~40 remaining suppressions documented with justification comments
+- Replaced `any` with typed interfaces in ESG widget, goals, simulations, analytics hooks
+- Fixed `react-hooks/exhaustive-deps` violations by wrapping functions in `useCallback`
+
+---
+
+### TD-018: Pre-commit Hook Without DB Guard
+
+**Status**: RESOLVED
+**Severity**: MEDIUM
+
+**Problem**:
+Pre-commit and pre-push hooks ran `pnpm typecheck` unconditionally, which always failed without `DATABASE_URL` set (Prisma types not generated). Also, API test runner in pre-commit failed without DB access.
+
+**Resolution (March 2026)**:
+Added `DATABASE_URL` guards to both hooks: skip `@dhanam/api` typecheck and API tests when DB not available, while still checking all other packages.
+
+---
+
+### TD-019: Loose `any` Types in API
+
+**Status**: RESOLVED
+**Severity**: MEDIUM
+
+**Problem**:
+339 `any` types in non-test API source files, including `@Request() req: any` across all controllers.
+
+**Resolution (March 2026)**:
+Reduced to 122 (64% reduction):
+
+- Created shared `AuthenticatedRequest` interface at `core/types/`
+- Replaced `req: any` across 10 controllers (87 usages)
+- Replaced `catch (error: any)` with `catch (error: unknown)` (21 usages)
+- Typed decorator signatures, health service, billing, admin ops, analytics, provider interfaces
+- Remaining 122 are in email tasks, transaction execution, logger utilities, and DTO metadata
+
+---
+
+### TD-020: Backup/Restore Runbook
+
+**Status**: RESOLVED
+**Severity**: MEDIUM
+
+**Problem**:
+No documented backup/restore procedure despite 99.9% availability target with RTO 4h / RPO 24h.
+
+**Resolution (March 2026)**:
+Created `docs/BACKUP_RESTORE.md` (full runbook), `scripts/backup-db.sh`, and `scripts/restore-db.sh`.
+
+---
+
+### TD-021: Mobile Unit Test Coverage
+
+**Status**: ACTIVE
+**Severity**: LOW
+
+**Problem**:
+Mobile app has only 6 test suites (~15% coverage). Target: ~20 test files (~40% coverage).
+
+**Priority targets**: AuthContext, useAccounts, useTransactions, useBudgets, api service, BudgetCard, ChartCard, GoalCard, TransactionFilter.
+
+**Ticket**: DHANAM-021
 
 ---
 
