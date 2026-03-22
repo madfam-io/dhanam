@@ -15,10 +15,18 @@ else
 fi
 
 # Run lint across entire codebase
-pnpm lint || {
-  echo "❌ Lint check failed. Push aborted."
-  exit 1
-}
+if [ -z "$DATABASE_URL" ]; then
+  echo "⚠️  DATABASE_URL not set — skipping API lint (run pnpm dev:infra first)"
+  pnpm turbo lint --filter='!@dhanam/api' || {
+    echo "❌ Lint check failed. Push aborted."
+    exit 1
+  }
+else
+  pnpm lint || {
+    echo "❌ Lint check failed. Push aborted."
+    exit 1
+  }
+fi
 
 # Check if schema.prisma was modified without a migration
 if git diff origin/main --name-only 2>/dev/null | grep -q "prisma/schema.prisma"; then
