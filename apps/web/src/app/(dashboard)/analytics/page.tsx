@@ -35,7 +35,11 @@ export default function AnalyticsPage() {
   const { t } = useTranslation('analytics');
   const { t: tCommon } = useTranslation('common');
 
-  const { data: netWorthData, isLoading: isLoadingNetWorth, isError: isErrorNetWorth } = useQuery({
+  const {
+    data: netWorthData,
+    isLoading: isLoadingNetWorth,
+    isError: isErrorNetWorth,
+  } = useQuery({
     queryKey: ['net-worth', currentSpace?.id],
     queryFn: () => {
       if (!currentSpace) throw new Error('No current space');
@@ -44,7 +48,11 @@ export default function AnalyticsPage() {
     enabled: !!currentSpace,
   });
 
-  const { data: netWorthHistory, isLoading: isLoadingNetWorthHistory, isError: isErrorHistory } = useQuery({
+  const {
+    data: netWorthHistory,
+    isLoading: isLoadingNetWorthHistory,
+    isError: isErrorHistory,
+  } = useQuery({
     queryKey: ['net-worth-history', currentSpace?.id],
     queryFn: () => {
       if (!currentSpace) throw new Error('No current space');
@@ -53,7 +61,11 @@ export default function AnalyticsPage() {
     enabled: !!currentSpace,
   });
 
-  const { data: spendingData, isLoading: isLoadingSpending, isError: isErrorSpending } = useQuery({
+  const {
+    data: spendingData,
+    isLoading: isLoadingSpending,
+    isError: isErrorSpending,
+  } = useQuery({
     queryKey: ['spending-by-category', currentSpace?.id],
     queryFn: () => {
       if (!currentSpace) throw new Error('No current space');
@@ -64,7 +76,11 @@ export default function AnalyticsPage() {
     enabled: !!currentSpace,
   });
 
-  const { data: incomeVsExpenses, isLoading: isLoadingIncomeExpenses, isError: isErrorIncome } = useQuery({
+  const {
+    data: incomeVsExpenses,
+    isLoading: isLoadingIncomeExpenses,
+    isError: isErrorIncome,
+  } = useQuery({
     queryKey: ['income-vs-expenses', currentSpace?.id],
     queryFn: () => {
       if (!currentSpace) throw new Error('No current space');
@@ -73,7 +89,11 @@ export default function AnalyticsPage() {
     enabled: !!currentSpace,
   });
 
-  const { data: cashflowForecast, isLoading: isLoadingCashflow, isError: isErrorCashflow } = useQuery({
+  const {
+    data: cashflowForecast,
+    isLoading: isLoadingCashflow,
+    isError: isErrorCashflow,
+  } = useQuery({
     queryKey: ['cashflow-forecast', currentSpace?.id],
     queryFn: () => {
       if (!currentSpace) throw new Error('No current space');
@@ -82,7 +102,11 @@ export default function AnalyticsPage() {
     enabled: !!currentSpace,
   });
 
-  const { data: portfolioAllocation, isLoading: isLoadingPortfolio, isError: isErrorPortfolio } = useQuery({
+  const {
+    data: portfolioAllocation,
+    isLoading: isLoadingPortfolio,
+    isError: isErrorPortfolio,
+  } = useQuery({
     queryKey: ['portfolio-allocation', currentSpace?.id],
     queryFn: () => {
       if (!currentSpace) throw new Error('No current space');
@@ -105,7 +129,13 @@ export default function AnalyticsPage() {
     );
   }
 
-  const hasError = isErrorNetWorth || isErrorHistory || isErrorSpending || isErrorIncome || isErrorCashflow || isErrorPortfolio;
+  const hasError =
+    isErrorNetWorth ||
+    isErrorHistory ||
+    isErrorSpending ||
+    isErrorIncome ||
+    isErrorCashflow ||
+    isErrorPortfolio;
 
   if (hasError) {
     return (
@@ -122,11 +152,21 @@ export default function AnalyticsPage() {
             <Button
               onClick={() => {
                 queryClient.invalidateQueries({ queryKey: ['net-worth', currentSpace?.id] });
-                queryClient.invalidateQueries({ queryKey: ['net-worth-history', currentSpace?.id] });
-                queryClient.invalidateQueries({ queryKey: ['spending-by-category', currentSpace?.id] });
-                queryClient.invalidateQueries({ queryKey: ['income-vs-expenses', currentSpace?.id] });
-                queryClient.invalidateQueries({ queryKey: ['cashflow-forecast', currentSpace?.id] });
-                queryClient.invalidateQueries({ queryKey: ['portfolio-allocation', currentSpace?.id] });
+                queryClient.invalidateQueries({
+                  queryKey: ['net-worth-history', currentSpace?.id],
+                });
+                queryClient.invalidateQueries({
+                  queryKey: ['spending-by-category', currentSpace?.id],
+                });
+                queryClient.invalidateQueries({
+                  queryKey: ['income-vs-expenses', currentSpace?.id],
+                });
+                queryClient.invalidateQueries({
+                  queryKey: ['cashflow-forecast', currentSpace?.id],
+                });
+                queryClient.invalidateQueries({
+                  queryKey: ['portfolio-allocation', currentSpace?.id],
+                });
               }}
             >
               {tCommon('tryAgain')}

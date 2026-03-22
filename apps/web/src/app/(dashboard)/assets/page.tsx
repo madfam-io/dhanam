@@ -160,9 +160,7 @@ export default function AssetsPage() {
             <Building2 className="h-12 w-12 text-muted-foreground mb-4" />
             <h3 className="font-semibold text-lg mb-2">{tCommon('somethingWentWrong')}</h3>
             <p className="text-muted-foreground text-center mb-4">{tCommon('loadFailed')}</p>
-            <Button onClick={() => fetchAssets()}>
-              {tCommon('tryAgain')}
-            </Button>
+            <Button onClick={() => fetchAssets()}>{tCommon('tryAgain')}</Button>
           </CardContent>
         </Card>
       </div>

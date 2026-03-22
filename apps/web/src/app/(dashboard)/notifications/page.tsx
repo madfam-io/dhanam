@@ -164,27 +164,27 @@ export default function NotificationsPage() {
           </CardContent>
         </Card>
       ) : (
-      <Tabs defaultValue="all">
-        <TabsList>
-          <TabsTrigger value="all">{t('all')}</TabsTrigger>
-          <TabsTrigger value="alerts">{t('alerts')}</TabsTrigger>
-          <TabsTrigger value="insights">{t('insights')}</TabsTrigger>
-          <TabsTrigger value="reminders">{t('reminders')}</TabsTrigger>
-        </TabsList>
+        <Tabs defaultValue="all">
+          <TabsList>
+            <TabsTrigger value="all">{t('all')}</TabsTrigger>
+            <TabsTrigger value="alerts">{t('alerts')}</TabsTrigger>
+            <TabsTrigger value="insights">{t('insights')}</TabsTrigger>
+            <TabsTrigger value="reminders">{t('reminders')}</TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="all" className="mt-4">
-          {renderNotificationList(notifications)}
-        </TabsContent>
-        <TabsContent value="alerts" className="mt-4">
-          {renderNotificationList(notifications.filter((n) => typeToTab[n.type] === 'alerts'))}
-        </TabsContent>
-        <TabsContent value="insights" className="mt-4">
-          {renderNotificationList(notifications.filter((n) => typeToTab[n.type] === 'insights'))}
-        </TabsContent>
-        <TabsContent value="reminders" className="mt-4">
-          {renderNotificationList(notifications.filter((n) => typeToTab[n.type] === 'reminders'))}
-        </TabsContent>
-      </Tabs>
+          <TabsContent value="all" className="mt-4">
+            {renderNotificationList(notifications)}
+          </TabsContent>
+          <TabsContent value="alerts" className="mt-4">
+            {renderNotificationList(notifications.filter((n) => typeToTab[n.type] === 'alerts'))}
+          </TabsContent>
+          <TabsContent value="insights" className="mt-4">
+            {renderNotificationList(notifications.filter((n) => typeToTab[n.type] === 'insights'))}
+          </TabsContent>
+          <TabsContent value="reminders" className="mt-4">
+            {renderNotificationList(notifications.filter((n) => typeToTab[n.type] === 'reminders'))}
+          </TabsContent>
+        </Tabs>
       )}
     </div>
   );
