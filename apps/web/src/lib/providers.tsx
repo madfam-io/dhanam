@@ -56,7 +56,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
           <PostHogProvider>
             <SSRSafeJanuaAuthBridge>
               <AuthProvider>
-                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any -- Reason: React 19 type incompatibility with PreferencesProvider children prop */}
                 <PreferencesProvider>{children as any}</PreferencesProvider>
               </AuthProvider>
             </SSRSafeJanuaAuthBridge>

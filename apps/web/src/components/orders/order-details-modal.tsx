@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@dhanam/ui';
 import { Loader2, X, AlertCircle, Copy } from 'lucide-react';
 import { TransactionOrder, OrderExecution, OrderStatus, ordersApi } from '../../lib/api/orders';
@@ -18,12 +18,7 @@ export function OrderDetailsModal({ spaceId, orderId, onClose }: OrderDetailsMod
   const [error, setError] = useState<string | null>(null);
   const [isCancelling, setIsCancelling] = useState(false);
 
-  useEffect(() => {
-    loadOrderDetails();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [spaceId, orderId]);
-
-  const loadOrderDetails = async () => {
+  const loadOrderDetails = useCallback(async () => {
     setIsLoading(true);
     setError(null);
 
@@ -35,13 +30,16 @@ export function OrderDetailsModal({ spaceId, orderId, onClose }: OrderDetailsMod
 
       setOrder(orderData);
       setExecutions(executionsData);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      setError(err.message || 'Failed to load order details');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to load order details');
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [spaceId, orderId]);
+
+  useEffect(() => {
+    loadOrderDetails();
+  }, [loadOrderDetails]);
 
   const handleCancel = async () => {
     if (!order) return;
@@ -50,9 +48,8 @@ export function OrderDetailsModal({ spaceId, orderId, onClose }: OrderDetailsMod
     try {
       const cancelled = await ordersApi.cancelOrder(spaceId, orderId);
       setOrder(cancelled);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      setError(err.message || 'Failed to cancel order');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to cancel order');
     } finally {
       setIsCancelling(false);
     }

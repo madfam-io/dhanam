@@ -29,7 +29,7 @@ function HomePageContent() {
     } else {
       analytics.trackPageView('Landing Page', '/');
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Reason: analytics is stable; only re-run when auth state changes
   }, [isAuthenticated]);
 
   const handleLiveDemoClick = async () => {

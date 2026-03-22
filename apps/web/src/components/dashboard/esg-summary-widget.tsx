@@ -11,8 +11,11 @@ import Link from 'next/link';
 
 export function EsgSummaryWidget() {
   const { getPortfolioAnalysis, loading } = useEsg();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [analysis, setAnalysis] = useState<any>(null);
+  const [analysis, setAnalysis] = useState<{
+    grade: string;
+    overallScore: number;
+    breakdown: { environmental: number; social: number; governance: number };
+  } | null>(null);
 
   useEffect(() => {
     const loadAnalysis = async () => {
@@ -20,7 +23,7 @@ export function EsgSummaryWidget() {
       if (data) setAnalysis(data);
     };
     loadAnalysis();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Reason: Only run on mount; getPortfolioAnalysis is stable from useEsg hook
   }, []);
 
   const getGradeColor = (grade: string) => {

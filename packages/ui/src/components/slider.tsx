@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any -- Reason: React 19 compatibility shim; Slider export cast to any for JSX type compatibility */
 'use client';
 
 import * as React from 'react';
@@ -14,7 +14,10 @@ export interface SliderProps {
 }
 
 const SliderBase = React.forwardRef<HTMLDivElement, SliderProps>(
-  ({ value = [0], onValueChange, min = 0, max = 100, step = 1, className = '', disabled = false }, ref) => {
+  (
+    { value = [0], onValueChange, min = 0, max = 100, step = 1, className = '', disabled = false },
+    ref
+  ) => {
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const newValue = parseFloat(e.target.value);
       if (onValueChange) {

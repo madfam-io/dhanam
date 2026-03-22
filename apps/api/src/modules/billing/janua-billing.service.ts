@@ -495,7 +495,7 @@ export class JanuaBillingService {
     }
 
     // Janua uses HMAC-SHA256 for webhook signatures
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- Reason: Dynamic require needed for HMAC verification; Node crypto import at module level conflicts with NestJS DI
     const crypto = require('crypto');
     const expectedSignature = crypto
       .createHmac('sha256', webhookSecret)

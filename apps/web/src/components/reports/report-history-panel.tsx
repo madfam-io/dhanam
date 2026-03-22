@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -25,12 +25,7 @@ export function ReportHistoryPanel({ reportId, onGenerate }: ReportHistoryPanelP
   const [generating, setGenerating] = useState(false);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadHistory();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reportId]);
-
-  const loadHistory = async () => {
+  const loadHistory = useCallback(async () => {
     setLoading(true);
     try {
       const data = await reportsApi.getReportHistory(reportId);
@@ -40,7 +35,11 @@ export function ReportHistoryPanel({ reportId, onGenerate }: ReportHistoryPanelP
     } finally {
       setLoading(false);
     }
-  };
+  }, [reportId]);
+
+  useEffect(() => {
+    loadHistory();
+  }, [loadHistory]);
 
   const handleGenerate = async () => {
     setGenerating(true);

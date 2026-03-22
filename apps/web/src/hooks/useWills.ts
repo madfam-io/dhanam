@@ -41,8 +41,8 @@ export interface Beneficiary {
     | 'other';
   assetId?: string;
   percentage: number;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  conditions?: any;
+  // Freeform JSON legal clauses with no fixed schema
+  conditions?: Record<string, unknown>;
   notes?: string;
   createdAt: string;
   updatedAt: string;
@@ -101,8 +101,8 @@ export interface AddBeneficiaryInput {
   assetType: Beneficiary['assetType'];
   assetId?: string;
   percentage: number;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  conditions?: any;
+  // Freeform JSON legal clauses with no fixed schema
+  conditions?: Record<string, unknown>;
   notes?: string;
 }
 
@@ -110,8 +110,8 @@ export interface UpdateBeneficiaryInput {
   assetType?: Beneficiary['assetType'];
   assetId?: string;
   percentage?: number;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  conditions?: any;
+  // Freeform JSON legal clauses with no fixed schema
+  conditions?: Record<string, unknown>;
   notes?: string;
 }
 

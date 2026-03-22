@@ -6,7 +6,7 @@
  * while maintaining runtime behavior.
  */
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any -- Reason: React 19 compatibility layer; all components cast to any to bypass TS2786 JSX type errors */
 
 import * as UIComponents from './index';
 

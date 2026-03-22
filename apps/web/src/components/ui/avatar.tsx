@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any -- Reason: React 19 compatibility; Radix Avatar components cast to any for JSX type compatibility */
 'use client';
 
 import * as React from 'react';

@@ -135,8 +135,9 @@ export function ShareReportDialog({
               <Label htmlFor="role">Permission Level</Label>
               <Select
                 value={formData.role}
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                onValueChange={(value: any) => setFormData({ ...formData, role: value })}
+                onValueChange={(value: string) =>
+                  setFormData({ ...formData, role: value as 'viewer' | 'editor' | 'manager' })
+                }
               >
                 <SelectTrigger id="role">
                   <SelectValue />

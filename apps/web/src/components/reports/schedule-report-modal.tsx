@@ -16,7 +16,6 @@ import { Switch } from '@dhanam/ui';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@dhanam/ui';
 import { Loader2, Calendar, FileSpreadsheet, FileText, File, Mail, Check } from 'lucide-react';
 
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { apiClient } from '@/lib/api/client';
 
 interface ScheduleReportModalProps {

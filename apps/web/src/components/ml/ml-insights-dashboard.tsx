@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Brain, TrendingUp, Zap, Clock, DollarSign } from 'lucide-react';
 import {
   Card,
@@ -51,12 +51,7 @@ export function MlInsightsDashboard({ spaceId, days = 30 }: MlInsightsDashboardP
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchInsights();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [spaceId, days]);
-
-  const fetchInsights = async () => {
+  const fetchInsights = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -77,7 +72,11 @@ export function MlInsightsDashboard({ spaceId, days = 30 }: MlInsightsDashboardP
     } finally {
       setLoading(false);
     }
-  };
+  }, [spaceId, days]);
+
+  useEffect(() => {
+    fetchInsights();
+  }, [fetchInsights]);
 
   if (loading) {
     return (

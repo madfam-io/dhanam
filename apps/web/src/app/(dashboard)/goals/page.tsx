@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from '@dhanam/shared';
 import { useGoals, type Goal, type GoalProgress, type GoalSummary } from '@/hooks/useGoals';
-import { useSimulations } from '@/hooks/useSimulations';
+import { useSimulations, type GoalProbabilityResult } from '@/hooks/useSimulations';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { useSpaceStore } from '@/stores/space';
 import { PremiumGate } from '~/components/billing/PremiumGate';
@@ -31,13 +31,7 @@ import { ShareManagementPanel } from '@/components/goals/share-management-panel'
 export default function GoalsPage() {
   const { t } = useTranslation('goals');
   const { t: tCommon } = useTranslation('common');
-  const {
-    getGoalsBySpace,
-    getGoalSummary,
-    getGoalProgress,
-    loading: _loading,
-    error,
-  } = useGoals();
+  const { getGoalsBySpace, getGoalSummary, getGoalProgress, loading: _loading, error } = useGoals();
   const { calculateGoalProbability } = useSimulations();
   const analytics = useAnalytics();
   const { currentSpace } = useSpaceStore();
@@ -46,8 +40,7 @@ export default function GoalsPage() {
   const [summary, setSummary] = useState<GoalSummary | null>(null);
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
   const [goalProgress, setGoalProgress] = useState<GoalProgress | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [probability, setProbability] = useState<any | null>(null);
+  const [probability, setProbability] = useState<GoalProbabilityResult | null>(null);
   const [loadingProbability, setLoadingProbability] = useState(false);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
 
@@ -58,7 +51,7 @@ export default function GoalsPage() {
     if (spaceId) {
       loadGoals();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Reason: loadGoals depends on hook functions that are stable; only re-run when spaceId changes
   }, [spaceId]);
 
   const loadGoals = async () => {
@@ -184,9 +177,7 @@ export default function GoalsPage() {
             <Target className="h-12 w-12 text-muted-foreground mb-4" />
             <h3 className="font-semibold text-lg mb-2">{tCommon('somethingWentWrong')}</h3>
             <p className="text-muted-foreground text-center mb-4">{tCommon('loadFailed')}</p>
-            <Button onClick={() => loadGoals()}>
-              {tCommon('tryAgain')}
-            </Button>
+            <Button onClick={() => loadGoals()}>{tCommon('tryAgain')}</Button>
           </CardContent>
         </Card>
       </div>

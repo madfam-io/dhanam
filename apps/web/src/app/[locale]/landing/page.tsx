@@ -36,7 +36,7 @@ export default function LocaleLandingPage() {
     } else {
       analytics.trackPageView('Landing Page', `/${locale}`);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Reason: analytics is stable; only re-run when auth state changes
   }, [isAuthenticated]);
 
   const handleLiveDemoClick = async () => {
@@ -78,7 +78,7 @@ export default function LocaleLandingPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
       {/* SEO hreflang tags */}
-      {/* eslint-disable-next-line @next/next/no-head-element */}
+      {/* eslint-disable-next-line @next/next/no-head-element -- Reason: hreflang and og:locale meta tags needed in client page where Next.js metadata API is unavailable */}
       <head>
         <link rel="alternate" hrefLang="es" href="https://dhan.am/es" />
         <link rel="alternate" hrefLang="en" href="https://dhan.am/en" />

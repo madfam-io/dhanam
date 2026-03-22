@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@dhanam/ui';
 import {
   Loader2,
@@ -25,12 +25,7 @@ export function RebalancingDashboard({ spaceId, goalId, goalName }: RebalancingD
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadSuggestions();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [spaceId, goalId]);
-
-  const loadSuggestions = async () => {
+  const loadSuggestions = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     setSuccess(null);
@@ -38,13 +33,16 @@ export function RebalancingDashboard({ spaceId, goalId, goalName }: RebalancingD
     try {
       const data = await ordersApi.suggestRebalancing(spaceId, goalId);
       setSuggestion(data);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      setError(err.message || 'Failed to load rebalancing suggestions');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to load rebalancing suggestions');
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [spaceId, goalId]);
+
+  useEffect(() => {
+    loadSuggestions();
+  }, [loadSuggestions]);
 
   const handleExecuteRebalancing = async () => {
     setIsExecuting(true);
@@ -55,9 +53,8 @@ export function RebalancingDashboard({ spaceId, goalId, goalName }: RebalancingD
       const result = await ordersApi.executeRebalancing(spaceId, goalId);
       setSuccess(result.message);
       await loadSuggestions(); // Reload to show updated state
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      setError(err.message || 'Failed to execute rebalancing');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to execute rebalancing');
     } finally {
       setIsExecuting(false);
     }

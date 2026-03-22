@@ -77,7 +77,7 @@ export function TransactionItem({ transaction, onPress }: TransactionItemProps) 
           </Chip>
         </View>
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Reason: React Native Paper List.Item render prop types are not compatible with React 19
       left={(_props: any) => (
         <View
           style={[
@@ -92,7 +92,7 @@ export function TransactionItem({ transaction, onPress }: TransactionItemProps) 
           />
         </View>
       )}
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Reason: React Native Paper List.Item render prop types are not compatible with React 19
       right={(_props: any) => (
         <View style={styles.amount}>
           <Text

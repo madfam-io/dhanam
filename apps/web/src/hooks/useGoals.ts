@@ -119,8 +119,8 @@ export interface GoalShare {
 export interface GoalActivity {
   id: string;
   action: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  metadata?: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Activity metadata is freeform JSON varying by action type (contribution, share, edit, etc.); values rendered dynamically
+  metadata?: Record<string, any>;
   createdAt: string;
   user: {
     id: string;
@@ -179,8 +179,8 @@ export function useGoals() {
   const handleRequest = async <T>(
     method: 'GET' | 'POST' | 'PUT' | 'DELETE',
     endpoint: string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    data?: any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Generic request handler accepts any JSON-serializable body (goal inputs, share inputs, etc.)
+    data?: Record<string, any>
   ): Promise<T | null> => {
     setLoading(true);
     setError(null);

@@ -87,7 +87,7 @@ export function MerchantIcon({ merchant, description, size = 32 }: MerchantIconP
 
   if (domain) {
     return (
-      // eslint-disable-next-line @next/next/no-img-element
+      // eslint-disable-next-line @next/next/no-img-element -- Reason: External Clearbit logo URLs cannot use next/image without configuring remote domains for every merchant
       <img
         src={`https://logo.clearbit.com/${domain}`}
         alt={displayName}

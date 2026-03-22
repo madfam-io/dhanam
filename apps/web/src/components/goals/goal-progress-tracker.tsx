@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@dhanam/ui';
 import {
   Loader2,
@@ -25,25 +25,23 @@ export function GoalProgressTracker({ spaceId, goalId }: GoalProgressTrackerProp
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadProgress();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [spaceId, goalId]);
-
-  const loadProgress = async () => {
+  const loadProgress = useCallback(async () => {
     setIsLoading(true);
     setError(null);
 
     try {
       const data = await ordersApi.getGoalProgress(spaceId, goalId);
       setProgress(data);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      setError(err.message || 'Failed to load goal progress');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to load goal progress');
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [spaceId, goalId]);
+
+  useEffect(() => {
+    loadProgress();
+  }, [loadProgress]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {

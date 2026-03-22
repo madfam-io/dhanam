@@ -48,8 +48,7 @@ export function GoalProbabilityTimeline({ goals }: GoalProbabilityTimelineProps)
   }
 
   // Calculate overall trend across all goals
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const calculateTrend = (goal: any) => {
+  const calculateTrend = (goal: Goal) => {
     if (!goal.probabilityHistory || !Array.isArray(goal.probabilityHistory)) {
       return { trend: 'stable', change: 0 };
     }

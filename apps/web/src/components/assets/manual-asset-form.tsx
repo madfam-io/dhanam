@@ -23,8 +23,8 @@ export interface ManualAssetData {
   currency: string;
   acquisitionDate?: string;
   acquisitionCost?: number;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  metadata?: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Asset metadata varies by type (Zillow data, collectible attributes, vehicle specs); values accessed dynamically for form binding
+  metadata?: Record<string, any>;
   notes?: string;
 }
 

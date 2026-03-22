@@ -72,7 +72,6 @@ export function SearchCommand({ spaceId }: SearchCommandProps) {
     setResults(null);
   }, []);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const commands: CommandItem[] = useMemo(
     () => [
       // Navigate
@@ -324,7 +323,7 @@ export function SearchCommand({ spaceId }: SearchCommandProps) {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               className="flex h-12 w-full bg-transparent py-3 px-3 text-sm outline-none placeholder:text-muted-foreground"
-              // eslint-disable-next-line jsx-a11y/no-autofocus
+              // eslint-disable-next-line jsx-a11y/no-autofocus -- Reason: Search command palette should auto-focus input when opened for keyboard-first UX
               autoFocus
             />
             {isSearching && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}

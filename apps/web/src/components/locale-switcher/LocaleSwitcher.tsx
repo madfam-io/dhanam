@@ -48,7 +48,7 @@ export function LocaleSwitcher() {
     }
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- Reason: locales array is a constant with at least one element; fallback to locales[0] is always safe
   const currentLocale = locales.find((l) => l.code === locale) || locales[0]!;
 
   return (

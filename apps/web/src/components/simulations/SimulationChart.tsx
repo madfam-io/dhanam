@@ -40,9 +40,22 @@ export function SimulationChart({ timeSeries, title, description }: SimulationCh
     return `$${value.toLocaleString()}`;
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
+  interface ChartDataPoint {
+    month: number;
+    year: string;
+    median: number;
+    p10: number;
+    p90: number;
+    mean: number;
+  }
+  const CustomTooltip = ({
+    active,
+    payload,
+  }: {
+    active?: boolean;
+    payload?: Array<{ payload: ChartDataPoint }>;
+  }) => {
+    if (active && payload && payload.length && payload[0]) {
       const data = payload[0].payload;
       return (
         <div className="bg-background border rounded-lg p-3 shadow-lg">

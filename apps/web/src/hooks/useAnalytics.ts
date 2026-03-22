@@ -10,7 +10,7 @@ import posthog from 'posthog-js';
 
 export interface AnalyticsEvent {
   event: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Reason: PostHog events accept arbitrary properties by design
   properties?: Record<string, any>;
 }
 
@@ -31,7 +31,7 @@ export function useAnalytics() {
     }
   }, []);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Reason: PostHog capture() accepts arbitrary event properties
   const track = (event: string, properties?: Record<string, any>) => {
     if (typeof window !== 'undefined' && posthog.__loaded) {
       posthog.capture(event, properties);
@@ -106,10 +106,8 @@ export function useAnalytics() {
   const trackGoalUpdated = (
     goal_id: string,
     field: string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    old_value: any,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    new_value: any
+    old_value: unknown,
+    new_value: unknown
   ) => {
     track('goal_updated', { goal_id, field, old_value, new_value });
   };
@@ -249,7 +247,7 @@ export function useAnalytics() {
   // USER IDENTIFICATION
   // ============================================================================
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Reason: PostHog identify() accepts arbitrary user properties
   const identifyUser = (userId: string, properties?: Record<string, any>) => {
     if (typeof window !== 'undefined' && posthog.__loaded) {
       posthog.identify(userId, properties);

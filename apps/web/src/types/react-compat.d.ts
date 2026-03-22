@@ -5,7 +5,7 @@ import 'react';
 
 declare module 'react' {
   // Fix for React 19 JSXElementType
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Reason: React 19 type compatibility fix for Radix UI and other libraries requires generic any
   type ElementType<P = any> =
     | {
         [K in keyof JSX.IntrinsicElements]: P extends JSX.IntrinsicElements[K] ? K : never;

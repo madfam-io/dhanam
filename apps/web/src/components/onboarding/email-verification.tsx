@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any -- Reason: React 19 type incompatibility with Suspense requires cast to any */
 'use client';
 
 import { Suspense as SuspenseBase, useEffect, useState } from 'react';
@@ -28,45 +28,42 @@ function EmailVerificationContent() {
       return;
     }
 
-    verifyEmail();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token]);
+    const verifyEmail = async () => {
+      try {
+        const response = await onboardingApi.verifyEmail(token);
 
-  const verifyEmail = async () => {
-    if (!token) return;
+        if (response.success) {
+          setStatus('success');
+          setMessage(response.message);
 
-    try {
-      const response = await onboardingApi.verifyEmail(token);
-
-      if (response.success) {
-        setStatus('success');
-        setMessage(response.message);
-
-        // Redirect to onboarding immediately
-        setIsRedirecting(true);
-        router.push('/onboarding');
-      } else {
+          // Redirect to onboarding immediately
+          setIsRedirecting(true);
+          router.push('/onboarding');
+        } else {
+          setStatus('error');
+          setMessage(response.message);
+        }
+      } catch (error: unknown) {
         setStatus('error');
-        setMessage(response.message);
+        const errorMessage =
+          error &&
+          typeof error === 'object' &&
+          'response' in error &&
+          error.response &&
+          typeof error.response === 'object' &&
+          'data' in error.response &&
+          error.response.data &&
+          typeof error.response.data === 'object' &&
+          'message' in error.response.data &&
+          typeof error.response.data.message === 'string'
+            ? error.response.data.message
+            : 'Error al verificar el email. El token puede haber expirado.';
+        setMessage(errorMessage);
       }
-    } catch (error: unknown) {
-      setStatus('error');
-      const errorMessage =
-        error &&
-        typeof error === 'object' &&
-        'response' in error &&
-        error.response &&
-        typeof error.response === 'object' &&
-        'data' in error.response &&
-        error.response.data &&
-        typeof error.response.data === 'object' &&
-        'message' in error.response.data &&
-        typeof error.response.data.message === 'string'
-          ? error.response.data.message
-          : 'Error al verificar el email. El token puede haber expirado.';
-      setMessage(errorMessage);
-    }
-  };
+    };
+
+    verifyEmail();
+  }, [token, router]);
 
   if (status === 'loading') {
     return (

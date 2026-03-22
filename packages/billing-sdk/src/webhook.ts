@@ -32,7 +32,7 @@ export async function verifyWebhookSignature(
   }
 
   // --- Node.js crypto fallback ---
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- Reason: Fallback for Node.js environments without Web Crypto API; conditional require is the correct pattern
   const crypto = require('crypto') as typeof import('crypto');
   const expected = crypto.createHmac('sha256', secret).update(rawBody).digest('hex');
 

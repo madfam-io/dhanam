@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -28,12 +28,7 @@ export function GoalActivityFeed({ goalId }: GoalActivityFeedProps) {
   const [activities, setActivities] = useState<GoalActivity[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadActivities();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [goalId]);
-
-  const loadActivities = async () => {
+  const loadActivities = useCallback(async () => {
     setLoading(true);
     try {
       const data = await getGoalActivities(goalId);
@@ -45,7 +40,11 @@ export function GoalActivityFeed({ goalId }: GoalActivityFeedProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [goalId, getGoalActivities]);
+
+  useEffect(() => {
+    loadActivities();
+  }, [loadActivities]);
 
   const getActivityIcon = (action: string) => {
     switch (action) {

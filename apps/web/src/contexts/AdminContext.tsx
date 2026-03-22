@@ -58,7 +58,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     loadInitialData();
   }, []);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Reason: React 19 type incompatibility with Context.Provider requires cast to any
   const Provider = AdminContext.Provider as any;
   return (
     <Provider

@@ -29,13 +29,13 @@ SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [loaded, error] = useFonts({
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- Reason: Expo useFonts requires require() for static font assets
     'Inter-Regular': require('../assets/fonts/Inter-Regular.ttf'),
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- Reason: Expo useFonts requires require() for static font assets
     'Inter-Medium': require('../assets/fonts/Inter-Medium.ttf'),
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- Reason: Expo useFonts requires require() for static font assets
     'Inter-SemiBold': require('../assets/fonts/Inter-SemiBold.ttf'),
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- Reason: Expo useFonts requires require() for static font assets
     'Inter-Bold': require('../assets/fonts/Inter-Bold.ttf'),
   });
 

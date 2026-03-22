@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -14,28 +14,34 @@ interface SharedGoalsListProps {
 
 export function SharedGoalsList({ onGoalClick }: SharedGoalsListProps) {
   const { getSharedGoals } = useGoals();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [sharedGoals, setSharedGoals] = useState<any[]>([]);
+  // Shared goals API returns Goal shape extended with owner metadata
+  type SharedGoal = Goal & {
+    shareRole: string;
+    sharedBy: { name: string; email: string };
+    currentProgress?: number;
+    currentProbability?: number;
+  };
+  const [sharedGoals, setSharedGoals] = useState<SharedGoal[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadSharedGoals();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const loadSharedGoals = async () => {
+  const loadSharedGoals = useCallback(async () => {
     setLoading(true);
     try {
       const data = await getSharedGoals();
       if (data) {
-        setSharedGoals(data);
+        // API returns Goal with extra shared metadata (shareRole, sharedBy, etc.)
+        setSharedGoals(data as SharedGoal[]);
       }
     } catch (error) {
       console.error('Failed to load shared goals:', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [getSharedGoals]);
+
+  useEffect(() => {
+    loadSharedGoals();
+  }, [loadSharedGoals]);
 
   const formatCurrency = (amount: number, currency: string) => {
     return new Intl.NumberFormat('en-US', {

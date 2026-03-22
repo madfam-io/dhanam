@@ -49,8 +49,7 @@ export function SplitTransactionDialog({
   const [splits, setSplits] = useState<SplitItem[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // Type compatibility fix for React 19
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Reason: React 19 type incompatibility with @dhanam/ui Button requires cast
   const ButtonCompat = Button as any;
 
   const totalSplit = splits.reduce((sum, split) => sum + split.amount, 0);
@@ -80,15 +79,18 @@ export function SplitTransactionDialog({
     setSplits(splits.filter((_, i) => i !== index));
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const updateSplit = (index: number, field: keyof SplitItem, value: any) => {
+  const updateSplit = (
+    index: number,
+    field: keyof SplitItem,
+    value: string | number | undefined
+  ) => {
     const newSplits = [...splits];
     newSplits[index] = { ...newSplits[index], [field]: value } as SplitItem;
 
     // Update percentage when amount changes
     if (field === 'amount' && transactionAmount !== 0) {
       const item = newSplits[index];
-      if (item) {
+      if (item && typeof value === 'number') {
         item.percentage = (value / Math.abs(transactionAmount)) * 100;
       }
     }

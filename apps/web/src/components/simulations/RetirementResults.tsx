@@ -1,5 +1,4 @@
 'use client';
-/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -14,6 +13,9 @@ interface RetirementResultsProps {
 
 export function RetirementResults({ results }: RetirementResultsProps) {
   const { accumulationPhase, withdrawalPhase, recommendations } = results;
+  const simulationConfig = results.simulation.config as
+    | { monthlyContribution?: number; expectedReturn?: number; volatility?: number }
+    | undefined;
 
   const successRate = withdrawalPhase.probabilityOfNotRunningOut;
   const isOnTrack = successRate >= 0.75;
@@ -71,7 +73,7 @@ export function RetirementResults({ results }: RetirementResultsProps) {
               This would bring your total monthly savings to approximately $
               {(
                 recommendations.increaseContributionBy +
-                ((results.simulation.config as any)?.monthlyContribution || 0)
+                (simulationConfig?.monthlyContribution ?? 0)
               ).toLocaleString()}
               .
             </p>
@@ -246,19 +248,15 @@ export function RetirementResults({ results }: RetirementResultsProps) {
                 <li className="flex items-start gap-2">
                   <span className="mt-1">•</span>
                   <span>
-                    Save $
-                    {((results.simulation.config as any).monthlyContribution * 12).toLocaleString()}{' '}
-                    per year for {accumulationPhase.yearsToRetirement} years
+                    Save ${((simulationConfig?.monthlyContribution ?? 0) * 12).toLocaleString()} per
+                    year for {accumulationPhase.yearsToRetirement} years
                   </span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="mt-1">•</span>
                   <span>
-                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                    Maintain {((results.simulation.config as any).expectedReturn * 100).toFixed(1)}%
-                    annual return with{' '}
-                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                    {((results.simulation.config as any).volatility * 100).toFixed(0)}% volatility
+                    Maintain {((simulationConfig?.expectedReturn ?? 0) * 100).toFixed(1)}% annual
+                    return with {((simulationConfig?.volatility ?? 0) * 100).toFixed(0)}% volatility
                   </span>
                 </li>
                 <li className="flex items-start gap-2">

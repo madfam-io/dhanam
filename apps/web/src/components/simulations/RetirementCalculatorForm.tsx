@@ -15,12 +15,15 @@ import {
 import { Slider } from '@/components/ui/slider';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Info } from 'lucide-react';
-import { useSimulations, type RetirementConfig } from '@/hooks/useSimulations';
+import {
+  useSimulations,
+  type RetirementConfig,
+  type RetirementSimulationResult,
+} from '@/hooks/useSimulations';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 export interface RetirementCalculatorFormProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  onResults: (results: any) => void;
+  onResults: (results: RetirementSimulationResult) => void;
   onError?: () => void;
 }
 
@@ -60,7 +63,7 @@ export function RetirementCalculatorForm({ onResults, onError }: RetirementCalcu
     };
 
     loadAllocation();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Reason: getRecommendedAllocation is stable from useSimulations hook; only re-run when risk/age inputs change
   }, [riskTolerance, inputs.currentAge, inputs.retirementAge]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -95,8 +98,9 @@ export function RetirementCalculatorForm({ onResults, onError }: RetirementCalcu
             <Label htmlFor="riskTolerance">Risk Tolerance</Label>
             <Select
               value={riskTolerance}
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              onValueChange={(value: any) => setRiskTolerance(value)}
+              onValueChange={(value: string) =>
+                setRiskTolerance(value as 'conservative' | 'moderate' | 'aggressive')
+              }
             >
               <SelectTrigger id="riskTolerance">
                 <SelectValue />

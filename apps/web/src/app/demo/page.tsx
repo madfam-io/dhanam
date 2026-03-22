@@ -105,7 +105,7 @@ export default function DemoPage() {
       setActivePersona(personaParam);
       handlePersonaClick(personaParam);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Reason: Intentionally run once on mount to fire analytics and auto-select persona from query param
   }, []);
 
   const handlePersonaClick = async (personaKey: string) => {
@@ -115,6 +115,7 @@ export default function DemoPage() {
 
     try {
       const result = await authApi.loginAsPersona(personaKey);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- loginAsPersona returns user with extra {isDemo, persona} fields not in UserProfile
       setAuth(result.user as any, result.tokens);
 
       // Clear stale space data to prevent mismatches with previous persona

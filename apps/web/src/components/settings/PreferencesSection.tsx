@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@dhan
 import { Separator } from '@dhanam/ui';
 import { Badge } from '@dhanam/ui';
 import { usePreferences } from '@/contexts/PreferencesContext';
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any -- Reason: React 19 compatibility; Lucide icons cast to any to bypass TS2786 JSX type errors */
 import {
   Bell,
   Shield,

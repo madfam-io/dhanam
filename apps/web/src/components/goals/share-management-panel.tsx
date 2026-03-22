@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -44,12 +44,7 @@ export function ShareManagementPanel({ goalId, onUpdate }: ShareManagementPanelP
   const [revokeDialogOpen, setRevokeDialogOpen] = useState(false);
   const [selectedShare, setSelectedShare] = useState<GoalShare | null>(null);
 
-  useEffect(() => {
-    loadShares();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [goalId]);
-
-  const loadShares = async () => {
+  const loadShares = useCallback(async () => {
     setLoading(true);
     try {
       const data = await getGoalShares(goalId);
@@ -61,12 +56,15 @@ export function ShareManagementPanel({ goalId, onUpdate }: ShareManagementPanelP
     } finally {
       setLoading(false);
     }
-  };
+  }, [goalId, getGoalShares]);
+
+  useEffect(() => {
+    loadShares();
+  }, [loadShares]);
 
   const handleRoleChange = async (share: GoalShare, newRole: string) => {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await updateShareRole(share.id, newRole as any);
+      await updateShareRole(share.id, newRole as GoalShare['role']);
       await loadShares();
       if (onUpdate) onUpdate();
     } catch (error) {
@@ -89,8 +87,8 @@ export function ShareManagementPanel({ goalId, onUpdate }: ShareManagementPanelP
   };
 
   const getStatusBadge = (status: string) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const variants: Record<string, { variant: any; label: string }> = {
+    type BadgeVariant = 'default' | 'secondary' | 'destructive' | 'outline';
+    const variants: Record<string, { variant: BadgeVariant; label: string }> = {
       pending: { variant: 'secondary', label: 'Pending' },
       accepted: { variant: 'default', label: 'Active' },
       declined: { variant: 'destructive', label: 'Declined' },
@@ -98,7 +96,7 @@ export function ShareManagementPanel({ goalId, onUpdate }: ShareManagementPanelP
     };
 
     const config = variants[status] ||
-      variants.pending || { variant: 'secondary', label: 'Unknown' };
+      variants.pending || { variant: 'secondary' as BadgeVariant, label: 'Unknown' };
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 

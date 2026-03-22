@@ -57,8 +57,8 @@ interface ManualAsset {
   currency: string;
   acquisitionDate?: string;
   acquisitionCost?: number;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  metadata?: any;
+  // Asset metadata varies by type (Zillow data, collectible attributes, vehicle specs, etc.)
+  metadata?: Record<string, unknown>;
   notes?: string;
   documents?: DocumentMetadata[];
   createdAt: string;

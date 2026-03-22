@@ -82,7 +82,7 @@ export default function HouseholdsPage() {
 
   useEffect(() => {
     loadHouseholds();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Reason: Only load on mount; getHouseholds is stable from useHouseholds hook
   }, []);
 
   const loadHouseholds = async () => {

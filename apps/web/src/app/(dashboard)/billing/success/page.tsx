@@ -22,7 +22,7 @@ export default function BillingSuccessPage() {
 
     const price = parseFloat(searchParams.get('amount') || '0') || 4.99;
     analytics.trackUpgradeCompleted('premium', price, 'stripe');
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Reason: Intentionally run once on mount to fire analytics and invalidate caches
   }, []);
 
   return (

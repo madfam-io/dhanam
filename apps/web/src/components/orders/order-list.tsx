@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@dhanam/ui';
 import {
   Loader2,
@@ -73,12 +73,7 @@ export function OrderList({ spaceId, filters, onOrderClick }: OrderListProps) {
   const [total, setTotal] = useState(0);
   const limit = 20;
 
-  useEffect(() => {
-    loadOrders();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [spaceId, filters, page]);
-
-  const loadOrders = async () => {
+  const loadOrders = useCallback(async () => {
     setIsLoading(true);
     setError(null);
 
@@ -91,13 +86,16 @@ export function OrderList({ spaceId, filters, onOrderClick }: OrderListProps) {
 
       setOrders(response.orders);
       setTotal(response.total);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      setError(err.message || 'Failed to load orders');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to load orders');
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [spaceId, filters, page]);
+
+  useEffect(() => {
+    loadOrders();
+  }, [loadOrders]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);

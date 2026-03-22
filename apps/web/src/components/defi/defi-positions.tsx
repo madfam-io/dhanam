@@ -265,7 +265,7 @@ export function DeFiPositions({ spaceId, initialData }: DeFiPositionsProps) {
       // Expand all accounts by default
       setExpandedAccounts(new Set(initialData.accounts.map((a) => a.accountId)));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Reason: Intentionally run once on mount; fetchData and initialData are stable for the component's lifetime
   }, []);
 
   if (loading) {

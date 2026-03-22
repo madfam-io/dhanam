@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any -- Reason: React 19 compatibility; Toast components cast to any for JSX type compatibility */
 import {
   Toast,
   ToastClose,

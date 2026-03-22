@@ -20,7 +20,7 @@ export function PremiumUpsell({ feature, context = 'generic' }: PremiumUpsellPro
   // Track when upsell is viewed
   useEffect(() => {
     analytics.trackPremiumUpsellViewed(context, feature);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Reason: analytics object recreated each render; only re-track when context/feature change
   }, [context, feature]);
 
   const handleUpgrade = () => {

@@ -1,4 +1,4 @@
-/* eslint-disable max-lines */
+/* eslint-disable max-lines -- Reason: Stripe billing service contains webhook handlers, subscription management, and usage tracking that are logically coupled; splitting would fragment the billing domain */
 import * as crypto from 'crypto';
 
 import { UsageMetricType, SubscriptionTier, Currency } from '@db';

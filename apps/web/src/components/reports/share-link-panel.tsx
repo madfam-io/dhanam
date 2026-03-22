@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -34,12 +34,7 @@ export function ShareLinkPanel({ reportId, onUpdate }: ShareLinkPanelProps) {
   const [selectedTokenId, setSelectedTokenId] = useState<string | null>(null);
   const [expiresInHours, setExpiresInHours] = useState(168);
 
-  useEffect(() => {
-    loadTokens();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reportId]);
-
-  const loadTokens = async () => {
+  const loadTokens = useCallback(async () => {
     setLoading(true);
     try {
       const data = await reportsApi.getShareLinks(reportId);
@@ -49,7 +44,11 @@ export function ShareLinkPanel({ reportId, onUpdate }: ShareLinkPanelProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [reportId]);
+
+  useEffect(() => {
+    loadTokens();
+  }, [loadTokens]);
 
   const handleCreate = async () => {
     setCreating(true);

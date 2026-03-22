@@ -1,9 +1,5 @@
 import { randomBytes, createHash } from 'crypto';
 
-import { Injectable } from '@nestjs/common';
-import * as qrcode from 'qrcode';
-import * as speakeasy from 'speakeasy';
-
 import { CryptoService } from '@core/crypto/crypto.service';
 import {
   SecurityException,
@@ -14,6 +10,9 @@ import {
 import { LoggerService } from '@core/logger/logger.service';
 import { PrismaService } from '@core/prisma/prisma.service';
 import { PrismaClientKnownRequestError } from '@db';
+import { Injectable } from '@nestjs/common';
+import * as qrcode from 'qrcode';
+import * as speakeasy from 'speakeasy';
 
 export interface TotpSetupResponse {
   qrCodeUrl: string;
@@ -69,7 +68,7 @@ export class TotpService {
       // Generate QR code (wrap in try-catch for QR generation errors)
       let qrCodeUrl: string;
       try {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- Reason: speakeasy always generates otpauth_url when name and issuer are provided
         qrCodeUrl = await qrcode.toDataURL(secret.otpauth_url!);
       } catch (qrError) {
         this.logger.error('Failed to generate QR code', String(qrError), 'TotpService');
@@ -85,7 +84,7 @@ export class TotpService {
       this.logger.log(`TOTP setup initiated for user: ${userId}`, 'TotpService');
 
       // speakeasy always generates these values
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- Reason: speakeasy always generates base32 for TOTP secrets
       const base32Secret = secret.base32!;
 
       return {

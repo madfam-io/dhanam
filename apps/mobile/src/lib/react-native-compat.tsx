@@ -6,7 +6,7 @@
  * JSX type errors (TS2786).
  */
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any -- Reason: React 19 compatibility layer for React Native + Expo; all components cast to any to bypass TS2786 */
 
 import { Ionicons as ExpoIonicons } from '@expo/vector-icons';
 import { LinearGradient as ExpoLinearGradient } from 'expo-linear-gradient';

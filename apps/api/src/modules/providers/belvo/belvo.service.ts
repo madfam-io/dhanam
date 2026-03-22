@@ -1,9 +1,5 @@
 import * as crypto from 'crypto';
 
-import { PROVIDER_DEFAULTS } from '@dhanam/shared';
-import { Injectable, Logger, BadRequestException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-
 import { AuditService } from '@core/audit/audit.service';
 import { CryptoService } from '@core/crypto/crypto.service';
 import { MonitorPerformance } from '@core/decorators/monitor-performance.decorator';
@@ -13,12 +9,15 @@ import { PrismaService } from '@core/prisma/prisma.service';
 import { withTimeout, TIMEOUT_PRESETS } from '@core/utils/timeout.util';
 import type { InputJsonValue } from '@db';
 import { Account, Transaction, Prisma as _Prisma, Currency, AccountType } from '@db';
+import { PROVIDER_DEFAULTS } from '@dhanam/shared';
+import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 
 import { CircuitBreakerService } from '../orchestrator/circuit-breaker.service';
 
 import { CreateBelvoLinkDto, BelvoWebhookDto, BelvoWebhookEvent } from './dto';
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- Reason: Belvo SDK has no ESM export; require() is the only import method
 const { default: Belvo } = require('belvo');
 
 const BELVO_TIMEOUT_MS = TIMEOUT_PRESETS.provider_api;

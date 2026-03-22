@@ -63,14 +63,14 @@ export default function EstatePlanningPage() {
 
   useEffect(() => {
     loadHouseholds();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Reason: Only load on mount; getHouseholds is stable from useHouseholds hook
   }, []);
 
   useEffect(() => {
     if (selectedHouseholdId) {
       loadWills(selectedHouseholdId);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Reason: loadWills depends on getWillsByHousehold which is stable; only re-run when household selection changes
   }, [selectedHouseholdId]);
 
   const loadHouseholds = async () => {

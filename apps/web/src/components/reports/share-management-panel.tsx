@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -43,12 +43,7 @@ export function ShareManagementPanel({ reportId, onUpdate }: ShareManagementPane
   const [revokeDialogOpen, setRevokeDialogOpen] = useState(false);
   const [selectedShare, setSelectedShare] = useState<ReportShare | null>(null);
 
-  useEffect(() => {
-    loadShares();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reportId]);
-
-  const loadShares = async () => {
+  const loadShares = useCallback(async () => {
     setLoading(true);
     try {
       const data = await reportsApi.getReportShares(reportId);
@@ -60,7 +55,11 @@ export function ShareManagementPanel({ reportId, onUpdate }: ShareManagementPane
     } finally {
       setLoading(false);
     }
-  };
+  }, [reportId]);
+
+  useEffect(() => {
+    loadShares();
+  }, [loadShares]);
 
   const handleRoleChange = async (share: ReportShare, newRole: string) => {
     try {
@@ -87,8 +86,8 @@ export function ShareManagementPanel({ reportId, onUpdate }: ShareManagementPane
   };
 
   const getStatusBadge = (status: string) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const variants: Record<string, { variant: any; label: string }> = {
+    type BadgeVariant = 'default' | 'secondary' | 'destructive' | 'outline';
+    const variants: Record<string, { variant: BadgeVariant; label: string }> = {
       pending: { variant: 'secondary', label: 'Pending' },
       accepted: { variant: 'default', label: 'Active' },
       declined: { variant: 'destructive', label: 'Declined' },
@@ -96,7 +95,7 @@ export function ShareManagementPanel({ reportId, onUpdate }: ShareManagementPane
     };
 
     const config = variants[status] ||
-      variants.pending || { variant: 'secondary', label: 'Unknown' };
+      variants.pending || { variant: 'secondary' as BadgeVariant, label: 'Unknown' };
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 

@@ -36,7 +36,7 @@ export default function EsgPage() {
 
   useEffect(() => {
     loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Reason: Only load on mount; loadData references hook functions that are stable
   }, []);
 
   const handleRefresh = () => {
@@ -74,9 +74,7 @@ export default function EsgPage() {
             <Leaf className="h-12 w-12 text-muted-foreground mb-4" />
             <h3 className="font-semibold text-lg mb-2">{tCommon('somethingWentWrong')}</h3>
             <p className="text-muted-foreground text-center mb-4">{tCommon('loadFailed')}</p>
-            <Button onClick={handleRefresh}>
-              {tCommon('tryAgain')}
-            </Button>
+            <Button onClick={handleRefresh}>{tCommon('tryAgain')}</Button>
           </CardContent>
         </Card>
       ) : loading && !portfolioAnalysis ? (

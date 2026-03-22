@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -25,12 +25,7 @@ export function ProbabilisticGoalCard({
   const [loading, setLoading] = useState(false);
   const [updating, setUpdating] = useState(false);
 
-  useEffect(() => {
-    loadProbability();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [goal.id]);
-
-  const loadProbability = async () => {
+  const loadProbability = useCallback(async () => {
     setLoading(true);
     try {
       const result = await getGoalProbability(goal.id);
@@ -42,7 +37,11 @@ export function ProbabilisticGoalCard({
     } finally {
       setLoading(false);
     }
-  };
+  }, [goal.id, getGoalProbability]);
+
+  useEffect(() => {
+    loadProbability();
+  }, [loadProbability]);
 
   const handleRefresh = async (e: React.MouseEvent) => {
     e.stopPropagation();
