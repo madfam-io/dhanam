@@ -67,3 +67,6 @@ web-build/
 # Docker volumes
 postgres_data/
 redis_data/
+
+# Financial data (never commit)
+data/
