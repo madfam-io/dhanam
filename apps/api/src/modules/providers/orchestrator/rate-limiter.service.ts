@@ -1,6 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
-
 import { Provider } from '@db';
+import { Injectable, Logger } from '@nestjs/common';
 
 import { PrismaService } from '../../../core/prisma/prisma.service';
 
@@ -423,7 +422,7 @@ export class RateLimiterService {
         await this.recordRequest(provider, region);
         const result = await fn();
         return result;
-      } catch (error: any) {
+      } catch (error: unknown) {
         const isRateLimit = this.isRateLimitError(error);
 
         if (isRateLimit && attempt < maxAttempts) {
@@ -484,9 +483,11 @@ export class RateLimiterService {
     }
   }
 
-  private isRateLimitError(error: any): boolean {
-    const message = (error?.message || '').toLowerCase();
-    const status = error?.status || error?.statusCode || error?.response?.status;
+  private isRateLimitError(error: unknown): boolean {
+    const err = error as Record<string, unknown> | null;
+    const message = (err && typeof err.message === 'string' ? err.message : '').toLowerCase();
+    const response = err?.response as Record<string, unknown> | undefined;
+    const status = err?.status || err?.statusCode || response?.status;
 
     return (
       status === 429 ||
@@ -496,8 +497,10 @@ export class RateLimiterService {
     );
   }
 
-  private extractRetryAfter(error: any): number | undefined {
-    const headers = error?.response?.headers;
+  private extractRetryAfter(error: unknown): number | undefined {
+    const err = error as Record<string, unknown> | null;
+    const response = err?.response as Record<string, unknown> | undefined;
+    const headers = response?.headers as Record<string, string> | undefined;
     if (headers) {
       const retryAfter = headers['retry-after'] || headers['Retry-After'];
       if (retryAfter) {

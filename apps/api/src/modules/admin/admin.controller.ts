@@ -1,3 +1,5 @@
+import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
+import { AuthenticatedRequest } from '@core/types/authenticated-request';
 import {
   Controller,
   Get,
@@ -22,8 +24,6 @@ import {
   ApiForbiddenResponse,
   ApiBadRequestResponse,
 } from '@nestjs/swagger';
-
-import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
 
 import { AdminOpsService } from './admin-ops.service';
 import { AdminService } from './admin.service';
@@ -73,7 +73,7 @@ export class AdminController {
   @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'User not found' })
   async getUserDetails(
     @Param('userId') userId: string,
-    @Request() req: any
+    @Request() req: AuthenticatedRequest
   ): Promise<UserDetailsDto> {
     return this.adminService.getUserDetails(userId, req.user.id);
   }
@@ -149,7 +149,7 @@ export class AdminController {
   async updateFeatureFlag(
     @Param('key') key: string,
     @Body() dto: UpdateFeatureFlagDto,
-    @Request() req: any
+    @Request() req: AuthenticatedRequest
   ): Promise<FeatureFlagDto> {
     return this.adminService.updateFeatureFlag(key, dto, req.user.id);
   }
@@ -161,14 +161,14 @@ export class AdminController {
   @Get('health')
   @ApiOperation({ summary: 'System health check (DB, Redis, queues, providers)' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Health status retrieved' })
-  async getSystemHealth(@Request() req: any) {
+  async getSystemHealth(@Request() req: AuthenticatedRequest) {
     return this.adminOpsService.getSystemHealth(req.user.id);
   }
 
   @Get('metrics')
   @ApiOperation({ summary: 'DAU/WAU/MAU, queue stats, resource usage' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Metrics retrieved' })
-  async getMetrics(@Request() req: any) {
+  async getMetrics(@Request() req: AuthenticatedRequest) {
     return this.adminOpsService.getMetrics(req.user.id);
   }
 
@@ -176,14 +176,14 @@ export class AdminController {
   @ApiOperation({ summary: 'Flush Redis cache by pattern' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Cache flushed' })
   @ApiBadRequestResponse({ description: 'Invalid pattern or not confirmed' })
-  async flushCache(@Body() dto: CacheFlushDto, @Request() req: any) {
+  async flushCache(@Body() dto: CacheFlushDto, @Request() req: AuthenticatedRequest) {
     return this.adminOpsService.flushCache(dto, req.user.id);
   }
 
   @Get('queues')
   @ApiOperation({ summary: 'BullMQ queue stats' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Queue stats retrieved' })
-  async getQueueStats(@Request() req: any) {
+  async getQueueStats(@Request() req: AuthenticatedRequest) {
     return this.adminOpsService.getQueueStats(req.user.id);
   }
 
@@ -191,7 +191,7 @@ export class AdminController {
   @ApiOperation({ summary: 'Retry failed jobs in a queue' })
   @ApiParam({ name: 'name', description: 'Queue name' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Retry initiated' })
-  async retryFailedJobs(@Param('name') name: string, @Request() req: any) {
+  async retryFailedJobs(@Param('name') name: string, @Request() req: AuthenticatedRequest) {
     return this.adminOpsService.retryFailedJobs(name, req.user.id);
   }
 
@@ -199,7 +199,7 @@ export class AdminController {
   @ApiOperation({ summary: 'Clear a queue' })
   @ApiParam({ name: 'name', description: 'Queue name' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Queue cleared' })
-  async clearQueue(@Param('name') name: string, @Request() req: any) {
+  async clearQueue(@Param('name') name: string, @Request() req: AuthenticatedRequest) {
     return this.adminOpsService.clearQueue(name, req.user.id);
   }
 
@@ -214,7 +214,11 @@ export class AdminController {
   @ApiOperation({ summary: 'Deactivate user and invalidate sessions' })
   @ApiParam({ name: 'id', description: 'User ID' })
   @ApiResponse({ status: HttpStatus.OK, description: 'User deactivated' })
-  async deactivateUser(@Param('id') id: string, @Body() dto: UserActionDto, @Request() req: any) {
+  async deactivateUser(
+    @Param('id') id: string,
+    @Body() dto: UserActionDto,
+    @Request() req: AuthenticatedRequest
+  ) {
     return this.adminOpsService.deactivateUser(id, dto, req.user.id);
   }
 
@@ -222,7 +226,11 @@ export class AdminController {
   @ApiOperation({ summary: 'Reset TOTP 2FA for a user' })
   @ApiParam({ name: 'id', description: 'User ID' })
   @ApiResponse({ status: HttpStatus.OK, description: '2FA reset' })
-  async resetUserTotp(@Param('id') id: string, @Body() dto: UserActionDto, @Request() req: any) {
+  async resetUserTotp(
+    @Param('id') id: string,
+    @Body() dto: UserActionDto,
+    @Request() req: AuthenticatedRequest
+  ) {
     return this.adminOpsService.resetUserTotp(id, dto, req.user.id);
   }
 
@@ -230,7 +238,7 @@ export class AdminController {
   @ApiOperation({ summary: 'Invalidate all sessions for a user' })
   @ApiParam({ name: 'id', description: 'User ID' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Sessions invalidated' })
-  async forceLogout(@Param('id') id: string, @Request() req: any) {
+  async forceLogout(@Param('id') id: string, @Request() req: AuthenticatedRequest) {
     return this.adminOpsService.forceLogout(id, req.user.id);
   }
 
@@ -247,7 +255,7 @@ export class AdminController {
   @ApiOperation({ summary: 'GDPR data export for a user' })
   @ApiParam({ name: 'userId', description: 'User ID' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Data exported' })
-  async gdprExport(@Param('userId') userId: string, @Request() req: any) {
+  async gdprExport(@Param('userId') userId: string, @Request() req: AuthenticatedRequest) {
     return this.adminOpsService.gdprExport(userId, req.user.id);
   }
 
@@ -255,14 +263,14 @@ export class AdminController {
   @ApiOperation({ summary: 'GDPR deletion (queued)' })
   @ApiParam({ name: 'userId', description: 'User ID' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Deletion queued' })
-  async gdprDelete(@Param('userId') userId: string, @Request() req: any) {
+  async gdprDelete(@Param('userId') userId: string, @Request() req: AuthenticatedRequest) {
     return this.adminOpsService.gdprDelete(userId, req.user.id);
   }
 
   @Post('retention/execute')
   @ApiOperation({ summary: 'Execute retention policies' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Retention execution initiated' })
-  async executeRetention(@Request() req: any) {
+  async executeRetention(@Request() req: AuthenticatedRequest) {
     return this.adminOpsService.executeRetention(req.user.id);
   }
 
@@ -276,7 +284,7 @@ export class AdminController {
   @Get('providers/health')
   @ApiOperation({ summary: 'Provider health and rate limits' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Provider health retrieved' })
-  async getProviderHealth(@Request() req: any) {
+  async getProviderHealth(@Request() req: AuthenticatedRequest) {
     return this.adminOpsService.getProviderHealth(req.user.id);
   }
 }

@@ -1,3 +1,5 @@
+import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
+import { AuthenticatedRequest } from '@core/types/authenticated-request';
 import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req } from '@nestjs/common';
 import {
   ApiTags,
@@ -11,17 +13,8 @@ import {
   ApiParam,
 } from '@nestjs/swagger';
 
-import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
-
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDto, UpdateCategoryDto } from './dto';
-
-interface AuthenticatedRequest {
-  user: {
-    id: string;
-    email: string;
-  };
-}
 
 @ApiTags('categories')
 @Controller('spaces/:spaceId/categories')

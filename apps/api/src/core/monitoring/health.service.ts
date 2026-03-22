@@ -1,10 +1,9 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import Redis from 'ioredis';
-
 import { PrismaService } from '@core/prisma/prisma.service';
 import { TIMEOUT_PRESETS } from '@core/utils/timeout.util';
 import { QueueService } from '@modules/jobs/queue.service';
+import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import Redis from 'ioredis';
 
 export interface HealthStatus {
   status: 'healthy' | 'degraded' | 'unhealthy';
@@ -35,7 +34,7 @@ export interface HealthCheck {
   status: 'up' | 'down';
   responseTime?: number;
   error?: string;
-  details?: any;
+  details?: Record<string, unknown>;
 }
 
 export interface ProviderHealthCheck {
@@ -52,6 +51,15 @@ export interface ProviderStatus {
   status: 'up' | 'down' | 'unconfigured';
   responseTime?: number;
   error?: string;
+}
+
+interface QueueStat {
+  name: string;
+  waiting: number;
+  active: number;
+  completed: number;
+  failed: number;
+  delayed: number;
 }
 
 @Injectable()
@@ -146,7 +154,11 @@ export class HealthService {
     };
   }
 
-  async getReadinessStatus(): Promise<{ ready: boolean; reason?: string; checks: any }> {
+  async getReadinessStatus(): Promise<{
+    ready: boolean;
+    reason?: string;
+    checks: Record<string, HealthCheck>;
+  }> {
     // If shutting down, return not ready immediately
     if (this.isShuttingDown) {
       return {
@@ -253,10 +265,10 @@ export class HealthService {
     try {
       const queueStats = await this.queueService.getAllQueueStats();
 
-      const hasFailedQueues = queueStats.some((queue: any) => queue.failed > 0);
+      const hasFailedQueues = queueStats.some((queue: QueueStat) => queue.failed > 0);
       const BACKPRESSURE_THRESHOLD = 1000;
       const hasBackpressure = queueStats.some(
-        (queue: any) => queue.waiting > BACKPRESSURE_THRESHOLD
+        (queue: QueueStat) => queue.waiting > BACKPRESSURE_THRESHOLD
       );
 
       const status = hasFailedQueues || hasBackpressure ? 'down' : 'up';
@@ -267,11 +279,11 @@ export class HealthService {
         details: {
           queues: queueStats.length,
           totalJobs: queueStats.reduce(
-            (sum: number, q: any) => sum + q.active + q.waiting + q.completed,
+            (sum: number, q: QueueStat) => sum + q.active + q.waiting + q.completed,
             0
           ),
-          failedJobs: queueStats.reduce((sum: number, q: any) => sum + q.failed, 0),
-          waitingJobs: queueStats.reduce((sum: number, q: any) => sum + q.waiting, 0),
+          failedJobs: queueStats.reduce((sum: number, q: QueueStat) => sum + q.failed, 0),
+          waitingJobs: queueStats.reduce((sum: number, q: QueueStat) => sum + q.waiting, 0),
           backpressure: hasBackpressure,
         },
       };
@@ -341,7 +353,7 @@ export class HealthService {
     }
   }
 
-  private createFailedCheck(error: any): HealthCheck {
+  private createFailedCheck(error: unknown): HealthCheck {
     return {
       status: 'down',
       error: error instanceof Error ? error.message : 'Health check failed',

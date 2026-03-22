@@ -1,10 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-
 import { AuditService } from '@core/audit/audit.service';
 import { LoggerService } from '@core/logger/logger.service';
 import { PrismaService } from '@core/prisma/prisma.service';
 import { RedisService } from '@core/redis/redis.service';
 import { Prisma } from '@db';
+import { Injectable, NotFoundException } from '@nestjs/common';
 
 import { CacheFlushDto, PaginatedResponseDto, SpaceSearchDto, UserActionDto } from './dto';
 
@@ -414,8 +413,21 @@ export class AdminOpsService {
     userId: string,
     adminUserId: string
   ): Promise<{
-    user: any;
-    spaces: any[];
+    user: {
+      id: string;
+      email: string;
+      name: string | null;
+      locale: string;
+      timezone: string;
+      createdAt: Date;
+      connections: Array<{
+        id: string;
+        provider: string;
+        providerUserId: string | null;
+        createdAt: Date;
+      }>;
+    };
+    spaces: Array<{ id: string; name: string; type: string; role: string }>;
     transactions: number;
     auditLogs: number;
     exportedAt: string;
@@ -571,7 +583,7 @@ export class AdminOpsService {
       severity: 'low',
     });
 
-    const providers = providerStats.map((p: any) => ({
+    const providers = providerStats.map((p) => ({
       name: p.provider,
       status: 'healthy',
       accountCount: p._count,

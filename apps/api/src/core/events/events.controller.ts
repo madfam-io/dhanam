@@ -1,4 +1,5 @@
 import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
+import { AuthenticatedRequest } from '@core/types/authenticated-request';
 import { Controller, Logger, Req, Sse, UseGuards } from '@nestjs/common';
 import { Observable } from 'rxjs';
 
@@ -26,8 +27,8 @@ export class EventsController {
 
   @Sse('stream')
   @UseGuards(JwtAuthGuard)
-  stream(@Req() req: any): Observable<SseMessage> {
-    const userId: string = req.user?.id ?? req.user?.userId;
+  stream(@Req() req: AuthenticatedRequest): Observable<SseMessage> {
+    const userId: string = req.user.id ?? req.user.userId;
     this.logger.log(`SSE connection opened for user ${userId}`);
     return this.eventsService.subscribe(userId);
   }

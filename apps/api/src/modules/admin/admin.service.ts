@@ -1,10 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-
 import { AuditService } from '@core/audit/audit.service';
 import { LoggerService } from '@core/logger/logger.service';
 import { PrismaService } from '@core/prisma/prisma.service';
 import { RedisService } from '@core/redis/redis.service';
 import { Prisma } from '@db';
+import { Injectable, NotFoundException } from '@nestjs/common';
 
 import {
   UserSearchDto,
@@ -373,10 +372,22 @@ export class AdminService {
       totalBudgets,
       activeBudgets: totalBudgets,
       providerConnections: {
-        belvo: providerConnections?.find((p: any) => p.provider === 'belvo')?._count || 0,
-        plaid: providerConnections?.find((p: any) => p.provider === 'plaid')?._count || 0,
-        bitso: providerConnections?.find((p: any) => p.provider === 'bitso')?._count || 0,
-        manual: providerConnections?.find((p: any) => p.provider === 'manual')?._count || 0,
+        belvo:
+          providerConnections?.find(
+            (p: { provider: string; _count: number }) => p.provider === 'belvo'
+          )?._count || 0,
+        plaid:
+          providerConnections?.find(
+            (p: { provider: string; _count: number }) => p.provider === 'plaid'
+          )?._count || 0,
+        bitso:
+          providerConnections?.find(
+            (p: { provider: string; _count: number }) => p.provider === 'bitso'
+          )?._count || 0,
+        manual:
+          providerConnections?.find(
+            (p: { provider: string; _count: number }) => p.provider === 'manual'
+          )?._count || 0,
       },
       systemHealth: {
         databaseConnections: await this.getDatabaseConnections(),

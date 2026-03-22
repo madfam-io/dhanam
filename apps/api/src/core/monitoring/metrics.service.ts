@@ -1,7 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
-
 import { PrismaService } from '@core/prisma/prisma.service';
 import { QueueService } from '@modules/jobs/queue.service';
+import { Injectable, Logger } from '@nestjs/common';
 
 export interface SystemMetrics {
   database: {
@@ -86,7 +85,7 @@ export class MetricsService {
       totalAccounts,
       totalTransactions,
       connectionsByProvider: connectionsByProvider.reduce(
-        (acc: Record<string, number>, item: any) => {
+        (acc: Record<string, number>, item: { provider: string; _count: { _all: number } }) => {
           acc[item.provider] = item._count._all;
           return acc;
         },

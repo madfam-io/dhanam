@@ -31,7 +31,7 @@ export class TotpService {
   /**
    * Handle errors in TOTP operations with proper exception mapping
    */
-  private handleError(error: any, operation: string): never {
+  private handleError(error: unknown, operation: string): never {
     // Re-throw domain exceptions
     if (
       error instanceof SecurityException ||

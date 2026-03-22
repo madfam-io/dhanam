@@ -53,7 +53,13 @@ export class JwtAuthGuard extends AuthGuard('janua') {
     }
   }
 
-  handleRequest(err: any, user: any, info: any, context: ExecutionContext) {
+  // Passport's AuthGuard.handleRequest requires these parameter types
+  handleRequest(
+    err: Error | null,
+    user: Record<string, unknown> | false,
+    info: { message?: string } | undefined,
+    context: ExecutionContext
+  ) {
     if (err || !user) {
       this.logger.warn(
         `Authentication failed: ${err?.message || info?.message || 'Unknown error'}`

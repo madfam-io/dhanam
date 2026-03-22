@@ -26,6 +26,7 @@ import {
 import { Throttle } from '@nestjs/throttler';
 
 import { JwtAuthGuard } from '../../core/auth/guards/jwt-auth.guard';
+import { AuthenticatedRequest } from '../../core/types/authenticated-request';
 import { RequiresFeature } from '../billing/decorators/requires-feature.decorator';
 import { FeatureGateGuard } from '../billing/guards/feature-gate.guard';
 
@@ -56,7 +57,7 @@ export class EstatePlanningController {
   @ApiOperation({ summary: 'Create a new will (draft status)' })
   @ApiOkResponse({ description: 'Will created successfully' })
   @ApiBadRequestResponse({ description: 'Invalid request body' })
-  async createWill(@Body() dto: CreateWillDto, @Req() req: any) {
+  async createWill(@Body() dto: CreateWillDto, @Req() req: AuthenticatedRequest) {
     return this.estatePlanningService.createWill(dto, req.user.id);
   }
 
@@ -68,7 +69,10 @@ export class EstatePlanningController {
   @ApiParam({ name: 'householdId', description: 'Household UUID' })
   @ApiOkResponse({ description: 'List of wills for the household' })
   @ApiNotFoundResponse({ description: 'Household not found' })
-  async findByHousehold(@Param('householdId') householdId: string, @Req() req: any) {
+  async findByHousehold(
+    @Param('householdId') householdId: string,
+    @Req() req: AuthenticatedRequest
+  ) {
     return this.estatePlanningService.findByHousehold(householdId, req.user.id);
   }
 
@@ -80,7 +84,7 @@ export class EstatePlanningController {
   @ApiParam({ name: 'id', description: 'Will UUID' })
   @ApiOkResponse({ description: 'Will details' })
   @ApiNotFoundResponse({ description: 'Will not found' })
-  async findById(@Param('id') id: string, @Req() req: any) {
+  async findById(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
     return this.estatePlanningService.findById(id, req.user.id);
   }
 
@@ -93,7 +97,11 @@ export class EstatePlanningController {
   @ApiOkResponse({ description: 'Will updated successfully' })
   @ApiNotFoundResponse({ description: 'Will not found' })
   @ApiBadRequestResponse({ description: 'Invalid request body' })
-  async updateWill(@Param('id') id: string, @Body() dto: UpdateWillDto, @Req() req: any) {
+  async updateWill(
+    @Param('id') id: string,
+    @Body() dto: UpdateWillDto,
+    @Req() req: AuthenticatedRequest
+  ) {
     return this.estatePlanningService.updateWill(id, dto, req.user.id);
   }
 
@@ -106,7 +114,7 @@ export class EstatePlanningController {
   @ApiParam({ name: 'id', description: 'Will UUID' })
   @ApiNoContentResponse({ description: 'Will deleted successfully' })
   @ApiNotFoundResponse({ description: 'Will not found' })
-  async deleteWill(@Param('id') id: string, @Req() req: any) {
+  async deleteWill(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
     await this.estatePlanningService.deleteWill(id, req.user.id);
   }
 
@@ -120,7 +128,7 @@ export class EstatePlanningController {
   @ApiParam({ name: 'id', description: 'Will UUID' })
   @ApiOkResponse({ description: 'Will activated successfully' })
   @ApiNotFoundResponse({ description: 'Will not found' })
-  async activateWill(@Param('id') id: string, @Req() req: any) {
+  async activateWill(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
     return this.estatePlanningService.activateWill(id, req.user.id);
   }
 
@@ -134,7 +142,7 @@ export class EstatePlanningController {
   @ApiParam({ name: 'id', description: 'Will UUID' })
   @ApiOkResponse({ description: 'Will revoked successfully' })
   @ApiNotFoundResponse({ description: 'Will not found' })
-  async revokeWill(@Param('id') id: string, @Req() req: any) {
+  async revokeWill(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
     return this.estatePlanningService.revokeWill(id, req.user.id);
   }
 
@@ -146,7 +154,7 @@ export class EstatePlanningController {
   @ApiParam({ name: 'id', description: 'Will UUID' })
   @ApiOkResponse({ description: 'Validation result' })
   @ApiNotFoundResponse({ description: 'Will not found' })
-  async validateWill(@Param('id') id: string, @Req() req: any) {
+  async validateWill(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
     // Verify access first
     await this.estatePlanningService.findById(id, req.user.id);
     return this.estatePlanningService.validateBeneficiaryAllocations(id);
@@ -161,7 +169,11 @@ export class EstatePlanningController {
   @ApiOkResponse({ description: 'Beneficiary added successfully' })
   @ApiNotFoundResponse({ description: 'Will not found' })
   @ApiBadRequestResponse({ description: 'Invalid beneficiary data' })
-  async addBeneficiary(@Param('id') id: string, @Body() dto: AddBeneficiaryDto, @Req() req: any) {
+  async addBeneficiary(
+    @Param('id') id: string,
+    @Body() dto: AddBeneficiaryDto,
+    @Req() req: AuthenticatedRequest
+  ) {
     return this.estatePlanningService.addBeneficiary(id, dto, req.user.id);
   }
 
@@ -179,7 +191,7 @@ export class EstatePlanningController {
     @Param('id') id: string,
     @Param('beneficiaryId') beneficiaryId: string,
     @Body() dto: UpdateBeneficiaryDto,
-    @Req() req: any
+    @Req() req: AuthenticatedRequest
   ) {
     return this.estatePlanningService.updateBeneficiary(id, beneficiaryId, dto, req.user.id);
   }
@@ -197,7 +209,7 @@ export class EstatePlanningController {
   async removeBeneficiary(
     @Param('id') id: string,
     @Param('beneficiaryId') beneficiaryId: string,
-    @Req() req: any
+    @Req() req: AuthenticatedRequest
   ) {
     await this.estatePlanningService.removeBeneficiary(id, beneficiaryId, req.user.id);
   }
@@ -211,7 +223,11 @@ export class EstatePlanningController {
   @ApiOkResponse({ description: 'Executor added successfully' })
   @ApiNotFoundResponse({ description: 'Will not found' })
   @ApiBadRequestResponse({ description: 'Invalid executor data' })
-  async addExecutor(@Param('id') id: string, @Body() dto: AddExecutorDto, @Req() req: any) {
+  async addExecutor(
+    @Param('id') id: string,
+    @Body() dto: AddExecutorDto,
+    @Req() req: AuthenticatedRequest
+  ) {
     return this.estatePlanningService.addExecutor(id, dto, req.user.id);
   }
 
@@ -229,7 +245,7 @@ export class EstatePlanningController {
     @Param('id') id: string,
     @Param('executorId') executorId: string,
     @Body() dto: UpdateExecutorDto,
-    @Req() req: any
+    @Req() req: AuthenticatedRequest
   ) {
     return this.estatePlanningService.updateExecutor(id, executorId, dto, req.user.id);
   }
@@ -247,7 +263,7 @@ export class EstatePlanningController {
   async removeExecutor(
     @Param('id') id: string,
     @Param('executorId') executorId: string,
-    @Req() req: any
+    @Req() req: AuthenticatedRequest
   ) {
     await this.estatePlanningService.removeExecutor(id, executorId, req.user.id);
   }

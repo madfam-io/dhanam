@@ -1,7 +1,6 @@
+import { Provider } from '@db';
 import { PROVIDER_DEFAULTS } from '@dhanam/shared';
 import { Injectable, Logger } from '@nestjs/common';
-
-import { Provider } from '@db';
 
 import { PrismaService } from '../../../core/prisma/prisma.service';
 
@@ -83,7 +82,13 @@ export class CircuitBreakerService {
   async isCircuitOpen(provider: Provider, region: string = 'US'): Promise<boolean> {
     const key = `${provider}:${region}`;
 
-    let health: any;
+    let health: {
+      circuitBreakerOpen: boolean;
+      updatedAt: Date;
+      errorRate: number;
+      avgResponseTimeMs: number;
+      consecutiveFailures: number;
+    } | null;
     try {
       health = await this.prisma.providerHealthStatus.findUnique({
         where: {
@@ -273,7 +278,12 @@ export class CircuitBreakerService {
   /**
    * Determine if circuit should open based on failure rate
    */
-  private async shouldOpenCircuit(health: any): Promise<boolean> {
+  private async shouldOpenCircuit(health: {
+    id: string;
+    windowStartAt: Date;
+    failedCalls: number;
+    successfulCalls: number;
+  }): Promise<boolean> {
     const windowAge = Date.now() - health.windowStartAt.getTime();
 
     // Reset window if it's older than monitoring window

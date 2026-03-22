@@ -26,6 +26,7 @@ import {
 } from '@nestjs/swagger';
 
 import { JwtAuthGuard } from '../../core/auth/guards/jwt-auth.guard';
+import { AuthenticatedRequest } from '../../core/types/authenticated-request';
 
 import { CreateHouseholdDto, UpdateHouseholdDto, AddMemberDto, UpdateMemberDto } from './dto';
 import { HouseholdsService } from './households.service';
@@ -46,7 +47,7 @@ export class HouseholdsController {
   @ApiOperation({ summary: 'Create a new household' })
   @ApiCreatedResponse({ description: 'Household created successfully' })
   @ApiBadRequestResponse({ description: 'Invalid request body' })
-  async create(@Body() dto: CreateHouseholdDto, @Req() req: any) {
+  async create(@Body() dto: CreateHouseholdDto, @Req() req: AuthenticatedRequest) {
     return this.householdsService.create(dto, req.user.id);
   }
 
@@ -56,7 +57,7 @@ export class HouseholdsController {
   @Get()
   @ApiOperation({ summary: 'Get all households for the current user' })
   @ApiOkResponse({ description: 'List of households' })
-  async findAll(@Req() req: any) {
+  async findAll(@Req() req: AuthenticatedRequest) {
     return this.householdsService.findByUser(req.user.id);
   }
 
@@ -68,7 +69,7 @@ export class HouseholdsController {
   @ApiParam({ name: 'id', description: 'Household UUID' })
   @ApiOkResponse({ description: 'Household details' })
   @ApiNotFoundResponse({ description: 'Household not found' })
-  async findById(@Param('id') id: string, @Req() req: any) {
+  async findById(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
     return this.householdsService.findById(id, req.user.id);
   }
 
@@ -81,7 +82,11 @@ export class HouseholdsController {
   @ApiOkResponse({ description: 'Household updated successfully' })
   @ApiNotFoundResponse({ description: 'Household not found' })
   @ApiBadRequestResponse({ description: 'Invalid request body' })
-  async update(@Param('id') id: string, @Body() dto: UpdateHouseholdDto, @Req() req: any) {
+  async update(
+    @Param('id') id: string,
+    @Body() dto: UpdateHouseholdDto,
+    @Req() req: AuthenticatedRequest
+  ) {
     return this.householdsService.update(id, dto, req.user.id);
   }
 
@@ -94,7 +99,7 @@ export class HouseholdsController {
   @ApiParam({ name: 'id', description: 'Household UUID' })
   @ApiNoContentResponse({ description: 'Household deleted successfully' })
   @ApiNotFoundResponse({ description: 'Household not found' })
-  async delete(@Param('id') id: string, @Req() req: any) {
+  async delete(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
     await this.householdsService.delete(id, req.user.id);
   }
 
@@ -106,7 +111,7 @@ export class HouseholdsController {
   @ApiParam({ name: 'id', description: 'Household UUID' })
   @ApiOkResponse({ description: 'Household net worth' })
   @ApiNotFoundResponse({ description: 'Household not found' })
-  async getNetWorth(@Param('id') id: string, @Req() req: any) {
+  async getNetWorth(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
     return this.householdsService.getNetWorth(id, req.user.id);
   }
 
@@ -118,7 +123,7 @@ export class HouseholdsController {
   @ApiParam({ name: 'id', description: 'Household UUID' })
   @ApiOkResponse({ description: 'Household goal summary' })
   @ApiNotFoundResponse({ description: 'Household not found' })
-  async getGoalSummary(@Param('id') id: string, @Req() req: any) {
+  async getGoalSummary(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
     return this.householdsService.getGoalSummary(id, req.user.id);
   }
 
@@ -131,7 +136,11 @@ export class HouseholdsController {
   @ApiCreatedResponse({ description: 'Member added successfully' })
   @ApiNotFoundResponse({ description: 'Household not found' })
   @ApiBadRequestResponse({ description: 'Invalid member data' })
-  async addMember(@Param('id') id: string, @Body() dto: AddMemberDto, @Req() req: any) {
+  async addMember(
+    @Param('id') id: string,
+    @Body() dto: AddMemberDto,
+    @Req() req: AuthenticatedRequest
+  ) {
     return this.householdsService.addMember(id, dto, req.user.id);
   }
 
@@ -149,7 +158,7 @@ export class HouseholdsController {
     @Param('id') id: string,
     @Param('memberId') memberId: string,
     @Body() dto: UpdateMemberDto,
-    @Req() req: any
+    @Req() req: AuthenticatedRequest
   ) {
     return this.householdsService.updateMember(id, memberId, dto, req.user.id);
   }
@@ -167,7 +176,7 @@ export class HouseholdsController {
   async removeMember(
     @Param('id') id: string,
     @Param('memberId') memberId: string,
-    @Req() req: any
+    @Req() req: AuthenticatedRequest
   ) {
     await this.householdsService.removeMember(id, memberId, req.user.id);
   }

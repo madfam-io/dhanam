@@ -57,7 +57,7 @@ export class LoggingInterceptor implements NestInterceptor {
     url: string,
     statusCode: number,
     duration: number,
-    metadata: any
+    metadata: Record<string, unknown>
   ) {
     const logLevel = this.getLogLevel(statusCode);
     const message = `${method} ${url} ${statusCode} - ${duration}ms`;

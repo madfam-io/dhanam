@@ -1,3 +1,6 @@
+import { AuditService } from '@core/audit/audit.service';
+import { SecurityConfigService } from '@core/config/security.config';
+import { ThrottleAuthGuard } from '@core/security/guards/throttle-auth.guard';
 import {
   LoginDto,
   RegisterDto,
@@ -24,10 +27,6 @@ import {
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { FastifyReply } from 'fastify';
-
-import { AuditService } from '@core/audit/audit.service';
-import { SecurityConfigService } from '@core/config/security.config';
-import { ThrottleAuthGuard } from '@core/security/guards/throttle-auth.guard';
 
 import { CurrentUser, AuthenticatedUser } from './decorators/current-user.decorator';
 import { DemoAuthService } from './demo-auth.service';
@@ -151,7 +150,7 @@ export class AuthController {
     @Headers('cf-ipcountry') cfCountry: string
   ): Promise<{
     tokens: AuthTokens;
-    user: any;
+    user: { id: string; email: string; name: string; isGuest: boolean };
     message: string;
   }> {
     const countryCode = body?.countryCode || cfCountry || undefined;
@@ -189,7 +188,7 @@ export class AuthController {
     @Headers('cf-ipcountry') cfCountry: string
   ): Promise<{
     tokens: AuthTokens;
-    user: any;
+    user: { id: string; email: string; name: string; isDemo: boolean; persona: string };
     persona: string;
     message: string;
   }> {
@@ -227,7 +226,7 @@ export class AuthController {
     @Body() body: { persona: string }
   ): Promise<{
     tokens: AuthTokens;
-    user: any;
+    user: { id: string; email: string; name: string; isDemo: boolean; persona: string };
     persona: string;
     message: string;
   }> {

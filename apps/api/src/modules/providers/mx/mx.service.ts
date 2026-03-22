@@ -1,5 +1,7 @@
 import * as crypto from 'crypto';
 
+import type { InputJsonValue } from '@db';
+import { Provider, AccountType, Currency, Prisma as _Prisma } from '@db';
 import { PROVIDER_DEFAULTS } from '@dhanam/shared';
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -12,9 +14,6 @@ import {
   AccountsApi,
   TransactionsApi,
 } from 'mx-platform-node';
-
-import type { InputJsonValue } from '@db';
-import { Provider, AccountType, Currency, Prisma as _Prisma } from '@db';
 
 import { CryptoService } from '../../../core/crypto/crypto.service';
 import { PrismaService } from '../../../core/prisma/prisma.service';
@@ -131,14 +130,14 @@ export class MxService implements IFinancialProvider {
         avgResponseTimeMs: responseTimeMs,
         lastCheckedAt: new Date(),
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         provider: Provider.mx,
         status: 'down',
         errorRate: 100,
         avgResponseTimeMs: Date.now() - startTime,
         lastCheckedAt: new Date(),
-        error: error.message,
+        error: error instanceof Error ? error.message : String(error),
       };
     }
   }
@@ -166,7 +165,7 @@ export class MxService implements IFinancialProvider {
       }
 
       // Step 2: Create Connect Widget URL
-      const widgetRequest: any = {
+      const widgetRequest: Record<string, unknown> = {
         widget_url: {
           widget_type: 'connect_widget',
           mode: 'verification',
@@ -195,9 +194,11 @@ export class MxService implements IFinancialProvider {
           provider: 'mx',
         },
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       this.logger.error('Failed to create MX Link:', error);
-      throw new BadRequestException(error.message || 'Failed to create MX link');
+      throw new BadRequestException(
+        error instanceof Error ? error.message : 'Failed to create MX link'
+      );
     }
   }
 
@@ -258,9 +259,11 @@ export class MxService implements IFinancialProvider {
         institutionId: member.institution_code || '',
         institutionName: member.name || '',
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       this.logger.error('Failed to exchange MX token:', error);
-      throw new BadRequestException(error.message || 'Failed to exchange MX token');
+      throw new BadRequestException(
+        error instanceof Error ? error.message : 'Failed to exchange MX token'
+      );
     }
   }
 
@@ -314,9 +317,11 @@ export class MxService implements IFinancialProvider {
       }
 
       return providerAccounts;
-    } catch (error: any) {
+    } catch (error: unknown) {
       this.logger.error('Failed to get MX accounts:', error);
-      throw new BadRequestException(error.message || 'Failed to get MX accounts');
+      throw new BadRequestException(
+        error instanceof Error ? error.message : 'Failed to get MX accounts'
+      );
     }
   }
 
@@ -461,13 +466,18 @@ export class MxService implements IFinancialProvider {
         removed: 0,
         cursor: toDate,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       this.logger.error('Failed to sync MX transactions:', error);
-      throw new BadRequestException(error.message || 'Failed to sync MX transactions');
+      throw new BadRequestException(
+        error instanceof Error ? error.message : 'Failed to sync MX transactions'
+      );
     }
   }
 
-  async handleWebhook(payload: any, signature?: string): Promise<WebhookHandlerResult> {
+  async handleWebhook(
+    payload: Record<string, unknown>,
+    signature?: string
+  ): Promise<WebhookHandlerResult> {
     if (!this.isConfigured) {
       throw new BadRequestException('MX integration not configured');
     }
@@ -512,11 +522,11 @@ export class MxService implements IFinancialProvider {
       return {
         processed: true,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       this.logger.error('Failed to handle MX webhook:', error);
       return {
         processed: false,
-        error: error.message,
+        error: error instanceof Error ? error.message : String(error),
       };
     }
   }
@@ -548,9 +558,11 @@ export class MxService implements IFinancialProvider {
         supportedProducts: ['accounts', 'transactions'],
         region: region || 'US',
       }));
-    } catch (error: any) {
+    } catch (error: unknown) {
       this.logger.error('Failed to search MX institutions:', error);
-      throw new BadRequestException(error.message || 'Failed to search institutions');
+      throw new BadRequestException(
+        error instanceof Error ? error.message : 'Failed to search institutions'
+      );
     }
   }
 
@@ -581,15 +593,17 @@ export class MxService implements IFinancialProvider {
         supportedProducts: ['accounts', 'transactions'],
         region: 'US',
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       this.logger.error('Failed to get MX institution:', error);
-      throw new BadRequestException(error.message || 'Failed to get institution');
+      throw new BadRequestException(
+        error instanceof Error ? error.message : 'Failed to get institution'
+      );
     }
   }
 
   // Helper methods
 
-  private async handleMemberUpdate(payload: any) {
+  private async handleMemberUpdate(payload: Record<string, unknown>) {
     const memberGuid = payload.member_guid;
     const _userGuid = payload.user_guid;
 
@@ -619,7 +633,7 @@ export class MxService implements IFinancialProvider {
     });
   }
 
-  private async handleMemberAggregated(payload: any) {
+  private async handleMemberAggregated(payload: Record<string, unknown>) {
     const memberGuid = payload.member_guid;
 
     // Find connection and trigger sync
@@ -640,7 +654,7 @@ export class MxService implements IFinancialProvider {
     this.logger.log(`MX aggregation complete for member ${memberGuid}`);
   }
 
-  private async handleAccountUpdate(payload: any) {
+  private async handleAccountUpdate(payload: Record<string, unknown>) {
     const accountGuid = payload.account_guid;
 
     // Find and update account
@@ -668,7 +682,7 @@ export class MxService implements IFinancialProvider {
     }
   }
 
-  private async handleTransactionUpdate(payload: any) {
+  private async handleTransactionUpdate(payload: Record<string, unknown>) {
     // Log transaction update
     this.logger.log(`MX transaction updated: ${payload.transaction_guid}`);
     // In production, trigger background transaction sync

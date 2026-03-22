@@ -28,7 +28,7 @@ import { withRetry, RetryConfig, RETRY_PRESETS } from '../utils/retry.util';
  * ```
  */
 export function Retry(config: RetryConfig | keyof typeof RETRY_PRESETS = {}): MethodDecorator {
-  return function (target: any, propertyName: string | symbol, descriptor: PropertyDescriptor) {
+  return function (target: object, propertyName: string | symbol, descriptor: PropertyDescriptor) {
     const method = descriptor.value;
     const logger = new Logger(target.constructor.name);
 
@@ -36,7 +36,7 @@ export function Retry(config: RetryConfig | keyof typeof RETRY_PRESETS = {}): Me
     const resolvedConfig: RetryConfig =
       typeof config === 'string' ? { ...RETRY_PRESETS[config], operationType: config } : config;
 
-    descriptor.value = async function (...args: any[]) {
+    descriptor.value = async function (...args: unknown[]) {
       const className = target.constructor.name;
       const methodName = String(propertyName);
 
@@ -79,11 +79,11 @@ export function Retry(config: RetryConfig | keyof typeof RETRY_PRESETS = {}): Me
  * ```
  */
 export function RetryWithTimeout(config: RetryConfig & { timeoutMs: number }): MethodDecorator {
-  return function (target: any, propertyName: string | symbol, descriptor: PropertyDescriptor) {
+  return function (target: object, propertyName: string | symbol, descriptor: PropertyDescriptor) {
     const method = descriptor.value;
     const logger = new Logger(target.constructor.name);
 
-    descriptor.value = async function (...args: any[]) {
+    descriptor.value = async function (...args: unknown[]) {
       const className = target.constructor.name;
       const methodName = String(propertyName);
       const operationName = config.operationType ?? `${className}.${methodName}`;
@@ -96,18 +96,18 @@ export function RetryWithTimeout(config: RetryConfig & { timeoutMs: number }): M
         const timeoutPromise = new Promise((_, reject) => {
           timeoutHandle = setTimeout(() => {
             const error = new Error(`Operation '${operationName}' timed out after ${timeoutMs}ms`);
-            (error as any).code = 'TIMEOUT';
+            (error as unknown as Record<string, unknown>).code = 'TIMEOUT';
             reject(error);
           }, timeoutMs);
         });
 
         return Promise.race([
           method.apply(this, args).then(
-            (result: any) => {
+            (result: unknown) => {
               clearTimeout(timeoutHandle);
               return result;
             },
-            (err: any) => {
+            (err: unknown) => {
               clearTimeout(timeoutHandle);
               throw err;
             }
@@ -152,18 +152,18 @@ export function RetryWithTimeout(config: RetryConfig & { timeoutMs: number }): M
  */
 export function RetryOn(
   config: RetryConfig & {
-    errorTypes?: Array<new (...args: any[]) => Error>;
+    errorTypes?: Array<new (...args: unknown[]) => Error>;
     errorCodes?: string[];
     errorMessages?: RegExp[];
   }
 ): MethodDecorator {
-  return function (target: any, propertyName: string | symbol, descriptor: PropertyDescriptor) {
+  return function (target: object, propertyName: string | symbol, descriptor: PropertyDescriptor) {
     const method = descriptor.value;
     const logger = new Logger(target.constructor.name);
 
     const { errorTypes, errorCodes, errorMessages, ...retryConfig } = config;
 
-    descriptor.value = async function (...args: any[]) {
+    descriptor.value = async function (...args: unknown[]) {
       const className = target.constructor.name;
       const methodName = String(propertyName);
       const operationName = retryConfig.operationType ?? `${className}.${methodName}`;
@@ -178,8 +178,8 @@ export function RetryOn(
           }
 
           // Check error codes
-          const errorCode = (error as any).code;
-          if (errorCode && errorCodes?.includes(errorCode)) {
+          const errorCode = (error as unknown as Record<string, unknown>).code;
+          if (typeof errorCode === 'string' && errorCodes?.includes(errorCode)) {
             return true;
           }
 
@@ -219,7 +219,7 @@ export function RetryOn(
  * ```
  */
 export function NoRetry(reason?: string): MethodDecorator {
-  return function (target: any, propertyName: string | symbol, descriptor: PropertyDescriptor) {
+  return function (target: object, propertyName: string | symbol, descriptor: PropertyDescriptor) {
     // This decorator is primarily for documentation
     // It doesn't modify behavior, but signals to developers that retries are intentionally disabled
 
@@ -246,7 +246,8 @@ export function NoRetry(reason?: string): MethodDecorator {
  * ```
  */
 export function RetryableService(config: RetryConfig = {}): ClassDecorator {
-  return function (target: any) {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type -- ClassDecorator signature requires Function
+  return function <T extends Function>(target: T): T | void {
     const prototype = target.prototype;
     const propertyNames = Object.getOwnPropertyNames(prototype);
 

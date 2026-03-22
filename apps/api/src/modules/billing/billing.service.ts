@@ -9,6 +9,7 @@ import Stripe from 'stripe';
 import { AuditService } from '../../core/audit/audit.service';
 import { PrismaService } from '../../core/prisma/prisma.service';
 
+import { JanuaWebhookPayloadDto } from './dto/janua-webhook.dto';
 import { BillingProvider, JanuaBillingService } from './janua-billing.service';
 import { StripeService } from './stripe.service';
 
@@ -1051,7 +1052,7 @@ export class BillingService {
   /**
    * Handle Janua subscription created event
    */
-  async handleJanuaSubscriptionCreated(payload: any): Promise<void> {
+  async handleJanuaSubscriptionCreated(payload: JanuaWebhookPayloadDto): Promise<void> {
     const { customer_id, subscription_id, plan_id, provider, metadata } = payload.data;
 
     const user = await this.prisma.user.findFirst({
@@ -1098,7 +1099,7 @@ export class BillingService {
   /**
    * Handle Janua subscription updated event
    */
-  async handleJanuaSubscriptionUpdated(payload: any): Promise<void> {
+  async handleJanuaSubscriptionUpdated(payload: JanuaWebhookPayloadDto): Promise<void> {
     const { customer_id, plan_id, status, provider: _provider } = payload.data;
 
     const user = await this.prisma.user.findFirst({
@@ -1124,7 +1125,7 @@ export class BillingService {
   /**
    * Handle Janua subscription cancelled event
    */
-  async handleJanuaSubscriptionCancelled(payload: any): Promise<void> {
+  async handleJanuaSubscriptionCancelled(payload: JanuaWebhookPayloadDto): Promise<void> {
     const { customer_id, provider } = payload.data;
 
     const user = await this.prisma.user.findFirst({
@@ -1162,7 +1163,7 @@ export class BillingService {
   /**
    * Handle Janua subscription paused event
    */
-  async handleJanuaSubscriptionPaused(payload: any): Promise<void> {
+  async handleJanuaSubscriptionPaused(payload: JanuaWebhookPayloadDto): Promise<void> {
     const { customer_id } = payload.data;
 
     const user = await this.prisma.user.findFirst({
@@ -1180,7 +1181,7 @@ export class BillingService {
   /**
    * Handle Janua subscription resumed event
    */
-  async handleJanuaSubscriptionResumed(payload: any): Promise<void> {
+  async handleJanuaSubscriptionResumed(payload: JanuaWebhookPayloadDto): Promise<void> {
     const { customer_id } = payload.data;
     const plan_id = payload.data?.plan_id;
 
@@ -1204,7 +1205,7 @@ export class BillingService {
   /**
    * Handle Janua payment succeeded event
    */
-  async handleJanuaPaymentSucceeded(payload: any): Promise<void> {
+  async handleJanuaPaymentSucceeded(payload: JanuaWebhookPayloadDto): Promise<void> {
     const { customer_id, amount, currency, provider } = payload.data;
     const plan_id = payload.data.plan_id;
 
@@ -1242,7 +1243,7 @@ export class BillingService {
   /**
    * Handle Janua payment failed event
    */
-  async handleJanuaPaymentFailed(payload: any): Promise<void> {
+  async handleJanuaPaymentFailed(payload: JanuaWebhookPayloadDto): Promise<void> {
     const { customer_id, amount, currency, provider } = payload.data;
 
     const user = await this.prisma.user.findFirst({
@@ -1273,7 +1274,7 @@ export class BillingService {
   /**
    * Handle Janua payment refunded event
    */
-  async handleJanuaPaymentRefunded(payload: any): Promise<void> {
+  async handleJanuaPaymentRefunded(payload: JanuaWebhookPayloadDto): Promise<void> {
     const { customer_id, amount, currency, provider } = payload.data;
 
     const user = await this.prisma.user.findFirst({

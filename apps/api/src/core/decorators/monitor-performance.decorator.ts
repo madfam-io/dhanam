@@ -1,11 +1,11 @@
 import { Logger } from '@nestjs/common';
 
 export function MonitorPerformance(threshold = 1000) {
-  return function (target: any, propertyName: string, descriptor: PropertyDescriptor) {
+  return function (target: object, propertyName: string, descriptor: PropertyDescriptor) {
     const method = descriptor.value;
     const logger = new Logger(target.constructor.name);
 
-    descriptor.value = async function (...args: any[]) {
+    descriptor.value = async function (...args: unknown[]) {
       const startTime = Date.now();
       const className = target.constructor.name;
       const methodName = propertyName;

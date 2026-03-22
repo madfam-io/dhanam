@@ -1,14 +1,13 @@
+import { InfrastructureException } from '@core/exceptions/domain-exceptions';
 import { Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as Sentry from '@sentry/node';
 import { Queue, Worker, Job, QueueEvents } from 'bullmq';
 import { Redis } from 'ioredis';
 
-import { InfrastructureException } from '@core/exceptions/domain-exceptions';
-
 export interface JobData {
   type: string;
-  payload: any;
+  payload: Record<string, unknown>;
   userId?: string;
   spaceId?: string;
   retryAttempts?: number;
@@ -18,7 +17,7 @@ export interface DeadLetterJob {
   id: string;
   queue: string;
   name: string;
-  data: any;
+  data: Record<string, unknown>;
   failedReason: string;
   stacktrace: string[];
   attemptsMade: number;
@@ -66,7 +65,7 @@ export interface EmailJobData {
   payload: {
     to: string;
     template: string;
-    data: any;
+    data: Record<string, unknown>;
     priority?: 'high' | 'normal' | 'low';
   };
 }
@@ -438,7 +437,7 @@ export class QueueService implements OnModuleInit, OnModuleDestroy {
   async scheduleRecurringJob(
     queueName: string,
     jobName: string,
-    data: any,
+    data: Record<string, unknown>,
     cronPattern: string
   ): Promise<Job | null> {
     const queue = this.queues.get(queueName);

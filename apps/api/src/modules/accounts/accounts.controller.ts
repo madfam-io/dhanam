@@ -1,3 +1,5 @@
+import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
+import { AuthenticatedRequest } from '@core/types/authenticated-request';
 import { Account, SyncAccountResponse } from '@dhanam/shared';
 import {
   Controller,
@@ -24,8 +26,6 @@ import {
   ApiBadRequestResponse,
   ApiParam,
 } from '@nestjs/swagger';
-
-import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
 
 import { RequireRole } from '../spaces/decorators/require-role.decorator';
 import { SpaceGuard } from '../spaces/guards/space.guard';
@@ -85,7 +85,7 @@ export class AccountsController {
   async connectAccount(
     @Param('spaceId') spaceId: string,
     @Body() dto: ConnectAccountDto,
-    @Req() req: any
+    @Req() req: AuthenticatedRequest
   ): Promise<Account[]> {
     const userId = req.user!.id;
     return this.accountsService.connectAccount(spaceId, userId, dto);
@@ -177,7 +177,7 @@ export class AccountsController {
     @Param('spaceId') spaceId: string,
     @Param('accountId') accountId: string,
     @Body() dto: UpdateOwnershipDto,
-    @Req() req: any
+    @Req() req: AuthenticatedRequest
   ): Promise<Account> {
     const userId = req.user!.id;
     return this.accountsService.updateOwnership(spaceId, accountId, userId, dto);
@@ -198,7 +198,7 @@ export class AccountsController {
   async getAccountsByOwnership(
     @Param('spaceId') spaceId: string,
     @Param('filter') filter: 'yours' | 'mine' | 'ours',
-    @Req() req: any
+    @Req() req: AuthenticatedRequest
   ): Promise<Account[]> {
     const userId = req.user!.id;
     return this.accountsService.getAccountsByOwnership(spaceId, userId, filter);
@@ -216,7 +216,7 @@ export class AccountsController {
   @ApiForbiddenResponse({ description: 'User lacks access to this space' })
   async getNetWorthByOwnership(
     @Param('spaceId') spaceId: string,
-    @Req() req: any
+    @Req() req: AuthenticatedRequest
   ): Promise<{ yours: number; mine: number; ours: number; total: number }> {
     const userId = req.user!.id;
     return this.accountsService.getNetWorthByOwnership(spaceId, userId);

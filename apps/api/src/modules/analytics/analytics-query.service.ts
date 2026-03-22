@@ -302,7 +302,7 @@ export class AnalyticsQueryService {
   ) {
     await this.spacesService.verifyUserAccess(userId, spaceId, 'viewer');
 
-    const where: any = {
+    const where: Record<string, unknown> = {
       account: { spaceId },
       date: { gte: params.startDate, lte: params.endDate },
       deletedAt: null,
@@ -325,10 +325,16 @@ export class AnalyticsQueryService {
       where.accountId = { in: params.accountIds };
     }
     if (params.amountMin !== undefined) {
-      where.amount = { ...where.amount, gte: params.amountMin };
+      where.amount = {
+        ...((where.amount as Record<string, unknown>) || {}),
+        gte: params.amountMin,
+      };
     }
     if (params.amountMax !== undefined) {
-      where.amount = { ...where.amount, lte: params.amountMax };
+      where.amount = {
+        ...((where.amount as Record<string, unknown>) || {}),
+        lte: params.amountMax,
+      };
     }
 
     if (params.groupBy === 'month') {
@@ -353,44 +359,88 @@ export class AnalyticsQueryService {
 
     // Enrich with names
     if (params.groupBy === 'category') {
-      const ids = results.map((r: any) => r.categoryId).filter(Boolean) as string[];
+      const ids = results
+        .map(
+          (
+            r: Record<string, unknown> & {
+              _sum: { amount: { toNumber: () => number } | null };
+              _count: { id: number };
+              _avg: { amount: { toNumber: () => number } | null };
+            }
+          ) => r.categoryId
+        )
+        .filter(Boolean) as string[];
       const cats = await this.prisma.category.findMany({ where: { id: { in: ids } } });
       const catMap = new Map(cats.map((c) => [c.id, c.name]));
 
-      return results.map((r: any) => ({
-        group: catMap.get(r.categoryId) || 'Uncategorized',
-        groupId: r.categoryId,
-        sum: Math.abs(r._sum.amount?.toNumber() || 0),
-        count: r._count.id,
-        average: Math.abs(r._avg.amount?.toNumber() || 0),
-      }));
+      return results.map(
+        (
+          r: Record<string, unknown> & {
+            _sum: { amount: { toNumber: () => number } | null };
+            _count: { id: number };
+            _avg: { amount: { toNumber: () => number } | null };
+          }
+        ) => ({
+          group: catMap.get(r.categoryId) || 'Uncategorized',
+          groupId: r.categoryId,
+          sum: Math.abs(r._sum.amount?.toNumber() || 0),
+          count: r._count.id,
+          average: Math.abs(r._avg.amount?.toNumber() || 0),
+        })
+      );
     }
 
     if (params.groupBy === 'account') {
-      const ids = results.map((r: any) => r.accountId).filter(Boolean) as string[];
+      const ids = results
+        .map(
+          (
+            r: Record<string, unknown> & {
+              _sum: { amount: { toNumber: () => number } | null };
+              _count: { id: number };
+              _avg: { amount: { toNumber: () => number } | null };
+            }
+          ) => r.accountId
+        )
+        .filter(Boolean) as string[];
       const accts = await this.prisma.account.findMany({ where: { id: { in: ids } } });
       const acctMap = new Map(accts.map((a) => [a.id, a.name]));
 
-      return results.map((r: any) => ({
-        group: acctMap.get(r.accountId) || 'Unknown',
-        groupId: r.accountId,
-        sum: Math.abs(r._sum.amount?.toNumber() || 0),
-        count: r._count.id,
-        average: Math.abs(r._avg.amount?.toNumber() || 0),
-      }));
+      return results.map(
+        (
+          r: Record<string, unknown> & {
+            _sum: { amount: { toNumber: () => number } | null };
+            _count: { id: number };
+            _avg: { amount: { toNumber: () => number } | null };
+          }
+        ) => ({
+          group: acctMap.get(r.accountId) || 'Unknown',
+          groupId: r.accountId,
+          sum: Math.abs(r._sum.amount?.toNumber() || 0),
+          count: r._count.id,
+          average: Math.abs(r._avg.amount?.toNumber() || 0),
+        })
+      );
     }
 
     // merchant grouping
-    return results.map((r: any) => ({
-      group: r.merchant || 'Unknown',
-      groupId: r.merchant,
-      sum: Math.abs(r._sum.amount?.toNumber() || 0),
-      count: r._count.id,
-      average: Math.abs(r._avg.amount?.toNumber() || 0),
-    }));
+    return results.map(
+      (
+        r: Record<string, unknown> & {
+          _sum: { amount: { toNumber: () => number } | null };
+          _count: { id: number };
+          _avg: { amount: { toNumber: () => number } | null };
+        }
+      ) => ({
+        group: r.merchant || 'Unknown',
+        groupId: r.merchant,
+        sum: Math.abs(r._sum.amount?.toNumber() || 0),
+        count: r._count.id,
+        average: Math.abs(r._avg.amount?.toNumber() || 0),
+      })
+    );
   }
 
-  private async _queryGroupByMonth(where: any, startDate: Date, endDate: Date) {
+  private async _queryGroupByMonth(where: Record<string, unknown>, startDate: Date, endDate: Date) {
     const transactions = await this.prisma.transaction.findMany({
       where,
       select: { date: true, amount: true },
@@ -472,17 +522,24 @@ export class AnalyticsQueryService {
     }
 
     // Build daily summary
-    const days: any[] = [];
+    const days: Array<{
+      date: string;
+      transactions: unknown[];
+      transactionCount: number;
+      income: number;
+      expenses: number;
+      net: number;
+    }> = [];
     const daysInMonth = endDate.getDate();
     for (let d = 1; d <= daysInMonth; d++) {
       const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
       const dayTransactions = dayMap.get(dateStr) || [];
       const income = dayTransactions
-        .filter((t: any) => t.amount > 0)
-        .reduce((sum: number, t: any) => sum + t.amount, 0);
+        .filter((t: { amount: number }) => t.amount > 0)
+        .reduce((sum: number, t: { amount: number }) => sum + t.amount, 0);
       const expenses = dayTransactions
-        .filter((t: any) => t.amount < 0)
-        .reduce((sum: number, t: any) => sum + Math.abs(t.amount), 0);
+        .filter((t: { amount: number }) => t.amount < 0)
+        .reduce((sum: number, t: { amount: number }) => sum + Math.abs(t.amount), 0);
 
       days.push({
         date: dateStr,

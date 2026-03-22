@@ -158,7 +158,11 @@ export class PostHogService implements OnModuleInit, OnModuleDestroy {
   /**
    * Track a feature flag evaluation
    */
-  async captureFeatureFlagCalled(userId: string, featureFlag: string, value: any): Promise<void> {
+  async captureFeatureFlagCalled(
+    userId: string,
+    featureFlag: string,
+    value: unknown
+  ): Promise<void> {
     await this.capture({
       distinctId: userId,
       event: '$feature_flag_called',

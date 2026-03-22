@@ -1,3 +1,11 @@
+import type { SentryService } from '@core/monitoring/sentry.service';
+import {
+  PrismaClientKnownRequestError,
+  PrismaClientValidationError,
+  PrismaClientRustPanicError,
+  PrismaClientInitializationError,
+  PrismaClientUnknownRequestError,
+} from '@db';
 import {
   ArgumentsHost,
   Catch,
@@ -9,15 +17,6 @@ import {
   Optional,
 } from '@nestjs/common';
 import { FastifyReply, FastifyRequest } from 'fastify';
-
-import type { SentryService } from '@core/monitoring/sentry.service';
-import {
-  PrismaClientKnownRequestError,
-  PrismaClientValidationError,
-  PrismaClientRustPanicError,
-  PrismaClientInitializationError,
-  PrismaClientUnknownRequestError,
-} from '@db';
 
 import { isDomainException, ErrorCode } from '../exceptions/domain-exceptions';
 import { TimeoutError } from '../utils/timeout.util';
@@ -48,7 +47,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     @Optional() @Inject('SentryService') private readonly sentryService?: SentryService
   ) {}
 
-  catch(exception: any, host: ArgumentsHost) {
+  catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<FastifyReply>();
     const request = ctx.getRequest<FastifyRequest>();
@@ -67,13 +66,15 @@ export class GlobalExceptionFilter implements ExceptionFilter {
   }
 
   private captureInSentry(
-    exception: any,
+    exception: unknown,
     request: FastifyRequest,
     errorResponse: ErrorResponse & { meta: { status: number; correlationId?: string } }
   ) {
     if (!this.sentryService) return;
 
-    const user = (request as any).user;
+    const user = (request as unknown as Record<string, unknown>).user as
+      | Record<string, unknown>
+      | undefined;
     if (user) {
       this.sentryService.setUser(user);
     }
@@ -143,7 +144,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     }
   }
 
-  private sanitizeHeaders(headers: Record<string, any>): Record<string, any> {
+  private sanitizeHeaders(headers: Record<string, unknown>): Record<string, unknown> {
     const sanitized = { ...headers };
     // Remove sensitive headers
     delete sanitized.authorization;
@@ -153,7 +154,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
   }
 
   private createErrorResponse(
-    exception: any,
+    exception: unknown,
     request: FastifyRequest
   ): ErrorResponse & {
     meta: {
@@ -475,7 +476,8 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     retryable: boolean;
   } {
     const message = error.message.toLowerCase();
-    const errorCode = (error as any).code?.toLowerCase() ?? '';
+    const errorCode =
+      ((error as unknown as Record<string, unknown>).code as string)?.toLowerCase() ?? '';
 
     // Network errors
     if (
@@ -547,7 +549,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
   }
 
   private logError(
-    exception: any,
+    exception: unknown,
     request: FastifyRequest,
     errorResponse: ErrorResponse & { meta: { status: number } }
   ) {
@@ -557,7 +559,9 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       method: request.method,
       userAgent: request.headers['user-agent'],
       ip: request.ip,
-      userId: (request as any).user?.id,
+      userId: (
+        (request as unknown as Record<string, unknown>).user as Record<string, unknown> | undefined
+      )?.id,
       errorCode: errorResponse.error.code,
       statusCode: status,
     };

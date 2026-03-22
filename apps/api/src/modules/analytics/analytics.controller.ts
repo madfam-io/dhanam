@@ -1,4 +1,5 @@
 import { JwtAuthGuard } from '@core/auth/guards/jwt-auth.guard';
+import { AuthenticatedRequest } from '@core/types/authenticated-request';
 import { Currency } from '@db';
 import {
   NetWorthResponse,
@@ -55,7 +56,10 @@ export class AnalyticsController {
   })
   @ApiOkResponse({ description: 'Consolidated net worth retrieved successfully' })
   @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
-  async getConsolidatedNetWorth(@Request() req: any, @Query('currency') currency?: string) {
+  async getConsolidatedNetWorth(
+    @Request() req: AuthenticatedRequest,
+    @Query('currency') currency?: string
+  ) {
     const baseCurrency = currency ? (currency.toUpperCase() as Currency) : undefined;
     return this.analyticsService.getConsolidatedNetWorth(req.user!.userId, baseCurrency);
   }
@@ -73,7 +77,7 @@ export class AnalyticsController {
   @ApiForbiddenResponse({ description: 'User lacks access to this space' })
   @ApiNotFoundResponse({ description: 'Space not found' })
   async getNetWorth(
-    @Request() req: any,
+    @Request() req: AuthenticatedRequest,
     @Param('spaceId') spaceId: string,
     @Query('currency') currency?: string
   ): Promise<NetWorthResponse> {
@@ -94,7 +98,7 @@ export class AnalyticsController {
   @ApiForbiddenResponse({ description: 'User lacks access to this space' })
   @ApiNotFoundResponse({ description: 'Space not found' })
   async getNetWorthHistory(
-    @Request() req: any,
+    @Request() req: AuthenticatedRequest,
     @Param('spaceId') spaceId: string,
     @Query('days') days?: string
   ): Promise<NetWorthHistoryPoint[]> {
@@ -114,7 +118,7 @@ export class AnalyticsController {
   @ApiForbiddenResponse({ description: 'User lacks access to this space' })
   @ApiNotFoundResponse({ description: 'Space not found' })
   async getNetWorthByOwnership(
-    @Request() req: any,
+    @Request() req: AuthenticatedRequest,
     @Param('spaceId') spaceId: string,
     @Query('currency') currency?: string
   ): Promise<NetWorthByOwnership> {
@@ -135,7 +139,7 @@ export class AnalyticsController {
   @ApiForbiddenResponse({ description: 'User lacks access to this space' })
   @ApiNotFoundResponse({ description: 'Space not found' })
   async getAccountsByOwnership(
-    @Request() req: any,
+    @Request() req: AuthenticatedRequest,
     @Param('spaceId') spaceId: string,
     @Query('ownership') ownership?: string
   ) {
@@ -156,7 +160,7 @@ export class AnalyticsController {
   @ApiForbiddenResponse({ description: 'User lacks access to this space' })
   @ApiNotFoundResponse({ description: 'Space not found' })
   async getCashflowForecast(
-    @Request() req: any,
+    @Request() req: AuthenticatedRequest,
     @Param('spaceId') spaceId: string,
     @Query('days') days?: string
   ): Promise<CashflowForecast> {
@@ -191,7 +195,7 @@ export class AnalyticsController {
   @ApiNotFoundResponse({ description: 'Space not found' })
   @ApiBadRequestResponse({ description: 'Invalid date format' })
   async getSpendingByCategory(
-    @Request() req: any,
+    @Request() req: AuthenticatedRequest,
     @Param('spaceId') spaceId: string,
     @Query('startDate') startDate: string,
     @Query('endDate') endDate: string,
@@ -224,7 +228,7 @@ export class AnalyticsController {
   @ApiForbiddenResponse({ description: 'User lacks access to this space' })
   @ApiNotFoundResponse({ description: 'Space not found' })
   async getIncomeVsExpenses(
-    @Request() req: any,
+    @Request() req: AuthenticatedRequest,
     @Param('spaceId') spaceId: string,
     @Query('months') months?: string,
     @Query('budgetId') budgetId?: string
@@ -245,7 +249,7 @@ export class AnalyticsController {
   @ApiForbiddenResponse({ description: 'User lacks access to this space' })
   @ApiNotFoundResponse({ description: 'Space not found' })
   async getAccountBalances(
-    @Request() req: any,
+    @Request() req: AuthenticatedRequest,
     @Param('spaceId') spaceId: string
   ): Promise<AccountBalanceAnalytics[]> {
     return this.analyticsService.getAccountBalances(req.user!.userId, spaceId);
@@ -259,7 +263,7 @@ export class AnalyticsController {
   @ApiForbiddenResponse({ description: 'User lacks access to this space' })
   @ApiNotFoundResponse({ description: 'Space not found' })
   async getPortfolioAllocation(
-    @Request() req: any,
+    @Request() req: AuthenticatedRequest,
     @Param('spaceId') spaceId: string
   ): Promise<PortfolioAllocation[]> {
     return this.analyticsService.getPortfolioAllocation(req.user!.userId, spaceId);
@@ -272,7 +276,7 @@ export class AnalyticsController {
   @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
   @ApiForbiddenResponse({ description: 'User lacks access to this space' })
   @ApiNotFoundResponse({ description: 'Space not found' })
-  async getDashboardData(@Request() req: any, @Param('spaceId') spaceId: string) {
+  async getDashboardData(@Request() req: AuthenticatedRequest, @Param('spaceId') spaceId: string) {
     return this.analyticsService.getDashboardData(req.user!.userId, spaceId);
   }
 
@@ -286,7 +290,7 @@ export class AnalyticsController {
   @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
   @ApiForbiddenResponse({ description: 'User lacks access to this space' })
   async getStatistics(
-    @Request() req: any,
+    @Request() req: AuthenticatedRequest,
     @Param('spaceId') spaceId: string,
     @Query('startDate') startDate: string,
     @Query('endDate') endDate: string,
@@ -310,7 +314,7 @@ export class AnalyticsController {
   @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
   @ApiForbiddenResponse({ description: 'User lacks access to this space' })
   async getAnnualTrends(
-    @Request() req: any,
+    @Request() req: AuthenticatedRequest,
     @Param('spaceId') spaceId: string,
     @Query('months') months?: string,
     @Query('budgetId') budgetId?: string
@@ -333,7 +337,7 @@ export class AnalyticsController {
   @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
   @ApiForbiddenResponse({ description: 'User lacks access to this space' })
   async getCalendarData(
-    @Request() req: any,
+    @Request() req: AuthenticatedRequest,
     @Param('spaceId') spaceId: string,
     @Query('year') year: string,
     @Query('month') month: string,
@@ -356,7 +360,7 @@ export class AnalyticsController {
   @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
   @ApiForbiddenResponse({ description: 'User lacks access to this space' })
   async executeQuery(
-    @Request() req: any,
+    @Request() req: AuthenticatedRequest,
     @Param('spaceId') spaceId: string,
     @Body()
     body: {
@@ -398,7 +402,7 @@ export class AnalyticsController {
   @ApiForbiddenResponse({ description: 'User lacks access to this space' })
   @ApiNotFoundResponse({ description: 'Space not found' })
   async getAnomalies(
-    @Request() req: any,
+    @Request() req: AuthenticatedRequest,
     @Param('spaceId') spaceId: string,
     @Query('days') days?: string,
     @Query('limit') limit?: string
@@ -416,7 +420,7 @@ export class AnalyticsController {
   @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
   @ApiForbiddenResponse({ description: 'User lacks access to this space' })
   @ApiNotFoundResponse({ description: 'Space not found' })
-  async getAnomalySummary(@Request() req: any, @Param('spaceId') spaceId: string) {
+  async getAnomalySummary(@Request() req: AuthenticatedRequest, @Param('spaceId') spaceId: string) {
     return this.anomalyService.getAnomalySummary(spaceId, req.user!.userId);
   }
 
@@ -431,7 +435,7 @@ export class AnalyticsController {
   @ApiNotFoundResponse({ description: 'Space not found' })
   @ApiBadRequestResponse({ description: 'Invalid request body' })
   async generateProjection(
-    @Request() req: any,
+    @Request() req: AuthenticatedRequest,
     @Param('spaceId') spaceId: string,
     @Body() dto: CreateProjectionDto
   ) {
@@ -447,7 +451,7 @@ export class AnalyticsController {
   @ApiNotFoundResponse({ description: 'Space not found' })
   @ApiBadRequestResponse({ description: 'Invalid request body' })
   async compareScenarios(
-    @Request() req: any,
+    @Request() req: AuthenticatedRequest,
     @Param('spaceId') spaceId: string,
     @Body() dto: WhatIfComparisonDto
   ) {
@@ -465,7 +469,7 @@ export class AnalyticsController {
   @ApiNotFoundResponse({ description: 'Space not found' })
   @ApiBadRequestResponse({ description: 'Invalid query parameters' })
   async getQuickProjection(
-    @Request() req: any,
+    @Request() req: AuthenticatedRequest,
     @Param('spaceId') spaceId: string,
     @Query('currentAge') currentAge: string,
     @Query('retirementAge') retirementAge: string

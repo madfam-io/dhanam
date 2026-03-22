@@ -1,6 +1,3 @@
-import { User, UserProfile } from '@dhanam/shared';
-import { Injectable } from '@nestjs/common';
-
 import {
   BusinessRuleException,
   InfrastructureException,
@@ -9,6 +6,8 @@ import {
 import { LoggerService } from '@core/logger/logger.service';
 import { PrismaService } from '@core/prisma/prisma.service';
 import { PrismaClientKnownRequestError } from '@db';
+import { User, UserProfile } from '@dhanam/shared';
+import { Injectable } from '@nestjs/common';
 
 import { UpdateUserDto } from './dto/update-user.dto';
 
@@ -26,7 +25,7 @@ export class UsersService {
   /**
    * Handle Prisma errors and map to domain exceptions
    */
-  private handlePrismaError(error: any, operation: string): never {
+  private handlePrismaError(error: unknown, operation: string): never {
     if (error instanceof PrismaClientKnownRequestError) {
       switch (error.code) {
         case 'P2025':
@@ -165,8 +164,8 @@ export class UsersService {
     }
   }
 
-  private sanitizeUser(user: any): User {
+  private sanitizeUser(user: Record<string, unknown>): User {
     const { passwordHash: _passwordHash, totpSecret: _totpSecret, ...sanitized } = user;
-    return sanitized;
+    return sanitized as unknown as User;
   }
 }

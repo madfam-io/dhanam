@@ -20,7 +20,7 @@ export class GuestAuthService {
    * get the same enriched data as persona-based demo users.
    */
   async createGuestSession(countryCode?: string): Promise<{
-    user: any;
+    user: { id: string; email: string; name: string | null };
     accessToken: string;
     refreshToken: string;
     expiresIn: number;

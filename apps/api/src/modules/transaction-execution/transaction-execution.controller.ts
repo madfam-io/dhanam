@@ -14,6 +14,7 @@ import {
 import { Throttle } from '@nestjs/throttler';
 
 import { JwtAuthGuard } from '../../core/auth/guards/jwt-auth.guard';
+import { AuthenticatedRequest } from '../../core/types/authenticated-request';
 import { RequiresPremium } from '../billing/decorators/requires-tier.decorator';
 import { SubscriptionGuard } from '../billing/guards/subscription.guard';
 
@@ -35,7 +36,7 @@ export class TransactionExecutionController {
   async createOrder(
     @Param('spaceId') spaceId: string,
     @Body() dto: CreateOrderDto,
-    @Req() req: any
+    @Req() req: AuthenticatedRequest
   ) {
     return this.transactionExecutionService.createOrder(
       spaceId,
@@ -53,7 +54,7 @@ export class TransactionExecutionController {
   async findAll(
     @Param('spaceId') spaceId: string,
     @Query() filter: OrderFilterDto,
-    @Req() req: any
+    @Req() req: AuthenticatedRequest
   ) {
     return this.transactionExecutionService.findAll(spaceId, req.user.id, filter);
   }
@@ -62,7 +63,11 @@ export class TransactionExecutionController {
    * Get a single order by ID
    */
   @Get(':id')
-  async findOne(@Param('spaceId') spaceId: string, @Param('id') id: string, @Req() req: any) {
+  async findOne(
+    @Param('spaceId') spaceId: string,
+    @Param('id') id: string,
+    @Req() req: AuthenticatedRequest
+  ) {
     return this.transactionExecutionService.findOne(id, req.user.id);
   }
 
@@ -74,7 +79,7 @@ export class TransactionExecutionController {
     @Param('spaceId') spaceId: string,
     @Param('id') id: string,
     @Body() dto: UpdateOrderDto,
-    @Req() req: any
+    @Req() req: AuthenticatedRequest
   ) {
     return this.transactionExecutionService.updateOrder(
       id,
@@ -95,7 +100,7 @@ export class TransactionExecutionController {
     @Param('spaceId') spaceId: string,
     @Param('id') id: string,
     @Body() dto: VerifyOrderDto,
-    @Req() req: any
+    @Req() req: AuthenticatedRequest
   ) {
     return this.transactionExecutionService.verifyOrder(
       id,
@@ -112,7 +117,11 @@ export class TransactionExecutionController {
    */
   @Post(':id/execute')
   @Throttle({ default: { limit: 10, ttl: 60000 } })
-  async executeOrder(@Param('spaceId') spaceId: string, @Param('id') id: string, @Req() req: any) {
+  async executeOrder(
+    @Param('spaceId') spaceId: string,
+    @Param('id') id: string,
+    @Req() req: AuthenticatedRequest
+  ) {
     return this.transactionExecutionService.executeOrder(
       id,
       req.user.id,
@@ -126,7 +135,11 @@ export class TransactionExecutionController {
    */
   @Post(':id/cancel')
   @HttpCode(HttpStatus.OK)
-  async cancelOrder(@Param('spaceId') spaceId: string, @Param('id') id: string, @Req() req: any) {
+  async cancelOrder(
+    @Param('spaceId') spaceId: string,
+    @Param('id') id: string,
+    @Req() req: AuthenticatedRequest
+  ) {
     return this.transactionExecutionService.cancelOrder(
       id,
       req.user.id,

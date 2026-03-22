@@ -1,6 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
-
 import { PrismaService } from '@core/prisma/prisma.service';
+import { Injectable, Logger } from '@nestjs/common';
 
 export interface ErrorReport {
   id: string;
@@ -181,7 +180,7 @@ export class ErrorTrackingService {
     );
   }
 
-  async reportJobError(jobType: string, jobId: string, error: Error, payload?: any) {
+  async reportJobError(jobType: string, jobId: string, error: Error, payload?: unknown) {
     await this.reportError(
       error,
       {
@@ -195,7 +194,11 @@ export class ErrorTrackingService {
     );
   }
 
-  async reportValidationError(endpoint: string, validationErrors: any[], userId?: string) {
+  async reportValidationError(
+    endpoint: string,
+    validationErrors: Array<{ message: string }>,
+    userId?: string
+  ) {
     await this.reportError(
       `Validation failed: ${validationErrors.map((e) => e.message).join(', ')}`,
       {

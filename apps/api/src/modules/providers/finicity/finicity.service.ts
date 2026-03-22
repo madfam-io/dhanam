@@ -1,13 +1,12 @@
 import * as crypto from 'crypto';
 
+import type { InputJsonValue } from '@db';
+import { Provider, AccountType, Currency, Prisma as _Prisma } from '@db';
 import { PROVIDER_DEFAULTS } from '@dhanam/shared';
 import { HttpService } from '@nestjs/axios';
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
-
-import type { InputJsonValue } from '@db';
-import { Provider, AccountType, Currency, Prisma as _Prisma } from '@db';
 
 import { CryptoService } from '../../../core/crypto/crypto.service';
 import { PrismaService } from '../../../core/prisma/prisma.service';
@@ -95,7 +94,7 @@ export class FinicityService implements IFinancialProvider {
       this.tokenExpiry = new Date(Date.now() + 115 * 60 * 1000);
 
       return this.accessToken!;
-    } catch (error: any) {
+    } catch (error: unknown) {
       this.logger.error('Failed to get Finicity access token:', error);
       throw new Error('Finicity authentication failed');
     }
@@ -127,14 +126,14 @@ export class FinicityService implements IFinancialProvider {
         avgResponseTimeMs: responseTimeMs,
         lastCheckedAt: new Date(),
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         provider: Provider.finicity,
         status: 'down',
         errorRate: 100,
         avgResponseTimeMs: Date.now() - startTime,
         lastCheckedAt: new Date(),
-        error: error.message,
+        error: error instanceof Error ? error.message : String(error),
       };
     }
   }
@@ -208,9 +207,11 @@ export class FinicityService implements IFinancialProvider {
           provider: 'finicity',
         },
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       this.logger.error('Failed to create Finicity Link:', error);
-      throw new BadRequestException(error.message || 'Failed to create Finicity link');
+      throw new BadRequestException(
+        error instanceof Error ? error.message : 'Failed to create Finicity link'
+      );
     }
   }
 
@@ -277,9 +278,11 @@ export class FinicityService implements IFinancialProvider {
         institutionId: institutionId || '',
         institutionName: firstAccount.institutionName || '',
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       this.logger.error('Failed to exchange Finicity token:', error);
-      throw new BadRequestException(error.message || 'Failed to exchange Finicity token');
+      throw new BadRequestException(
+        error instanceof Error ? error.message : 'Failed to exchange Finicity token'
+      );
     }
   }
 
@@ -325,9 +328,11 @@ export class FinicityService implements IFinancialProvider {
       }
 
       return providerAccounts;
-    } catch (error: any) {
+    } catch (error: unknown) {
       this.logger.error('Failed to get Finicity accounts:', error);
-      throw new BadRequestException(error.message || 'Failed to get Finicity accounts');
+      throw new BadRequestException(
+        error instanceof Error ? error.message : 'Failed to get Finicity accounts'
+      );
     }
   }
 
@@ -465,13 +470,18 @@ export class FinicityService implements IFinancialProvider {
         removed: 0,
         cursor: toDate.toString(),
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       this.logger.error('Failed to sync Finicity transactions:', error);
-      throw new BadRequestException(error.message || 'Failed to sync Finicity transactions');
+      throw new BadRequestException(
+        error instanceof Error ? error.message : 'Failed to sync Finicity transactions'
+      );
     }
   }
 
-  async handleWebhook(payload: any, signature?: string): Promise<WebhookHandlerResult> {
+  async handleWebhook(
+    payload: Record<string, unknown>,
+    signature?: string
+  ): Promise<WebhookHandlerResult> {
     if (!this.appKey) {
       throw new BadRequestException('Finicity integration not configured');
     }
@@ -507,11 +517,11 @@ export class FinicityService implements IFinancialProvider {
       return {
         processed: true,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       this.logger.error('Failed to handle Finicity webhook:', error);
       return {
         processed: false,
-        error: error.message,
+        error: error instanceof Error ? error.message : String(error),
       };
     }
   }
@@ -541,18 +551,29 @@ export class FinicityService implements IFinancialProvider {
 
       const institutions = response.data.institutions || [];
 
-      return institutions.map((inst: any) => ({
-        institutionId: inst.id.toString(),
-        name: inst.name || '',
-        logo: inst.branding?.logo,
-        primaryColor: inst.branding?.primaryColor,
-        url: inst.urlHomeApp,
-        supportedProducts: ['accounts', 'transactions'],
-        region: region || 'US',
-      }));
-    } catch (error: any) {
+      return institutions.map(
+        (
+          inst: Record<string, unknown> & {
+            id: number;
+            name?: string;
+            branding?: { logo?: string; primaryColor?: string };
+            urlHomeApp?: string;
+          }
+        ) => ({
+          institutionId: inst.id.toString(),
+          name: inst.name || '',
+          logo: inst.branding?.logo,
+          primaryColor: inst.branding?.primaryColor,
+          url: inst.urlHomeApp,
+          supportedProducts: ['accounts', 'transactions'],
+          region: region || 'US',
+        })
+      );
+    } catch (error: unknown) {
       this.logger.error('Failed to search Finicity institutions:', error);
-      throw new BadRequestException(error.message || 'Failed to search institutions');
+      throw new BadRequestException(
+        error instanceof Error ? error.message : 'Failed to search institutions'
+      );
     }
   }
 
@@ -591,9 +612,11 @@ export class FinicityService implements IFinancialProvider {
         supportedProducts: ['accounts', 'transactions'],
         region: 'US',
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       this.logger.error('Failed to get Finicity institution:', error);
-      throw new BadRequestException(error.message || 'Failed to get institution');
+      throw new BadRequestException(
+        error instanceof Error ? error.message : 'Failed to get institution'
+      );
     }
   }
 

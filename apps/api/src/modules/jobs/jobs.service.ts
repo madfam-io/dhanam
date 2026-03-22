@@ -248,14 +248,22 @@ export class JobsService {
         try {
           // Calculate total assets and liabilities
           const totalAssets = space.accounts
-            .filter((account: any) =>
+            .filter((account: { type: string; balance: { toNumber: () => number } }) =>
               ['checking', 'savings', 'investment', 'crypto'].includes(account.type)
             )
-            .reduce((sum: number, account: any) => sum + account.balance.toNumber(), 0);
+            .reduce(
+              (sum: number, account: { balance: { toNumber: () => number } }) =>
+                sum + account.balance.toNumber(),
+              0
+            );
 
           const totalLiabilities = space.accounts
-            .filter((account: any) => account.type === 'credit')
-            .reduce((sum: number, account: any) => sum + Math.abs(account.balance.toNumber()), 0);
+            .filter((account: { type: string }) => account.type === 'credit')
+            .reduce(
+              (sum: number, account: { balance: { toNumber: () => number } }) =>
+                sum + Math.abs(account.balance.toNumber()),
+              0
+            );
 
           const netWorth = totalAssets - totalLiabilities;
 

@@ -44,7 +44,10 @@ export interface IFinancialProvider {
   /**
    * Handle webhook from the provider
    */
-  handleWebhook(payload: any, signature?: string): Promise<WebhookHandlerResult>;
+  handleWebhook(
+    payload: Record<string, unknown>,
+    signature?: string
+  ): Promise<WebhookHandlerResult>;
 
   /**
    * Get institution information by ID
@@ -74,7 +77,7 @@ export interface CreateLinkParams {
   region?: string;
   institutionId?: string;
   redirectUri?: string;
-  metadata?: any;
+  metadata?: Record<string, unknown>;
 }
 
 export interface LinkResult {
@@ -82,7 +85,7 @@ export interface LinkResult {
   linkUrl?: string;
   expiresAt: Date;
   expiration?: Date;
-  metadata?: any;
+  metadata?: Record<string, unknown>;
 }
 
 export interface ExchangeTokenParams {
@@ -90,7 +93,7 @@ export interface ExchangeTokenParams {
   userId: string;
   spaceId: string;
   institutionId?: string;
-  metadata?: any;
+  metadata?: Record<string, unknown>;
 }
 
 export interface ExchangeTokenResult {
@@ -115,7 +118,7 @@ export interface ProviderAccount {
   currency: Currency;
   balance: number;
   mask?: string;
-  metadata?: any;
+  metadata?: Record<string, unknown>;
 }
 
 export interface SyncTransactionsParams {
@@ -148,7 +151,7 @@ export interface ProviderTransaction {
   merchantName?: string;
   category?: string[];
   pending: boolean;
-  metadata?: any;
+  metadata?: Record<string, unknown>;
 }
 
 export interface WebhookHandlerResult {

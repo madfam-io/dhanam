@@ -1,3 +1,4 @@
+import { SubscriptionTier } from '@db';
 import {
   Controller,
   Post,
@@ -26,9 +27,11 @@ import {
 } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import type { FastifyReply } from 'fastify';
+import type Stripe from 'stripe';
 
 import { JwtAuthGuard } from '../../core/auth/guards/jwt-auth.guard';
 import { ThrottleAuthGuard } from '../../core/security/guards/throttle-auth.guard';
+import { AuthenticatedRequest } from '../../core/types/authenticated-request';
 
 import { BillingService } from './billing.service';
 import { CheckoutQueryDto, StartTrialDto, UpgradeToPremiumDto } from './dto';
@@ -100,7 +103,7 @@ export class BillingController {
   @ApiCreatedResponse({ description: 'Checkout session created successfully' })
   @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
   @ApiBadRequestResponse({ description: 'Invalid request body' })
-  async upgradeToPremium(@Req() req: any, @Body() dto: UpgradeToPremiumDto) {
+  async upgradeToPremium(@Req() req: AuthenticatedRequest, @Body() dto: UpgradeToPremiumDto) {
     return this.billingService.upgradeToPremium(req.user.id, {
       orgId: dto.orgId,
       plan: dto.plan,
@@ -119,7 +122,7 @@ export class BillingController {
   @ApiOperation({ summary: 'Create billing portal session for subscription management' })
   @ApiCreatedResponse({ description: 'Portal session created successfully' })
   @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
-  async createPortalSession(@Req() req: any) {
+  async createPortalSession(@Req() req: AuthenticatedRequest) {
     return this.billingService.createPortalSession(req.user.id);
   }
 
@@ -131,7 +134,7 @@ export class BillingController {
   @ApiOperation({ summary: 'Get current usage metrics for the authenticated user' })
   @ApiOkResponse({ description: 'Usage metrics retrieved successfully' })
   @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
-  async getUsage(@Req() req: any) {
+  async getUsage(@Req() req: AuthenticatedRequest) {
     return this.billingService.getUserUsage(req.user.id);
   }
 
@@ -143,7 +146,7 @@ export class BillingController {
   @ApiOperation({ summary: 'Get billing history for the authenticated user' })
   @ApiOkResponse({ description: 'Billing history retrieved successfully' })
   @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
-  async getBillingHistory(@Req() req: any) {
+  async getBillingHistory(@Req() req: AuthenticatedRequest) {
     return this.billingService.getBillingHistory(req.user.id);
   }
 
@@ -167,8 +170,17 @@ export class BillingController {
   @ApiOperation({ summary: 'Get subscription status for the authenticated user' })
   @ApiOkResponse({ description: 'Subscription status retrieved successfully' })
   @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
-  async getSubscriptionStatus(@Req() req: any) {
-    const user = req.user;
+  async getSubscriptionStatus(@Req() req: AuthenticatedRequest) {
+    // JWT payload includes subscription fields beyond AuthenticatedUser
+    const user = req.user as AuthenticatedRequest['user'] & {
+      subscriptionTier: string;
+      subscriptionStartedAt: string | null;
+      subscriptionExpiresAt: string | null;
+      trialTier: string | null;
+      trialEndsAt: string | null;
+      promoStartedAt: string | null;
+      promoEndsAt: string | null;
+    };
 
     const isInTrial = this.trialService.isInTrial({
       trialTier: user.trialTier,
@@ -201,8 +213,8 @@ export class BillingController {
   @ApiOperation({ summary: 'Start a free trial' })
   @ApiCreatedResponse({ description: 'Trial started successfully' })
   @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
-  async startTrial(@Req() req: any, @Body() dto: StartTrialDto) {
-    const tier = dto.plan as any;
+  async startTrial(@Req() req: AuthenticatedRequest, @Body() dto: StartTrialDto) {
+    const tier = dto.plan as SubscriptionTier;
     await this.trialService.startTrial(req.user.id, tier, false);
     return { message: 'Trial started', plan: tier, trialDays: 3 };
   }
@@ -215,7 +227,7 @@ export class BillingController {
   @ApiOperation({ summary: 'Extend trial with credit card' })
   @ApiCreatedResponse({ description: 'Trial extended successfully' })
   @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
-  async extendTrial(@Req() req: any) {
+  async extendTrial(@Req() req: AuthenticatedRequest) {
     await this.trialService.extendTrialWithCC(req.user.id);
     return { message: 'Trial extended to 21 days' };
   }
@@ -240,7 +252,7 @@ export class BillingController {
       return { received: false, error: 'Webhook secret not configured' };
     }
 
-    let event: any;
+    let event: Stripe.Event;
 
     try {
       // Verify webhook signature

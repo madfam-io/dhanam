@@ -1,7 +1,6 @@
+import { LoggerService } from '@core/logger/logger.service';
 import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import { PostHog } from 'posthog-node';
-
-import { LoggerService } from '@core/logger/logger.service';
 
 /**
  * PostHog Analytics Service
@@ -83,7 +82,7 @@ export class PostHogService implements OnModuleDestroy {
       locale?: string;
       timezone?: string;
       createdAt?: string;
-      [key: string]: any;
+      [key: string]: string | number | boolean | undefined;
     }
   ): Promise<void> {
     if (!this.isEnabled) {

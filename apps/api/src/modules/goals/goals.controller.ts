@@ -1,3 +1,4 @@
+import { GoalShareRole, UsageMetricType } from '@db';
 import {
   Controller,
   Get,
@@ -26,9 +27,8 @@ import {
   ApiPaymentRequiredResponse,
 } from '@nestjs/swagger';
 
-import { GoalShareRole, UsageMetricType } from '@db';
-
 import { JwtAuthGuard } from '../../core/auth/guards/jwt-auth.guard';
+import { AuthenticatedRequest } from '../../core/types/authenticated-request';
 import { TrackUsage } from '../billing/decorators/track-usage.decorator';
 import { UsageLimitGuard } from '../billing/guards/usage-limit.guard';
 
@@ -55,7 +55,7 @@ export class GoalsController {
   @ApiCreatedResponse({ description: 'Goal created successfully' })
   @ApiBadRequestResponse({ description: 'Invalid request body' })
   @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
-  async create(@Body() dto: CreateGoalDto, @Req() req: any) {
+  async create(@Body() dto: CreateGoalDto, @Req() req: AuthenticatedRequest) {
     return this.goalsService.create(dto, req.user.id);
   }
 
@@ -65,7 +65,7 @@ export class GoalsController {
   @ApiOkResponse({ description: 'List of goals in the space' })
   @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
   @ApiForbiddenResponse({ description: 'User lacks access to this space' })
-  async findBySpace(@Param('spaceId') spaceId: string, @Req() req: any) {
+  async findBySpace(@Param('spaceId') spaceId: string, @Req() req: AuthenticatedRequest) {
     return this.goalsService.findBySpace(spaceId, req.user.id);
   }
 
@@ -75,7 +75,7 @@ export class GoalsController {
   @ApiOkResponse({ description: 'Goals summary for the space' })
   @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
   @ApiForbiddenResponse({ description: 'User lacks access to this space' })
-  async getSummary(@Param('spaceId') spaceId: string, @Req() req: any) {
+  async getSummary(@Param('spaceId') spaceId: string, @Req() req: AuthenticatedRequest) {
     return this.goalsService.getSummary(spaceId, req.user.id);
   }
 
@@ -86,7 +86,7 @@ export class GoalsController {
   @ApiNotFoundResponse({ description: 'Goal not found' })
   @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
   @ApiForbiddenResponse({ description: 'User lacks access to this goal' })
-  async findById(@Param('id') id: string, @Req() req: any) {
+  async findById(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
     return this.goalsService.findById(id, req.user.id);
   }
 
@@ -98,7 +98,11 @@ export class GoalsController {
   @ApiBadRequestResponse({ description: 'Invalid request body' })
   @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
   @ApiForbiddenResponse({ description: 'User lacks access to this goal' })
-  async update(@Param('id') id: string, @Body() dto: UpdateGoalDto, @Req() req: any) {
+  async update(
+    @Param('id') id: string,
+    @Body() dto: UpdateGoalDto,
+    @Req() req: AuthenticatedRequest
+  ) {
     return this.goalsService.update(id, dto, req.user.id);
   }
 
@@ -110,7 +114,7 @@ export class GoalsController {
   @ApiNotFoundResponse({ description: 'Goal not found' })
   @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
   @ApiForbiddenResponse({ description: 'User lacks access to this goal' })
-  async delete(@Param('id') id: string, @Req() req: any) {
+  async delete(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
     await this.goalsService.delete(id, req.user.id);
   }
 
@@ -121,7 +125,7 @@ export class GoalsController {
   @ApiNotFoundResponse({ description: 'Goal not found' })
   @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
   @ApiForbiddenResponse({ description: 'User lacks access to this goal' })
-  async getProgress(@Param('id') id: string, @Req() req: any) {
+  async getProgress(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
     return this.goalsService.calculateProgress(id, req.user.id);
   }
 
@@ -133,7 +137,11 @@ export class GoalsController {
   @ApiBadRequestResponse({ description: 'Invalid allocation data' })
   @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
   @ApiForbiddenResponse({ description: 'User lacks access to this goal' })
-  async addAllocation(@Param('id') id: string, @Body() dto: AddAllocationDto, @Req() req: any) {
+  async addAllocation(
+    @Param('id') id: string,
+    @Body() dto: AddAllocationDto,
+    @Req() req: AuthenticatedRequest
+  ) {
     return this.goalsService.addAllocation(id, dto, req.user.id);
   }
 
@@ -149,7 +157,7 @@ export class GoalsController {
   async removeAllocation(
     @Param('id') id: string,
     @Param('accountId') accountId: string,
-    @Req() req: any
+    @Req() req: AuthenticatedRequest
   ) {
     await this.goalsService.removeAllocation(id, accountId, req.user.id);
   }
@@ -160,7 +168,7 @@ export class GoalsController {
   @ApiOkResponse({ description: 'Detailed progress with rebalancing data' })
   @ApiNotFoundResponse({ description: 'Goal not found' })
   @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
-  async getDetailedProgress(@Param('id') id: string, @Req() _req: any) {
+  async getDetailedProgress(@Param('id') id: string, @Req() _req: AuthenticatedRequest) {
     return this.goalsExecutionService.calculateGoalProgress(id);
   }
 
@@ -171,7 +179,7 @@ export class GoalsController {
   @ApiNotFoundResponse({ description: 'Goal not found' })
   @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
   @ApiForbiddenResponse({ description: 'User lacks access to this goal' })
-  async suggestRebalancing(@Param('id') id: string, @Req() req: any) {
+  async suggestRebalancing(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
     return this.goalsExecutionService.suggestRebalancing(id, req.user.id);
   }
 
@@ -182,7 +190,7 @@ export class GoalsController {
   @ApiNotFoundResponse({ description: 'Goal not found' })
   @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
   @ApiForbiddenResponse({ description: 'User lacks access to this goal' })
-  async executeRebalancing(@Param('id') id: string, @Req() req: any) {
+  async executeRebalancing(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
     return this.goalsExecutionService.executeGoalRebalancing(id, req.user.id);
   }
 
@@ -196,7 +204,7 @@ export class GoalsController {
   @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
   @ApiPaymentRequiredResponse({ description: 'Daily goal probability limit exceeded' })
   @ApiForbiddenResponse({ description: 'User lacks access to this goal' })
-  async getProbability(@Param('id') id: string, @Req() req: any) {
+  async getProbability(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
     return this.goalProbabilityService.calculateGoalProbability(req.user.id, id);
   }
 
@@ -210,7 +218,7 @@ export class GoalsController {
   @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
   @ApiPaymentRequiredResponse({ description: 'Daily goal probability limit exceeded' })
   @ApiForbiddenResponse({ description: 'User lacks access to this goal' })
-  async updateProbability(@Param('id') id: string, @Req() req: any) {
+  async updateProbability(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
     await this.goalProbabilityService.updateGoalProbability(req.user.id, id);
     return { message: 'Probability updated successfully' };
   }
@@ -236,7 +244,7 @@ export class GoalsController {
       expectedReturn?: number;
       volatility?: number;
     },
-    @Req() req: any
+    @Req() req: AuthenticatedRequest
   ) {
     const scenarioData = {
       ...scenario,
@@ -254,7 +262,10 @@ export class GoalsController {
   @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
   @ApiPaymentRequiredResponse({ description: 'Daily goal probability limit exceeded' })
   @ApiForbiddenResponse({ description: 'User lacks access to this space' })
-  async updateAllProbabilities(@Param('spaceId') spaceId: string, @Req() req: any) {
+  async updateAllProbabilities(
+    @Param('spaceId') spaceId: string,
+    @Req() req: AuthenticatedRequest
+  ) {
     await this.goalProbabilityService.updateAllGoalProbabilities(req.user.id, spaceId);
     return { message: 'All goal probabilities updated successfully' };
   }
@@ -277,7 +288,7 @@ export class GoalsController {
       role: GoalShareRole;
       message?: string;
     },
-    @Req() req: any
+    @Req() req: AuthenticatedRequest
   ) {
     return this.goalCollaborationService.shareGoal(req.user.id, {
       goalId,
@@ -292,7 +303,7 @@ export class GoalsController {
   @ApiNotFoundResponse({ description: 'Goal not found' })
   @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
   @ApiForbiddenResponse({ description: 'User lacks access to this goal' })
-  async getGoalShares(@Param('id') goalId: string, @Req() req: any) {
+  async getGoalShares(@Param('id') goalId: string, @Req() req: AuthenticatedRequest) {
     return this.goalCollaborationService.getGoalShares(req.user.id, goalId);
   }
 
@@ -300,7 +311,7 @@ export class GoalsController {
   @ApiOperation({ summary: 'Get all goals shared with me' })
   @ApiOkResponse({ description: 'List of goals shared with current user' })
   @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
-  async getSharedGoals(@Req() req: any) {
+  async getSharedGoals(@Req() req: AuthenticatedRequest) {
     return this.goalCollaborationService.getSharedGoals(req.user.id);
   }
 
@@ -311,7 +322,7 @@ export class GoalsController {
   @ApiNotFoundResponse({ description: 'Share invitation not found' })
   @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
   @ApiForbiddenResponse({ description: 'Share invitation not for this user' })
-  async acceptShare(@Param('shareId') shareId: string, @Req() req: any) {
+  async acceptShare(@Param('shareId') shareId: string, @Req() req: AuthenticatedRequest) {
     return this.goalCollaborationService.acceptShare(req.user.id, shareId);
   }
 
@@ -323,7 +334,7 @@ export class GoalsController {
   @ApiNotFoundResponse({ description: 'Share invitation not found' })
   @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
   @ApiForbiddenResponse({ description: 'Share invitation not for this user' })
-  async declineShare(@Param('shareId') shareId: string, @Req() req: any) {
+  async declineShare(@Param('shareId') shareId: string, @Req() req: AuthenticatedRequest) {
     await this.goalCollaborationService.declineShare(req.user.id, shareId);
   }
 
@@ -335,7 +346,7 @@ export class GoalsController {
   @ApiNotFoundResponse({ description: 'Share not found' })
   @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
   @ApiForbiddenResponse({ description: 'User lacks permission to revoke this share' })
-  async revokeShare(@Param('shareId') shareId: string, @Req() req: any) {
+  async revokeShare(@Param('shareId') shareId: string, @Req() req: AuthenticatedRequest) {
     await this.goalCollaborationService.revokeShare(req.user.id, shareId);
   }
 
@@ -350,7 +361,7 @@ export class GoalsController {
   async updateShareRole(
     @Param('shareId') shareId: string,
     @Body() body: { newRole: GoalShareRole },
-    @Req() req: any
+    @Req() req: AuthenticatedRequest
   ) {
     return this.goalCollaborationService.updateShareRole(req.user.id, {
       shareId,
@@ -365,7 +376,7 @@ export class GoalsController {
   @ApiNotFoundResponse({ description: 'Goal not found' })
   @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
   @ApiForbiddenResponse({ description: 'User lacks access to this goal' })
-  async getGoalActivities(@Param('id') goalId: string, @Req() req: any) {
+  async getGoalActivities(@Param('id') goalId: string, @Req() req: AuthenticatedRequest) {
     return this.goalCollaborationService.getGoalActivities(req.user.id, goalId);
   }
 }

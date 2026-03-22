@@ -183,7 +183,7 @@ export class ProviderOrchestratorService {
    */
   async executeWithFailover<T>(
     operation: 'createLink' | 'exchangeToken' | 'getAccounts' | 'syncTransactions',
-    params: any,
+    params: Record<string, unknown>,
     preferredProvider?: Provider,
     region: string = 'US'
   ): Promise<ProviderAttemptResult<T>> {
@@ -243,7 +243,7 @@ export class ProviderOrchestratorService {
         );
 
         // Execute the operation
-        let result: any;
+        let result: unknown;
         switch (operation) {
           case 'createLink':
             result = await providerImpl.createLink(params as CreateLinkParams);
@@ -292,7 +292,7 @@ export class ProviderOrchestratorService {
           responseTimeMs: Date.now() - startTime,
           failoverUsed: i > 0,
         };
-      } catch (error: any) {
+      } catch (error: unknown) {
         const responseTimeMs = Date.now() - attemptStartTime;
 
         lastError = this.parseError(error, provider);
@@ -433,8 +433,10 @@ export class ProviderOrchestratorService {
    * @param provider - Provider that threw the error
    * @returns Standardized ProviderError object
    */
-  private parseError(error: any, provider: Provider): ProviderError {
-    const errorMessage = error.message || 'Unknown error';
+  private parseError(error: unknown, provider: Provider): ProviderError {
+    const err = error as Record<string, unknown> | null;
+    const errorMessage =
+      (error instanceof Error ? error.message : String(error)) || 'Unknown error';
 
     // Determine error type and if it's retryable
     let type: ProviderError['type'] = 'unknown';
@@ -458,7 +460,7 @@ export class ProviderOrchestratorService {
     }
 
     return {
-      code: error.code || 'UNKNOWN_ERROR',
+      code: (typeof err?.code === 'string' ? err.code : undefined) || 'UNKNOWN_ERROR',
       message: errorMessage,
       type,
       retryable,
