@@ -5,6 +5,7 @@ import { AuthModule } from '../../core/auth/auth.module';
 import { CryptoModule } from '../../core/crypto/crypto.module';
 import { PrismaModule } from '../../core/prisma/prisma.module';
 import { BillingModule } from '../billing/billing.module';
+import { KycModule } from '../kyc/kyc.module';
 import { SpacesModule } from '../spaces/spaces.module';
 
 // Provider adapters
@@ -19,7 +20,15 @@ import { TransactionExecutionController } from './transaction-execution.controll
 import { TransactionExecutionService } from './transaction-execution.service';
 
 @Module({
-  imports: [PrismaModule, AuditModule, AuthModule, SpacesModule, BillingModule, CryptoModule],
+  imports: [
+    PrismaModule,
+    AuditModule,
+    AuthModule,
+    SpacesModule,
+    BillingModule,
+    KycModule,
+    CryptoModule,
+  ],
   controllers: [TransactionExecutionController],
   providers: [
     TransactionExecutionService,

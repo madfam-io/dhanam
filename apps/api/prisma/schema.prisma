@@ -222,6 +222,14 @@ enum AssetType {
   other
 }
 
+enum KycStatus {
+  PENDING
+  IN_PROGRESS
+  VERIFIED
+  REJECTED
+  EXPIRED
+}
+
 // Models
 model User {
   id                    String    @id @default(uuid())
@@ -284,32 +292,33 @@ model User {
   deletedAt DateTime? @map("deleted_at")
 
   // Relations
-  userSpaces          UserSpace[]
-  sessions            Session[]
-  auditLogs           AuditLog[]
-  providerConnections ProviderConnection[]
-  preferences         UserPreferences?
-  billingEvents       BillingEvent[]
-  usageMetrics        UsageMetric[]
-  householdMembers    HouseholdMember[]
-  simulations         Simulation[]
-  ownedAccounts       Account[] // For "Yours/Mine/Ours" visibility
-  transactionSplits   TransactionSplit[]
-  sharedAccounts      AccountSharingPermission[] @relation("SharedAccounts")
-  createdGoals        Goal[]                     @relation("GoalCreator")
-  goalShares          GoalShare[]                @relation("GoalShares")
-  sentGoalInvites     GoalShare[]                @relation("GoalInvites")
-  goalActivities      GoalActivity[]             @relation("GoalActivities")
-  notifications       UserNotification[]
-  inactivityAlerts    InactivityAlert[]
-  executorAssignments ExecutorAssignment[]       @relation("AccountHolder")
-  assignedAsExecutor  ExecutorAssignment[]       @relation("Executor")
-  savedReports        SavedReport[]              @relation("SavedReportCreator")
-  generatedReports    GeneratedReport[]          @relation("GeneratedReports")
-  reportShares        ReportShare[]              @relation("ReportShares")
-  reportInvites       ReportShare[]              @relation("ReportInvites")
-  reportShareTokens   ReportShareToken[]         @relation("ReportShareTokens")
-  dripEvents          DripEvent[]
+  userSpaces            UserSpace[]
+  sessions              Session[]
+  auditLogs             AuditLog[]
+  providerConnections   ProviderConnection[]
+  preferences           UserPreferences?
+  billingEvents         BillingEvent[]
+  usageMetrics          UsageMetric[]
+  householdMembers      HouseholdMember[]
+  simulations           Simulation[]
+  ownedAccounts         Account[] // For "Yours/Mine/Ours" visibility
+  transactionSplits     TransactionSplit[]
+  sharedAccounts        AccountSharingPermission[] @relation("SharedAccounts")
+  createdGoals          Goal[]                     @relation("GoalCreator")
+  goalShares            GoalShare[]                @relation("GoalShares")
+  sentGoalInvites       GoalShare[]                @relation("GoalInvites")
+  goalActivities        GoalActivity[]             @relation("GoalActivities")
+  notifications         UserNotification[]
+  inactivityAlerts      InactivityAlert[]
+  executorAssignments   ExecutorAssignment[]       @relation("AccountHolder")
+  assignedAsExecutor    ExecutorAssignment[]       @relation("Executor")
+  savedReports          SavedReport[]              @relation("SavedReportCreator")
+  generatedReports      GeneratedReport[]          @relation("GeneratedReports")
+  reportShares          ReportShare[]              @relation("ReportShares")
+  reportInvites         ReportShare[]              @relation("ReportInvites")
+  reportShareTokens     ReportShareToken[]         @relation("ReportShareTokens")
+  dripEvents            DripEvent[]
+  identityVerifications IdentityVerification[]
 
   @@index([onboardingCompleted, createdAt(sort: Desc)])
   @@index([lastLoginAt(sort: Desc)])
@@ -2013,4 +2022,45 @@ model TransactionTag {
   @@id([transactionId, tagId])
   @@index([tagId])
   @@map("transaction_tags")
+}
+
+// =============================================================================
+// KYC / AML — MetaMap Identity Verification (CNBV Compliance)
+// =============================================================================
+
+model IdentityVerification {
+  id               String    @id @default(uuid())
+  userId           String    @map("user_id")
+  kycStatus        KycStatus @default(PENDING) @map("kyc_status")
+  providerFlowId   String?   @map("provider_flow_id")
+  pepMatch         Boolean   @default(false) @map("pep_match")
+  sanctionsMatch   Boolean   @default(false) @map("sanctions_match")
+  curpValidated    Boolean   @default(false) @map("curp_validated")
+  ineValidated     Boolean   @default(false) @map("ine_validated")
+  verificationData Json?     @map("verification_data")
+  completedAt      DateTime? @map("completed_at")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  user      User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  documents VerificationDocument[]
+
+  @@index([userId])
+  @@index([kycStatus])
+  @@index([providerFlowId])
+  @@map("identity_verifications")
+}
+
+model VerificationDocument {
+  id             String   @id @default(uuid())
+  verificationId String   @map("verification_id")
+  documentType   String   @map("document_type")
+  documentUrl    String   @map("document_url")
+  status         String   @default("pending")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  verification IdentityVerification @relation(fields: [verificationId], references: [id], onDelete: Cascade)
+
+  @@index([verificationId])
+  @@map("verification_documents")
 }

@@ -17,12 +17,13 @@ import { JwtAuthGuard } from '../../core/auth/guards/jwt-auth.guard';
 import { AuthenticatedRequest } from '../../core/types/authenticated-request';
 import { RequiresPremium } from '../billing/decorators/requires-tier.decorator';
 import { SubscriptionGuard } from '../billing/guards/subscription.guard';
+import { KycVerifiedGuard } from '../kyc/guards/kyc-verified.guard';
 
 import { CreateOrderDto, VerifyOrderDto, UpdateOrderDto, OrderFilterDto } from './dto';
 import { TransactionExecutionService } from './transaction-execution.service';
 
 @Controller('spaces/:spaceId/orders')
-@UseGuards(JwtAuthGuard, SubscriptionGuard)
+@UseGuards(JwtAuthGuard, SubscriptionGuard, KycVerifiedGuard)
 @RequiresPremium()
 export class TransactionExecutionController {
   constructor(private transactionExecutionService: TransactionExecutionService) {}
