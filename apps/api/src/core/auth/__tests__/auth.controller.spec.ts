@@ -6,6 +6,7 @@ import {
   RegisterDto,
   ResetPasswordDto,
 } from '@dhanam/shared';
+import { GoneException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ThrottlerModule } from '@nestjs/throttler';
 
@@ -166,11 +167,7 @@ describe('AuthController', () => {
 
   describe('refreshTokens', () => {
     it('should delegate to AUTH_PROVIDER.refreshTokens', async () => {
-      const result = await controller.refreshTokens(
-        { refreshToken: 'old-token' },
-        '',
-        mockRes
-      );
+      const result = await controller.refreshTokens({ refreshToken: 'old-token' }, '', mockRes);
 
       expect(authProvider.refreshTokens).toHaveBeenCalledWith('old-token');
       expect(result.tokens.accessToken).toBe(mockTokens.accessToken);
@@ -262,6 +259,121 @@ describe('AuthController', () => {
 
       expect(authProvider.register).not.toHaveBeenCalled();
       expect(authProvider.login).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('local auth disabled (Janua SSO mode)', () => {
+    const originalAuthMode = process.env.AUTH_MODE;
+    const originalEnableLocal = process.env.ENABLE_LOCAL_AUTH;
+
+    afterEach(() => {
+      // Restore env vars
+      if (originalAuthMode !== undefined) {
+        process.env.AUTH_MODE = originalAuthMode;
+      } else {
+        delete process.env.AUTH_MODE;
+      }
+      if (originalEnableLocal !== undefined) {
+        process.env.ENABLE_LOCAL_AUTH = originalEnableLocal;
+      } else {
+        delete process.env.ENABLE_LOCAL_AUTH;
+      }
+    });
+
+    it('should throw GoneException on register when AUTH_MODE=janua', async () => {
+      process.env.AUTH_MODE = 'janua';
+
+      const dto: RegisterDto = {
+        email: 'test@example.com',
+        password: 'SecureP@ss123',
+        name: 'Test',
+      };
+
+      await expect(controller.register(dto, '127.0.0.1', 'test-agent', mockRes)).rejects.toThrow(
+        GoneException
+      );
+
+      expect(authProvider.register).not.toHaveBeenCalled();
+    });
+
+    it('should throw GoneException on login when AUTH_MODE=janua', async () => {
+      process.env.AUTH_MODE = 'janua';
+
+      const dto: LoginDto = { email: 'test@example.com', password: 'pass' };
+
+      await expect(controller.login(dto, '127.0.0.1', 'test-agent', mockRes)).rejects.toThrow(
+        GoneException
+      );
+
+      expect(authProvider.login).not.toHaveBeenCalled();
+    });
+
+    it('should throw GoneException on forgotPassword when AUTH_MODE=janua', async () => {
+      process.env.AUTH_MODE = 'janua';
+
+      const dto: ForgotPasswordDto = { email: 'test@example.com' };
+
+      await expect(controller.forgotPassword(dto)).rejects.toThrow(GoneException);
+      expect(authProvider.forgotPassword).not.toHaveBeenCalled();
+    });
+
+    it('should throw GoneException on resetPassword when AUTH_MODE=janua', async () => {
+      process.env.AUTH_MODE = 'janua';
+
+      const dto: ResetPasswordDto = { token: 'tok', newPassword: 'NewPass123!' };
+
+      await expect(controller.resetPassword(dto)).rejects.toThrow(GoneException);
+      expect(authProvider.resetPassword).not.toHaveBeenCalled();
+    });
+
+    it('should throw GoneException on register when ENABLE_LOCAL_AUTH=false', async () => {
+      delete process.env.AUTH_MODE;
+      process.env.ENABLE_LOCAL_AUTH = 'false';
+
+      const dto: RegisterDto = {
+        email: 'test@example.com',
+        password: 'SecureP@ss123',
+        name: 'Test',
+      };
+
+      await expect(controller.register(dto, '127.0.0.1', 'test-agent', mockRes)).rejects.toThrow(
+        GoneException
+      );
+    });
+
+    it('should include redirect URL in GoneException response', async () => {
+      process.env.AUTH_MODE = 'janua';
+
+      const dto: LoginDto = { email: 'test@example.com', password: 'pass' };
+
+      try {
+        await controller.login(dto, '127.0.0.1', 'test-agent', mockRes);
+        fail('Expected GoneException to be thrown');
+      } catch (error) {
+        expect(error).toBeInstanceOf(GoneException);
+        const response = (error as GoneException).getResponse();
+        expect(response).toEqual(
+          expect.objectContaining({
+            redirect: 'https://auth.madfam.io',
+            message: 'Local auth disabled. Use SSO.',
+          })
+        );
+      }
+    });
+
+    it('should allow local auth when AUTH_MODE is not janua', async () => {
+      delete process.env.AUTH_MODE;
+      delete process.env.ENABLE_LOCAL_AUTH;
+
+      const dto: RegisterDto = {
+        email: 'test@example.com',
+        password: 'SecureP@ss123',
+        name: 'Test',
+      };
+
+      const result = await controller.register(dto, '127.0.0.1', 'test-agent', mockRes);
+      expect(result.tokens.accessToken).toBe(mockTokens.accessToken);
+      expect(authProvider.register).toHaveBeenCalled();
     });
   });
 });
