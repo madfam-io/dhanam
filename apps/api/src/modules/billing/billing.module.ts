@@ -23,7 +23,9 @@ import { PrismaModule } from '../../core/prisma/prisma.module';
 
 import { BillingController } from './billing.controller';
 import { BillingService } from './billing.service';
+import { CustomerFederationController } from './customer-federation.controller';
 import { FeatureGateGuard } from './guards/feature-gate.guard';
+import { FederationAuthGuard } from './guards/federation-auth.guard';
 import { ProviderConnectionGuard } from './guards/provider-connection.guard';
 import { SpaceLimitGuard } from './guards/space-limit.guard';
 import { SubscriptionGuard } from './guards/subscription.guard';
@@ -31,6 +33,8 @@ import { UsageLimitGuard } from './guards/usage-limit.guard';
 import { UsageTrackingInterceptor } from './interceptors/usage-tracking.interceptor';
 import { JanuaBillingService } from './janua-billing.service';
 import { SubscriptionLifecycleJob } from './jobs/subscription-lifecycle.job';
+// Federation (PhyneCRM integration)
+import { CustomerFederationService } from './services/customer-federation.service';
 // Hybrid Router Services (Stripe MX + Paddle)
 import { PaddleService } from './services/paddle.service';
 import { PaymentRouterService } from './services/payment-router.service';
@@ -50,7 +54,7 @@ import { StripeService } from './stripe.service';
       maxRedirects: 5,
     }),
   ],
-  controllers: [BillingController],
+  controllers: [BillingController, CustomerFederationController],
   providers: [
     // Core billing services
     BillingService,
@@ -67,6 +71,10 @@ import { StripeService } from './stripe.service';
     PaymentRouterService,
     StripeMxService,
     PaddleService,
+
+    // Federation (PhyneCRM)
+    CustomerFederationService,
+    FederationAuthGuard,
 
     // Guards and interceptors
     SubscriptionGuard,
@@ -86,6 +94,7 @@ import { StripeService } from './stripe.service';
     PaymentRouterService,
     StripeMxService,
     PaddleService,
+    CustomerFederationService,
     SubscriptionGuard,
     UsageLimitGuard,
     SpaceLimitGuard,
