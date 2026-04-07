@@ -23,6 +23,7 @@ import { PrismaModule } from '../../core/prisma/prisma.module';
 
 import { BillingController } from './billing.controller';
 import { BillingService } from './billing.service';
+import { CotizaWebhookController } from './cotiza-webhook.controller';
 import { CustomerFederationController } from './customer-federation.controller';
 import { FeatureGateGuard } from './guards/feature-gate.guard';
 import { FederationAuthGuard } from './guards/federation-auth.guard';
@@ -54,7 +55,7 @@ import { StripeService } from './stripe.service';
       maxRedirects: 5,
     }),
   ],
-  controllers: [BillingController, CustomerFederationController],
+  controllers: [BillingController, CustomerFederationController, CotizaWebhookController],
   providers: [
     // Core billing services
     BillingService,
