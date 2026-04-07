@@ -19,6 +19,7 @@ import { GoalsModule } from '@modules/goals/goals.module';
 import { HouseholdsModule } from '@modules/households/households.module';
 import { IntegrationsModule } from '@modules/integrations/integrations.module';
 import { JobsModule } from '@modules/jobs/jobs.module';
+import { KycModule } from '@modules/kyc/kyc.module';
 import { ManualAssetsModule } from '@modules/manual-assets/manual-assets.module';
 import { OnboardingModule } from '@modules/onboarding/onboarding.module';
 import { PreferencesModule } from '@modules/preferences/preferences.module';
@@ -70,6 +71,7 @@ import { validationSchema } from './config/validation';
     BillingModule,
     GamingModule,
     GoalsModule,
+    KycModule,
     HouseholdsModule,
     EstatePlanningModule,
     SimulationsModule,
