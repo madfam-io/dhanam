@@ -183,6 +183,43 @@ spec:
                   key: JWT_REFRESH_SECRET
 
             # =================================================================
+            # Webhook Secrets
+            # =================================================================
+            - name: COTIZA_WEBHOOK_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: dhanam-secrets
+                  key: COTIZA_WEBHOOK_SECRET
+
+            # =================================================================
+            # KYC - MetaMap Integration
+            # =================================================================
+            - name: METAMAP_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: dhanam-secrets
+                  key: METAMAP_CLIENT_ID
+            - name: METAMAP_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: dhanam-secrets
+                  key: METAMAP_CLIENT_SECRET
+            - name: METAMAP_WEBHOOK_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: dhanam-secrets
+                  key: METAMAP_WEBHOOK_SECRET
+
+            # =================================================================
+            # Federation
+            # =================================================================
+            - name: FEDERATION_API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: dhanam-secrets
+                  key: FEDERATION_API_TOKEN
+
+            # =================================================================
             # Email / SMTP
             # =================================================================
             - name: SMTP_HOST
