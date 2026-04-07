@@ -1,16 +1,15 @@
-import { AUTH_DEFAULTS } from '@dhanam/shared';
-import { Module, forwardRef } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { JwtModule } from '@nestjs/jwt';
-import { PassportModule } from '@nestjs/passport';
-
 import { AuditModule } from '@core/audit/audit.module';
 import { SecurityConfigService } from '@core/config/security.config';
 import { CryptoModule } from '@core/crypto/crypto.module';
 import { LoggerModule } from '@core/logger/logger.module';
 import { PrismaModule } from '@core/prisma/prisma.module';
 import { RedisModule } from '@core/redis/redis.module';
+import { AUTH_DEFAULTS } from '@dhanam/shared';
 import { EmailModule } from '@modules/email/email.module';
+import { Logger, Module, OnModuleInit, forwardRef } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { JwtModule } from '@nestjs/jwt';
+import { PassportModule } from '@nestjs/passport';
 
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
@@ -138,4 +137,22 @@ function resolveAuthMode(): AuthMode {
     MFA_PROVIDER,
   ],
 })
-export class AuthModule {}
+export class AuthModule implements OnModuleInit {
+  private readonly logger = new Logger(AuthModule.name);
+
+  onModuleInit() {
+    const authMode = process.env.AUTH_MODE ?? resolveAuthMode();
+    const nodeEnv = process.env.NODE_ENV;
+
+    if (nodeEnv === 'production' && authMode !== 'janua') {
+      this.logger.error('=======================================================================');
+      this.logger.error('CRITICAL: AUTH_MODE is not "janua" in production!');
+      this.logger.error(`  Current AUTH_MODE="${authMode}", NODE_ENV="${nodeEnv}"`);
+      this.logger.error('  Dhanam MUST use Janua SSO (auth.madfam.io) in production.');
+      this.logger.error('  Set AUTH_MODE=janua or deployment will use local auth unsafely.');
+      this.logger.error('=======================================================================');
+    } else {
+      this.logger.log(`AuthModule initialised — AUTH_MODE="${authMode}", NODE_ENV="${nodeEnv}"`);
+    }
+  }
+}

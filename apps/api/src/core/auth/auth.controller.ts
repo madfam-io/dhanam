@@ -23,6 +23,7 @@ import {
   Res,
   Inject,
   UnauthorizedException,
+  GoneException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
@@ -48,6 +49,26 @@ export class AuthController {
     private securityConfig: SecurityConfigService
   ) {}
 
+  /**
+   * Returns true when local auth endpoints (login, register, forgot/reset
+   * password) should be disabled — i.e. when Janua SSO is the active auth
+   * provider or local auth has been explicitly turned off.
+   */
+  private isLocalAuthDisabled(): boolean {
+    return process.env.AUTH_MODE === 'janua' || process.env.ENABLE_LOCAL_AUTH === 'false';
+  }
+
+  /**
+   * Throws a 410 Gone response directing the client to Janua SSO.
+   * Used as a guard at the top of local-auth-only endpoints.
+   */
+  private throwLocalAuthDisabled(): never {
+    throw new GoneException({
+      redirect: 'https://auth.madfam.io',
+      message: 'Local auth disabled. Use SSO.',
+    });
+  }
+
   @Post('register')
   @UseGuards(ThrottleAuthGuard)
   @Throttle({
@@ -67,6 +88,8 @@ export class AuthController {
     @Headers('user-agent') userAgent: string,
     @Res({ passthrough: true }) res: FastifyReply
   ): Promise<{ tokens: { accessToken: string; expiresIn: number } }> {
+    if (this.isLocalAuthDisabled()) this.throwLocalAuthDisabled();
+
     const tokens = await this.authProvider.register(dto);
 
     // Set refresh token as httpOnly cookie
@@ -110,6 +133,8 @@ export class AuthController {
     @Headers('user-agent') userAgent: string,
     @Res({ passthrough: true }) res: FastifyReply
   ): Promise<{ tokens: { accessToken: string; expiresIn: number } }> {
+    if (this.isLocalAuthDisabled()) this.throwLocalAuthDisabled();
+
     try {
       const tokens = await this.authProvider.login(dto);
 
@@ -333,6 +358,8 @@ export class AuthController {
   @ApiOperation({ summary: 'Request password reset' })
   @ApiResponse({ status: 200, description: 'Reset email sent if user exists' })
   async forgotPassword(@Body() dto: ForgotPasswordDto): Promise<{ message: string }> {
+    if (this.isLocalAuthDisabled()) this.throwLocalAuthDisabled();
+
     await this.authProvider.forgotPassword(dto);
     return { message: 'If the email exists, a reset link has been sent' };
   }
@@ -349,6 +376,8 @@ export class AuthController {
   @ApiOperation({ summary: 'Reset password with token' })
   @ApiResponse({ status: 200, description: 'Password reset successful' })
   async resetPassword(@Body() dto: ResetPasswordDto): Promise<{ message: string }> {
+    if (this.isLocalAuthDisabled()) this.throwLocalAuthDisabled();
+
     await this.authProvider.resetPassword(dto);
     return { message: 'Password reset successful' };
   }
