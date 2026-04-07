@@ -84,7 +84,7 @@ describe('PaymentRouterService', () => {
       expect(config).toEqual({
         provider: 'stripe_mx',
         currency: 'MXN',
-        paymentMethods: ['card', 'oxxo', 'spei'],
+        paymentMethods: ['card', 'oxxo', 'customer_balance'],
         taxHandling: 'automatic',
       });
     });
@@ -284,7 +284,10 @@ describe('PaymentRouterService', () => {
         url: 'https://billing.stripe.com/session/test123',
       } as any);
 
-      const result = await service.createPortalSession('user-123', 'https://app.dhanam.com/billing');
+      const result = await service.createPortalSession(
+        'user-123',
+        'https://app.dhanam.com/billing'
+      );
 
       expect(result).toEqual({
         portalUrl: 'https://billing.stripe.com/session/test123',
@@ -305,7 +308,10 @@ describe('PaymentRouterService', () => {
       };
       prisma.user.findUnique.mockResolvedValue(userWithPaddle as any);
 
-      const result = await service.createPortalSession('user-123', 'https://app.dhanam.com/billing');
+      const result = await service.createPortalSession(
+        'user-123',
+        'https://app.dhanam.com/billing'
+      );
 
       expect(result).toEqual({
         portalUrl: 'https://app.dhanam.com/billing?manage=paddle',

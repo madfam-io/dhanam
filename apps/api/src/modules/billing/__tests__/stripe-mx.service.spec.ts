@@ -100,10 +100,7 @@ describe('StripeMxService', () => {
     it('should throw error if not configured', async () => {
       const mockGet = jest.fn(() => null);
       const module: TestingModule = await Test.createTestingModule({
-        providers: [
-          StripeMxService,
-          { provide: ConfigService, useValue: { get: mockGet } },
-        ],
+        providers: [StripeMxService, { provide: ConfigService, useValue: { get: mockGet } }],
       }).compile();
 
       const unconfiguredService = module.get<StripeMxService>(StripeMxService);
@@ -135,7 +132,7 @@ describe('StripeMxService', () => {
         successUrl: 'https://app.dhanam.com/success',
         cancelUrl: 'https://app.dhanam.com/cancel',
         metadata: { dhanam_user_id: 'user-123' },
-        paymentMethods: ['card', 'oxxo'],
+        paymentMethods: ['card', 'oxxo', 'customer_balance'],
       });
 
       expect(createSpy).toHaveBeenCalledWith({
@@ -143,7 +140,7 @@ describe('StripeMxService', () => {
         customer: 'cus_mx_test123',
         customer_email: undefined, // Not used when customerId is provided
         line_items: [{ price: 'price_premium_mx', quantity: 1 }],
-        payment_method_types: ['card', 'oxxo'],
+        payment_method_types: ['card', 'oxxo', 'customer_balance'],
         success_url: 'https://app.dhanam.com/success',
         cancel_url: 'https://app.dhanam.com/cancel',
         locale: 'es-419',
@@ -185,7 +182,7 @@ describe('StripeMxService', () => {
 
       expect(createSpy).toHaveBeenCalledWith(
         expect.objectContaining({
-          payment_method_types: ['card', 'oxxo'],
+          payment_method_types: ['card', 'oxxo', 'customer_balance'],
         })
       );
     });
@@ -218,10 +215,7 @@ describe('StripeMxService', () => {
     it('should throw error if not configured', async () => {
       const mockGet = jest.fn(() => null);
       const module: TestingModule = await Test.createTestingModule({
-        providers: [
-          StripeMxService,
-          { provide: ConfigService, useValue: { get: mockGet } },
-        ],
+        providers: [StripeMxService, { provide: ConfigService, useValue: { get: mockGet } }],
       }).compile();
 
       const unconfiguredService = module.get<StripeMxService>(StripeMxService);
@@ -325,10 +319,7 @@ describe('StripeMxService', () => {
     it('should throw error if not configured', async () => {
       const mockGet = jest.fn(() => null);
       const module: TestingModule = await Test.createTestingModule({
-        providers: [
-          StripeMxService,
-          { provide: ConfigService, useValue: { get: mockGet } },
-        ],
+        providers: [StripeMxService, { provide: ConfigService, useValue: { get: mockGet } }],
       }).compile();
 
       const unconfiguredService = module.get<StripeMxService>(StripeMxService);
@@ -369,10 +360,7 @@ describe('StripeMxService', () => {
       });
 
       const module: TestingModule = await Test.createTestingModule({
-        providers: [
-          StripeMxService,
-          { provide: ConfigService, useValue: { get: mockGet } },
-        ],
+        providers: [StripeMxService, { provide: ConfigService, useValue: { get: mockGet } }],
       }).compile();
 
       const serviceWithoutWebhookSecret = module.get<StripeMxService>(StripeMxService);
@@ -432,17 +420,14 @@ describe('StripeMxService', () => {
     it('should throw error if not configured', async () => {
       const mockGet = jest.fn(() => null);
       const module: TestingModule = await Test.createTestingModule({
-        providers: [
-          StripeMxService,
-          { provide: ConfigService, useValue: { get: mockGet } },
-        ],
+        providers: [StripeMxService, { provide: ConfigService, useValue: { get: mockGet } }],
       }).compile();
 
       const unconfiguredService = module.get<StripeMxService>(StripeMxService);
 
-      await expect(
-        unconfiguredService.cancelSubscription('sub_123', false)
-      ).rejects.toThrow('Stripe MX not configured');
+      await expect(unconfiguredService.cancelSubscription('sub_123', false)).rejects.toThrow(
+        'Stripe MX not configured'
+      );
     });
   });
 
@@ -467,10 +452,7 @@ describe('StripeMxService', () => {
     it('should throw error if not configured', async () => {
       const mockGet = jest.fn(() => null);
       const module: TestingModule = await Test.createTestingModule({
-        providers: [
-          StripeMxService,
-          { provide: ConfigService, useValue: { get: mockGet } },
-        ],
+        providers: [StripeMxService, { provide: ConfigService, useValue: { get: mockGet } }],
       }).compile();
 
       const unconfiguredService = module.get<StripeMxService>(StripeMxService);
@@ -501,10 +483,7 @@ describe('StripeMxService', () => {
     it('should throw error if not configured', async () => {
       const mockGet = jest.fn(() => null);
       const module: TestingModule = await Test.createTestingModule({
-        providers: [
-          StripeMxService,
-          { provide: ConfigService, useValue: { get: mockGet } },
-        ],
+        providers: [StripeMxService, { provide: ConfigService, useValue: { get: mockGet } }],
       }).compile();
 
       const unconfiguredService = module.get<StripeMxService>(StripeMxService);

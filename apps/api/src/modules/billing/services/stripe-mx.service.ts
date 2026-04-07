@@ -106,7 +106,7 @@ export class StripeMxService {
     this.logger.log(`Creating Stripe MX checkout for: ${params.customerEmail}`);
 
     // Default payment methods for Mexico
-    const paymentMethods = params.paymentMethods || ['card', 'oxxo'];
+    const paymentMethods = params.paymentMethods || ['card', 'oxxo', 'customer_balance'];
 
     const sessionParams: Stripe.Checkout.SessionCreateParams = {
       mode: 'subscription',

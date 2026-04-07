@@ -37,10 +37,9 @@
  * =============================================================================
  */
 
+import { PrismaService } from '@core/prisma/prisma.service';
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-
-import { PrismaService } from '@core/prisma/prisma.service';
 
 import { PaddleService } from './paddle.service';
 import { StripeMxService } from './stripe-mx.service';
@@ -92,7 +91,7 @@ export class PaymentRouterService {
       return {
         provider: 'stripe_mx',
         currency: 'MXN',
-        paymentMethods: ['card', 'oxxo', 'spei'],
+        paymentMethods: ['card', 'oxxo', 'customer_balance'],
         taxHandling: 'automatic', // Stripe Tax handles Mexican IVA
       };
     }
@@ -192,7 +191,7 @@ export class PaymentRouterService {
         ...metadata,
         dhanam_user_id: user.id,
       },
-      paymentMethods: ['card', 'oxxo'],
+      paymentMethods: ['card', 'oxxo', 'customer_balance'],
     });
 
     return {
