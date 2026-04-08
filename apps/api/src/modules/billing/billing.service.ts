@@ -8,6 +8,7 @@ import Stripe from 'stripe';
 
 import { AuditService } from '../../core/audit/audit.service';
 import { PrismaService } from '../../core/prisma/prisma.service';
+import { PostHogService } from '../analytics/posthog.service';
 
 import { JanuaWebhookPayloadDto } from './dto/janua-webhook.dto';
 import { BillingProvider, JanuaBillingService } from './janua-billing.service';
@@ -179,7 +180,8 @@ export class BillingService {
     private stripe: StripeService,
     private januaBilling: JanuaBillingService,
     private audit: AuditService,
-    private config: ConfigService
+    private config: ConfigService,
+    private posthog: PostHogService
   ) {
     // Validate billing secrets on startup
     const billingSecretKeys = [
@@ -259,6 +261,19 @@ export class BillingService {
     }
 
     const webUrl = this.config.get<string>('WEB_URL', 'http://localhost:3000');
+
+    // Track upgrade initiation
+    await this.posthog.capture({
+      distinctId: user.id,
+      event: 'upgrade_initiated',
+      properties: {
+        product: options.product || 'dhanam',
+        plan: requestedPlan,
+        current_tier: currentUser?.subscriptionTier || 'community',
+        country_code: countryCode,
+        provider: this.januaBilling.isEnabled() ? 'janua' : 'stripe',
+      },
+    });
 
     // Try Janua multi-provider billing first
     if (this.januaBilling.isEnabled()) {
@@ -482,6 +497,19 @@ export class BillingService {
       },
     });
 
+    // Track subscription creation in PostHog
+    await this.posthog.capture({
+      distinctId: user.id,
+      event: 'subscription_created',
+      properties: {
+        product: 'dhanam',
+        plan: tier,
+        amount: (subscription.items.data[0].price.unit_amount || 0) / 100,
+        currency: subscription.currency.toUpperCase(),
+        provider: 'stripe',
+      },
+    });
+
     // Dispatch Janua role upgrade if janua_user_id metadata is present
     if ((subscription as any).metadata?.janua_user_id) {
       const rawProduct = subscription.items.data[0]?.price?.product;
@@ -568,6 +596,17 @@ export class BillingService {
       metadata: { subscriptionId: subscription.id },
     });
 
+    // Track cancellation in PostHog
+    await this.posthog.capture({
+      distinctId: user.id,
+      event: 'subscription_cancelled',
+      properties: {
+        product: 'dhanam',
+        provider: 'stripe',
+        subscription_id: subscription.id,
+      },
+    });
+
     this.logger.log(`Subscription cancelled for user ${user.id}`);
   }
 
@@ -643,6 +682,19 @@ export class BillingService {
       metadata: {
         amount: invoice.amount_due / 100,
         invoiceId: invoice.id,
+      },
+    });
+
+    // Track payment failure in PostHog
+    await this.posthog.capture({
+      distinctId: user.id,
+      event: 'payment_failed',
+      properties: {
+        product: 'dhanam',
+        amount: invoice.amount_due / 100,
+        currency: invoice.currency.toUpperCase(),
+        provider: 'stripe',
+        invoice_id: invoice.id,
       },
     });
 
@@ -1087,6 +1139,18 @@ export class BillingService {
       },
     });
 
+    // Track in PostHog
+    await this.posthog.capture({
+      distinctId: user.id,
+      event: 'subscription_created',
+      properties: {
+        product: metadata?.product || 'dhanam',
+        plan: tier,
+        provider: provider || 'janua',
+        org_id: metadata?.orgId,
+      },
+    });
+
     this.logger.log(`Janua subscription created for user ${user.id} via ${provider}`);
 
     // Notify Janua identity system if this subscription is linked to an organization
@@ -1154,6 +1218,15 @@ export class BillingService {
         amount: 0,
         currency: payload.data.currency || 'USD',
         metadata: { provider },
+      },
+    });
+
+    await this.posthog.capture({
+      distinctId: user.id,
+      event: 'subscription_cancelled',
+      properties: {
+        product: 'dhanam',
+        provider: provider || 'janua',
       },
     });
 
@@ -1237,6 +1310,18 @@ export class BillingService {
       data: { subscriptionTier: tier as SubscriptionTier },
     });
 
+    await this.posthog.capture({
+      distinctId: user.id,
+      event: 'subscription_renewed',
+      properties: {
+        product: 'dhanam',
+        plan: tier,
+        amount: amount || 0,
+        currency: currency || 'USD',
+        provider: provider || 'janua',
+      },
+    });
+
     this.logger.log(`Janua payment succeeded for user ${user.id}: ${currency} ${amount}`);
   }
 
@@ -1264,6 +1349,17 @@ export class BillingService {
         amount: amount || 0,
         currency: currency || 'USD',
         metadata: { provider },
+      },
+    });
+
+    await this.posthog.capture({
+      distinctId: user.id,
+      event: 'payment_failed',
+      properties: {
+        product: 'dhanam',
+        amount: amount || 0,
+        currency: currency || 'USD',
+        provider: provider || 'janua',
       },
     });
 

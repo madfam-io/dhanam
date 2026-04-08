@@ -8,6 +8,7 @@ import { AuditService } from '../../../core/audit/audit.service';
 import { BillingService } from '../billing.service';
 import { StripeService } from '../stripe.service';
 import { JanuaBillingService } from '../janua-billing.service';
+import { PostHogService } from '../../analytics/posthog.service';
 
 describe('BillingService', () => {
   let service: BillingService;
@@ -106,6 +107,15 @@ describe('BillingService', () => {
             createCheckoutSession: jest.fn(),
             createPortalSession: jest.fn(),
             cancelSubscription: jest.fn(),
+          },
+        },
+        {
+          provide: PostHogService,
+          useValue: {
+            capture: jest.fn(),
+            identify: jest.fn(),
+            flush: jest.fn(),
+            isAnalyticsEnabled: jest.fn().mockReturnValue(false),
           },
         },
       ],

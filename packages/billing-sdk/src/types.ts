@@ -3,7 +3,7 @@
 // ────────────────────────────────────────────────
 
 /** Product identifiers in the MADFAM ecosystem */
-export type ProductId = 'enclii' | 'tezca' | 'yantra4d' | 'dhanam';
+export type ProductId = 'enclii' | 'tezca' | 'yantra4d' | 'dhanam' | 'karafiel' | 'forgesight';
 
 /** Subscription tier levels */
 export type SubscriptionTier = 'community' | 'essentials' | 'pro' | 'premium' | 'madfam';

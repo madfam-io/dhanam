@@ -22,6 +22,7 @@ import {
 } from '@nestjs/swagger';
 
 import { AuditService } from '../../core/audit/audit.service';
+import { PostHogService } from '../analytics/posthog.service';
 
 /**
  * Cotiza webhook event types forwarded by the DhanamRelayService
@@ -108,7 +109,8 @@ export class CotizaWebhookController {
 
   constructor(
     private readonly config: ConfigService,
-    private readonly audit: AuditService
+    private readonly audit: AuditService,
+    private readonly posthog: PostHogService
   ) {
     this.webhookSecret = this.config.get<string>('COTIZA_WEBHOOK_SECRET', '');
 
@@ -246,6 +248,20 @@ export class CotizaWebhookController {
       `Cotiza payment succeeded: tenant=${tenant_id} amount=${currency} ${amount} provider=${provider}`
     );
 
+    if (tenant_id) {
+      await this.posthog.capture({
+        distinctId: tenant_id,
+        event: 'cotiza_payment_succeeded',
+        properties: {
+          product: 'cotiza',
+          amount,
+          currency,
+          provider,
+          quote_id,
+        },
+      });
+    }
+
     await this.audit.log({
       action: 'cotiza.payment.succeeded',
       resource: 'billing',
@@ -358,6 +374,19 @@ export class CotizaWebhookController {
     this.logger.log(
       `Cotiza subscription event: type=${payload.type} tenant=${tenant_id} sub=${subscription_id} plan=${plan_id} status=${status}`
     );
+
+    if (tenant_id) {
+      await this.posthog.capture({
+        distinctId: tenant_id,
+        event: `cotiza_${payload.type.replace('.', '_')}`,
+        properties: {
+          product: 'cotiza',
+          subscription_id,
+          plan_id,
+          status,
+        },
+      });
+    }
 
     await this.audit.log({
       action: `cotiza.${payload.type}`,

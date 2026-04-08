@@ -26,7 +26,7 @@ const dhanam = new DhanamClient({
 
 // Check subscription status
 const status = await dhanam.getStatus();
-console.log(status.tier); // 'community' | 'essentials' | 'pro'
+console.log(status.tier); // 'community' | 'essentials' | 'pro' | 'premium'
 
 // Initiate upgrade
 const { checkoutUrl } = await dhanam.upgrade({ plan: 'pro' });
@@ -56,21 +56,21 @@ const payload = await parseWebhookPayload(rawBody, signature, secret);
 
 ### `DhanamClient`
 
-| Method | Auth | Description |
-|--------|------|-------------|
-| `buildCheckoutUrl(opts)` | No | Build a public checkout redirect URL |
-| `upgrade(opts)` | Yes | Initiate a premium upgrade |
-| `getStatus()` | Yes | Get current subscription status |
-| `getUsage()` | Yes | Get billing-period usage metrics |
-| `getHistory()` | Yes | Get billing event history |
-| `createPortalSession()` | Yes | Create a self-service portal session |
+| Method                   | Auth | Description                          |
+| ------------------------ | ---- | ------------------------------------ |
+| `buildCheckoutUrl(opts)` | No   | Build a public checkout redirect URL |
+| `upgrade(opts)`          | Yes  | Initiate a premium upgrade           |
+| `getStatus()`            | Yes  | Get current subscription status      |
+| `getUsage()`             | Yes  | Get billing-period usage metrics     |
+| `getHistory()`           | Yes  | Get billing event history            |
+| `createPortalSession()`  | Yes  | Create a self-service portal session |
 
 ### Webhook Utilities
 
-| Function | Description |
-|----------|-------------|
+| Function                                             | Description              |
+| ---------------------------------------------------- | ------------------------ |
 | `verifyWebhookSignature(rawBody, signature, secret)` | HMAC-SHA256 verification |
-| `parseWebhookPayload(rawBody, signature?, secret?)` | Parse + optional verify |
+| `parseWebhookPayload(rawBody, signature?, secret?)`  | Parse + optional verify  |
 
 ### Error Handling
 

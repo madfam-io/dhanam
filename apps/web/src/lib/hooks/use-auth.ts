@@ -42,6 +42,16 @@ export const useAuth = create<AuthState>()(
         apiClient.setTokens(tokens);
         set({ user, tokens, token: tokens.accessToken, isAuthenticated: true });
 
+        // Identify user in PostHog with Janua UUID for cross-product analytics
+        if (typeof window !== 'undefined' && user?.id && posthog.__loaded) {
+          posthog.identify(user.id, {
+            email: user.email,
+            name: user.name,
+            product: 'dhanam',
+            subscription_tier: user.subscriptionTier,
+          });
+        }
+
         // Set cookie marker for middleware detection (prevents redirect flash)
         // Use Domain=.dhan.am for cross-subdomain auth (app.dhan.am + admin.dhan.am)
         if (typeof document !== 'undefined') {

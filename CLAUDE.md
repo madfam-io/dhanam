@@ -234,7 +234,7 @@ Uses the Dhanam package (https://github.com/aldoruizluna/Dhanam) for:
 
 ## Admin & Analytics
 
-**PostHog Events:** sign_up, onboarding_complete, connect_initiated, connect_success, sync_success, budget_created, rule_created, txn_categorized, alert_fired, view_net_worth, export_data, drip_email_sent, onboarding_step_completed, onboarding_step_skipped, connect_failed
+**PostHog Events:** sign_up, onboarding_complete, connect_initiated, connect_success, sync_success, budget_created, rule_created, txn_categorized, alert_fired, view_net_worth, export_data, drip_email_sent, onboarding_step_completed, onboarding_step_skipped, connect_failed, upgrade_initiated, subscription_created, subscription_cancelled, subscription_renewed, payment_failed, cotiza_payment_succeeded, cotiza_subscription_created, cotiza_subscription_updated, cotiza_subscription_cancelled
 
 **Admin Panel (SRE Ops Center):** Standalone app at `apps/admin/` (production: `admin.dhan.am`). Also accessible via `apps/web/(admin)/admin/` in development (redirects to standalone app in production). Includes system health, queue management, provider dashboards, compliance (GDPR export/delete, retention), deployment status, billing events, user/space management with audit trails.
 
