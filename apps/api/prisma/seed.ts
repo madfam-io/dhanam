@@ -6,10 +6,10 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Seeding database...');
 
-  // Get demo password from environment or generate a secure default
-  const demoPassword = process.env.DEMO_USER_PASSWORD || 'ChangeMeInProduction123!';
-  if (!process.env.DEMO_USER_PASSWORD) {
-    console.warn('⚠️  WARNING: Using default demo password. Set DEMO_USER_PASSWORD environment variable for production.');
+  // Require password from environment — no fallbacks
+  const demoPassword = process.env.DEMO_USER_PASSWORD;
+  if (!demoPassword) {
+    throw new Error('DEMO_USER_PASSWORD env var required for seeding. Generate with: openssl rand -base64 24');
   }
 
   // Create demo user

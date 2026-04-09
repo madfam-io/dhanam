@@ -371,7 +371,7 @@ async function main(): Promise<void> {
   console.log('='.repeat(64));
   console.log('');
   console.log('# === Stripe Configuration (Test Mode) ===');
-  console.log(`STRIPE_MX_PUBLISHABLE_KEY=pk_test_51T8qlgAKQiFuxYX76AvYrGBEoL2aag5Az2KgCIiKXiwkxghDRNyL8TZ4ECasb0iJzQstTvJW7j482YroLpB6TgZc00XPlwvi3f`);
+  console.log(`STRIPE_MX_PUBLISHABLE_KEY=${process.env.STRIPE_MX_PUBLISHABLE_KEY || '<get-from-stripe-dashboard>'}`);
   console.log(`STRIPE_MX_SECRET_KEY=${STRIPE_SECRET_KEY}`);
   console.log(`STRIPE_MX_WEBHOOK_SECRET=${webhookSecret}`);
   console.log(`STRIPE_ESSENTIALS_PRICE_ID=${essentials.price.id}`);
@@ -380,7 +380,7 @@ async function main(): Promise<void> {
   console.log(`STRIPE_INTRO_COUPON_ID=${coupon.id}`);
   console.log('');
   console.log('# Frontend');
-  console.log(`NEXT_PUBLIC_STRIPE_MX_PUBLISHABLE_KEY=pk_test_51T8qlgAKQiFuxYX76AvYrGBEoL2aag5Az2KgCIiKXiwkxghDRNyL8TZ4ECasb0iJzQstTvJW7j482YroLpB6TgZc00XPlwvi3f`);
+  console.log(`NEXT_PUBLIC_STRIPE_MX_PUBLISHABLE_KEY=${process.env.STRIPE_MX_PUBLISHABLE_KEY || '<get-from-stripe-dashboard>'}`);
   console.log('');
   console.log('# --- Product IDs (for reference) ---');
   for (const r of results) {

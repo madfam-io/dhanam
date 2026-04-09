@@ -18,10 +18,10 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Seeding MADFAM internal finance configuration...');
 
-  // Get password from environment
-  const adminPassword = process.env.MADFAM_ADMIN_PASSWORD || 'ChangeMeInProduction123!';
-  if (!process.env.MADFAM_ADMIN_PASSWORD) {
-    console.warn('⚠️  WARNING: Using default password. Set MADFAM_ADMIN_PASSWORD for production.');
+  // Require password from environment — no fallbacks
+  const adminPassword = process.env.MADFAM_ADMIN_PASSWORD;
+  if (!adminPassword) {
+    throw new Error('MADFAM_ADMIN_PASSWORD env var required for seeding. Generate with: openssl rand -base64 24');
   }
 
   // Create MADFAM admin user (will be linked to Janua SSO in production)

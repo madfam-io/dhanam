@@ -225,7 +225,7 @@ export async function seedUsers(prisma: PrismaClient): Promise<SeedContext> {
     update: {},
     create: {
       email: 'carlos@dhanam.demo',
-      passwordHash: await hash(process.env.DEMO_USER_PASSWORD || 'ChangeMeInProduction123!'),
+      passwordHash: await hash(process.env.DEMO_USER_PASSWORD!),
       name: 'Carlos Mendoza',
       locale: 'es',
       timezone: 'America/Mexico_City',
@@ -358,7 +358,7 @@ export async function seedUsers(prisma: PrismaClient): Promise<SeedContext> {
     update: {},
     create: {
       email: 'patricia@dhanam.demo',
-      passwordHash: await hash(process.env.DEMO_USER_PASSWORD || 'ChangeMeInProduction123!'),
+      passwordHash: await hash(process.env.DEMO_USER_PASSWORD!),
       name: 'Patricia Ruiz',
       locale: 'en',
       timezone: 'America/Mexico_City',
@@ -473,7 +473,7 @@ export async function seedUsers(prisma: PrismaClient): Promise<SeedContext> {
     update: {},
     create: {
       email: 'admin@dhanam.app',
-      passwordHash: await hash(process.env.ADMIN_PASSWORD || 'AdminChangeMeInProduction123!'),
+      passwordHash: await hash(process.env.ADMIN_PASSWORD!),
       name: 'Admin',
       locale: 'en',
       timezone: 'America/Mexico_City',
@@ -498,7 +498,7 @@ export async function seedUsers(prisma: PrismaClient): Promise<SeedContext> {
     update: {},
     create: {
       email: 'diego@dhanam.demo',
-      passwordHash: await hash(process.env.DEMO_USER_PASSWORD || 'ChangeMeInProduction123!'),
+      passwordHash: await hash(process.env.DEMO_USER_PASSWORD!),
       name: 'Diego Navarro',
       locale: 'es',
       timezone: 'America/Mexico_City',
