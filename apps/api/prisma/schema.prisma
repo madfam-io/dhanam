@@ -255,6 +255,8 @@ model User {
   onboardingCompleted   Boolean   @default(false) @map("onboarding_completed")
   onboardingCompletedAt DateTime? @map("onboarding_completed_at")
   onboardingStep        String?   @map("onboarding_step")
+  kycVerified           Boolean   @default(false) @map("kyc_verified")
+  kycVerifiedAt         DateTime? @map("kyc_verified_at")
   lastLoginAt           DateTime? @map("last_login_at")
   lastActivityAt        DateTime? @map("last_activity_at")
 

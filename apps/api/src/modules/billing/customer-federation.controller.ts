@@ -1,9 +1,20 @@
-import { Controller, Get, Param, UseGuards, Logger, HttpCode, HttpStatus } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  UseGuards,
+  Logger,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
 import {
   ApiTags,
   ApiBearerAuth,
   ApiOperation,
   ApiOkResponse,
+  ApiCreatedResponse,
   ApiNotFoundResponse,
   ApiUnauthorizedResponse,
   ApiParam,
@@ -12,6 +23,7 @@ import { Throttle } from '@nestjs/throttler';
 
 import { ThrottleAuthGuard } from '../../core/security/guards/throttle-auth.guard';
 
+import { BillingService } from './billing.service';
 import { FederationAuthGuard } from './guards/federation-auth.guard';
 import {
   CustomerFederationService,
@@ -43,7 +55,10 @@ import {
 export class CustomerFederationController {
   private readonly logger = new Logger(CustomerFederationController.name);
 
-  constructor(private readonly customerFederationService: CustomerFederationService) {}
+  constructor(
+    private readonly customerFederationService: CustomerFederationService,
+    private readonly billingService: BillingService
+  ) {}
 
   /**
    * Fetch customer billing data by external ID.
@@ -76,5 +91,40 @@ export class CustomerFederationController {
   async getCustomer(@Param('externalId') externalId: string): Promise<FederatedCustomerResponse> {
     this.logger.log(`Federation customer lookup: externalId=${externalId}`);
     return this.customerFederationService.getCustomerByExternalId(externalId);
+  }
+
+  /**
+   * Create a checkout session for a customer via federation.
+   *
+   * Returns a checkout URL that PhyneCRM can redirect the customer to.
+   */
+  @Post(':externalId/checkout')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: 'Create checkout session for federation customer',
+    description:
+      'Creates a Dhanam checkout session and returns the URL. ' +
+      'PhyneCRM uses this to trigger subscription upgrades for contacts.',
+  })
+  @ApiParam({
+    name: 'externalId',
+    description: 'Dhanam user ID',
+    type: String,
+  })
+  @ApiCreatedResponse({
+    description: 'Checkout session created',
+  })
+  @ApiNotFoundResponse({
+    description: 'Customer not found',
+  })
+  async createCheckout(
+    @Param('externalId') externalId: string,
+    @Body() body: { planId: string; successUrl?: string; cancelUrl?: string }
+  ): Promise<{ checkoutUrl: string; sessionId: string }> {
+    this.logger.log(`Federation checkout request: externalId=${externalId}, plan=${body.planId}`);
+    return this.billingService.createFederatedCheckout(externalId, body.planId, {
+      successUrl: body.successUrl,
+      cancelUrl: body.cancelUrl,
+    });
   }
 }

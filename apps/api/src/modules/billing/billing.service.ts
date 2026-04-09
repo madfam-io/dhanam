@@ -1460,4 +1460,51 @@ export class BillingService {
       this.logger.error(`Error notifying Janua of tier change: ${error.message}`);
     }
   }
+
+  /**
+   * Create a checkout session on behalf of a federated service (e.g., PhyneCRM).
+   *
+   * Looks up the user by ID, creates a Stripe checkout session, and returns
+   * the checkout URL for the calling service to redirect the customer to.
+   */
+  async createFederatedCheckout(
+    userId: string,
+    planId: string,
+    options?: { successUrl?: string; cancelUrl?: string }
+  ): Promise<{ checkoutUrl: string; sessionId: string }> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, email: true, stripeCustomerId: true, countryCode: true },
+    });
+
+    if (!user) {
+      throw new Error(`User not found: ${userId}`);
+    }
+
+    const priceId = this.config.get<string>(`STRIPE_${planId.toUpperCase()}_PRICE_ID`);
+    if (!priceId) {
+      throw new Error(`Unknown plan: ${planId}`);
+    }
+
+    const defaultSuccessUrl = this.config.get<string>('FRONTEND_URL', 'https://app.dhan.am');
+    const session = await this.stripe.createCheckoutSession({
+      customerId: user.stripeCustomerId || undefined,
+      customerEmail: !user.stripeCustomerId ? user.email : undefined,
+      priceId,
+      successUrl:
+        options?.successUrl ||
+        `${defaultSuccessUrl}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancelUrl: options?.cancelUrl || `${defaultSuccessUrl}/billing`,
+      metadata: {
+        userId: user.id,
+        source: 'federation',
+        planId,
+      },
+    });
+
+    return {
+      checkoutUrl: session.url || '',
+      sessionId: session.id,
+    };
+  }
 }

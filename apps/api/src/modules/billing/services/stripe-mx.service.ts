@@ -27,7 +27,7 @@ export interface StripeMxCheckoutParams {
   successUrl: string;
   cancelUrl: string;
   metadata?: Record<string, string>;
-  paymentMethods?: ('card' | 'oxxo' | 'customer_balance')[];
+  paymentMethods?: ('card' | 'oxxo' | 'customer_balance' | 'spei_transfer')[];
 }
 
 export interface StripeMxCustomerParams {
@@ -106,7 +106,12 @@ export class StripeMxService {
     this.logger.log(`Creating Stripe MX checkout for: ${params.customerEmail}`);
 
     // Default payment methods for Mexico
-    const paymentMethods = params.paymentMethods || ['card', 'oxxo', 'customer_balance'];
+    const paymentMethods = params.paymentMethods || [
+      'card',
+      'oxxo',
+      'customer_balance',
+      'spei_transfer',
+    ];
 
     const sessionParams: Stripe.Checkout.SessionCreateParams = {
       mode: 'subscription',
@@ -156,7 +161,7 @@ export class StripeMxService {
     customerEmail: string;
     description: string;
     metadata?: Record<string, string>;
-    paymentMethod?: 'card' | 'oxxo' | 'customer_balance';
+    paymentMethod?: 'card' | 'oxxo' | 'customer_balance' | 'spei_transfer';
   }): Promise<Stripe.PaymentIntent> {
     if (!this.stripe) {
       throw new Error('Stripe MX not configured');

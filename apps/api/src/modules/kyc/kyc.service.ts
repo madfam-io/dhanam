@@ -164,8 +164,17 @@ export class KycService {
               `PEP=${result.pepMatch}, sanctions=${result.sanctionsMatch}, status=${result.status}`
           );
         } else {
+          // Enable live payment methods for this user
+          await this.prisma.user.update({
+            where: { id: verification.userId },
+            data: {
+              kycVerified: true,
+              kycVerifiedAt: new Date(),
+            },
+          });
+
           this.logger.log(
-            `Verification ${verification.id} VERIFIED for user ${verification.userId}`
+            `Verification ${verification.id} VERIFIED for user ${verification.userId} — payment methods unlocked`
           );
         }
         break;
@@ -254,6 +263,17 @@ export class KycService {
    * Used by the KycVerifiedGuard.
    */
   async isVerified(userId: string): Promise<boolean> {
+    // Fast path: check denormalized flag on User
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { kycVerified: true },
+    });
+
+    if (user?.kycVerified) {
+      return true;
+    }
+
+    // Fallback: check IdentityVerification table (covers pre-migration data)
     const verification = await this.prisma.identityVerification.findFirst({
       where: {
         userId,
