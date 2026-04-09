@@ -114,7 +114,7 @@ When the codebase is implemented, use these commands:
 # Local infrastructure
 pnpm dev:infra    # Start docker compose (postgres, redis, mailhog)
 pnpm db:push      # Prisma schema sync
-pnpm db:seed      # Seed demo data
+pnpm db:seed      # Seed demo data (requires DEMO_USER_PASSWORD, ADMIN_PASSWORD env vars)
 
 # Development servers
 pnpm dev:api      # Backend at http://localhost:4010
@@ -253,6 +253,13 @@ Each app requires environment configuration:
 - API: Database, Redis, JWT keys, provider credentials (Belvo/Plaid/Bitso), Banxico API
 - Web: API URL, PostHog key, default locale
 - Mobile: Same as web for Expo public variables
+
+**Seed script env vars (required — no fallbacks):**
+- `DEMO_USER_PASSWORD`: Password for demo users (carlos, patricia, diego)
+- `ADMIN_PASSWORD`: Password for platform admin
+- `MADFAM_ADMIN_PASSWORD`: Password for MADFAM internal finance admin (seed-madfam.ts)
+
+Seed scripts will throw an error if these are not set. Generate with `openssl rand -base64 24`.
 
 The application targets 99.9% availability with RTO 4h and daily backups.
 
