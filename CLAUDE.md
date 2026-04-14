@@ -106,6 +106,42 @@ infra/
 - Analytics: PostHog
 - ESG: Dhanam package integration
 
+### Billing Module (`apps/api/src/modules/billing/`)
+
+The billing module uses a facade pattern with focused sub-services:
+
+```
+billing/
+├─ billing.service.ts              # Facade — thin delegation layer (preserves all public method signatures)
+├─ billing.module.ts               # Registers all services, guards, interceptors
+├─ billing.controller.ts           # REST endpoints
+├─ stripe.service.ts               # Low-level Stripe SDK wrapper
+├─ janua-billing.service.ts        # Janua multi-provider billing integration
+├─ services/
+│  ├─ usage-tracking.service.ts    # Daily usage metering, tier-based feature/resource limits
+│  ├─ subscription-lifecycle.service.ts  # Checkout creation, portal, plan changes, Janua role sync
+│  ├─ webhook-processor.service.ts # Inbound Stripe + Janua webhook event handlers
+│  ├─ payment-router.service.ts    # Hybrid routing (Stripe MX + Paddle)
+│  ├─ stripe-mx.service.ts         # Stripe Mexico (MXN, OXXO, SPEI)
+│  ├─ paddle.service.ts            # Paddle MoR (global tax compliance)
+│  ├─ customer-federation.service.ts # PhyneCRM federation
+│  ├─ price-resolver.service.ts    # Price ID resolution
+│  ├─ pricing-engine.service.ts    # Dynamic pricing logic
+│  └─ trial.service.ts             # Trial lifecycle management
+├─ jobs/
+│  ├─ reconciliation.job.ts        # Nightly Stripe-vs-local-DB reconciliation (3 AM UTC cron)
+│  └─ subscription-lifecycle.job.ts # Hourly trial/promo expiration handler
+├─ guards/                         # SubscriptionGuard, UsageLimitGuard, SpaceLimitGuard, FeatureGateGuard, etc.
+└─ interceptors/                   # UsageTrackingInterceptor
+```
+
+**Key design decisions:**
+
+- `BillingService` is a backward-compatible facade: all existing callers (controllers, guards, interceptors, external services like SimulationsService) continue to work without changes
+- The facade constructor accepts `@Optional()` sub-service params for DI but can construct them from raw dependencies for test compatibility
+- `ReconciliationJob` creates `BillingEvent` records with type `reconciliation_mismatch` and status `flagged` for manual review
+- `PLAN_TIER_MAP` in `subscription-lifecycle.service.ts` maps plan slugs (e.g. `pro_yearly`) to tier names (e.g. `pro`)
+
 ## Development Commands
 
 When the codebase is implemented, use these commands:
@@ -178,7 +214,8 @@ The provider orchestrator (`apps/api/src/modules/providers/orchestrator/`) handl
 
 **API (NestJS):**
 
-- 3900+ unit tests across 152+ test suites (98%+ coverage)
+- 3900+ unit tests across 163+ test suites (98%+ coverage)
+- Billing module tests cover the facade (`billing.service.spec.ts`) and all three extracted sub-services (`usage-tracking.service.spec.ts`, `subscription-lifecycle.service.spec.ts`, `webhook-processor.service.spec.ts`) plus the reconciliation job (`reconciliation.job.spec.ts`)
 - E2E journey tests: core value loop, subscription upgrade, admin operations, provider sync, billing webhooks, estate planning, households
 - Contract tests for Stripe, Plaid, and Belvo webhook schemas (Zod validation)
 - Drip campaign task tests (15 cases: send/skip/idempotency/batch/error-resilience)
@@ -255,6 +292,7 @@ Each app requires environment configuration:
 - Mobile: Same as web for Expo public variables
 
 **Seed script env vars (required — no fallbacks):**
+
 - `DEMO_USER_PASSWORD`: Password for demo users (carlos, patricia, diego)
 - `ADMIN_PASSWORD`: Password for platform admin
 - `MADFAM_ADMIN_PASSWORD`: Password for MADFAM internal finance admin (seed-madfam.ts)

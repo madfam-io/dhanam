@@ -16,9 +16,11 @@ import { RedisService } from '../../core/redis/redis.service';
  * Stream is capped at ~10000 entries via MAXLEN to prevent unbounded growth.
  */
 
+// Stream constants from @madfam/types — keep in sync with event-schemas.yaml
 const STREAM_KEY = 'madfam:billing-events';
 const MAX_STREAM_LEN = 10000;
 
+// Re-export for backward compat; canonical definition lives in @madfam/types
 export interface EventEnvelope {
   event_type: string;
   source: string;
@@ -26,6 +28,8 @@ export interface EventEnvelope {
   timestamp: string;
   payload: string; // JSON-stringified
 }
+// TODO(P4-4): Replace with `import { ServiceEventEnvelope, STREAMS } from '@madfam/types'`
+// once the package is published to npm.madfam.io and added to dhanam's deps.
 
 @Injectable()
 export class EventPublisherService implements OnModuleInit {

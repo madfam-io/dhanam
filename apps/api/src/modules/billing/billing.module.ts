@@ -33,6 +33,7 @@ import { SubscriptionGuard } from './guards/subscription.guard';
 import { UsageLimitGuard } from './guards/usage-limit.guard';
 import { UsageTrackingInterceptor } from './interceptors/usage-tracking.interceptor';
 import { JanuaBillingService } from './janua-billing.service';
+import { ReconciliationJob } from './jobs/reconciliation.job';
 import { SubscriptionLifecycleJob } from './jobs/subscription-lifecycle.job';
 // Federation (PhyneCRM integration)
 import { CustomerFederationService } from './services/customer-federation.service';
@@ -42,7 +43,11 @@ import { PaymentRouterService } from './services/payment-router.service';
 import { PriceResolverService } from './services/price-resolver.service';
 import { PricingEngineService } from './services/pricing-engine.service';
 import { StripeMxService } from './services/stripe-mx.service';
+// Extracted sub-services (usage, lifecycle, webhooks)
+import { SubscriptionLifecycleService } from './services/subscription-lifecycle.service';
 import { TrialService } from './services/trial.service';
+import { UsageTrackingService } from './services/usage-tracking.service';
+import { WebhookProcessorService } from './services/webhook-processor.service';
 import { StripeService } from './stripe.service';
 
 @Module({
@@ -62,11 +67,17 @@ import { StripeService } from './stripe.service';
     JanuaBillingService,
     StripeService,
 
+    // Extracted sub-services
+    UsageTrackingService,
+    SubscriptionLifecycleService,
+    WebhookProcessorService,
+
     // Pricing & trial lifecycle
     PriceResolverService,
     PricingEngineService,
     TrialService,
     SubscriptionLifecycleJob,
+    ReconciliationJob,
 
     // Hybrid Router (Stripe MX + Paddle)
     PaymentRouterService,
@@ -96,6 +107,9 @@ import { StripeService } from './stripe.service';
     StripeMxService,
     PaddleService,
     CustomerFederationService,
+    UsageTrackingService,
+    SubscriptionLifecycleService,
+    WebhookProcessorService,
     SubscriptionGuard,
     UsageLimitGuard,
     SpaceLimitGuard,

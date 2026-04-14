@@ -1,9 +1,9 @@
 # Quick Jest module resolution check (runs in <2s)
 echo "Checking Jest module resolution..."
 cd apps/api
-if ! pnpm jest --passWithNoTests --testPathPattern="nonexistent" 2>&1 | head -5 | grep -q "No tests found"; then
+if ! pnpm jest --passWithNoTests --testPathPatterns="nonexistent" 2>&1 | head -5 | grep -q "No tests found"; then
   # Check for module resolution errors
-  if pnpm jest --passWithNoTests --testPathPattern="nonexistent" 2>&1 | grep -q "Cannot find module"; then
+  if pnpm jest --passWithNoTests --testPathPatterns="nonexistent" 2>&1 | grep -q "Cannot find module"; then
     echo "❌ Jest module resolution issues detected. Check moduleNameMapper in jest.config.js"
     exit 1
   fi

@@ -1,0 +1,554 @@
+import * as crypto from 'crypto';
+
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+
+import { AuditService } from '../../../core/audit/audit.service';
+import { PrismaService } from '../../../core/prisma/prisma.service';
+import { PostHogService } from '../../analytics/posthog.service';
+import { BillingProvider, JanuaBillingService } from '../janua-billing.service';
+import { StripeService } from '../stripe.service';
+
+/**
+ * Options for premium upgrade.
+ * Used for external app integration (e.g., Enclii).
+ */
+export interface UpgradeOptions {
+  orgId?: string;
+  plan?: string;
+  product?: string;
+  successUrl?: string;
+  cancelUrl?: string;
+  countryCode?: string;
+}
+
+/** Map plan slugs to subscription tiers */
+export const PLAN_TIER_MAP: Record<string, string> = {
+  essentials: 'essentials',
+  essentials_yearly: 'essentials',
+  pro: 'pro',
+  pro_yearly: 'pro',
+  premium: 'premium',
+  premium_yearly: 'premium',
+};
+
+/**
+ * Subscription Lifecycle Service
+ *
+ * Manages the full subscription lifecycle: checkout creation, portal access,
+ * plan changes, Janua role synchronization, and billing history.
+ * Extracted from BillingService to isolate checkout / subscription orchestration.
+ *
+ * ## Responsibilities
+ * - Initiate upgrades (via Janua or direct Stripe)
+ * - Create billing portal sessions
+ * - External and federated checkout flows
+ * - Dispatch Janua role upgrades on tier change
+ * - Notify Janua identity system of org-level tier changes
+ * - Query billing history
+ *
+ * @see WebhookProcessorService - handles inbound webhook events
+ * @see UsageTrackingService - metering and limits
+ */
+@Injectable()
+export class SubscriptionLifecycleService {
+  private readonly logger = new Logger(SubscriptionLifecycleService.name);
+
+  constructor(
+    private prisma: PrismaService,
+    private stripe: StripeService,
+    private januaBilling: JanuaBillingService,
+    private audit: AuditService,
+    private config: ConfigService,
+    private posthog: PostHogService
+  ) {}
+
+  // ─── Upgrade flows ───────────────────────────────────────────────────
+
+  /**
+   * Initiate upgrade to premium subscription.
+   * Uses Janua multi-provider billing when available, falls back to direct Stripe.
+   */
+  async upgradeToPremium(
+    userId: string,
+    options: UpgradeOptions = {}
+  ): Promise<{ checkoutUrl: string; provider: string }> {
+    const countryCode = options.countryCode || 'US';
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        stripeCustomerId: true,
+        januaCustomerId: true,
+        billingProvider: true,
+      },
+    });
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // Check if already on the requested tier (or higher)
+    const currentUser = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { subscriptionTier: true },
+    });
+
+    const requestedPlan = options.plan || 'pro';
+    const tierRank = { community: 0, essentials: 1, pro: 2, premium: 3 };
+    const currentRank = tierRank[currentUser?.subscriptionTier as keyof typeof tierRank] ?? 0;
+    const requestedRank = tierRank[requestedPlan as keyof typeof tierRank] ?? 2;
+
+    if (currentRank >= requestedRank) {
+      throw new Error(`User is already on ${currentUser?.subscriptionTier} tier`);
+    }
+
+    const webUrl = this.config.get<string>('WEB_URL', 'http://localhost:3000');
+
+    // Track upgrade initiation
+    await this.posthog.capture({
+      distinctId: user.id,
+      event: 'upgrade_initiated',
+      properties: {
+        product: options.product || 'dhanam',
+        plan: requestedPlan,
+        current_tier: currentUser?.subscriptionTier || 'community',
+        country_code: countryCode,
+        provider: this.januaBilling.isEnabled() ? 'janua' : 'stripe',
+      },
+    });
+
+    // Try Janua multi-provider billing first
+    if (this.januaBilling.isEnabled()) {
+      return this.upgradeToPremiumViaJanua(user, countryCode, webUrl, options);
+    }
+
+    // Fallback to direct Stripe
+    return this.upgradeToPremiumViaStripe(user, webUrl, options);
+  }
+
+  /**
+   * Upgrade via Janua (multi-provider: Conekta for MX, Polar for international).
+   */
+  private async upgradeToPremiumViaJanua(
+    user: { id: string; email: string; name: string; januaCustomerId?: string },
+    countryCode: string,
+    webUrl: string,
+    options: UpgradeOptions = {}
+  ): Promise<{ checkoutUrl: string; provider: BillingProvider }> {
+    let customerId = user.januaCustomerId;
+    let provider: BillingProvider = this.januaBilling.getProviderForCountry(countryCode);
+
+    if (!customerId) {
+      const result = await this.januaBilling.createCustomer({
+        email: user.email,
+        name: user.name,
+        countryCode,
+        orgId: options.orgId,
+        metadata: { userId: user.id },
+      });
+
+      customerId = result.customerId;
+      provider = result.provider;
+
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: {
+          januaCustomerId: customerId,
+          billingProvider: provider,
+        },
+      });
+    }
+
+    // Build metadata including orgId for Janua organization linking
+    const metadata: Record<string, string> = { userId: user.id };
+    if (options.orgId) {
+      metadata.orgId = options.orgId;
+    }
+
+    const result = await this.januaBilling.createCheckoutSession({
+      customerId,
+      customerEmail: user.email,
+      priceId: options.plan || 'pro',
+      countryCode,
+      successUrl:
+        options.successUrl || `${webUrl}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancelUrl: options.cancelUrl || `${webUrl}/billing/cancel`,
+      orgId: options.orgId,
+      metadata,
+    });
+
+    await this.audit.log({
+      userId: user.id,
+      action: 'BILLING_UPGRADE_INITIATED',
+      severity: 'medium',
+      metadata: {
+        sessionId: result.sessionId,
+        provider: result.provider,
+        orgId: options.orgId,
+        plan: options.plan,
+      },
+    });
+
+    this.logger.log(
+      `Upgrade initiated via Janua (${result.provider}) for user ${user.id}${options.orgId ? ` (org: ${options.orgId})` : ''}`
+    );
+
+    return { checkoutUrl: result.checkoutUrl, provider: result.provider };
+  }
+
+  /**
+   * Upgrade via direct Stripe (fallback).
+   */
+  private async upgradeToPremiumViaStripe(
+    user: { id: string; email: string; name: string; stripeCustomerId?: string },
+    webUrl: string,
+    options: UpgradeOptions = {}
+  ): Promise<{ checkoutUrl: string; provider: BillingProvider }> {
+    let customerId = user.stripeCustomerId;
+
+    if (!customerId) {
+      const customer = await this.stripe.createCustomer({
+        email: user.email,
+        name: user.name,
+        metadata: { userId: user.id },
+      });
+
+      customerId = customer.id;
+
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: { stripeCustomerId: customerId },
+      });
+    }
+
+    // Route to correct Stripe price based on plan
+    const plan = options.plan || 'pro';
+    const priceId =
+      plan === 'essentials'
+        ? this.config.get<string>('STRIPE_ESSENTIALS_PRICE_ID')
+        : plan === 'premium'
+          ? this.config.get<string>('STRIPE_PREMIUM_PLAN_PRICE_ID')
+          : this.config.get<string>('STRIPE_PREMIUM_PRICE_ID');
+
+    if (!priceId) {
+      throw new Error(`No Stripe price configured for plan: ${plan}`);
+    }
+
+    // Build metadata including orgId for external app linking
+    const metadata: Record<string, string> = { userId: user.id, plan };
+    if (options.orgId) {
+      metadata.orgId = options.orgId;
+    }
+
+    // Apply intro coupon if configured (e.g., $0.99/mo for first 3 months)
+    const introCouponId = this.config.get<string>('STRIPE_INTRO_COUPON_ID');
+
+    const session = await this.stripe.createCheckoutSession({
+      customerId,
+      priceId,
+      successUrl:
+        options.successUrl || `${webUrl}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancelUrl: options.cancelUrl || `${webUrl}/billing/cancel`,
+      metadata,
+      couponId: introCouponId,
+    });
+
+    await this.audit.log({
+      userId: user.id,
+      action: 'BILLING_UPGRADE_INITIATED',
+      severity: 'medium',
+      metadata: { sessionId: session.id, provider: 'stripe', orgId: options.orgId },
+    });
+
+    this.logger.log(`Upgrade initiated via Stripe for user ${user.id}, session: ${session.id}`);
+
+    return { checkoutUrl: session.url, provider: 'stripe' };
+  }
+
+  // ─── Portal ──────────────────────────────────────────────────────────
+
+  /**
+   * Create billing portal session for subscription management.
+   */
+  async createPortalSession(userId: string): Promise<{ portalUrl: string }> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { stripeCustomerId: true },
+    });
+
+    if (!user?.stripeCustomerId) {
+      throw new Error('No Stripe customer found for this user');
+    }
+
+    const webUrl = this.config.get<string>('WEB_URL', 'http://localhost:3000');
+
+    const session = await this.stripe.createPortalSession({
+      customerId: user.stripeCustomerId,
+      returnUrl: `${webUrl}/billing`,
+    });
+
+    return { portalUrl: session.url };
+  }
+
+  // ─── External / federated checkout ───────────────────────────────────
+
+  /**
+   * Create a checkout session for an external (unauthenticated) caller.
+   * Returns the Stripe/Janua checkout URL.
+   */
+  async createExternalCheckout(
+    userId: string,
+    plan: string,
+    returnUrl: string,
+    product?: string
+  ): Promise<string> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        stripeCustomerId: true,
+        januaCustomerId: true,
+        billingProvider: true,
+        countryCode: true,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const countryCode = user.countryCode || 'US';
+    const webUrl = this.config.get<string>('WEB_URL', 'http://localhost:3000');
+
+    // Try Janua first, fall back to direct Stripe
+    if (this.januaBilling.isEnabled()) {
+      const result = await this.upgradeToPremiumViaJanua(user as any, countryCode, webUrl, {
+        plan,
+        successUrl: returnUrl,
+        cancelUrl: returnUrl,
+      });
+      return result.checkoutUrl;
+    }
+
+    // Direct Stripe path
+    let customerId = user.stripeCustomerId;
+    if (!customerId) {
+      const customer = await this.stripe.createCustomer({
+        email: user.email,
+        name: user.name,
+        metadata: { userId: user.id },
+      });
+      customerId = customer.id;
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: { stripeCustomerId: customerId },
+      });
+    }
+
+    // Route to correct Stripe price based on plan
+    const priceId =
+      plan === 'essentials'
+        ? this.config.get<string>('STRIPE_ESSENTIALS_PRICE_ID')
+        : plan === 'premium'
+          ? this.config.get<string>('STRIPE_PREMIUM_PLAN_PRICE_ID')
+          : this.config.get<string>('STRIPE_PREMIUM_PRICE_ID');
+
+    const session = await this.stripe.createCheckoutSession({
+      customerId,
+      priceId,
+      successUrl: returnUrl,
+      cancelUrl: returnUrl,
+      metadata: {
+        janua_user_id: userId,
+        plan,
+        source: 'external',
+        ...(product && { product }),
+      },
+    });
+
+    await this.audit.log({
+      userId: user.id,
+      action: 'BILLING_UPGRADE_INITIATED',
+      severity: 'medium',
+      metadata: {
+        sessionId: session.id,
+        provider: 'stripe',
+        plan,
+        source: 'external',
+        ...(product && { product }),
+      },
+    });
+
+    return session.url;
+  }
+
+  /**
+   * Create a checkout session on behalf of a federated service (e.g., PhyneCRM).
+   */
+  async createFederatedCheckout(
+    userId: string,
+    planId: string,
+    options?: { successUrl?: string; cancelUrl?: string }
+  ): Promise<{ checkoutUrl: string; sessionId: string }> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, email: true, stripeCustomerId: true, countryCode: true },
+    });
+
+    if (!user) {
+      throw new Error(`User not found: ${userId}`);
+    }
+
+    const priceId = this.config.get<string>(`STRIPE_${planId.toUpperCase()}_PRICE_ID`);
+    if (!priceId) {
+      throw new Error(`Unknown plan: ${planId}`);
+    }
+
+    const defaultSuccessUrl = this.config.get<string>('FRONTEND_URL', 'https://app.dhan.am');
+    const session = await this.stripe.createCheckoutSession({
+      customerId: user.stripeCustomerId || undefined,
+      priceId,
+      successUrl:
+        options?.successUrl ||
+        `${defaultSuccessUrl}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancelUrl: options?.cancelUrl || `${defaultSuccessUrl}/billing`,
+      metadata: {
+        userId: user.id,
+        source: 'federation',
+        planId,
+      },
+      // customerEmail is passed via the spread when no stripeCustomerId exists
+      ...(!user.stripeCustomerId && { customerEmail: user.email }),
+    } as any);
+
+    return {
+      checkoutUrl: session.url || '',
+      sessionId: session.id,
+    };
+  }
+
+  // ─── Billing history ─────────────────────────────────────────────────
+
+  /**
+   * Get billing history for a user.
+   */
+  async getBillingHistory(userId: string, limit = 20) {
+    return this.prisma.billingEvent.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+    });
+  }
+
+  // ─── Janua role sync (used by WebhookProcessorService too) ───────────
+
+  /**
+   * Dispatch a role-upgrade call to the Janua Admin API.
+   * Maps Stripe product IDs to Janua role names via STRIPE_FOUNDRY_PRODUCT_ID config.
+   * Non-blocking -- errors are logged, not thrown.
+   */
+  async dispatchJanuaRoleUpgrade(januaUserId: string, productId?: string): Promise<void> {
+    const januaApiUrl = this.config.get<string>('JANUA_API_URL');
+    const januaAdminKey = this.config.get<string>('JANUA_ADMIN_KEY');
+
+    if (!januaApiUrl || !januaAdminKey) {
+      this.logger.warn(
+        'Cannot dispatch Janua role upgrade: missing JANUA_API_URL or JANUA_ADMIN_KEY'
+      );
+      return;
+    }
+
+    // Build product -> role map from config
+    const foundryProductId = this.config.get<string>('STRIPE_FOUNDRY_PRODUCT_ID', 'prod_foundry');
+    const productRoleMap: Record<string, string> = {
+      [foundryProductId]: 'foundry_tier',
+    };
+
+    const role = productId ? productRoleMap[productId] : undefined;
+    if (!role) {
+      this.logger.log(
+        `No Janua role mapping for product ${productId ?? 'unknown'}, skipping dispatch`
+      );
+      return;
+    }
+
+    try {
+      const response = await fetch(`${januaApiUrl}/internal/users/${januaUserId}/roles`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${januaAdminKey}`,
+        },
+        body: JSON.stringify({ add_role: role }),
+      });
+
+      if (!response.ok) {
+        const text = await response.text();
+        this.logger.error(`Janua role upgrade failed: ${response.status} - ${text}`);
+      } else {
+        this.logger.log(`Janua role upgraded for user ${januaUserId}: ${role}`);
+      }
+    } catch (error) {
+      this.logger.error(`Janua role upgrade request error: ${error.message}`);
+    }
+  }
+
+  /**
+   * Notify Janua identity system of subscription tier change.
+   * This updates the organization's subscription_tier, enabling
+   * the Enclii -> Dhanam -> Janua payment loop.
+   */
+  async notifyJanuaOfTierChange(orgId: string, customerId: string, planId: string): Promise<void> {
+    const januaApiUrl = this.config.get<string>('JANUA_API_URL');
+    const dhanamWebhookSecret = this.config.get<string>('DHANAM_WEBHOOK_SECRET');
+
+    if (!januaApiUrl || !dhanamWebhookSecret) {
+      this.logger.warn('Cannot notify Janua: missing JANUA_API_URL or DHANAM_WEBHOOK_SECRET');
+      return;
+    }
+
+    const payload = JSON.stringify({
+      type: 'subscription.created',
+      data: {
+        customer_id: customerId,
+        plan_id: planId,
+        organization_id: orgId,
+      },
+      timestamp: new Date().toISOString(),
+    });
+
+    // Sign the payload using HMAC-SHA256
+    const signature = crypto
+      .createHmac('sha256', dhanamWebhookSecret)
+      .update(payload)
+      .digest('hex');
+
+    try {
+      const response = await fetch(`${januaApiUrl}/api/v1/webhooks/dhanam/subscription`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Dhanam-Signature': signature,
+        },
+        body: payload,
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        this.logger.error(
+          `Failed to notify Janua of tier change: ${response.status} - ${errorText}`
+        );
+      } else {
+        this.logger.log(`Notified Janua of tier change for org ${orgId} (plan: ${planId})`);
+      }
+    } catch (error) {
+      this.logger.error(`Error notifying Janua of tier change: ${error.message}`);
+    }
+  }
+}
