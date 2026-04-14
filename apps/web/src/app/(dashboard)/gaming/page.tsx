@@ -6,7 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@dhanam/ui';
 import { Skeleton } from '@dhanam/ui';
-import { Currency, useTranslation } from '@dhanam/shared';
+import { Currency, useTranslation, CHART_COLORS } from '@dhanam/shared';
 import { formatCurrency } from '~/lib/utils';
 
 import { PlatformSelector, type MetaversePlatform } from '@/components/gaming/platform-selector';
@@ -19,6 +19,7 @@ import { NftGallery } from '@/components/gaming/nft-gallery';
 import { GovernanceActivity } from '@/components/gaming/governance-activity';
 import { gamingApi } from '@/lib/api/gaming';
 import { useAuth } from '~/lib/hooks/use-auth';
+import { useSpaceStore } from '@/stores/space';
 import { Button } from '@dhanam/ui';
 import { useRouter } from 'next/navigation';
 
@@ -109,21 +110,21 @@ const FALLBACK_PLATFORM_DATA = [
 ];
 
 const FALLBACK_EARNINGS_DATA = [
-  { platform: 'sandbox', source: 'staking', amountUsd: 48, color: '#F1C40F' },
-  { platform: 'sandbox', source: 'rental', amountUsd: 135, color: '#E67E22' },
-  { platform: 'sandbox', source: 'creator', amountUsd: 320, color: '#9B59B6' },
-  { platform: 'axie', source: 'scholarship', amountUsd: 200, color: '#3498DB' },
-  { platform: 'axie', source: 'staking', amountUsd: 49, color: '#2980B9' },
-  { platform: 'axie', source: 'p2e', amountUsd: 35, color: '#1ABC9C' },
-  { platform: 'illuvium', source: 'staking', amountUsd: 32, color: '#8E44AD' },
-  { platform: 'illuvium', source: 'p2e', amountUsd: 148, color: '#9B59B6' },
-  { platform: 'star-atlas', source: 'staking', amountUsd: 4, color: '#34495E' },
-  { platform: 'star-atlas', source: 'p2e', amountUsd: 25, color: '#2C3E50' },
-  { platform: 'gala', source: 'node_rewards', amountUsd: 150, color: '#E74C3C' },
-  { platform: 'gala', source: 'p2e', amountUsd: 40, color: '#C0392B' },
-  { platform: 'enjin', source: 'marketplace', amountUsd: 45, color: '#1ABC9C' },
-  { platform: 'immutable', source: 'staking', amountUsd: 10, color: '#2ECC71' },
-  { platform: 'immutable', source: 'marketplace', amountUsd: 65, color: '#27AE60' },
+  { platform: 'sandbox', source: 'staking', amountUsd: 48, color: CHART_COLORS[0] },
+  { platform: 'sandbox', source: 'rental', amountUsd: 135, color: CHART_COLORS[1] },
+  { platform: 'sandbox', source: 'creator', amountUsd: 320, color: CHART_COLORS[2] },
+  { platform: 'axie', source: 'scholarship', amountUsd: 200, color: CHART_COLORS[3] },
+  { platform: 'axie', source: 'staking', amountUsd: 49, color: CHART_COLORS[4] },
+  { platform: 'axie', source: 'p2e', amountUsd: 35, color: CHART_COLORS[5] },
+  { platform: 'illuvium', source: 'staking', amountUsd: 32, color: CHART_COLORS[6] },
+  { platform: 'illuvium', source: 'p2e', amountUsd: 148, color: CHART_COLORS[2] },
+  { platform: 'star-atlas', source: 'staking', amountUsd: 4, color: CHART_COLORS[7] },
+  { platform: 'star-atlas', source: 'p2e', amountUsd: 25, color: CHART_COLORS[8] },
+  { platform: 'gala', source: 'node_rewards', amountUsd: 150, color: CHART_COLORS[9] },
+  { platform: 'gala', source: 'p2e', amountUsd: 40, color: CHART_COLORS[10] },
+  { platform: 'enjin', source: 'marketplace', amountUsd: 45, color: CHART_COLORS[5] },
+  { platform: 'immutable', source: 'staking', amountUsd: 10, color: CHART_COLORS[11] },
+  { platform: 'immutable', source: 'marketplace', amountUsd: 65, color: CHART_COLORS[12] },
 ];
 
 const FALLBACK_GUILD_DATA = [
@@ -278,14 +279,14 @@ export default function GamingPage() {
   const { t } = useTranslation('gaming');
   const { t: tCommon } = useTranslation('common');
   const { user } = useAuth();
+  const { currentSpace } = useSpaceStore();
   const router = useRouter();
   const [selectedPlatform, setSelectedPlatform] = useState<MetaversePlatform>('all');
 
   const isGamingPersona =
     user?.email === 'diego@dhanam.demo' || user?.email === 'guest@dhanam.demo';
 
-  // TODO: Replace 'demo-space' with actual spaceId from auth context
-  const spaceId = 'demo-space';
+  const spaceId = currentSpace?.id;
 
   const {
     data: portfolio,
@@ -293,9 +294,9 @@ export default function GamingPage() {
     error,
   } = useQuery({
     queryKey: ['gaming-portfolio', spaceId],
-    queryFn: () => gamingApi.getPortfolio(spaceId),
+    queryFn: () => gamingApi.getPortfolio(spaceId!),
     retry: false,
-    enabled: isGamingPersona,
+    enabled: isGamingPersona && !!spaceId,
   });
 
   // Show connect CTA for non-gaming personas

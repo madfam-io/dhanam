@@ -249,7 +249,7 @@ export class BillingController {
 
     if (!webhookSecret) {
       this.logger.error('STRIPE_WEBHOOK_SECRET not configured');
-      return { received: false, error: 'Webhook secret not configured' };
+      throw new BadRequestException('Webhook not configured');
     }
 
     let event: Stripe.Event;
@@ -261,9 +261,9 @@ export class BillingController {
         signature,
         webhookSecret
       );
-    } catch (error) {
-      this.logger.error(`Webhook signature verification failed: ${error.message}`);
-      return { received: false, error: 'Invalid signature' };
+    } catch (_error) {
+      this.logger.error('Webhook signature verification failed');
+      throw new BadRequestException('Invalid webhook signature');
     }
 
     this.logger.log(`Received Stripe webhook: ${event.type}`);
@@ -299,8 +299,8 @@ export class BillingController {
           this.logger.log(`Unhandled event type: ${event.type}`);
       }
     } catch (error) {
-      this.logger.error(`Error processing webhook: ${error.message}`, error.stack);
-      return { received: false, error: error.message };
+      // Log the error but acknowledge receipt to prevent Stripe retries
+      this.logger.error(`Error processing webhook event ${event.type}`, error.stack);
     }
 
     return { received: true };
@@ -326,7 +326,7 @@ export class BillingController {
 
     if (!this.januaBillingService.verifyWebhookSignature(rawBody, signature || '')) {
       this.logger.error('Janua webhook signature verification failed');
-      return { received: false, error: 'Invalid signature' };
+      throw new BadRequestException('Invalid webhook signature');
     }
 
     this.logger.log(
@@ -371,8 +371,8 @@ export class BillingController {
           this.logger.log(`Unhandled Janua event type: ${payload.type}`);
       }
     } catch (error) {
-      this.logger.error(`Error processing Janua webhook: ${error.message}`, error.stack);
-      return { received: false, error: error.message };
+      // Log the error but acknowledge receipt to prevent Janua retries
+      this.logger.error(`Error processing Janua webhook event ${payload.type}`, error.stack);
     }
 
     return { received: true, event: payload.type };

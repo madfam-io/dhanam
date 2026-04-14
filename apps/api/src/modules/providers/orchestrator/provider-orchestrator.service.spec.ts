@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { Logger } from '@nestjs/common';
 
+import { ProviderException } from '../../../core/exceptions/domain-exceptions';
 import { EventsService } from '../../../core/events/events.service';
 import { ProviderOrchestratorService } from './provider-orchestrator.service';
 import { CircuitBreakerService } from './circuit-breaker.service';
@@ -147,7 +148,7 @@ describe('ProviderOrchestratorService', () => {
       expect(mockCircuitBreaker.isCircuitOpen).toHaveBeenCalledTimes(3);
     });
 
-    it('should return primary provider when all circuit breakers are open', async () => {
+    it('should throw ProviderException when all circuit breakers are open', async () => {
       const mockMapping = {
         institutionId: 'inst-123',
         region: 'US',
@@ -158,9 +159,9 @@ describe('ProviderOrchestratorService', () => {
       mockPrisma.institutionProviderMapping.findFirst.mockResolvedValue(mockMapping);
       mockCircuitBreaker.isCircuitOpen.mockResolvedValue(true); // All open
 
-      const providers = await service.getAvailableProviders('inst-123', 'US');
-
-      expect(providers).toEqual(['plaid' as any]); // Failover to primary
+      await expect(service.getAvailableProviders('inst-123', 'US')).rejects.toThrow(
+        ProviderException
+      );
     });
 
     it('should handle mapping without backup providers', async () => {

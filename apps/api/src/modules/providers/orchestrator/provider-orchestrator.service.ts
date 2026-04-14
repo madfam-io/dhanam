@@ -2,6 +2,7 @@ import { Provider } from '@db';
 import { Injectable, Logger } from '@nestjs/common';
 
 import { EventsService } from '../../../core/events/events.service';
+import { ProviderException } from '../../../core/exceptions/domain-exceptions';
 import { PrismaService } from '../../../core/prisma/prisma.service';
 import { ProviderSelectionService } from '../../ml/provider-selection.service';
 
@@ -138,8 +139,7 @@ export class ProviderOrchestratorService {
       this.logger.error(
         `All providers for institution ${institutionId} have open circuit breakers!`
       );
-      // Return primary provider anyway (failover to fail-fast)
-      return [mapping.primaryProvider];
+      throw ProviderException.circuitOpen(mapping.primaryProvider);
     }
 
     return availableProviders;

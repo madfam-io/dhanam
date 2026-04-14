@@ -18,26 +18,8 @@ import { Badge } from '@dhanam/ui';
 import { Loader2, Plus, Pencil, Trash2, Tag } from 'lucide-react';
 import { useSpaceStore } from '@/stores/space';
 import { tagsApi, Tag as TagType, CreateTagDto, UpdateTagDto } from '@/lib/api/tags';
+import { TAG_COLORS } from '@dhanam/shared';
 import { toast } from 'sonner';
-
-const TAG_COLORS = [
-  '#ef4444',
-  '#f97316',
-  '#f59e0b',
-  '#eab308',
-  '#84cc16',
-  '#22c55e',
-  '#14b8a6',
-  '#06b6d4',
-  '#3b82f6',
-  '#6366f1',
-  '#8b5cf6',
-  '#a855f7',
-  '#d946ef',
-  '#ec4899',
-  '#f43f5e',
-  '#64748b',
-];
 
 export default function TagsSettingsPage() {
   const { currentSpace } = useSpaceStore();
@@ -51,7 +33,7 @@ export default function TagsSettingsPage() {
   // Form state
   const [formName, setFormName] = useState('');
   const [formDescription, setFormDescription] = useState('');
-  const [formColor, setFormColor] = useState(TAG_COLORS[0]);
+  const [formColor, setFormColor] = useState<string>(TAG_COLORS[0]);
 
   const { data: tags, isLoading } = useQuery({
     queryKey: ['tags', spaceId],

@@ -11,17 +11,19 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 export default function BillingEventsPage() {
   const [events, setEvents] = useState<BillingEvent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
   const loadEvents = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const response = await adminApi.getBillingEvents(page, 20);
       setEvents(response.data);
       setTotalPages(response.totalPages);
-    } catch (error) {
-      console.error('Failed to load billing events:', error);
+    } catch (err) {
+      setError('Failed to load billing events. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -43,6 +45,15 @@ export default function BillingEventsPage() {
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Billing Events</h1>
         <p className="text-gray-500 dark:text-gray-400 mt-1">View billing-related audit events</p>
       </div>
+
+      {error && (
+        <div className="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-300">
+          {error}{' '}
+          <button onClick={loadEvents} className="underline font-medium">
+            Retry
+          </button>
+        </div>
+      )}
 
       <Card>
         <div className="overflow-x-auto">

@@ -21,9 +21,15 @@ function setConsentCookie(status: 'accepted' | 'rejected') {
 export function CookieConsent({
   onAccept,
   onReject,
+  message,
+  acceptLabel,
+  rejectLabel,
 }: {
   onAccept?: () => void;
   onReject?: () => void;
+  message?: string;
+  acceptLabel?: string;
+  rejectLabel?: string;
 }) {
   const [visible, setVisible] = useState(false);
 
@@ -51,26 +57,27 @@ export function CookieConsent({
   return (
     <div
       role="dialog"
+      aria-modal="true"
       aria-label="Cookie consent"
       className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background p-4 shadow-lg"
     >
       <div className="mx-auto flex max-w-4xl flex-col items-center gap-4 sm:flex-row">
         <p className="flex-1 text-sm text-muted-foreground">
-          We use cookies and analytics to improve your experience. You can accept or reject
-          non-essential cookies.
+          {message ??
+            'We use cookies and analytics to improve your experience. You can accept or reject non-essential cookies.'}
         </p>
         <div className="flex gap-2">
           <button
             onClick={handleReject}
             className="rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent"
           >
-            Reject
+            {rejectLabel ?? 'Reject'}
           </button>
           <button
             onClick={handleAccept}
             className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
           >
-            Accept
+            {acceptLabel ?? 'Accept'}
           </button>
         </div>
       </div>

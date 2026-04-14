@@ -15,13 +15,7 @@ export interface Account {
   updatedAt: string;
 }
 
-export type AccountType = 
-  | 'checking'
-  | 'savings'
-  | 'credit'
-  | 'investment'
-  | 'crypto'
-  | 'other';
+export type AccountType = 'checking' | 'savings' | 'credit' | 'investment' | 'crypto' | 'other';
 
 export interface CreateAccountDto {
   name: string;
@@ -39,7 +33,7 @@ export interface UpdateAccountDto {
 export interface ConnectAccountDto {
   provider: Provider;
   linkToken?: string;
-  credentials?: Record<string, any>;
+  credentials?: Record<string, unknown>;
 }
 
 export interface AccountConnection {
@@ -50,11 +44,7 @@ export interface AccountConnection {
   error?: string;
 }
 
-export type ConnectionStatus = 
-  | 'active'
-  | 'error'
-  | 'syncing'
-  | 'disconnected';
+export type ConnectionStatus = 'active' | 'error' | 'syncing' | 'disconnected';
 
 export interface SyncAccountResponse {
   jobId: string;

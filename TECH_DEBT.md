@@ -380,4 +380,22 @@ Mobile app has only 6 test suites (~15% coverage). Target: ~20 test files (~40% 
 
 ---
 
+### TD-022: Codebase Remediation — Security, UX, and Quality Hardening
+
+**Status**: RESOLVED
+**Severity**: HIGH
+
+**Problem**:
+Comprehensive audit identified 48 issues across the monorepo: billing webhooks returning HTTP 200 on signature failure (leaking error messages), Stripe MX throwing raw `Error` instead of domain exceptions, PII in logs, circuit breaker failing open, 18 missing env var validations, toast delay set to 17 minutes, hardcoded magic numbers in financial calculations, hardcoded `'demo-space'` in gaming page, scattered hex color constants, race conditions in simulations hook, no fetch timeouts, and loose `any` types in shared packages.
+
+**Resolution (April 2026)**:
+
+- **Security**: Webhook throws 400 on bad signature, never leaks `error.message`; Stripe MX uses `InfrastructureException`; PII removed from logs; circuit breaker throws `ProviderException.circuitOpen()`
+- **Config**: Added 18 env vars to validation schema; CORS/WEB_URL required in production; Finicity redirect URI made configurable
+- **Frontend**: Toast delay fixed (5s); `FINANCIAL_DEFAULTS` constants extracted; gaming page uses `useSpaceStore()`; shared `CHART_COLORS`/`TAG_COLORS`/`CELEBRATION_COLORS` constants; `fetchWithTimeout` utility; simulations hook AbortController; global error page i18n + CSS variable fallbacks + keyboard focus
+- **Types**: `Record<string, any>` → `Record<string, unknown>` in shared types; cookie consent accepts i18n props; ESG base score rationale documented
+- **Admin**: Billing events page has visible error state with retry
+
+---
+
 _This document is maintained per Law 7 (API Mandate) requirements. All bare-metal workarounds must be logged here._

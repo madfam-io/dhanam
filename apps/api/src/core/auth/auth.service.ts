@@ -1,5 +1,9 @@
 import { createHash } from 'crypto';
 
+import { AuditService } from '@core/audit/audit.service';
+import { SecurityConfigService } from '@core/config/security.config';
+import { LoggerService } from '@core/logger/logger.service';
+import { PrismaService } from '@core/prisma/prisma.service';
 import {
   LoginDto,
   RegisterDto,
@@ -8,6 +12,7 @@ import {
   ResetPasswordDto,
   ForgotPasswordDto,
 } from '@dhanam/shared';
+import { EmailService } from '@modules/email/email.service';
 import {
   Injectable,
   UnauthorizedException,
@@ -19,12 +24,6 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
 import Redis from 'ioredis';
-
-import { AuditService } from '@core/audit/audit.service';
-import { SecurityConfigService } from '@core/config/security.config';
-import { LoggerService } from '@core/logger/logger.service';
-import { PrismaService } from '@core/prisma/prisma.service';
-import { EmailService } from '@modules/email/email.service';
 
 import { SessionService } from './session.service';
 import { TotpService } from './totp.service';
@@ -169,7 +168,7 @@ export class AuthService {
       },
     });
 
-    this.logger.log(`User registered: ${user.email}`, 'AuthService');
+    this.logger.log(`User registered: ${user.id}`, 'AuthService');
 
     // Send welcome email
     await this.emailService.sendWelcomeEmail(user.email, user.name);

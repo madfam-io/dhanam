@@ -31,7 +31,7 @@ export class StripeService {
     name?: string;
     metadata?: Record<string, string>;
   }): Promise<Stripe.Customer> {
-    this.logger.log(`Creating Stripe customer for email: ${params.email}`);
+    this.logger.log('Creating Stripe customer');
 
     return await this.stripe.customers.create({
       email: params.email,

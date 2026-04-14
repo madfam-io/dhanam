@@ -1,4 +1,5 @@
 import confetti from 'canvas-confetti';
+import { CELEBRATION_COLORS } from '@dhanam/shared';
 
 export function fireConfetti() {
   confetti({
@@ -18,14 +19,14 @@ export function fireGoalConfetti() {
       angle: 60,
       spread: 55,
       origin: { x: 0 },
-      colors: ['#FFD700', '#FFA500', '#FF6347'],
+      colors: [...CELEBRATION_COLORS.goal],
     });
     confetti({
       particleCount: 3,
       angle: 120,
       spread: 55,
       origin: { x: 1 },
-      colors: ['#FFD700', '#FFA500', '#FF6347'],
+      colors: [...CELEBRATION_COLORS.goal],
     });
 
     if (Date.now() < end) {
@@ -43,6 +44,6 @@ export function fireStreakCelebration(weeks: number) {
     particleCount: intensity,
     spread: 100,
     origin: { y: 0.6 },
-    colors: ['#10B981', '#34D399', '#6EE7B7', '#FFD700'],
+    colors: [...CELEBRATION_COLORS.streak],
   });
 }

@@ -1,5 +1,7 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { FINANCIAL_DEFAULTS } from '@dhanam/shared';
 import { useAuth } from '@/lib/hooks/use-auth';
+import { fetchWithTimeout } from '@/lib/fetch-with-timeout';
 
 export interface MonteCarloConfig {
   initialBalance: number;
@@ -154,25 +156,39 @@ export function useSimulations() {
   const { getToken } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<SimulationsError | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
   const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4010';
+
+  // Abort any in-flight request on unmount
+  useEffect(() => {
+    return () => {
+      abortRef.current?.abort();
+    };
+  }, []);
 
   const handleRequest = async <T>(
     endpoint: string,
     config: MonteCarloConfig | RetirementConfig | GoalProbabilityConfig
   ): Promise<T | null> => {
+    // Abort previous in-flight request
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     setLoading(true);
     setError(null);
 
     try {
       const token = await getToken();
-      const response = await fetch(`${apiBaseUrl}/simulations/${endpoint}`, {
+      const response = await fetchWithTimeout(`${apiBaseUrl}/simulations/${endpoint}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(config),
+        signal: controller.signal,
       });
 
       if (!response.ok) {
@@ -184,6 +200,9 @@ export function useSimulations() {
       const data = await response.json();
       return data as T;
     } catch (err) {
+      if (err instanceof DOMException && err.name === 'AbortError') {
+        return null; // Request was superseded or component unmounted
+      }
       setError({
         statusCode: 500,
         message: err instanceof Error ? err.message : 'Unknown error occurred',
@@ -208,6 +227,11 @@ export function useSimulations() {
   const simulateRetirement = async (
     config: RetirementConfig
   ): Promise<RetirementSimulationResult | null> => {
+    // Abort previous in-flight request
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     setLoading(true);
     setError(null);
 
@@ -223,19 +247,20 @@ export function useSimulations() {
         monthlyContribution: config.monthlyContribution,
         monthlyWithdrawal: (config.monthlyExpenses || 0) - (config.socialSecurityIncome || 0),
         preRetirementReturn: config.expectedReturn,
-        postRetirementReturn: config.expectedReturn * 0.85, // More conservative in retirement
+        postRetirementReturn: config.expectedReturn * FINANCIAL_DEFAULTS.RETIREMENT_RETURN_FACTOR,
         returnVolatility: config.volatility,
-        iterations: config.iterations || 10000,
-        inflationRate: config.inflationAdjusted ? 0.03 : undefined,
+        iterations: config.iterations || FINANCIAL_DEFAULTS.MONTE_CARLO_ITERATIONS,
+        inflationRate: config.inflationAdjusted ? FINANCIAL_DEFAULTS.INFLATION_RATE : undefined,
       };
 
-      const response = await fetch(`${apiBaseUrl}/simulations/retirement`, {
+      const response = await fetchWithTimeout(`${apiBaseUrl}/simulations/retirement`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(apiConfig),
+        signal: controller.signal,
       });
 
       if (!response.ok) {
@@ -329,6 +354,9 @@ export function useSimulations() {
 
       return result;
     } catch (err) {
+      if (err instanceof DOMException && err.name === 'AbortError') {
+        return null;
+      }
       setError({
         statusCode: 500,
         message: err instanceof Error ? err.message : 'Unknown error occurred',
@@ -352,12 +380,16 @@ export function useSimulations() {
       inflationRate?: number;
     }
   ): Promise<ScenarioComparisonResult | null> => {
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     setLoading(true);
     setError(null);
 
     try {
       const token = await getToken();
-      const response = await fetch(`${apiBaseUrl}/simulations/scenario-analysis`, {
+      const response = await fetchWithTimeout(`${apiBaseUrl}/simulations/scenario-analysis`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -367,6 +399,7 @@ export function useSimulations() {
           scenarioType,
           ...config,
         }),
+        signal: controller.signal,
       });
 
       if (!response.ok) {
@@ -378,6 +411,9 @@ export function useSimulations() {
       const data = await response.json();
       return data as ScenarioComparisonResult;
     } catch (err) {
+      if (err instanceof DOMException && err.name === 'AbortError') {
+        return null;
+      }
       setError({
         statusCode: 500,
         message: err instanceof Error ? err.message : 'Unknown error occurred',
@@ -393,18 +429,23 @@ export function useSimulations() {
     riskTolerance: 'conservative' | 'moderate' | 'aggressive',
     yearsToRetirement: number
   ): Promise<RecommendedAllocation | null> => {
-    const token = await getToken();
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     setLoading(true);
     setError(null);
 
     try {
-      const response = await fetch(`${apiBaseUrl}/simulations/recommended-allocation`, {
+      const token = await getToken();
+      const response = await fetchWithTimeout(`${apiBaseUrl}/simulations/recommended-allocation`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ riskTolerance, yearsToRetirement }),
+        signal: controller.signal,
       });
 
       if (!response.ok) {
@@ -416,6 +457,9 @@ export function useSimulations() {
       const data = await response.json();
       return data as RecommendedAllocation;
     } catch (err) {
+      if (err instanceof DOMException && err.name === 'AbortError') {
+        return null;
+      }
       setError({
         statusCode: 500,
         message: err instanceof Error ? err.message : 'Unknown error occurred',

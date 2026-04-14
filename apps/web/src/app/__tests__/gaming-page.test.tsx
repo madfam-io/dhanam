@@ -1,20 +1,22 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 
-jest.mock('@dhanam/ui', () =>
-  new Proxy(
-    {},
-    {
-      get: (_, prop) => {
-        if (prop === '__esModule') return true;
-        return ({ children, ...props }: any) => (
-          <div data-testid={String(prop).toLowerCase()} {...props}>
-            {children}
-          </div>
-        );
-      },
-    },
-  ),
+jest.mock(
+  '@dhanam/ui',
+  () =>
+    new Proxy(
+      {},
+      {
+        get: (_, prop) => {
+          if (prop === '__esModule') return true;
+          return ({ children, ...props }: any) => (
+            <div data-testid={String(prop).toLowerCase()} {...props}>
+              {children}
+            </div>
+          );
+        },
+      }
+    )
 );
 
 jest.mock('@dhanam/shared', () => ({
@@ -24,18 +26,23 @@ jest.mock('@dhanam/shared', () => ({
     setLocale: jest.fn(),
   }),
   Currency: { USD: 'USD' },
+  CHART_COLORS: Array.from({ length: 16 }, (_, i) => `#${i.toString(16).padStart(6, '0')}`),
 }));
 
-jest.mock('lucide-react', () =>
-  new Proxy(
-    {},
-    {
-      get: (_, prop) => {
-        if (prop === '__esModule') return true;
-        return (props: any) => <span data-testid={`icon-${String(prop).toLowerCase()}`} {...props} />;
-      },
-    },
-  ),
+jest.mock(
+  'lucide-react',
+  () =>
+    new Proxy(
+      {},
+      {
+        get: (_, prop) => {
+          if (prop === '__esModule') return true;
+          return (props: any) => (
+            <span data-testid={`icon-${String(prop).toLowerCase()}`} {...props} />
+          );
+        },
+      }
+    )
 );
 
 const mockUseQuery = jest.fn();
@@ -47,6 +54,10 @@ jest.mock('@tanstack/react-query', () => ({
 const mockUseAuth = jest.fn();
 jest.mock('~/lib/hooks/use-auth', () => ({
   useAuth: () => mockUseAuth(),
+}));
+
+jest.mock('@/stores/space', () => ({
+  useSpaceStore: () => ({ currentSpace: { id: 'space-123' } }),
 }));
 
 const mockPush = jest.fn();

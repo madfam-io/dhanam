@@ -214,7 +214,7 @@ The provider orchestrator (`apps/api/src/modules/providers/orchestrator/`) handl
 
 **API (NestJS):**
 
-- 3900+ unit tests across 163+ test suites (98%+ coverage)
+- 4100+ unit tests across 165+ test suites (98%+ coverage)
 - Billing module tests cover the facade (`billing.service.spec.ts`) and all three extracted sub-services (`usage-tracking.service.spec.ts`, `subscription-lifecycle.service.spec.ts`, `webhook-processor.service.spec.ts`) plus the reconciliation job (`reconciliation.job.spec.ts`)
 - E2E journey tests: core value loop, subscription upgrade, admin operations, provider sync, billing webhooks, estate planning, households
 - Contract tests for Stripe, Plaid, and Belvo webhook schemas (Zod validation)

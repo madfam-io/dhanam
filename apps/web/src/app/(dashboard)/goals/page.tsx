@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useTranslation } from '@dhanam/shared';
+import { useTranslation, FINANCIAL_DEFAULTS } from '@dhanam/shared';
 import { useGoals, type Goal, type GoalProgress, type GoalSummary } from '@/hooks/useGoals';
 import { useSimulations, type GoalProbabilityResult } from '@/hooks/useSimulations';
 import { useAnalytics } from '@/hooks/useAnalytics';
@@ -96,8 +96,8 @@ export default function GoalsPage() {
       targetAmount: parseFloat(selectedGoal.targetAmount.toString()),
       monthsRemaining,
       monthlyContribution: goalProgress.monthlyContributionNeeded || 0,
-      expectedReturn: 0.07, // TODO: Get from user preferences
-      volatility: 0.15,
+      expectedReturn: FINANCIAL_DEFAULTS.EXPECTED_RETURN,
+      volatility: FINANCIAL_DEFAULTS.VOLATILITY,
     });
 
     if (result) {

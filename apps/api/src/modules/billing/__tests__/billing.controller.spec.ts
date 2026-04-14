@@ -1,3 +1,4 @@
+import { BadRequestException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
@@ -521,21 +522,18 @@ describe('BillingController', () => {
       expect(billingService.handleSubscriptionCreated).not.toHaveBeenCalled();
     });
 
-    it('should return error when webhook secret is not configured', async () => {
+    it('should throw BadRequestException when webhook secret is not configured', async () => {
       configService.get.mockReturnValue(null);
 
       const mockRequest = createMockRequest({});
       const signature = 'test_signature';
 
-      const result = await controller.handleWebhook(mockRequest as any, signature);
-
-      expect(result).toEqual({
-        received: false,
-        error: 'Webhook secret not configured',
-      });
+      await expect(controller.handleWebhook(mockRequest as any, signature)).rejects.toThrow(
+        BadRequestException
+      );
     });
 
-    it('should return error for invalid signature', async () => {
+    it('should throw BadRequestException for invalid signature', async () => {
       const mockRequest = createMockRequest({});
       const signature = 'invalid_signature';
 
@@ -543,15 +541,12 @@ describe('BillingController', () => {
         throw new Error('Invalid signature');
       });
 
-      const result = await controller.handleWebhook(mockRequest as any, signature);
-
-      expect(result).toEqual({
-        received: false,
-        error: 'Invalid signature',
-      });
+      await expect(controller.handleWebhook(mockRequest as any, signature)).rejects.toThrow(
+        BadRequestException
+      );
     });
 
-    it('should return error when webhook processing fails', async () => {
+    it('should acknowledge receipt even when webhook processing fails', async () => {
       const mockEvent = {
         id: 'evt_test123',
         type: 'customer.subscription.created',
@@ -566,10 +561,7 @@ describe('BillingController', () => {
 
       const result = await controller.handleWebhook(mockRequest as any, signature);
 
-      expect(result).toEqual({
-        received: false,
-        error: 'Database error',
-      });
+      expect(result).toEqual({ received: true });
     });
 
     it('should handle checkout.session.completed webhook', async () => {

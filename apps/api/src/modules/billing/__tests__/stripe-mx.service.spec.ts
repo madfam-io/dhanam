@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import Stripe from 'stripe';
 
+import { InfrastructureException } from '../../../core/exceptions/domain-exceptions';
 import { StripeMxService } from '../services/stripe-mx.service';
 
 describe('StripeMxService', () => {
@@ -107,7 +108,7 @@ describe('StripeMxService', () => {
 
       await expect(
         unconfiguredService.createCustomer({ email: 'test@example.com' })
-      ).rejects.toThrow('Stripe MX not configured');
+      ).rejects.toThrow(InfrastructureException);
     });
   });
 
@@ -182,7 +183,7 @@ describe('StripeMxService', () => {
 
       expect(createSpy).toHaveBeenCalledWith(
         expect.objectContaining({
-          payment_method_types: ['card', 'oxxo', 'customer_balance'],
+          payment_method_types: ['card', 'oxxo', 'customer_balance', 'spei_transfer'],
         })
       );
     });
@@ -227,7 +228,7 @@ describe('StripeMxService', () => {
           successUrl: 'https://example.com/success',
           cancelUrl: 'https://example.com/cancel',
         })
-      ).rejects.toThrow('Stripe MX not configured');
+      ).rejects.toThrow(InfrastructureException);
     });
   });
 
@@ -329,7 +330,7 @@ describe('StripeMxService', () => {
           customerId: 'cus_123',
           returnUrl: 'https://example.com',
         })
-      ).rejects.toThrow('Stripe MX not configured');
+      ).rejects.toThrow(InfrastructureException);
     });
   });
 
@@ -367,7 +368,7 @@ describe('StripeMxService', () => {
 
       expect(() => {
         serviceWithoutWebhookSecret.verifyWebhookSignature('payload', 'signature');
-      }).toThrow('STRIPE_MX_WEBHOOK_SECRET not configured');
+      }).toThrow(InfrastructureException);
     });
 
     it('should throw error for invalid signature', () => {
@@ -426,7 +427,7 @@ describe('StripeMxService', () => {
       const unconfiguredService = module.get<StripeMxService>(StripeMxService);
 
       await expect(unconfiguredService.cancelSubscription('sub_123', false)).rejects.toThrow(
-        'Stripe MX not configured'
+        InfrastructureException
       );
     });
   });
@@ -458,7 +459,7 @@ describe('StripeMxService', () => {
       const unconfiguredService = module.get<StripeMxService>(StripeMxService);
 
       await expect(unconfiguredService.getSubscription('sub_123')).rejects.toThrow(
-        'Stripe MX not configured'
+        InfrastructureException
       );
     });
   });
@@ -489,7 +490,7 @@ describe('StripeMxService', () => {
       const unconfiguredService = module.get<StripeMxService>(StripeMxService);
 
       await expect(unconfiguredService.getCustomer('cus_123')).rejects.toThrow(
-        'Stripe MX not configured'
+        InfrastructureException
       );
     });
   });

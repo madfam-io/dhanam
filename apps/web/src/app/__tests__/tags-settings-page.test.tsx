@@ -27,6 +27,7 @@ jest.mock('@dhanam/shared', () => ({
     hasKey: () => true,
     getNamespace: () => ({}),
   }),
+  TAG_COLORS: Array.from({ length: 16 }, (_, i) => `#${i.toString(16).padStart(6, '0')}`),
 }));
 
 jest.mock(

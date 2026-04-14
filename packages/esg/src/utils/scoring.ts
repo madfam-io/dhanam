@@ -2,7 +2,10 @@ import { ESGScore, ESGMetrics } from '../types/esg.types';
 
 export class ESGScoringUtils {
   /**
-   * Calculate composite ESG score from individual components
+   * Calculate composite ESG score from individual components.
+   * Default weights: E=0.4, S=0.3, G=0.3 — follows ESG industry convention
+   * where environmental impact receives slightly higher emphasis for crypto assets
+   * due to the energy intensity of blockchain networks.
    */
   static calculateCompositeScore(
     environmental: number,
@@ -15,19 +18,22 @@ export class ESGScoringUtils {
     }
   ): number {
     const totalWeight = weights.environmental + weights.social + weights.governance;
-    
+
     return Math.round(
       (environmental * weights.environmental +
-       social * weights.social +
-       governance * weights.governance) / totalWeight
+        social * weights.social +
+        governance * weights.governance) /
+        totalWeight
     );
   }
 
   /**
-   * Calculate environmental score based on energy and carbon metrics
+   * Calculate environmental score based on energy and carbon metrics.
+   * Base score of 50 represents "unknown/neutral" on the 0-100 scale.
+   * This avoids biasing unscorable assets toward "good" or "bad".
    */
   static calculateEnvironmentalScore(metrics: ESGMetrics): number {
-    let score = 50; // Base score
+    let score = 50;
 
     // Consensus mechanism impact
     switch (metrics.consensusMechanism) {
@@ -65,10 +71,11 @@ export class ESGScoringUtils {
   }
 
   /**
-   * Calculate social score based on community and adoption metrics
+   * Calculate social score based on community and adoption metrics.
+   * Base score of 50 = neutral midpoint (no data = unknown, not good/bad).
    */
   static calculateSocialScore(metrics: ESGMetrics): number {
-    let score = 50; // Base score
+    let score = 50;
 
     // Community engagement impact
     if (metrics.communityEngagement !== undefined) {
@@ -84,10 +91,11 @@ export class ESGScoringUtils {
   }
 
   /**
-   * Calculate governance score based on decentralization and transparency
+   * Calculate governance score based on decentralization and transparency.
+   * Base score of 50 = neutral midpoint (no data = unknown, not good/bad).
    */
   static calculateGovernanceScore(metrics: ESGMetrics): number {
-    let score = 50; // Base score
+    let score = 50;
 
     // Decentralization impact
     if (metrics.decentralizationScore !== undefined) {
@@ -122,7 +130,7 @@ export class ESGScoringUtils {
       metrics.communityEngagement,
       metrics.transparencyScore,
       metrics.regulatoryCompliance,
-    ].filter(metric => metric !== undefined).length;
+    ].filter((metric) => metric !== undefined).length;
 
     score += availableMetrics * 10; // 10 points per available metric
 
@@ -143,7 +151,7 @@ export class ESGScoringUtils {
     const social = this.calculateSocialScore(metrics);
     const governance = this.calculateGovernanceScore(metrics);
     const confidence = this.calculateConfidenceScore(metrics);
-    
+
     const overall = this.calculateCompositeScore(environmental, social, governance, weights);
 
     return {
@@ -161,14 +169,17 @@ export class ESGScoringUtils {
   /**
    * Compare two ESG scores and provide insight
    */
-  static compareScores(scoreA: ESGScore, scoreB: ESGScore): {
+  static compareScores(
+    scoreA: ESGScore,
+    scoreB: ESGScore
+  ): {
     better: 'A' | 'B' | 'tie';
     difference: number;
     improvementAreas: string[];
   } {
     const diff = scoreA.overall - scoreB.overall;
     let better: 'A' | 'B' | 'tie' = 'tie';
-    
+
     if (Math.abs(diff) > 2) {
       better = diff > 0 ? 'A' : 'B';
     }

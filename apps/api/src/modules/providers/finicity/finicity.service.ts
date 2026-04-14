@@ -178,7 +178,9 @@ export class FinicityService implements IFinancialProvider {
           {
             partnerId: this.partnerId,
             customerId: customerId,
-            redirectUri: params.redirectUri || 'https://app.dhanam.io/connect/callback',
+            redirectUri:
+              params.redirectUri ||
+              `${this.configService.get('WEB_URL', 'https://app.dhan.am')}/connect/callback`,
             webhook: this.configService.get('FINICITY_WEBHOOK_URL'),
             webhookContentType: 'application/json',
           },

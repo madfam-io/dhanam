@@ -19,6 +19,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Stripe from 'stripe';
 
+import { InfrastructureException } from '../../../core/exceptions/domain-exceptions';
+
 export interface StripeMxCheckoutParams {
   customerId?: string;
   customerEmail: string;
@@ -77,10 +79,10 @@ export class StripeMxService {
    */
   async createCustomer(params: StripeMxCustomerParams): Promise<Stripe.Customer> {
     if (!this.stripe) {
-      throw new Error('Stripe MX not configured');
+      throw InfrastructureException.configurationError('STRIPE_MX_SECRET_KEY');
     }
 
-    this.logger.log(`Creating Stripe MX customer: ${params.email}`);
+    this.logger.log('Creating Stripe MX customer');
 
     return await this.stripe.customers.create({
       email: params.email,
@@ -100,10 +102,10 @@ export class StripeMxService {
    */
   async createCheckoutSession(params: StripeMxCheckoutParams): Promise<Stripe.Checkout.Session> {
     if (!this.stripe) {
-      throw new Error('Stripe MX not configured');
+      throw InfrastructureException.configurationError('STRIPE_MX_SECRET_KEY');
     }
 
-    this.logger.log(`Creating Stripe MX checkout for: ${params.customerEmail}`);
+    this.logger.log('Creating Stripe MX checkout session');
 
     // Default payment methods for Mexico
     const paymentMethods = params.paymentMethods || [
@@ -164,7 +166,7 @@ export class StripeMxService {
     paymentMethod?: 'card' | 'oxxo' | 'customer_balance' | 'spei_transfer';
   }): Promise<Stripe.PaymentIntent> {
     if (!this.stripe) {
-      throw new Error('Stripe MX not configured');
+      throw InfrastructureException.configurationError('STRIPE_MX_SECRET_KEY');
     }
 
     return await this.stripe.paymentIntents.create({
@@ -189,7 +191,7 @@ export class StripeMxService {
     returnUrl: string;
   }): Promise<Stripe.BillingPortal.Session> {
     if (!this.stripe) {
-      throw new Error('Stripe MX not configured');
+      throw InfrastructureException.configurationError('STRIPE_MX_SECRET_KEY');
     }
 
     return await this.stripe.billingPortal.sessions.create({
@@ -204,11 +206,11 @@ export class StripeMxService {
    */
   verifyWebhookSignature(payload: string | Buffer, signature: string): Stripe.Event {
     if (!this.stripe) {
-      throw new Error('Stripe MX not configured');
+      throw InfrastructureException.configurationError('STRIPE_MX_SECRET_KEY');
     }
 
     if (!this.webhookSecret) {
-      throw new Error('STRIPE_MX_WEBHOOK_SECRET not configured');
+      throw InfrastructureException.configurationError('STRIPE_MX_WEBHOOK_SECRET');
     }
 
     return this.stripe.webhooks.constructEvent(payload, signature, this.webhookSecret);
@@ -222,7 +224,7 @@ export class StripeMxService {
     immediate: boolean = false
   ): Promise<Stripe.Subscription> {
     if (!this.stripe) {
-      throw new Error('Stripe MX not configured');
+      throw InfrastructureException.configurationError('STRIPE_MX_SECRET_KEY');
     }
 
     if (immediate) {
@@ -240,7 +242,7 @@ export class StripeMxService {
    */
   async getSubscription(subscriptionId: string): Promise<Stripe.Subscription> {
     if (!this.stripe) {
-      throw new Error('Stripe MX not configured');
+      throw InfrastructureException.configurationError('STRIPE_MX_SECRET_KEY');
     }
 
     return await this.stripe.subscriptions.retrieve(subscriptionId);
@@ -251,7 +253,7 @@ export class StripeMxService {
    */
   async getCustomer(customerId: string): Promise<Stripe.Customer> {
     if (!this.stripe) {
-      throw new Error('Stripe MX not configured');
+      throw InfrastructureException.configurationError('STRIPE_MX_SECRET_KEY');
     }
 
     return (await this.stripe.customers.retrieve(customerId)) as Stripe.Customer;

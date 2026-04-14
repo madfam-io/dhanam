@@ -61,6 +61,19 @@ export const GOAL_THRESHOLDS = {
   DEFAULT_INTEREST_RATE: 0.05,
 } as const;
 
+// ── Financial Defaults (Simulations & Projections) ───────────────────────
+
+export const FINANCIAL_DEFAULTS = {
+  EXPECTED_RETURN: 0.07,
+  VOLATILITY: 0.15,
+  INFLATION_RATE: 0.03,
+  RETIREMENT_RETURN_FACTOR: 0.85,
+  SAFE_WITHDRAWAL_RATE: 0.04,
+  MONTE_CARLO_ITERATIONS: 10_000,
+  BINARY_SEARCH_TOLERANCE: 0.001,
+  BINARY_SEARCH_MAX_ITERATIONS: 20,
+} as const;
+
 // ── ESG Thresholds ───────────────────────────────────────────────────────────
 
 export const ESG_THRESHOLDS = {
