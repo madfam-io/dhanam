@@ -7,50 +7,63 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { tokens, isAuthenticated, setAuth, refreshTokens, clearAuth } = useAuth();
 
   // Bootstrap: if Janua tokens exist in localStorage but Zustand store is empty,
-  // hydrate the store directly. This handles the case where JanuaAuthSync hasn't
-  // fired (SDK init delay, getCurrentUser failure, etc.)
+  // hydrate the store directly. Polls briefly after mount to catch tokens stored
+  // by the Janua SDK's SignIn component (which stores tokens asynchronously).
   useEffect(() => {
-    if (isAuthenticated) return; // Already authenticated
+    if (isAuthenticated) return;
 
-    const januaToken = localStorage.getItem('janua_access_token');
-    if (!januaToken) return;
+    const tryBootstrap = () => {
+      if (useAuth.getState().isAuthenticated) return true;
+      const januaToken = localStorage.getItem('janua_access_token');
+      if (!januaToken) return false;
 
-    try {
-      const parts = januaToken.split('.');
-      if (parts.length !== 3 || !parts[1]) return;
+      try {
+        const parts = januaToken.split('.');
+        if (parts.length !== 3 || !parts[1]) return false;
 
-      const payload = JSON.parse(atob(parts[1]));
-      if (!payload.sub || !payload.exp) return;
+        const payload = JSON.parse(atob(parts[1]));
+        if (!payload.sub || !payload.exp) return false;
+        if (payload.exp * 1000 < Date.now()) return false;
 
-      // Check token isn't expired
-      if (payload.exp * 1000 < Date.now()) return;
+        setAuth(
+          {
+            id: payload.sub,
+            email: payload.email || '',
+            name: payload.name || payload.email?.split('@')[0] || 'User',
+            locale: 'en',
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            totpEnabled: false,
+            emailVerified: payload.email_verified || true,
+            onboardingCompleted: true,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            spaces: [],
+          },
+          {
+            accessToken: januaToken,
+            refreshToken: localStorage.getItem('janua_refresh_token') || '',
+            expiresIn: payload.exp - Math.floor(Date.now() / 1000),
+          }
+        );
 
-      setAuth(
-        {
-          id: payload.sub,
-          email: payload.email || '',
-          name: payload.name || payload.email?.split('@')[0] || 'User',
-          locale: 'en',
-          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-          totpEnabled: false,
-          emailVerified: payload.email_verified || true,
-          onboardingCompleted: true,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          spaces: [],
-        },
-        {
-          accessToken: januaToken,
-          refreshToken: localStorage.getItem('janua_refresh_token') || '',
-          expiresIn: payload.exp - Math.floor(Date.now() / 1000),
-        }
-      );
+        document.cookie = 'auth-storage=authenticated; path=/; max-age=86400; SameSite=Lax; Secure';
+        return true;
+      } catch {
+        return false;
+      }
+    };
 
-      // Set middleware cookie
-      document.cookie = 'auth-storage=authenticated; path=/; max-age=86400; SameSite=Lax; Secure';
-    } catch {
-      // Token parse failed — ignore
-    }
+    // Try immediately, then poll briefly to catch async token storage by SignIn
+    if (tryBootstrap()) return;
+    const interval = setInterval(() => {
+      if (tryBootstrap()) clearInterval(interval);
+    }, 500);
+    // Stop polling after 30 seconds
+    const timeout = setTimeout(() => clearInterval(interval), 30000);
+    return () => {
+      clearInterval(interval);
+      clearTimeout(timeout);
+    };
   }, [isAuthenticated, setAuth]);
 
   useEffect(() => {
