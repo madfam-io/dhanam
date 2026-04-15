@@ -1,6 +1,10 @@
 // Client
 export { DhanamClient } from './client';
 
+// Usage metering client
+export { DhanamUsageClient } from './usage';
+export type { UsageClientConfig } from './usage';
+
 // Errors
 export { DhanamApiError, DhanamAuthError } from './errors';
 
@@ -14,15 +18,20 @@ export type {
   BillingProvider,
   CheckoutOptions,
   CheckoutResult,
+  CreditBalance,
+  CreditUsageResult,
   DhanamClientConfig,
   DhanamWebhookData,
   DhanamWebhookPayload,
   PlanSlug,
   PortalResult,
+  ServiceBreakdown,
   SubscriptionStatus,
   SubscriptionTier,
   UpgradeOptions,
+  UsageBreakdown,
   UsageBucket,
+  UsageEventEntry,
   UsageMetricType,
   UsageMetrics,
 } from './types';

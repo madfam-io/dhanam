@@ -2066,3 +2066,33 @@ model VerificationDocument {
   @@index([verificationId])
   @@map("verification_documents")
 }
+
+// ─── Credit-based Usage Metering ───────────────────────────────────────
+
+model UsageEvent {
+  id             String   @id @default(uuid())
+  orgId          String   @map("org_id")
+  service        String // "karafiel", "selva", "fortuna", etc.
+  operation      String // "cfdi_stamp", "agent_dispatch", "problem_query"
+  credits        Int
+  idempotencyKey String   @unique @map("idempotency_key")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  @@index([orgId, createdAt])
+  @@index([orgId, service])
+  @@map("usage_events")
+}
+
+model CreditBalance {
+  id              String   @id @default(uuid())
+  orgId           String   @unique @map("org_id")
+  creditsIncluded Int      @default(100) @map("credits_included") // from subscription tier
+  creditsUsed     Int      @default(0) @map("credits_used") // this billing period
+  overageCredits  Int      @default(0) @map("overage_credits") // credits beyond included
+  periodStart     DateTime @map("period_start")
+  periodEnd       DateTime @map("period_end")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@index([orgId])
+  @@map("credit_balances")
+}

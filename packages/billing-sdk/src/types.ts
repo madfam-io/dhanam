@@ -153,6 +153,51 @@ export interface BillingHistory {
 }
 
 // ────────────────────────────────────────────────
+// Credit-based Usage Metering Types
+// ────────────────────────────────────────────────
+
+/** Result of recording a credit usage event */
+export interface CreditUsageResult {
+  recorded: boolean;
+  creditsRemaining: number;
+  overageCredits: number;
+  tier: SubscriptionTier;
+}
+
+/** Credit balance for an org */
+export interface CreditBalance {
+  creditsIncluded: number;
+  creditsUsed: number;
+  creditsRemaining: number;
+  overageCredits: number;
+  overageRate: number | null;
+  tier: SubscriptionTier;
+  periodStart: string;
+  periodEnd: string;
+}
+
+/** Single usage event in a breakdown */
+export interface UsageEventEntry {
+  service: string;
+  operation: string;
+  credits: number;
+  createdAt: string;
+}
+
+/** Per-service breakdown in usage response */
+export interface ServiceBreakdown {
+  totalCredits: number;
+  operations: Record<string, number>;
+}
+
+/** Full usage breakdown response */
+export interface UsageBreakdown {
+  totalCredits: number;
+  events: UsageEventEntry[];
+  breakdown: Record<string, ServiceBreakdown>;
+}
+
+// ────────────────────────────────────────────────
 // Client Configuration
 // ────────────────────────────────────────────────
 

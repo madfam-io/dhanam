@@ -24,6 +24,7 @@ import { PrismaModule } from '../../core/prisma/prisma.module';
 import { BillingController } from './billing.controller';
 import { BillingService } from './billing.service';
 import { CotizaWebhookController } from './cotiza-webhook.controller';
+import { CreditBillingController } from './credit-billing.controller';
 import { CustomerFederationController } from './customer-federation.controller';
 import { FeatureGateGuard } from './guards/feature-gate.guard';
 import { FederationAuthGuard } from './guards/federation-auth.guard';
@@ -46,6 +47,7 @@ import { StripeMxService } from './services/stripe-mx.service';
 // Extracted sub-services (usage, lifecycle, webhooks)
 import { SubscriptionLifecycleService } from './services/subscription-lifecycle.service';
 import { TrialService } from './services/trial.service';
+import { UsageMeteringService } from './services/usage-metering.service';
 import { UsageTrackingService } from './services/usage-tracking.service';
 import { WebhookProcessorService } from './services/webhook-processor.service';
 import { StripeService } from './stripe.service';
@@ -60,7 +62,12 @@ import { StripeService } from './stripe.service';
       maxRedirects: 5,
     }),
   ],
-  controllers: [BillingController, CustomerFederationController, CotizaWebhookController],
+  controllers: [
+    BillingController,
+    CreditBillingController,
+    CustomerFederationController,
+    CotizaWebhookController,
+  ],
   providers: [
     // Core billing services
     BillingService,
@@ -68,6 +75,7 @@ import { StripeService } from './stripe.service';
     StripeService,
 
     // Extracted sub-services
+    UsageMeteringService,
     UsageTrackingService,
     SubscriptionLifecycleService,
     WebhookProcessorService,
@@ -107,6 +115,7 @@ import { StripeService } from './stripe.service';
     StripeMxService,
     PaddleService,
     CustomerFederationService,
+    UsageMeteringService,
     UsageTrackingService,
     SubscriptionLifecycleService,
     WebhookProcessorService,
