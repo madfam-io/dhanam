@@ -20,12 +20,19 @@ WORKDIR /app
 # =============================================================================
 FROM base AS deps
 
-# Copy workspace configuration and registry config
+# Copy workspace configuration and ALL package.json files
+# pnpm needs the full workspace context for correct dependency resolution
 COPY .npmrc package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/web/package.json ./apps/web/
+COPY apps/api/package.json ./apps/api/
+COPY apps/admin/package.json ./apps/admin/
+COPY apps/mobile/package.json ./apps/mobile/
 COPY packages/shared/package.json ./packages/shared/
 COPY packages/config/package.json ./packages/config/
 COPY packages/ui/package.json ./packages/ui/
+COPY packages/esg/package.json ./packages/esg/
+COPY packages/simulations/package.json ./packages/simulations/
+COPY packages/billing-sdk/package.json ./packages/billing-sdk/
 
 # Install dependencies
 RUN pnpm install --frozen-lockfile
