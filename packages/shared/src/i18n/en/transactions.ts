@@ -264,4 +264,26 @@ export const transactions = {
     },
     na: 'N/A',
   },
+
+  // Calendar view
+  calendar: {
+    title: 'Calendar',
+    description: 'View your transactions day by day.',
+    today: 'Today',
+    dayDetails: 'Day Details',
+    clickToSee: 'Click on a day to see its transactions.',
+    noDetails: 'No transaction details available.',
+    transactionCount: '{{count}} transaction',
+    transactionCountPlural: '{{count}} transactions',
+    income: 'Income',
+    expenses: 'Expenses',
+    net: 'Net',
+    monthlySummary: 'Monthly Summary',
+    noSpaceSelected: 'No space selected',
+    selectSpacePrompt: 'Select a space to view the calendar.',
+    categoryBreakdown: 'By Category',
+    prevMonth: 'Previous month',
+    nextMonth: 'Next month',
+    uncategorized: 'Uncategorized',
+  },
 } as const;

@@ -78,13 +78,24 @@ export interface TrendMonth {
 export interface CalendarDay {
   date: string;
   transactionCount: number;
-  netAmount: number;
+  income: number;
+  expenses: number;
+  net: number;
   transactions?: {
     id: string;
     description: string;
     amount: number;
     merchant: string | null;
+    categoryName: string | null;
+    categoryColor: string | null;
+    accountName: string;
   }[];
+}
+
+export interface CalendarResponse {
+  year: number;
+  month: number;
+  days: CalendarDay[];
 }
 
 // Query types
@@ -252,13 +263,13 @@ export const analyticsApi = {
     year: number,
     month: number,
     budgetId?: string
-  ): Promise<CalendarDay[]> => {
+  ): Promise<CalendarResponse> => {
     const params: Record<string, string> = {
       year: year.toString(),
       month: month.toString(),
     };
     if (budgetId) params.budgetId = budgetId;
-    return apiClient.get<CalendarDay[]>(`/analytics/${spaceId}/calendar`, params);
+    return apiClient.get<CalendarResponse>(`/analytics/${spaceId}/calendar`, params);
   },
 
   /**

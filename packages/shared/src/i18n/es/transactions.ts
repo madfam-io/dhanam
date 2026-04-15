@@ -264,4 +264,26 @@ export const transactions = {
     },
     na: 'N/D',
   },
+
+  // Calendar view
+  calendar: {
+    title: 'Calendario',
+    description: 'Visualiza tus transacciones día por día.',
+    today: 'Hoy',
+    dayDetails: 'Detalles del Día',
+    clickToSee: 'Haz clic en un día para ver sus transacciones.',
+    noDetails: 'No hay detalles de transacciones disponibles.',
+    transactionCount: '{{count}} transacción',
+    transactionCountPlural: '{{count}} transacciones',
+    income: 'Ingresos',
+    expenses: 'Gastos',
+    net: 'Neto',
+    monthlySummary: 'Resumen Mensual',
+    noSpaceSelected: 'Sin espacio seleccionado',
+    selectSpacePrompt: 'Selecciona un espacio para ver el calendario.',
+    categoryBreakdown: 'Por Categoría',
+    prevMonth: 'Mes anterior',
+    nextMonth: 'Mes siguiente',
+    uncategorized: 'Sin categorizar',
+  },
 } as const;
