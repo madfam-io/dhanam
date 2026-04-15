@@ -22,7 +22,9 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as yaml from 'js-yaml';
 import Stripe from 'stripe';
-import { PrismaClient } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { Pool } from 'pg';
+import { PrismaClient } from '../apps/api/generated/prisma';
 
 // ---------------------------------------------------------------------------
 // Configuration
@@ -31,7 +33,15 @@ import { PrismaClient } from '@prisma/client';
 const DRY_RUN = process.argv.includes('--dry-run');
 const CATALOG_PATH = path.resolve(__dirname, '..', 'catalog.yaml');
 
-const prisma = new PrismaClient();
+const DATABASE_URL = process.env.DATABASE_URL;
+if (!DATABASE_URL) {
+  console.error('ERROR: Set DATABASE_URL environment variable.');
+  process.exit(1);
+}
+
+const pool = new Pool({ connectionString: DATABASE_URL });
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
 
 // Initialize Stripe clients (MXN and/or USD)
 const stripeMx = process.env.STRIPE_MX_SECRET_KEY
@@ -410,4 +420,7 @@ main()
     console.error('FATAL:', err);
     process.exit(1);
   })
-  .finally(() => prisma.$disconnect());
+  .finally(async () => {
+    await prisma.$disconnect();
+    await pool.end();
+  });
