@@ -21,17 +21,19 @@ async function main() {
   // Require password from environment — no fallbacks
   const adminPassword = process.env.MADFAM_ADMIN_PASSWORD;
   if (!adminPassword) {
-    throw new Error('MADFAM_ADMIN_PASSWORD env var required for seeding. Generate with: openssl rand -base64 24');
+    throw new Error(
+      'MADFAM_ADMIN_PASSWORD env var required for seeding. Generate with: openssl rand -base64 24'
+    );
   }
 
   // Create MADFAM admin user (will be linked to Janua SSO in production)
   const madfamAdmin = await prisma.user.upsert({
-    where: { email: 'finance@madfam.org' },
+    where: { email: 'admin@madfam.io' },
     update: {},
     create: {
-      email: 'finance@madfam.org',
+      email: 'admin@madfam.io',
       passwordHash: await hash(adminPassword),
-      name: 'MADFAM Finance',
+      name: 'MADFAM Admin',
       locale: 'en',
       timezone: 'America/Mexico_City',
       emailVerified: true,
