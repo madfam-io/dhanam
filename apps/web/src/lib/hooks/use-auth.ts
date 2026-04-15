@@ -60,18 +60,36 @@ function getInitialAuthState(): Pick<AuthState, 'user' | 'tokens' | 'token' | 'i
       throw new Error('invalid or expired');
     }
 
+    // Read cached profile from localStorage (set by setAuth after refreshUser).
+    // This supplements JWT-only fields with subscriptionTier, isAdmin, etc.
+    let cachedProfile: Partial<UserProfile> = {};
+    try {
+      const cached = localStorage.getItem('dhanam_user_profile');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        // Only use if it matches the current JWT user
+        if (parsed.id === payload.sub) {
+          cachedProfile = parsed;
+        }
+      }
+    } catch {
+      // ignore parse errors
+    }
+
     const user: UserProfile = {
       id: payload.sub,
       email: payload.email || '',
-      name: payload.name || payload.email?.split('@')[0] || 'User',
-      locale: (payload.locale?.startsWith('es') ? 'es' : 'en') as Locale,
-      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-      totpEnabled: payload.mfa_enabled || false,
-      emailVerified: payload.email_verified || true,
-      onboardingCompleted: true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      spaces: [],
+      name: cachedProfile.name || payload.name || payload.email?.split('@')[0] || 'User',
+      locale: (cachedProfile.locale || (payload.locale?.startsWith('es') ? 'es' : 'en')) as Locale,
+      timezone: cachedProfile.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
+      totpEnabled: cachedProfile.totpEnabled ?? payload.mfa_enabled ?? false,
+      emailVerified: cachedProfile.emailVerified ?? payload.email_verified ?? true,
+      onboardingCompleted: cachedProfile.onboardingCompleted ?? true,
+      isAdmin: cachedProfile.isAdmin,
+      subscriptionTier: cachedProfile.subscriptionTier,
+      createdAt: cachedProfile.createdAt || new Date().toISOString(),
+      updatedAt: cachedProfile.updatedAt || new Date().toISOString(),
+      spaces: cachedProfile.spaces || [],
     };
 
     const tokens: AuthTokens = {
@@ -104,6 +122,16 @@ export const useAuth = create<AuthState>()((set, get) => ({
     apiClient.setTokens(tokens);
     set({ user, tokens, token: tokens.accessToken, isAuthenticated: true });
 
+    // Cache user profile so getInitialAuthState() can read subscriptionTier/isAdmin
+    // on next page load (JWT from Janua doesn't include Dhanam-specific fields)
+    if (typeof window !== 'undefined' && user) {
+      try {
+        localStorage.setItem('dhanam_user_profile', JSON.stringify(user));
+      } catch {
+        // quota exceeded or SSR — ignore
+      }
+    }
+
     // Identify user in PostHog with Janua UUID for cross-product analytics
     if (typeof window !== 'undefined' && user?.id && posthog.__loaded) {
       posthog.identify(user.id, {
@@ -126,6 +154,15 @@ export const useAuth = create<AuthState>()((set, get) => ({
   clearAuth: () => {
     apiClient.clearTokens();
     set({ user: null, tokens: null, token: null, isAuthenticated: false });
+
+    // Clear cached user profile
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.removeItem('dhanam_user_profile');
+      } catch {
+        /* ignore */
+      }
+    }
 
     // Clear cookie marker for middleware detection
     // Use Domain=.dhan.am for cross-subdomain auth (app.dhan.am + admin.dhan.am)
