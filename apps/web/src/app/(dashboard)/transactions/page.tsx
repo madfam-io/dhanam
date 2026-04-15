@@ -260,7 +260,7 @@ export default function TransactionsPage() {
   }, []);
 
   const rowVirtualizer = useVirtualizer({
-    count: transactionsData?.data.length ?? 0,
+    count: transactionsData?.data?.length ?? 0,
     getScrollElement: () => parentRef.current,
     estimateSize: () => TRANSACTION_ROW_HEIGHT,
     overscan: 5,
@@ -383,7 +383,7 @@ export default function TransactionsPage() {
             </Button>
           </CardContent>
         </Card>
-      ) : transactionsData?.data.length === 0 ? (
+      ) : transactionsData?.data?.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-8">
             <Receipt className="h-12 w-12 text-muted-foreground mb-4" />
@@ -414,7 +414,7 @@ export default function TransactionsPage() {
                 }}
               >
                 {rowVirtualizer.getVirtualItems().map((virtualItem) => {
-                  const transaction = transactionsData?.data[virtualItem.index];
+                  const transaction = transactionsData?.data?.[virtualItem.index];
                   if (!transaction) return null;
                   const account = accounts?.find((a) => a.id === transaction.accountId);
                   const merchant =
