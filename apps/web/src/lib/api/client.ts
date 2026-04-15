@@ -60,7 +60,12 @@ export class ApiClient {
         );
       }
 
-      return data.data || data;
+      // Unwrap {success: true, data: T} envelope, but preserve paginated
+      // responses like {data: [], total: 0, page: 1, limit: 25} as-is
+      if (data.success !== undefined && data.data !== undefined) {
+        return data.data;
+      }
+      return data;
     } catch (error) {
       if (error instanceof ApiError) {
         if (error.status === 401) {
