@@ -260,6 +260,48 @@ export interface CatalogResponse {
 }
 
 // ────────────────────────────────────────────────
+// Cancellation Pipeline Types
+// ────────────────────────────────────────────────
+
+/** Cancellation intent reasons */
+export type CancellationReason =
+  | 'too_expensive'
+  | 'missing_features'
+  | 'switched_service'
+  | 'unused'
+  | 'technical_issues'
+  | 'other';
+
+/** Save offer types returned by cancel-intent endpoint */
+export type SaveOfferType = 'discount' | 'pause' | 'roadmap' | 'support' | 'loss_aversion';
+
+/** Save offer returned during the cancellation flow */
+export interface SaveOffer {
+  type: SaveOfferType;
+  intentId: string;
+  discountPercent?: number;
+  discountMonths?: number;
+  suggestedPauseMonths?: number[];
+  message?: string;
+  features?: string[];
+  supportUrl?: string;
+}
+
+/** Response from POST /billing/cancel-intent */
+export interface CancelIntentResponse {
+  intentId: string;
+  saveOffer: SaveOffer;
+}
+
+/** Extended subscription status with pause and cancellation fields */
+export interface SubscriptionStatusExtended extends SubscriptionStatus {
+  isPaused: boolean;
+  pausedUntil: string | null;
+  cancelledAt: string | null;
+  cancellationReason: string | null;
+}
+
+// ────────────────────────────────────────────────
 // Client Configuration
 // ────────────────────────────────────────────────
 

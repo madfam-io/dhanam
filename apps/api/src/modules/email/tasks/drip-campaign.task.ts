@@ -1,8 +1,7 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { Cron } from '@nestjs/schedule';
-
 import { PrismaService } from '@core/prisma/prisma.service';
 import { PostHogService } from '@modules/analytics/posthog.service';
+import { Injectable, Logger } from '@nestjs/common';
+import { Cron } from '@nestjs/schedule';
 
 import { EmailService } from '../email.service';
 
@@ -293,5 +292,105 @@ export class DripCampaignTask {
       _sum: { balance: true },
     });
     return result._sum.balance?.toNumber() || 0;
+  }
+
+  // ─── Cancellation Retention Drip ───────────────────────────────
+
+  /**
+   * Post-cancellation retention: win-back emails at day 3, 7, and 14.
+   * Runs daily at 12 PM UTC.
+   */
+  @Cron('0 12 * * *')
+  async processRetentionDrips() {
+    this.logger.log('Starting cancellation retention drip campaign');
+
+    try {
+      // Find users enrolled in the retention campaign
+      const enrolled = await this.prisma.dripEvent.findMany({
+        where: {
+          campaign: 'cancellation-retention',
+          step: 'enrolled',
+        },
+        include: {
+          user: { select: { id: true, email: true, name: true, cancelledAt: true } },
+        },
+      });
+
+      let sent = 0;
+
+      for (const event of enrolled) {
+        const user = event.user;
+        if (!user?.cancelledAt || !user.email) continue;
+
+        const daysSinceCancel = Math.floor(
+          (Date.now() - new Date(user.cancelledAt).getTime()) / (1000 * 60 * 60 * 24)
+        );
+
+        try {
+          if (daysSinceCancel >= 3 && daysSinceCancel < 7) {
+            await this.sendRetentionStep(user, 'day3_miss_you', daysSinceCancel);
+            sent++;
+          } else if (daysSinceCancel >= 7 && daysSinceCancel < 14) {
+            await this.sendRetentionStep(user, 'day7_win_back', daysSinceCancel);
+            sent++;
+          } else if (daysSinceCancel >= 14 && daysSinceCancel < 21) {
+            await this.sendRetentionStep(user, 'day14_last_chance', daysSinceCancel);
+            sent++;
+          }
+        } catch (error) {
+          this.logger.error(`Retention drip failed for ${user.email}:`, error);
+        }
+      }
+
+      this.logger.log(`Retention drip complete: ${sent} emails sent`);
+    } catch (error) {
+      this.logger.error('Retention drip campaign failed:', error);
+    }
+  }
+
+  private async sendRetentionStep(
+    user: { id: string; email: string; name: string | null },
+    step: string,
+    daysSinceCancel: number
+  ) {
+    // Idempotency: check if this step was already sent
+    const existing = await this.prisma.dripEvent.findFirst({
+      where: { userId: user.id, campaign: 'cancellation-retention', step },
+    });
+    if (existing) return;
+
+    const subjects: Record<string, string> = {
+      day3_miss_you: 'Te echamos de menos',
+      day7_win_back: 'Una oferta especial para ti',
+      day14_last_chance: 'Ultima oportunidad',
+    };
+
+    const bodies: Record<string, string> = {
+      day3_miss_you: `Hola ${user.name || ''},\n\nNotamos que cancelaste tu suscripcion. Queremos que sepas que tu experiencia nos importa. Si hay algo que podamos mejorar, nos encantaria saberlo.\n\nSiempre puedes volver cuando quieras.`,
+      day7_win_back: `Hola ${user.name || ''},\n\nTenemos una oferta especial: 30% de descuento por 3 meses si decides regresar. Tu historial y configuracion siguen guardados.\n\nResponde a este correo si te interesa.`,
+      day14_last_chance: `Hola ${user.name || ''},\n\nEste es un recordatorio amistoso de que tu cuenta sigue disponible. Despues de 30 dias, tus datos seran eliminados de acuerdo con nuestra politica de privacidad.\n\nSi cambias de opinion, reactivar es facil.`,
+    };
+
+    await this.emailService.sendEmail({
+      to: user.email,
+      subject: subjects[step] || 'Hola de nuevo',
+      text: bodies[step] || '',
+    });
+
+    // Record the drip event
+    await this.prisma.dripEvent.create({
+      data: {
+        userId: user.id,
+        campaign: 'cancellation-retention',
+        step,
+      },
+    });
+
+    // Track in PostHog
+    await this.postHogService.capture({
+      distinctId: user.id,
+      event: 'retention_drip_sent',
+      properties: { step, days_since_cancel: daysSinceCancel },
+    });
   }
 }

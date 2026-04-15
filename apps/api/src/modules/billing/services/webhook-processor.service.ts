@@ -154,6 +154,8 @@ export class WebhookProcessorService {
   async handleSubscriptionCancelled(event: Stripe.Event): Promise<void> {
     const subscription = event.data.object as Stripe.Subscription;
     const customerId = subscription.customer as string;
+    const cancellationReason = (subscription as any).cancellation_details?.reason;
+    const cancellationFeedback = (subscription as any).cancellation_details?.feedback;
 
     const user = await this.prisma.user.findUnique({
       where: { stripeCustomerId: customerId },
@@ -170,6 +172,8 @@ export class WebhookProcessorService {
         subscriptionTier: 'community',
         subscriptionExpiresAt: null,
         stripeSubscriptionId: null,
+        cancelledAt: new Date(),
+        cancellationReason: cancellationFeedback || cancellationReason || null,
       },
     });
 
@@ -200,6 +204,7 @@ export class WebhookProcessorService {
         product: 'dhanam',
         provider: 'stripe',
         subscription_id: subscription.id,
+        cancellation_reason: cancellationFeedback || cancellationReason || 'unknown',
       },
     });
 
@@ -531,11 +536,47 @@ export class WebhookProcessorService {
     });
 
     if (!user) {
+      this.logger.warn(`User not found for Janua customer: ${customer_id}`);
       return;
     }
 
-    // Keep premium tier but mark as paused in metadata
-    this.logger.log(`Janua subscription paused for user ${user.id}`);
+    const resumesAt = (payload.data as any).metadata?.resumes_at
+      ? new Date((payload.data as any).metadata.resumes_at)
+      : null;
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { subscriptionPausedUntil: resumesAt },
+    });
+
+    await this.prisma.billingEvent.create({
+      data: {
+        userId: user.id,
+        type: 'subscription_paused',
+        amount: 0,
+        currency: 'USD',
+        status: 'succeeded',
+        stripeEventId: payload.id,
+        metadata: { resumes_at: resumesAt?.toISOString() },
+      },
+    });
+
+    await this.posthog.capture({
+      distinctId: user.id,
+      event: 'subscription_paused',
+      properties: {
+        product: 'dhanam',
+        resumes_at: resumesAt?.toISOString(),
+      },
+    });
+
+    this.lifecycle
+      .notifyProductWebhooks('', customer_id!, '', 'subscription.paused')
+      .catch((err) => this.logger.warn(`Product webhook dispatch failed: ${err.message}`));
+
+    this.logger.log(
+      `Subscription paused for user ${user.id}, resumes at ${resumesAt?.toISOString()}`
+    );
   }
 
   /**

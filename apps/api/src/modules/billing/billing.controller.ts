@@ -35,8 +35,12 @@ import { AuthenticatedRequest } from '../../core/types/authenticated-request';
 
 import { BillingService } from './billing.service';
 import { CheckoutQueryDto, StartTrialDto, UpgradeToPremiumDto } from './dto';
+import { CancelConfirmDto } from './dto/cancel-confirm.dto';
+import { CancelIntentDto } from './dto/cancel-intent.dto';
 import { JanuaWebhookPayloadDto, JanuaWebhookEventType } from './dto/janua-webhook.dto';
+import { PauseSubscriptionDto } from './dto/pause-subscription.dto';
 import { JanuaBillingService } from './janua-billing.service';
+import { CancellationService } from './services/cancellation.service';
 import { PricingEngineService } from './services/pricing-engine.service';
 import { TrialService } from './services/trial.service';
 import { StripeService } from './stripe.service';
@@ -53,6 +57,7 @@ export class BillingController {
     private januaBillingService: JanuaBillingService,
     private pricingEngine: PricingEngineService,
     private trialService: TrialService,
+    private cancellationService: CancellationService,
     private config: ConfigService
   ) {}
 
@@ -132,6 +137,36 @@ export class BillingController {
   @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
   async createPortalSession(@Req() req: AuthenticatedRequest) {
     return this.billingService.createPortalSession(req.user.id);
+  }
+
+  // ─── Cancellation-Intent Reengagement Pipeline ─────────────────
+
+  @Post('cancel-intent')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Start cancellation flow — collects reason, returns save offer' })
+  async startCancelIntent(@Req() req: AuthenticatedRequest, @Body() dto: CancelIntentDto) {
+    return this.cancellationService.startCancelIntent(req.user.id, dto.reason, dto.reasonText);
+  }
+
+  @Post('cancel-confirm')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Confirm cancellation at period end (after seeing save offer)' })
+  async confirmCancellation(@Req() req: AuthenticatedRequest, @Body() dto: CancelConfirmDto) {
+    return this.cancellationService.confirmCancellation(req.user.id, dto.intentId);
+  }
+
+  @Post('pause')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Pause subscription for 1-3 months instead of cancelling' })
+  async pauseSubscription(@Req() req: AuthenticatedRequest, @Body() dto: PauseSubscriptionDto) {
+    return this.cancellationService.pauseSubscription(req.user.id, dto.months, dto.intentId);
+  }
+
+  @Post('save-offer/accept')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Accept retention discount offer' })
+  async acceptSaveOffer(@Req() req: AuthenticatedRequest, @Body() body: CancelConfirmDto) {
+    return this.cancellationService.applySaveDiscount(req.user.id, body.intentId);
   }
 
   /**

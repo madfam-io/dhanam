@@ -165,6 +165,64 @@ export class StripeService {
     });
   }
 
+  // ─── Cancellation & Pause ────────────────────────────────────────
+
+  /** Pause subscription billing for a period. User retains access but isn't charged. */
+  async pauseSubscription(subscriptionId: string, resumesAt: number): Promise<Stripe.Subscription> {
+    return this.stripe.subscriptions.update(subscriptionId, {
+      pause_collection: { behavior: 'void', resumes_at: resumesAt },
+    });
+  }
+
+  /** Resume a paused subscription. */
+  async resumeSubscription(subscriptionId: string): Promise<Stripe.Subscription> {
+    return this.stripe.subscriptions.update(subscriptionId, {
+      pause_collection: '' as any, // clears pause
+    });
+  }
+
+  /** Cancel subscription at the end of the current billing period (never immediate). */
+  async cancelAtPeriodEnd(subscriptionId: string): Promise<Stripe.Subscription> {
+    return this.stripe.subscriptions.update(subscriptionId, {
+      cancel_at_period_end: true,
+    });
+  }
+
+  /** Apply a coupon/discount to an existing subscription (retention offer). */
+  async applyCouponToSubscription(
+    subscriptionId: string,
+    couponId: string
+  ): Promise<Stripe.Subscription> {
+    return this.stripe.subscriptions.update(subscriptionId, {
+      coupon: couponId,
+    });
+  }
+
+  // ─── Invoice Creation (for overage billing) ────────────────────
+
+  /** Create a one-off invoice item on a customer (for overage charges). */
+  async createInvoiceItem(params: {
+    customerId: string;
+    amount: number;
+    currency: string;
+    description: string;
+  }): Promise<Stripe.InvoiceItem> {
+    return this.stripe.invoiceItems.create({
+      customer: params.customerId,
+      amount: Math.round(params.amount * 100), // convert to cents
+      currency: params.currency,
+      description: params.description,
+    });
+  }
+
+  /** Create and auto-advance an invoice for pending invoice items. */
+  async createInvoice(customerId: string): Promise<Stripe.Invoice> {
+    return this.stripe.invoices.create({
+      customer: customerId,
+      auto_advance: true, // auto-finalize and attempt payment
+    });
+  }
+
   /**
    * Check if Stripe is configured
    */

@@ -35,9 +35,11 @@ import { SubscriptionGuard } from './guards/subscription.guard';
 import { UsageLimitGuard } from './guards/usage-limit.guard';
 import { UsageTrackingInterceptor } from './interceptors/usage-tracking.interceptor';
 import { JanuaBillingService } from './janua-billing.service';
+import { OverageInvoicingJob } from './jobs/overage-invoicing.job';
 import { ReconciliationJob } from './jobs/reconciliation.job';
 import { SubscriptionLifecycleJob } from './jobs/subscription-lifecycle.job';
 // Federation (PhyneCRM integration)
+import { CancellationService } from './services/cancellation.service';
 import { CustomerFederationService } from './services/customer-federation.service';
 // Hybrid Router Services (Stripe MX + Paddle)
 import { PaddleService } from './services/paddle.service';
@@ -86,12 +88,16 @@ import { StripeService } from './stripe.service';
     // Product catalog
     ProductCatalogService,
 
+    // Cancellation pipeline
+    CancellationService,
+
     // Pricing & trial lifecycle
     PriceResolverService,
     PricingEngineService,
     TrialService,
     SubscriptionLifecycleJob,
     ReconciliationJob,
+    OverageInvoicingJob,
 
     // Hybrid Router (Stripe MX + Paddle)
     PaymentRouterService,
@@ -132,6 +138,7 @@ import { StripeService } from './stripe.service';
     FeatureGateGuard,
     UsageTrackingInterceptor,
     ProductCatalogService,
+    CancellationService,
   ],
 })
 export class BillingModule {}

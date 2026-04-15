@@ -75,9 +75,12 @@ enum BillingEventType {
   subscription_created
   subscription_renewed
   subscription_cancelled
+  subscription_paused
   payment_succeeded
   payment_failed
   refund_issued
+  cancel_intent_created
+  save_offer_accepted
 }
 
 enum BillingStatus {
@@ -85,6 +88,24 @@ enum BillingStatus {
   succeeded
   failed
   refunded
+  paused
+}
+
+enum CancellationReason {
+  too_expensive
+  missing_features
+  switched_service
+  unused
+  technical_issues
+  other
+}
+
+enum CancellationIntentOutcome {
+  retained_discount
+  retained_pause
+  retained_support
+  cancelled
+  abandoned
 }
 
 enum UsageMetricType {
@@ -310,6 +331,11 @@ model User {
   paddleCustomerId     String? @unique @map("paddle_customer_id")
   paddleSubscriptionId String? @unique @map("paddle_subscription_id")
 
+  // Cancellation & pause fields
+  cancelledAt             DateTime? @map("cancelled_at")
+  cancellationReason      String?   @map("cancellation_reason")
+  subscriptionPausedUntil DateTime? @map("subscription_paused_until")
+
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime  @updatedAt @map("updated_at")
   deletedAt DateTime? @map("deleted_at")
@@ -341,6 +367,7 @@ model User {
   reportInvites         ReportShare[]              @relation("ReportInvites")
   reportShareTokens     ReportShareToken[]         @relation("ReportShareTokens")
   dripEvents            DripEvent[]
+  cancellationIntents   CancellationIntent[]
   identityVerifications IdentityVerification[]
 
   @@index([onboardingCompleted, createdAt(sort: Desc)])
@@ -2204,4 +2231,28 @@ model ProductCreditCost {
   @@unique([productId, operation])
   @@index([productId])
   @@map("product_credit_costs")
+}
+
+// ────────────────────────────────────────────────
+// Cancellation Intent — tracks each cancel attempt for retention analytics
+// ────────────────────────────────────────────────
+
+model CancellationIntent {
+  id              String                    @id @default(uuid())
+  userId          String                    @map("user_id")
+  reason          CancellationReason
+  reasonText      String?                   @map("reason_text")
+  outcome         CancellationIntentOutcome @default(abandoned)
+  saveOfferType   String?                   @map("save_offer_type")
+  pauseMonths     Int?                      @map("pause_months")
+  discountPercent Int?                      @map("discount_percent")
+  discountMonths  Int?                      @map("discount_months")
+  completedAt     DateTime?                 @map("completed_at")
+  createdAt       DateTime                  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([outcome])
+  @@map("cancellation_intents")
 }

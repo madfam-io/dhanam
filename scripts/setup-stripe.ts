@@ -313,6 +313,9 @@ async function main(): Promise<void> {
         proration_behavior: 'create_prorations',
         products: portalProducts,
       },
+      subscription_pause: {
+        enabled: true,
+      },
       payment_method_update: {
         enabled: true,
       },
