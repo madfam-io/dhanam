@@ -48,6 +48,7 @@ import {
   type TransactionFilterValues,
 } from '@/components/transactions/transaction-filters';
 import { CategoryCorrectionDialog } from '@/components/transactions/category-correction-dialog';
+import { TransactionDetailSheet } from '@/components/transactions/transaction-detail-sheet';
 
 const ITEMS_PER_PAGE = 25;
 const TRANSACTION_ROW_HEIGHT = 80;
@@ -120,6 +121,7 @@ export default function TransactionsPage() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [correctionTransaction, setCorrectionTransaction] = useState<Transaction | null>(null);
+  const [detailTransaction, setDetailTransaction] = useState<Transaction | null>(null);
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState<TransactionFilterValues>(EMPTY_FILTERS);
   const parentRef = useRef<HTMLDivElement>(null);
@@ -432,7 +434,18 @@ export default function TransactionsPage() {
                         transform: `translateY(${virtualItem.start}px)`,
                       }}
                     >
-                      <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors mx-1 my-1">
+                      <div
+                        className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors mx-1 my-1 cursor-pointer"
+                        onClick={() => setDetailTransaction(transaction)}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            setDetailTransaction(transaction);
+                          }
+                        }}
+                      >
                         <div className="flex items-center gap-4">
                           {/* Merchant Icon instead of generic Receipt */}
                           <MerchantIcon
@@ -640,6 +653,20 @@ export default function TransactionsPage() {
           onCorrectionComplete={() => setCorrectionTransaction(null)}
         />
       )}
+
+      {/* Transaction Detail Sheet */}
+      <TransactionDetailSheet
+        transaction={detailTransaction}
+        open={!!detailTransaction}
+        onOpenChange={(open) => {
+          if (!open) setDetailTransaction(null);
+        }}
+        spaceId={currentSpace.id}
+        categories={categories ?? []}
+        onUpdate={() =>
+          queryClient.invalidateQueries({ queryKey: ['transactions', currentSpace?.id] })
+        }
+      />
     </div>
   );
 }

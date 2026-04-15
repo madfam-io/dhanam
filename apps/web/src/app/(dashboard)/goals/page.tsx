@@ -22,16 +22,28 @@ import {
   Calculator,
   Loader2,
   Users,
+  Pencil,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { ShareGoalDialog } from '@/components/goals/share-goal-dialog';
 import { SharedGoalsList } from '@/components/goals/shared-goals-list';
 import { GoalActivityFeed } from '@/components/goals/goal-activity-feed';
 import { ShareManagementPanel } from '@/components/goals/share-management-panel';
+import { GoalEditDialog } from '@/components/goals/goal-edit-dialog';
+import type { UpdateGoalInput } from '@/hooks/useGoals';
 
 export default function GoalsPage() {
   const { t } = useTranslation('goals');
   const { t: tCommon } = useTranslation('common');
-  const { getGoalsBySpace, getGoalSummary, getGoalProgress, loading: _loading, error } = useGoals();
+  const {
+    getGoalsBySpace,
+    getGoalSummary,
+    getGoalProgress,
+    updateGoal,
+    deleteGoal,
+    loading: _loading,
+    error,
+  } = useGoals();
   const { calculateGoalProbability } = useSimulations();
   const analytics = useAnalytics();
   const { currentSpace } = useSpaceStore();
@@ -43,6 +55,9 @@ export default function GoalsPage() {
   const [probability, setProbability] = useState<GoalProbabilityResult | null>(null);
   const [loadingProbability, setLoadingProbability] = useState(false);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isSavingGoal, setIsSavingGoal] = useState(false);
+  const [isDeletingGoal, setIsDeletingGoal] = useState(false);
 
   // Get spaceId from current space context
   const spaceId = currentSpace?.id;
@@ -113,6 +128,46 @@ export default function GoalsPage() {
     }
 
     setLoadingProbability(false);
+  };
+
+  const handleSaveGoal = async (updates: UpdateGoalInput) => {
+    if (!selectedGoal) return;
+    setIsSavingGoal(true);
+    try {
+      const result = await updateGoal(selectedGoal.id, updates);
+      if (result) {
+        setSelectedGoal(result);
+        setIsEditDialogOpen(false);
+        toast.success(t('toast.goalUpdated'));
+        await loadGoals();
+        // Refresh progress for updated goal
+        const progress = await getGoalProgress(result.id);
+        setGoalProgress(progress);
+      } else {
+        toast.error(t('toast.goalUpdateFailed'));
+      }
+    } catch {
+      toast.error(t('toast.goalUpdateFailed'));
+    } finally {
+      setIsSavingGoal(false);
+    }
+  };
+
+  const handleDeleteGoal = async (goalId: string) => {
+    setIsDeletingGoal(true);
+    try {
+      await deleteGoal(goalId);
+      setSelectedGoal(null);
+      setGoalProgress(null);
+      setProbability(null);
+      setIsEditDialogOpen(false);
+      toast.success(t('toast.goalDeleted'));
+      await loadGoals();
+    } catch {
+      toast.error(t('toast.goalDeleteFailed'));
+    } finally {
+      setIsDeletingGoal(false);
+    }
   };
 
   const getGoalTypeLabel = (type: Goal['type']): string => {
@@ -347,10 +402,25 @@ export default function GoalsPage() {
                         <CardTitle>{selectedGoal.name}</CardTitle>
                         <CardDescription>{selectedGoal.description}</CardDescription>
                       </div>
-                      <Button variant="outline" size="sm" onClick={() => setShareDialogOpen(true)}>
-                        <Users className="h-4 w-4 mr-2" />
-                        {t('page.share')}
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setIsEditDialogOpen(true)}
+                          aria-label={t('page.editGoal')}
+                        >
+                          <Pencil className="h-4 w-4 mr-2" />
+                          {t('page.edit')}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setShareDialogOpen(true)}
+                        >
+                          <Users className="h-4 w-4 mr-2" />
+                          {t('page.share')}
+                        </Button>
+                      </div>
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-6">
@@ -610,6 +680,17 @@ export default function GoalsPage() {
           }}
         />
       )}
+
+      {/* Goal Edit Dialog */}
+      <GoalEditDialog
+        goal={selectedGoal}
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        onSave={handleSaveGoal}
+        onDelete={handleDeleteGoal}
+        isSaving={isSavingGoal}
+        isDeleting={isDeletingGoal}
+      />
     </div>
   );
 }

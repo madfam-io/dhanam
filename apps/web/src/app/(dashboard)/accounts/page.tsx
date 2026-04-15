@@ -34,12 +34,13 @@ import {
 } from 'lucide-react';
 import { useSpaceStore } from '@/stores/space';
 import { accountsApi } from '@/lib/api/accounts';
-import { AccountType, Currency, Provider, useTranslation } from '@dhanam/shared';
+import { Account, AccountType, Currency, Provider, useTranslation } from '@dhanam/shared';
 import { formatCurrency } from '@/lib/utils';
 import { toast } from 'sonner';
 import { BelvoConnect } from '@/components/providers/belvo-connect';
 import { PlaidConnect } from '@/components/providers/plaid-connect';
 import { BitsoConnect } from '@/components/providers/bitso-connect';
+import { AccountDetailSheet } from '@/components/accounts/account-detail-sheet';
 
 const accountTypeIcons: Record<AccountType, React.ElementType> = {
   checking: Building2,
@@ -61,6 +62,7 @@ export default function AccountsPage() {
   const [isBelvoOpen, setIsBelvoOpen] = useState(false);
   const [isPlaidOpen, setIsPlaidOpen] = useState(false);
   const [isBitsoOpen, setIsBitsoOpen] = useState(false);
+  const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
 
   const providerLabels: Record<Provider, string> = {
     belvo: t('provider.belvo'),
@@ -260,12 +262,20 @@ export default function AccountsPage() {
           {accounts?.map((account) => {
             const Icon = accountTypeIcons[account.type];
             return (
-              <Card key={account.id}>
+              <Card
+                key={account.id}
+                className="cursor-pointer transition-colors hover:bg-muted/50"
+                onClick={() => setSelectedAccount(account)}
+              >
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">{account.name}</CardTitle>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="h-8 w-8 p-0">
+                      <Button
+                        variant="ghost"
+                        className="h-8 w-8 p-0"
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         <MoreVertical className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
@@ -398,6 +408,16 @@ export default function AccountsPage() {
         onSuccess={() => {
           queryClient.invalidateQueries({ queryKey: ['accounts', currentSpace.id] });
         }}
+      />
+
+      <AccountDetailSheet
+        account={selectedAccount}
+        open={!!selectedAccount}
+        onOpenChange={(open) => {
+          if (!open) setSelectedAccount(null);
+        }}
+        spaceId={currentSpace.id}
+        onUpdate={() => queryClient.invalidateQueries({ queryKey: ['accounts', currentSpace.id] })}
       />
     </div>
   );

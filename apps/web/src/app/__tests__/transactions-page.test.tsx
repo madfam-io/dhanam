@@ -28,6 +28,12 @@ jest.mock('@dhanam/ui', () => ({
   DropdownMenuContent: ({ children }: any) => <div>{children}</div>,
   DropdownMenuItem: ({ children }: any) => <div>{children}</div>,
   DropdownMenuTrigger: ({ children }: any) => <div>{children}</div>,
+  Sheet: ({ children }: any) => <div>{children}</div>,
+  SheetContent: ({ children }: any) => <div>{children}</div>,
+  SheetHeader: ({ children }: any) => <div>{children}</div>,
+  SheetTitle: ({ children }: any) => <div>{children}</div>,
+  SheetDescription: ({ children }: any) => <div>{children}</div>,
+  Separator: () => <hr />,
 }));
 
 jest.mock('@dhanam/shared', () => ({
@@ -40,18 +46,24 @@ jest.mock('@dhanam/shared', () => ({
   }),
 }));
 
-jest.mock('lucide-react', () =>
-  new Proxy(
-    {},
-    {
-      get: () => (props: any) => <span {...props} />,
-    },
-  ),
+jest.mock(
+  'lucide-react',
+  () =>
+    new Proxy(
+      {},
+      {
+        get: () => (props: any) => <span {...props} />,
+      }
+    )
 );
 
-const mockTransactionsQuery = jest.fn().mockReturnValue({ data: null, isLoading: false, isError: false });
+const mockTransactionsQuery = jest
+  .fn()
+  .mockReturnValue({ data: null, isLoading: false, isError: false });
 const mockAccountsQuery = jest.fn().mockReturnValue({ data: [], isLoading: false, isError: false });
-const mockCategoriesQuery = jest.fn().mockReturnValue({ data: [], isLoading: false, isError: false });
+const mockCategoriesQuery = jest
+  .fn()
+  .mockReturnValue({ data: [], isLoading: false, isError: false });
 
 jest.mock('@tanstack/react-query', () => ({
   useQuery: (opts: any) => {
@@ -99,7 +111,13 @@ jest.mock('~/components/transactions/merchant-icon', () => ({
 
 jest.mock('~/components/transactions/transaction-filters', () => ({
   TransactionFilters: () => <div data-testid="transaction-filters" />,
-  EMPTY_FILTERS: { search: '', categoryId: undefined, accountId: undefined, dateRange: 'all', type: 'all' },
+  EMPTY_FILTERS: {
+    search: '',
+    categoryId: undefined,
+    accountId: undefined,
+    dateRange: 'all',
+    type: 'all',
+  },
 }));
 
 jest.mock('~/components/transactions/category-correction-dialog', () => ({

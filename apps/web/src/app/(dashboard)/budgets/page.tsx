@@ -18,7 +18,17 @@ import { Input } from '@dhanam/ui';
 import { Label } from '@dhanam/ui';
 import { Progress } from '@dhanam/ui';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@dhanam/ui';
-import { Plus, Loader2, PiggyBank, Settings } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@dhanam/ui';
+import { Plus, Loader2, PiggyBank, Settings, Pencil, Trash2, X, Check } from 'lucide-react';
 import { useSpaceStore } from '@/stores/space';
 import { budgetsApi, CategorySummary } from '@/lib/api/budgets';
 import { categoriesApi } from '@/lib/api/categories';
@@ -40,6 +50,11 @@ export default function BudgetsPage() {
   const [selectedBudget, setSelectedBudget] = useState<Budget | null>(null);
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
   const [isRuleManagerOpen, setIsRuleManagerOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
+  const [editCategoryAmount, setEditCategoryAmount] = useState('');
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 
   const {
     data: budgets,
@@ -94,6 +109,60 @@ export default function BudgetsPage() {
     },
     onError: () => {
       toast.error(t('toast.categoryAddFailed'));
+    },
+  });
+
+  const updateBudgetMutation = useMutation({
+    mutationFn: (data: { name: string }) => {
+      if (!currentSpace || !selectedBudget) throw new Error('Missing required data');
+      return budgetsApi.updateBudget(currentSpace.id, selectedBudget.id, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['budgets', currentSpace?.id] });
+      queryClient.invalidateQueries({
+        queryKey: ['budget-summary', currentSpace?.id, selectedBudget?.id],
+      });
+      setIsEditing(false);
+      toast.success(t('toast.budgetUpdated'));
+    },
+    onError: () => {
+      toast.error(t('toast.budgetUpdateFailed'));
+    },
+  });
+
+  const deleteBudgetMutation = useMutation({
+    mutationFn: () => {
+      if (!currentSpace || !selectedBudget) throw new Error('Missing required data');
+      return budgetsApi.deleteBudget(currentSpace.id, selectedBudget.id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['budgets', currentSpace?.id] });
+      setSelectedBudget(null);
+      setIsDeleteConfirmOpen(false);
+      toast.success(t('toast.budgetDeleted'));
+    },
+    onError: () => {
+      toast.error(t('toast.budgetDeleteFailed'));
+    },
+  });
+
+  const updateCategoryMutation = useMutation({
+    mutationFn: (data: { categoryId: string; budgetedAmount: number }) => {
+      if (!currentSpace) throw new Error('No current space');
+      return categoriesApi.updateCategory(currentSpace.id, data.categoryId, {
+        budgetedAmount: data.budgetedAmount,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['budgets', currentSpace?.id] });
+      queryClient.invalidateQueries({
+        queryKey: ['budget-summary', currentSpace?.id, selectedBudget?.id],
+      });
+      setEditingCategoryId(null);
+      toast.success(t('toast.categoryUpdated'));
+    },
+    onError: () => {
+      toast.error(t('toast.categoryUpdateFailed'));
     },
   });
 
@@ -267,13 +336,81 @@ export default function BudgetsPage() {
 
       <Dialog
         open={!!selectedBudget}
-        onOpenChange={(open: boolean) => !open && setSelectedBudget(null)}
+        onOpenChange={(open: boolean) => {
+          if (!open) {
+            setSelectedBudget(null);
+            setIsEditing(false);
+            setEditingCategoryId(null);
+          }
+        }}
       >
         <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
           {selectedBudget && budgetSummary && (
             <>
               <DialogHeader>
-                <DialogTitle>{selectedBudget.name}</DialogTitle>
+                <div className="flex items-center justify-between">
+                  {isEditing ? (
+                    <div className="flex items-center gap-2 flex-1 mr-4">
+                      <Input
+                        value={editName}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                          setEditName(e.target.value)
+                        }
+                        className="text-lg font-semibold"
+                        aria-label={t('fields.budgetName')}
+                        autoFocus
+                        onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                          if (e.key === 'Enter' && editName.trim()) {
+                            updateBudgetMutation.mutate({ name: editName.trim() });
+                          }
+                          if (e.key === 'Escape') {
+                            setIsEditing(false);
+                          }
+                        }}
+                      />
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => {
+                          if (editName.trim()) {
+                            updateBudgetMutation.mutate({ name: editName.trim() });
+                          }
+                        }}
+                        disabled={updateBudgetMutation.isPending || !editName.trim()}
+                        aria-label={tCommon('save')}
+                      >
+                        {updateBudgetMutation.isPending ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Check className="h-4 w-4" />
+                        )}
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => setIsEditing(false)}
+                        aria-label={tCommon('cancel')}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <DialogTitle className="flex-1">{selectedBudget.name}</DialogTitle>
+                  )}
+                  {!isEditing && (
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => {
+                        setIsEditing(true);
+                        setEditName(selectedBudget.name);
+                      }}
+                      aria-label={t('page.editBudget')}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
                 <DialogDescription>
                   {formatDate(selectedBudget.startDate)} -{' '}
                   {selectedBudget.endDate
@@ -345,9 +482,91 @@ export default function BudgetsPage() {
                             />
                             <span className="font-medium">{category.name}</span>
                           </div>
-                          <Badge variant={category.percentUsed > 90 ? 'destructive' : 'secondary'}>
-                            {category.percentUsed.toFixed(0)}% {t('summary.used')}
-                          </Badge>
+                          <div className="flex items-center gap-2">
+                            {editingCategoryId === category.id ? (
+                              <div className="flex items-center gap-1">
+                                <Input
+                                  type="number"
+                                  step="0.01"
+                                  value={editCategoryAmount}
+                                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                                    setEditCategoryAmount(e.target.value)
+                                  }
+                                  className="w-28 h-7 text-sm"
+                                  aria-label={t('fields.budgetAmount')}
+                                  autoFocus
+                                  onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                                    if (e.key === 'Enter') {
+                                      const amount = parseFloat(editCategoryAmount);
+                                      if (!isNaN(amount) && amount >= 0) {
+                                        updateCategoryMutation.mutate({
+                                          categoryId: category.id,
+                                          budgetedAmount: amount,
+                                        });
+                                      }
+                                    }
+                                    if (e.key === 'Escape') {
+                                      setEditingCategoryId(null);
+                                    }
+                                  }}
+                                />
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-7 w-7"
+                                  onClick={() => {
+                                    const amount = parseFloat(editCategoryAmount);
+                                    if (!isNaN(amount) && amount >= 0) {
+                                      updateCategoryMutation.mutate({
+                                        categoryId: category.id,
+                                        budgetedAmount: amount,
+                                      });
+                                    }
+                                  }}
+                                  disabled={updateCategoryMutation.isPending}
+                                  aria-label={tCommon('save')}
+                                >
+                                  {updateCategoryMutation.isPending ? (
+                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                  ) : (
+                                    <Check className="h-3 w-3" />
+                                  )}
+                                </Button>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-7 w-7"
+                                  onClick={() => setEditingCategoryId(null)}
+                                  aria-label={tCommon('cancel')}
+                                >
+                                  <X className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            ) : (
+                              <>
+                                <span className="text-sm text-muted-foreground">
+                                  {formatCurrency(category.budgetedAmount, currentSpace.currency)}
+                                </span>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-7 w-7"
+                                  onClick={() => {
+                                    setEditingCategoryId(category.id);
+                                    setEditCategoryAmount(category.budgetedAmount.toString());
+                                  }}
+                                  aria-label={t('page.editCategoryAmount')}
+                                >
+                                  <Pencil className="h-3 w-3" />
+                                </Button>
+                              </>
+                            )}
+                            <Badge
+                              variant={category.percentUsed > 90 ? 'destructive' : 'secondary'}
+                            >
+                              {category.percentUsed.toFixed(0)}% {t('summary.used')}
+                            </Badge>
+                          </div>
                         </div>
                         <Progress value={category.percentUsed} className="mb-2" />
                         <div className="flex justify-between text-sm text-muted-foreground">
@@ -364,11 +583,50 @@ export default function BudgetsPage() {
                     </Card>
                   ))}
                 </div>
+
+                <div className="flex justify-end pt-4 border-t">
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => setIsDeleteConfirmOpen(true)}
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    {t('page.deleteBudget')}
+                  </Button>
+                </div>
               </div>
             </>
           )}
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={isDeleteConfirmOpen} onOpenChange={setIsDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('dialog.delete.title')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('dialog.delete.description', { name: selectedBudget?.name ?? '' })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{tCommon('cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => deleteBudgetMutation.mutate()}
+              disabled={deleteBudgetMutation.isPending}
+            >
+              {deleteBudgetMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  {t('dialog.delete.deleting')}
+                </>
+              ) : (
+                t('page.deleteBudget')
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <Dialog open={isAddCategoryOpen} onOpenChange={setIsAddCategoryOpen}>
         <DialogContent>
