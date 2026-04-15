@@ -308,3 +308,4 @@ The application targets 99.9% availability with RTO 4h and daily backups.
 - **API CORS for local dev**: `.env` `CORS_ORIGINS` must include the web dev port (e.g. `http://localhost:3040`).
 - **API PORT**: Local API runs on port from `.env` (`PORT=8500`), not 4010. Set `NEXT_PUBLIC_API_URL=http://localhost:8500/v1` for the web app.
 - **Prisma migration**: After schema changes, run `npx prisma db push` against a running database before the API starts.
+- **SMTP env var**: The canonical name is `SMTP_PASSWORD` (not `SMTP_PASS`). K8s mounts `SMTP_PASSWORD`, and `email.service.ts` reads it directly via `configService.get('SMTP_PASSWORD')`.

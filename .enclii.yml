@@ -27,7 +27,7 @@ spec:
         autoDeploy: true
 
   runtime:
-    port: 3000
+    port: 4200
     replicas: 2
     resources:
       requests:

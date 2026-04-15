@@ -70,7 +70,7 @@ export const validationSchema = Joi.object({
   SMTP_HOST: Joi.string().optional().allow('').default('localhost'),
   SMTP_PORT: Joi.number().default(587),
   SMTP_USER: Joi.string().optional().allow(''),
-  SMTP_PASS: Joi.string().optional().allow(''),
+  SMTP_PASSWORD: Joi.string().optional().allow(''),
   EMAIL_FROM: Joi.string().email().default('noreply@dhanam.app'),
 
   // Monitoring
