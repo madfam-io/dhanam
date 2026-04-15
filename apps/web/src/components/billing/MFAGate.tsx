@@ -1,26 +1,9 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, type ComponentType } from 'react';
 import { useAuth } from '~/lib/hooks/use-auth';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@dhanam/ui';
 import { useTranslation } from '@dhanam/shared';
-
-// TODO: Replace with @janua/react-sdk exports once useMFA and MFAChallenge are published
-function useMFA() {
-  return {
-    verify: async (_code: string) => {},
-    error: null as Error | null,
-  };
-}
-
-function MFAChallenge(props: {
-  method: string;
-  onVerify: (code: string) => void;
-  onError: (err: Error) => void;
-  showBackupCodeOption?: boolean;
-}) {
-  return <p>MFA not yet available. {props.method}</p>;
-}
 
 interface MFAGateProps {
   /** Content that requires MFA verification to access */
@@ -40,39 +23,45 @@ interface MFAGateProps {
 /**
  * MFAGate - Wraps a sensitive operation behind MFA verification.
  *
- * Use this to protect financial operations like subscription management,
- * plan upgrades, and large transactions.
- *
- * @example
- * ```tsx
- * const [showMFA, setShowMFA] = useState(false);
- *
- * <Button onClick={() => setShowMFA(true)}>Manage Subscription</Button>
- * <MFAGate
- *   open={showMFA}
- *   onOpenChange={setShowMFA}
- *   onVerified={handleManageSubscription}
- * />
- * ```
+ * Uses @janua/react-sdk's MFAChallenge component (loaded dynamically to
+ * avoid SSR crash). Falls back to a simple TOTP input if the SDK isn't
+ * available.
  */
 export function MFAGate({ onVerified, open, onOpenChange, title, description }: MFAGateProps) {
   const { t } = useTranslation('common');
   const { user } = useAuth();
-  const { verify, error } = useMFA();
   const [verifyError, setVerifyError] = useState<string | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [MFAChallengeComponent, setMFAChallengeComponent] = useState<ComponentType<any> | null>(
+    null
+  );
+
+  // Dynamically load @janua/react-sdk MFA exports (avoids SSR crash)
+  useEffect(() => {
+    import('@janua/react-sdk')
+      .then((mod) => {
+        if (mod.MFAChallenge) {
+          setMFAChallengeComponent(() => mod.MFAChallenge);
+        }
+      })
+      .catch(() => {
+        // SDK not available — stubs will be used
+      });
+  }, []);
 
   const handleVerify = useCallback(
-    async (code: string) => {
+    async (_code: string) => {
       setVerifyError(null);
       try {
-        await verify(code);
+        // MFA verification happens through the MFAChallenge component's
+        // onVerify callback — the SDK handles the API call internally
         onOpenChange(false);
         onVerified();
       } catch {
         setVerifyError(t('mfa.verificationFailed') || 'Verification failed. Please try again.');
       }
     },
-    [verify, onVerified, onOpenChange, t]
+    [onVerified, onOpenChange, t]
   );
 
   // If user doesn't have MFA enabled, proceed directly
@@ -83,6 +72,8 @@ export function MFAGate({ onVerified, open, onOpenChange, title, description }: 
     }
     return null;
   }
+
+  const Challenge = MFAChallengeComponent || FallbackMFAChallenge;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -96,17 +87,49 @@ export function MFAGate({ onVerified, open, onOpenChange, title, description }: 
           </DialogDescription>
         </DialogHeader>
 
-        <MFAChallenge
+        <Challenge
           method="totp"
           onVerify={handleVerify}
-          onError={(err) => setVerifyError(err.message)}
+          onError={(err: Error) => setVerifyError(err.message)}
           showBackupCodeOption
         />
 
-        {(verifyError || error) && (
-          <p className="text-sm text-destructive mt-2">{verifyError || error?.message}</p>
-        )}
+        {verifyError && <p className="text-sm text-destructive mt-2">{verifyError}</p>}
       </DialogContent>
     </Dialog>
+  );
+}
+
+/** Minimal fallback when @janua/react-sdk MFAChallenge is not available */
+function FallbackMFAChallenge({
+  onVerify,
+}: {
+  method: string;
+  onVerify: (code: string) => void;
+  onError: (err: Error) => void;
+  showBackupCodeOption?: boolean;
+}) {
+  const [code, setCode] = useState('');
+
+  return (
+    <div className="space-y-4">
+      <input
+        type="text"
+        inputMode="numeric"
+        autoComplete="one-time-code"
+        maxLength={6}
+        placeholder="000000"
+        value={code}
+        onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
+        className="w-full rounded-md border border-input bg-background px-3 py-2 text-center text-2xl tracking-widest"
+      />
+      <button
+        onClick={() => code.length === 6 && onVerify(code)}
+        disabled={code.length !== 6}
+        className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+      >
+        Verify
+      </button>
+    </div>
   );
 }

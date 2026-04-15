@@ -303,8 +303,7 @@ The application targets 99.9% availability with RTO 4h and daily backups.
 
 ## Known Local Dev Issues
 
-- **Janua SDK (typescript-sdk@0.1.1)**: Published with incomplete build — `generateCodeVerifier` and other PKCE utils exist in `src/` but missing from `dist/`. Workaround: patched at runtime in `node_modules` (not committed). Needs Janua-side republish.
-- **Janua SSR safety**: `@janua/react-sdk` components (`SignIn`, `SignUp`, `UserButton`) call `useJanua()` which crashes during SSR. Fixed with `next/dynamic` + `JanuaErrorBoundary` in login/register pages and dashboard header.
+- **Janua SDK**: Using `@janua/react-sdk@0.1.4`. PKCE exports and `useMFA`/`MFAChallenge` are now available. Auth state fix: `signIn()` parses JWT for immediate user state instead of blocking on `getCurrentUser()`. SSR safety: components loaded via `next/dynamic` + `JanuaErrorBoundary`; `SSRSafeJanuaProvider` in `providers.tsx` handles the dynamic import.
 - **API CORS for local dev**: `.env` `CORS_ORIGINS` must include the web dev port (e.g. `http://localhost:3040`).
 - **API PORT**: Local API runs on port from `.env` (`PORT=8500`), not 4010. Set `NEXT_PUBLIC_API_URL=http://localhost:8500/v1` for the web app.
 - **Prisma migration**: After schema changes, run `npx prisma db push` against a running database before the API starts.
