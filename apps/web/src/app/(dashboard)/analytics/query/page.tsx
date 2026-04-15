@@ -153,12 +153,15 @@ export default function QueryPage() {
             <div className="grid gap-4 md:grid-cols-4">
               <div className="grid gap-2">
                 <Label htmlFor="query-category">Category (optional)</Label>
-                <Select value={categoryId} onValueChange={setCategoryId}>
+                <Select
+                  value={categoryId || '__all__'}
+                  onValueChange={(v) => setCategoryId(v === '__all__' ? '' : v)}
+                >
                   <SelectTrigger id="query-category">
                     <SelectValue placeholder="All categories" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All categories</SelectItem>
+                    <SelectItem value="__all__">All categories</SelectItem>
                     {categories?.map((cat) => (
                       <SelectItem key={cat.id} value={cat.id}>
                         {cat.name}
@@ -169,12 +172,15 @@ export default function QueryPage() {
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="query-account">Account (optional)</Label>
-                <Select value={accountId} onValueChange={setAccountId}>
+                <Select
+                  value={accountId || '__all__'}
+                  onValueChange={(v) => setAccountId(v === '__all__' ? '' : v)}
+                >
                   <SelectTrigger id="query-account">
                     <SelectValue placeholder="All accounts" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All accounts</SelectItem>
+                    <SelectItem value="__all__">All accounts</SelectItem>
                     {accounts?.map((acc) => (
                       <SelectItem key={acc.id} value={acc.id}>
                         {acc.name}
@@ -194,12 +200,15 @@ export default function QueryPage() {
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="query-tag">Tag (optional)</Label>
-                <Select value={tagId} onValueChange={setTagId}>
+                <Select
+                  value={tagId || '__all__'}
+                  onValueChange={(v) => setTagId(v === '__all__' ? '' : v)}
+                >
                   <SelectTrigger id="query-tag">
                     <SelectValue placeholder="All tags" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All tags</SelectItem>
+                    <SelectItem value="__all__">All tags</SelectItem>
                     {tags?.map((tag) => (
                       <SelectItem key={tag.id} value={tag.id}>
                         {tag.name}

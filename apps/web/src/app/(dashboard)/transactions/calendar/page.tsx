@@ -52,8 +52,9 @@ export default function CalendarPage() {
   // Build a lookup map from date string to CalendarDay
   const dayMap = useMemo(() => {
     const map = new Map<string, CalendarDay>();
-    if (calendarData) {
-      for (const day of calendarData) {
+    const days = Array.isArray(calendarData) ? calendarData : [];
+    if (days.length > 0) {
+      for (const day of days) {
         // Normalize to just the date part
         const dateKey = day.date.slice(0, 10);
         map.set(dateKey, day);
