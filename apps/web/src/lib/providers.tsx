@@ -83,6 +83,54 @@ function SSRSafeJanuaProvider({ children }: { children: React.ReactNode }) {
               };
 
               setAuth(dhanamUser, tokens);
+
+              // Set cookie for middleware auth check
+              if (typeof document !== 'undefined') {
+                document.cookie =
+                  'auth-storage=authenticated; path=/; max-age=86400; SameSite=Lax; Secure';
+              }
+            } else if (!isSignedIn && !dhanamAuthenticated) {
+              // SDK hooks don't reflect login — fall back to localStorage tokens
+              const januaToken =
+                typeof window !== 'undefined' ? localStorage.getItem('janua_access_token') : null;
+
+              if (januaToken) {
+                try {
+                  const payloadStr = januaToken.split('.')[1];
+                  if (!payloadStr) throw new Error('Invalid token');
+                  const payload = JSON.parse(atob(payloadStr));
+                  const januaRefresh = localStorage.getItem('janua_refresh_token') || '';
+
+                  const fallbackUser: import('@dhanam/shared').UserProfile = {
+                    id: payload.sub,
+                    email: payload.email || '',
+                    name: payload.name || payload.email?.split('@')[0] || 'User',
+                    locale: 'en',
+                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                    totpEnabled: false,
+                    emailVerified: payload.email_verified || true,
+                    onboardingCompleted: true,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                    spaces: [],
+                  };
+
+                  const fallbackTokens: import('@dhanam/shared').AuthTokens = {
+                    accessToken: januaToken,
+                    refreshToken: januaRefresh,
+                    expiresIn: payload.exp ? payload.exp - Math.floor(Date.now() / 1000) : 15 * 60,
+                  };
+
+                  setAuth(fallbackUser, fallbackTokens);
+
+                  if (typeof document !== 'undefined') {
+                    document.cookie =
+                      'auth-storage=authenticated; path=/; max-age=86400; SameSite=Lax; Secure';
+                  }
+                } catch {
+                  // Token parse failed — ignore
+                }
+              }
             } else if (!isSignedIn && dhanamAuthenticated) {
               // Only clear when Janua says "not signed in" AND there is no
               // out-of-band session (direct PKCE tokens or demo mode)
@@ -93,6 +141,9 @@ function SSRSafeJanuaProvider({ children }: { children: React.ReactNode }) {
 
               if (!hasJanuaToken && !isDemoMode) {
                 clearAuth();
+                if (typeof document !== 'undefined') {
+                  document.cookie = 'auth-storage=; path=/; max-age=0; SameSite=Lax; Secure';
+                }
               }
             }
           }, [authLoaded, isSignedIn, januaUser, session, dhanamAuthenticated, setAuth, clearAuth]);
