@@ -97,6 +97,9 @@ jest.mock('lucide-react', () => {
     CreditCard: icon('CreditCard'),
     Calendar: icon('Calendar'),
     BarChart3: icon('BarChart3'),
+    ChevronDown: icon('ChevronDown'),
+    ChevronRight: icon('ChevronRight'),
+    ArrowLeftRight: icon('ArrowLeftRight'),
   };
 });
 
@@ -113,20 +116,16 @@ jest.mock('~/lib/contexts/demo-navigation-context', () => ({
   useDemoNavigation: () => mockDemoNavigation,
 }));
 
+// Top-level links always visible (sub-items are collapsed under parents)
 const expectedLinks = [
   { name: 'Dashboard', href: '/dashboard' },
   { name: 'Accounts', href: '/accounts' },
   { name: 'Transactions', href: '/transactions' },
-  { name: 'Calendar', href: '/transactions/calendar' },
   { name: 'Budgets', href: '/budgets' },
-  { name: 'Zero-Based', href: '/budgets/zero-based' },
   { name: 'Goals', href: '/goals' },
   { name: 'Households', href: '/households' },
   { name: 'Estate Planning', href: '/estate-planning' },
   { name: 'Analytics', href: '/analytics' },
-  { name: 'Statistics', href: '/analytics/statistics' },
-  { name: 'Trends', href: '/analytics/trends' },
-  { name: 'ESG Insights', href: '/esg' },
   { name: 'Gaming', href: '/gaming' },
   { name: 'Retirement', href: '/retirement' },
   { name: 'Scenarios', href: '/scenarios' },

@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@dhanam/ui';
@@ -24,28 +25,57 @@ import {
   CreditCard,
   Calendar,
   BarChart3,
+  ChevronDown,
+  ChevronRight,
 } from 'lucide-react';
 
-const navigation = [
-  { key: 'dashboard' as const, href: '/dashboard', icon: LayoutDashboard },
-  { key: 'accounts' as const, href: '/accounts', icon: Wallet },
-  { key: 'transactions' as const, href: '/transactions', icon: Receipt },
-  { key: 'calendar' as const, href: '/transactions/calendar', icon: Calendar },
-  { key: 'budgets' as const, href: '/budgets', icon: PiggyBank },
-  { key: 'zeroBased' as const, href: '/budgets/zero-based', icon: Landmark },
-  { key: 'goals' as const, href: '/goals', icon: Target },
-  { key: 'households' as const, href: '/households', icon: Users },
-  { key: 'estatePlanning' as const, href: '/estate-planning', icon: ScrollText },
-  { key: 'analytics' as const, href: '/analytics', icon: TrendingUp },
-  { key: 'statistics' as const, href: '/analytics/statistics', icon: BarChart3 },
-  { key: 'trends' as const, href: '/analytics/trends', icon: TrendingUp },
-  { key: 'esgInsights' as const, href: '/esg', icon: Leaf },
-  { key: 'gaming' as const, href: '/gaming', icon: Gamepad2 },
-  { key: 'retirement' as const, href: '/retirement', icon: Target },
-  { key: 'scenarios' as const, href: '/scenarios', icon: AlertTriangle },
-  { key: 'reports' as const, href: '/reports', icon: FileText },
-  { key: 'billing' as const, href: '/billing', icon: CreditCard },
-  { key: 'settings' as const, href: '/settings', icon: Settings },
+interface NavChild {
+  key: string;
+  href: string;
+  icon: React.ElementType;
+}
+
+interface NavItem {
+  key: string;
+  href: string;
+  icon: React.ElementType;
+  children?: NavChild[];
+}
+
+const navigation: NavItem[] = [
+  { key: 'dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { key: 'accounts', href: '/accounts', icon: Wallet },
+  {
+    key: 'transactions',
+    href: '/transactions',
+    icon: Receipt,
+    children: [{ key: 'calendar', href: '/transactions/calendar', icon: Calendar }],
+  },
+  {
+    key: 'budgets',
+    href: '/budgets',
+    icon: PiggyBank,
+    children: [{ key: 'zeroBased', href: '/budgets/zero-based', icon: Landmark }],
+  },
+  { key: 'goals', href: '/goals', icon: Target },
+  { key: 'households', href: '/households', icon: Users },
+  { key: 'estatePlanning', href: '/estate-planning', icon: ScrollText },
+  {
+    key: 'analytics',
+    href: '/analytics',
+    icon: TrendingUp,
+    children: [
+      { key: 'statistics', href: '/analytics/statistics', icon: BarChart3 },
+      { key: 'trends', href: '/analytics/trends', icon: TrendingUp },
+      { key: 'esgInsights', href: '/esg', icon: Leaf },
+    ],
+  },
+  { key: 'gaming', href: '/gaming', icon: Gamepad2 },
+  { key: 'retirement', href: '/retirement', icon: Target },
+  { key: 'scenarios', href: '/scenarios', icon: AlertTriangle },
+  { key: 'reports', href: '/reports', icon: FileText },
+  { key: 'billing', href: '/billing', icon: CreditCard },
+  { key: 'settings', href: '/settings', icon: Settings },
 ];
 
 export function DashboardNav() {
@@ -53,8 +83,21 @@ export function DashboardNav() {
   const { t } = useTranslation('dashboard');
   const { t: tc } = useTranslation('common');
   const { demoHref, stripDemoPrefix } = useDemoNavigation();
+  const [expanded, setExpanded] = useState<Set<string>>(new Set(['analytics']));
 
   const normalizedPath = stripDemoPrefix(pathname);
+
+  const toggleExpanded = (key: string) => {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
+  };
 
   return (
     <nav aria-label={tc('aria.mainNavigation')} className="w-64 border-r bg-background">
@@ -65,28 +108,84 @@ export function DashboardNav() {
               {navigation.map((item) => {
                 const isActive =
                   normalizedPath === item.href || normalizedPath.startsWith(item.href + '/');
+                const hasChildren = item.children && item.children.length > 0;
+                const isExpanded = expanded.has(item.key);
+
                 return (
                   <li key={item.key} data-tour={`sidebar-${item.key}`}>
-                    <Link
-                      href={demoHref(item.href)}
-                      className={cn(
-                        isActive
-                          ? 'bg-primary/10 text-primary'
-                          : 'text-muted-foreground hover:text-foreground hover:bg-muted',
-                        'group flex gap-x-3 rounded-md p-2 text-sm font-medium leading-6 transition-colors'
-                      )}
-                    >
-                      <item.icon
+                    <div className="flex items-center">
+                      <Link
+                        href={demoHref(item.href)}
                         className={cn(
                           isActive
-                            ? 'text-primary'
-                            : 'text-muted-foreground group-hover:text-foreground',
-                          'h-5 w-5 shrink-0'
+                            ? 'bg-primary/10 text-primary'
+                            : 'text-muted-foreground hover:text-foreground hover:bg-muted',
+                          'group flex flex-1 gap-x-3 rounded-md p-2 text-sm font-medium leading-6 transition-colors'
                         )}
-                        aria-hidden="true"
-                      />
-                      {t(`sidebar.${item.key}`)}
-                    </Link>
+                      >
+                        <item.icon
+                          className={cn(
+                            isActive
+                              ? 'text-primary'
+                              : 'text-muted-foreground group-hover:text-foreground',
+                            'h-5 w-5 shrink-0'
+                          )}
+                          aria-hidden="true"
+                        />
+                        {t(`sidebar.${item.key}`)}
+                      </Link>
+                      {hasChildren && (
+                        <button
+                          type="button"
+                          onClick={() => toggleExpanded(item.key)}
+                          className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                          aria-label={
+                            isExpanded
+                              ? `Collapse ${t(`sidebar.${item.key}`)}`
+                              : `Expand ${t(`sidebar.${item.key}`)}`
+                          }
+                        >
+                          {isExpanded ? (
+                            <ChevronDown className="h-4 w-4" />
+                          ) : (
+                            <ChevronRight className="h-4 w-4" />
+                          )}
+                        </button>
+                      )}
+                    </div>
+                    {hasChildren && isExpanded && (
+                      <ul className="mt-1 space-y-1">
+                        {(item.children ?? []).map((child) => {
+                          const isChildActive =
+                            normalizedPath === child.href ||
+                            normalizedPath.startsWith(child.href + '/');
+                          return (
+                            <li key={child.key}>
+                              <Link
+                                href={demoHref(child.href)}
+                                className={cn(
+                                  isChildActive
+                                    ? 'bg-primary/10 text-primary'
+                                    : 'text-muted-foreground hover:text-foreground hover:bg-muted',
+                                  'group flex gap-x-3 rounded-md p-2 pl-8 text-xs font-medium leading-6 transition-colors'
+                                )}
+                              >
+                                <child.icon
+                                  className={cn(
+                                    isChildActive
+                                      ? 'text-primary'
+                                      : 'text-muted-foreground group-hover:text-foreground',
+                                    'h-4 w-4 shrink-0'
+                                  )}
+                                  aria-hidden="true"
+                                />
+                                {t(`sidebar.${child.key}`)}
+                              </Link>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
                   </li>
                 );
               })}

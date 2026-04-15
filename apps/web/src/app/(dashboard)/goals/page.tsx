@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslation, FINANCIAL_DEFAULTS } from '@dhanam/shared';
+import { fireGoalConfetti } from '~/lib/celebrations';
+import { formatDate } from '~/lib/utils';
 import { useGoals, type Goal, type GoalProgress, type GoalSummary } from '@/hooks/useGoals';
 import { useSimulations, type GoalProbabilityResult } from '@/hooks/useSimulations';
 import { useAnalytics } from '@/hooks/useAnalytics';
@@ -77,7 +79,24 @@ export default function GoalsPage() {
       getGoalSummary(spaceId),
     ]);
 
-    if (goalsData) setGoals(goalsData);
+    if (goalsData) {
+      setGoals(goalsData);
+      // Check for newly achieved goals and celebrate
+      for (const goal of goalsData) {
+        if (goal.status === 'achieved') {
+          const celebratedKey = `dhanam_celebrated_goal_${goal.id}`;
+          try {
+            if (!localStorage.getItem(celebratedKey)) {
+              localStorage.setItem(celebratedKey, 'true');
+              fireGoalConfetti();
+              break; // One celebration at a time
+            }
+          } catch {
+            // localStorage unavailable
+          }
+        }
+      }
+    }
     if (summaryData) setSummary(summaryData);
   };
 
@@ -87,6 +106,19 @@ export default function GoalsPage() {
 
     const progress = await getGoalProgress(goal.id);
     setGoalProgress(progress);
+
+    // Celebrate if goal is achieved
+    if (progress && progress.currentValue >= parseFloat(goal.targetAmount.toString())) {
+      const celebratedKey = `dhanam_celebrated_goal_${goal.id}`;
+      try {
+        if (!localStorage.getItem(celebratedKey)) {
+          localStorage.setItem(celebratedKey, 'true');
+          fireGoalConfetti();
+        }
+      } catch {
+        // localStorage unavailable
+      }
+    }
 
     // Track goal progress view
     if (progress) {
@@ -370,7 +402,7 @@ export default function GoalsPage() {
                       </div>
                       <div className="flex justify-between text-sm text-muted-foreground">
                         <span>{t('page.dueLabel')}</span>
-                        <span>{new Date(goal.targetDate).toLocaleDateString()}</span>
+                        <span>{formatDate(goal.targetDate)}</span>
                       </div>
                     </div>
                   </div>

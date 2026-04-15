@@ -1,6 +1,6 @@
 'use client';
 
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, Button } from '@dhanam/ui';
 import { Skeleton } from '@dhanam/ui';
 import {
@@ -17,7 +17,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { useSpaceStore } from '@/stores/space';
 import { analyticsApi } from '@/lib/api/analytics';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, formatDateShort } from '@/lib/utils';
 import {
   NetWorthChart,
   IncomeExpenseChart,
@@ -30,15 +30,14 @@ import { useTranslation } from '@dhanam/shared';
 
 export default function AnalyticsPage() {
   const { currentSpace } = useSpaceStore();
-  const queryClient = useQueryClient();
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const { t } = useTranslation('analytics');
-  const { t: tCommon } = useTranslation('common');
 
   const {
     data: netWorthData,
     isLoading: isLoadingNetWorth,
     isError: isErrorNetWorth,
+    refetch: refetchNetWorth,
   } = useQuery({
     queryKey: ['net-worth', currentSpace?.id],
     queryFn: () => {
@@ -54,6 +53,7 @@ export default function AnalyticsPage() {
     data: netWorthHistory,
     isLoading: isLoadingNetWorthHistory,
     isError: isErrorHistory,
+    refetch: refetchHistory,
   } = useQuery({
     queryKey: ['net-worth-history', currentSpace?.id],
     queryFn: () => {
@@ -69,6 +69,7 @@ export default function AnalyticsPage() {
     data: spendingData,
     isLoading: isLoadingSpending,
     isError: isErrorSpending,
+    refetch: refetchSpending,
   } = useQuery({
     queryKey: ['spending-by-category', currentSpace?.id],
     queryFn: () => {
@@ -86,6 +87,7 @@ export default function AnalyticsPage() {
     data: incomeVsExpenses,
     isLoading: isLoadingIncomeExpenses,
     isError: isErrorIncome,
+    refetch: refetchIncome,
   } = useQuery({
     queryKey: ['income-vs-expenses', currentSpace?.id],
     queryFn: () => {
@@ -101,6 +103,7 @@ export default function AnalyticsPage() {
     data: cashflowForecast,
     isLoading: isLoadingCashflow,
     isError: isErrorCashflow,
+    refetch: refetchCashflow,
   } = useQuery({
     queryKey: ['cashflow-forecast', currentSpace?.id],
     queryFn: () => {
@@ -116,6 +119,7 @@ export default function AnalyticsPage() {
     data: portfolioAllocation,
     isLoading: isLoadingPortfolio,
     isError: isErrorPortfolio,
+    refetch: refetchPortfolio,
   } = useQuery({
     queryKey: ['portfolio-allocation', currentSpace?.id],
     queryFn: () => {
@@ -137,54 +141,6 @@ export default function AnalyticsPage() {
         <p className="text-muted-foreground text-sm max-w-sm">
           {t('emptyState.selectSpacePrompt')}
         </p>
-      </div>
-    );
-  }
-
-  const hasError =
-    isErrorNetWorth ||
-    isErrorHistory ||
-    isErrorSpending ||
-    isErrorIncome ||
-    isErrorCashflow ||
-    isErrorPortfolio;
-
-  if (hasError) {
-    return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
-          <p className="text-muted-foreground">{t('description')}</p>
-        </div>
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-8">
-            <TrendingUp className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="font-semibold text-lg mb-2">{tCommon('somethingWentWrong')}</h3>
-            <p className="text-muted-foreground text-center mb-4">{tCommon('loadFailed')}</p>
-            <Button
-              onClick={() => {
-                queryClient.invalidateQueries({ queryKey: ['net-worth', currentSpace?.id] });
-                queryClient.invalidateQueries({
-                  queryKey: ['net-worth-history', currentSpace?.id],
-                });
-                queryClient.invalidateQueries({
-                  queryKey: ['spending-by-category', currentSpace?.id],
-                });
-                queryClient.invalidateQueries({
-                  queryKey: ['income-vs-expenses', currentSpace?.id],
-                });
-                queryClient.invalidateQueries({
-                  queryKey: ['cashflow-forecast', currentSpace?.id],
-                });
-                queryClient.invalidateQueries({
-                  queryKey: ['portfolio-allocation', currentSpace?.id],
-                });
-              }}
-            >
-              {tCommon('tryAgain')}
-            </Button>
-          </CardContent>
-        </Card>
       </div>
     );
   }
@@ -218,7 +174,14 @@ export default function AnalyticsPage() {
             <Wallet className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            {isLoadingNetWorth ? (
+            {isErrorNetWorth ? (
+              <div className="text-sm text-muted-foreground">
+                Failed to load.{' '}
+                <button onClick={() => refetchNetWorth()} className="underline">
+                  Retry
+                </button>
+              </div>
+            ) : isLoadingNetWorth ? (
               <Skeleton className="h-8 w-24" />
             ) : (
               <>
@@ -256,7 +219,14 @@ export default function AnalyticsPage() {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            {isLoadingNetWorth ? (
+            {isErrorNetWorth ? (
+              <div className="text-sm text-muted-foreground">
+                Failed to load.{' '}
+                <button onClick={() => refetchNetWorth()} className="underline">
+                  Retry
+                </button>
+              </div>
+            ) : isLoadingNetWorth ? (
               <Skeleton className="h-8 w-24" />
             ) : (
               <>
@@ -277,7 +247,14 @@ export default function AnalyticsPage() {
             <TrendingDown className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            {isLoadingNetWorth ? (
+            {isErrorNetWorth ? (
+              <div className="text-sm text-muted-foreground">
+                Failed to load.{' '}
+                <button onClick={() => refetchNetWorth()} className="underline">
+                  Retry
+                </button>
+              </div>
+            ) : isLoadingNetWorth ? (
               <Skeleton className="h-8 w-24" />
             ) : (
               <>
@@ -298,7 +275,14 @@ export default function AnalyticsPage() {
             <Wallet className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            {isLoadingNetWorth ? (
+            {isErrorNetWorth ? (
+              <div className="text-sm text-muted-foreground">
+                Failed to load.{' '}
+                <button onClick={() => refetchNetWorth()} className="underline">
+                  Retry
+                </button>
+              </div>
+            ) : isLoadingNetWorth ? (
               <Skeleton className="h-8 w-24" />
             ) : (
               <>
@@ -318,33 +302,85 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Net Worth Chart */}
-      <NetWorthChart
-        data={netWorthHistory || []}
-        currency={currentSpace.currency}
-        isLoading={isLoadingNetWorthHistory}
-      />
+      {isErrorHistory ? (
+        <Card>
+          <CardContent className="py-6">
+            <div className="text-sm text-muted-foreground text-center">
+              Failed to load net worth history.{' '}
+              <button onClick={() => refetchHistory()} className="underline">
+                Retry
+              </button>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <NetWorthChart
+          data={netWorthHistory || []}
+          currency={currentSpace.currency}
+          isLoading={isLoadingNetWorthHistory}
+        />
+      )}
 
       {/* Income vs Expenses and Spending by Category */}
       <div className="grid gap-4 lg:grid-cols-2">
-        <IncomeExpenseChart
-          data={incomeVsExpenses || []}
-          currency={currentSpace.currency}
-          isLoading={isLoadingIncomeExpenses}
-        />
+        {isErrorIncome ? (
+          <Card>
+            <CardContent className="py-6">
+              <div className="text-sm text-muted-foreground text-center">
+                Failed to load income vs expenses.{' '}
+                <button onClick={() => refetchIncome()} className="underline">
+                  Retry
+                </button>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <IncomeExpenseChart
+            data={incomeVsExpenses || []}
+            currency={currentSpace.currency}
+            isLoading={isLoadingIncomeExpenses}
+          />
+        )}
 
-        <SpendingCategoryChart
-          data={spendingData || []}
-          currency={currentSpace.currency}
-          isLoading={isLoadingSpending}
-        />
+        {isErrorSpending ? (
+          <Card>
+            <CardContent className="py-6">
+              <div className="text-sm text-muted-foreground text-center">
+                Failed to load spending data.{' '}
+                <button onClick={() => refetchSpending()} className="underline">
+                  Retry
+                </button>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <SpendingCategoryChart
+            data={spendingData || []}
+            currency={currentSpace.currency}
+            isLoading={isLoadingSpending}
+          />
+        )}
       </div>
 
       {/* Portfolio Allocation */}
-      <PortfolioChart
-        data={portfolioAllocation || []}
-        currency={currentSpace.currency}
-        isLoading={isLoadingPortfolio}
-      />
+      {isErrorPortfolio ? (
+        <Card>
+          <CardContent className="py-6">
+            <div className="text-sm text-muted-foreground text-center">
+              Failed to load portfolio allocation.{' '}
+              <button onClick={() => refetchPortfolio()} className="underline">
+                Retry
+              </button>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <PortfolioChart
+          data={portfolioAllocation || []}
+          currency={currentSpace.currency}
+          isLoading={isLoadingPortfolio}
+        />
+      )}
 
       {/* Cashflow Forecast */}
       <Card>
@@ -356,7 +392,14 @@ export default function AnalyticsPage() {
           <CardDescription>{t('cashflow.description')}</CardDescription>
         </CardHeader>
         <CardContent>
-          {isLoadingCashflow ? (
+          {isErrorCashflow ? (
+            <div className="text-sm text-muted-foreground text-center py-6">
+              Failed to load cashflow forecast.{' '}
+              <button onClick={() => refetchCashflow()} className="underline">
+                Retry
+              </button>
+            </div>
+          ) : isLoadingCashflow ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
@@ -418,7 +461,7 @@ export default function AnalyticsPage() {
                             {t('cashflow.week', { number: index + 1 })}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            {new Date(point.date).toLocaleDateString()}
+                            {formatDateShort(point.date)}
                           </p>
                         </div>
                         <div className="space-y-1 text-sm">

@@ -25,6 +25,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@dhanam/ui';
 import { Badge } from '@/components/ui/badge';
 import { apiClient } from '@/lib/api/client';
+import { transactionsApi } from '@/lib/api/transactions';
 import { useTranslation } from '@dhanam/shared';
 
 interface SearchResult {
@@ -62,6 +63,13 @@ export function SearchCommand({ spaceId }: SearchCommandProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult | null>(null);
+  const [directTransactions, setDirectTransactions] = useState<Array<{
+    id: string;
+    description: string;
+    merchant?: string;
+    amount: number;
+    date: string;
+  }> | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const router = useRouter();
@@ -70,6 +78,7 @@ export function SearchCommand({ spaceId }: SearchCommandProps) {
     setOpen(false);
     setQuery('');
     setResults(null);
+    setDirectTransactions(null);
   }, []);
 
   const commands: CommandItem[] = useMemo(
@@ -241,12 +250,17 @@ export function SearchCommand({ spaceId }: SearchCommandProps) {
     if (!query.trim() || !spaceId || query.startsWith('>')) return;
     setIsSearching(true);
     try {
-      const data = await apiClient.get<SearchResult>(`/spaces/${spaceId}/search`, {
-        q: query.trim(),
-      });
-      setResults(data);
+      const [data, txnData] = await Promise.allSettled([
+        apiClient.get<SearchResult>(`/spaces/${spaceId}/search`, {
+          q: query.trim(),
+        }),
+        transactionsApi.getTransactions(spaceId, { search: query.trim(), limit: 5 }),
+      ]);
+      setResults(data.status === 'fulfilled' ? data.value : null);
+      setDirectTransactions(txnData.status === 'fulfilled' ? txnData.value.data : null);
     } catch {
       setResults(null);
+      setDirectTransactions(null);
     } finally {
       setIsSearching(false);
     }
@@ -255,9 +269,10 @@ export function SearchCommand({ spaceId }: SearchCommandProps) {
   useEffect(() => {
     if (query.length < 3 || query.startsWith('>')) {
       setResults(null);
+      setDirectTransactions(null);
       return;
     }
-    const timer = setTimeout(handleSearch, 500);
+    const timer = setTimeout(handleSearch, 300);
     return () => clearTimeout(timer);
   }, [query, handleSearch]);
 
@@ -499,11 +514,62 @@ export function SearchCommand({ spaceId }: SearchCommandProps) {
               </div>
             )}
 
-            {!results && !isSearching && !showCommands && query.length >= 3 && (
-              <div className="p-8 text-center text-sm text-muted-foreground">
-                {t('searchCommand.noResults')} &ldquo;{query}&rdquo;
-              </div>
-            )}
+            {/* Direct transaction results (shown when unified search has no txns) */}
+            {!results?.transactions?.length &&
+              directTransactions &&
+              directTransactions.length > 0 && (
+                <div className="p-4 space-y-2">
+                  <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-1">
+                    <Receipt className="h-3 w-3" />
+                    {t('searchCommand.transactions')}
+                  </h4>
+                  {directTransactions.slice(0, 5).map((txn) => (
+                    <button
+                      type="button"
+                      key={txn.id}
+                      className="flex w-full items-center justify-between p-2 rounded hover:bg-accent cursor-pointer text-left"
+                      onClick={() => {
+                        handleClose();
+                        router.push(`/transactions?search=${encodeURIComponent(query)}`);
+                      }}
+                    >
+                      <div>
+                        <p className="text-sm font-medium">{txn.merchant || txn.description}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(txn.date).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <span
+                        className={`text-sm font-medium ${txn.amount < 0 ? 'text-red-600' : 'text-green-600'}`}
+                      >
+                        {formatCurrency(txn.amount)}
+                      </span>
+                    </button>
+                  ))}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => {
+                      handleClose();
+                      router.push(`/transactions?search=${encodeURIComponent(query)}`);
+                    }}
+                  >
+                    {t('searchCommand.viewAllResults')}
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </Button>
+                </div>
+              )}
+
+            {!results &&
+              !directTransactions?.length &&
+              !isSearching &&
+              !showCommands &&
+              query.length >= 3 && (
+                <div className="p-8 text-center text-sm text-muted-foreground">
+                  {t('searchCommand.noResults')} &ldquo;{query}&rdquo;
+                </div>
+              )}
           </div>
         </DialogContent>
       </Dialog>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@dhanam/ui';
 import { Button } from '@dhanam/ui';
@@ -31,6 +31,8 @@ import {
   CreditCard,
   TrendingUp,
   Coins,
+  ChevronDown,
+  ChevronRight,
 } from 'lucide-react';
 import { useSpaceStore } from '@/stores/space';
 import { accountsApi } from '@/lib/api/accounts';
@@ -63,6 +65,7 @@ export default function AccountsPage() {
   const [isPlaidOpen, setIsPlaidOpen] = useState(false);
   const [isBitsoOpen, setIsBitsoOpen] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
+  const [cryptoExpanded, setCryptoExpanded] = useState(false);
 
   const providerLabels: Record<Provider, string> = {
     belvo: t('provider.belvo'),
@@ -83,6 +86,24 @@ export default function AccountsPage() {
     },
     enabled: !!currentSpace,
   });
+
+  const accountGroups = useMemo(() => {
+    if (!accounts) return [];
+    const groupConfig: { key: string; label: string; types: AccountType[] }[] = [
+      { key: 'checking_savings', label: 'Checking & Savings', types: ['checking', 'savings'] },
+      { key: 'credit', label: 'Credit', types: ['credit'] },
+      { key: 'investment', label: 'Investment', types: ['investment'] },
+      { key: 'crypto', label: 'Crypto', types: ['crypto'] },
+      { key: 'other', label: 'Other', types: ['other'] },
+    ];
+    return groupConfig
+      .map((group) => {
+        const items = accounts.filter((a) => group.types.includes(a.type));
+        const totalBalance = items.reduce((sum, a) => sum + a.balance, 0);
+        return { ...group, items, totalBalance };
+      })
+      .filter((group) => group.items.length > 0);
+  }, [accounts]);
 
   const connectMutation = useMutation({
     mutationFn: (provider: Exclude<Provider, 'manual'>) => {
@@ -258,58 +279,106 @@ export default function AccountsPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {accounts?.map((account) => {
-            const Icon = accountTypeIcons[account.type];
+        <div className="space-y-6">
+          {accountGroups.map((group) => {
+            const isCrypto = group.key === 'crypto';
+            const isExpanded = isCrypto ? cryptoExpanded : true;
+
+            const groupCards = (
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {group.items.map((account) => {
+                  const Icon = accountTypeIcons[account.type];
+                  return (
+                    <Card
+                      key={account.id}
+                      className="cursor-pointer transition-colors hover:bg-muted/50"
+                      onClick={() => setSelectedAccount(account)}
+                    >
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">{account.name}</CardTitle>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              className="h-8 w-8 p-0"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={() => deleteMutation.mutate(account.id)}
+                              className="text-destructive"
+                            >
+                              {t('action.delete')}
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex items-center space-x-2">
+                          <Icon className="h-4 w-4 text-muted-foreground" />
+                          <Badge variant="secondary" className="text-xs">
+                            {account.type}
+                          </Badge>
+                          <Badge variant="outline" className="text-xs">
+                            {account.provider}
+                          </Badge>
+                        </div>
+                        <div className="mt-4">
+                          <div className="text-2xl font-bold">
+                            {formatCurrency(account.balance, account.currency)}
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            {t('card.lastUpdated')}{' '}
+                            {new Date(
+                              account.lastSyncedAt || account.updatedAt
+                            ).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            );
+
+            if (isCrypto) {
+              return (
+                <div key={group.key}>
+                  <button
+                    type="button"
+                    className="flex items-center gap-2 mb-3 text-left"
+                    onClick={() => setCryptoExpanded((prev) => !prev)}
+                  >
+                    {cryptoExpanded ? (
+                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                    ) : (
+                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    )}
+                    <h3 className="text-lg font-semibold">
+                      {group.label} ({group.items.length})
+                    </h3>
+                    <span className="text-sm text-muted-foreground">
+                      {formatCurrency(group.totalBalance, currentSpace.currency)}
+                    </span>
+                  </button>
+                  {isExpanded && groupCards}
+                </div>
+              );
+            }
+
             return (
-              <Card
-                key={account.id}
-                className="cursor-pointer transition-colors hover:bg-muted/50"
-                onClick={() => setSelectedAccount(account)}
-              >
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">{account.name}</CardTitle>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        className="h-8 w-8 p-0"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem
-                        onClick={() => deleteMutation.mutate(account.id)}
-                        className="text-destructive"
-                      >
-                        {t('action.delete')}
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center space-x-2">
-                    <Icon className="h-4 w-4 text-muted-foreground" />
-                    <Badge variant="secondary" className="text-xs">
-                      {account.type}
-                    </Badge>
-                    <Badge variant="outline" className="text-xs">
-                      {account.provider}
-                    </Badge>
-                  </div>
-                  <div className="mt-4">
-                    <div className="text-2xl font-bold">
-                      {formatCurrency(account.balance, account.currency)}
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      {t('card.lastUpdated')}{' '}
-                      {new Date(account.lastSyncedAt || account.updatedAt).toLocaleDateString()}
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
+              <div key={group.key}>
+                <h3 className="text-lg font-semibold mb-3">
+                  {group.label} ({group.items.length})
+                  <span className="text-sm font-normal text-muted-foreground ml-2">
+                    {formatCurrency(group.totalBalance, currentSpace.currency)}
+                  </span>
+                </h3>
+                {groupCards}
+              </div>
             );
           })}
         </div>

@@ -502,7 +502,7 @@ export default function TransactionsPage() {
                             >
                               {formatCurrency(
                                 transaction.amount,
-                                account?.currency || transaction.currency
+                                transaction.currency || currentSpace?.currency
                               )}
                             </p>
                             <p className="text-xs text-muted-foreground">

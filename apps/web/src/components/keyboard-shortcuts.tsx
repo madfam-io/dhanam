@@ -1,18 +1,41 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Dialog, DialogContent } from '@dhanam/ui';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@dhanam/ui';
 
 import { useDemoRouter } from '~/lib/hooks/use-demo-router';
 
-const shortcuts = [
-  { keys: ['⌘', 'K'], label: 'Open search / command palette' },
-  { keys: ['G', 'D'], label: 'Go to Dashboard' },
-  { keys: ['G', 'T'], label: 'Go to Transactions' },
-  { keys: ['G', 'B'], label: 'Go to Budgets' },
-  { keys: ['G', 'A'], label: 'Go to Analytics' },
-  { keys: ['G', 'S'], label: 'Go to Settings' },
-  { keys: ['?'], label: 'Show this help' },
+interface ShortcutItem {
+  keys: string[];
+  label: string;
+}
+
+interface ShortcutSection {
+  title: string;
+  items: ShortcutItem[];
+}
+
+const shortcutSections: ShortcutSection[] = [
+  {
+    title: 'Navigation',
+    items: [
+      { keys: ['G', 'D'], label: 'Go to Dashboard' },
+      { keys: ['G', 'T'], label: 'Go to Transactions' },
+      { keys: ['G', 'A'], label: 'Go to Accounts' },
+      { keys: ['G', 'B'], label: 'Go to Budgets' },
+      { keys: ['G', 'S'], label: 'Go to Settings' },
+      { keys: ['G', 'G'], label: 'Go to Goals' },
+      { keys: ['G', 'E'], label: 'Go to ESG' },
+    ],
+  },
+  {
+    title: 'Actions',
+    items: [
+      { keys: ['N'], label: 'New Transaction' },
+      { keys: ['⌘', 'K'], label: 'Search' },
+      { keys: ['?'], label: 'This help' },
+    ],
+  },
 ];
 
 const NAV_MAP: Record<string, string> = {
@@ -73,25 +96,36 @@ export function KeyboardShortcuts() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="sm:max-w-md">
-        <h2 className="text-lg font-semibold mb-4">Keyboard Shortcuts</h2>
-        <div className="space-y-3">
-          {shortcuts.map((s) => (
-            <div key={s.label} className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">{s.label}</span>
-              <div className="flex gap-1">
-                {s.keys.map((k) => (
-                  <kbd
-                    key={k}
-                    className="inline-flex h-6 min-w-[24px] items-center justify-center rounded border bg-muted px-1.5 font-mono text-xs font-medium"
-                  >
-                    {k}
-                  </kbd>
+        <DialogHeader>
+          <DialogTitle>Keyboard Shortcuts</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-6">
+          {shortcutSections.map((section) => (
+            <div key={section.title}>
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">
+                {section.title}
+              </h3>
+              <div className="space-y-2">
+                {section.items.map((s) => (
+                  <div key={s.label} className="grid grid-cols-2 items-center gap-4">
+                    <div className="flex gap-1 justify-end">
+                      {s.keys.map((k, i) => (
+                        <kbd
+                          key={`${k}-${i}`}
+                          className="inline-flex h-6 min-w-[24px] items-center justify-center rounded border bg-muted px-1.5 font-mono text-xs font-medium"
+                        >
+                          {k}
+                        </kbd>
+                      ))}
+                    </div>
+                    <span className="text-sm text-muted-foreground">{s.label}</span>
+                  </div>
                 ))}
               </div>
             </div>
           ))}
         </div>
-        <p className="text-xs text-muted-foreground mt-4">
+        <p className="text-xs text-muted-foreground mt-2">
           Press <kbd className="rounded border px-1 text-[10px]">?</kbd> to toggle this dialog
         </p>
       </DialogContent>

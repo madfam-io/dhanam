@@ -9,6 +9,7 @@ import { SubscriptionBanner } from '~/components/billing/SubscriptionBanner';
 import { DemoTour } from '~/components/demo/demo-tour';
 import { KeyboardShortcuts } from '~/components/keyboard-shortcuts';
 import { PageTransition } from '~/components/motion/page-transition';
+import { MobileNav } from '~/components/layout/mobile-nav';
 import { DemoNavigationProvider } from '~/lib/contexts/demo-navigation-context';
 import { useTranslation } from '@dhanam/shared';
 import { useAuth } from '~/lib/hooks/use-auth';
@@ -138,12 +139,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <div className="hidden md:block">
             <DashboardNav />
           </div>
-          <main id="main-content" className="flex-1 p-6">
+          <main id="main-content" className="flex-1 p-6 pb-20 md:pb-6">
             <div className="mx-auto max-w-7xl">
               <PageTransition>{children}</PageTransition>
             </div>
           </main>
         </div>
+        <MobileNav />
       </div>
     </DemoNavigationProvider>
   );

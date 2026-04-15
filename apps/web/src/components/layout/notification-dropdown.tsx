@@ -51,7 +51,11 @@ export function NotificationDropdown() {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       if (!res.ok) return [];
-      return res.json();
+      try {
+        return await res.json();
+      } catch {
+        return [];
+      }
     },
     staleTime: 30000,
   });
@@ -66,7 +70,20 @@ export function NotificationDropdown() {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
     },
-    onSuccess: () => {
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ['notifications'] });
+      const previous = queryClient.getQueryData<Notification[]>(['notifications']);
+      queryClient.setQueryData<Notification[]>(['notifications'], (old) =>
+        old ? old.map((n) => ({ ...n, read: true })) : []
+      );
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(['notifications'], context.previous);
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
     },
   });
@@ -105,9 +122,11 @@ export function NotificationDropdown() {
         </div>
         <div className="max-h-[300px] overflow-y-auto">
           {notifications.length === 0 ? (
-            <p className="px-4 py-6 text-center text-sm text-muted-foreground">
-              No notifications yet
-            </p>
+            <div className="flex flex-col items-center py-6 text-center">
+              <Bell className="h-8 w-8 text-muted-foreground mb-2" />
+              <p className="text-sm font-medium">No notifications</p>
+              <p className="text-xs text-muted-foreground">You&apos;re all caught up!</p>
+            </div>
           ) : (
             notifications.map((n) => {
               const Icon = typeIcons[n.type] ?? Info;
@@ -131,7 +150,7 @@ export function NotificationDropdown() {
             })
           )}
         </div>
-        <div className="border-t px-4 py-2">
+        <div className="border-t px-4 py-2 space-y-1">
           <Button
             variant="ghost"
             size="sm"
@@ -142,6 +161,17 @@ export function NotificationDropdown() {
             }}
           >
             See all notifications
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full text-xs text-muted-foreground"
+            onClick={() => {
+              setOpen(false);
+              router.push('/settings');
+            }}
+          >
+            Notification Settings &rarr;
           </Button>
         </div>
       </PopoverContent>

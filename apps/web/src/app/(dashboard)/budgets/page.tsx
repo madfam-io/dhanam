@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { cn } from '@dhanam/ui';
 import { Card, CardContent, CardHeader, CardTitle } from '@dhanam/ui';
 import { Button } from '@dhanam/ui';
 import {
@@ -568,17 +569,36 @@ export default function BudgetsPage() {
                             </Badge>
                           </div>
                         </div>
-                        <Progress value={category.percentUsed} className="mb-2" />
-                        <div className="flex justify-between text-sm text-muted-foreground">
-                          <span>
-                            {formatCurrency(category.spent, currentSpace.currency)}{' '}
-                            {t('summary.spent')}
-                          </span>
-                          <span>
-                            {formatCurrency(category.remaining, currentSpace.currency)}{' '}
-                            {t('summary.remaining')}
-                          </span>
-                        </div>
+                        {category.budgetedAmount > 0 ? (
+                          <>
+                            <Progress
+                              value={Math.min(category.percentUsed, 100)}
+                              className={cn(
+                                'mb-2',
+                                category.percentUsed > 100
+                                  ? '[&>div]:bg-red-500'
+                                  : category.percentUsed >= 80
+                                    ? '[&>div]:bg-yellow-500'
+                                    : ''
+                              )}
+                            />
+                            <div className="flex justify-between text-sm text-muted-foreground">
+                              <span>
+                                {t('summary.spent')}:{' '}
+                                {formatCurrency(category.spent, currentSpace.currency)} /{' '}
+                                {formatCurrency(category.budgetedAmount, currentSpace.currency)}
+                              </span>
+                              <span>
+                                {formatCurrency(category.remaining, currentSpace.currency)}{' '}
+                                {t('summary.remaining')}
+                              </span>
+                            </div>
+                          </>
+                        ) : (
+                          <p className="text-sm text-muted-foreground italic">
+                            {t('summary.noBudgetSet', { defaultValue: 'No budget set' })}
+                          </p>
+                        )}
                       </CardContent>
                     </Card>
                   ))}

@@ -41,6 +41,12 @@ import { PremiumGate } from '@/components/billing/PremiumGate';
 import { DemoTour } from '@/components/demo/demo-tour';
 import { SavingsStreak } from '@/components/insights/savings-streak';
 import { InsightCards } from '@/components/insights/insight-cards';
+import { AreaChart, Area, ResponsiveContainer } from 'recharts';
+import { InsightsCard } from '@/components/dashboard/insights-card';
+import { WeeklySummary } from '@/components/dashboard/weekly-summary';
+import { OnboardingWizard } from '~/components/onboarding/onboarding-wizard';
+import { fireStreakCelebration } from '~/lib/celebrations';
+import { formatDate } from '~/lib/utils';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -93,6 +99,13 @@ export default function DashboardPage() {
     staleTime: 120_000,
   });
 
+  const { data: netWorthHistory, isLoading: isNetWorthHistoryLoading } = useQuery({
+    queryKey: analyticsKeys.netWorthHistory(currentSpace?.id ?? ''),
+    queryFn: () => analyticsApi.getNetWorthHistory(currentSpace!.id, 90),
+    enabled: !!currentSpace,
+    staleTime: 120_000,
+  });
+
   const accounts = dashboardData?.accounts;
   const recentTransactions = dashboardData?.recentTransactions;
   const budgets = dashboardData?.budgets;
@@ -115,6 +128,25 @@ export default function DashboardPage() {
       analytics.trackViewNetWorth(netWorthData.netWorth);
     }
   }, [netWorthData, analytics]);
+
+  // Net worth all-time high celebration
+  const athCelebrated = useRef(false);
+  useEffect(() => {
+    if (netWorthData?.netWorth == null || athCelebrated.current) return;
+    try {
+      const storedHigh = localStorage.getItem('dhanam_net_worth_high');
+      const previousHigh = storedHigh ? parseFloat(storedHigh) : 0;
+      if (netWorthData.netWorth > previousHigh && previousHigh > 0) {
+        athCelebrated.current = true;
+        fireStreakCelebration(4);
+      }
+      if (netWorthData.netWorth > previousHigh) {
+        localStorage.setItem('dhanam_net_worth_high', String(netWorthData.netWorth));
+      }
+    } catch {
+      // localStorage unavailable
+    }
+  }, [netWorthData]);
 
   if (!currentSpace) {
     if (spacesQuery.isLoading) {
@@ -165,6 +197,12 @@ export default function DashboardPage() {
           </Button>
         </div>
       )}
+
+      <OnboardingWizard
+        accountCount={accounts?.length ?? 0}
+        budgetCount={budgets?.length ?? 0}
+        goalCount={goals?.length ?? 0}
+      />
 
       <div>
         <h1 className="text-3xl font-bold tracking-tight">
@@ -301,6 +339,68 @@ export default function DashboardPage() {
         )}
       </div>
 
+      {/* Net Worth Trend Sparkline */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-medium">
+            {t('overview.netWorthTrend', { defaultValue: 'Net Worth Trend' })}
+          </CardTitle>
+          <CardDescription>
+            {t('overview.netWorthTrendDescription', { defaultValue: 'Last 90 days' })}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {isNetWorthHistoryLoading ? (
+            <Skeleton className="h-[120px] w-full" />
+          ) : netWorthHistory && netWorthHistory.length > 0 ? (
+            <ResponsiveContainer width="100%" height={120}>
+              <AreaChart data={netWorthHistory}>
+                <defs>
+                  <linearGradient id="netWorthGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <Area
+                  type="monotone"
+                  dataKey="netWorth"
+                  stroke="hsl(var(--primary))"
+                  fill="url(#netWorthGradient)"
+                  strokeWidth={2}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          ) : (
+            <p className="text-sm text-muted-foreground text-center py-8">
+              {t('overview.noDataYet', { defaultValue: 'No data yet' })}
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Financial Insights */}
+      {!isLoading && (
+        <InsightsCard
+          netWorth={netWorth}
+          previousNetWorth={
+            netWorthData?.changeAmount != null ? netWorth - netWorthData.changeAmount : undefined
+          }
+          totalIncome={cashflowForecast?.summary.totalIncome}
+          totalExpenses={cashflowForecast?.summary.totalExpenses}
+          topCategory={
+            currentBudgetSummary?.categories?.[0]
+              ? {
+                  name: currentBudgetSummary.categories[0].name,
+                  amount: currentBudgetSummary.categories[0].spent,
+                }
+              : undefined
+          }
+        />
+      )}
+
+      {/* Weekly Summary */}
+      {currentSpace && <WeeklySummary spaceId={currentSpace.id} />}
+
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
         {/* Accounts Overview */}
         <Card className="col-span-4">
@@ -367,7 +467,7 @@ export default function DashboardPage() {
                     <div className="space-y-1 flex-1">
                       <p className="text-sm font-medium leading-none">{transaction.description}</p>
                       <p className="text-sm text-muted-foreground">
-                        {new Date(transaction.date).toLocaleDateString()}
+                        {formatDate(transaction.date)}
                       </p>
                     </div>
                     <div

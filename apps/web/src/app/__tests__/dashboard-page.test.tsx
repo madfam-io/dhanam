@@ -2,7 +2,11 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 
 jest.mock('@dhanam/ui', () => ({
-  Card: ({ children, ...props }: any) => <div data-testid="card" {...props}>{children}</div>,
+  Card: ({ children, ...props }: any) => (
+    <div data-testid="card" {...props}>
+      {children}
+    </div>
+  ),
   CardHeader: ({ children }: any) => <div>{children}</div>,
   CardTitle: ({ children }: any) => <h3>{children}</h3>,
   CardDescription: ({ children }: any) => <p>{children}</p>,
@@ -63,7 +67,10 @@ jest.mock('~/lib/api/analytics', () => ({
 }));
 
 jest.mock('~/lib/utils', () => ({
-  formatCurrency: (amount: number, currency: string) => `$${amount.toFixed(2)}`,
+  formatCurrency: (amount: number) => `$${amount?.toFixed?.(2) ?? '0.00'}`,
+  formatDate: (date: any) => String(date),
+  formatDateShort: (date: any) => String(date),
+  cn: (...args: any[]) => args.filter(Boolean).join(' '),
 }));
 
 jest.mock('@/components/sync/sync-status', () => ({
@@ -106,6 +113,29 @@ jest.mock('@/components/insights/insight-cards', () => ({
   InsightCards: () => <div data-testid="insight-cards" />,
 }));
 
+jest.mock('recharts', () => ({
+  AreaChart: ({ children }: any) => <div>{children}</div>,
+  Area: () => <div />,
+  ResponsiveContainer: ({ children }: any) => <div>{children}</div>,
+}));
+
+jest.mock('~/components/onboarding/onboarding-wizard', () => ({
+  OnboardingWizard: () => <div data-testid="onboarding-wizard" />,
+}));
+
+jest.mock('~/components/dashboard/insights-card', () => ({
+  InsightsCard: () => <div data-testid="insights-card" />,
+}));
+
+jest.mock('~/components/dashboard/weekly-summary', () => ({
+  WeeklySummary: () => <div data-testid="weekly-summary" />,
+}));
+
+jest.mock('~/lib/celebrations', () => ({
+  fireStreakCelebration: jest.fn(),
+  fireGoalConfetti: jest.fn(),
+}));
+
 jest.mock('~/hooks/useAnalytics', () => ({
   useAnalytics: () => ({
     trackViewNetWorth: jest.fn(),
@@ -130,7 +160,10 @@ jest.mock('~/stores/space', () => ({
 describe('DashboardPage', () => {
   beforeEach(() => {
     // Defaults: spaces loaded, current space set
-    mockUseSpaces = () => ({ data: [{ id: 'space-1', name: 'Personal', currency: 'USD' }], isLoading: false });
+    mockUseSpaces = () => ({
+      data: [{ id: 'space-1', name: 'Personal', currency: 'USD' }],
+      isLoading: false,
+    });
     mockUseSpaceStore = () => ({
       currentSpace: { id: 'space-1', name: 'Personal', currency: 'USD' },
     });
