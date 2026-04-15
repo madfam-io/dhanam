@@ -137,8 +137,9 @@ export const useAuth = create<AuthState>()((set, get) => ({
       posthog.identify(user.id, {
         email: user.email,
         name: user.name,
-        product: 'dhanam',
-        subscription_tier: user.subscriptionTier,
+        madfam_product: 'dhanam',
+        madfam_tier: user.subscriptionTier,
+        $set_once: { first_seen_product: 'dhanam' },
       });
     }
 

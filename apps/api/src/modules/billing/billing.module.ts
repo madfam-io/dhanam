@@ -47,6 +47,7 @@ import { PaymentRouterService } from './services/payment-router.service';
 import { PriceResolverService } from './services/price-resolver.service';
 import { PricingEngineService } from './services/pricing-engine.service';
 import { ProductCatalogService } from './services/product-catalog.service';
+import { RevenueMetricsService } from './services/revenue-metrics.service';
 import { StripeMxService } from './services/stripe-mx.service';
 // Extracted sub-services (usage, lifecycle, webhooks)
 import { SubscriptionLifecycleService } from './services/subscription-lifecycle.service';
@@ -90,6 +91,9 @@ import { StripeService } from './stripe.service';
 
     // Cancellation pipeline
     CancellationService,
+
+    // Revenue analytics
+    RevenueMetricsService,
 
     // Pricing & trial lifecycle
     PriceResolverService,

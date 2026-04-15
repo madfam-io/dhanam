@@ -42,6 +42,7 @@ import { PauseSubscriptionDto } from './dto/pause-subscription.dto';
 import { JanuaBillingService } from './janua-billing.service';
 import { CancellationService } from './services/cancellation.service';
 import { PricingEngineService } from './services/pricing-engine.service';
+import { RevenueMetricsService } from './services/revenue-metrics.service';
 import { TrialService } from './services/trial.service';
 import { StripeService } from './stripe.service';
 
@@ -58,6 +59,7 @@ export class BillingController {
     private pricingEngine: PricingEngineService,
     private trialService: TrialService,
     private cancellationService: CancellationService,
+    private revenueMetricsService: RevenueMetricsService,
     private config: ConfigService
   ) {}
 
@@ -167,6 +169,17 @@ export class BillingController {
   @ApiOperation({ summary: 'Accept retention discount offer' })
   async acceptSaveOffer(@Req() req: AuthenticatedRequest, @Body() body: CancelConfirmDto) {
     return this.cancellationService.applySaveDiscount(req.user.id, body.intentId);
+  }
+
+  // ─── Admin Revenue Metrics ────────────────────────────────────
+
+  @Get('admin/revenue-metrics')
+  @UseGuards(JwtAuthGuard) // TODO: add admin role check
+  @ApiOperation({ summary: 'Get MRR/ARR/churn metrics (admin only)' })
+  @ApiOkResponse({ description: 'Revenue metrics retrieved successfully' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  async getRevenueMetrics() {
+    return this.revenueMetricsService.getRevenueMetrics();
   }
 
   /**

@@ -53,6 +53,24 @@ if (typeof window !== 'undefined') {
   }
 }
 
+function PostHogUtmCapture() {
+  useEffect(() => {
+    if (typeof window === 'undefined' || !posthog.__loaded) return;
+
+    const params = new URLSearchParams(window.location.search);
+    const utmSource = params.get('utm_source');
+    if (utmSource) {
+      posthog.people.set_once({
+        first_utm_source: utmSource,
+        first_utm_medium: params.get('utm_medium') || undefined,
+        first_utm_campaign: params.get('utm_campaign') || undefined,
+      });
+    }
+  }, []);
+
+  return null;
+}
+
 function PostHogPageView() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -78,6 +96,7 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
   return (
     <>
       <SuspenseCompat fallback={null}>
+        <PostHogUtmCapture />
         <PostHogPageView />
       </SuspenseCompat>
       {children}
