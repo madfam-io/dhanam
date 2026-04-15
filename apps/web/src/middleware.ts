@@ -91,6 +91,14 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // === REDIRECT /dashboard/<subpath> to /<subpath> ===
+  // The (dashboard) route group is layout-only; all pages live at root paths.
+  // Users may intuit /dashboard/settings, /dashboard/accounts, etc. — redirect them.
+  if (path.startsWith('/dashboard/') && path !== '/dashboard') {
+    const subpath = path.replace(/^\/dashboard/, '');
+    return NextResponse.redirect(new URL(subpath, request.url), 301);
+  }
+
   // === REDIRECT OLD /admin PATHS TO ADMIN SUBDOMAIN ===
   if (path.startsWith('/admin')) {
     const adminUrl = process.env.NEXT_PUBLIC_ADMIN_URL || 'https://admin.dhan.am';

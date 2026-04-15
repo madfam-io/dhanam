@@ -33,7 +33,15 @@ describe('middleware public paths', () => {
   }
 
   describe('legal pages should be public', () => {
-    const legalPaths = ['/privacy', '/terms', '/cookies', '/security', '/esg-methodology', '/status', '/docs'];
+    const legalPaths = [
+      '/privacy',
+      '/terms',
+      '/cookies',
+      '/security',
+      '/esg-methodology',
+      '/status',
+      '/docs',
+    ];
 
     for (const path of legalPaths) {
       it(`${path} should be a public path`, () => {
@@ -60,6 +68,46 @@ describe('middleware public paths', () => {
         expect(isPublicPath(path)).toBe(false);
       });
     }
+  });
+
+  describe('dashboard subpath redirect logic', () => {
+    // Mirrors the middleware rule: /dashboard/<subpath> → /<subpath>
+    function shouldRedirectDashboardSubpath(path: string): string | null {
+      if (path.startsWith('/dashboard/') && path !== '/dashboard') {
+        return path.replace(/^\/dashboard/, '');
+      }
+      return null;
+    }
+
+    it('/dashboard/settings should redirect to /settings', () => {
+      expect(shouldRedirectDashboardSubpath('/dashboard/settings')).toBe('/settings');
+    });
+
+    it('/dashboard/accounts should redirect to /accounts', () => {
+      expect(shouldRedirectDashboardSubpath('/dashboard/accounts')).toBe('/accounts');
+    });
+
+    it('/dashboard/settings/merchants should redirect to /settings/merchants', () => {
+      expect(shouldRedirectDashboardSubpath('/dashboard/settings/merchants')).toBe(
+        '/settings/merchants'
+      );
+    });
+
+    it('/dashboard/billing should redirect to /billing', () => {
+      expect(shouldRedirectDashboardSubpath('/dashboard/billing')).toBe('/billing');
+    });
+
+    it('/dashboard should NOT redirect (it is the actual dashboard page)', () => {
+      expect(shouldRedirectDashboardSubpath('/dashboard')).toBeNull();
+    });
+
+    it('/ should NOT redirect', () => {
+      expect(shouldRedirectDashboardSubpath('/')).toBeNull();
+    });
+
+    it('/settings should NOT redirect', () => {
+      expect(shouldRedirectDashboardSubpath('/settings')).toBeNull();
+    });
   });
 
   describe('subpaths should match', () => {
