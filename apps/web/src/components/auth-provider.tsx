@@ -4,7 +4,54 @@ import { useEffect } from 'react';
 import { useAuth } from '~/lib/hooks/use-auth';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const { tokens, refreshTokens, clearAuth } = useAuth();
+  const { tokens, isAuthenticated, setAuth, refreshTokens, clearAuth } = useAuth();
+
+  // Bootstrap: if Janua tokens exist in localStorage but Zustand store is empty,
+  // hydrate the store directly. This handles the case where JanuaAuthSync hasn't
+  // fired (SDK init delay, getCurrentUser failure, etc.)
+  useEffect(() => {
+    if (isAuthenticated) return; // Already authenticated
+
+    const januaToken = localStorage.getItem('janua_access_token');
+    if (!januaToken) return;
+
+    try {
+      const parts = januaToken.split('.');
+      if (parts.length !== 3 || !parts[1]) return;
+
+      const payload = JSON.parse(atob(parts[1]));
+      if (!payload.sub || !payload.exp) return;
+
+      // Check token isn't expired
+      if (payload.exp * 1000 < Date.now()) return;
+
+      setAuth(
+        {
+          id: payload.sub,
+          email: payload.email || '',
+          name: payload.name || payload.email?.split('@')[0] || 'User',
+          locale: 'en',
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          totpEnabled: false,
+          emailVerified: payload.email_verified || true,
+          onboardingCompleted: true,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          spaces: [],
+        },
+        {
+          accessToken: januaToken,
+          refreshToken: localStorage.getItem('janua_refresh_token') || '',
+          expiresIn: payload.exp - Math.floor(Date.now() / 1000),
+        }
+      );
+
+      // Set middleware cookie
+      document.cookie = 'auth-storage=authenticated; path=/; max-age=86400; SameSite=Lax; Secure';
+    } catch {
+      // Token parse failed — ignore
+    }
+  }, [isAuthenticated, setAuth]);
 
   useEffect(() => {
     if (!tokens?.accessToken) return;
