@@ -20,22 +20,41 @@ export default function TrendsPage() {
   const spaceId = currentSpace?.id;
   const [months, setMonths] = useState(12);
 
-  const { data: trends, isLoading } = useQuery({
+  const { data: trendsResponse, isLoading } = useQuery({
     queryKey: ['trends', spaceId, months],
     queryFn: () => analyticsApi.getAnnualTrends(spaceId!, months),
     enabled: !!spaceId,
+    staleTime: 120_000,
+    retry: 1,
   });
 
-  // Computed summary
-  const summary = trends
-    ? {
-        totalIncome: trends.reduce((sum, m) => sum + m.income, 0),
-        totalExpenses: trends.reduce((sum, m) => sum + m.expenses, 0),
-        totalNet: trends.reduce((sum, m) => sum + m.net, 0),
-        avgSavingsRate:
-          trends.length > 0 ? trends.reduce((sum, m) => sum + m.savingsRate, 0) / trends.length : 0,
-      }
-    : null;
+  // API may return {months: [...], summary: {...}} or a plain array
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const rawResponse = trendsResponse as any;
+  const trends = Array.isArray(rawResponse) ? rawResponse : (rawResponse?.months ?? []);
+
+  // Computed summary (use API summary if available, else compute)
+  const apiSummary = !Array.isArray(rawResponse) ? rawResponse?.summary : null;
+  const summary =
+    trends.length > 0
+      ? {
+          totalIncome:
+            apiSummary?.totalIncome ??
+            trends.reduce((sum: number, m: { income: number }) => sum + m.income, 0),
+          totalExpenses:
+            apiSummary?.totalExpenses ??
+            trends.reduce((sum: number, m: { expenses: number }) => sum + m.expenses, 0),
+          totalNet:
+            apiSummary?.totalNet ??
+            trends.reduce((sum: number, m: { net: number }) => sum + m.net, 0),
+          avgSavingsRate:
+            apiSummary?.overallSavingsRate ??
+            (trends.length > 0
+              ? trends.reduce((sum: number, m: { savingsRate: number }) => sum + m.savingsRate, 0) /
+                trends.length
+              : 0),
+        }
+      : null;
 
   if (!spaceId) {
     return (
@@ -164,30 +183,38 @@ export default function TrendsPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {trends.map((month) => (
-                      <tr
-                        key={month.month}
-                        className="border-b hover:bg-muted/50 transition-colors"
-                      >
-                        <td className="py-3 px-4 font-medium">{month.month}</td>
-                        <td className="py-3 px-4 text-right text-green-600">
-                          {formatCurrency(month.income, currentSpace.currency)}
-                        </td>
-                        <td className="py-3 px-4 text-right text-red-600">
-                          {formatCurrency(Math.abs(month.expenses), currentSpace.currency)}
-                        </td>
-                        <td
-                          className={`py-3 px-4 text-right font-medium ${month.net >= 0 ? 'text-green-600' : 'text-red-600'}`}
+                    {trends.map(
+                      (month: {
+                        month: string;
+                        income: number;
+                        expenses: number;
+                        net: number;
+                        savingsRate: number;
+                      }) => (
+                        <tr
+                          key={month.month}
+                          className="border-b hover:bg-muted/50 transition-colors"
                         >
-                          {formatCurrency(month.net, currentSpace.currency)}
-                        </td>
-                        <td
-                          className={`py-3 px-4 text-right ${month.savingsRate >= 0 ? 'text-green-600' : 'text-red-600'}`}
-                        >
-                          {month.savingsRate.toFixed(1)}%
-                        </td>
-                      </tr>
-                    ))}
+                          <td className="py-3 px-4 font-medium">{month.month}</td>
+                          <td className="py-3 px-4 text-right text-green-600">
+                            {formatCurrency(month.income, currentSpace.currency)}
+                          </td>
+                          <td className="py-3 px-4 text-right text-red-600">
+                            {formatCurrency(Math.abs(month.expenses), currentSpace.currency)}
+                          </td>
+                          <td
+                            className={`py-3 px-4 text-right font-medium ${month.net >= 0 ? 'text-green-600' : 'text-red-600'}`}
+                          >
+                            {formatCurrency(month.net, currentSpace.currency)}
+                          </td>
+                          <td
+                            className={`py-3 px-4 text-right ${month.savingsRate >= 0 ? 'text-green-600' : 'text-red-600'}`}
+                          >
+                            {month.savingsRate.toFixed(1)}%
+                          </td>
+                        </tr>
+                      )
+                    )}
                   </tbody>
                 </table>
               </div>

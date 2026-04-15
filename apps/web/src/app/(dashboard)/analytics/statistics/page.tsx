@@ -30,6 +30,8 @@ export default function StatisticsPage() {
     queryKey: ['statistics', spaceId, startDate, endDate],
     queryFn: () => analyticsApi.getStatistics(spaceId!, startDate, endDate),
     enabled: !!spaceId && !!startDate && !!endDate,
+    staleTime: 120_000,
+    retry: 1,
   });
 
   if (!spaceId) {
@@ -235,7 +237,7 @@ export default function StatisticsPage() {
                         </div>
                       </div>
                       <p className="font-medium">
-                        {formatCurrency(Math.abs(merchant.totalAmount), currentSpace.currency)}
+                        {formatCurrency(Math.abs(merchant.totalSpent), currentSpace.currency)}
                       </p>
                     </div>
                   ))}
@@ -278,7 +280,7 @@ export default function StatisticsPage() {
                         </div>
                       </div>
                       <p className="font-medium">
-                        {formatCurrency(Math.abs(category.totalAmount), currentSpace.currency)}
+                        {formatCurrency(Math.abs(category.totalSpent), currentSpace.currency)}
                       </p>
                     </div>
                   ))}

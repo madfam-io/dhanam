@@ -46,6 +46,8 @@ export default function AnalyticsPage() {
       return analyticsApi.getNetWorth(currentSpace.id);
     },
     enabled: !!currentSpace,
+    staleTime: 120_000,
+    retry: 1,
   });
 
   const {
@@ -59,6 +61,8 @@ export default function AnalyticsPage() {
       return analyticsApi.getNetWorthHistory(currentSpace.id, 30);
     },
     enabled: !!currentSpace,
+    staleTime: 120_000,
+    retry: 1,
   });
 
   const {
@@ -74,6 +78,8 @@ export default function AnalyticsPage() {
       return analyticsApi.getSpendingByCategory(currentSpace.id, startDate, endDate);
     },
     enabled: !!currentSpace,
+    staleTime: 120_000,
+    retry: 1,
   });
 
   const {
@@ -87,6 +93,8 @@ export default function AnalyticsPage() {
       return analyticsApi.getIncomeVsExpenses(currentSpace.id, 6);
     },
     enabled: !!currentSpace,
+    staleTime: 120_000,
+    retry: 1,
   });
 
   const {
@@ -100,6 +108,8 @@ export default function AnalyticsPage() {
       return analyticsApi.getCashflowForecast(currentSpace.id, 60);
     },
     enabled: !!currentSpace,
+    staleTime: 120_000,
+    retry: 1,
   });
 
   const {
@@ -113,6 +123,8 @@ export default function AnalyticsPage() {
       return analyticsApi.getPortfolioAllocation(currentSpace.id);
     },
     enabled: !!currentSpace,
+    staleTime: 120_000,
+    retry: 1,
   });
 
   if (!currentSpace) {

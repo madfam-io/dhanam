@@ -54,13 +54,13 @@ export interface StatisticsData {
   }[];
   topMerchants: {
     merchant: string;
-    totalAmount: number;
+    totalSpent: number;
     transactionCount: number;
   }[];
   topCategories: {
     categoryId: string;
     categoryName: string;
-    totalAmount: number;
+    totalSpent: number;
     transactionCount: number;
   }[];
 }
