@@ -87,20 +87,27 @@ export function MerchantIcon({ merchant, description, size = 32 }: MerchantIconP
 
   if (domain) {
     return (
-      // eslint-disable-next-line @next/next/no-img-element -- Reason: External Clearbit logo URLs cannot use next/image without configuring remote domains for every merchant
-      <img
-        src={`https://logo.clearbit.com/${domain}`}
-        alt={displayName}
-        width={size}
-        height={size}
-        className="rounded-full object-cover bg-muted"
-        onError={(e) => {
-          // Fall back to letter circle on load failure
-          const target = e.currentTarget;
-          target.style.display = 'none';
-          target.nextElementSibling?.classList.remove('hidden');
-        }}
-      />
+      <div className="shrink-0" style={{ width: size, height: size }}>
+        {/* eslint-disable-next-line @next/next/no-img-element -- Reason: External Clearbit logo URLs cannot use next/image without configuring remote domains for every merchant */}
+        <img
+          src={`https://logo.clearbit.com/${domain}`}
+          alt={displayName}
+          width={size}
+          height={size}
+          className="rounded-full object-cover bg-muted"
+          onError={(e) => {
+            // Fall back to letter circle on load failure
+            e.currentTarget.style.display = 'none';
+            e.currentTarget.nextElementSibling?.classList.remove('hidden');
+          }}
+        />
+        <div
+          className="hidden rounded-full flex items-center justify-center text-white font-semibold"
+          style={{ width: size, height: size, backgroundColor: bgColor, fontSize: size * 0.4 }}
+        >
+          {initial}
+        </div>
+      </div>
     );
   }
 

@@ -419,8 +419,11 @@ export default function TransactionsPage() {
                   const transaction = transactionsData?.data?.[virtualItem.index];
                   if (!transaction) return null;
                   const account = accounts?.find((a) => a.id === transaction.accountId);
-                  const merchant =
-                    (transaction.metadata as Record<string, string> | undefined)?.merchant ?? null;
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- merchant field exists in DB but not in shared Transaction type
+                  const merchant: string | null =
+                    (transaction as any).merchant ??
+                    (transaction.metadata as Record<string, string> | undefined)?.merchant ??
+                    null;
                   const isAICategorized = !!(
                     transaction.metadata as Record<string, string> | undefined
                   )?.categorizedBy;
