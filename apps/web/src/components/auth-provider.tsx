@@ -53,16 +53,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
-    // Try immediately, then poll briefly to catch async token storage by SignIn
+    // Try immediately (covers page reload with existing tokens)
     if (tryBootstrap()) return;
-    const interval = setInterval(() => {
-      if (tryBootstrap()) clearInterval(interval);
-    }, 500);
-    // Stop polling after 30 seconds
-    const timeout = setTimeout(() => clearInterval(interval), 30000);
+
+    // Intercept localStorage.setItem to detect when Janua SDK stores tokens
+    const originalSetItem = localStorage.setItem.bind(localStorage);
+    localStorage.setItem = function (key: string, value: string) {
+      originalSetItem(key, value);
+      if (key === 'janua_access_token') {
+        tryBootstrap();
+      }
+    };
+
+    // Also listen for storage events (cross-tab)
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === 'janua_access_token' && e.newValue) {
+        tryBootstrap();
+      }
+    };
+    window.addEventListener('storage', onStorage);
+
     return () => {
-      clearInterval(interval);
-      clearTimeout(timeout);
+      localStorage.setItem = originalSetItem;
+      window.removeEventListener('storage', onStorage);
     };
   }, [isAuthenticated, setAuth]);
 
