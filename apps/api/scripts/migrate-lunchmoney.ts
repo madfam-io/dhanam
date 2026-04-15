@@ -78,14 +78,22 @@ async function main() {
     process.exit(1);
   }
 
-  const userSpace = await prisma.userSpace.findFirst({
-    where: { userId: user.id },
-    include: { space: true },
-    orderBy: { createdAt: 'asc' },
-  });
+  const targetSpaceId = process.env.TARGET_SPACE_ID;
+  const userSpace = targetSpaceId
+    ? await prisma.userSpace.findFirst({
+        where: { userId: user.id, spaceId: targetSpaceId },
+        include: { space: true },
+      })
+    : await prisma.userSpace.findFirst({
+        where: { userId: user.id },
+        include: { space: true },
+        orderBy: { createdAt: 'asc' },
+      });
 
   if (!userSpace) {
-    console.error(`ERROR: No space found for user ${targetEmail}`);
+    console.error(
+      `ERROR: No space found for user ${targetEmail}${targetSpaceId ? ` with space ID ${targetSpaceId}` : ''}`
+    );
     process.exit(1);
   }
 
@@ -267,7 +275,7 @@ async function main() {
       data: mapPlaidAccountToAccount(p),
     })),
     ...lmCrypto.map((c) => ({
-      lmId: c.id,
+      lmId: `${c.id}-${c.currency}`,
       type: 'crypto' as const,
       data: mapCryptoToAccount(c),
     })),
@@ -471,16 +479,16 @@ async function main() {
 
         await prisma.recurringTransaction.create({
           data: {
-            space: { connect: { id: spaceId } },
+            spaceId,
             merchantName: mapped.merchantName,
             expectedAmount: mapped.expectedAmount,
             currency: mapped.currency,
             frequency: mapped.frequency,
             status: item.type === 'cleared' ? RecurringStatus.confirmed : RecurringStatus.detected,
-            ...(categoryId ? { category: { connect: { id: categoryId } } } : {}),
-            notes: mapped.notes,
+            categoryId: categoryId || null,
+            notes: mapped.notes || null,
             metadata: mapped.metadata as any,
-            lastOccurrence: new Date(item.billing_date),
+            lastOccurrence: item.billing_date ? new Date(item.billing_date) : null,
           },
         });
         log('RECURRING', `  Created: ${mapped.merchantName}`);

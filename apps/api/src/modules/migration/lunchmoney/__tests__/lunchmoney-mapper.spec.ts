@@ -271,7 +271,7 @@ describe('LunchMoney Mapper', () => {
 
       expect(result).toEqual({
         provider: 'manual',
-        providerAccountId: 'lm-crypto-99',
+        providerAccountId: 'lm-crypto-99-usd',
         name: 'BTC Hodl',
         type: 'crypto',
         currency: 'USD',

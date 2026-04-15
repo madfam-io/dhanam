@@ -121,7 +121,7 @@ export function mapPlaidAccountToAccount(plaid: LMPlaidAccount) {
 export function mapCryptoToAccount(crypto: LMCrypto) {
   return {
     provider: Provider.manual,
-    providerAccountId: `lm-crypto-${crypto.id}`,
+    providerAccountId: `lm-crypto-${crypto.id}-${crypto.currency}`,
     name: decodeHtmlEntities(crypto.display_name || crypto.name),
     type: AccountType.crypto,
     currency: mapCurrency(crypto.currency),

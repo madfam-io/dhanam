@@ -123,8 +123,11 @@ export class LunchMoneyClient {
   }
 
   async getRecurringItems(): Promise<LMRecurringItem[]> {
-    const data = await this.request<{ recurring_items: LMRecurringItem[] }>('/v1/recurring_items');
-    return data.recurring_items;
+    const data = await this.request<LMRecurringItem[] | { recurring_items: LMRecurringItem[] }>(
+      '/v1/recurring_items'
+    );
+    // API may return a plain array or {recurring_items: [...]}
+    return Array.isArray(data) ? data : (data.recurring_items ?? []);
   }
 
   async getBudgets(startDate: string, endDate: string): Promise<LMBudget[]> {
