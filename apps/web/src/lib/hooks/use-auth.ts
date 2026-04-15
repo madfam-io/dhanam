@@ -38,13 +38,63 @@ interface AuthState {
   setHasHydrated: (state: boolean) => void;
 }
 
+// Hydrate initial state from Janua localStorage tokens (if present).
+// This runs synchronously at store creation, before any React render,
+// ensuring API calls in React Query hooks have the auth token available.
+function getInitialAuthState(): Pick<AuthState, 'user' | 'tokens' | 'token' | 'isAuthenticated'> {
+  if (typeof window === 'undefined') {
+    return { user: null, tokens: null, token: null, isAuthenticated: false };
+  }
+
+  const januaToken = localStorage.getItem('janua_access_token');
+  if (!januaToken) {
+    return { user: null, tokens: null, token: null, isAuthenticated: false };
+  }
+
+  try {
+    const parts = januaToken.split('.');
+    if (parts.length !== 3 || !parts[1]) throw new Error('bad format');
+
+    const payload = JSON.parse(atob(parts[1]));
+    if (!payload.sub || !payload.exp || payload.exp * 1000 < Date.now()) {
+      throw new Error('invalid or expired');
+    }
+
+    const user: UserProfile = {
+      id: payload.sub,
+      email: payload.email || '',
+      name: payload.name || payload.email?.split('@')[0] || 'User',
+      locale: (payload.locale?.startsWith('es') ? 'es' : 'en') as Locale,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      totpEnabled: payload.mfa_enabled || false,
+      emailVerified: payload.email_verified || true,
+      onboardingCompleted: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      spaces: [],
+    };
+
+    const tokens: AuthTokens = {
+      accessToken: januaToken,
+      refreshToken: localStorage.getItem('janua_refresh_token') || '',
+      expiresIn: payload.exp - Math.floor(Date.now() / 1000),
+    };
+
+    // Wire the token into the API client immediately
+    apiClient.setTokens(tokens);
+
+    return { user, tokens, token: januaToken, isAuthenticated: true };
+  } catch {
+    return { user: null, tokens: null, token: null, isAuthenticated: false };
+  }
+}
+
+const initialAuth = getInitialAuthState();
+
 export const useAuth = create<AuthState>()((set, get) => ({
-  user: null,
-  tokens: null,
-  token: null,
-  isAuthenticated: false,
+  ...initialAuth,
   isLoading: false,
-  _hasHydrated: true, // No localStorage rehydration — always ready
+  _hasHydrated: true,
 
   setHasHydrated: (state) => {
     set({ _hasHydrated: state });
