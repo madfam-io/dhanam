@@ -11,6 +11,7 @@ export interface User {
   totpEnabled: boolean;
   emailVerified: boolean;
   onboardingCompleted: boolean;
+  isAdmin?: boolean;
   subscriptionTier?: SubscriptionTier;
   createdAt: string;
   updatedAt: string;

@@ -11,11 +11,16 @@ import {
   Button,
   Input,
   Label,
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
 } from '@dhanam/ui';
-import { Currency } from '@dhanam/shared';
+import { Currency, useTranslation } from '@dhanam/shared';
 import { Wallet, ArrowRight } from 'lucide-react';
 
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, getCurrencySymbol } from '@/lib/utils';
 import { CategoryAllocationStatus } from '@/lib/api/zero-based';
 
 interface AllocateModalProps {
@@ -41,6 +46,7 @@ export function AllocateModal({
   onAllocate,
   isLoading = false,
 }: AllocateModalProps) {
+  const { t } = useTranslation('budgets');
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>(preselectedCategoryId || '');
   const [amount, setAmount] = useState('');
   const [notes, setNotes] = useState('');
@@ -60,23 +66,28 @@ export function AllocateModal({
   const numericAmount = parseFloat(amount) || 0;
   const isValidAmount = numericAmount > 0 && numericAmount <= unallocated;
   const canSubmit = selectedCategoryId && isValidAmount && !isLoading;
+  const symbol = getCurrencySymbol(currency);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
     if (!selectedCategoryId) {
-      setError('Please select a category');
+      setError(t('zeroBased.allocateModal.errSelectCategory'));
       return;
     }
 
     if (numericAmount <= 0) {
-      setError('Amount must be greater than zero');
+      setError(t('zeroBased.allocateModal.errAmountZero'));
       return;
     }
 
     if (numericAmount > unallocated) {
-      setError(`Amount exceeds available funds (${formatCurrency(unallocated, currency)})`);
+      setError(
+        t('zeroBased.allocateModal.errAmountExceeds', {
+          amount: formatCurrency(unallocated, currency),
+        })
+      );
       return;
     }
 
@@ -84,7 +95,7 @@ export function AllocateModal({
       await onAllocate(selectedCategoryId, numericAmount, notes || undefined);
       onOpenChange(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to allocate funds');
+      setError(err instanceof Error ? err.message : t('zeroBased.allocateModal.errFailed'));
     }
   };
 
@@ -106,8 +117,8 @@ export function AllocateModal({
               <Wallet className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <DialogTitle>Allocate Funds</DialogTitle>
-              <DialogDescription>Assign money to a budget category</DialogDescription>
+              <DialogTitle>{t('zeroBased.allocateModal.title')}</DialogTitle>
+              <DialogDescription>{t('zeroBased.allocateModal.description')}</DialogDescription>
             </div>
           </div>
         </DialogHeader>
@@ -115,36 +126,36 @@ export function AllocateModal({
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Available to Allocate */}
           <div className="rounded-lg bg-muted p-3">
-            <p className="text-sm text-muted-foreground">Available to allocate</p>
+            <p className="text-sm text-muted-foreground">
+              {t('zeroBased.allocateModal.availableToAllocate')}
+            </p>
             <p className="text-xl font-bold">{formatCurrency(unallocated, currency)}</p>
           </div>
 
           {/* Category Selection */}
           <div className="space-y-2">
-            <Label htmlFor="category">Category</Label>
-            <select
-              id="category"
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring"
-              value={selectedCategoryId}
-              onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                setSelectedCategoryId(e.target.value)
-              }
-            >
-              <option value="">Select a category...</option>
-              {categories.map((cat) => (
-                <option key={cat.categoryId} value={cat.categoryId}>
-                  {cat.categoryName} (Available: {formatCurrency(cat.available, currency)})
-                </option>
-              ))}
-            </select>
+            <Label htmlFor="category">{t('zeroBased.allocateModal.category')}</Label>
+            <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId}>
+              <SelectTrigger>
+                <SelectValue placeholder={t('zeroBased.allocateModal.selectCategory')} />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map((cat) => (
+                  <SelectItem key={cat.categoryId} value={cat.categoryId}>
+                    {cat.categoryName} ({t('zeroBased.categoryRow.available')}:{' '}
+                    {formatCurrency(cat.available, currency)})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Amount Input */}
           <div className="space-y-2">
-            <Label htmlFor="amount">Amount</Label>
+            <Label htmlFor="amount">{t('zeroBased.allocateModal.amount')}</Label>
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                $
+                {symbol}
               </span>
               <Input
                 id="amount"
@@ -171,7 +182,8 @@ export function AllocateModal({
                 onClick={() => handleQuickAmount(quickAmount)}
                 disabled={unallocated < quickAmount}
               >
-                ${quickAmount}
+                {symbol}
+                {quickAmount}
               </Button>
             ))}
             <Button
@@ -181,16 +193,18 @@ export function AllocateModal({
               onClick={handleAllocateAll}
               disabled={unallocated <= 0}
             >
-              All ({formatCurrency(unallocated, currency)})
+              {t('zeroBased.allocateModal.allocateAll', {
+                amount: formatCurrency(unallocated, currency),
+              })}
             </Button>
           </div>
 
           {/* Notes (Optional) */}
           <div className="space-y-2">
-            <Label htmlFor="notes">Notes (optional)</Label>
+            <Label htmlFor="notes">{t('zeroBased.allocateModal.notes')}</Label>
             <Input
               id="notes"
-              placeholder="Add a note..."
+              placeholder={t('zeroBased.allocateModal.notesPlaceholder')}
               value={notes}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNotes(e.target.value)}
             />
@@ -205,7 +219,7 @@ export function AllocateModal({
                   {formatCurrency(selectedCategory.allocated, currency)}
                 </span>
                 <ArrowRight className="h-4 w-4" />
-                <span className="font-semibold text-emerald-600">
+                <span className="font-semibold text-emerald-600 dark:text-emerald-400">
                   {formatCurrency(selectedCategory.allocated + numericAmount, currency)}
                 </span>
               </div>
@@ -213,7 +227,7 @@ export function AllocateModal({
           )}
 
           {/* Error Message */}
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
 
           <DialogFooter>
             <Button
@@ -222,10 +236,12 @@ export function AllocateModal({
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
             >
-              Cancel
+              {t('zeroBased.allocateModal.cancel')}
             </Button>
             <Button type="submit" disabled={!canSubmit}>
-              {isLoading ? 'Allocating...' : 'Allocate'}
+              {isLoading
+                ? t('zeroBased.allocateModal.allocating')
+                : t('zeroBased.allocateModal.allocate')}
             </Button>
           </DialogFooter>
         </form>

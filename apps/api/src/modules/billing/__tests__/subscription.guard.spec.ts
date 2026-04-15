@@ -185,7 +185,9 @@ describe('SubscriptionGuard', () => {
       });
       reflector.getAllAndOverride.mockReturnValue('pro' as SubscriptionTier);
 
-      await expect(guard.canActivate(communityUserContext)).rejects.toThrow(PaymentRequiredException);
+      await expect(guard.canActivate(communityUserContext)).rejects.toThrow(
+        PaymentRequiredException
+      );
 
       // Pro user can access community tier features
       const proUserContext = mockExecutionContext({
@@ -228,6 +230,49 @@ describe('SubscriptionGuard', () => {
       reflector.getAllAndOverride.mockReturnValue('premium' as SubscriptionTier);
 
       await expect(guard.canActivate(proUserContext)).rejects.toThrow(PaymentRequiredException);
+    });
+  });
+
+  describe('admin bypass', () => {
+    it('should bypass tier check when user is admin', async () => {
+      const context = mockExecutionContext({
+        id: 'admin-user',
+        subscriptionTier: 'community',
+        isAdmin: true,
+      });
+      reflector.getAllAndOverride.mockReturnValue('premium' as SubscriptionTier);
+
+      const result = await guard.canActivate(context);
+
+      expect(result).toBe(true);
+    });
+
+    it('should bypass expiration check when user is admin', async () => {
+      const pastDate = new Date();
+      pastDate.setFullYear(pastDate.getFullYear() - 1);
+
+      const context = mockExecutionContext({
+        id: 'admin-user',
+        subscriptionTier: 'community',
+        isAdmin: true,
+        subscriptionExpiresAt: pastDate,
+      });
+      reflector.getAllAndOverride.mockReturnValue('premium' as SubscriptionTier);
+
+      const result = await guard.canActivate(context);
+
+      expect(result).toBe(true);
+    });
+
+    it('should not bypass when isAdmin is false', async () => {
+      const context = mockExecutionContext({
+        id: 'user-123',
+        subscriptionTier: 'community',
+        isAdmin: false,
+      });
+      reflector.getAllAndOverride.mockReturnValue('pro' as SubscriptionTier);
+
+      await expect(guard.canActivate(context)).rejects.toThrow(PaymentRequiredException);
     });
   });
 });

@@ -158,11 +158,16 @@ export class UsageTrackingService {
   async checkUsageLimit(userId: string, metricType: UsageMetricType): Promise<boolean> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      select: { subscriptionTier: true },
+      select: { subscriptionTier: true, isAdmin: true },
     });
 
     if (!user) {
       return false;
+    }
+
+    // Platform admins have unlimited usage
+    if (user.isAdmin) {
+      return true;
     }
 
     // Pro and premium users have unlimited usage

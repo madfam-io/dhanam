@@ -1,7 +1,6 @@
+import { SubscriptionTier } from '@db';
 import { Injectable, CanActivate, ExecutionContext, Logger } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-
-import { SubscriptionTier } from '@db';
 
 import { TIER_KEY } from '../decorators';
 import { PaymentRequiredException, SubscriptionExpiredException } from '../exceptions';
@@ -29,6 +28,11 @@ export class SubscriptionGuard implements CanActivate {
     if (!user) {
       this.logger.warn('SubscriptionGuard: No user found in request');
       throw new PaymentRequiredException('Authentication required');
+    }
+
+    // Platform admins bypass all subscription checks
+    if (user.isAdmin) {
+      return true;
     }
 
     // Check if user has required tier

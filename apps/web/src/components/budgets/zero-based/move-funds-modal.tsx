@@ -11,11 +11,16 @@ import {
   Button,
   Input,
   Label,
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
 } from '@dhanam/ui';
-import { Currency } from '@dhanam/shared';
+import { Currency, useTranslation } from '@dhanam/shared';
 import { ArrowLeftRight, ArrowRight } from 'lucide-react';
 
-import { formatCurrency, cn } from '@/lib/utils';
+import { formatCurrency, getCurrencySymbol, cn } from '@/lib/utils';
 import { CategoryAllocationStatus } from '@/lib/api/zero-based';
 
 interface MoveFundsModalProps {
@@ -42,6 +47,7 @@ export function MoveFundsModal({
   onMoveFunds,
   isLoading = false,
 }: MoveFundsModalProps) {
+  const { t } = useTranslation('budgets');
   const [fromCategoryId, setFromCategoryId] = useState<string>(preselectedFromCategoryId || '');
   const [toCategoryId, setToCategoryId] = useState<string>('');
   const [amount, setAmount] = useState('');
@@ -73,33 +79,36 @@ export function MoveFundsModal({
 
   // Filter out the source category from destination options
   const destinationCategories = categories.filter((c) => c.categoryId !== fromCategoryId);
+  const symbol = getCurrencySymbol(currency);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
     if (!fromCategoryId) {
-      setError('Please select a source category');
+      setError(t('zeroBased.moveFundsModal.errNoSource'));
       return;
     }
 
     if (!toCategoryId) {
-      setError('Please select a destination category');
+      setError(t('zeroBased.moveFundsModal.errNoDestination'));
       return;
     }
 
     if (fromCategoryId === toCategoryId) {
-      setError('Source and destination must be different');
+      setError(t('zeroBased.moveFundsModal.errSameCategory'));
       return;
     }
 
     if (numericAmount <= 0) {
-      setError('Amount must be greater than zero');
+      setError(t('zeroBased.moveFundsModal.errAmountZero'));
       return;
     }
 
     if (numericAmount > maxAmount) {
-      setError(`Amount exceeds available funds in ${fromCategory?.categoryName}`);
+      setError(
+        t('zeroBased.moveFundsModal.errAmountExceeds', { name: fromCategory?.categoryName ?? '' })
+      );
       return;
     }
 
@@ -107,7 +116,7 @@ export function MoveFundsModal({
       await onMoveFunds(fromCategoryId, toCategoryId, numericAmount, notes || undefined);
       onOpenChange(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to move funds');
+      setError(err instanceof Error ? err.message : t('zeroBased.moveFundsModal.errFailed'));
     }
   };
 
@@ -131,12 +140,12 @@ export function MoveFundsModal({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <div className="flex items-center gap-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
-              <ArrowLeftRight className="h-5 w-5 text-blue-600" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/50">
+              <ArrowLeftRight className="h-5 w-5 text-blue-600 dark:text-blue-400" />
             </div>
             <div>
-              <DialogTitle>Move Funds</DialogTitle>
-              <DialogDescription>Transfer money between budget categories</DialogDescription>
+              <DialogTitle>{t('zeroBased.moveFundsModal.title')}</DialogTitle>
+              <DialogDescription>{t('zeroBased.moveFundsModal.description')}</DialogDescription>
             </div>
           </div>
         </DialogHeader>
@@ -144,28 +153,31 @@ export function MoveFundsModal({
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* From Category */}
           <div className="space-y-2">
-            <Label htmlFor="from-category">From Category</Label>
-            <select
-              id="from-category"
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring"
+            <Label htmlFor="from-category">{t('zeroBased.moveFundsModal.fromCategory')}</Label>
+            <Select
               value={fromCategoryId}
-              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
-                setFromCategoryId(e.target.value);
-                setAmount(''); // Reset amount when source changes
+              onValueChange={(val) => {
+                setFromCategoryId(val);
+                setAmount('');
               }}
             >
-              <option value="">Select source category...</option>
-              {categories
-                .filter((cat) => cat.available > 0) // Only show categories with positive balance
-                .map((cat) => (
-                  <option key={cat.categoryId} value={cat.categoryId}>
-                    {cat.categoryName} (Available: {formatCurrency(cat.available, currency)})
-                  </option>
-                ))}
-            </select>
+              <SelectTrigger>
+                <SelectValue placeholder={t('zeroBased.moveFundsModal.selectSource')} />
+              </SelectTrigger>
+              <SelectContent>
+                {categories
+                  .filter((cat) => cat.available > 0)
+                  .map((cat) => (
+                    <SelectItem key={cat.categoryId} value={cat.categoryId}>
+                      {cat.categoryName} ({t('zeroBased.categoryRow.available')}:{' '}
+                      {formatCurrency(cat.available, currency)})
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
             {fromCategory && (
               <p className="text-xs text-muted-foreground">
-                Available to move:{' '}
+                {t('zeroBased.moveFundsModal.availableToMove')}{' '}
                 <span className="font-medium">{formatCurrency(maxAmount, currency)}</span>
               </p>
             )}
@@ -182,34 +194,32 @@ export function MoveFundsModal({
               className="text-muted-foreground"
             >
               <ArrowLeftRight className="h-4 w-4 rotate-90" />
-              Swap
+              {t('zeroBased.moveFundsModal.swap')}
             </Button>
           </div>
 
           {/* To Category */}
           <div className="space-y-2">
-            <Label htmlFor="to-category">To Category</Label>
-            <select
-              id="to-category"
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring"
-              value={toCategoryId}
-              onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                setToCategoryId(e.target.value)
-              }
-            >
-              <option value="">Select destination category...</option>
-              {destinationCategories.map((cat) => (
-                <option key={cat.categoryId} value={cat.categoryId}>
-                  {cat.categoryName} (Available: {formatCurrency(cat.available, currency)})
-                </option>
-              ))}
-            </select>
+            <Label htmlFor="to-category">{t('zeroBased.moveFundsModal.toCategory')}</Label>
+            <Select value={toCategoryId} onValueChange={setToCategoryId}>
+              <SelectTrigger>
+                <SelectValue placeholder={t('zeroBased.moveFundsModal.selectDestination')} />
+              </SelectTrigger>
+              <SelectContent>
+                {destinationCategories.map((cat) => (
+                  <SelectItem key={cat.categoryId} value={cat.categoryId}>
+                    {cat.categoryName} ({t('zeroBased.categoryRow.available')}:{' '}
+                    {formatCurrency(cat.available, currency)})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Amount Input */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label htmlFor="amount">Amount</Label>
+              <Label htmlFor="amount">{t('zeroBased.moveFundsModal.amount')}</Label>
               {maxAmount > 0 && (
                 <Button
                   type="button"
@@ -218,13 +228,13 @@ export function MoveFundsModal({
                   onClick={handleMoveAll}
                   className="h-auto p-0 text-xs"
                 >
-                  Move all
+                  {t('zeroBased.moveFundsModal.moveAll')}
                 </Button>
               )}
             </div>
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                $
+                {symbol}
               </span>
               <Input
                 id="amount"
@@ -242,10 +252,10 @@ export function MoveFundsModal({
 
           {/* Notes (Optional) */}
           <div className="space-y-2">
-            <Label htmlFor="notes">Notes (optional)</Label>
+            <Label htmlFor="notes">{t('zeroBased.moveFundsModal.notes')}</Label>
             <Input
               id="notes"
-              placeholder="Reason for moving funds..."
+              placeholder={t('zeroBased.moveFundsModal.notesPlaceholder')}
               value={notes}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNotes(e.target.value)}
             />
@@ -262,7 +272,9 @@ export function MoveFundsModal({
                   <span
                     className={cn(
                       'font-semibold',
-                      fromCategory.available - numericAmount < 0 ? 'text-red-600' : ''
+                      fromCategory.available - numericAmount < 0
+                        ? 'text-red-600 dark:text-red-400'
+                        : ''
                     )}
                   >
                     {formatCurrency(fromCategory.available - numericAmount, currency)}
@@ -274,7 +286,7 @@ export function MoveFundsModal({
                 <div className="flex items-center gap-2">
                   <span>{formatCurrency(toCategory.available, currency)}</span>
                   <ArrowRight className="h-4 w-4" />
-                  <span className="font-semibold text-emerald-600">
+                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">
                     {formatCurrency(toCategory.available + numericAmount, currency)}
                   </span>
                 </div>
@@ -283,7 +295,7 @@ export function MoveFundsModal({
           )}
 
           {/* Error Message */}
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
 
           <DialogFooter>
             <Button
@@ -292,10 +304,12 @@ export function MoveFundsModal({
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
             >
-              Cancel
+              {t('zeroBased.moveFundsModal.cancel')}
             </Button>
             <Button type="submit" disabled={!canSubmit}>
-              {isLoading ? 'Moving...' : 'Move Funds'}
+              {isLoading
+                ? t('zeroBased.moveFundsModal.moving')
+                : t('zeroBased.moveFundsModal.moveFunds')}
             </Button>
           </DialogFooter>
         </form>

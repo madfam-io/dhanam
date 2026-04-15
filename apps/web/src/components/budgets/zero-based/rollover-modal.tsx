@@ -10,7 +10,7 @@ import {
   DialogTitle,
   Button,
 } from '@dhanam/ui';
-import { Currency } from '@dhanam/shared';
+import { Currency, useTranslation } from '@dhanam/shared';
 import { RotateCcw, ArrowRight, CheckCircle2 } from 'lucide-react';
 
 import { formatCurrency } from '@/lib/utils';
@@ -26,10 +26,15 @@ interface RolloverModalProps {
   isLoading?: boolean;
 }
 
+function getIntlLocale(): string {
+  const lang = typeof document !== 'undefined' ? document.documentElement.lang : 'es';
+  return lang.startsWith('pt') ? 'pt-BR' : lang.startsWith('en') ? 'en-US' : 'es-MX';
+}
+
 function formatMonthDisplay(month: string): string {
   const [year, monthNum] = month.split('-').map(Number);
   const date = new Date(year!, monthNum! - 1, 1);
-  return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  return date.toLocaleDateString(getIntlLocale(), { month: 'long', year: 'numeric' });
 }
 
 function getPreviousMonth(month: string): string {
@@ -47,6 +52,7 @@ export function RolloverModal({
   onRollover,
   isLoading = false,
 }: RolloverModalProps) {
+  const { t } = useTranslation('budgets');
   const [error, setError] = useState<string | null>(null);
 
   // Reset error when modal opens
@@ -66,7 +72,7 @@ export function RolloverModal({
     setError(null);
 
     if (rolloverCategories.length === 0) {
-      setError('No categories with positive balance to roll over');
+      setError(t('zeroBased.rolloverModal.errNoCategories'));
       return;
     }
 
@@ -77,7 +83,7 @@ export function RolloverModal({
       });
       onOpenChange(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to rollover funds');
+      setError(err instanceof Error ? err.message : t('zeroBased.rolloverModal.errFailed'));
     }
   };
 
@@ -86,12 +92,12 @@ export function RolloverModal({
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <div className="flex items-center gap-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
-              <RotateCcw className="h-5 w-5 text-blue-600" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/50">
+              <RotateCcw className="h-5 w-5 text-blue-600 dark:text-blue-400" />
             </div>
             <div>
-              <DialogTitle>Rollover Funds</DialogTitle>
-              <DialogDescription>Carry unspent funds to the next month</DialogDescription>
+              <DialogTitle>{t('zeroBased.rolloverModal.title')}</DialogTitle>
+              <DialogDescription>{t('zeroBased.rolloverModal.description')}</DialogDescription>
             </div>
           </div>
         </DialogHeader>
@@ -100,39 +106,46 @@ export function RolloverModal({
           {/* Rollover Summary */}
           <div className="flex items-center justify-between rounded-lg bg-muted p-4">
             <div className="text-center">
-              <p className="text-sm text-muted-foreground">From</p>
+              <p className="text-sm text-muted-foreground">{t('zeroBased.rolloverModal.from')}</p>
               <p className="font-semibold">{formatMonthDisplay(previousMonth)}</p>
             </div>
             <ArrowRight className="h-6 w-6 text-muted-foreground" />
             <div className="text-center">
-              <p className="text-sm text-muted-foreground">To</p>
+              <p className="text-sm text-muted-foreground">{t('zeroBased.rolloverModal.to')}</p>
               <p className="font-semibold">{formatMonthDisplay(currentMonth)}</p>
             </div>
           </div>
 
           {/* Total Rollover Amount */}
-          <div className="rounded-lg bg-blue-50 p-4">
-            <p className="text-sm text-blue-700">Total to Rollover</p>
-            <p className="text-2xl font-bold text-blue-700">
+          <div className="rounded-lg bg-blue-50 dark:bg-blue-950/30 p-4">
+            <p className="text-sm text-blue-700 dark:text-blue-300">
+              {t('zeroBased.rolloverModal.totalToRollover')}
+            </p>
+            <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">
               {formatCurrency(totalRollover, currency)}
             </p>
-            <p className="text-xs text-blue-600 mt-1">
-              From {rolloverCategories.length}{' '}
-              {rolloverCategories.length === 1 ? 'category' : 'categories'}
+            <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+              {rolloverCategories.length === 1
+                ? t('zeroBased.rolloverModal.fromOneCategory')
+                : t('zeroBased.rolloverModal.fromNCategories', {
+                    count: rolloverCategories.length,
+                  })}
             </p>
           </div>
 
           {/* Categories to Rollover */}
           {rolloverCategories.length > 0 ? (
             <div className="max-h-64 space-y-2 overflow-y-auto">
-              <p className="text-sm font-medium">Categories with unspent funds:</p>
+              <p className="text-sm font-medium">
+                {t('zeroBased.rolloverModal.categoriesWithUnspent')}
+              </p>
               {rolloverCategories.map((cat) => (
                 <div
                   key={cat.categoryId}
                   className="flex items-center justify-between rounded border p-2"
                 >
                   <span>{cat.categoryName}</span>
-                  <span className="font-medium text-emerald-600">
+                  <span className="font-medium text-emerald-600 dark:text-emerald-400">
                     +{formatCurrency(cat.available, currency)}
                   </span>
                 </div>
@@ -141,29 +154,32 @@ export function RolloverModal({
           ) : (
             <div className="py-4 text-center text-muted-foreground">
               <CheckCircle2 className="mx-auto h-8 w-8 mb-2" />
-              <p>No funds to rollover.</p>
-              <p className="text-sm">All category budgets have been spent.</p>
+              <p>{t('zeroBased.rolloverModal.noFundsToRollover')}</p>
+              <p className="text-sm">{t('zeroBased.rolloverModal.allBudgetsSpent')}</p>
             </div>
           )}
 
           {/* Warning about overspent categories */}
           {categories.some((cat) => cat.isOverspent) && (
-            <div className="rounded-lg bg-amber-50 p-3 text-sm text-amber-700">
-              <strong>Note:</strong> Overspent categories will carry their negative balance forward.
-              Consider covering the deficit before rolling over.
+            <div className="rounded-lg bg-amber-50 dark:bg-amber-950/30 p-3 text-sm text-amber-700 dark:text-amber-300">
+              <strong>Note:</strong> {t('zeroBased.rolloverModal.overspentNote')}
             </div>
           )}
 
           {/* Error Message */}
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
         </div>
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
-            Cancel
+            {t('zeroBased.rolloverModal.cancel')}
           </Button>
           <Button onClick={handleRollover} disabled={rolloverCategories.length === 0 || isLoading}>
-            {isLoading ? 'Rolling over...' : `Rollover ${formatCurrency(totalRollover, currency)}`}
+            {isLoading
+              ? t('zeroBased.rolloverModal.rollingOver')
+              : t('zeroBased.rolloverModal.rolloverAmount', {
+                  amount: formatCurrency(totalRollover, currency),
+                })}
           </Button>
         </DialogFooter>
       </DialogContent>

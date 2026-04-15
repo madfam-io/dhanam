@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { Button } from '@dhanam/ui';
+import { Button, Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@dhanam/ui';
 import { Currency, useTranslation } from '@dhanam/shared';
 import { Loader2, Plus, RotateCcw, HelpCircle } from 'lucide-react';
 
@@ -51,6 +51,7 @@ export default function ZeroBasedBudgetPage() {
   const [isAddIncomeOpen, setIsAddIncomeOpen] = useState(false);
   const [isGoalEditorOpen, setIsGoalEditorOpen] = useState(false);
   const [isRolloverOpen, setIsRolloverOpen] = useState(false);
+  const [isHowItWorksOpen, setIsHowItWorksOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<CategoryAllocationStatus | null>(null);
   const [preselectedCategoryId, setPreselectedCategoryId] = useState<string | undefined>();
 
@@ -225,7 +226,12 @@ export default function ZeroBasedBudgetPage() {
       {/* Month Selector */}
       <div className="flex items-center justify-between rounded-lg border bg-card p-4">
         <MonthSelector currentMonth={currentMonth} onMonthChange={setCurrentMonth} />
-        <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="gap-2 text-muted-foreground"
+          onClick={() => setIsHowItWorksOpen(true)}
+        >
           <HelpCircle className="h-4 w-4" />
           {t('zeroBased.howItWorks')}
         </Button>
@@ -322,6 +328,30 @@ export default function ZeroBasedBudgetPage() {
         onRollover={handleRollover}
         isLoading={rolloverMutation.isPending}
       />
+
+      {/* How It Works Dialog */}
+      <Dialog open={isHowItWorksOpen} onOpenChange={setIsHowItWorksOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t('zeroBased.howItWorksDialog.title')}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {(['step1', 'step2', 'step3', 'step4'] as const).map((step) => (
+              <div key={step}>
+                <h4 className="font-medium">{t(`zeroBased.howItWorksDialog.${step}Title`)}</h4>
+                <p className="text-sm text-muted-foreground">
+                  {t(`zeroBased.howItWorksDialog.${step}Desc`)}
+                </p>
+              </div>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setIsHowItWorksOpen(false)}>
+              {t('zeroBased.howItWorksDialog.close')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

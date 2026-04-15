@@ -1,7 +1,6 @@
+import { UsageMetricType } from '@db';
 import { Injectable, CanActivate, ExecutionContext, Logger } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-
-import { UsageMetricType } from '@db';
 
 import { BillingService } from '../billing.service';
 import { USAGE_METRIC_KEY } from '../decorators';
@@ -30,6 +29,11 @@ export class UsageLimitGuard implements CanActivate {
     if (!user) {
       this.logger.warn('UsageLimitGuard: No user found in request');
       return true; // Let other guards handle authentication
+    }
+
+    // Platform admins bypass all usage limits
+    if (user.isAdmin) {
+      return true;
     }
 
     // Check if user has exceeded usage limit

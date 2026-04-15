@@ -226,7 +226,10 @@ describe('UsageLimitGuard', () => {
       const result = await guard.canActivate(context);
 
       expect(result).toBe(true);
-      expect(billingService.checkUsageLimit).toHaveBeenCalledWith('user-pro', 'monte_carlo_simulation');
+      expect(billingService.checkUsageLimit).toHaveBeenCalledWith(
+        'user-pro',
+        'monte_carlo_simulation'
+      );
     });
   });
 
@@ -242,7 +245,38 @@ describe('UsageLimitGuard', () => {
       const result = await guard.canActivate(context);
 
       expect(result).toBe(true);
-      expect(billingService.checkUsageLimit).toHaveBeenCalledWith('user-premium', 'monte_carlo_simulation');
+      expect(billingService.checkUsageLimit).toHaveBeenCalledWith(
+        'user-premium',
+        'monte_carlo_simulation'
+      );
+    });
+  });
+
+  describe('admin bypass', () => {
+    it('should bypass usage limit check when user is admin', async () => {
+      const context = mockExecutionContext({
+        id: 'admin-user',
+        subscriptionTier: 'community',
+        isAdmin: true,
+      });
+      reflector.get.mockReturnValue('esg_calculation' as UsageMetricType);
+
+      const result = await guard.canActivate(context);
+
+      expect(result).toBe(true);
+      expect(billingService.checkUsageLimit).not.toHaveBeenCalled();
+    });
+
+    it('should not bypass when isAdmin is false', async () => {
+      const context = mockExecutionContext({
+        id: 'user-123',
+        subscriptionTier: 'essentials',
+        isAdmin: false,
+      });
+      reflector.get.mockReturnValue('esg_calculation' as UsageMetricType);
+      billingService.checkUsageLimit.mockResolvedValue(false);
+
+      await expect(guard.canActivate(context)).rejects.toThrow(UsageLimitExceededException);
     });
   });
 

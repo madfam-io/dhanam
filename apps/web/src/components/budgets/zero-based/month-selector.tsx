@@ -1,6 +1,7 @@
 'use client';
 
 import { Button } from '@dhanam/ui';
+import { useTranslation } from '@dhanam/shared';
 import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
 
 interface MonthSelectorProps {
@@ -13,10 +14,15 @@ function parseMonth(month: string): { year: number; month: number } {
   return { year: year!, month: monthNum! };
 }
 
+function getIntlLocale(): string {
+  const lang = typeof document !== 'undefined' ? document.documentElement.lang : 'es';
+  return lang.startsWith('pt') ? 'pt-BR' : lang.startsWith('en') ? 'en-US' : 'es-MX';
+}
+
 function formatMonth(month: string): string {
   const { year, month: monthNum } = parseMonth(month);
   const date = new Date(year, monthNum - 1, 1);
-  return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  return date.toLocaleDateString(getIntlLocale(), { month: 'long', year: 'numeric' });
 }
 
 function getPreviousMonth(month: string): string {
@@ -41,6 +47,7 @@ function isCurrentMonth(month: string): boolean {
 }
 
 export function MonthSelector({ currentMonth, onMonthChange }: MonthSelectorProps) {
+  const { t } = useTranslation('budgets');
   const previousMonth = getPreviousMonth(currentMonth);
   const nextMonth = getNextMonth(currentMonth);
   const isCurrent = isCurrentMonth(currentMonth);
@@ -52,7 +59,7 @@ export function MonthSelector({ currentMonth, onMonthChange }: MonthSelectorProp
         variant="ghost"
         size="sm"
         onClick={() => onMonthChange(previousMonth)}
-        title={`Go to ${formatMonth(previousMonth)}`}
+        aria-label={formatMonth(previousMonth)}
       >
         <ChevronLeft className="h-4 w-4" />
       </Button>
@@ -63,7 +70,7 @@ export function MonthSelector({ currentMonth, onMonthChange }: MonthSelectorProp
         <span className="font-semibold">{formatMonth(currentMonth)}</span>
         {isCurrent && (
           <span className="rounded bg-primary/10 px-1.5 py-0.5 text-xs font-medium text-primary">
-            Current
+            {t('zeroBased.monthSelector.current')}
           </span>
         )}
       </div>
@@ -73,7 +80,7 @@ export function MonthSelector({ currentMonth, onMonthChange }: MonthSelectorProp
         variant="ghost"
         size="sm"
         onClick={() => onMonthChange(nextMonth)}
-        title={`Go to ${formatMonth(nextMonth)}`}
+        aria-label={formatMonth(nextMonth)}
       >
         <ChevronRight className="h-4 w-4" />
       </Button>
@@ -86,7 +93,7 @@ export function MonthSelector({ currentMonth, onMonthChange }: MonthSelectorProp
           onClick={() => onMonthChange(getCurrentMonth())}
           className="ml-2"
         >
-          Today
+          {t('zeroBased.monthSelector.today')}
         </Button>
       )}
     </div>
@@ -95,6 +102,7 @@ export function MonthSelector({ currentMonth, onMonthChange }: MonthSelectorProp
 
 // Full month navigation with quick jumps
 export function MonthNavigator({ currentMonth, onMonthChange }: MonthSelectorProps) {
+  const { t } = useTranslation('budgets');
   const todayMonth = getCurrentMonth();
 
   // Generate last 6 months for quick access
@@ -123,11 +131,13 @@ export function MonthNavigator({ currentMonth, onMonthChange }: MonthSelectorPro
             className="text-xs"
           >
             {new Date(parseMonth(month).year, parseMonth(month).month - 1, 1).toLocaleDateString(
-              'en-US',
+              getIntlLocale(),
               { month: 'short' }
             )}
             {month === todayMonth && (
-              <span className="ml-1 rounded bg-primary/20 px-1 text-[10px]">now</span>
+              <span className="ml-1 rounded bg-primary/20 px-1 text-[10px]">
+                {t('zeroBased.monthSelector.now')}
+              </span>
             )}
           </Button>
         ))}

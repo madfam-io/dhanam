@@ -26,7 +26,7 @@ describe('PremiumGate', () => {
     render(
       <PremiumGate feature="Retirement">
         <div>Premium Content</div>
-      </PremiumGate>,
+      </PremiumGate>
     );
     expect(screen.getByText('Premium Content')).toBeTruthy();
   });
@@ -38,7 +38,7 @@ describe('PremiumGate', () => {
     render(
       <PremiumGate feature="Retirement" requiredTier="essentials">
         <div>Premium Content</div>
-      </PremiumGate>,
+      </PremiumGate>
     );
     expect(screen.getByText('Premium Content')).toBeTruthy();
   });
@@ -50,7 +50,7 @@ describe('PremiumGate', () => {
     render(
       <PremiumGate feature="Retirement">
         <div>Premium Content</div>
-      </PremiumGate>,
+      </PremiumGate>
     );
     expect(screen.getByTestId('premium-upsell')).toBeTruthy();
     expect(screen.queryByText('Premium Content')).toBeNull();
@@ -63,7 +63,7 @@ describe('PremiumGate', () => {
     render(
       <PremiumGate feature="Scenarios">
         <div>Premium Content</div>
-      </PremiumGate>,
+      </PremiumGate>
     );
     expect(screen.getByTestId('premium-upsell')).toBeTruthy();
   });
@@ -75,7 +75,7 @@ describe('PremiumGate', () => {
     render(
       <PremiumGate feature="Retirement">
         <div>Premium Content</div>
-      </PremiumGate>,
+      </PremiumGate>
     );
     expect(screen.getByText('Premium Content')).toBeTruthy();
     expect(screen.queryByTestId('premium-upsell')).toBeNull();
@@ -97,11 +97,37 @@ describe('PremiumGate', () => {
       const { unmount } = render(
         <PremiumGate feature="Scenarios" requiredTier="pro">
           <div>Pro Content</div>
-        </PremiumGate>,
+        </PremiumGate>
       );
       expect(screen.getByText('Pro Content')).toBeTruthy();
       unmount();
     }
+  });
+
+  it('should grant access to admin users regardless of subscription tier', () => {
+    mockUseAuth.mockReturnValue({
+      user: { email: 'admin@madfam.io', subscriptionTier: 'community', isAdmin: true },
+    });
+    render(
+      <PremiumGate feature="Estate Planning" requiredTier="premium">
+        <div>Premium Content</div>
+      </PremiumGate>
+    );
+    expect(screen.getByText('Premium Content')).toBeTruthy();
+    expect(screen.queryByTestId('premium-upsell')).toBeNull();
+  });
+
+  it('should not grant admin bypass when isAdmin is false', () => {
+    mockUseAuth.mockReturnValue({
+      user: { email: 'user@example.com', subscriptionTier: 'community', isAdmin: false },
+    });
+    render(
+      <PremiumGate feature="Estate Planning" requiredTier="premium">
+        <div>Premium Content</div>
+      </PremiumGate>
+    );
+    expect(screen.queryByText('Premium Content')).toBeNull();
+    expect(screen.getByTestId('premium-upsell')).toBeTruthy();
   });
 
   it('should render custom fallback when provided', () => {
@@ -111,7 +137,7 @@ describe('PremiumGate', () => {
     render(
       <PremiumGate feature="Retirement" fallback={<div>Custom Fallback</div>}>
         <div>Premium Content</div>
-      </PremiumGate>,
+      </PremiumGate>
     );
     expect(screen.getByText('Custom Fallback')).toBeTruthy();
     expect(screen.queryByText('Premium Content')).toBeNull();

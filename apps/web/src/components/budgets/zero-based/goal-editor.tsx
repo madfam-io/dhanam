@@ -12,10 +12,10 @@ import {
   Input,
   Label,
 } from '@dhanam/ui';
-import { Currency } from '@dhanam/shared';
+import { Currency, useTranslation } from '@dhanam/shared';
 import { Target, Calendar, Percent, TrendingUp } from 'lucide-react';
 
-import { formatCurrency, cn } from '@/lib/utils';
+import { formatCurrency, getCurrencySymbol, cn } from '@/lib/utils';
 import { SetCategoryGoalDto, CategoryAllocationStatus } from '@/lib/api/zero-based';
 
 interface GoalEditorProps {
@@ -29,41 +29,6 @@ interface GoalEditorProps {
 
 type GoalType = 'monthly_spending' | 'target_balance' | 'weekly_spending' | 'percentage_income';
 
-const GOAL_TYPES = [
-  {
-    value: 'monthly_spending' as GoalType,
-    label: 'Monthly Spending',
-    description: 'Set a target amount to spend per month',
-    icon: TrendingUp,
-    iconColor: 'text-blue-600',
-    bgColor: 'bg-blue-100',
-  },
-  {
-    value: 'target_balance' as GoalType,
-    label: 'Target Balance',
-    description: 'Save a specific amount by a target date',
-    icon: Target,
-    iconColor: 'text-purple-600',
-    bgColor: 'bg-purple-100',
-  },
-  {
-    value: 'weekly_spending' as GoalType,
-    label: 'Weekly Spending',
-    description: 'Set a target amount to spend per week',
-    icon: Calendar,
-    iconColor: 'text-orange-600',
-    bgColor: 'bg-orange-100',
-  },
-  {
-    value: 'percentage_income' as GoalType,
-    label: 'Percentage of Income',
-    description: 'Allocate a percentage of your income',
-    icon: Percent,
-    iconColor: 'text-emerald-600',
-    bgColor: 'bg-emerald-100',
-  },
-];
-
 export function GoalEditor({
   open,
   onOpenChange,
@@ -72,12 +37,50 @@ export function GoalEditor({
   onSaveGoal,
   isLoading = false,
 }: GoalEditorProps) {
+  const { t } = useTranslation('budgets');
   const [goalType, setGoalType] = useState<GoalType>('monthly_spending');
   const [targetAmount, setTargetAmount] = useState('');
   const [targetDate, setTargetDate] = useState('');
   const [percentageTarget, setPercentageTarget] = useState('');
   const [notes, setNotes] = useState('');
   const [error, setError] = useState<string | null>(null);
+
+  const symbol = getCurrencySymbol(currency);
+
+  const GOAL_TYPES = [
+    {
+      value: 'monthly_spending' as GoalType,
+      label: t('zeroBased.goalEditor.monthlySpending'),
+      description: t('zeroBased.goalEditor.monthlySpendingDesc'),
+      icon: TrendingUp,
+      iconColor: 'text-blue-600 dark:text-blue-400',
+      bgColor: 'bg-blue-100 dark:bg-blue-900/50',
+    },
+    {
+      value: 'target_balance' as GoalType,
+      label: t('zeroBased.goalEditor.targetBalance'),
+      description: t('zeroBased.goalEditor.targetBalanceDesc'),
+      icon: Target,
+      iconColor: 'text-purple-600 dark:text-purple-400',
+      bgColor: 'bg-purple-100 dark:bg-purple-900/50',
+    },
+    {
+      value: 'weekly_spending' as GoalType,
+      label: t('zeroBased.goalEditor.weeklySpending'),
+      description: t('zeroBased.goalEditor.weeklySpendingDesc'),
+      icon: Calendar,
+      iconColor: 'text-orange-600 dark:text-orange-400',
+      bgColor: 'bg-orange-100 dark:bg-orange-900/50',
+    },
+    {
+      value: 'percentage_income' as GoalType,
+      label: t('zeroBased.goalEditor.percentageIncome'),
+      description: t('zeroBased.goalEditor.percentageIncomeDesc'),
+      icon: Percent,
+      iconColor: 'text-emerald-600 dark:text-emerald-400',
+      bgColor: 'bg-emerald-100 dark:bg-emerald-900/50',
+    },
+  ];
 
   // Reset form when modal opens or category changes
   useEffect(() => {
@@ -110,7 +113,7 @@ export function GoalEditor({
       case 'weekly_spending':
         return numericAmount > 0;
       case 'target_balance':
-        return numericAmount > 0 && targetDate;
+        return numericAmount > 0 && !!targetDate;
       case 'percentage_income':
         return numericPercentage > 0 && numericPercentage <= 100;
       default:
@@ -123,7 +126,7 @@ export function GoalEditor({
     setError(null);
 
     if (!category) {
-      setError('No category selected');
+      setError(t('zeroBased.goalEditor.errNoCat'));
       return;
     }
 
@@ -136,18 +139,18 @@ export function GoalEditor({
       case 'monthly_spending':
       case 'weekly_spending':
         if (numericAmount <= 0) {
-          setError('Amount must be greater than zero');
+          setError(t('zeroBased.goalEditor.errAmountZero'));
           return;
         }
         dto.targetAmount = numericAmount;
         break;
       case 'target_balance':
         if (numericAmount <= 0) {
-          setError('Target amount must be greater than zero');
+          setError(t('zeroBased.goalEditor.errTargetZero'));
           return;
         }
         if (!targetDate) {
-          setError('Please select a target date');
+          setError(t('zeroBased.goalEditor.errNoDate'));
           return;
         }
         dto.targetAmount = numericAmount;
@@ -155,7 +158,7 @@ export function GoalEditor({
         break;
       case 'percentage_income':
         if (numericPercentage <= 0 || numericPercentage > 100) {
-          setError('Percentage must be between 1 and 100');
+          setError(t('zeroBased.goalEditor.errPercentRange'));
           return;
         }
         dto.percentageTarget = numericPercentage;
@@ -166,7 +169,7 @@ export function GoalEditor({
       await onSaveGoal(category.categoryId, dto);
       onOpenChange(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save goal');
+      setError(err instanceof Error ? err.message : t('zeroBased.goalEditor.errFailed'));
     }
   };
 
@@ -179,8 +182,8 @@ export function GoalEditor({
               <Target className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <DialogTitle>Set Funding Goal</DialogTitle>
-              <DialogDescription>{category?.categoryName || 'Category'}</DialogDescription>
+              <DialogTitle>{t('zeroBased.goalEditor.title')}</DialogTitle>
+              <DialogDescription>{category?.categoryName || ''}</DialogDescription>
             </div>
           </div>
         </DialogHeader>
@@ -188,7 +191,7 @@ export function GoalEditor({
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Goal Type Selection */}
           <div className="space-y-2">
-            <Label>Goal Type</Label>
+            <Label>{t('zeroBased.goalEditor.goalType')}</Label>
             <div className="grid grid-cols-2 gap-2">
               {GOAL_TYPES.map((type) => {
                 const Icon = type.icon;
@@ -222,11 +225,13 @@ export function GoalEditor({
           {(goalType === 'monthly_spending' || goalType === 'weekly_spending') && (
             <div className="space-y-2">
               <Label htmlFor="target-amount">
-                Target Amount ({goalType === 'monthly_spending' ? 'per month' : 'per week'})
+                {goalType === 'monthly_spending'
+                  ? t('zeroBased.goalEditor.targetAmountPerMonth')
+                  : t('zeroBased.goalEditor.targetAmountPerWeek')}
               </Label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                  $
+                  {symbol}
                 </span>
                 <Input
                   id="target-amount"
@@ -243,12 +248,16 @@ export function GoalEditor({
               </div>
               {goalType === 'monthly_spending' && numericAmount > 0 && (
                 <p className="text-xs text-muted-foreground">
-                  ~{formatCurrency(numericAmount / 4, currency)} per week
+                  {t('zeroBased.goalEditor.perWeekEstimate', {
+                    amount: formatCurrency(numericAmount / 4, currency),
+                  })}
                 </p>
               )}
               {goalType === 'weekly_spending' && numericAmount > 0 && (
                 <p className="text-xs text-muted-foreground">
-                  ~{formatCurrency(numericAmount * 4, currency)} per month
+                  {t('zeroBased.goalEditor.perMonthEstimate', {
+                    amount: formatCurrency(numericAmount * 4, currency),
+                  })}
                 </p>
               )}
             </div>
@@ -257,10 +266,10 @@ export function GoalEditor({
           {goalType === 'target_balance' && (
             <>
               <div className="space-y-2">
-                <Label htmlFor="target-amount">Target Amount</Label>
+                <Label htmlFor="target-amount">{t('zeroBased.goalEditor.targetAmount')}</Label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                    $
+                    {symbol}
                   </span>
                   <Input
                     id="target-amount"
@@ -277,7 +286,7 @@ export function GoalEditor({
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="target-date">Target Date</Label>
+                <Label htmlFor="target-date">{t('zeroBased.goalEditor.targetDate')}</Label>
                 <div className="relative">
                   <Calendar className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
@@ -302,7 +311,10 @@ export function GoalEditor({
                       )
                     );
                     const monthly = numericAmount / months;
-                    return `Save ~${formatCurrency(monthly, currency)}/month over ${months} months`;
+                    return t('zeroBased.goalEditor.saveEstimate', {
+                      amount: formatCurrency(monthly, currency),
+                      months,
+                    });
                   })()}
                 </p>
               )}
@@ -311,7 +323,7 @@ export function GoalEditor({
 
           {goalType === 'percentage_income' && (
             <div className="space-y-2">
-              <Label htmlFor="percentage">Percentage of Income</Label>
+              <Label htmlFor="percentage">{t('zeroBased.goalEditor.percentageOfIncome')}</Label>
               <div className="relative">
                 <Input
                   id="percentage"
@@ -335,10 +347,10 @@ export function GoalEditor({
 
           {/* Notes (Optional) */}
           <div className="space-y-2">
-            <Label htmlFor="notes">Notes (optional)</Label>
+            <Label htmlFor="notes">{t('zeroBased.goalEditor.notes')}</Label>
             <Input
               id="notes"
-              placeholder="Describe your goal..."
+              placeholder={t('zeroBased.goalEditor.notesPlaceholder')}
               value={notes}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNotes(e.target.value)}
             />
@@ -347,13 +359,17 @@ export function GoalEditor({
           {/* Current Progress (if category has existing goal) */}
           {category?.goalProgress !== undefined && (
             <div className="rounded-lg bg-muted p-3">
-              <p className="text-sm text-muted-foreground">Current Progress</p>
-              <p className="text-lg font-semibold">{Math.round(category.goalProgress)}% funded</p>
+              <p className="text-sm text-muted-foreground">
+                {t('zeroBased.goalEditor.currentProgress')}
+              </p>
+              <p className="text-lg font-semibold">
+                {t('zeroBased.goalEditor.funded', { percent: Math.round(category.goalProgress) })}
+              </p>
             </div>
           )}
 
           {/* Error Message */}
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
 
           <DialogFooter>
             <Button
@@ -362,10 +378,10 @@ export function GoalEditor({
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
             >
-              Cancel
+              {t('zeroBased.goalEditor.cancel')}
             </Button>
             <Button type="submit" disabled={!canSubmit}>
-              {isLoading ? 'Saving...' : 'Save Goal'}
+              {isLoading ? t('zeroBased.goalEditor.saving') : t('zeroBased.goalEditor.saveGoal')}
             </Button>
           </DialogFooter>
         </form>

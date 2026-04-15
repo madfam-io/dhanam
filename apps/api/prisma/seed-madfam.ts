@@ -29,7 +29,10 @@ async function main() {
   // Create MADFAM admin user (will be linked to Janua SSO in production)
   const madfamAdmin = await prisma.user.upsert({
     where: { email: 'admin@madfam.io' },
-    update: {},
+    update: {
+      isAdmin: true,
+      subscriptionTier: 'premium',
+    },
     create: {
       email: 'admin@madfam.io',
       passwordHash: await hash(adminPassword),
@@ -38,6 +41,8 @@ async function main() {
       timezone: 'America/Mexico_City',
       emailVerified: true,
       onboardingCompleted: true,
+      isAdmin: true,
+      subscriptionTier: 'premium',
     },
   });
 

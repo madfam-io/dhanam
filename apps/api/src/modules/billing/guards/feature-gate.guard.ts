@@ -42,6 +42,11 @@ export class FeatureGateGuard implements CanActivate {
       return true; // Let auth guards handle this
     }
 
+    // Platform admins bypass all feature gates
+    if (user.isAdmin) {
+      return true;
+    }
+
     const tierLimits = this.billing.getTierLimits(user.subscriptionTier || 'community');
     const featureEnabled = tierLimits[requiredFeature as keyof typeof tierLimits];
 

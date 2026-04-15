@@ -10,7 +10,7 @@ import {
   Input,
   Button,
 } from '@dhanam/ui';
-import { Currency } from '@dhanam/shared';
+import { Currency, useTranslation } from '@dhanam/shared';
 import { Search, SortAsc, SortDesc, AlertTriangle } from 'lucide-react';
 
 import { CategoryAllocationStatus } from '@/lib/api/zero-based';
@@ -35,6 +35,7 @@ export function CategoryAllocationList({
   onMoveFunds,
   onEditGoal,
 }: CategoryAllocationListProps) {
+  const { t } = useTranslation('budgets');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortField, setSortField] = useState<SortField>('name');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
@@ -107,20 +108,42 @@ export function CategoryAllocationList({
 
   const SortIcon = sortDirection === 'asc' ? SortAsc : SortDesc;
 
+  const filterOptions: { value: FilterOption; label: string }[] = [
+    { value: 'all', label: t('zeroBased.categoryList.filterAll') },
+    { value: 'overspent', label: t('zeroBased.categoryList.filterOverspent') },
+    { value: 'underfunded', label: t('zeroBased.categoryList.filterUnderfunded') },
+    { value: 'on-track', label: t('zeroBased.categoryList.filterOnTrack') },
+  ];
+
+  const sortOptions: { value: SortField; label: string }[] = [
+    { value: 'name', label: t('zeroBased.categoryList.sortName') },
+    { value: 'allocated', label: t('zeroBased.categoryList.sortAllocated') },
+    { value: 'available', label: t('zeroBased.categoryList.sortAvailable') },
+  ];
+
   return (
     <Card>
       <CardHeader>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <CardTitle>Category Allocations</CardTitle>
+            <CardTitle>{t('zeroBased.categoryList.title')}</CardTitle>
             <CardDescription>
-              {categories.length} categories •{' '}
+              {t('zeroBased.categoryList.categories', { count: categories.length })}
               {overspentCount > 0 && (
-                <span className="text-red-600">{overspentCount} overspent</span>
+                <>
+                  {' \u2022 '}
+                  <span className="text-red-600 dark:text-red-400">
+                    {t('zeroBased.categoryList.overspent', { count: overspentCount })}
+                  </span>
+                </>
               )}
-              {overspentCount > 0 && underfundedCount > 0 && ' • '}
               {underfundedCount > 0 && (
-                <span className="text-amber-600">{underfundedCount} underfunded</span>
+                <>
+                  {' \u2022 '}
+                  <span className="text-amber-600 dark:text-amber-400">
+                    {t('zeroBased.categoryList.underfunded', { count: underfundedCount })}
+                  </span>
+                </>
               )}
             </CardDescription>
           </div>
@@ -129,7 +152,7 @@ export function CategoryAllocationList({
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Search categories..."
+              placeholder={t('zeroBased.categoryList.searchPlaceholder')}
               value={searchQuery}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
               className="pl-9 w-64"
@@ -139,19 +162,17 @@ export function CategoryAllocationList({
 
         {/* Filters */}
         <div className="flex flex-wrap items-center gap-2 pt-2">
-          <span className="text-sm text-muted-foreground">Filter:</span>
+          <span className="text-sm text-muted-foreground">
+            {t('zeroBased.categoryList.filterLabel')}
+          </span>
           <div className="flex gap-1">
-            {[
-              { value: 'all', label: 'All' },
-              { value: 'overspent', label: 'Overspent' },
-              { value: 'underfunded', label: 'Underfunded' },
-              { value: 'on-track', label: 'On Track' },
-            ].map((option) => (
+            {filterOptions.map((option) => (
               <Button
                 key={option.value}
                 variant={filter === option.value ? 'default' : 'outline'}
                 size="sm"
-                onClick={() => setFilter(option.value as FilterOption)}
+                onClick={() => setFilter(option.value)}
+                aria-pressed={filter === option.value}
               >
                 {option.label}
               </Button>
@@ -160,18 +181,16 @@ export function CategoryAllocationList({
 
           <div className="flex-1" />
 
-          <span className="text-sm text-muted-foreground">Sort:</span>
+          <span className="text-sm text-muted-foreground">
+            {t('zeroBased.categoryList.sortLabel')}
+          </span>
           <div className="flex gap-1">
-            {[
-              { value: 'name', label: 'Name' },
-              { value: 'allocated', label: 'Allocated' },
-              { value: 'available', label: 'Available' },
-            ].map((option) => (
+            {sortOptions.map((option) => (
               <Button
                 key={option.value}
                 variant={sortField === option.value ? 'secondary' : 'ghost'}
                 size="sm"
-                onClick={() => toggleSort(option.value as SortField)}
+                onClick={() => toggleSort(option.value)}
                 className="gap-1"
               >
                 {option.label}
@@ -185,11 +204,12 @@ export function CategoryAllocationList({
       <CardContent>
         {/* Overspent Warning */}
         {overspentCount > 0 && filter === 'all' && (
-          <div className="mb-4 flex items-center gap-2 rounded-lg bg-red-50 p-3 text-sm text-red-700">
+          <div className="mb-4 flex items-center gap-2 rounded-lg bg-red-50 dark:bg-red-950/30 p-3 text-sm text-red-700 dark:text-red-300">
             <AlertTriangle className="h-4 w-4" />
             <span>
-              {overspentCount} {overspentCount === 1 ? 'category is' : 'categories are'} overspent.
-              Consider moving funds to cover the deficit.
+              {overspentCount === 1
+                ? t('zeroBased.categoryList.overspentWarningSingular')
+                : t('zeroBased.categoryList.overspentWarning', { count: overspentCount })}
             </span>
           </div>
         )}
@@ -198,8 +218,8 @@ export function CategoryAllocationList({
         {filteredCategories.length === 0 ? (
           <div className="py-8 text-center text-muted-foreground">
             {searchQuery || filter !== 'all'
-              ? 'No categories match your filters'
-              : 'No categories found'}
+              ? t('zeroBased.categoryList.emptyFiltered')
+              : t('zeroBased.categoryList.emptyNone')}
           </div>
         ) : (
           <>
@@ -225,6 +245,8 @@ export function CategoryAllocationList({
                   category={category}
                   currency={currency}
                   onAllocate={onAllocate}
+                  onMoveFunds={onMoveFunds}
+                  onEditGoal={onEditGoal}
                 />
               ))}
             </div>

@@ -11,10 +11,16 @@ import {
   Button,
   Input,
   Label,
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
 } from '@dhanam/ui';
-import { Currency } from '@dhanam/shared';
+import { Currency, useTranslation } from '@dhanam/shared';
 import { Banknote, Calendar } from 'lucide-react';
 
+import { getCurrencySymbol } from '@/lib/utils';
 import { CreateIncomeEventDto } from '@/lib/api/zero-based';
 
 interface AddIncomeModalProps {
@@ -25,16 +31,28 @@ interface AddIncomeModalProps {
   isLoading?: boolean;
 }
 
-const INCOME_SOURCES = [
-  { value: 'salary', label: 'Salary' },
-  { value: 'bonus', label: 'Bonus' },
-  { value: 'freelance', label: 'Freelance' },
-  { value: 'investment', label: 'Investment Income' },
-  { value: 'rental', label: 'Rental Income' },
-  { value: 'refund', label: 'Refund' },
-  { value: 'gift', label: 'Gift' },
-  { value: 'other', label: 'Other' },
-];
+const INCOME_SOURCE_KEYS = [
+  'salary',
+  'bonus',
+  'freelance',
+  'investmentIncome',
+  'rentalIncome',
+  'refund',
+  'gift',
+  'other',
+] as const;
+
+// Map i18n key to API value
+const SOURCE_API_VALUE: Record<string, string> = {
+  salary: 'salary',
+  bonus: 'bonus',
+  freelance: 'freelance',
+  investmentIncome: 'investment',
+  rentalIncome: 'rental',
+  refund: 'refund',
+  gift: 'gift',
+  other: 'other',
+};
 
 export function AddIncomeModal({
   open,
@@ -43,6 +61,7 @@ export function AddIncomeModal({
   onAddIncome,
   isLoading = false,
 }: AddIncomeModalProps) {
+  const { t } = useTranslation('budgets');
   const [amount, setAmount] = useState('');
   const [source, setSource] = useState('');
   const [customSource, setCustomSource] = useState('');
@@ -63,25 +82,26 @@ export function AddIncomeModal({
   }, [open]);
 
   const numericAmount = parseFloat(amount) || 0;
-  const effectiveSource = source === 'other' ? customSource : source;
-  const canSubmit = numericAmount > 0 && effectiveSource && receivedAt && !isLoading;
+  const apiSource = source === 'other' ? customSource : (SOURCE_API_VALUE[source] ?? source);
+  const canSubmit = numericAmount > 0 && apiSource && receivedAt && !isLoading;
+  const symbol = getCurrencySymbol(currency);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
     if (numericAmount <= 0) {
-      setError('Amount must be greater than zero');
+      setError(t('zeroBased.addIncomeModal.errAmountZero'));
       return;
     }
 
-    if (!effectiveSource) {
-      setError('Please select or enter an income source');
+    if (!apiSource) {
+      setError(t('zeroBased.addIncomeModal.errNoSource'));
       return;
     }
 
     if (!receivedAt) {
-      setError('Please select a date');
+      setError(t('zeroBased.addIncomeModal.errNoDate'));
       return;
     }
 
@@ -89,13 +109,13 @@ export function AddIncomeModal({
       await onAddIncome({
         amount: numericAmount,
         currency,
-        source: effectiveSource,
+        source: apiSource,
         description: description || undefined,
         receivedAt: new Date(receivedAt).toISOString(),
       });
       onOpenChange(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to add income');
+      setError(err instanceof Error ? err.message : t('zeroBased.addIncomeModal.errFailed'));
     }
   };
 
@@ -104,12 +124,12 @@ export function AddIncomeModal({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <div className="flex items-center gap-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100">
-              <Banknote className="h-5 w-5 text-emerald-600" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/50">
+              <Banknote className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
             </div>
             <div>
-              <DialogTitle>Add Income</DialogTitle>
-              <DialogDescription>Record money you've received to allocate</DialogDescription>
+              <DialogTitle>{t('zeroBased.addIncomeModal.title')}</DialogTitle>
+              <DialogDescription>{t('zeroBased.addIncomeModal.description')}</DialogDescription>
             </div>
           </div>
         </DialogHeader>
@@ -117,10 +137,10 @@ export function AddIncomeModal({
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Amount Input */}
           <div className="space-y-2">
-            <Label htmlFor="amount">Amount</Label>
+            <Label htmlFor="amount">{t('zeroBased.addIncomeModal.amount')}</Label>
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                $
+                {symbol}
               </span>
               <Input
                 id="amount"
@@ -137,29 +157,28 @@ export function AddIncomeModal({
 
           {/* Source Selection */}
           <div className="space-y-2">
-            <Label htmlFor="source">Source</Label>
-            <select
-              id="source"
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring"
-              value={source}
-              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSource(e.target.value)}
-            >
-              <option value="">Select a source...</option>
-              {INCOME_SOURCES.map((src) => (
-                <option key={src.value} value={src.value}>
-                  {src.label}
-                </option>
-              ))}
-            </select>
+            <Label htmlFor="source">{t('zeroBased.addIncomeModal.source')}</Label>
+            <Select value={source} onValueChange={setSource}>
+              <SelectTrigger>
+                <SelectValue placeholder={t('zeroBased.addIncomeModal.selectSource')} />
+              </SelectTrigger>
+              <SelectContent>
+                {INCOME_SOURCE_KEYS.map((key) => (
+                  <SelectItem key={key} value={key}>
+                    {t(`zeroBased.incomeEvents.${key}`)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Custom Source (if "Other" selected) */}
           {source === 'other' && (
             <div className="space-y-2">
-              <Label htmlFor="custom-source">Custom Source</Label>
+              <Label htmlFor="custom-source">{t('zeroBased.addIncomeModal.customSource')}</Label>
               <Input
                 id="custom-source"
-                placeholder="Enter income source..."
+                placeholder={t('zeroBased.addIncomeModal.customSourcePlaceholder')}
                 value={customSource}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   setCustomSource(e.target.value)
@@ -170,7 +189,7 @@ export function AddIncomeModal({
 
           {/* Date */}
           <div className="space-y-2">
-            <Label htmlFor="received-at">Date Received</Label>
+            <Label htmlFor="received-at">{t('zeroBased.addIncomeModal.dateReceived')}</Label>
             <div className="relative">
               <Calendar className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -185,17 +204,17 @@ export function AddIncomeModal({
 
           {/* Description (Optional) */}
           <div className="space-y-2">
-            <Label htmlFor="description">Description (optional)</Label>
+            <Label htmlFor="description">{t('zeroBased.addIncomeModal.descriptionLabel')}</Label>
             <Input
               id="description"
-              placeholder="Add details about this income..."
+              placeholder={t('zeroBased.addIncomeModal.descriptionPlaceholder')}
               value={description}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDescription(e.target.value)}
             />
           </div>
 
           {/* Error Message */}
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
 
           <DialogFooter>
             <Button
@@ -204,10 +223,12 @@ export function AddIncomeModal({
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
             >
-              Cancel
+              {t('zeroBased.addIncomeModal.cancel')}
             </Button>
             <Button type="submit" disabled={!canSubmit}>
-              {isLoading ? 'Adding...' : 'Add Income'}
+              {isLoading
+                ? t('zeroBased.addIncomeModal.adding')
+                : t('zeroBased.addIncomeModal.addIncome')}
             </Button>
           </DialogFooter>
         </form>

@@ -25,6 +25,11 @@ export class SpaceLimitGuard implements CanActivate {
       return true; // Let auth guards handle this
     }
 
+    // Platform admins bypass all space limits
+    if (user.isAdmin) {
+      return true;
+    }
+
     const tierLimits = this.billing.getTierLimits(user.subscriptionTier || 'community');
     const currentSpaceCount = await this.prisma.userSpace.count({
       where: {

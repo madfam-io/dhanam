@@ -23,6 +23,20 @@ export function formatCurrency(amount: number, currency: Currency): string {
 }
 
 /**
+ * Locale-aware currency symbol extractor.
+ * Returns the symbol for a given currency (e.g. "$" for MXN/USD, "€" for EUR).
+ */
+export function getCurrencySymbol(currency: Currency): string {
+  const lang = typeof document !== 'undefined' ? document.documentElement.lang : 'es';
+  const locale = lang.startsWith('pt') ? 'pt-BR' : lang.startsWith('en') ? 'en-US' : 'es-MX';
+  return (
+    new Intl.NumberFormat(locale, { style: 'currency', currency })
+      .formatToParts(0)
+      .find((p) => p.type === 'currency')?.value ?? '$'
+  );
+}
+
+/**
  * Resolve the user's locale from the document lang attribute.
  */
 function resolveLocale(): string {
