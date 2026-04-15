@@ -124,8 +124,10 @@ export const auth = {
   totp: {
     setupTitle: 'Configurar autenticação de dois fatores',
     setupDescription: 'Adicione uma camada extra de segurança à sua conta',
-    authenticatorAppNotice: 'Você precisará de um app de autenticação como Google Authenticator, Authy ou 1Password.',
-    setupExplanation: 'A autenticação de dois fatores adiciona uma camada extra de segurança ao exigir um código temporário do seu celular além da sua senha.',
+    authenticatorAppNotice:
+      'Você precisará de um app de autenticação como Google Authenticator, Authy ou 1Password.',
+    setupExplanation:
+      'A autenticação de dois fatores adiciona uma camada extra de segurança ao exigir um código temporário do seu celular além da sua senha.',
     settingUp: 'Configurando...',
     startSetup: 'Iniciar configuração',
     scanQrCode: 'Escanear código QR',
@@ -133,11 +135,13 @@ export const auth = {
     enterCodeLabel: 'Digite o código de 6 dígitos do seu app',
     verifying: 'Verificando...',
     verifyCode: 'Verificar código',
-    backupCodesWarning: 'Salve estes códigos de backup em um local seguro. Cada código só pode ser usado uma vez.',
+    backupCodesWarning:
+      'Salve estes códigos de backup em um local seguro. Cada código só pode ser usado uma vez.',
     backupCodesTitle: 'Códigos de backup',
     enabling2FA: 'Habilitando 2FA...',
     completeSetup: 'Concluir configuração',
-    keepCodesSafe: 'Salve estes códigos de backup em um local seguro. Você vai precisar deles se perder acesso ao seu app de autenticação.',
+    keepCodesSafe:
+      'Salve estes códigos de backup em um local seguro. Você vai precisar deles se perder acesso ao seu app de autenticação.',
     setupFailed: 'Erro ao configurar 2FA',
     invalidCode: 'Código de verificação inválido',
     enabledSuccess: 'Autenticação de dois fatores habilitada com sucesso',
@@ -153,7 +157,8 @@ export const auth = {
     useAuthenticatorApp: 'Usar app de autenticação',
     useBackupCodeLink: 'Usar código de backup',
     verifyAndLogin: 'Verificar e entrar',
-    backupCodeSingleUse: 'Os códigos de backup são de uso único. Certifique-se de guardar os códigos restantes.',
+    backupCodeSingleUse:
+      'Os códigos de backup são de uso único. Certifique-se de guardar os códigos restantes.',
     authSuccess: 'Autenticação bem-sucedida',
     invalidBackupCode: 'Código de backup inválido',
     verificationFailed: 'Verificação falhou',
@@ -184,6 +189,14 @@ export const auth = {
   signInFailed: 'Falha no login',
   redirectingToLogin: 'Redirecionando para o login...',
   authenticationFailed: 'Falha na autenticação',
+
+  // Register page
+  register: {
+    title: 'Criar uma conta',
+    description: 'Comece a gerenciar suas finanças com Dhanam',
+    hasAccount: 'Já tem uma conta?',
+    signIn: 'Entrar',
+  },
 
   // Success
   loginSuccessful: 'Login realizado com sucesso',

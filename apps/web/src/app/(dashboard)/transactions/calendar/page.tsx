@@ -197,7 +197,7 @@ export default function CalendarPage() {
                                 dayData.netAmount >= 0 ? 'text-green-600' : 'text-red-600'
                               }`}
                             >
-                              {formatCurrency(dayData.netAmount, currentSpace.currency)}
+                              {formatCurrency(dayData.netAmount, currentSpace?.currency)}
                             </p>
                           </div>
                         )}
@@ -229,7 +229,7 @@ export default function CalendarPage() {
                   {selectedDay.transactionCount} transaction
                   {selectedDay.transactionCount !== 1 ? 's' : ''} | Net:{' '}
                   <span className={selectedDay.netAmount >= 0 ? 'text-green-600' : 'text-red-600'}>
-                    {formatCurrency(selectedDay.netAmount, currentSpace.currency)}
+                    {formatCurrency(selectedDay.netAmount, currentSpace?.currency)}
                   </span>
                 </CardDescription>
               )}
@@ -264,7 +264,7 @@ export default function CalendarPage() {
                           txn.amount < 0 ? 'text-red-600' : 'text-green-600'
                         }`}
                       >
-                        {formatCurrency(txn.amount, currentSpace.currency)}
+                        {formatCurrency(txn.amount, currentSpace?.currency)}
                       </p>
                     </div>
                   ))}

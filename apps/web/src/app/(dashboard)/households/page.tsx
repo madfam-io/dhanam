@@ -369,9 +369,9 @@ export default function HouseholdsPage() {
                   <div className="text-3xl font-bold">
                     {formatCurrency(netWorth.totalNetWorth, selectedHousehold.baseCurrency)}
                   </div>
-                  {netWorth.bySpace.length > 0 && (
+                  {(netWorth?.bySpace ?? []).length > 0 && (
                     <div className="mt-4 space-y-2">
-                      {netWorth.bySpace.map((space) => (
+                      {(netWorth?.bySpace ?? []).map((space) => (
                         <div key={space.spaceId} className="flex justify-between text-sm">
                           <span className="text-muted-foreground">{space.spaceName}:</span>
                           <span className="font-medium">

@@ -11,14 +11,17 @@ import { RefreshCw } from 'lucide-react';
 export default function QueuesPage() {
   const [queues, setQueues] = useState<QueueInfo[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const loadQueues = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const result = await adminApi.getQueueStats();
       setQueues(result.queues);
-    } catch (error) {
-      console.error('Failed to load queue stats:', error);
+    } catch (err) {
+      console.error('Failed to load queue stats:', err);
+      setError('Failed to load queue stats. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -40,6 +43,15 @@ export default function QueuesPage() {
           <span>Refresh</span>
         </Button>
       </div>
+
+      {error && (
+        <div className="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-300">
+          {error}{' '}
+          <button onClick={loadQueues} className="underline font-medium">
+            Retry
+          </button>
+        </div>
+      )}
 
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

@@ -339,7 +339,7 @@ export default function ScenariosPage() {
                             <span>Median:</span>
                             <span className="font-semibold text-red-600">
                               $
-                              {(comparison.scenario.median ?? 0).toLocaleString(undefined, {
+                              {(comparison.scenario?.median ?? 0).toLocaleString(undefined, {
                                 maximumFractionDigits: 0,
                               })}
                             </span>
@@ -348,7 +348,7 @@ export default function ScenariosPage() {
                             <span>P10:</span>
                             <span className="font-semibold text-red-600">
                               $
-                              {(comparison.scenario.p10 ?? 0).toLocaleString(undefined, {
+                              {(comparison.scenario?.p10 ?? 0).toLocaleString(undefined, {
                                 maximumFractionDigits: 0,
                               })}
                             </span>
@@ -357,7 +357,7 @@ export default function ScenariosPage() {
                             <span>P90:</span>
                             <span className="font-semibold text-red-600">
                               $
-                              {(comparison.scenario.p90 ?? 0).toLocaleString(undefined, {
+                              {(comparison.scenario?.p90 ?? 0).toLocaleString(undefined, {
                                 maximumFractionDigits: 0,
                               })}
                             </span>
@@ -402,7 +402,7 @@ export default function ScenariosPage() {
                 />
 
                 <SimulationChart
-                  timeSeries={comparison.scenario.timeSeries ?? []}
+                  timeSeries={comparison.scenario?.timeSeries ?? []}
                   title={`${comparison.scenarioName} ${t('scenarios.page.projection')}`}
                   description={comparison.scenarioDescription}
                 />

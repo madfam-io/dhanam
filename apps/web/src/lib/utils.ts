@@ -11,6 +11,7 @@ export function cn(...inputs: ClassValue[]) {
  * Reads locale from document.documentElement.lang (set by I18nProvider).
  */
 export function formatCurrency(amount: number, currency: Currency): string {
+  if (amount == null || isNaN(amount)) return '\u2014';
   const lang = typeof document !== 'undefined' ? document.documentElement.lang : 'es';
   const locale = lang.startsWith('pt') ? 'pt-BR' : lang.startsWith('en') ? 'en-US' : 'es-MX';
   return new Intl.NumberFormat(locale, {

@@ -11,14 +11,17 @@ import { RefreshCw } from 'lucide-react';
 export default function DeploymentPage() {
   const [status, setStatus] = useState<DeploymentStatus | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const loadStatus = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const data = await adminApi.getDeploymentStatus();
       setStatus(data);
-    } catch (error) {
-      console.error('Failed to load deployment status:', error);
+    } catch (err) {
+      console.error('Failed to load deployment status:', err);
+      setError('Failed to load deployment status. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -28,7 +31,7 @@ export default function DeploymentPage() {
     loadStatus();
   }, [loadStatus]);
 
-  if (loading || !status) {
+  if (loading && !status) {
     return (
       <div className="space-y-6">
         <div>
@@ -64,9 +67,20 @@ export default function DeploymentPage() {
         </Button>
       </div>
 
-      <div className="max-w-lg">
-        <DeploymentStatusCard status={status} />
-      </div>
+      {error && (
+        <div className="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-300">
+          {error}{' '}
+          <button onClick={loadStatus} className="underline font-medium">
+            Retry
+          </button>
+        </div>
+      )}
+
+      {status && (
+        <div className="max-w-lg">
+          <DeploymentStatusCard status={status} />
+        </div>
+      )}
     </div>
   );
 }

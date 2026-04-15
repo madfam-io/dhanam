@@ -124,8 +124,10 @@ export const auth = {
   totp: {
     setupTitle: 'Setup Two-Factor Authentication',
     setupDescription: 'Add an extra layer of security to your account',
-    authenticatorAppNotice: "You'll need an authenticator app like Google Authenticator, Authy, or 1Password.",
-    setupExplanation: 'Two-factor authentication adds an extra layer of security by requiring a time-based code from your phone in addition to your password.',
+    authenticatorAppNotice:
+      "You'll need an authenticator app like Google Authenticator, Authy, or 1Password.",
+    setupExplanation:
+      'Two-factor authentication adds an extra layer of security by requiring a time-based code from your phone in addition to your password.',
     settingUp: 'Setting up...',
     startSetup: 'Start Setup',
     scanQrCode: 'Scan QR Code',
@@ -133,11 +135,13 @@ export const auth = {
     enterCodeLabel: 'Enter 6-digit code from your app',
     verifying: 'Verifying...',
     verifyCode: 'Verify Code',
-    backupCodesWarning: 'Save these backup codes in a secure location. Each code can only be used once.',
+    backupCodesWarning:
+      'Save these backup codes in a secure location. Each code can only be used once.',
     backupCodesTitle: 'Backup Codes',
     enabling2FA: 'Enabling 2FA...',
     completeSetup: 'Complete Setup',
-    keepCodesSafe: "Keep these backup codes safe. You'll need them if you lose access to your authenticator app.",
+    keepCodesSafe:
+      "Keep these backup codes safe. You'll need them if you lose access to your authenticator app.",
     setupFailed: 'Failed to setup 2FA',
     invalidCode: 'Invalid verification code',
     enabledSuccess: 'Two-factor authentication enabled successfully',
@@ -153,7 +157,8 @@ export const auth = {
     useAuthenticatorApp: 'Use authenticator app',
     useBackupCodeLink: 'Use backup code',
     verifyAndLogin: 'Verify & Login',
-    backupCodeSingleUse: 'Backup codes are single-use. Make sure to keep your remaining codes safe.',
+    backupCodeSingleUse:
+      'Backup codes are single-use. Make sure to keep your remaining codes safe.',
     authSuccess: 'Authentication successful',
     invalidBackupCode: 'Invalid backup code',
     verificationFailed: 'Verification failed',
@@ -184,6 +189,14 @@ export const auth = {
   signInFailed: 'Sign in failed',
   redirectingToLogin: 'Redirecting to login...',
   authenticationFailed: 'Authentication failed',
+
+  // Register page
+  register: {
+    title: 'Create an account',
+    description: 'Start managing your finances with Dhanam',
+    hasAccount: 'Already have an account?',
+    signIn: 'Sign in',
+  },
 
   // Success
   loginSuccessful: 'Login successful',

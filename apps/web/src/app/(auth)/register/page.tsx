@@ -1,5 +1,6 @@
 'use client';
 
+import { Component, type ReactNode } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
@@ -9,11 +10,39 @@ const SignUp = dynamic(() => import('@janua/react-sdk').then((mod) => mod.SignUp
   loading: () => <div className="h-10 animate-pulse bg-muted rounded" />,
 });
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@dhanam/ui';
+import { Button } from '@dhanam/ui';
+import { useTranslation } from '@dhanam/shared';
 import { LocaleSwitcher } from '~/components/locale-switcher';
+
+/** Catches errors from Janua SDK components without crashing the page */
+class JanuaErrorBoundary extends Component<
+  { children: ReactNode; fallback?: ReactNode },
+  { hasError: boolean }
+> {
+  state = { hasError: false };
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        this.props.fallback ?? (
+          <Button variant="default" className="w-full" asChild>
+            <Link href="https://auth.madfam.io">Sign up with Janua SSO</Link>
+          </Button>
+        )
+      );
+    }
+    return this.props.children;
+  }
+}
 
 export default function RegisterPage() {
   const searchParams = useSearchParams();
   const selectedPlan = searchParams.get('plan');
+  const { t } = useTranslation('auth');
 
   return (
     <div className="flex flex-col space-y-4">
@@ -22,21 +51,23 @@ export default function RegisterPage() {
       </div>
       <Card>
         <CardHeader>
-          <CardTitle>Create an account</CardTitle>
+          <CardTitle>{t('register.title') || 'Create an account'}</CardTitle>
           <CardDescription>
             {selectedPlan
               ? `Start your free trial of ${selectedPlan.charAt(0).toUpperCase() + selectedPlan.slice(1)}`
-              : 'Start managing your finances with Dhanam'}
+              : t('register.description') || 'Start managing your finances with Dhanam'}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <SignUp redirectUrl="/onboarding" />
+          <JanuaErrorBoundary>
+            <SignUp redirectUrl="/onboarding" />
+          </JanuaErrorBoundary>
         </CardContent>
         <CardFooter>
           <div className="text-sm text-muted-foreground text-center w-full">
-            Already have an account?{' '}
+            {t('register.hasAccount') || 'Already have an account?'}{' '}
             <Link href="/login" className="text-primary hover:underline">
-              Sign in
+              {t('register.signIn') || 'Sign in'}
             </Link>
           </div>
         </CardFooter>

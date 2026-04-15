@@ -46,9 +46,9 @@ function groupByDate(notifications: Notification[]): Record<string, Notification
 
   for (const n of notifications) {
     const ts = new Date(n.createdAt).getTime();
-    if (ts >= today) groups['today']!.push(n);
-    else if (ts >= weekAgo) groups['thisWeek']!.push(n);
-    else groups['earlier']!.push(n);
+    if (ts >= today) groups['today']?.push(n);
+    else if (ts >= weekAgo) groups['thisWeek']?.push(n);
+    else groups['earlier']?.push(n);
   }
 
   return groups;

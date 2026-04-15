@@ -417,7 +417,7 @@ export default function EstatePlanningPage() {
                         className="flex items-center justify-between p-3 border rounded"
                       >
                         <div>
-                          <div className="font-medium">{beneficiary.beneficiary?.user.name}</div>
+                          <div className="font-medium">{beneficiary.beneficiary?.user?.name}</div>
                           <div className="text-sm text-muted-foreground">
                             {beneficiary.assetType.replace('_', ' ')} - {beneficiary.percentage}%
                           </div>
@@ -447,7 +447,7 @@ export default function EstatePlanningPage() {
                         className="flex items-center justify-between p-3 border rounded"
                       >
                         <div>
-                          <div className="font-medium">{executor.executor?.user.name}</div>
+                          <div className="font-medium">{executor.executor?.user?.name}</div>
                           <div className="text-sm text-muted-foreground">
                             {t('fields.order')} {executor.order}
                           </div>

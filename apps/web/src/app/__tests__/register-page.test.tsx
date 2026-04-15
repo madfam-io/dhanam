@@ -14,6 +14,22 @@ jest.mock('~/components/locale-switcher', () => ({
   LocaleSwitcher: () => <div data-testid="locale-switcher" />,
 }));
 
+jest.mock('@dhanam/shared', () => ({
+  useTranslation: () => ({
+    t: (key: string) => {
+      const translations: Record<string, string> = {
+        'register.title': 'Create an account',
+        'register.description': 'Start managing your finances with Dhanam',
+        'register.hasAccount': 'Already have an account?',
+        'register.signIn': 'Sign in',
+      };
+      return translations[key] || key;
+    },
+    locale: 'en',
+    setLocale: jest.fn(),
+  }),
+}));
+
 jest.mock('@janua/react-sdk', () => ({
   SignUp: ({ redirectUrl }: any) => (
     <div data-testid="janua-sign-up" data-redirect-url={redirectUrl}>

@@ -279,17 +279,17 @@ export default function QueryPage() {
                         <td className="py-3 px-4 font-medium">{row.groupLabel}</td>
                         <td className="py-3 px-4 text-right">{row.transactionCount}</td>
                         <td className="py-3 px-4 text-right text-green-600">
-                          {formatCurrency(row.income, currentSpace.currency)}
+                          {formatCurrency(row.income, currentSpace?.currency ?? 'MXN')}
                         </td>
                         <td className="py-3 px-4 text-right text-red-600">
-                          {formatCurrency(Math.abs(row.expenses), currentSpace.currency)}
+                          {formatCurrency(Math.abs(row.expenses), currentSpace?.currency ?? 'MXN')}
                         </td>
                         <td
                           className={`py-3 px-4 text-right font-medium ${
                             row.totalAmount >= 0 ? 'text-green-600' : 'text-red-600'
                           }`}
                         >
-                          {formatCurrency(row.totalAmount, currentSpace.currency)}
+                          {formatCurrency(row.totalAmount, currentSpace?.currency ?? 'MXN')}
                         </td>
                       </tr>
                     ))}
@@ -303,13 +303,13 @@ export default function QueryPage() {
                       <td className="py-3 px-4 text-right text-green-600">
                         {formatCurrency(
                           results.reduce((s, r) => s + r.income, 0),
-                          currentSpace.currency
+                          currentSpace?.currency ?? 'MXN'
                         )}
                       </td>
                       <td className="py-3 px-4 text-right text-red-600">
                         {formatCurrency(
                           Math.abs(results.reduce((s, r) => s + r.expenses, 0)),
-                          currentSpace.currency
+                          currentSpace?.currency ?? 'MXN'
                         )}
                       </td>
                       <td
@@ -321,7 +321,7 @@ export default function QueryPage() {
                       >
                         {formatCurrency(
                           results.reduce((s, r) => s + r.totalAmount, 0),
-                          currentSpace.currency
+                          currentSpace?.currency ?? 'MXN'
                         )}
                       </td>
                     </tr>

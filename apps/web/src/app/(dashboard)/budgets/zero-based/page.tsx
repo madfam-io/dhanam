@@ -83,7 +83,7 @@ export default function ZeroBasedBudgetPage() {
 
   const handleEditGoal = useCallback(
     (categoryId: string) => {
-      const category = allocationStatus?.categories.find((c) => c.categoryId === categoryId);
+      const category = allocationStatus?.categories?.find((c) => c.categoryId === categoryId);
       if (category) {
         setSelectedCategory(category);
         setIsGoalEditorOpen(true);

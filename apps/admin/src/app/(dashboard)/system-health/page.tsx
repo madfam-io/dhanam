@@ -14,18 +14,18 @@ export default function SystemHealthPage() {
   const [health, setHealth] = useState<SystemHealth | null>(null);
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const loadData = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
-      const [h, m] = await Promise.all([
-        adminApi.getSystemHealth(),
-        adminApi.getMetrics(),
-      ]);
+      const [h, m] = await Promise.all([adminApi.getSystemHealth(), adminApi.getMetrics()]);
       setHealth(h);
       setMetrics(m);
-    } catch (error) {
-      console.error('Failed to load system health:', error);
+    } catch (err) {
+      console.error('Failed to load system health:', err);
+      setError('Failed to load system health. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -35,23 +35,35 @@ export default function SystemHealthPage() {
     loadData();
   }, [loadData]);
 
-  if (loading || !health || !metrics) {
+  if (loading && !health) {
     return <SystemHealthSkeleton />;
   }
 
-  const services = [
-    { name: 'Database', status: health.database.status, detail: `${health.database.connections} connections` },
-    { name: 'Redis', status: health.redis.status, detail: health.redis.connected ? 'Connected' : 'Disconnected' },
-    { name: 'Job Queues', status: health.queues.status },
-    { name: 'Providers', status: health.providers.status },
-  ];
+  const services = health
+    ? [
+        {
+          name: 'Database',
+          status: health.database.status,
+          detail: `${health.database.connections} connections`,
+        },
+        {
+          name: 'Redis',
+          status: health.redis.status,
+          detail: health.redis.connected ? 'Connected' : 'Disconnected',
+        },
+        { name: 'Job Queues', status: health.queues.status },
+        { name: 'Providers', status: health.providers.status },
+      ]
+    : [];
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">System Health</h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">Monitor system status and performance</p>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">
+            Monitor system status and performance
+          </p>
         </div>
         <Button variant="outline" onClick={loadData} className="flex items-center space-x-2">
           <RefreshCw className="h-4 w-4" />
@@ -59,21 +71,34 @@ export default function SystemHealthPage() {
         </Button>
       </div>
 
-      <HealthStatusCard services={services} uptime={health.uptime} />
+      {error && (
+        <div className="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-300">
+          {error}{' '}
+          <button onClick={loadData} className="underline font-medium">
+            Retry
+          </button>
+        </div>
+      )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatsCard title="DAU" value={metrics.dau} icon={Users} color="blue" />
-        <StatsCard title="WAU" value={metrics.wau} icon={Users} color="green" />
-        <StatsCard title="MAU" value={metrics.mau} icon={Users} color="purple" />
-        <StatsCard
-          title="Memory Usage"
-          value={`${metrics.resourceUsage.memoryMB} MB`}
-          icon={Activity}
-          color="orange"
-        />
-      </div>
+      {health && metrics && (
+        <>
+          <HealthStatusCard services={services} uptime={health.uptime} />
 
-      <CacheControls />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <StatsCard title="DAU" value={metrics.dau} icon={Users} color="blue" />
+            <StatsCard title="WAU" value={metrics.wau} icon={Users} color="green" />
+            <StatsCard title="MAU" value={metrics.mau} icon={Users} color="purple" />
+            <StatsCard
+              title="Memory Usage"
+              value={`${metrics.resourceUsage.memoryMB} MB`}
+              icon={Activity}
+              color="orange"
+            />
+          </div>
+
+          <CacheControls />
+        </>
+      )}
     </div>
   );
 }

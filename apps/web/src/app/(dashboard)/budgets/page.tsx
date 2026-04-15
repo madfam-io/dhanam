@@ -334,7 +334,7 @@ export default function BudgetsPage() {
                       {t('page.addCategory')}
                     </Button>
                   </div>
-                  {budgetSummary.categories.map((category: CategorySummary) => (
+                  {(budgetSummary.categories ?? []).map((category: CategorySummary) => (
                     <Card key={category.id}>
                       <CardContent className="pt-4">
                         <div className="flex items-center justify-between mb-2">

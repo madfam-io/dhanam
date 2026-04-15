@@ -13,6 +13,7 @@ import { UserDetailsModal } from '@/components/user-details-modal';
 export default function UsersPage() {
   const [users, setUsers] = useState<UserDetails[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -20,6 +21,7 @@ export default function UsersPage() {
 
   const loadUsers = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const response = await adminApi.searchUsers({
         search,
@@ -30,8 +32,9 @@ export default function UsersPage() {
       });
       setUsers(response.data);
       setTotalPages(response.totalPages);
-    } catch (error) {
-      console.error('Failed to load users:', error);
+    } catch (err) {
+      console.error('Failed to load users:', err);
+      setError('Failed to load users. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -62,6 +65,15 @@ export default function UsersPage() {
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Users</h1>
         <p className="text-gray-500 dark:text-gray-400 mt-1">Search and manage user accounts</p>
       </div>
+
+      {error && (
+        <div className="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-300">
+          {error}{' '}
+          <button onClick={loadUsers} className="underline font-medium">
+            Retry
+          </button>
+        </div>
+      )}
 
       <Card className="p-6">
         <form onSubmit={handleSearch} className="flex space-x-4">
