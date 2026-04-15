@@ -115,6 +115,16 @@ export default function StatisticsPage() {
               >
                 Last 90 Days
               </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setStartDate('2000-01-01');
+                  setEndDate(new Date().toISOString().slice(0, 10));
+                }}
+              >
+                All Time
+              </Button>
             </div>
           </div>
         </CardContent>
