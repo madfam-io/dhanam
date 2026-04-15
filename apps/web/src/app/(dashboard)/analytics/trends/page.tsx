@@ -28,31 +28,29 @@ export default function TrendsPage() {
     retry: 1,
   });
 
-  // API may return {months: [...], summary: {...}} or a plain array
+  // API returns {months: [...], summary: {...}} — extract the months array
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const rawResponse = trendsResponse as any;
-  const trends = Array.isArray(rawResponse) ? rawResponse : (rawResponse?.months ?? []);
+  const raw = trendsResponse as any;
+  const monthsArr = raw?.months ?? raw;
+  const trends: Array<{
+    month: string;
+    income: number;
+    expenses: number;
+    net: number;
+    savingsRate: number;
+  }> = Array.isArray(monthsArr) ? monthsArr : [];
 
-  // Computed summary (use API summary if available, else compute)
-  const apiSummary = !Array.isArray(rawResponse) ? rawResponse?.summary : null;
+  // Use API-provided summary or compute from trends
+  const apiSummary = raw?.summary ?? null;
   const summary =
     trends.length > 0
       ? {
-          totalIncome:
-            apiSummary?.totalIncome ??
-            trends.reduce((sum: number, m: { income: number }) => sum + m.income, 0),
-          totalExpenses:
-            apiSummary?.totalExpenses ??
-            trends.reduce((sum: number, m: { expenses: number }) => sum + m.expenses, 0),
-          totalNet:
-            apiSummary?.totalNet ??
-            trends.reduce((sum: number, m: { net: number }) => sum + m.net, 0),
+          totalIncome: apiSummary?.totalIncome ?? trends.reduce((s, m) => s + m.income, 0),
+          totalExpenses: apiSummary?.totalExpenses ?? trends.reduce((s, m) => s + m.expenses, 0),
+          totalNet: apiSummary?.totalNet ?? trends.reduce((s, m) => s + m.net, 0),
           avgSavingsRate:
             apiSummary?.overallSavingsRate ??
-            (trends.length > 0
-              ? trends.reduce((sum: number, m: { savingsRate: number }) => sum + m.savingsRate, 0) /
-                trends.length
-              : 0),
+            trends.reduce((s, m) => s + m.savingsRate, 0) / trends.length,
         }
       : null;
 
