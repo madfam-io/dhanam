@@ -421,6 +421,19 @@ export class WebhookProcessorService {
     if (metadata?.orgId) {
       await this.lifecycle.notifyJanuaOfTierChange(metadata.orgId, customer_id!, plan_id!);
     }
+
+    // Notify product-specific webhooks (Karafiel, Tezca, etc.) — zero-touch via env var
+    if (plan_id) {
+      this.lifecycle
+        .notifyProductWebhooks(
+          metadata?.orgId || '',
+          customer_id!,
+          plan_id,
+          'subscription.created',
+          subscription_id
+        )
+        .catch((err) => this.logger.warn(`Product webhook dispatch failed: ${err.message}`));
+    }
   }
 
   /**
@@ -446,6 +459,13 @@ export class WebhookProcessorService {
     });
 
     this.logger.log(`Janua subscription updated for user ${user.id}: ${status}`);
+
+    // Notify product-specific webhooks
+    if (plan_id) {
+      this.lifecycle
+        .notifyProductWebhooks('', customer_id!, plan_id, 'subscription.updated')
+        .catch((err) => this.logger.warn(`Product webhook dispatch failed: ${err.message}`));
+    }
   }
 
   /**
@@ -493,6 +513,11 @@ export class WebhookProcessorService {
     });
 
     this.logger.log(`Janua subscription cancelled for user ${user.id}`);
+
+    // Notify product-specific webhooks
+    this.lifecycle
+      .notifyProductWebhooks('', customer_id!, '', 'subscription.cancelled')
+      .catch((err) => this.logger.warn(`Product webhook dispatch failed: ${err.message}`));
   }
 
   /**

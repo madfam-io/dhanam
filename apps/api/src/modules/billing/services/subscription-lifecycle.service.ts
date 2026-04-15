@@ -551,4 +551,76 @@ export class SubscriptionLifecycleService {
       this.logger.error(`Error notifying Janua of tier change: ${error.message}`);
     }
   }
+
+  /**
+   * Notify product-specific webhook endpoints of subscription changes.
+   *
+   * URLs are configured via PRODUCT_WEBHOOK_URLS env var (zero-touch:
+   * new products add their URL without Dhanam code changes).
+   * Format: "karafiel:https://api.karafiel.mx/api/v1/webhooks/dhanam,tezca:https://..."
+   */
+  async notifyProductWebhooks(
+    orgId: string,
+    customerId: string,
+    planId: string,
+    eventType: string,
+    subscriptionId?: string
+  ): Promise<void> {
+    const urlConfig = this.config.get<string>('PRODUCT_WEBHOOK_URLS');
+    const secret = this.config.get<string>('DHANAM_WEBHOOK_SECRET');
+
+    if (!urlConfig || !secret) return;
+
+    // Parse product from planId (e.g., "karafiel_pro" -> "karafiel")
+    const product = planId?.split('_')[0];
+    if (!product) return;
+
+    // Parse URL map from env var
+    const urlMap: Record<string, string> = {};
+    for (const entry of urlConfig.split(',')) {
+      const colonIdx = entry.indexOf(':');
+      if (colonIdx > 0) {
+        const key = entry.slice(0, colonIdx).trim();
+        const url = entry.slice(colonIdx + 1).trim();
+        urlMap[key] = url;
+      }
+    }
+
+    const targetUrl = urlMap[product];
+    if (!targetUrl) return;
+
+    const payload = JSON.stringify({
+      type: eventType,
+      id: crypto.randomUUID(),
+      data: {
+        customer_id: customerId,
+        subscription_id: subscriptionId,
+        plan_id: planId,
+        organization_id: orgId,
+        status: eventType.includes('.') ? eventType.split('.')[1] : 'created',
+      },
+      timestamp: new Date().toISOString(),
+    });
+
+    const signature = crypto.createHmac('sha256', secret).update(payload).digest('hex');
+
+    try {
+      const response = await fetch(targetUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Dhanam-Signature': signature,
+        },
+        body: payload,
+      });
+
+      if (!response.ok) {
+        this.logger.warn(`Product webhook to ${product} failed: ${response.status}`);
+      } else {
+        this.logger.log(`Product webhook dispatched to ${product} for ${eventType}`);
+      }
+    } catch (error) {
+      this.logger.error(`Product webhook dispatch to ${product} failed: ${error.message}`);
+    }
+  }
 }
