@@ -61,7 +61,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem = function (key: string, value: string) {
       originalSetItem(key, value);
       if (key === 'janua_access_token') {
-        tryBootstrap();
+        const bootstrapped = tryBootstrap();
+        if (bootstrapped) {
+          // Redirect after successful login (middleware only fires on navigation)
+          const path = window.location.pathname;
+          if (path === '/login' || path === '/register') {
+            const from = new URLSearchParams(window.location.search).get('from');
+            window.location.href = from || '/dashboard';
+          }
+        }
       }
     };
 

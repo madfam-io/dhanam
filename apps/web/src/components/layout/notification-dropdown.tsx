@@ -7,6 +7,8 @@ import { Bell, Check, AlertTriangle, Lightbulb, Trophy, Info } from 'lucide-reac
 import { Button, Popover, PopoverContent, PopoverTrigger } from '@dhanam/ui';
 import { useTranslation } from '@dhanam/shared';
 
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4010/v1';
+
 interface Notification {
   id: string;
   type: string;
@@ -44,7 +46,10 @@ export function NotificationDropdown() {
   const { data: notifications = [] } = useQuery<Notification[]>({
     queryKey: ['notifications'],
     queryFn: async () => {
-      const res = await fetch('/api/notifications?limit=5', { credentials: 'include' });
+      const token = localStorage.getItem('janua_access_token');
+      const res = await fetch(`${API_BASE}/notifications?limit=5`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
       if (!res.ok) return [];
       return res.json();
     },
@@ -55,9 +60,10 @@ export function NotificationDropdown() {
 
   const markAllRead = useMutation({
     mutationFn: async () => {
-      await fetch('/api/notifications/mark-all-read', {
+      const token = localStorage.getItem('janua_access_token');
+      await fetch(`${API_BASE}/notifications/mark-all-read`, {
         method: 'POST',
-        credentials: 'include',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
     },
     onSuccess: () => {

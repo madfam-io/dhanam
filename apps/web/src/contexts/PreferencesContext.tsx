@@ -3,6 +3,8 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { useAuth } from '@/lib/hooks/use-auth';
 
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4010/v1';
+
 export interface UserPreferences {
   id: string;
   userId: string;
@@ -115,7 +117,7 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
     setError(null);
 
     try {
-      const response = await fetch('/api/preferences', {
+      const response = await fetch(`${API_BASE}/preferences`, {
         headers: {
           Authorization: `Bearer ${tokens?.accessToken}`,
         },
@@ -141,7 +143,7 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
       setError(null);
 
       try {
-        const response = await fetch('/api/preferences', {
+        const response = await fetch(`${API_BASE}/preferences`, {
           method: 'PATCH',
           headers: {
             Authorization: `Bearer ${tokens?.accessToken}`,
@@ -207,7 +209,7 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
       setError(null);
 
       try {
-        const response = await fetch('/api/preferences/bulk', {
+        const response = await fetch(`${API_BASE}/preferences/bulk`, {
           method: 'PUT',
           headers: {
             Authorization: `Bearer ${tokens?.accessToken}`,
@@ -236,7 +238,7 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
     setError(null);
 
     try {
-      const response = await fetch('/api/preferences/reset', {
+      const response = await fetch(`${API_BASE}/preferences/reset`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${tokens?.accessToken}`,
