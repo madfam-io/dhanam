@@ -1,6 +1,4 @@
-import { IsIn, IsOptional, IsString } from 'class-validator';
-
-const VALID_PRODUCTS = ['enclii', 'tezca', 'yantra4d', 'dhanam'] as const;
+import { IsOptional, IsString, Matches } from 'class-validator';
 
 export class UpgradeToPremiumDto {
   @IsOptional()
@@ -20,7 +18,7 @@ export class UpgradeToPremiumDto {
   orgId?: string;
 
   /**
-   * Plan ID (e.g., 'enclii_pro', 'tezca_pro', 'dhanam_pro')
+   * Plan ID (e.g., 'enclii_pro', 'tezca_pro', 'karafiel_essentials')
    * Used to select the appropriate product/price in the payment provider
    */
   @IsOptional()
@@ -28,11 +26,12 @@ export class UpgradeToPremiumDto {
   plan?: string;
 
   /**
-   * Product being upgraded (defaults to 'dhanam')
+   * Product being upgraded (lowercase alphanumeric, e.g. 'karafiel').
+   * Defaults to 'dhanam'.
    */
   @IsOptional()
-  @IsIn(VALID_PRODUCTS)
-  product?: (typeof VALID_PRODUCTS)[number];
+  @Matches(/^[a-z][a-z0-9]*$/, { message: 'product must be lowercase alphanumeric' })
+  product?: string;
 
   /**
    * Country code for provider routing (e.g., 'MX', 'US')

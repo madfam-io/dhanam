@@ -68,6 +68,14 @@ export class BillingController {
   async publicCheckout(@Query() query: CheckoutQueryDto, @Res() reply: FastifyReply) {
     const allowedHosts = [/\.madfam\.io$/, /\.dhan\.am$/, /\.enclii\.dev$/, /\.enclii\.com$/];
 
+    // Env-driven allowlist: CHECKOUT_ALLOWED_HOSTS=karafiel.mx,tezca.mx,janua.dev
+    // New ecosystem services add their custom domain here without code changes.
+    const envHosts = (process.env.CHECKOUT_ALLOWED_HOSTS || '').split(',').filter(Boolean);
+    for (const h of envHosts) {
+      const escaped = h.replace(/\./g, '\\.');
+      allowedHosts.push(new RegExp(`(^|\\.)${escaped}$`));
+    }
+
     if (process.env.NODE_ENV !== 'production') {
       allowedHosts.push(/^localhost(:\d+)?$/);
     }

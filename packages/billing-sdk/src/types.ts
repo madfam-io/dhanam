@@ -2,13 +2,29 @@
 // Enums & Literals
 // ────────────────────────────────────────────────
 
-/** Product identifiers in the MADFAM ecosystem */
-export type ProductId = 'enclii' | 'tezca' | 'yantra4d' | 'dhanam' | 'karafiel' | 'forgesight';
+/**
+ * Product identifiers in the MADFAM ecosystem.
+ * Known values are provided for autocomplete; any lowercase alphanumeric
+ * string is accepted at runtime (zero-touch: new products don't need SDK changes).
+ */
+export type ProductId =
+  | 'enclii'
+  | 'tezca'
+  | 'yantra4d'
+  | 'dhanam'
+  | 'karafiel'
+  | 'forgesight'
+  | (string & {});
 
 /** Subscription tier levels */
 export type SubscriptionTier = 'community' | 'essentials' | 'pro' | 'premium' | 'madfam';
 
-/** Plan slug for checkout and upgrade flows (optionally product-prefixed) */
+/**
+ * Plan slug for checkout and upgrade flows.
+ * Format: bare tier ("pro"), product-prefixed ("{product}_{tier}"),
+ * or with billing period ("{product}_{tier}_yearly").
+ * Known values are provided for autocomplete; any valid format is accepted.
+ */
 export type PlanSlug =
   | 'essentials'
   | 'pro'
@@ -18,10 +34,9 @@ export type PlanSlug =
   | 'pro_yearly'
   | 'premium_yearly'
   | 'madfam_yearly'
-  | `${ProductId}_essentials`
-  | `${ProductId}_pro`
-  | `${ProductId}_premium`
-  | `${ProductId}_madfam`;
+  | `${string}_${'essentials' | 'pro' | 'premium' | 'madfam'}`
+  | `${string}_${'essentials' | 'pro' | 'premium' | 'madfam'}_${'yearly' | 'monthly'}`
+  | (string & {});
 
 /** Supported billing payment providers */
 export type BillingProvider = 'conekta' | 'polar' | 'stripe';

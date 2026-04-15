@@ -1,41 +1,16 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsIn, IsOptional, IsString, IsUrl, IsUUID } from 'class-validator';
+import { IsOptional, IsString, IsUrl, IsUUID, Matches } from 'class-validator';
 
-const VALID_PLANS = [
-  'essentials',
-  'pro',
-  'madfam',
-  'essentials_yearly',
-  'pro_yearly',
-  'madfam_yearly',
-  // Product-prefixed plans
-  'enclii_essentials',
-  'enclii_pro',
-  'enclii_madfam',
-  'tezca_essentials',
-  'tezca_pro',
-  'tezca_madfam',
-  'yantra4d_essentials',
-  'yantra4d_pro',
-  'yantra4d_madfam',
-  'dhanam_essentials',
-  'dhanam_pro',
-  'dhanam_madfam',
-  // Legacy plans (backwards compat)
-  'sovereign',
-  'enclii_sovereign',
-  'enclii_ecosystem',
-] as const;
-
-const VALID_PRODUCTS = ['enclii', 'tezca', 'yantra4d', 'dhanam'] as const;
+import { IsValidPlanId } from '../validators/plan-id.validator';
 
 export class CheckoutQueryDto {
   @ApiProperty({
-    enum: VALID_PLANS,
-    description: 'Subscription plan (optionally product-prefixed)',
+    description:
+      'Subscription plan ID. Format: {product}_{tier} (e.g. "karafiel_pro"), bare tier (e.g. "pro"), or legacy plan name.',
+    example: 'karafiel_pro',
   })
-  @IsIn(VALID_PLANS)
-  plan: (typeof VALID_PLANS)[number];
+  @IsValidPlanId()
+  plan: string;
 
   @ApiProperty({ description: 'Janua user ID' })
   @IsUUID()
@@ -47,10 +22,11 @@ export class CheckoutQueryDto {
   return_url: string;
 
   @ApiPropertyOptional({
-    enum: VALID_PRODUCTS,
-    description: 'Product being upgraded (defaults to dhanam)',
+    description:
+      'Product being upgraded (lowercase alphanumeric, e.g. "karafiel"). Defaults to "dhanam".',
+    example: 'karafiel',
   })
   @IsOptional()
-  @IsIn(VALID_PRODUCTS)
-  product?: (typeof VALID_PRODUCTS)[number];
+  @Matches(/^[a-z][a-z0-9]*$/, { message: 'product must be lowercase alphanumeric' })
+  product?: string;
 }
