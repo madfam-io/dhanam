@@ -25,6 +25,8 @@ FROM base AS deps
 COPY .npmrc package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/web/package.json ./apps/web/
 COPY apps/api/package.json ./apps/api/
+COPY apps/api/prisma/schema.prisma ./apps/api/prisma/schema.prisma
+COPY apps/api/prisma.config.ts ./apps/api/prisma.config.ts
 COPY apps/admin/package.json ./apps/admin/
 COPY apps/mobile/package.json ./apps/mobile/
 COPY packages/shared/package.json ./packages/shared/
@@ -34,8 +36,8 @@ COPY packages/esg/package.json ./packages/esg/
 COPY packages/simulations/package.json ./packages/simulations/
 COPY packages/billing-sdk/package.json ./packages/billing-sdk/
 
-# Install dependencies
-RUN pnpm install --frozen-lockfile
+# Install dependencies (DATABASE_URL needed for Prisma generate postinstall)
+RUN DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy" pnpm install --frozen-lockfile
 
 # =============================================================================
 # Builder Stage
