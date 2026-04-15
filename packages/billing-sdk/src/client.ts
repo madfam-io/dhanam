@@ -1,6 +1,9 @@
 import { DhanamApiError, DhanamAuthError } from './errors';
 import type {
   BillingHistory,
+  CatalogCreditCost,
+  CatalogProduct,
+  CatalogResponse,
   CheckoutOptions,
   CheckoutResult,
   DhanamClientConfig,
@@ -84,6 +87,25 @@ export class DhanamClient {
   /** Create a billing portal session for self-service management. Requires authentication. */
   async createPortalSession(): Promise<PortalResult> {
     return this.request<PortalResult>('POST', '/billing/portal');
+  }
+
+  // ────────────────────────────────────────────
+  // Product Catalog (public, no auth required)
+  // ────────────────────────────────────────────
+
+  /** Get the full MADFAM product catalog. Public endpoint, no auth required. */
+  async getCatalog(): Promise<CatalogResponse> {
+    return this.request<CatalogResponse>('GET', '/billing/catalog');
+  }
+
+  /** Get a single product from the catalog by slug. Public, no auth required. */
+  async getProduct(slug: string): Promise<CatalogProduct> {
+    return this.request<CatalogProduct>('GET', `/billing/catalog/${slug}`);
+  }
+
+  /** Get credit costs for a specific product. Public, no auth required. */
+  async getCreditCosts(slug: string): Promise<CatalogCreditCost[]> {
+    return this.request<CatalogCreditCost[]>('GET', `/billing/catalog/${slug}/credit-costs`);
   }
 
   // ────────────────────────────────────────────

@@ -213,6 +213,53 @@ export interface UsageBreakdown {
 }
 
 // ────────────────────────────────────────────────
+// Product Catalog Types
+// ────────────────────────────────────────────────
+
+/** A product in the MADFAM ecosystem catalog */
+export interface CatalogProduct {
+  slug: string;
+  name: string;
+  description: string | null;
+  category: string;
+  iconUrl: string | null;
+  websiteUrl: string | null;
+  tiers: CatalogTier[];
+  creditCosts: CatalogCreditCost[];
+}
+
+/** A pricing tier within a product */
+export interface CatalogTier {
+  tierSlug: string;
+  dhanamTier: SubscriptionTier;
+  displayName: string | null;
+  description: string | null;
+  metadata: Record<string, unknown> | null;
+  /** Prices keyed by currency (e.g., "MXN", "USD") */
+  prices: Record<string, CatalogPrice>;
+  features: string[];
+}
+
+/** Monthly and yearly price in smallest currency unit (centavos/cents) */
+export interface CatalogPrice {
+  monthly: number | null;
+  yearly: number | null;
+}
+
+/** Credit cost for a metered operation on a product */
+export interface CatalogCreditCost {
+  operation: string;
+  credits: number;
+  label: string | null;
+}
+
+/** Response from GET /billing/catalog */
+export interface CatalogResponse {
+  products: CatalogProduct[];
+  updatedAt: string;
+}
+
+// ────────────────────────────────────────────────
 // Client Configuration
 // ────────────────────────────────────────────────
 

@@ -96,6 +96,27 @@ enum UsageMetricType {
   api_request
 }
 
+enum ProductCategory {
+  compliance
+  finance
+  legal
+  infrastructure
+  intelligence
+  fabrication
+  crm
+  platform
+}
+
+enum BillingInterval {
+  monthly
+  yearly
+}
+
+enum PriceStatus {
+  active
+  archived
+}
+
 enum ManualAssetType {
   real_estate
   vehicle
@@ -2095,4 +2116,92 @@ model CreditBalance {
 
   @@index([orgId])
   @@map("credit_balances")
+}
+
+// ────────────────────────────────────────────────
+// Product Catalog — centralized MADFAM product registry
+// ────────────────────────────────────────────────
+
+model Product {
+  id              String          @id @default(uuid())
+  slug            String          @unique // "karafiel", "dhanam", "selva"
+  name            String // "Karafiel"
+  description     String?
+  category        ProductCategory @default(platform)
+  active          Boolean         @default(true)
+  sortOrder       Int             @default(0) @map("sort_order")
+  iconUrl         String?         @map("icon_url")
+  websiteUrl      String?         @map("website_url")
+  stripeProductId String?         @unique @map("stripe_product_id")
+  metadata        Json?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  prices      ProductPrice[]
+  features    ProductFeature[]
+  creditCosts ProductCreditCost[]
+
+  @@index([active, sortOrder])
+  @@map("products")
+}
+
+model ProductPrice {
+  id            String           @id @default(uuid())
+  productId     String           @map("product_id")
+  tierSlug      String           @map("tier_slug") // "contador", "despacho", "essentials"
+  dhanamTier    SubscriptionTier @map("dhanam_tier")
+  currency      String           @default("USD") // "USD", "MXN"
+  interval      BillingInterval  @default(monthly)
+  amountCents   Int              @map("amount_cents") // price in smallest unit
+  status        PriceStatus      @default(active)
+  stripePriceId String?          @unique @map("stripe_price_id")
+  displayName   String?          @map("display_name") // "Contador", "Despacho"
+  description   String?
+  metadata      Json? // tier-specific limits (e.g., rfc_limit: 10)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, tierSlug, currency, interval])
+  @@index([productId, status])
+  @@index([dhanamTier])
+  @@map("product_prices")
+}
+
+model ProductFeature {
+  id        String @id @default(uuid())
+  productId String @map("product_id")
+  tierSlug  String @map("tier_slug")
+  feature   String // "cfdi_download", "ai_categorization"
+  label     String // human-readable
+  sortOrder Int    @default(0) @map("sort_order")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, tierSlug, feature])
+  @@index([productId, tierSlug])
+  @@map("product_features")
+}
+
+model ProductCreditCost {
+  id          String  @id @default(uuid())
+  productId   String  @map("product_id")
+  operation   String // "cfdi_stamp", "agent_dispatch"
+  credits     Int // number of credits consumed
+  label       String? // human-readable
+  description String?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, operation])
+  @@index([productId])
+  @@map("product_credit_costs")
 }

@@ -23,6 +23,7 @@ import { PrismaModule } from '../../core/prisma/prisma.module';
 
 import { BillingController } from './billing.controller';
 import { BillingService } from './billing.service';
+import { CatalogController } from './catalog.controller';
 import { CotizaWebhookController } from './cotiza-webhook.controller';
 import { CreditBillingController } from './credit-billing.controller';
 import { CustomerFederationController } from './customer-federation.controller';
@@ -43,6 +44,7 @@ import { PaddleService } from './services/paddle.service';
 import { PaymentRouterService } from './services/payment-router.service';
 import { PriceResolverService } from './services/price-resolver.service';
 import { PricingEngineService } from './services/pricing-engine.service';
+import { ProductCatalogService } from './services/product-catalog.service';
 import { StripeMxService } from './services/stripe-mx.service';
 // Extracted sub-services (usage, lifecycle, webhooks)
 import { SubscriptionLifecycleService } from './services/subscription-lifecycle.service';
@@ -66,6 +68,7 @@ import { StripeService } from './stripe.service';
     BillingController,
     CreditBillingController,
     CustomerFederationController,
+    CatalogController,
     CotizaWebhookController,
   ],
   providers: [
@@ -79,6 +82,9 @@ import { StripeService } from './stripe.service';
     UsageTrackingService,
     SubscriptionLifecycleService,
     WebhookProcessorService,
+
+    // Product catalog
+    ProductCatalogService,
 
     // Pricing & trial lifecycle
     PriceResolverService,
@@ -125,6 +131,7 @@ import { StripeService } from './stripe.service';
     ProviderConnectionGuard,
     FeatureGateGuard,
     UsageTrackingInterceptor,
+    ProductCatalogService,
   ],
 })
 export class BillingModule {}

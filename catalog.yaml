@@ -1,0 +1,274 @@
+# ═══════════════════════════════════════════════════
+# MADFAM Product Catalog — Single Source of Truth
+# ═══════════════════════════════════════════════════
+#
+# This file defines ALL MADFAM ecosystem products, pricing tiers,
+# features, and credit costs. It is synced to Stripe and the
+# Dhanam product catalog DB via `scripts/sync-catalog.ts`.
+#
+# To add a new product:
+#   1. Add it here (pricing, features, credit costs)
+#   2. Run: npx tsx scripts/sync-catalog.ts
+#   3. Products appear in Stripe + Dhanam DB automatically
+#
+# Prices are in smallest currency unit (centavos for MXN, cents for USD).
+# The sync script creates Stripe Products + Prices and stores IDs in DB.
+
+products:
+  dhanam:
+    name: "Dhanam"
+    description: "AI-powered wealth tracking and personal finance for LATAM"
+    category: finance
+    website: "https://app.dhan.am"
+    sort_order: 1
+    tiers:
+      essentials:
+        dhanam_tier: essentials
+        display_name: "Essentials"
+        prices:
+          USD: { monthly: 499, yearly: 4790 }
+          MXN: { monthly: 7900, yearly: 75900 }
+        features:
+          - "AI transaction categorization"
+          - "Bank sync (Belvo + Bitso)"
+          - "2 financial spaces"
+          - "10 simulations/day"
+          - "60-day cashflow forecast"
+          - "ESG crypto scoring"
+          - "500 MB document storage"
+      pro:
+        dhanam_tier: pro
+        display_name: "Pro"
+        prices:
+          USD: { monthly: 1199, yearly: 11500 }
+          MXN: { monthly: 19900, yearly: 191000 }
+        features:
+          - "Everything in Essentials"
+          - "Unlimited provider connections"
+          - "Unlimited simulations"
+          - "5 financial spaces"
+          - "Estate planning (Life Beat)"
+          - "Household views (Yours/Mine/Ours)"
+          - "Collectibles valuation"
+          - "DeFi portfolio tracking"
+          - "5 GB storage"
+      premium:
+        dhanam_tier: premium
+        display_name: "Premium"
+        prices:
+          USD: { monthly: 1999, yearly: 19190 }
+          MXN: { monthly: 32900, yearly: 315900 }
+        features:
+          - "Everything in Pro"
+          - "10 financial spaces"
+          - "50,000 Monte Carlo iterations"
+          - "24 stress scenarios"
+          - "25 GB storage"
+          - "Priority support"
+          - "Advanced analytics engine"
+    credit_costs:
+      api_request: 1
+      esg_calculation: 2
+      monte_carlo_simulation: 5
+      goal_probability: 3
+      scenario_analysis: 5
+      portfolio_rebalance: 3
+
+  karafiel:
+    name: "Karafiel"
+    description: "Combat Accounting — SAT compliance automation for Mexico"
+    category: compliance
+    website: "https://karafiel.mx"
+    sort_order: 2
+    tiers:
+      contador:
+        dhanam_tier: essentials
+        display_name: "Contador"
+        prices:
+          MXN: { monthly: 129900, yearly: 99900 }
+        metadata:
+          rfc_limit: 10
+        features:
+          - "Descarga masiva CFDI automatica"
+          - "Contabilidad electronica (Anexo 24)"
+          - "DIOT automatico desde CFDIs"
+          - "Declaraciones provisionales ISR/IVA"
+          - "Blindaje 69-B en tiempo real"
+          - "Alertas proactivas"
+          - "10 RFCs incluidos"
+          - "Prueba gratuita de 14 dias"
+      despacho:
+        dhanam_tier: pro
+        display_name: "Despacho"
+        prices:
+          MXN: { monthly: 399900, yearly: 299900 }
+        metadata:
+          rfc_limit: 50
+        features:
+          - "Todo en Contador"
+          - "Agente Portal SAT autonomo (Kafi)"
+          - "Declaraciones anuales PF y PM"
+          - "Evidencia forense GPS + NOM-151"
+          - "Contratos con e.firma + fecha cierta"
+          - "Auto-presentacion de declaraciones"
+          - "Conciliacion bancaria automatica"
+          - "50 RFCs incluidos"
+          - "Soporte prioritario"
+      firma:
+        dhanam_tier: premium
+        display_name: "Firma"
+        # Custom pricing — no Stripe price created (sales-driven)
+        prices: {}
+        metadata:
+          rfc_limit: 9999
+        features:
+          - "Todo en Despacho"
+          - "Verificacion biometrica para firmas"
+          - "Trabajo de campo con geofencing"
+          - "Monitoreo legislativo (DOF + RMF)"
+          - "Analisis de leyes con IA"
+          - "Integracion con ERP"
+          - "RFCs ilimitados"
+          - "SLA de 4 horas"
+          - "Onboarding personalizado"
+    credit_costs:
+      cfdi_stamp: 1
+      mass_download: 1
+      portal_session: 1
+      filing: 5
+      blacklist_check: 1
+
+  selva:
+    name: "Selva"
+    description: "AI agent swarm orchestration — AutoSwarm Office"
+    category: infrastructure
+    website: "https://selva.town"
+    sort_order: 3
+    tiers:
+      starter:
+        dhanam_tier: essentials
+        display_name: "Starter"
+        prices:
+          USD: { monthly: 14900 }
+          MXN: { monthly: 299900 }
+        metadata:
+          max_agents: 5
+          daily_token_limit: 1000
+        features:
+          - "5 concurrent agents"
+          - "1,000 compute tokens/day"
+          - "Basic workflow graphs"
+          - "Email + GitHub tools"
+          - "Community support"
+      professional:
+        dhanam_tier: pro
+        display_name: "Professional"
+        prices:
+          USD: { monthly: 49900 }
+          MXN: { monthly: 999900 }
+        metadata:
+          max_agents: 20
+          daily_token_limit: 10000
+        features:
+          - "20 concurrent agents"
+          - "10,000 compute tokens/day"
+          - "All 12 workflow graphs"
+          - "Custom YAML workflows"
+          - "A2A agent-to-agent protocol"
+          - "FAISS memory persistence"
+          - "Priority support"
+    credit_costs:
+      agent_dispatch: 5
+      a2a_task: 8
+      bash_execute: 1
+      email_send: 2
+      git_push: 3
+
+  tezca:
+    name: "Tezca"
+    description: "Mexican legal intelligence — 30,000+ laws, real-time alerts"
+    category: legal
+    website: "https://tezca.mx"
+    sort_order: 4
+    tiers:
+      pro:
+        dhanam_tier: pro
+        display_name: "Pro"
+        prices:
+          USD: { monthly: 1999 }
+          MXN: { monthly: 39900 }
+        features:
+          - "Full-text law search (30K+ laws)"
+          - "Real-time legislative alerts"
+          - "API access (5,000 req/day)"
+          - "Compliance rule engine"
+          - "Federal + state + municipal coverage"
+    credit_costs:
+      api_search: 1
+      law_detail: 1
+      compliance_check: 2
+
+  forgesight:
+    name: "Forgesight"
+    description: "Global digital fabrication pricing intelligence"
+    category: fabrication
+    website: "https://forgesight.madfam.io"
+    sort_order: 5
+    tiers:
+      pro:
+        dhanam_tier: pro
+        display_name: "Pro"
+        prices:
+          USD: { monthly: 4999 }
+          MXN: { monthly: 99900 }
+        features:
+          - "Real-time pricing from 500+ vendors"
+          - "Material cost comparison"
+          - "Market trend analytics"
+          - "API access"
+    credit_costs:
+      price_lookup: 1
+      market_report: 5
+
+  fortuna:
+    name: "Fortuna"
+    description: "Problem intelligence — NBI scoring and validation"
+    category: intelligence
+    website: "https://fortuna.madfam.io"
+    sort_order: 6
+    tiers:
+      pro:
+        dhanam_tier: pro
+        display_name: "Pro"
+        prices:
+          USD: { monthly: 2999 }
+          MXN: { monthly: 59900 }
+        features:
+          - "Unlimited problem exploration"
+          - "NBI score analysis"
+          - "Validation campaign tools"
+          - "API access"
+    credit_costs:
+      api_call: 1
+      nbi_score: 2
+
+coupons:
+  founding_member_mx:
+    name: "MADFAM Founding Member (Mexico)"
+    percent_off: 40
+    duration: forever
+    products: [karafiel, dhanam, tezca]
+
+  launch_intro:
+    name: "Dhanam Launch Intro"
+    amount_off_cents: 400
+    currency: usd
+    duration: repeating
+    duration_months: 3
+    products: [dhanam]
+
+  latam_regional:
+    name: "LATAM Regional Discount"
+    percent_off: 45
+    duration: forever
+    products: [dhanam, selva, fortuna]
