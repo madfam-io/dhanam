@@ -142,6 +142,36 @@ billing/
 - `ReconciliationJob` creates `BillingEvent` records with type `reconciliation_mismatch` and status `flagged` for manual review
 - `PLAN_TIER_MAP` in `subscription-lifecycle.service.ts` maps plan slugs (e.g. `pro_yearly`) to tier names (e.g. `pro`)
 
+### Referral Module (`apps/api/src/modules/referral/`)
+
+Ecosystem-wide referral system. Dhanam is the source of truth for referral codes, lifecycle tracking, and reward management across all MADFAM products.
+
+```
+referral/
+├─ referral.module.ts           # NestJS module registration
+├─ referral.controller.ts       # 9 endpoints (2 public, 6 JWT, 1 HMAC)
+├─ referral.service.ts          # Core: code generation, validation, application, event reporting
+├─ referral-reward.service.ts   # Reward calculation + application (Stripe + credits)
+├─ ambassador.service.ts        # Tier management (none→bronze→silver→gold→platinum)
+├─ dto/                         # create-code, apply-referral, referral-event DTOs
+├─ guards/referral-hmac.guard.ts # HMAC-SHA256 for service-to-service events
+└─ jobs/
+   ├─ referral-reward.job.ts    # Every 15 min: process pending rewards
+   └─ referral-expiry.job.ts    # Daily 4 AM: expire 90-day unused codes
+```
+
+**Prisma models**: `ReferralCode`, `Referral`, `ReferralReward`, `AmbassadorProfile`
+
+**Code format**: `{PREFIX}-{8 hex chars}` — KRF (Karafiel), DHN (Dhanam), SLV (Selva), MADFAM (generic)
+
+**Rewards on conversion**: Referrer gets 1 free month + 50 credits; referred user gets 50 credits
+
+**Ambassador tiers**: 3→bronze (5% off), 5→silver (10%), 10→gold (15%), 25→platinum (20%)
+
+**Anti-abuse**: Self-referral prevention, same-org check, disposable email blocklist, 90-day code expiry
+
+**SDK**: `@dhanam/billing-sdk` exports `DhanamReferralClient` (JWT) and `DhanamReferralReporter` (HMAC) for consumer products
+
 ## Development Commands
 
 When the codebase is implemented, use these commands:

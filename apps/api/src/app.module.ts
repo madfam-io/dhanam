@@ -25,6 +25,7 @@ import { OnboardingModule } from '@modules/onboarding/onboarding.module';
 import { PreferencesModule } from '@modules/preferences/preferences.module';
 import { ProvidersModule } from '@modules/providers/providers.module';
 import { RecurringModule } from '@modules/recurring/recurring.module';
+import { ReferralModule } from '@modules/referral/referral.module';
 import { SearchModule } from '@modules/search/search.module';
 import { SimulationsModule } from '@modules/simulations/simulations.module';
 import { SpacesModule } from '@modules/spaces/spaces.module';
@@ -79,6 +80,7 @@ import { validationSchema } from './config/validation';
     ManualAssetsModule,
     DocumentsModule,
     RecurringModule,
+    ReferralModule,
     SubscriptionsModule,
     SearchModule,
     TagsModule,

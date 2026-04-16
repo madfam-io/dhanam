@@ -369,6 +369,8 @@ model User {
   dripEvents            DripEvent[]
   cancellationIntents   CancellationIntent[]
   identityVerifications IdentityVerification[]
+  referralCodes         ReferralCode[]
+  ambassadorProfile     AmbassadorProfile?
 
   @@index([onboardingCompleted, createdAt(sort: Desc)])
   @@index([lastLoginAt(sort: Desc)])
@@ -2255,4 +2257,128 @@ model CancellationIntent {
   @@index([userId, createdAt(sort: Desc)])
   @@index([outcome])
   @@map("cancellation_intents")
+}
+
+// ────────────────────────────────────────────────
+// Referral System — ecosystem-wide referral codes, tracking, and rewards
+// ────────────────────────────────────────────────
+
+enum ReferralStatus {
+  pending
+  applied
+  trial_started
+  converted
+  rewarded
+  expired
+  revoked
+}
+
+enum RewardType {
+  subscription_extension
+  credit_grant
+  tier_discount
+}
+
+enum AmbassadorTier {
+  none
+  bronze
+  silver
+  gold
+  platinum
+}
+
+model ReferralCode {
+  id             String    @id @default(uuid())
+  code           String    @unique // "MADFAM-XXXXXXXX" or "KRF-XXXXXXXX"
+  referrerUserId String    @map("referrer_user_id")
+  referrerEmail  String    @map("referrer_email")
+  sourceProduct  String    @map("source_product") // "karafiel", "dhanam", "selva"
+  targetProduct  String?   @map("target_product") // null = any product
+  isActive       Boolean   @default(true) @map("is_active")
+  usageCount     Int       @default(0) @map("usage_count")
+  maxUsages      Int       @default(50) @map("max_usages")
+  expiresAt      DateTime? @map("expires_at")
+  metadata       Json?
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  referrer  User       @relation(fields: [referrerUserId], references: [id], onDelete: Cascade)
+  referrals Referral[]
+
+  @@index([referrerUserId])
+  @@index([sourceProduct])
+  @@index([isActive, expiresAt])
+  @@map("referral_codes")
+}
+
+model Referral {
+  id             String         @id @default(uuid())
+  referralCodeId String         @map("referral_code_id")
+  referredEmail  String         @map("referred_email")
+  referredUserId String?        @map("referred_user_id")
+  targetProduct  String         @map("target_product")
+  status         ReferralStatus @default(pending)
+  clickedAt      DateTime?      @map("clicked_at")
+  signedUpAt     DateTime?      @map("signed_up_at")
+  trialStartedAt DateTime?      @map("trial_started_at")
+  convertedAt    DateTime?      @map("converted_at")
+  rewardedAt     DateTime?      @map("rewarded_at")
+  utmSource      String?        @map("utm_source")
+  utmMedium      String?        @map("utm_medium")
+  utmCampaign    String?        @map("utm_campaign")
+  ipAddress      String?        @map("ip_address")
+  userAgent      String?        @map("user_agent")
+  metadata       Json?
+  createdAt      DateTime       @default(now()) @map("created_at")
+  updatedAt      DateTime       @updatedAt @map("updated_at")
+
+  referralCode ReferralCode     @relation(fields: [referralCodeId], references: [id], onDelete: Cascade)
+  rewards      ReferralReward[]
+
+  @@unique([referralCodeId, referredEmail])
+  @@index([referredUserId])
+  @@index([status])
+  @@index([targetProduct, status])
+  @@map("referrals")
+}
+
+model ReferralReward {
+  id              String     @id @default(uuid())
+  referralId      String     @map("referral_id")
+  recipientUserId String     @map("recipient_user_id")
+  rewardType      RewardType @map("reward_type")
+  amount          Int // months for subscription_extension, credits for credit_grant, basis points for tier_discount
+  description     String
+  applied         Boolean    @default(false)
+  appliedAt       DateTime?  @map("applied_at")
+  stripeActionId  String?    @map("stripe_action_id")
+  metadata        Json?
+  createdAt       DateTime   @default(now()) @map("created_at")
+
+  referral Referral @relation(fields: [referralId], references: [id], onDelete: Cascade)
+
+  @@index([recipientUserId])
+  @@index([applied])
+  @@map("referral_rewards")
+}
+
+model AmbassadorProfile {
+  id                    String         @id @default(uuid())
+  userId                String         @unique @map("user_id")
+  tier                  AmbassadorTier @default(none)
+  totalReferrals        Int            @default(0) @map("total_referrals")
+  totalConversions      Int            @default(0) @map("total_conversions")
+  lifetimeCreditsEarned Int            @default(0) @map("lifetime_credits_earned")
+  lifetimeMonthsEarned  Int            @default(0) @map("lifetime_months_earned")
+  discountPercent       Int            @default(0) @map("discount_percent")
+  publicProfile         Boolean        @default(false) @map("public_profile")
+  displayName           String?        @map("display_name")
+  metadata              Json?
+  createdAt             DateTime       @default(now()) @map("created_at")
+  updatedAt             DateTime       @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([tier])
+  @@map("ambassador_profiles")
 }

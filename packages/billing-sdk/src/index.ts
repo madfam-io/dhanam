@@ -5,6 +5,12 @@ export { DhanamClient } from './client';
 export { DhanamUsageClient } from './usage';
 export type { UsageClientConfig } from './usage';
 
+// Referral clients
+export { DhanamReferralClient } from './referral';
+export type { ReferralClientConfig } from './referral';
+export { DhanamReferralReporter } from './referral-reporter';
+export type { ReferralReporterConfig } from './referral-reporter';
+
 // Errors
 export { DhanamApiError, DhanamAuthError } from './errors';
 
@@ -13,6 +19,8 @@ export { parseWebhookPayload, verifyWebhookSignature } from './webhook';
 
 // Types (re-export everything)
 export type {
+  AmbassadorProfile,
+  ApplyResult,
   BillingEvent,
   BillingHistory,
   BillingProvider,
@@ -23,8 +31,15 @@ export type {
   DhanamClientConfig,
   DhanamWebhookData,
   DhanamWebhookPayload,
+  GenerateCodeOptions,
   PlanSlug,
   PortalResult,
+  ReferralCode,
+  ReferralCodeInfo,
+  ReferralEvent,
+  ReferralLandingData,
+  ReferralReward,
+  ReferralStats,
   ServiceBreakdown,
   SubscriptionStatus,
   SubscriptionTier,
@@ -34,6 +49,7 @@ export type {
   UsageEventEntry,
   UsageMetricType,
   UsageMetrics,
+  UTMParams,
 } from './types';
 
 // Enum (value export — consumers need runtime access)
