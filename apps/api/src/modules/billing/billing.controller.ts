@@ -29,7 +29,9 @@ import { Throttle } from '@nestjs/throttler';
 import type { FastifyReply } from 'fastify';
 import type Stripe from 'stripe';
 
+import { Roles } from '../../core/auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../../core/auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../core/auth/guards/roles.guard';
 import { ThrottleAuthGuard } from '../../core/security/guards/throttle-auth.guard';
 import { AuthenticatedRequest } from '../../core/types/authenticated-request';
 
@@ -174,7 +176,8 @@ export class BillingController {
   // ─── Admin Revenue Metrics ────────────────────────────────────
 
   @Get('admin/revenue-metrics')
-  @UseGuards(JwtAuthGuard) // TODO: add admin role check
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
   @ApiOperation({ summary: 'Get MRR/ARR/churn metrics (admin only)' })
   @ApiOkResponse({ description: 'Revenue metrics retrieved successfully' })
   @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })

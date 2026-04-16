@@ -1,4 +1,5 @@
 import { apiClient } from './client';
+import { authStore } from '../../stores/auth';
 
 export interface ReportType {
   id: string;
@@ -102,7 +103,7 @@ export const reportsApi = {
       `${baseUrl}/reports/${spaceId}/download/pdf?startDate=${startDate}&endDate=${endDate}`,
       {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+          Authorization: `Bearer ${authStore.getState().accessToken}`,
         },
       }
     );
@@ -120,7 +121,7 @@ export const reportsApi = {
       `${baseUrl}/reports/${spaceId}/download/csv?startDate=${startDate}&endDate=${endDate}`,
       {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+          Authorization: `Bearer ${authStore.getState().accessToken}`,
         },
       }
     );
@@ -144,7 +145,7 @@ export const reportsApi = {
       `${baseUrl}/reports/${spaceId}/download/excel?startDate=${startDate}&endDate=${endDate}`,
       {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+          Authorization: `Bearer ${authStore.getState().accessToken}`,
         },
       }
     );
@@ -166,7 +167,7 @@ export const reportsApi = {
       `${baseUrl}/reports/${spaceId}/download/json?startDate=${startDate}&endDate=${endDate}`,
       {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+          Authorization: `Bearer ${authStore.getState().accessToken}`,
         },
       }
     );

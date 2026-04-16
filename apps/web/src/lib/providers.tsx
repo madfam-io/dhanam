@@ -6,7 +6,7 @@ import { ThemeProvider } from '~/components/theme-provider';
 import { AuthProvider } from '~/components/auth-provider';
 import { PreferencesProvider } from '~/contexts/PreferencesContext';
 import PostHogProvider from '~/providers/PostHogProvider';
-import { useState, useEffect, useCallback, type ComponentType } from 'react';
+import { useState, useEffect, useCallback, useRef, type ComponentType } from 'react';
 import { CookieConsentBanner } from '~/components/cookie-consent-banner';
 
 /**
@@ -46,6 +46,7 @@ function SSRSafeJanuaProvider({ children }: { children: React.ReactNode }) {
           const { session } = useSession();
           const { user: januaUser } = useUser();
           const { setAuth, clearAuth, isAuthenticated: dhanamAuthenticated } = useAuth();
+          const verificationInFlight = useRef(false);
 
           const syncAuthState = useCallback(() => {
             if (!authLoaded) return;
@@ -90,18 +91,33 @@ function SSRSafeJanuaProvider({ children }: { children: React.ReactNode }) {
                   'auth-storage=authenticated; path=/; max-age=86400; SameSite=Lax; Secure';
               }
             } else if (!isSignedIn && !dhanamAuthenticated) {
-              // SDK hooks don't reflect login — fall back to localStorage tokens
+              // SECURITY: This is an optimistic decode for UI hydration only.
+              // The token is NOT trusted until verified by the API server.
+              // All API calls go through apiClient which validates the JWT server-side.
+              //
+              // Flow:
+              // 1. Decode JWT payload (unverified) for immediate UI display
+              // 2. Optimistically set auth state so the UI doesn't flash
+              // 3. Verify the token server-side via /users/me
+              // 4. If verification fails, clear auth and purge the invalid token
               const januaToken =
                 typeof window !== 'undefined' ? localStorage.getItem('janua_access_token') : null;
 
-              if (januaToken) {
+              if (januaToken && !verificationInFlight.current) {
                 try {
                   const payloadStr = januaToken.split('.')[1];
                   if (!payloadStr) throw new Error('Invalid token');
                   const payload = JSON.parse(atob(payloadStr));
+
+                  // Reject obviously expired tokens before even attempting verification
+                  if (payload.exp && payload.exp * 1000 < Date.now()) {
+                    throw new Error('Token expired');
+                  }
+
                   const januaRefresh = localStorage.getItem('janua_refresh_token') || '';
 
-                  const fallbackUser: import('@dhanam/shared').UserProfile = {
+                  // Optimistic UI hydration — display user info while verifying
+                  const optimisticUser: import('@dhanam/shared').UserProfile = {
                     id: payload.sub,
                     email: payload.email || '',
                     name: payload.name || payload.email?.split('@')[0] || 'User',
@@ -115,20 +131,69 @@ function SSRSafeJanuaProvider({ children }: { children: React.ReactNode }) {
                     spaces: [],
                   };
 
-                  const fallbackTokens: import('@dhanam/shared').AuthTokens = {
+                  const optimisticTokens: import('@dhanam/shared').AuthTokens = {
                     accessToken: januaToken,
                     refreshToken: januaRefresh,
                     expiresIn: payload.exp ? payload.exp - Math.floor(Date.now() / 1000) : 15 * 60,
                   };
 
-                  setAuth(fallbackUser, fallbackTokens);
+                  // Set optimistic state for UI hydration (prevents auth flash)
+                  setAuth(optimisticUser, optimisticTokens);
 
                   if (typeof document !== 'undefined') {
                     document.cookie =
                       'auth-storage=authenticated; path=/; max-age=86400; SameSite=Lax; Secure';
                   }
+
+                  // SECURITY: Verify the token server-side. The Dhanam API /users/me
+                  // endpoint validates the JWT signature via NestJS JwtAuthGuard.
+                  // If the token is forged or revoked, this call returns 401 and
+                  // we revoke the optimistic auth state.
+                  verificationInFlight.current = true;
+                  const dhanamApiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.dhan.am/v1';
+
+                  fetch(`${dhanamApiUrl}/users/me`, {
+                    headers: { Authorization: `Bearer ${januaToken}` },
+                  })
+                    .then((res) => {
+                      if (!res.ok) {
+                        // Server rejected the token — revoke optimistic auth
+                        clearAuth();
+                        if (typeof window !== 'undefined') {
+                          localStorage.removeItem('janua_access_token');
+                          localStorage.removeItem('janua_refresh_token');
+                          localStorage.removeItem('dhanam_user_profile');
+                        }
+                        if (typeof document !== 'undefined') {
+                          document.cookie =
+                            'auth-storage=; path=/; max-age=0; SameSite=Lax; Secure';
+                        }
+                        return;
+                      }
+                      return res.json();
+                    })
+                    .then((data) => {
+                      if (!data) return; // Already handled in the !res.ok branch
+                      // Server confirmed the token. Update auth with the verified
+                      // server profile (includes subscriptionTier, isAdmin, etc.)
+                      const verifiedProfile: import('@dhanam/shared').UserProfile =
+                        data.data || data;
+                      setAuth(verifiedProfile, optimisticTokens);
+                    })
+                    .catch(() => {
+                      // Network error during verification — keep optimistic state
+                      // but do NOT escalate trust. The apiClient will re-verify
+                      // on the next actual API call and handle 401 there.
+                    })
+                    .finally(() => {
+                      verificationInFlight.current = false;
+                    });
                 } catch {
-                  // Token parse failed — ignore
+                  // Token decode failed or expired — remove the bad token
+                  if (typeof window !== 'undefined') {
+                    localStorage.removeItem('janua_access_token');
+                    localStorage.removeItem('janua_refresh_token');
+                  }
                 }
               }
             } else if (!isSignedIn && dhanamAuthenticated) {

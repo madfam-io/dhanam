@@ -30,18 +30,30 @@ export function Footer() {
             .
           </p>
           <div className="flex items-center justify-center gap-3 text-xs text-muted-foreground">
-            <a href="https://madfam.io/privacy" className="hover:text-foreground transition-colors">Privacy Policy</a>
+            <a href="https://madfam.io/privacy" className="hover:text-foreground transition-colors">
+              Privacy Policy
+            </a>
             <span aria-hidden="true">&middot;</span>
-            <a href="https://madfam.io/terms" className="hover:text-foreground transition-colors">Terms of Service</a>
+            <a href="https://madfam.io/terms" className="hover:text-foreground transition-colors">
+              Terms of Service
+            </a>
             <span aria-hidden="true">&middot;</span>
-            <a href="https://status.madfam.io" className="hover:text-foreground transition-colors">Status</a>
+            <a href="https://status.madfam.io" className="hover:text-foreground transition-colors">
+              Status
+            </a>
           </div>
           <div className="flex items-center justify-center gap-3 pt-1 text-xs text-muted-foreground">
-            <a href="https://karafiel.mx" className="hover:text-foreground transition-colors">Karafiel</a>
+            <a href="https://karafiel.mx" className="hover:text-foreground transition-colors">
+              Karafiel
+            </a>
             <span aria-hidden="true">&middot;</span>
-            <a href="https://forgesight.quest" className="hover:text-foreground transition-colors">Forgesight</a>
+            <a href="https://forgesight.quest" className="hover:text-foreground transition-colors">
+              Forgesight
+            </a>
             <span aria-hidden="true">&middot;</span>
-            <a href="https://selva.town" className="hover:text-foreground transition-colors">Selva</a>
+            <a href="https://selva.town" className="hover:text-foreground transition-colors">
+              Selva
+            </a>
           </div>
         </div>
 

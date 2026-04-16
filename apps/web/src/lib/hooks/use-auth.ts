@@ -38,9 +38,19 @@ interface AuthState {
   setHasHydrated: (state: boolean) => void;
 }
 
-// Hydrate initial state from Janua localStorage tokens (if present).
-// This runs synchronously at store creation, before any React render,
-// ensuring API calls in React Query hooks have the auth token available.
+// SECURITY: Optimistic UI hydration from localStorage JWT — NOT a trust boundary.
+//
+// This decodes the JWT payload WITHOUT verifying the signature. It exists solely
+// to prevent a blank/flash UI state on page load by pre-populating the Zustand
+// store with user info (name, email, etc.) before the first API call completes.
+//
+// The token is NOT trusted at this point. Actual authentication is enforced:
+//   1. Server-side: NestJS JwtAuthGuard validates every /users/me and API call
+//   2. Client-side: SSRSafeJanuaProvider verifies the token via /users/me after mount
+//   3. On 401: apiClient automatically clears tokens and forces re-auth
+//
+// The expiry check below (line ~59) is a client-side optimization to avoid
+// sending obviously-expired tokens, but it is NOT a security control.
 function getInitialAuthState(): Pick<AuthState, 'user' | 'tokens' | 'token' | 'isAuthenticated'> {
   if (typeof window === 'undefined') {
     return { user: null, tokens: null, token: null, isAuthenticated: false };

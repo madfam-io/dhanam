@@ -1,18 +1,25 @@
 'use client';
 
-import * as Sentry from '@sentry/nextjs';
 import { useEffect, useRef } from 'react';
 
+// Global error renders outside all providers, so CSS custom properties and
+// theme classes are unavailable. Raw Tailwind color classes are intentional.
 const defaultMsg = {
+  title: 'Dhanam',
   body: 'Something went wrong. Please try refreshing the page.',
   button: 'Try Again',
 };
 
-const messages: Record<string, { body: string; button: string }> = {
+const messages: Record<string, typeof defaultMsg> = {
   en: defaultMsg,
-  es: { body: 'Algo salió mal. Por favor intenta recargar la página.', button: 'Reintentar' },
+  es: {
+    title: 'Dhanam',
+    body: 'Algo salio mal. Por favor intenta recargar la pagina.',
+    button: 'Reintentar',
+  },
   pt: {
-    body: 'Algo deu errado. Por favor, tente atualizar a página.',
+    title: 'Dhanam',
+    body: 'Algo deu errado. Por favor, tente atualizar a pagina.',
     button: 'Tentar novamente',
   },
 };
@@ -30,46 +37,28 @@ export default function GlobalError({
   const m = messages[lang] ?? defaultMsg;
 
   useEffect(() => {
-    Sentry.captureException(error);
+    import('@sentry/nextjs').then((Sentry) => Sentry.captureException(error)).catch(() => {});
     buttonRef.current?.focus();
   }, [error]);
 
   return (
     <html lang={lang}>
-      <body>
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            minHeight: '100vh',
-            fontFamily: 'system-ui, sans-serif',
-            background: 'var(--background, #fafafa)',
-          }}
-        >
-          <div style={{ textAlign: 'center', maxWidth: 400 }}>
-            <h1 style={{ fontSize: 24, fontWeight: 600, marginBottom: 8 }}>Dhanam</h1>
-            <p style={{ color: 'var(--muted-foreground, #666)', marginBottom: 24 }}>{m.body}</p>
-            <button
-              ref={buttonRef}
-              onClick={reset}
-              style={{
-                padding: '8px 20px',
-                borderRadius: 6,
-                border: '1px solid var(--border, #ddd)',
-                background: 'var(--card, #fff)',
-                cursor: 'pointer',
-                fontSize: 14,
-              }}
-            >
-              {m.button}
-            </button>
-            {error.digest && (
-              <p style={{ color: 'var(--muted-foreground, #999)', fontSize: 12, marginTop: 16 }}>
-                Error ID: {error.digest}
-              </p>
-            )}
-          </div>
+      <body className="flex min-h-screen items-center justify-center bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-gray-100 px-4 py-8 sm:p-8">
+        <div className="text-center max-w-md">
+          <h1 className="text-2xl font-semibold mb-2">{m.title}</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">{m.body}</p>
+          <button
+            ref={buttonRef}
+            onClick={reset}
+            className="rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-5 py-2 text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          >
+            {m.button}
+          </button>
+          {error?.digest && (
+            <p className="text-xs text-gray-400 dark:text-gray-500 font-mono mt-4">
+              Error ID: {error.digest}
+            </p>
+          )}
         </div>
       </body>
     </html>
