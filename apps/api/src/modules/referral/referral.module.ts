@@ -1,20 +1,19 @@
 /**
  * =============================================================================
- * Dhanam Referral Module
+ * Dhanam Referral Module (Rewards-Only)
  * =============================================================================
- * Provides the referral and ambassador system for the MADFAM ecosystem.
+ * Provides reward application and ambassador tier management for the
+ * MADFAM ecosystem referral system.
+ *
+ * Funnel tracking (referral codes, lifecycle) has moved to PhyneCRM.
  *
  * ## Features
- * - Referral code generation with product-specific prefixes
- * - Code validation and anti-abuse (self-referral, same-org, disposable email)
- * - Referral lifecycle tracking (pending -> applied -> trial_started -> converted -> rewarded)
- * - Reward calculation and application (subscription extensions, credit grants)
+ * - Reward creation from PhyneCRM conversion webhooks
+ * - Reward application (subscription extensions, credit grants)
  * - Ambassador tier system (none -> bronze -> silver -> gold -> platinum)
- * - Service-to-service event reporting via HMAC-authenticated endpoint
  *
  * ## Jobs
- * - ReferralRewardJob: Processes converted referrals every 15 minutes
- * - ReferralExpiryJob: Deactivates expired codes daily at 4:00 AM UTC
+ * - ReferralRewardJob: Processes pending rewards every 15 minutes
  * =============================================================================
  */
 import { Module } from '@nestjs/common';
@@ -24,7 +23,6 @@ import { BillingModule } from '../billing/billing.module';
 
 import { AmbassadorService } from './ambassador.service';
 import { ReferralHmacGuard } from './guards/referral-hmac.guard';
-import { ReferralExpiryJob } from './jobs/referral-expiry.job';
 import { ReferralRewardJob } from './jobs/referral-reward.job';
 import { ReferralRewardService } from './referral-reward.service';
 import { ReferralController } from './referral.controller';
@@ -41,7 +39,6 @@ import { ReferralService } from './referral.service';
 
     // Jobs
     ReferralRewardJob,
-    ReferralExpiryJob,
 
     // Guards
     ReferralHmacGuard,

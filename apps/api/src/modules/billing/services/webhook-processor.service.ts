@@ -243,9 +243,6 @@ export class WebhookProcessorService {
     });
 
     this.logger.log(`Payment succeeded for user ${user.id}, amount: ${invoice.amount_paid / 100}`);
-
-    // Check for referral conversion — triggers reward application
-    await this.checkReferralConversion(user.id, invoice.amount_paid || 0);
   }
 
   /**
@@ -654,9 +651,6 @@ export class WebhookProcessorService {
     });
 
     this.logger.log(`Janua payment succeeded for user ${user.id}: ${currency} ${amount}`);
-
-    // Check for referral conversion
-    await this.checkReferralConversion(user.id, (amount || 0) * 100);
   }
 
   /**
@@ -728,137 +722,5 @@ export class WebhookProcessorService {
     });
 
     this.logger.log(`Janua refund processed for user ${user.id}: ${currency} ${amount}`);
-  }
-
-  // =========================================================================
-  // Referral Conversion Detection
-  // =========================================================================
-
-  /**
-   * Check if a paying user was referred and trigger conversion rewards.
-   *
-   * Called on first payment success. Finds any pending referral for this user
-   * and transitions it to 'converted', then enqueues the reward job.
-   */
-  private async checkReferralConversion(userId: string, amountCents: number): Promise<void> {
-    try {
-      const referral = await this.prisma.referral.findFirst({
-        where: {
-          referredUserId: userId,
-          status: { in: ['applied', 'trial_started'] },
-        },
-        include: { referralCode: true },
-      });
-
-      if (!referral) return;
-
-      // Transition to converted
-      await this.prisma.referral.update({
-        where: { id: referral.id },
-        data: {
-          status: 'converted',
-          convertedAt: new Date(),
-        },
-      });
-
-      // Create rewards: 1 month for referrer, 50 credits for both
-      const referrerUserId = referral.referralCode.referrerUserId;
-
-      await this.prisma.referralReward.createMany({
-        data: [
-          {
-            referralId: referral.id,
-            recipientUserId: referrerUserId,
-            rewardType: 'subscription_extension',
-            amount: 1,
-            description: 'Referral reward: 1 free month for successful referral',
-          },
-          {
-            referralId: referral.id,
-            recipientUserId: referrerUserId,
-            rewardType: 'credit_grant',
-            amount: 50,
-            description: 'Referral bonus: 50 credits for referrer',
-          },
-          {
-            referralId: referral.id,
-            recipientUserId: userId,
-            rewardType: 'credit_grant',
-            amount: 50,
-            description: 'Welcome bonus: 50 credits for being referred',
-          },
-        ],
-      });
-
-      // Update ambassador profile
-      await this.prisma.ambassadorProfile.upsert({
-        where: { userId: referrerUserId },
-        create: {
-          userId: referrerUserId,
-          totalReferrals: 1,
-          totalConversions: 1,
-          lifetimeCreditsEarned: 50,
-          lifetimeMonthsEarned: 1,
-          tier: 'none',
-        },
-        update: {
-          totalConversions: { increment: 1 },
-          lifetimeCreditsEarned: { increment: 50 },
-          lifetimeMonthsEarned: { increment: 1 },
-        },
-      });
-
-      // Recalculate ambassador tier
-      const profile = await this.prisma.ambassadorProfile.findUnique({
-        where: { userId: referrerUserId },
-      });
-
-      if (profile) {
-        const newTier =
-          profile.totalConversions >= 25
-            ? 'platinum'
-            : profile.totalConversions >= 10
-              ? 'gold'
-              : profile.totalConversions >= 5
-                ? 'silver'
-                : profile.totalConversions >= 3
-                  ? 'bronze'
-                  : 'none';
-
-        const discountPercent =
-          newTier === 'platinum'
-            ? 20
-            : newTier === 'gold'
-              ? 15
-              : newTier === 'silver'
-                ? 10
-                : newTier === 'bronze'
-                  ? 5
-                  : 0;
-
-        if (newTier !== profile.tier) {
-          await this.prisma.ambassadorProfile.update({
-            where: { userId: referrerUserId },
-            data: { tier: newTier, discountPercent },
-          });
-          this.logger.log(`Ambassador promoted: ${referrerUserId} → ${newTier}`);
-        }
-      }
-
-      // Track in PostHog
-      this.posthog.capture(referrerUserId, 'referral_converted', {
-        referral_code: referral.referralCode.code,
-        target_product: referral.targetProduct,
-        revenue_cents: amountCents,
-      });
-
-      this.logger.log(
-        `Referral converted: code=${referral.referralCode.code} ` +
-          `referrer=${referrerUserId} referred=${userId}`
-      );
-    } catch (err) {
-      // Non-critical — don't fail the payment webhook
-      this.logger.error(`Referral conversion check failed for user ${userId}: ${err}`);
-    }
   }
 }

@@ -31,10 +31,14 @@ export class ReferralHmacGuard implements CanActivate {
 
   canActivate(context: ExecutionContext): boolean {
     const request = context.switchToHttp().getRequest();
-    const signature = request.headers['x-referral-signature'] as string | undefined;
+    const signature =
+      (request.headers['x-phynecrm-signature'] as string | undefined) ||
+      (request.headers['x-referral-signature'] as string | undefined);
 
     if (!signature) {
-      throw new UnauthorizedException('Missing X-Referral-Signature header');
+      throw new UnauthorizedException(
+        'Missing X-PhyneCRM-Signature or X-Referral-Signature header'
+      );
     }
 
     const secret =

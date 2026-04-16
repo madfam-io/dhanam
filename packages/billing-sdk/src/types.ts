@@ -321,63 +321,8 @@ export interface DhanamClientConfig {
 }
 
 // ────────────────────────────────────────────────
-// Referral System Types
+// Referral Reward Types (funnel types moved to PhyneCRM)
 // ────────────────────────────────────────────────
-
-/** Public metadata for a referral code */
-export interface ReferralCodeInfo {
-  code: string;
-  isActive: boolean;
-  sourceProduct: string;
-  targetProduct: string | null;
-  referrerDisplayName: string | null;
-}
-
-/** Landing page data for a referral link */
-export interface ReferralLandingData {
-  code: string;
-  referrerName: string;
-  sourceProduct: string;
-  targetProduct: string | null;
-  productName: string;
-  productDescription: string;
-}
-
-/** A referral code owned by a user */
-export interface ReferralCode {
-  id: string;
-  code: string;
-  sourceProduct: string;
-  targetProduct: string | null;
-  usageCount: number;
-  maxUsages: number;
-  isActive: boolean;
-  expiresAt: string | null;
-  createdAt: string;
-}
-
-/** Options for generating a new referral code */
-export interface GenerateCodeOptions {
-  sourceProduct: string;
-  targetProduct?: string;
-}
-
-/** Result of applying a referral code */
-export interface ApplyResult {
-  referralId: string;
-  status: 'applied';
-  referrerUserId: string;
-}
-
-/** Aggregated referral statistics for a user */
-export interface ReferralStats {
-  totalReferrals: number;
-  byStatus: Record<string, number>;
-  totalConversions: number;
-  monthsEarned: number;
-  creditsEarned: number;
-  ambassadorTier: string;
-}
 
 /** A reward earned through referrals */
 export interface ReferralReward {
@@ -400,26 +345,4 @@ export interface AmbassadorProfile {
   discountPercent: number;
   publicProfile: boolean;
   displayName: string | null;
-}
-
-/** A referral funnel event reported by ecosystem services */
-export interface ReferralEvent {
-  type: 'click' | 'signup' | 'trial_started' | 'converted';
-  code: string;
-  email?: string;
-  userId?: string;
-  targetProduct?: string;
-  utmSource?: string;
-  utmMedium?: string;
-  utmCampaign?: string;
-  ip?: string;
-  userAgent?: string;
-  metadata?: Record<string, unknown>;
-}
-
-/** UTM tracking parameters */
-export interface UTMParams {
-  source?: string;
-  medium?: string;
-  campaign?: string;
 }

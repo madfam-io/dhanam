@@ -1,14 +1,5 @@
 import { DhanamApiError, DhanamAuthError } from './errors';
-import type {
-  AmbassadorProfile,
-  ApplyResult,
-  GenerateCodeOptions,
-  ReferralCode,
-  ReferralCodeInfo,
-  ReferralLandingData,
-  ReferralReward,
-  ReferralStats,
-} from './types';
+import type { AmbassadorProfile, ReferralReward } from './types';
 
 /**
  * Configuration for the referral client.
@@ -19,8 +10,7 @@ export interface ReferralClientConfig {
 
   /**
    * Async function that returns a fresh JWT access token.
-   * Required for authenticated endpoints (generateCode, applyCode, getStats, etc.).
-   * Public endpoints (validateCode, getLandingData) work without a token.
+   * Required for authenticated endpoints.
    */
   getAccessToken: () => Promise<string>;
 
@@ -29,10 +19,13 @@ export interface ReferralClientConfig {
 }
 
 /**
- * Typed HTTP client for the Dhanam referral API.
+ * Typed HTTP client for the Dhanam referral rewards API.
  *
- * Used by product frontends to manage referral codes, apply referrals,
- * and display ambassador profiles. Authenticates via JWT.
+ * Used by product frontends to display reward history and ambassador profiles.
+ * Authenticates via JWT.
+ *
+ * Funnel operations (code generation, validation, application, stats) have
+ * moved to PhyneCRM. This client retains only reward and ambassador queries.
  *
  * @example
  * ```ts
@@ -41,12 +34,8 @@ export interface ReferralClientConfig {
  *   getAccessToken: () => auth.getToken(),
  * });
  *
- * // Public — no auth needed
- * const info = await referrals.validateCode('FRIEND-ABC');
- *
- * // Authenticated
- * const myCode = await referrals.getMyCode('enclii');
- * const stats = await referrals.getStats();
+ * const rewards = await referrals.getRewards();
+ * const profile = await referrals.getAmbassadorProfile();
  * ```
  */
 export class DhanamReferralClient {
@@ -60,108 +49,30 @@ export class DhanamReferralClient {
     this._fetch = config.fetch ?? globalThis.fetch;
   }
 
-  // ────────────────────────────────────────────
-  // Public endpoints (no auth required)
-  // ────────────────────────────────────────────
-
-  /**
-   * Validate a referral code and get its metadata.
-   * Public endpoint — no authentication required.
-   */
-  async validateCode(code: string): Promise<ReferralCodeInfo> {
-    return this.request<ReferralCodeInfo>(
-      'GET',
-      `/v1/referrals/validate/${encodeURIComponent(code)}`,
-      undefined,
-      false
-    );
-  }
-
-  /**
-   * Get landing page data for a referral code.
-   * Public endpoint — no authentication required.
-   */
-  async getLandingData(code: string): Promise<ReferralLandingData> {
-    return this.request<ReferralLandingData>(
-      'GET',
-      `/v1/referrals/landing/${encodeURIComponent(code)}`,
-      undefined,
-      false
-    );
-  }
-
-  // ────────────────────────────────────────────
-  // Authenticated endpoints
-  // ────────────────────────────────────────────
-
-  /**
-   * Get the current user's referral code, optionally scoped to a product.
-   * Creates one if none exists.
-   */
-  async getMyCode(product?: string): Promise<ReferralCode> {
-    const params = new URLSearchParams();
-    if (product) params.set('product', product);
-    const query = params.toString();
-    const path = `/v1/referrals/my-code${query ? `?${query}` : ''}`;
-    return this.request<ReferralCode>('GET', path);
-  }
-
-  /**
-   * Generate a new referral code with the given options.
-   */
-  async generateCode(opts: GenerateCodeOptions): Promise<ReferralCode> {
-    return this.request<ReferralCode>('POST', '/v1/referrals/codes', opts);
-  }
-
-  /**
-   * Apply a referral code to the current user for a target product.
-   */
-  async applyCode(code: string, targetProduct: string): Promise<ApplyResult> {
-    return this.request<ApplyResult>('POST', '/v1/referrals/apply', {
-      code,
-      targetProduct,
-    });
-  }
-
-  /**
-   * Get referral statistics for the current user.
-   */
-  async getStats(): Promise<ReferralStats> {
-    return this.request<ReferralStats>('GET', '/v1/referrals/stats');
-  }
-
   /**
    * Get all rewards earned by the current user through referrals.
    */
   async getRewards(): Promise<ReferralReward[]> {
-    return this.request<ReferralReward[]>('GET', '/v1/referrals/rewards');
+    return this.request<ReferralReward[]>('GET', '/v1/referral/rewards');
   }
 
   /**
    * Get the current user's ambassador profile.
    */
   async getAmbassadorProfile(): Promise<AmbassadorProfile> {
-    return this.request<AmbassadorProfile>('GET', '/v1/referrals/ambassador');
+    return this.request<AmbassadorProfile>('GET', '/v1/referral/ambassador');
   }
 
   // ────────────────────────────────────────────
   // Internal
   // ────────────────────────────────────────────
 
-  private async request<T>(
-    method: 'GET' | 'POST',
-    path: string,
-    body?: unknown,
-    authenticated = true
-  ): Promise<T> {
+  private async request<T>(method: 'GET' | 'POST', path: string, body?: unknown): Promise<T> {
+    const token = await this.getAccessToken();
     const headers: Record<string, string> = {
       Accept: 'application/json',
+      Authorization: `Bearer ${token}`,
     };
-
-    if (authenticated) {
-      const token = await this.getAccessToken();
-      headers['Authorization'] = `Bearer ${token}`;
-    }
 
     if (body !== undefined) {
       headers['Content-Type'] = 'application/json';
