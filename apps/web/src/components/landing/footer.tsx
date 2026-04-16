@@ -18,9 +18,31 @@ export function Footer() {
 
         <div className="text-center space-y-1">
           <p className="text-sm text-muted-foreground">
-            {t('footer.copyright', { year: currentYear })}
+            &copy; {currentYear} Dhanam. By{' '}
+            <a
+              href="https://madfam.io"
+              className="text-muted-foreground hover:text-foreground transition-colors"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Innovaciones MADFAM
+            </a>
+            .
           </p>
-          <p className="text-xs text-muted-foreground">{t('footer.subtitle')}</p>
+          <div className="flex items-center justify-center gap-3 text-xs text-muted-foreground">
+            <a href="https://madfam.io/privacy" className="hover:text-foreground transition-colors">Privacy Policy</a>
+            <span aria-hidden="true">&middot;</span>
+            <a href="https://madfam.io/terms" className="hover:text-foreground transition-colors">Terms of Service</a>
+            <span aria-hidden="true">&middot;</span>
+            <a href="https://status.madfam.io" className="hover:text-foreground transition-colors">Status</a>
+          </div>
+          <div className="flex items-center justify-center gap-3 pt-1 text-xs text-muted-foreground">
+            <a href="https://karafiel.mx" className="hover:text-foreground transition-colors">Karafiel</a>
+            <span aria-hidden="true">&middot;</span>
+            <a href="https://forgesight.quest" className="hover:text-foreground transition-colors">Forgesight</a>
+            <span aria-hidden="true">&middot;</span>
+            <a href="https://selva.town" className="hover:text-foreground transition-colors">Selva</a>
+          </div>
         </div>
 
         <div className="flex items-center gap-6">
