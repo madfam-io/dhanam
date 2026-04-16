@@ -19,7 +19,7 @@ import { StripeService } from '../billing/stripe.service';
  * - Subscription extensions: via Stripe subscription update (trial_end extension)
  * - Credit grants: via direct CreditBalance increment in the database
  *
- * @see ReferralService - lifecycle tracking
+ * @see ReferralService - webhook handling and reward creation
  * @see AmbassadorService - tier management and additional rewards
  * =============================================================================
  */
@@ -32,103 +32,6 @@ export class ReferralRewardService {
     private readonly stripe: StripeService,
     private readonly config: ConfigService
   ) {}
-
-  /**
-   * Calculate and create reward rows for a converted referral.
-   * Creates both referrer and referred user rewards within a transaction.
-   */
-  async calculateRewards(referralId: string): Promise<{ rewardIds: string[] }> {
-    const referral = await this.prisma.referral.findUnique({
-      where: { id: referralId },
-      include: {
-        referralCode: {
-          select: { referrerUserId: true },
-        },
-      },
-    });
-
-    if (!referral) {
-      throw new NotFoundException('Referral not found');
-    }
-
-    if (referral.status !== 'converted') {
-      this.logger.warn(
-        `Cannot calculate rewards for referral ${referralId}: status is ${referral.status}`
-      );
-      return { rewardIds: [] };
-    }
-
-    // Check if rewards already exist for this referral
-    const existingRewards = await this.prisma.referralReward.findMany({
-      where: { referralId },
-      select: { id: true },
-    });
-
-    if (existingRewards.length > 0) {
-      this.logger.debug(`Rewards already calculated for referral ${referralId}`);
-      return { rewardIds: existingRewards.map((r) => r.id) };
-    }
-
-    const referrerUserId = referral.referralCode.referrerUserId;
-    const referredUserId = referral.referredUserId;
-
-    const rewards = await this.prisma.$transaction(async (tx) => {
-      const created: string[] = [];
-
-      // Reward 1: Referrer gets 1 month subscription extension
-      const referrerExtension = await tx.referralReward.create({
-        data: {
-          referralId,
-          recipientUserId: referrerUserId,
-          rewardType: 'subscription_extension',
-          amount: 1, // 1 month
-          description: 'Referral reward: 1 month subscription extension',
-        },
-      });
-      created.push(referrerExtension.id);
-
-      // Reward 2: Referrer gets 50 credits
-      const referrerCredits = await tx.referralReward.create({
-        data: {
-          referralId,
-          recipientUserId: referrerUserId,
-          rewardType: 'credit_grant',
-          amount: 50,
-          description: 'Referral reward: 50 credits for referring a new user',
-        },
-      });
-      created.push(referrerCredits.id);
-
-      // Reward 3: Referred user gets 50 credits (if user ID is known)
-      if (referredUserId) {
-        const referredCredits = await tx.referralReward.create({
-          data: {
-            referralId,
-            recipientUserId: referredUserId,
-            rewardType: 'credit_grant',
-            amount: 50,
-            description: 'Welcome reward: 50 credits for signing up via referral',
-          },
-        });
-        created.push(referredCredits.id);
-      }
-
-      // Transition referral to rewarded
-      await tx.referral.update({
-        where: { id: referralId },
-        data: {
-          status: 'rewarded',
-          rewardedAt: new Date(),
-        },
-      });
-
-      return created;
-    });
-
-    this.logger.log(`Calculated ${rewards.length} rewards for referral ${referralId}`);
-
-    return { rewardIds: rewards };
-  }
 
   /**
    * Apply a single reward: execute the actual Stripe or credit balance operation.

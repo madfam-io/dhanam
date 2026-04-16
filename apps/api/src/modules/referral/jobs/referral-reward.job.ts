@@ -9,16 +9,14 @@ import { ReferralRewardService } from '../referral-reward.service';
  * =============================================================================
  * Referral Reward Job
  * =============================================================================
- * Processes converted referrals that have not yet been rewarded.
+ * Processes unapplied referral rewards every 15 minutes.
  *
- * Runs every 15 minutes to:
- * 1. Find referrals in "converted" status (not yet rewarded)
- * 2. Calculate rewards (subscription extensions + credit grants)
- * 3. Apply each reward (Stripe or credit balance)
- * 4. Recalculate ambassador tier for the referrer
+ * Reward rows are created by ReferralService.handleConversionWebhook() when
+ * PhyneCRM sends a referral.converted event. This job picks up any rewards
+ * that have not yet been applied (subscription extension or credit grant)
+ * and executes them.
  *
- * Designed to be idempotent: if a referral already has rewards, they are
- * not duplicated. If a reward is already applied, it is skipped.
+ * Designed to be idempotent: already-applied rewards are skipped.
  * =============================================================================
  */
 @Injectable()
@@ -38,70 +36,54 @@ export class ReferralRewardJob {
   async processRewards(): Promise<void> {
     this.logger.log('Starting referral reward processing');
 
-    // Find converted referrals that have not been rewarded yet
-    const convertedReferrals = await this.prisma.referral.findMany({
-      where: { status: 'converted' },
+    // Find unapplied rewards
+    const unappliedRewards = await this.prisma.referralReward.findMany({
+      where: { applied: false },
       select: {
         id: true,
-        referralCode: {
-          select: { referrerUserId: true },
-        },
+        recipientUserId: true,
       },
       take: 100, // Process in batches to avoid overload
     });
 
-    if (convertedReferrals.length === 0) {
-      this.logger.debug('No converted referrals to process');
+    if (unappliedRewards.length === 0) {
+      this.logger.debug('No unapplied rewards to process');
       return;
     }
 
-    this.logger.log(`Processing ${convertedReferrals.length} converted referrals`);
+    this.logger.log(`Processing ${unappliedRewards.length} unapplied rewards`);
 
-    let processed = 0;
+    let applied = 0;
     let failed = 0;
-    const referrersToRecalculate = new Set<string>();
+    const usersToRecalculate = new Set<string>();
 
-    for (const referral of convertedReferrals) {
+    for (const reward of unappliedRewards) {
       try {
-        // Step 1: Calculate rewards
-        const { rewardIds } = await this.rewardService.calculateRewards(referral.id);
-
-        // Step 2: Apply each reward
-        for (const rewardId of rewardIds) {
-          try {
-            await this.rewardService.applyReward(rewardId);
-          } catch (rewardError) {
-            this.logger.error(
-              `Failed to apply reward ${rewardId}: ${(rewardError as Error).message}`
-            );
-          }
+        const result = await this.rewardService.applyReward(reward.id);
+        if (result.applied) {
+          applied++;
+          usersToRecalculate.add(reward.recipientUserId);
         }
-
-        // Track referrer for tier recalculation
-        referrersToRecalculate.add(referral.referralCode.referrerUserId);
-        processed++;
       } catch (error) {
         this.logger.error(
-          `Failed to process referral ${referral.id}: ${(error as Error).message}`,
+          `Failed to apply reward ${reward.id}: ${(error as Error).message}`,
           (error as Error).stack
         );
         failed++;
       }
     }
 
-    // Step 3: Recalculate ambassador tiers for all affected referrers
-    for (const referrerId of referrersToRecalculate) {
+    // Recalculate ambassador tiers for all affected users
+    for (const userId of usersToRecalculate) {
       try {
-        await this.ambassadorService.recalculateTier(referrerId);
+        await this.ambassadorService.recalculateTier(userId);
       } catch (error) {
-        this.logger.error(
-          `Failed to recalculate tier for ${referrerId}: ${(error as Error).message}`
-        );
+        this.logger.error(`Failed to recalculate tier for ${userId}: ${(error as Error).message}`);
       }
     }
 
     this.logger.log(
-      `Referral reward processing complete: ${processed} processed, ${failed} failed, ${referrersToRecalculate.size} tiers recalculated`
+      `Referral reward processing complete: ${applied} applied, ${failed} failed, ${usersToRecalculate.size} tiers recalculated`
     );
   }
 }

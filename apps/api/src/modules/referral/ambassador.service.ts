@@ -83,36 +83,34 @@ export class AmbassadorService {
   }
 
   /**
-   * Recalculate ambassador tier based on actual conversion count.
-   * Called after a referral is rewarded.
+   * Recalculate ambassador tier based on reward data.
+   * Called after a referral conversion webhook is processed.
    *
-   * Also updates aggregate stats (totalReferrals, totalConversions,
-   * lifetimeCreditsEarned, lifetimeMonthsEarned).
+   * Derives conversion count from subscription_extension rewards (one per conversion).
+   * Also updates aggregate stats (lifetimeCreditsEarned, lifetimeMonthsEarned).
+   *
+   * Note: With funnel tracking moved to PhyneCRM, we derive conversion counts
+   * from ReferralReward records rather than Referral records.
    */
   async recalculateTier(userId: string): Promise<{
     previousTier: string;
     newTier: string;
     promoted: boolean;
   }> {
-    // Count actual conversions across all of the user's referral codes
-    const codes = await this.prisma.referralCode.findMany({
-      where: { referrerUserId: userId },
-      select: { id: true },
+    // Count conversions from subscription_extension rewards (1 per conversion)
+    const conversions = await this.prisma.referralReward.count({
+      where: {
+        recipientUserId: userId,
+        rewardType: 'subscription_extension',
+      },
     });
 
-    const codeIds = codes.map((c) => c.id);
-
-    const [totalReferrals, conversions] = await Promise.all([
-      this.prisma.referral.count({
-        where: { referralCodeId: { in: codeIds } },
-      }),
-      this.prisma.referral.count({
-        where: {
-          referralCodeId: { in: codeIds },
-          status: { in: ['converted', 'rewarded'] },
-        },
-      }),
-    ]);
+    // Count total distinct referralIds as proxy for total referrals
+    const distinctReferrals = await this.prisma.referralReward.groupBy({
+      by: ['referralId'],
+      where: { recipientUserId: userId },
+    });
+    const totalReferrals = distinctReferrals.length;
 
     // Sum lifetime rewards
     const rewardAggregates = await this.prisma.referralReward.groupBy({
