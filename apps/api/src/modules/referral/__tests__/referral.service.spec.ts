@@ -273,12 +273,8 @@ describe('ReferralService', () => {
 
     it('should reject self-referral by userId', async () => {
       prisma.referralCode.findUnique
-        .mockResolvedValueOnce(validCode as any)
-        .mockResolvedValueOnce(validCode as any);
-
-      await expect(
-        service.applyCode('KRF-APPLY001', 'other@example.com', 'karafiel', 'referrer-user')
-      ).rejects.toThrow(BadRequestException);
+        .mockResolvedValueOnce(validCode as any) // validateCode
+        .mockResolvedValueOnce(validCode as any); // applyCode findUnique
 
       await expect(
         service.applyCode('KRF-APPLY001', 'other@example.com', 'karafiel', 'referrer-user')
