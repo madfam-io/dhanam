@@ -21,7 +21,7 @@ import { SubscriptionLifecycleService } from './subscription-lifecycle.service';
  * Tracks every attempt (even abandoned ones) for retention analytics.
  */
 
-interface SaveOffer {
+export interface SaveOffer {
   type: 'discount' | 'pause' | 'roadmap' | 'support' | 'loss_aversion';
   intentId: string;
   discountPercent?: number;
