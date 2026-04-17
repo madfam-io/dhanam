@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { z } from 'zod';
 
 const envSchemaBase = z.object({
   // API
@@ -32,7 +32,7 @@ const envSchemaBase = z.object({
   // App
   NEXT_PUBLIC_APP_URL: z.string().url().optional(),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
-})
+});
 
 const envSchema = envSchemaBase.superRefine((data, ctx) => {
   // In janua auth mode, OIDC vars are required
@@ -42,21 +42,21 @@ const envSchema = envSchemaBase.superRefine((data, ctx) => {
         code: z.ZodIssueCode.custom,
         message: 'NEXT_PUBLIC_OIDC_ISSUER is required when auth mode is janua',
         path: ['NEXT_PUBLIC_OIDC_ISSUER'],
-      })
+      });
     }
     if (!data.NEXT_PUBLIC_OIDC_CLIENT_ID) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: 'NEXT_PUBLIC_OIDC_CLIENT_ID is required when auth mode is janua',
         path: ['NEXT_PUBLIC_OIDC_CLIENT_ID'],
-      })
+      });
     }
     if (!data.NEXT_PUBLIC_JANUA_API_URL) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: 'NEXT_PUBLIC_JANUA_API_URL is required when auth mode is janua',
         path: ['NEXT_PUBLIC_JANUA_API_URL'],
-      })
+      });
     }
   }
 
@@ -67,29 +67,29 @@ const envSchema = envSchemaBase.superRefine((data, ctx) => {
         code: z.ZodIssueCode.custom,
         message: 'NEXT_PUBLIC_POSTHOG_KEY should be set in production for observability',
         path: ['NEXT_PUBLIC_POSTHOG_KEY'],
-      })
+      });
     }
   }
-})
+});
 
-export type Env = z.infer<typeof envSchema>
+export type Env = z.infer<typeof envSchema>;
 
-let cachedEnv: Env | null = null
+let cachedEnv: Env | null = null;
 
 export function getEnv(): Env {
-  if (cachedEnv) return cachedEnv
-  const parsed = envSchema.safeParse(process.env)
+  if (cachedEnv) return cachedEnv;
+  const parsed = envSchema.safeParse(process.env);
   if (!parsed.success) {
-    const formatted = parsed.error.flatten().fieldErrors
+    const formatted = parsed.error.flatten().fieldErrors;
     const message = Object.entries(formatted)
       .map(([key, errors]) => `  ${key}: ${errors?.join(', ')}`)
-      .join('\n')
-    throw new Error(`[dhanam-web] Invalid environment variables:\n${message}`)
+      .join('\n');
+    throw new Error(`[dhanam-web] Invalid environment variables:\n${message}`);
   }
-  cachedEnv = parsed.data
-  return cachedEnv
+  cachedEnv = parsed.data;
+  return cachedEnv;
 }
 
 export function getEnvUnsafe(): Partial<Env> {
-  return envSchemaBase.partial().parse(process.env)
+  return envSchemaBase.partial().parse(process.env);
 }
