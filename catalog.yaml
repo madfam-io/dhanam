@@ -84,8 +84,17 @@ products:
       contador:
         dhanam_tier: essentials
         display_name: "Contador"
+        # Yearly set at the higher end of the PRICING_OVERHAUL_20260417.md
+        # range ($10,188-$11,988). Principle: premium list price + well-
+        # timed campaigns for accessibility (year-1 founding member 40%
+        # off brings yearly effective to ~$7,192/yr, which is still above
+        # misKuentas Básico $10K/yr minus the 23% annual discount once
+        # the founding cohort rolls off to list pricing in year 2).
+        # Prior value was 99900 cents ($999/yr total) which the
+        # pricing-intelligence tool flagged as a 93% annual discount
+        # catalog bug.
         prices:
-          MXN: { monthly: 129900, yearly: 99900 }
+          MXN: { monthly: 129900, yearly: 1198800 }
         metadata:
           rfc_limit: 10
         features:
@@ -100,8 +109,13 @@ products:
       despacho:
         dhanam_tier: pro
         display_name: "Despacho"
+        # Yearly fix — same story as contador. Prior 299900 cents
+        # ($2,999/yr total) was a 94% annual discount catalog bug;
+        # 3598800 cents ($35,988/yr) is 25% off monthly-equivalent
+        # and matches the Despacho-tier recommendation in
+        # PRICING_OVERHAUL_20260417.md section 2.2.
         prices:
-          MXN: { monthly: 399900, yearly: 299900 }
+          MXN: { monthly: 399900, yearly: 3598800 }
         metadata:
           rfc_limit: 50
         features:
@@ -252,12 +266,96 @@ products:
       api_call: 1
       nbi_score: 2
 
+  routecraft:
+    name: "RouteCraft"
+    description: "Event-driven routing and multi-city trip planning for distributed teams. Score conferences + optimize circuits automatically."
+    category: travel
+    website: "https://routecraft.app"
+    sort_order: 7
+    tiers:
+      discovery:
+        dhanam_tier: essentials
+        display_name: "Discovery"
+        # Higher-end entry price per user directive (2026-04-17).
+        # TravelPerk starts at ~$99/user/mo for their self-serve tier;
+        # Navan is free + enterprise quote. RouteCraft lands above the
+        # free-tier floor but below TravelPerk's mid-market mark.
+        # Founding member year-1 40% off brings this to $35.40 USD /
+        # ~$720 MXN per user/mo — which is credit-card expensable
+        # without manager approval at most MX mid-market companies.
+        prices:
+          USD: { monthly: 5900 }
+          MXN: { monthly: 119900 }
+        metadata:
+          max_trips_per_month: 3
+          max_users: 1
+        features:
+          - "3 multi-city trip plans per month"
+          - "Event scoring (business fit, culture, deal potential)"
+          - "Basic route optimization"
+          - "Email itinerary delivery"
+          - "Single-user"
+          - "14-day free trial"
+      professional:
+        dhanam_tier: pro
+        display_name: "Professional"
+        # Higher-end mid-tier. TravelPerk Pro is ~€199/user/mo; this
+        # undercuts while still anchoring premium vs free tools.
+        prices:
+          USD: { monthly: 19900 }
+          MXN: { monthly: 399900 }
+        metadata:
+          max_trips_per_month: null
+          max_users: 5
+        features:
+          - "Unlimited multi-city trip planning"
+          - "Shared team itineraries"
+          - "Advanced AI event scoring"
+          - "Custom scoring profiles"
+          - "Calendar integration (Google, Microsoft)"
+          - "5 team seats"
+          - "Priority support"
+      enterprise:
+        dhanam_tier: premium
+        display_name: "Enterprise"
+        # Custom pricing — sales-driven (same pattern as Karafiel Firma).
+        prices: {}
+        metadata:
+          max_users: 9999
+        features:
+          - "Unlimited seats"
+          - "SSO / SAML"
+          - "Custom integrations (expense, calendar, ERP)"
+          - "Dedicated success manager"
+          - "SLA guarantees"
+          - "Custom scoring-profile authoring"
+    credit_costs:
+      trip_plan_generation: 5
+      event_score_compute: 2
+      itinerary_optimization: 3
+
 coupons:
   founding_member_mx:
-    name: "MADFAM Founding Member (Mexico)"
+    # Year-1 onboarding deal (was "40% forever" — PRICING_OVERHAUL_20260417.md
+    # flagged "forever" as industry-unusual; CONTPAQi caps at year 1,
+    # Alegra caps at 25% annual commit). Paired with
+    # founding_member_mx_year2 for a deliberate ramp to list.
+    name: "MADFAM Founding Member (Mexico) — Year 1"
     percent_off: 40
-    duration: forever
-    products: [karafiel, dhanam, tezca]
+    duration: repeating
+    duration_months: 12
+    products: [karafiel, dhanam, tezca, routecraft]
+
+  founding_member_mx_year2:
+    # Automatic follow-on when founding_member_mx expires. Sales ops
+    # apply this via Stripe subscription-update when the 12-month
+    # window lapses. Soft ramp so founding cohort doesn't churn the
+    # moment list pricing bites.
+    name: "MADFAM Founding Member (Mexico) — Year 2"
+    percent_off: 20
+    duration: repeating
+    duration_months: 12
+    products: [karafiel, dhanam, tezca, routecraft]
 
   launch_intro:
     name: "Dhanam Launch Intro"
@@ -268,6 +366,10 @@ coupons:
     products: [dhanam]
 
   latam_regional:
+    # Still "forever" — PRICING_OVERHAUL_20260417.md flags this for
+    # reshape in the next iteration. Kept as-is for now so LATAM
+    # users don't see a price jump mid-rollout; revisit once
+    # founding_member_mx cohort performance signals hold rate.
     name: "LATAM Regional Discount"
     percent_off: 45
     duration: forever
