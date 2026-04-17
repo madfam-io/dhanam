@@ -38,6 +38,7 @@ import { JanuaBillingService } from './janua-billing.service';
 import { OverageInvoicingJob } from './jobs/overage-invoicing.job';
 import { ReconciliationJob } from './jobs/reconciliation.job';
 import { SubscriptionLifecycleJob } from './jobs/subscription-lifecycle.job';
+import { MadfamEventsController } from './madfam-events.controller';
 // Federation (PhyneCRM integration)
 import { CancellationService } from './services/cancellation.service';
 import { CustomerFederationService } from './services/customer-federation.service';
@@ -73,6 +74,7 @@ import { StripeService } from './stripe.service';
     CustomerFederationController,
     CatalogController,
     CotizaWebhookController,
+    MadfamEventsController,
   ],
   providers: [
     // Core billing services
