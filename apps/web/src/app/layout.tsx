@@ -88,7 +88,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       </head>
       <body className={inter.className}>
         <Providers>{children}</Providers>
-        <Toaster />
+        <Toaster theme="system" position="top-right" richColors />
       </body>
     </html>
   );
