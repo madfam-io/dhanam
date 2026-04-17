@@ -97,6 +97,25 @@ products:
           MXN: { monthly: 129900, yearly: 1198800 }
         metadata:
           rfc_limit: 10
+      consultor:
+        dhanam_tier: essentials
+        display_name: "Consultor"
+        # New middle tier addressing the 3.08x cannibalization gap
+        # between Contador (10 RFC) and Despacho (50 RFC). Fills the
+        # mid-market — despachos that have outgrown 10 RFC but haven't
+        # reached 50. Higher-end price per user directive; yearly at
+        # ~17% off monthly-equivalent (matching Karafiel's tier
+        # philosophy of modest yearly discounts vs Dhanam's 20%).
+        prices:
+          MXN: { monthly: 249900, yearly: 2490000 }
+        metadata:
+          rfc_limit: 25
+        features:
+          - "Todo en Contador"
+          - "25 RFCs incluidos"
+          - "2 usuarios incluidos"
+          - "Agente Portal SAT (Kafi) — hasta 25 RFCs"
+          - "Prioridad en soporte"
         features:
           - "Descarga masiva CFDI automatica"
           - "Contabilidad electronica (Anexo 24)"
@@ -159,6 +178,26 @@ products:
     website: "https://selva.town"
     sort_order: 3
     tiers:
+      developer:
+        dhanam_tier: essentials
+        display_name: "Developer"
+        # Entry tier addressing cannibalization pressure from Lindy
+        # ($19.99), Relevance AI ($19), Make ($9). Higher end of the
+        # $29-$49 range. Solo devs and MX individual contributors who
+        # can't justify $149 Starter. Starter/Professional tier slugs
+        # preserved below — no rename without explicit approval.
+        prices:
+          USD: { monthly: 4900 }
+          MXN: { monthly: 99900 }
+        metadata:
+          max_agents: 2
+          daily_token_limit: 200
+        features:
+          - "2 concurrent agents"
+          - "200 compute tokens/day"
+          - "Core workflow graphs (coding, research)"
+          - "Community support"
+          - "Single-user"
       starter:
         dhanam_tier: essentials
         display_name: "Starter"
@@ -205,6 +244,23 @@ products:
     website: "https://tezca.mx"
     sort_order: 4
     tiers:
+      free:
+        dhanam_tier: essentials
+        display_name: "Free"
+        # Acquisition funnel. Every MX legal-SaaS comparable has a free
+        # trial or free tier (Protector Fiscal 15d, Facturama 30d, Alegra
+        # 15d, vLex free trial). Without a free entry Tezca has no
+        # top-of-funnel story. Eng follow-up: entitlement gate for
+        # 5-alerts/week cap.
+        prices: {}
+        metadata:
+          alerts_per_week: 5
+          legislatures_tracked: 3
+        features:
+          - "5 custom legislative alerts per week"
+          - "Read-only DOF + top 3 legislatures"
+          - "Full-text law search (30K+ laws)"
+          - "Community support"
       pro:
         dhanam_tier: pro
         display_name: "Pro"
@@ -217,6 +273,41 @@ products:
           - "API access (5,000 req/day)"
           - "Compliance rule engine"
           - "Federal + state + municipal coverage"
+          - "1 user seat"
+      pro_plus:
+        dhanam_tier: pro
+        display_name: "Pro+"
+        # Multi-user tier. Higher end of the $899 range — closes the
+        # gap to vLex firm (~$4K MXN) while remaining 75%+ cheaper.
+        # Mid-market despachos and compliance teams.
+        prices:
+          USD: { monthly: 4499 }
+          MXN: { monthly: 89900 }
+        metadata:
+          user_seats: 3
+        features:
+          - "Everything in Pro"
+          - "3 user seats"
+          - "API access (20,000 req/day)"
+          - "Priority support"
+          - "Custom alert topics"
+          - "Weekly compliance digest"
+      enterprise:
+        dhanam_tier: premium
+        display_name: "Enterprise"
+        # Sales-led — anchor above vLex firm (~$4K MXN) and below
+        # Checkpoint Fiscal Pro ($8.2-15.3K MXN/yr equivalent).
+        prices: {}
+        metadata:
+          user_seats: 9999
+        features:
+          - "Everything in Pro+"
+          - "Unlimited user seats"
+          - "SSO / SAML"
+          - "SLA guarantees"
+          - "Custom compliance-rule authoring"
+          - "Dedicated success manager"
+          - "On-prem API deployment option"
     credit_costs:
       api_search: 1
       law_detail: 1
@@ -229,6 +320,20 @@ products:
     website: "https://forgesight.madfam.io"
     sort_order: 5
     tiers:
+      free:
+        dhanam_tier: essentials
+        display_name: "Free"
+        # Acquisition funnel for job-shops, schools, and freelance
+        # manufacturing consultants. Watermarked exports + narrow
+        # material-lookup cap. Eng follow-up: entitlement gate.
+        prices: {}
+        metadata:
+          lookups_per_month: 10
+        features:
+          - "10 pricing lookups per month"
+          - "1 material category"
+          - "Watermarked exports"
+          - "Community support"
       pro:
         dhanam_tier: pro
         display_name: "Pro"
@@ -240,6 +345,42 @@ products:
           - "Material cost comparison"
           - "Market trend analytics"
           - "API access"
+          - "Single-user"
+      team:
+        dhanam_tier: pro
+        display_name: "Team"
+        # Higher end of $249-$299 range. Procurement teams won't trust
+        # $49 tools for $5M+ manufacturing spend; missing Team tier left
+        # mid-market money on the table.
+        prices:
+          USD: { monthly: 29900 }
+          MXN: { monthly: 599900 }
+        metadata:
+          user_seats: 5
+        features:
+          - "Everything in Pro"
+          - "5 user seats"
+          - "Bulk CSV quote uploads"
+          - "API access (10,000 req/day)"
+          - "Priority support"
+          - "Vendor shortlist + favorites"
+      enterprise:
+        dhanam_tier: premium
+        display_name: "Enterprise"
+        # Sales-led. OEMs and contract manufacturers. Xometry/Fictiv/
+        # Protolabs all sell via enterprise quote (transaction-margin
+        # model); Forgesight should meet that buyer on their terms.
+        prices: {}
+        metadata:
+          user_seats: 9999
+        features:
+          - "Everything in Team"
+          - "Unlimited seats"
+          - "Private vendor database"
+          - "Custom materials taxonomy"
+          - "SSO / SAML"
+          - "SLA guarantees"
+          - "Dedicated success manager"
     credit_costs:
       price_lookup: 1
       market_report: 5
@@ -262,6 +403,45 @@ products:
           - "NBI score analysis"
           - "Validation campaign tools"
           - "API access"
+          - "Single-user"
+      team:
+        dhanam_tier: pro
+        display_name: "Team"
+        # Higher end of $99-$149 range. Productboard 5-seat equivalent
+        # is $95-295/mo — Fortuna's flat-rate Team is a clear price-
+        # story. Captures mid-market PM teams that would otherwise
+        # skip Fortuna on per-seat math.
+        prices:
+          USD: { monthly: 14900 }
+          MXN: { monthly: 299900 }
+        metadata:
+          user_seats: 5
+        features:
+          - "Everything in Pro"
+          - "5 user seats"
+          - "Public feedback boards"
+          - "Changelog publishing"
+          - "Advanced API (50,000 req/day)"
+          - "Priority support"
+      business:
+        dhanam_tier: premium
+        display_name: "Business"
+        # Higher end of $399-$599 range. SSO + SLA bracket; captures
+        # the 20-50 seat PM teams that today route to Productboard
+        # ($59/maker/mo = $1,180+/mo) or Canny Growth ($948+/yr).
+        prices:
+          USD: { monthly: 59900 }
+          MXN: { monthly: 1199900 }
+        metadata:
+          user_seats: 20
+        features:
+          - "Everything in Team"
+          - "20 user seats"
+          - "SSO / SAML"
+          - "SLA guarantees"
+          - "Custom NBI scoring models"
+          - "Dedicated success manager"
+          - "Audit log + compliance exports"
     credit_costs:
       api_call: 1
       nbi_score: 2
