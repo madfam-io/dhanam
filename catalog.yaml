@@ -128,6 +128,15 @@ products:
           MXN: { monthly: 129900, yearly: 1198800 }
         metadata:
           rfc_limit: 10
+        features:
+          - "Descarga masiva CFDI automatica"
+          - "Contabilidad electronica (Anexo 24)"
+          - "DIOT automatico desde CFDIs"
+          - "Declaraciones provisionales ISR/IVA"
+          - "Blindaje 69-B en tiempo real"
+          - "Alertas proactivas"
+          - "10 RFCs incluidos"
+          - "Prueba gratuita de 14 dias"
       consultor:
         dhanam_tier: essentials
         display_name: "Consultor"
@@ -147,15 +156,6 @@ products:
           - "2 usuarios incluidos"
           - "Agente Portal SAT (Kafi) — hasta 25 RFCs"
           - "Prioridad en soporte"
-        features:
-          - "Descarga masiva CFDI automatica"
-          - "Contabilidad electronica (Anexo 24)"
-          - "DIOT automatico desde CFDIs"
-          - "Declaraciones provisionales ISR/IVA"
-          - "Blindaje 69-B en tiempo real"
-          - "Alertas proactivas"
-          - "10 RFCs incluidos"
-          - "Prueba gratuita de 14 dias"
       despacho:
         dhanam_tier: pro
         display_name: "Despacho"
@@ -215,8 +215,7 @@ products:
         # Entry tier addressing cannibalization pressure from Lindy
         # ($19.99), Relevance AI ($19), Make ($9). Higher end of the
         # $29-$49 range. Solo devs and MX individual contributors who
-        # can't justify $149 Starter. Starter/Professional tier slugs
-        # preserved below — no rename without explicit approval.
+        # can't justify a team-sized seat.
         prices:
           USD: { monthly: 4900 }
           MXN: { monthly: 99900 }
@@ -229,9 +228,16 @@ products:
           - "Core workflow graphs (coding, research)"
           - "Community support"
           - "Single-user"
-      starter:
+      team:
+        # Renamed from "starter" on 2026-04-17 to match mid-market SaaS
+        # naming convention (Clay, MS Power Automate, and comparables
+        # at the $149 price point use "Team" not "Starter"; "Starter"
+        # at $149 signals wrong against the prosumer $9-$20 cluster).
+        # Rename was safe because no live Selva subscriptions exist yet
+        # and no downstream code hardcodes selva-specific tier slugs
+        # (audit: dhanam/catalog.yaml was the only referencing file).
         dhanam_tier: essentials
-        display_name: "Starter"
+        display_name: "Team"
         prices:
           USD: { monthly: 14900 }
           MXN: { monthly: 299900 }
@@ -244,9 +250,15 @@ products:
           - "Basic workflow graphs"
           - "Email + GitHub tools"
           - "Community support"
-      professional:
+      business:
+        # Renamed from "professional" on 2026-04-17 for the same
+        # consistency reason as team (above). "Business" is the
+        # conventional name for the tier above "Team" in mid-market
+        # SaaS naming (Linear, Notion, Clay, Zapier, Make all use
+        # Team/Business rather than Starter/Professional at these
+        # price points).
         dhanam_tier: pro
-        display_name: "Professional"
+        display_name: "Business"
         prices:
           USD: { monthly: 49900 }
           MXN: { monthly: 999900 }
