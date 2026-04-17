@@ -13,6 +13,28 @@
 #
 # Prices are in smallest currency unit (centavos for MXN, cents for USD).
 # The sync script creates Stripe Products + Prices and stores IDs in DB.
+#
+# ───────────────────────────────────────────────────────────
+# ROADMAP — Purchasing-Power-Parity (PPP) / Regional pricing
+# ───────────────────────────────────────────────────────────
+# The current catalog only expresses USD + MXN. Per the 2026-04-17
+# pricing overhaul directive, MADFAM will eventually optimise prices
+# per region + currency + purchasing power (Netflix-style PPP). The
+# planned schema extension adds a sibling `regional_factors` map:
+#
+#   products.<slug>.tiers.<tier>.prices.USD.monthly: <usd_cents>
+#   products.<slug>.tiers.<tier>.regional_factors:
+#     MX: 1.00    # full USD anchor, covered today by MXN prices
+#     CO: 0.85    # 15% discount via PPP
+#     AR: 0.60    # 40% discount — captures soft-currency markets
+#     BR: 0.90    # anchor close to USD
+#     US: 1.00
+#     EU: 1.10    # EUR zone premium
+#
+# Until `sync-catalog.ts` learns to materialise these into per-country
+# Stripe Prices, the factors should stay advisory. The
+# `pricing-intelligence` skill can start recommending factors
+# immediately.
 
 products:
   dhanam:
@@ -39,9 +61,13 @@ products:
       pro:
         dhanam_tier: pro
         display_name: "Pro"
+        # Raised from $11.99 -> $14.99 per PRICING_OVERHAUL_20260417.md
+        # section 2.1, higher-end. Still undercuts Monarch ($14.99 flat
+        # but USA-only) and YNAB ($14.99, no MX bank sync). MXN raised
+        # proportionally. Yearly discount preserved at ~20%.
         prices:
-          USD: { monthly: 1199, yearly: 11500 }
-          MXN: { monthly: 19900, yearly: 191000 }
+          USD: { monthly: 1499, yearly: 14388 }
+          MXN: { monthly: 29900, yearly: 286800 }
         features:
           - "Everything in Essentials"
           - "Unlimited provider connections"
@@ -55,9 +81,14 @@ products:
       premium:
         dhanam_tier: premium
         display_name: "Premium"
+        # Raised from $19.99 -> $29.99 per PRICING_OVERHAUL_20260417.md
+        # section 2.1, higher-end. Monte Carlo + estate + DeFi depth is
+        # qualitatively stronger than Monarch's top tier; $5 above Pro
+        # was too shallow. New ratio pro->premium is 2.0x (was 1.65x,
+        # flagged as weak upgrade incentive by catalog_tier_gap_audit).
         prices:
-          USD: { monthly: 1999, yearly: 19190 }
-          MXN: { monthly: 32900, yearly: 315900 }
+          USD: { monthly: 2999, yearly: 28788 }
+          MXN: { monthly: 59900, yearly: 575200 }
         features:
           - "Everything in Pro"
           - "10 financial spaces"
@@ -546,11 +577,24 @@ coupons:
     products: [dhanam]
 
   latam_regional:
-    # Still "forever" — PRICING_OVERHAUL_20260417.md flags this for
-    # reshape in the next iteration. Kept as-is for now so LATAM
-    # users don't see a price jump mid-rollout; revisit once
-    # founding_member_mx cohort performance signals hold rate.
-    name: "LATAM Regional Discount"
+    # Time-bounded per 2026-04-17 approval. Prior "45% forever" trained
+    # LATAM users to expect a permanent discount, making list pricing
+    # impossible to re-anchor. Same ramp philosophy as founding_member_mx:
+    # deep year-1 entry + softer year-2 + list in year-3. PPP / regional
+    # pricing will eventually supersede this coupon via the
+    # `regional_factors` schema noted at the top of this file.
+    name: "LATAM Regional Discount — Year 1"
     percent_off: 45
-    duration: forever
+    duration: repeating
+    duration_months: 12
+    products: [dhanam, selva, fortuna]
+
+  latam_regional_year2:
+    # Automatic follow-on. Sales ops apply via Stripe subscription-update
+    # when latam_regional expires at month 12. Soft ramp keeps cohort
+    # from churning when list-pricing bites.
+    name: "LATAM Regional Discount — Year 2"
+    percent_off: 25
+    duration: repeating
+    duration_months: 12
     products: [dhanam, selva, fortuna]
