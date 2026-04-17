@@ -142,6 +142,14 @@ billing/
 - `ReconciliationJob` creates `BillingEvent` records with type `reconciliation_mismatch` and status `flagged` for manual review
 - `PLAN_TIER_MAP` in `subscription-lifecycle.service.ts` maps plan slugs (e.g. `pro_yearly`) to tier names (e.g. `pro`)
 
+**Ecosystem payment receiver (`madfam-events.controller.ts`):**
+
+- `POST /v1/billing/madfam-events` — inbound for `@routecraft/payments::emitPaymentSucceeded` and any future signed MADFAM event producer
+- Signature: `x-madfam-signature: t=<unix-seconds>,v1=<hex-hmac-sha256>` over `"${ts}.${raw-body}"`, secret `MADFAM_EVENTS_WEBHOOK_SECRET`, 5-minute replay window. Verifier is pure + unit-tested at `madfam-events.sig.ts` / `madfam-events.sig.spec.ts` (18 tests)
+- Idempotent — dedup via `BillingEvent.stripeEventId` unique constraint on the incoming `event_id`
+- `organization_id` → Dhanam user resolution is best-effort via `Space.ownerId`; unknown orgs return `status: "accepted_unlinked"` so first-touch events don't fail
+- Probe lookup: `GET /v1/probe/billing-events/:eventId` — used by `madfam-revenue-loop-probe` to confirm the ledger row landed (per `autoswarm-office/packages/revenue-loop-probe/README.md`)
+
 ### Referral Module (`apps/api/src/modules/referral/`)
 
 Ecosystem-wide referral system. Dhanam is the source of truth for referral codes, lifecycle tracking, and reward management across all MADFAM products.
