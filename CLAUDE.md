@@ -321,6 +321,59 @@ Uses the Dhanam package (https://github.com/aldoruizluna/Dhanam) for:
 - **Staging**: `infra/k8s/staging/` — 1 replica, `:main` image tags, auto-deployed on push to main
 - **ArgoCD**: GitOps sync from `infra/k8s/production/` with auto-sync, prune, and self-heal
 
+## Deployment Pipeline (dev → staging → prod)
+
+Dhanam is a **Phase 2** target (billing/MXN-ingress priority) for the 3-tier
+pipeline defined in
+[internal-devops/rfcs/0001-dev-staging-prod-pipeline.md](https://github.com/madfam-org/internal-devops/blob/main/rfcs/0001-dev-staging-prod-pipeline.md).
+
+**Current state:** staging exists and auto-deploys on every push to `main`,
+but does not yet follow the RFC shape. See
+[docs/PP_2_STAGING_AUDIT.md](docs/PP_2_STAGING_AUDIT.md) for the full row-by-row
+gap analysis.
+
+### Known divergences from RFC 0001 (tracked in PP_2_STAGING_AUDIT.md)
+
+| Divergence                                                               | Impact                                                                                        | Resolution PR                                        |
+| ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| Staging manifests are duplicated from production (not overlays)          | Maintenance burden; drift risk                                                                | PP.2b                                                |
+| Staging image tag is `:main` (mutable), not digest-pinned                | "The image that passed staging" is not identifiable — breaks RFC's "one image, promoted" rule | PP.2b                                                |
+| No `promote-to-prod.yml` or `rollback-prod.yml` workflow                 | Prod consumes CI builds directly, not staging-validated digests                               | PP.2c                                                |
+| `deploy-staging.yml` does `kubectl apply -k` instead of ArgoCD reconcile | Push-based staging deploy vs pull-based GitOps                                                | PP.2b                                                |
+| No ArgoCD Application for staging                                        | `infra/argocd/config.json` only registers the prod App                                        | PP.2b (infra action)                                 |
+| Admin app not included in staging overlay                                | Admin ships straight to prod with no staging soak                                             | PP.2b                                                |
+| No staging ingress / DNS (`staging-api.dhan.am`)                         | Staging is namespace-internal; can't run cross-service smoke                                  | PP.2b (+ Cloudflare ops)                             |
+| Nightly prod→staging masked DB refresh not implemented                   | Staging data is hand-seeded; migrations don't see prod-shaped volumes                         | Deferred (RFC 0001 open question — masking tool TBD) |
+
+### Promotion pattern (when PP.2c lands)
+
+Dhanam is **Pattern B — manual gate** per RFC 0001. Reasoning: Dhanam is the
+billing boundary for the MADFAM ecosystem (Stripe MX, SPEI, Paddle, webhook
+relay to Karafiel for CFDI issuance). A wrong promote is expensive.
+
+When PP.2c ships, `.enclii.yml` will declare:
+
+```yaml
+promotion:
+  pattern: manual
+  min_soak_minutes: 30
+  require_smoke_pass: true
+```
+
+### What currently ships on push to `main`
+
+| Workflow               | Trigger                    | Effect                                                                                                |
+| ---------------------- | -------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `deploy-staging.yml`   | push to main               | `kubectl apply -k infra/k8s/staging/` → `dhanam-staging` namespace, `:main` tag                       |
+| `deploy-k8s.yml` (API) | push to main (api paths)   | Builds + pushes image, commits digest to `infra/k8s/production/kustomization.yaml`, ArgoCD syncs prod |
+| `deploy-web-k8s.yml`   | push to main (web paths)   | Same pattern for `dhanam-web`                                                                         |
+| `deploy-admin-k8s.yml` | push to main (admin paths) | Same pattern for `dhanam-admin`                                                                       |
+| `deploy-enclii.yml`    | push to main               | Enclii auto-deploy (primary production path per MADFAM ecosystem)                                     |
+
+**This flow is intentionally preserved unchanged by PP.2.** Convergence to
+RFC 0001 is sequenced across follow-up PRs (PP.2b structural, PP.2c
+promote/rollback) so each diff is reviewable and reversible.
+
 ## Environment Setup
 
 Each app requires environment configuration:
