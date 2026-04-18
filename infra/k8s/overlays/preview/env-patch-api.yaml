@@ -1,0 +1,42 @@
+# Preview-specific env overrides for the API.
+#
+# Keys differ from staging on:
+#   - ENVIRONMENT / SENTRY_ENVIRONMENT = "preview" (segregate preview noise
+#     from staging dashboards + alerting rules)
+#   - CORS_ORIGINS = wildcard under *.preview.dhan.am (every preview web/admin
+#     origin must be accepted; individual PR URLs are templated by the
+#     ApplicationSet at Application creation time)
+#
+# Safety: billing stays test-mode (same as staging). If a preview ever
+# processed a live Stripe event it would be a material compliance break.
+# FEATURE_STRIPE_MXN_LIVE=false is enforced here even if the preview-secret
+# accidentally leaked a live key.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dhanam-api
+spec:
+  template:
+    spec:
+      containers:
+        - name: api
+          env:
+            - name: NODE_ENV
+              value: "staging"
+            - name: ENVIRONMENT
+              value: "preview"
+            - name: SENTRY_ENVIRONMENT
+              value: "preview"
+            - name: SENTRY_RELEASE
+              value: "dhanam-api@preview"
+            - name: FEATURE_STRIPE_MXN_LIVE
+              value: "false"
+            - name: PADDLE_ENVIRONMENT
+              value: "sandbox"
+            # CORS: wildcard across all preview hosts. Pair with preview-only
+            # JWT secret so a leaked preview token cannot be used in prod.
+            - name: CORS_ORIGINS
+              value: "https://*.preview.dhan.am"
+            # Fan-out disabled in preview (no downstream webhook consumers).
+            - name: PRODUCT_WEBHOOK_URLS
+              value: ""

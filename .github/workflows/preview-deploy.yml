@@ -1,0 +1,232 @@
+# P1.7 — Dhanam per-PR preview deploy.
+#
+# On PR open/synchronize (new commits pushed to PR branch):
+#   1. Build the API image (api-only; web/admin stay on staging-latest per
+#      infra/k8s/overlays/preview/kustomization.yaml rationale).
+#   2. Push to ghcr.io/madfam-org/dhanam/api:pr-<N>-<sha> (tagged so the
+#      image is discoverable from the PR page) AND capture the digest.
+#   3. Patch infra/k8s/overlays/preview/kustomization.yaml on the PR's
+#      own branch (NOT main) with the new digest. ArgoCD's ApplicationSet
+#      pullRequest generator watches this file at the PR's `head` ref, so
+#      committing on the PR branch is how the digest reaches the cluster.
+#
+# Teardown is handled by the ApplicationSet finalizer on PR close/merge —
+# this workflow intentionally does NOT have a `pull_request: types: closed`
+# job.
+#
+# Skip conditions:
+#   - Fork PRs: no preview (credential + resource leak risk). GitHub's
+#     default `GITHUB_TOKEN` can't write to the fork anyway.
+#   - `no-preview` label: operator escape hatch (e.g., docs-only PR,
+#     known-broken build, cost containment).
+
+name: Preview Deploy (per-PR)
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+
+concurrency:
+  # One build per PR at a time; cancel superseded runs on new commits.
+  group: preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+env:
+  REGISTRY: ghcr.io
+  API_IMAGE: madfam-org/dhanam/api
+
+jobs:
+  guard:
+    # Single gate job — other jobs depend on its output. Keeps the
+    # fork/label logic in one place.
+    name: Guard (fork + label checks)
+    runs-on: ubuntu-latest
+    outputs:
+      should_deploy: ${{ steps.decide.outputs.should_deploy }}
+      reason: ${{ steps.decide.outputs.reason }}
+    steps:
+      - id: decide
+        env:
+          IS_FORK: ${{ github.event.pull_request.head.repo.fork }}
+          LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
+        run: |
+          set -euo pipefail
+          if [ "$IS_FORK" = "true" ]; then
+            echo "should_deploy=false" >> "$GITHUB_OUTPUT"
+            echo "reason=fork" >> "$GITHUB_OUTPUT"
+            echo "::notice::Preview skipped — PR is from a fork (security policy)."
+            exit 0
+          fi
+          if echo "$LABELS" | grep -q '"no-preview"'; then
+            echo "should_deploy=false" >> "$GITHUB_OUTPUT"
+            echo "reason=no-preview-label" >> "$GITHUB_OUTPUT"
+            echo "::notice::Preview skipped — 'no-preview' label present."
+            exit 0
+          fi
+          echo "should_deploy=true" >> "$GITHUB_OUTPUT"
+          echo "reason=ok" >> "$GITHUB_OUTPUT"
+
+  build-api:
+    name: Build API preview image
+    needs: guard
+    if: needs.guard.outputs.should_deploy == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      digest: ${{ steps.push.outputs.digest }}
+      short: ${{ steps.sha.outputs.short }}
+      pr: ${{ github.event.pull_request.number }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: sha
+        run: echo "short=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+
+      - id: push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/api/Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.API_IMAGE }}:pr-${{ github.event.pull_request.number }}-${{ steps.sha.outputs.short }}
+            ${{ env.REGISTRY }}/${{ env.API_IMAGE }}:pr-${{ github.event.pull_request.number }}-latest
+          cache-from: |
+            type=gha,scope=api-preview-${{ github.event.pull_request.number }}
+            type=gha,scope=api
+          cache-to: type=gha,scope=api-preview-${{ github.event.pull_request.number }},mode=max
+
+  update-preview-overlay:
+    name: Patch preview overlay digest on PR branch
+    needs: [guard, build-api]
+    if: needs.guard.outputs.should_deploy == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          # Need write access to push back to the PR branch. Default
+          # GITHUB_TOKEN is insufficient for fork-guarded workflows only;
+          # same-repo PRs work fine with the default token.
+          token: ${{ secrets.MADFAM_BOT_PAT || secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Patch preview overlay api digest
+        env:
+          API_DIGEST: ${{ needs.build-api.outputs.digest }}
+          SHORT: ${{ needs.build-api.outputs.short }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          FILE="infra/k8s/overlays/preview/kustomization.yaml"
+          python3 <<PY
+          import os, re, pathlib
+          path = pathlib.Path("$FILE")
+          text = path.read_text()
+
+          # Only the api digest gets rewritten on every PR push; web/admin
+          # keep whatever digest is currently in the file (points at the
+          # most recent staging-latest captured when the preview overlay
+          # was last manually refreshed — see README in infra/k8s/overlays/preview/).
+          pattern = (
+              r'(name:\s+ghcr\.io/madfam-org/dhanam/api\n\s+digest:\s+)'
+              r'sha256:[a-f0-9]+'
+          )
+          text = re.sub(pattern, lambda m: m.group(1) + os.environ["API_DIGEST"], text)
+          path.write_text(text)
+          PY
+
+          if git diff --quiet -- "$FILE"; then
+            echo "No digest change (duplicate build?) — skipping commit."
+            exit 0
+          fi
+
+          git config user.name "madfam-deploy-bot"
+          git config user.email "deploy-bot@madfam.io"
+          git add "$FILE"
+          git commit -m "deploy(preview): pr-$PR api digest -> $SHORT"
+          git push origin HEAD:${{ github.event.pull_request.head.ref }}
+
+  smoke:
+    name: Preview smoke test
+    needs: [guard, update-preview-overlay]
+    if: needs.guard.outputs.should_deploy == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Wait for ArgoCD reconcile
+        # ApplicationSet regen cadence (~30s) + ArgoCD sync + pod warmup.
+        # Larger than staging smoke because preview namespaces cold-start.
+        run: sleep 240
+
+      - name: API health check (6x retry x 20s)
+        env:
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          URL="https://pr-${PR}.api.preview.dhan.am"
+          for i in 1 2 3 4 5 6; do
+            if curl -fsS --max-time 10 "$URL/health" > /dev/null; then
+              echo "Preview API healthy on attempt $i ($URL/health)"
+              exit 0
+            fi
+            echo "attempt $i unhealthy, retrying"
+            sleep 20
+          done
+          echo "::error::Preview failed health check after 6 attempts ($URL/health)"
+          echo "::error::Check ArgoCD (\`argocd app get dhanam-pr-${PR}\`) and namespace events (\`kubectl -n dhanam-pr-${PR} get events\`)."
+          exit 1
+
+      - name: Comment preview URL on PR
+        if: always()
+        uses: actions/github-script@v7
+        env:
+          PR: ${{ github.event.pull_request.number }}
+        with:
+          script: |
+            const pr = process.env.PR;
+            const body = [
+              `### Preview environment`,
+              ``,
+              `- API: https://pr-${pr}.api.preview.dhan.am`,
+              `- Web: https://pr-${pr}.web.preview.dhan.am`,
+              `- Admin: https://pr-${pr}.admin.preview.dhan.am`,
+              ``,
+              `Build: \`pr-${pr}-${{ needs.build-api.outputs.short }}\`.`,
+              `Teardown on PR close/merge is automatic.`,
+              `Add label \`no-preview\` to skip future builds.`
+            ].join('\n');
+            // Upsert: one preview comment per PR, find-by-marker + update/create.
+            const marker = '### Preview environment';
+            const {data: comments} = await github.rest.issues.listComments({
+              ...context.repo, issue_number: Number(pr)
+            });
+            const existing = comments.find(c =>
+              c.user.login === 'github-actions[bot]' && c.body.startsWith(marker)
+            );
+            if (existing) {
+              await github.rest.issues.updateComment({
+                ...context.repo, comment_id: existing.id, body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                ...context.repo, issue_number: Number(pr), body
+              });
+            }

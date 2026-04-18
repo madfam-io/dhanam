@@ -1,0 +1,8 @@
+# Same mechanism as staging: pin min=max=1 on HPAs. Pairs with the
+# `replicas:` block in kustomization.yaml.
+- op: replace
+  path: /spec/minReplicas
+  value: 1
+- op: replace
+  path: /spec/maxReplicas
+  value: 1

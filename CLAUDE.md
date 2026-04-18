@@ -480,6 +480,88 @@ for the transform implementation and
 for the 22-test suite covering signature, transforms, idempotency,
 currency guard, and feature-flag gate.
 
+## Preview Environments (P1.7 — Enclii ephemeral per-PR envs)
+
+Dhanam is the first participating service for Enclii's preview-environment
+feature (see
+[internal-devops/roadmaps/2026-04-enclii-remediation-plan.md](https://github.com/madfam-org/internal-devops/blob/main/roadmaps/2026-04-enclii-remediation-plan.md)
+P1.7). Every non-fork PR to `main` auto-spawns a per-PR environment:
+
+| Surface | URL |
+|---------|-----|
+| API | `https://pr-<N>.api.preview.dhan.am` |
+| Web | `https://pr-<N>.web.preview.dhan.am` |
+| Admin | `https://pr-<N>.admin.preview.dhan.am` |
+
+### How it works
+
+1. `preview-deploy.yml` (on PR open/synchronize) builds the API image,
+   pushes it to `ghcr.io/madfam-org/dhanam/api:pr-<N>-<sha>`, and patches
+   `infra/k8s/overlays/preview/kustomization.yaml` **on the PR branch**
+   with the new digest.
+2. ArgoCD's `dhanam-preview` ApplicationSet (in
+   [internal-devops/infra/argocd/appsets/dhanam-preview.yaml](https://github.com/madfam-org/internal-devops/blob/main/infra/argocd/appsets/dhanam-preview.yaml))
+   watches `madfam-org/dhanam` for open PRs. For each PR it generates an
+   Application `dhanam-pr-<N>` that deploys this overlay to namespace
+   `dhanam-pr-<N>`.
+3. On PR close/merge, ArgoCD drops the Application. The
+   `resources-finalizer.argocd.argoproj.io` finalizer deletes every
+   resource in the namespace, including the namespace itself.
+4. The smoke job polls `pr-<N>.api.preview.dhan.am/health` and comments
+   the URLs on the PR.
+
+### Guardrails
+
+- **Fork PRs are skipped** (no preview build) — prevents credential +
+  resource leakage to untrusted contributors.
+- **`no-preview` label skips** builds — escape hatch for docs-only PRs,
+  known-broken branches, or cost containment.
+- **Sandbox-only credentials** — `dhanam-secrets-preview`,
+  `dhanam-billing-secrets-preview`, `dhanam-provider-secrets-preview`,
+  `dhanam-janua-secrets-preview` are provisioned from
+  `infra/k8s/overlays/preview/secrets-template.yaml` with test/sandbox
+  keys only. `FEATURE_STRIPE_MXN_LIVE=false` is pinned in
+  `env-patch-api.yaml` regardless of secret content.
+- **Per-namespace quota** — `quota.yaml` caps the preview at cpu 1 /
+  mem 2Gi / 8 pods, so a runaway preview cannot exhaust the cluster.
+- **14-day reap** — a CronJob in `internal-devops/infra/k8s/`
+  (`preview-reaper-cronjob.yaml`) deletes any `dhanam-pr-*` namespace
+  older than 14 days regardless of PR state, as a safety net if
+  ApplicationSet fails to reap.
+- **API-only rebuild** — web/admin use the most-recent staging digests
+  pinned in `overlays/preview/kustomization.yaml`. Rebuilding all three
+  per PR costs too much; web/admin changes ship through staging on
+  merge like always.
+
+### Files
+
+| Purpose | Location |
+|---------|----------|
+| Overlay | `infra/k8s/overlays/preview/kustomization.yaml` |
+| API env patch | `infra/k8s/overlays/preview/env-patch-api.yaml` |
+| Web env patch | `infra/k8s/overlays/preview/env-patch-web.yaml` |
+| Admin env patch | `infra/k8s/overlays/preview/env-patch-admin.yaml` |
+| Secrets retarget | `infra/k8s/overlays/preview/secrets-patch.yaml` |
+| HPA disable | `infra/k8s/overlays/preview/hpa-disable-patch.yaml` |
+| Resource quota | `infra/k8s/overlays/preview/quota.yaml` |
+| Secrets template | `infra/k8s/overlays/preview/secrets-template.yaml` |
+| CI workflow | `.github/workflows/preview-deploy.yml` |
+| Smoke script | `scripts/preview-smoke.sh <pr-number>` |
+
+### Troubleshooting
+
+- **Preview not appearing after PR open**: check the `Preview Deploy
+  (per-PR)` workflow run. If skipped, look for the `fork` /
+  `no-preview-label` reason in the guard step.
+- **Build succeeds but pod CrashLoop**: missing
+  `dhanam-secrets-preview` in the namespace. Operator must apply
+  `secrets-template.yaml` with `__NAMESPACE__` substituted.
+- **Health check 6x fail**: run `./scripts/preview-smoke.sh <PR>`; check
+  ArgoCD (`argocd app get dhanam-pr-<PR>`) and namespace events.
+- **Stale preview after merge**: reap runs within 14 days. For
+  immediate cleanup, `kubectl delete application dhanam-pr-<PR> -n
+  argocd` and the finalizer takes care of the namespace.
+
 ## Known Local Dev Issues
 
 - **Janua SDK**: Using `@janua/react-sdk@0.1.4`. PKCE exports and `useMFA`/`MFAChallenge` are now available. Auth state fix: `signIn()` parses JWT for immediate user state instead of blocking on `getCurrentUser()`. SSR safety: components loaded via `next/dynamic` + `JanuaErrorBoundary`; `SSRSafeJanuaProvider` in `providers.tsx` handles the dynamic import.

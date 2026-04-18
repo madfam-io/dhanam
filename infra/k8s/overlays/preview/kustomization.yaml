@@ -1,0 +1,119 @@
+# Preview overlay — ephemeral per-PR environments (RFC 0001 / Enclii P1.7).
+#
+# Architecture (end-to-end):
+#
+#   GitHub PR opened ─▶ preview-deploy.yml builds API image, pushes to GHCR
+#                         with tag  `pr-<PR>-<sha>`, then commits this file
+#                         on the PR branch with the new digest pinned below.
+#
+#   ArgoCD ApplicationSet (`internal-devops/infra/argocd/appsets/dhanam-preview.yaml`)
+#   watches madfam-org/dhanam for open PRs. For each PR it generates an
+#   Application that deploys this overlay to namespace `dhanam-pr-<n>`,
+#   substituting the namespace and hostnames via the ApplicationSet
+#   template.
+#
+#   When the PR closes or merges, ArgoCD drops the Application, its
+#   `resources-finalizer.argocd.argoproj.io` deletes every resource in the
+#   namespace, and a separate CronJob (`infra/k8s/preview-reaper-cronjob.yaml`
+#   in internal-devops) sweeps any `dhanam-pr-*` namespace older than 14 days
+#   as a safety net.
+#
+# What preview differs from prod on:
+#   - namespace: dhanam-pr-<n>     (templated by ApplicationSet)
+#   - replicas: 1 everywhere (no HPA; preview is cost-capped)
+#   - images: ONLY the api is rebuilt per PR; web/admin use the current
+#     staging-latest digests (most product changes are API-first; rebuilding
+#     three images per push costs too much for a preview). Web/admin can be
+#     promoted to per-PR later if demand justifies it.
+#   - hostnames: pr-<n>.api.preview.dhan.am (resolved by Cloudflare wildcard
+#     tunnel route `*.api.preview.dhan.am` — operator configures once)
+#   - secrets: dhanam-secrets-preview, dhanam-billing-secrets-preview,
+#     dhanam-provider-secrets-preview, dhanam-janua-secrets-preview — all
+#     sandbox/test credentials, operator-provisioned once, reused across
+#     every pr-<n> namespace via Kustomize-level secret ref names. ReplicaSet
+#     will fail scheduling if missing; see secrets-template.yaml.
+#   - feature flags: mirror staging (FEATURE_STRIPE_MXN_LIVE=false, sandbox
+#     Paddle, sandbox Belvo/Plaid/Bitso). ENVIRONMENT=preview tags logs.
+#   - resource quota: cpu 1 / mem 2Gi per namespace (see quota.yaml).
+#
+# Security guardrails:
+#   - Preview NEVER receives prod secrets (enforced by distinct K8s secret names).
+#   - PRs from forks are skipped by the ApplicationSet generator (credential
+#     + resource leak prevention).
+#   - Per-namespace ResourceQuota prevents a runaway preview from eating the
+#     cluster.
+#   - Namespace is isolated; no NetworkPolicy egress to prod databases.
+#     (Preview DB_URL points at the dedicated staging-preview Postgres
+#     instance, populated with synthetic fixtures only.)
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Namespace: placeholder; ApplicationSet replaces via `namespace:` override.
+# Kustomize requires *some* value here so the overlay builds standalone for
+# `kubectl kustomize` smoke tests.
+namespace: dhanam-pr-0
+
+resources:
+  - ../../production
+  - quota.yaml
+
+# Preview replicas: 1 everywhere. HPAs are pinned min=max=1 via patch.
+replicas:
+  - name: dhanam-api
+    count: 1
+  - name: dhanam-web
+    count: 1
+  - name: dhanam-admin
+    count: 1
+
+# Image digests for the preview overlay. `preview-deploy.yml` patches the
+# api digest on every PR push; web/admin stay on staging-latest and are
+# only refreshed when staging's own pipeline runs (intentional — preview
+# is API-focused).
+images:
+  - name: ghcr.io/madfam-org/dhanam/api
+    digest: sha256:0000000000000000000000000000000000000000000000000000000000000000
+  - name: ghcr.io/madfam-org/dhanam/web
+    digest: sha256:0000000000000000000000000000000000000000000000000000000000000000
+  - name: ghcr.io/madfam-org/dhanam/admin
+    digest: sha256:0000000000000000000000000000000000000000000000000000000000000000
+
+patches:
+  # PATCH ORDERING MATTERS: secrets-patch.yaml is a JSON-patch `replace` on
+  # the container env array, so it must run FIRST. The env-patch-*.yaml
+  # files are strategic-merge patches keyed on env-entry `name`, so they
+  # merge additional env vars (ENVIRONMENT, CORS_ORIGINS, …) on top of
+  # the already-rewritten-to-preview secret refs.
+  #
+  # Re-point every deployment's secretRefs at the -preview secret set.
+  # (Runs first — replaces the entire env array on api/web/admin.)
+  - path: secrets-patch.yaml
+    target:
+      kind: Deployment
+
+  # Preview-specific env vars on the API (ENVIRONMENT=preview, forced-test
+  # billing, sandbox integrations, preview CORS wildcard). Strategic-merge
+  # appends these to the container's env (merged by `name`).
+  - path: env-patch-api.yaml
+    target:
+      kind: Deployment
+      name: dhanam-api
+
+  # Preview env on web (NODE_ENV=staging to reuse staging bundles; API URL
+  # points at the PR's own api host).
+  - path: env-patch-web.yaml
+    target:
+      kind: Deployment
+      name: dhanam-web
+
+  # Preview env on admin.
+  - path: env-patch-admin.yaml
+    target:
+      kind: Deployment
+      name: dhanam-admin
+
+  # Disable HPAs in preview (same mechanism as staging).
+  - path: hpa-disable-patch.yaml
+    target:
+      kind: HorizontalPodAutoscaler

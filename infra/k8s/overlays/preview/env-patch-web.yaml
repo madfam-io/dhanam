@@ -1,0 +1,26 @@
+# Preview env overrides for the web (Next.js) deployment.
+#
+# Web needs to know the *specific* PR's API host. The `__PR_NUMBER__`
+# placeholder is substituted by the ApplicationSet template at sync time
+# (pullRequest generator exposes {{.number}}) so each preview's browser
+# client talks to its own isolated API.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dhanam-web
+spec:
+  template:
+    spec:
+      containers:
+        - name: dhanam-web
+          env:
+            - name: NODE_ENV
+              value: "staging"
+            - name: NEXT_PUBLIC_API_URL
+              value: "https://pr-__PR_NUMBER__.api.preview.dhan.am/v1"
+            - name: NEXT_PUBLIC_BASE_URL
+              value: "https://pr-__PR_NUMBER__.web.preview.dhan.am"
+            - name: SENTRY_ENVIRONMENT
+              value: "preview"
+            - name: SENTRY_RELEASE
+              value: "dhanam-web@preview"
