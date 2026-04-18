@@ -42,12 +42,7 @@ function formatCents(cents: number, currency: string): string {
 export default function WaybillUsageAlertsPage() {
   const { data, isLoading, error } = useQuery({
     queryKey: ['waybill-usage-alerts'],
-    queryFn: async () => {
-      const res = await apiClient.get<{ alerts: UsageAlertIngest[] }>(
-        '/billing/usage-alerts'
-      );
-      return res.data;
-    },
+    queryFn: async () => apiClient.get<{ alerts: UsageAlertIngest[] }>('/billing/usage-alerts'),
   });
 
   if (isLoading) {
@@ -96,32 +91,20 @@ export default function WaybillUsageAlertsPage() {
           <table className="min-w-full divide-y">
             <thead className="bg-muted/40">
               <tr>
-                <th className="px-4 py-2 text-left text-xs font-medium uppercase">
-                  When
-                </th>
-                <th className="px-4 py-2 text-left text-xs font-medium uppercase">
-                  Threshold
-                </th>
-                <th className="px-4 py-2 text-left text-xs font-medium uppercase">
-                  Actual
-                </th>
-                <th className="px-4 py-2 text-left text-xs font-medium uppercase">
-                  Budget
-                </th>
-                <th className="px-4 py-2 text-left text-xs font-medium uppercase">
-                  Notified
-                </th>
+                <th className="px-4 py-2 text-left text-xs font-medium uppercase">When</th>
+                <th className="px-4 py-2 text-left text-xs font-medium uppercase">Threshold</th>
+                <th className="px-4 py-2 text-left text-xs font-medium uppercase">Actual</th>
+                <th className="px-4 py-2 text-left text-xs font-medium uppercase">Budget</th>
+                <th className="px-4 py-2 text-left text-xs font-medium uppercase">Notified</th>
               </tr>
             </thead>
             <tbody className="divide-y">
-              {alerts.map((a) => (
+              {alerts.map((a: UsageAlertIngest) => (
                 <tr key={a.id}>
                   <td className="px-4 py-2 text-sm whitespace-nowrap">
                     {new Date(a.createdAt).toLocaleString()}
                   </td>
-                  <td className="px-4 py-2 text-sm font-semibold">
-                    {a.thresholdCrossed}%
-                  </td>
+                  <td className="px-4 py-2 text-sm font-semibold">{a.thresholdCrossed}%</td>
                   <td className="px-4 py-2 text-sm font-mono">
                     {formatCents(a.actualCents, a.currency)}
                   </td>
