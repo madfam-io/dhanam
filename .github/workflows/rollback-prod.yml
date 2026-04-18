@@ -1,0 +1,150 @@
+# PP.2c (RFC 0001 Phase 2) — emergency prod rollback.
+#
+# Writes a target digest into infra/k8s/production/kustomization.yaml
+# and commits. ArgoCD reconciles within ~3 min. Intended RTO <5 min.
+#
+# There is no auto-trigger — rollbacks are always a human call. Per
+# RFC 0001, leaving `digest` blank rolls back to the previous prod digest
+# for the chosen component by reading git history.
+
+name: Rollback prod
+
+on:
+  workflow_dispatch:
+    inputs:
+      component:
+        description: "Which image to roll back"
+        required: true
+        type: choice
+        options:
+          - api
+          - web
+          - admin
+      digest:
+        description: "Digest to roll back to (sha256:...). Leave blank to use the previous prod digest from git history."
+        required: false
+        type: string
+      reason:
+        description: "Why are you rolling back? (shown in audit log; required)"
+        required: true
+        type: string
+
+concurrency:
+  group: prod-rollback
+  cancel-in-progress: false
+
+jobs:
+  rollback:
+    name: Write target digest
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.MADFAM_BOT_PAT || secrets.GITHUB_TOKEN }}
+          fetch-depth: 100
+
+      - name: Resolve target digest
+        id: target
+        env:
+          COMPONENT: ${{ inputs.component }}
+          INPUT_DIGEST: ${{ inputs.digest }}
+        run: |
+          set -euo pipefail
+          FILE="infra/k8s/production/kustomization.yaml"
+          IMAGE="ghcr.io/madfam-org/dhanam/$COMPONENT"
+          SHORT_NAME="dhanam-$COMPONENT"
+
+          if [[ -n "$INPUT_DIGEST" ]]; then
+            TARGET="$INPUT_DIGEST"
+          else
+            # Walk history: find the most recent commit that changed this
+            # component's digest, then pick the one before that.
+            CURRENT_DIGEST=$(python3 - <<PY
+          import re, pathlib
+          t = pathlib.Path("$FILE").read_text()
+          m = re.search(r'name:\s+$SHORT_NAME\n\s+newName:[^\n]+\n\s+digest:\s+(sha256:[a-f0-9]+)', t)
+          if not m:
+              # Try alt: digest above name
+              m = re.search(r'digest:\s+(sha256:[a-f0-9]+)\n\s+name:\s+$SHORT_NAME', t)
+          if m: print(m.group(1))
+          PY
+          )
+            if [[ -z "$CURRENT_DIGEST" ]]; then
+              echo "::error::Could not read current prod digest for $COMPONENT"; exit 1
+            fi
+            # Walk git log; find first historical version where the digest
+            # for this component differed from current.
+            TARGET=""
+            for sha in $(git log -n 40 --format=%H -- "$FILE"); do
+              HIST=$(git show "$sha:$FILE" 2>/dev/null | python3 - <<PY
+          import re, sys
+          t = sys.stdin.read()
+          m = re.search(r'name:\s+$SHORT_NAME\n\s+newName:[^\n]+\n\s+digest:\s+(sha256:[a-f0-9]+)', t)
+          if not m:
+              m = re.search(r'digest:\s+(sha256:[a-f0-9]+)\n\s+name:\s+$SHORT_NAME', t)
+          if m: print(m.group(1))
+          PY
+          )
+              if [[ -n "$HIST" && "$HIST" != "$CURRENT_DIGEST" ]]; then
+                TARGET="$HIST"
+                break
+              fi
+            done
+            if [[ -z "$TARGET" ]]; then
+              echo "::error::Cannot find previous $COMPONENT digest. Pass one explicitly."; exit 1
+            fi
+          fi
+
+          if [[ ! "$TARGET" =~ ^sha256:[a-f0-9]+$ ]]; then
+            echo "::error::Invalid digest: $TARGET"; exit 1
+          fi
+          echo "target=$TARGET" >> "$GITHUB_OUTPUT"
+          echo "Rolling back $COMPONENT to $TARGET"
+
+      - name: Patch prod kustomization
+        env:
+          TARGET: ${{ steps.target.outputs.target }}
+          COMPONENT: ${{ inputs.component }}
+          REASON: ${{ inputs.reason }}
+          ACTOR: ${{ github.actor }}
+        run: |
+          set -euo pipefail
+          FILE="infra/k8s/production/kustomization.yaml"
+          SHORT_NAME="dhanam-$COMPONENT"
+          python3 <<PY
+          import os, re, pathlib
+          p = pathlib.Path("$FILE")
+          t = p.read_text()
+          target = os.environ["TARGET"]
+          short = os.environ["COMPONENT"]
+          pat = (
+              r'(name:\s+dhanam-' + re.escape(short)
+              + r'\n\s+newName:\s+ghcr\.io/madfam-org/dhanam/[a-z]+\n\s+digest:\s+)sha256:[a-f0-9]+'
+          )
+          alt = (
+              r'(digest:\s+)sha256:[a-f0-9]+(\n\s+name:\s+dhanam-' + re.escape(short) + r')'
+          )
+          if re.search(pat, t):
+              t = re.sub(pat, lambda m: m.group(1) + target, t)
+          elif re.search(alt, t):
+              t = re.sub(alt, lambda m: m.group(1) + target + m.group(2), t)
+          else:
+              raise SystemExit(f"Could not locate $SHORT_NAME digest entry")
+          p.write_text(t)
+          PY
+          SHORT="${TARGET:7:15}"
+          git config user.name "madfam-deploy-bot"
+          git config user.email "deploy-bot@madfam.io"
+          git add "$FILE"
+          git commit -m "rollback(prod): restore $COMPONENT $SHORT
+
+          Reason: $REASON
+          Rolled-back-by: $ACTOR"
+          git push
+
+      - name: Notify
+        if: always()
+        run: |
+          echo "::notice::Dhanam ${{ inputs.component }} rolled back to ${{ steps.target.outputs.target }}. Monitor ArgoCD (dhanam Application) for reconcile completion."

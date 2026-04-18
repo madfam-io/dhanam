@@ -327,23 +327,29 @@ Dhanam is a **Phase 2** target (billing/MXN-ingress priority) for the 3-tier
 pipeline defined in
 [internal-devops/rfcs/0001-dev-staging-prod-pipeline.md](https://github.com/madfam-org/internal-devops/blob/main/rfcs/0001-dev-staging-prod-pipeline.md).
 
-**Current state:** staging exists and auto-deploys on every push to `main`,
-but does not yet follow the RFC shape. See
-[docs/PP_2_STAGING_AUDIT.md](docs/PP_2_STAGING_AUDIT.md) for the full row-by-row
-gap analysis.
+**Current state:** PP.2b + PP.2c shipped. Staging now lives at
+`infra/k8s/overlays/staging/` as a Kustomize overlay of the prod canonical
+base, digest-pinned, and reconciled by the `dhanam-staging` ArgoCD
+Application. Promote + rollback are manual workflows (Pattern B).
 
-### Known divergences from RFC 0001 (tracked in PP_2_STAGING_AUDIT.md)
+See [docs/PP_2_STAGING_AUDIT.md](docs/PP_2_STAGING_AUDIT.md) for the original
+row-by-row gap analysis that scoped this work.
 
-| Divergence                                                               | Impact                                                                                        | Resolution PR                                        |
-| ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
-| Staging manifests are duplicated from production (not overlays)          | Maintenance burden; drift risk                                                                | PP.2b                                                |
-| Staging image tag is `:main` (mutable), not digest-pinned                | "The image that passed staging" is not identifiable — breaks RFC's "one image, promoted" rule | PP.2b                                                |
-| No `promote-to-prod.yml` or `rollback-prod.yml` workflow                 | Prod consumes CI builds directly, not staging-validated digests                               | PP.2c                                                |
-| `deploy-staging.yml` does `kubectl apply -k` instead of ArgoCD reconcile | Push-based staging deploy vs pull-based GitOps                                                | PP.2b                                                |
-| No ArgoCD Application for staging                                        | `infra/argocd/config.json` only registers the prod App                                        | PP.2b (infra action)                                 |
-| Admin app not included in staging overlay                                | Admin ships straight to prod with no staging soak                                             | PP.2b                                                |
-| No staging ingress / DNS (`staging-api.dhan.am`)                         | Staging is namespace-internal; can't run cross-service smoke                                  | PP.2b (+ Cloudflare ops)                             |
-| Nightly prod→staging masked DB refresh not implemented                   | Staging data is hand-seeded; migrations don't see prod-shaped volumes                         | Deferred (RFC 0001 open question — masking tool TBD) |
+### RFC 0001 alignment (post PP.2b + PP.2c)
+
+| Area                                                                     | Status                                                                                     |
+| ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------ |
+| Staging overlay (`infra/k8s/overlays/staging/`) inherits from production | Aligned (PP.2b)                                                                            |
+| Staging images digest-pinned (`sha256:...`)                              | Aligned (PP.2b) — CI patches `infra/k8s/overlays/staging/kustomization.yaml` per push      |
+| Admin in staging                                                         | Aligned (PP.2b)                                                                            |
+| `dhanam-staging` ArgoCD Application                                      | Manifest shipped at `infra/argocd/dhanam-staging-application.yaml`; operator must register |
+| Staging ingress / DNS (`staging-api.dhan.am`)                            | Env vars + CORS updated; Cloudflare tunnel route is an ops action                          |
+| Staging secrets template                                                 | Aligned (PP.2b) — `infra/k8s/staging-secrets-template.yaml` covers all three secret groups |
+| HTTP smoke on staging                                                    | Aligned (PP.2b) — 6x20s retry in `deploy-staging.yml`                                      |
+| `promote-to-prod.yml` (manual gate)                                      | Aligned (PP.2c)                                                                            |
+| `rollback-prod.yml`                                                      | Aligned (PP.2c)                                                                            |
+| `.enclii.yml` `promotion:` key                                           | Aligned (PP.2c) — `pattern: manual`                                                        |
+| Nightly prod→staging masked DB refresh                                   | Deferred (RFC 0001 open question — masking tool TBD)                                       |
 
 ### Promotion pattern (when PP.2c lands)
 
@@ -360,19 +366,22 @@ promotion:
   require_smoke_pass: true
 ```
 
-### What currently ships on push to `main`
+### What ships on push to `main` (post PP.2b/PP.2c)
 
-| Workflow               | Trigger                    | Effect                                                                                                |
-| ---------------------- | -------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `deploy-staging.yml`   | push to main               | `kubectl apply -k infra/k8s/staging/` → `dhanam-staging` namespace, `:main` tag                       |
-| `deploy-k8s.yml` (API) | push to main (api paths)   | Builds + pushes image, commits digest to `infra/k8s/production/kustomization.yaml`, ArgoCD syncs prod |
-| `deploy-web-k8s.yml`   | push to main (web paths)   | Same pattern for `dhanam-web`                                                                         |
-| `deploy-admin-k8s.yml` | push to main (admin paths) | Same pattern for `dhanam-admin`                                                                       |
-| `deploy-enclii.yml`    | push to main               | Enclii auto-deploy (primary production path per MADFAM ecosystem)                                     |
+| Workflow               | Trigger                    | Effect                                                                                                                      |
+| ---------------------- | -------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `deploy-staging.yml`   | push to main               | Builds api/web/admin, patches digests into `infra/k8s/overlays/staging/kustomization.yaml`, ArgoCD reconciles staging       |
+| `deploy-k8s.yml` (API) | push to main (api paths)   | Still ships prod the legacy way (direct prod digest commit). Phase 2 finish removes this in favour of `promote-to-prod.yml` |
+| `deploy-web-k8s.yml`   | push to main (web paths)   | Same pattern for `dhanam-web`                                                                                               |
+| `deploy-admin-k8s.yml` | push to main (admin paths) | Same pattern for `dhanam-admin`                                                                                             |
+| `deploy-enclii.yml`    | push to main               | Enclii auto-deploy (primary production path per MADFAM ecosystem)                                                           |
+| `promote-to-prod.yml`  | workflow_dispatch (manual) | Promotes a staging digest (one component or all) into `infra/k8s/production/kustomization.yaml`                             |
+| `rollback-prod.yml`    | workflow_dispatch (manual) | Restores a previous prod digest; defaults to the previous git-history entry                                                 |
 
-**This flow is intentionally preserved unchanged by PP.2.** Convergence to
-RFC 0001 is sequenced across follow-up PRs (PP.2b structural, PP.2c
-promote/rollback) so each diff is reviewable and reversible.
+The legacy `deploy-{k8s,web-k8s,admin-k8s}.yml` workflows stay until a
+follow-up PR (Phase 4 per RFC 0001) decommissions direct-to-prod digest
+commits. During the overlap, promote-to-prod is the preferred path; the
+legacy workflows are the fallback.
 
 ## Environment Setup
 

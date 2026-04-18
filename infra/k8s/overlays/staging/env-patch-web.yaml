@@ -1,0 +1,23 @@
+# Staging env overrides for the web (Next.js) deployment.
+# Points the browser client at the staging API + flags the release.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dhanam-web
+spec:
+  template:
+    spec:
+      containers:
+        - name: dhanam-web
+          env:
+            - name: NODE_ENV
+              value: "staging"
+            - name: NEXT_PUBLIC_API_URL
+              value: "https://staging-api.dhan.am/v1"
+            - name: NEXT_PUBLIC_BASE_URL
+              value: "https://staging.dhan.am"
+            - name: SENTRY_ENVIRONMENT
+              value: "staging"
+            - name: SENTRY_RELEASE
+              value: "dhanam-web@staging"

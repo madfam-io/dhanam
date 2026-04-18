@@ -8,6 +8,18 @@ metadata:
   project: madfam-platform
   description: Community wealth management with AI-powered insights
 
+# RFC 0001 promotion policy — Dhanam is Pattern B (manual gate) because it
+# is the billing boundary for the MADFAM ecosystem. A wrong promote is
+# expensive (wrong Stripe charges, wrong SPEI refund amounts, wrong
+# ecosystem webhook relay). The promote-to-prod.yml workflow's scheduled
+# auto-promote job is disabled via the repo variable AUTO_PROMOTE_ENABLED
+# (default: unset -> evaluated as "false"); leaving this value "manual"
+# here is the policy record.
+promotion:
+  pattern: manual
+  min_soak_minutes: 30
+  require_smoke_pass: true
+
 spec:
   build:
     type: dockerfile
