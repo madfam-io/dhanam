@@ -464,6 +464,119 @@ describe('StripeMxService', () => {
     });
   });
 
+  describe('createSpeiPaymentIntent (T1.1)', () => {
+    it('creates an MXN PaymentIntent with customer_balance + bank_transfer', async () => {
+      const mockPi = {
+        id: 'pi_spei_test123',
+        amount: 19900,
+        currency: 'mxn',
+        status: 'requires_action',
+      } as Stripe.PaymentIntent;
+
+      const createSpy = jest
+        .spyOn(service['stripe']!.paymentIntents, 'create')
+        .mockResolvedValue(mockPi);
+
+      const result = await service.createSpeiPaymentIntent({
+        amount: 19900,
+        currency: 'MXN',
+        customerId: 'cus_mx_123',
+        customerEmail: 'usuario@ejemplo.mx',
+        description: 'Karafiel Contador — mensual',
+        paymentRequestId: 'dhanam-pi-user123-inv456',
+        metadata: { dhanam_user_id: 'user-123' },
+      });
+
+      expect(createSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          amount: 19900,
+          currency: 'mxn',
+          customer: 'cus_mx_123',
+          receipt_email: 'usuario@ejemplo.mx',
+          description: 'Karafiel Contador — mensual',
+          payment_method_types: ['customer_balance'],
+          payment_method_data: { type: 'customer_balance' },
+          payment_method_options: {
+            customer_balance: {
+              funding_type: 'bank_transfer',
+              bank_transfer: { type: 'mx_bank_transfer' },
+            },
+          },
+          confirm: true,
+          metadata: expect.objectContaining({
+            dhanam_user_id: 'user-123',
+            region: 'MX',
+            payment_request_id: 'dhanam-pi-user123-inv456',
+            settlement_rail: 'spei',
+          }),
+        }),
+        { idempotencyKey: 'dhanam-pi-user123-inv456' }
+      );
+      expect(result).toEqual(mockPi);
+    });
+
+    it('rejects non-MXN currency', async () => {
+      await expect(
+        service.createSpeiPaymentIntent({
+          amount: 19900,
+          currency: 'USD',
+          customerEmail: 'u@e.mx',
+          description: 'x',
+          paymentRequestId: 'req-1',
+        })
+      ).rejects.toThrow(InfrastructureException);
+    });
+
+    it('rejects missing paymentRequestId (idempotency is mandatory)', async () => {
+      await expect(
+        service.createSpeiPaymentIntent({
+          amount: 19900,
+          customerEmail: 'u@e.mx',
+          description: 'x',
+          paymentRequestId: '',
+        })
+      ).rejects.toThrow(InfrastructureException);
+    });
+
+    it('rejects non-positive or non-integer amounts', async () => {
+      await expect(
+        service.createSpeiPaymentIntent({
+          amount: 0,
+          customerEmail: 'u@e.mx',
+          description: 'x',
+          paymentRequestId: 'req-1',
+        })
+      ).rejects.toThrow(InfrastructureException);
+
+      await expect(
+        service.createSpeiPaymentIntent({
+          amount: 99.5 as unknown as number,
+          customerEmail: 'u@e.mx',
+          description: 'x',
+          paymentRequestId: 'req-1',
+        })
+      ).rejects.toThrow(InfrastructureException);
+    });
+
+    it('throws when service not configured', async () => {
+      const mockGet = jest.fn(() => null);
+      const module: TestingModule = await Test.createTestingModule({
+        providers: [StripeMxService, { provide: ConfigService, useValue: { get: mockGet } }],
+      }).compile();
+
+      const unconfiguredService = module.get<StripeMxService>(StripeMxService);
+
+      await expect(
+        unconfiguredService.createSpeiPaymentIntent({
+          amount: 19900,
+          customerEmail: 'u@e.mx',
+          description: 'x',
+          paymentRequestId: 'req-1',
+        })
+      ).rejects.toThrow(InfrastructureException);
+    });
+  });
+
   describe('getCustomer', () => {
     it('should retrieve customer', async () => {
       const mockCustomer = {

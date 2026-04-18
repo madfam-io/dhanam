@@ -184,6 +184,96 @@ export class StripeMxService {
   }
 
   /**
+   * Create an MXN PaymentIntent for SPEI bank-transfer settlement via
+   * Stripe's `customer_balance` payment method.
+   *
+   * Returns the raw PaymentIntent; callers read the SPEI instructions
+   * off `next_action.display_bank_transfer_instructions` (CLABE +
+   * reference + Stripe's `hosted_instructions_url`). The CLABE is
+   * issued per-customer by Stripe's Citibanamex rail — do not cache
+   * it client-side.
+   *
+   * Currency is hard-coded `mxn`; callers passing anything else will
+   * hit a InfrastructureException before the PI is created. This is a
+   * hard guardrail because Stripe happily accepts non-MXN
+   * customer_balance requests and we'd silently break the CFDI path
+   * downstream (IVA math assumes MXN).
+   *
+   * `paymentRequestId` is required and is used as Stripe's idempotency
+   * key so retries from our side can't double-charge. Stripe retains
+   * idempotency responses for 24h — pick a stable id derived from the
+   * user's intent, not a timestamp.
+   *
+   * RFC 0003 Gotcha #1: settlement is T+3 via Citibanamex → BBVA; the
+   * PaymentIntent `amount_received` will not reflect spendable funds
+   * until Stripe's payout cycle clears.
+   */
+  async createSpeiPaymentIntent(params: {
+    amount: number; // centavos (minor units)
+    currency?: string; // must be 'mxn' — enforced
+    customerId?: string;
+    customerEmail: string;
+    description: string;
+    paymentRequestId: string; // internal idempotency key
+    metadata?: Record<string, string>;
+  }): Promise<Stripe.PaymentIntent> {
+    if (!this.stripe) {
+      throw InfrastructureException.configurationError('STRIPE_MX_SECRET_KEY');
+    }
+
+    const currency = (params.currency || 'mxn').toLowerCase();
+    if (currency !== 'mxn') {
+      throw InfrastructureException.configurationError(
+        `Stripe MX SPEI PaymentIntent requires MXN (got "${params.currency}")`
+      );
+    }
+
+    if (!params.paymentRequestId) {
+      throw InfrastructureException.configurationError(
+        'Stripe MX SPEI PaymentIntent requires paymentRequestId for idempotency'
+      );
+    }
+
+    if (!Number.isInteger(params.amount) || params.amount <= 0) {
+      throw InfrastructureException.configurationError(
+        'Stripe MX SPEI PaymentIntent requires positive integer amount (centavos)'
+      );
+    }
+
+    return this.stripe.paymentIntents.create(
+      {
+        amount: params.amount,
+        currency: 'mxn',
+        customer: params.customerId,
+        receipt_email: params.customerEmail,
+        description: params.description,
+        payment_method_types: ['customer_balance'],
+        payment_method_data: {
+          type: 'customer_balance',
+        },
+        payment_method_options: {
+          customer_balance: {
+            funding_type: 'bank_transfer',
+            bank_transfer: {
+              type: 'mx_bank_transfer',
+            },
+          },
+        },
+        confirm: true,
+        metadata: {
+          ...params.metadata,
+          region: 'MX',
+          payment_request_id: params.paymentRequestId,
+          settlement_rail: 'spei',
+        },
+      },
+      {
+        idempotencyKey: params.paymentRequestId,
+      }
+    );
+  }
+
+  /**
    * Create billing portal session
    */
   async createPortalSession(params: {
