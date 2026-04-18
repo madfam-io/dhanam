@@ -1,0 +1,55 @@
+# ArgoCD Application for the Dhanam staging environment.
+#
+# PP.2b (RFC 0001) — turns staging into a pull-based GitOps tier. Before this
+# Application is registered, the operator must:
+#   1. Create the `dhanam-staging` namespace (rendered by the overlay, but
+#      ArgoCD needs it to exist OR CreateNamespace=true in syncOptions).
+#   2. Create the staging-scoped secrets (dhanam-secrets, dhanam-billing-secrets,
+#      dhanam-provider-secrets, dhanam-janua-secrets) inside dhanam-staging
+#      from `infra/k8s/staging-secrets-template.yaml`.
+#   3. Set the GitHub repo variable STAGING_API_URL to `https://staging-api.dhan.am`
+#      so the staging smoke step in deploy-staging.yml targets the right host.
+#
+# Runbook: internal-devops/runbooks/staging-bootstrap.md (Dhanam section to be
+# added when this PR merges).
+#
+# Registration — once Enclii/ArgoCD operator applies this file, ArgoCD will
+# watch infra/k8s/overlays/staging/ on the main branch and reconcile every
+# commit within ~3 min.
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: dhanam-staging
+  namespace: argocd
+  labels:
+    app.kubernetes.io/part-of: dhanam
+    environment: staging
+  annotations:
+    argocd.argoproj.io/description: "Dhanam staging (RFC 0001 Phase 2)"
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/madfam-org/dhanam.git
+    targetRevision: main
+    path: infra/k8s/overlays/staging
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: dhanam-staging
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      allowEmpty: false
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true
+      - ApplyOutOfSyncOnly=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 30s
+        factor: 2
+        maxDuration: 5m
+  revisionHistoryLimit: 10

@@ -1,0 +1,38 @@
+# Staging-specific env vars layered onto the API deployment.
+# Keys here override any set in the base.
+#
+# RFC 0001 rule: staging must never emit live billing or regulated side
+# effects. Stripe/Paddle are forced to test-mode, SAT/PAC integration is
+# disabled via Karafiel-side flags (nothing to do here — Dhanam doesn't
+# issue CFDIs directly).
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dhanam-api
+spec:
+  template:
+    spec:
+      containers:
+        - name: api
+          env:
+            # Tag staging traffic in logs + metrics so prod dashboards aren't polluted.
+            - name: NODE_ENV
+              value: "staging"
+            - name: ENVIRONMENT
+              value: "staging"
+            - name: SENTRY_ENVIRONMENT
+              value: "staging"
+            - name: SENTRY_RELEASE
+              value: "dhanam-api@staging"
+            # Billing: force test-mode. Livemode Stripe events are 200-ACK'd
+            # with a warning per stripe-mx-spei-relay guardrails (CLAUDE.md).
+            - name: FEATURE_STRIPE_MXN_LIVE
+              value: "false"
+            - name: PADDLE_ENVIRONMENT
+              value: "sandbox"
+            # Staging CORS (superset of prod origins; includes staging-*)
+            - name: CORS_ORIGINS
+              value: "https://staging.dhan.am,https://staging-admin.dhan.am,https://staging-api.dhan.am"
+            # Webhook relay: staging fan-out to karafiel-staging if present.
+            # Operator populates PRODUCT_WEBHOOK_URLS in dhanam-staging secret.

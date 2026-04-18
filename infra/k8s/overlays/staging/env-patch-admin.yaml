@@ -1,0 +1,23 @@
+# Staging env overrides for the admin (Next.js standalone) deployment.
+# Admin was absent from the previous staging kustomization (see PP.2 audit,
+# "Admin in staging" row). PP.2b brings it in so admin changes get a
+# staging soak before hitting prod.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dhanam-admin
+spec:
+  template:
+    spec:
+      containers:
+        - name: admin
+          env:
+            - name: NODE_ENV
+              value: "staging"
+            - name: NEXT_PUBLIC_API_URL
+              value: "https://staging-api.dhan.am/v1"
+            - name: NEXT_PUBLIC_APP_URL
+              value: "https://staging.dhan.am"
+            - name: SENTRY_ENVIRONMENT
+              value: "staging"

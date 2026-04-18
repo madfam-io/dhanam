@@ -1,0 +1,13 @@
+# HPAs exist in the prod base for auto-scaling. Staging doesn't need this —
+# a single replica is enough and we want deploys to be visible rather than
+# masked by autoscaling activity.
+#
+# Setting minReplicas=maxReplicas=1 effectively pins to 1 without removing
+# the HPA resource (which would require a different kustomize mechanism).
+
+- op: replace
+  path: /spec/minReplicas
+  value: 1
+- op: replace
+  path: /spec/maxReplicas
+  value: 1

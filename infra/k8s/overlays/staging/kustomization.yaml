@@ -1,0 +1,83 @@
+# Staging overlay — imports production manifests and applies staging-specific patches.
+#
+# Phase 2 of RFC 0001 (internal-devops/rfcs/0001-dev-staging-prod-pipeline.md).
+# Mirrors Karafiel's Phase 1 pilot (karafiel/infra/k8s/overlays/staging/).
+# The production/ directory remains the canonical base during Phase 1; once
+# all services adopt overlays and ArgoCD reconciles cleanly, a follow-up PR
+# will rename production/ -> base/ and add overlays/production/ as a symmetric
+# peer.
+#
+# What staging differs from prod on:
+#   - namespace: dhanam-staging
+#   - replicas: 1 per deploy (vs 2 in prod)
+#   - hostnames: staging-api.dhan.am, staging.dhan.am, staging-admin.dhan.am
+#   - secrets: dhanam-secrets lives in dhanam-staging namespace (distinct K8s
+#     object from the prod one; a future RFC 0010 cutover will rename to
+#     dhanam-staging-secrets / dhanam-staging-billing-secrets / ...)
+#   - image digests: updated by deploy-staging.yml on every main-branch merge
+#   - HPAs disabled — staging doesn't need horizontal scaling
+#   - Cloudflare tunnel routes for staging hostnames are ops-managed (see
+#     internal-devops/runbooks/staging-bootstrap.md)
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: dhanam-staging
+
+resources:
+  - ../../production
+
+# Staging replicas: 1 everywhere. HPAs are pinned min=max=1 via patch — the
+# deployments ignore HPA when they're at max.
+replicas:
+  - name: dhanam-api
+    count: 1
+  - name: dhanam-web
+    count: 1
+  - name: dhanam-admin
+    count: 1
+
+# Image digests for staging. CI (deploy-staging.yml) updates these on every
+# main-branch push via `kustomize edit set image`. The placeholder digest
+# below will be overwritten by the first staging deploy.
+#
+# Important: the `name:` values here are the post-transform image names from
+# the production base (which maps `dhanam-api` -> `ghcr.io/madfam-org/dhanam/api`
+# via its own images: block). Kustomize applies image transforms in order —
+# base first, then overlay — so by the time this overlay's transformer
+# runs, container images already reference the GHCR path. Matching on the
+# short name ("dhanam-api") at this layer is a no-op; we must match on the
+# already-rewritten newName. Karafiel's base happens to use identical
+# name/newName, which masks this ordering difference.
+images:
+  - name: ghcr.io/madfam-org/dhanam/api
+    digest: sha256:0000000000000000000000000000000000000000000000000000000000000000
+  - name: ghcr.io/madfam-org/dhanam/web
+    digest: sha256:0000000000000000000000000000000000000000000000000000000000000000
+  - name: ghcr.io/madfam-org/dhanam/admin
+    digest: sha256:0000000000000000000000000000000000000000000000000000000000000000
+
+patches:
+  # Staging-specific env vars on the API (feature flags off, ENVIRONMENT=staging,
+  # sandbox URLs, staging CORS).
+  - path: env-patch-api.yaml
+    target:
+      kind: Deployment
+      name: dhanam-api
+
+  # Staging env on web (NODE_ENV=staging, staging API URL).
+  - path: env-patch-web.yaml
+    target:
+      kind: Deployment
+      name: dhanam-web
+
+  # Staging env on admin (NODE_ENV=staging, staging API URL).
+  - path: env-patch-admin.yaml
+    target:
+      kind: Deployment
+      name: dhanam-admin
+
+  # Disable HPAs in staging — single replica is fine.
+  - path: hpa-disable-patch.yaml
+    target:
+      kind: HorizontalPodAutoscaler

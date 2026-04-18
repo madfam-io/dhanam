@@ -1,45 +1,195 @@
+# PP.2b (RFC 0001 Phase 2) — Dhanam staging deploy.
+#
+# Replaces the previous `kubectl apply -k` push-based deploy with a GitOps
+# flow: CI builds the three images (api/web/admin), patches their digests
+# into infra/k8s/overlays/staging/kustomization.yaml, commits, and lets the
+# dhanam-staging ArgoCD Application reconcile. Post-reconcile smoke hits
+# https://staging-api.dhan.am/health with 6 retries x 20s like Karafiel.
+#
+# Triggered on every push to main. Does NOT touch production — that's the
+# promote-to-prod workflow's job (PP.2c).
+
 name: Deploy to Staging
 
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'infra/k8s/production/kustomization.yaml'  # prod promotions don't rebuild
   workflow_dispatch:
 
 concurrency:
-  group: deploy-staging
-  cancel-in-progress: true
+  group: staging-deploy
+  cancel-in-progress: false
+
+env:
+  REGISTRY: ghcr.io
+  API_IMAGE: madfam-org/dhanam/api
+  WEB_IMAGE: madfam-org/dhanam/web
+  ADMIN_IMAGE: madfam-org/dhanam/admin
 
 jobs:
-  deploy-staging:
-    name: Apply Staging Kustomization
+  build-api:
+    name: Build API staging image
     runs-on: ubuntu-latest
-    environment: staging
-
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      digest: ${{ steps.push.outputs.digest }}
+      short: ${{ steps.sha.outputs.short }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup kubectl
-        uses: azure/setup-kubectl@v4
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
         with:
-          version: 'v1.29.0'
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: sha
+        run: echo "short=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+      - id: push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/api/Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.API_IMAGE }}:staging-${{ steps.sha.outputs.short }}
+            ${{ env.REGISTRY }}/${{ env.API_IMAGE }}:staging-latest
+          cache-from: type=gha,scope=api
+          cache-to: type=gha,scope=api,mode=max
 
-      - name: Configure kubeconfig
-        run: |
-          mkdir -p ~/.kube
-          echo "${{ secrets.KUBECONFIG_STAGING }}" | base64 -d > ~/.kube/config
-          chmod 600 ~/.kube/config
+  build-web:
+    name: Build Web staging image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      digest: ${{ steps.push.outputs.digest }}
+      short: ${{ steps.sha.outputs.short }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: sha
+        run: echo "short=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+      - id: push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/web/Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.WEB_IMAGE }}:staging-${{ steps.sha.outputs.short }}
+            ${{ env.REGISTRY }}/${{ env.WEB_IMAGE }}:staging-latest
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,scope=web,mode=max
 
-      - name: Apply staging manifests
-        run: |
-          kubectl apply -k infra/k8s/staging/
+  build-admin:
+    name: Build Admin staging image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      digest: ${{ steps.push.outputs.digest }}
+      short: ${{ steps.sha.outputs.short }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: sha
+        run: echo "short=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+      - id: push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/admin/Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.ADMIN_IMAGE }}:staging-${{ steps.sha.outputs.short }}
+            ${{ env.REGISTRY }}/${{ env.ADMIN_IMAGE }}:staging-latest
+          cache-from: type=gha,scope=admin
+          cache-to: type=gha,scope=admin,mode=max
 
-      - name: Wait for rollout
-        run: |
-          kubectl rollout status deployment/dhanam-api -n dhanam-staging --timeout=300s
-          kubectl rollout status deployment/dhanam-web -n dhanam-staging --timeout=300s
+  update-staging-overlay:
+    name: Patch staging overlay digests
+    needs: [build-api, build-web, build-admin]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.MADFAM_BOT_PAT || secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
 
-      - name: Verify pods
+      - name: Patch overlay image digests
+        env:
+          API_DIGEST: ${{ needs.build-api.outputs.digest }}
+          WEB_DIGEST: ${{ needs.build-web.outputs.digest }}
+          ADMIN_DIGEST: ${{ needs.build-admin.outputs.digest }}
+          SHORT: ${{ needs.build-api.outputs.short }}
         run: |
-          echo "=== Staging Deployment Status ==="
-          kubectl get pods -n dhanam-staging -o wide
+          set -euo pipefail
+          FILE="infra/k8s/overlays/staging/kustomization.yaml"
+          python3 <<PY
+          import os, re, pathlib
+          path = pathlib.Path("$FILE")
+          text = path.read_text()
+
+          def patch(text, image, digest):
+              pattern = (
+                  r'(name:\s+' + re.escape(image)
+                  + r'\n\s+digest:\s+)sha256:[a-f0-9]+'
+              )
+              return re.sub(pattern, lambda m: m.group(1) + digest, text)
+
+          text = patch(text, "ghcr.io/madfam-org/dhanam/api",   os.environ["API_DIGEST"])
+          text = patch(text, "ghcr.io/madfam-org/dhanam/web",   os.environ["WEB_DIGEST"])
+          text = patch(text, "ghcr.io/madfam-org/dhanam/admin", os.environ["ADMIN_DIGEST"])
+          path.write_text(text)
+          PY
+
+          git config user.name "madfam-deploy-bot"
+          git config user.email "deploy-bot@madfam.io"
+          git add "$FILE"
+          git commit -m "deploy(staging): update digests to $SHORT" || {
+            echo "No digest change — skipping push"
+            exit 0
+          }
+          git push
+
+  smoke:
+    name: Staging smoke test
+    needs: update-staging-overlay
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for ArgoCD reconcile
+        run: sleep 180
+
+      - name: API health check (6x retry x 20s)
+        run: |
+          URL="${{ vars.STAGING_API_URL || 'https://staging-api.dhan.am' }}"
+          for i in 1 2 3 4 5 6; do
+            if curl -fsS --max-time 10 "$URL/health" > /dev/null; then
+              echo "Health check passed on attempt $i"
+              exit 0
+            fi
+            echo "attempt $i unhealthy, retrying"
+            sleep 20
+          done
+          echo "::error::Staging API failed health check after 6 attempts ($URL/health)"
+          exit 1
