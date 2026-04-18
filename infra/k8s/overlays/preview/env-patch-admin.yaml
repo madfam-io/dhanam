@@ -1,0 +1,20 @@
+# Preview env overrides for the admin (Next.js standalone) deployment.
+# Same templating pattern as web — ApplicationSet substitutes __PR_NUMBER__.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dhanam-admin
+spec:
+  template:
+    spec:
+      containers:
+        - name: admin
+          env:
+            - name: NODE_ENV
+              value: "staging"
+            - name: NEXT_PUBLIC_API_URL
+              value: "https://pr-__PR_NUMBER__.api.preview.dhan.am/v1"
+            - name: NEXT_PUBLIC_APP_URL
+              value: "https://pr-__PR_NUMBER__.admin.preview.dhan.am"
+            - name: SENTRY_ENVIRONMENT
+              value: "preview"

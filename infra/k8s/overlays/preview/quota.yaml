@@ -1,0 +1,22 @@
+# ResourceQuota for preview namespaces.
+#
+# Per RFC 0001 / Enclii P1.7 guardrails: a preview env is cost-capped so
+# that an arbitrary PR (or a leaked fork PR, if the fork filter ever fails)
+# cannot exhaust cluster capacity. Values intentionally conservative;
+# scale up if legitimate preview runs hit the limit.
+#
+# Quota targets ~1 small workload (api pod at ~400Mi request) per ns.
+# Web/admin already run the staging-latest digest at 1 replica.
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: dhanam-preview-quota
+spec:
+  hard:
+    requests.cpu: "1"
+    requests.memory: "2Gi"
+    limits.cpu: "2"
+    limits.memory: "4Gi"
+    pods: "8"
+    persistentvolumeclaims: "0"  # preview uses shared staging-preview PG
+    services.loadbalancers: "0"  # ingress handled by Cloudflare tunnel
