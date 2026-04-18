@@ -20,6 +20,7 @@ import { ConfigModule } from '@nestjs/config';
 
 import { AuditModule } from '../../core/audit/audit.module';
 import { PrismaModule } from '../../core/prisma/prisma.module';
+import { EmailModule } from '../email/email.module';
 
 import { BillingController } from './billing.controller';
 import { BillingService } from './billing.service';
@@ -59,12 +60,16 @@ import { UsageTrackingService } from './services/usage-tracking.service';
 import { WebhookProcessorService } from './services/webhook-processor.service';
 import { StripeMxController } from './stripe-mx.controller';
 import { StripeService } from './stripe.service';
+// Waybill → Dhanam alert pipeline (P2.2)
+import { UsageAlertsController } from './usage-alerts.controller';
+import { UsageAlertsService } from './services/usage-alerts.service';
 
 @Module({
   imports: [
     ConfigModule,
     PrismaModule,
     AuditModule,
+    EmailModule,
     HttpModule.register({
       timeout: 30000,
       maxRedirects: 5,
@@ -75,9 +80,9 @@ import { StripeService } from './stripe.service';
     CreditBillingController,
     CustomerFederationController,
     CatalogController,
-    CotizaWebhookController,
-    MadfamEventsController,
+    CotizaWebhookController,    MadfamEventsController,
     StripeMxController,
+    UsageAlertsController,
   ],
   providers: [
     // Core billing services
@@ -99,6 +104,9 @@ import { StripeService } from './stripe.service';
 
     // Revenue analytics
     RevenueMetricsService,
+
+    // Waybill alert ingest (P2.2)
+    UsageAlertsService,
 
     // Pricing & trial lifecycle
     PriceResolverService,
@@ -150,6 +158,7 @@ import { StripeService } from './stripe.service';
     UsageTrackingInterceptor,
     ProductCatalogService,
     CancellationService,
+    UsageAlertsService,
   ],
 })
 export class BillingModule {}

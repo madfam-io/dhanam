@@ -2314,3 +2314,35 @@ model AmbassadorProfile {
   @@index([tier])
   @@map("ambassador_profiles")
 }
+
+// ────────────────────────────────────────────────
+// Waybill Usage Alerts Ingest (P2.2)
+// ────────────────────────────────────────────────
+//
+// Receives budget-threshold-crossing events from Enclii's Waybill service.
+// Uniqueness by (projectId, periodStart, thresholdCrossed) enforces
+// exactly-once notification delivery despite at-least-once transport.
+
+model UsageAlertIngest {
+  id                String    @id @default(uuid())
+  waybillAlertId    String    @map("waybill_alert_id")
+  projectId         String    @map("project_id") // Enclii project UUID (opaque here)
+  budgetId          String    @map("budget_id")
+  period            String // "monthly" | "weekly" | "quarterly"
+  periodStart       DateTime  @map("period_start")
+  periodEnd         DateTime  @map("period_end")
+  thresholdCrossed  Int       @map("threshold_crossed") // 50, 80, 100, etc.
+  actualCents       BigInt    @map("actual_cents") // BigInt future-proofs against enterprise-scale spend
+  budgetCents       BigInt    @map("budget_cents")
+  currency          String    @default("USD")
+  serviceBreakdown  Json?     @map("service_breakdown")
+  notifiedAt        DateTime? @map("notified_at")
+  seenCount         Int       @default(1) @map("seen_count")
+  lastSeenAt        DateTime  @default(now()) @map("last_seen_at")
+  createdAt         DateTime  @default(now()) @map("created_at")
+
+  @@unique([projectId, periodStart, thresholdCrossed], name: "projectId_periodStart_thresholdCrossed")
+  @@index([projectId, createdAt(sort: Desc)])
+  @@index([notifiedAt])
+  @@map("usage_alert_ingests")
+}
