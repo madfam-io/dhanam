@@ -339,6 +339,85 @@ Seed scripts will throw an error if these are not set. Generate with `openssl ra
 
 The application targets 99.9% availability with RTO 4h and daily backups.
 
+## Stripe MX + SPEI (T1.1 — MXN flywheel roadmap)
+
+Dhanam is the billing boundary for the MADFAM ecosystem. T1.1 adds a native
+Mexico payment path backed by Stripe's Mexican entity: MXN-denominated card
+charges + SPEI bank transfers via the `customer_balance` payment method.
+Refunds propagate to Karafiel as CFDI egresos (T1.2, already merged).
+
+### Scope
+
+- `POST /v1/billing/stripe-mx/spei-payment-intent` (auth required) creates
+  an MXN PaymentIntent with SPEI bank-transfer instructions (CLABE,
+  reference, expiry). Idempotent on caller-supplied `paymentRequestId`.
+- `POST /v1/billing/webhooks/stripe` is the Stripe-facing webhook URL.
+  Signature-verified (`STRIPE_MX_WEBHOOK_SECRET`), feature-flagged, and
+  idempotent on Stripe event id. Handles `payment_intent.succeeded`,
+  `payment_intent.payment_failed`, `charge.refunded`.
+- Inbound Stripe events are transformed to Dhanam's canonical outbound
+  envelope (`payment.succeeded` / `payment.failed` / `payment.refunded`)
+  and fanned out to `PRODUCT_WEBHOOK_URLS` (HMAC-SHA256 via
+  `DHANAM_WEBHOOK_SECRET`, matches the existing `notifyProductWebhooks`
+  contract).
+
+### Envelope contract (matches Karafiel `DhanamPaymentDataSerializer`)
+
+```json
+{
+  "type": "payment.succeeded" | "payment.failed" | "payment.refunded",
+  "id": "<uuid v4>",
+  "timestamp": "ISO 8601",
+  "data": {
+    "customer_id":     "<dhanam user id, resolved from metadata.dhanam_user_id → User.stripeCustomerId → fallback to stripe customer id>",
+    "subscription_id": "<stripe sub id from metadata.subscription_id, may be empty>",
+    "payment_id":      "<stripe PaymentIntent id (or refund id for payment.refunded)>",
+    "amount":          "199.00",
+    "amount_minor":    19900,
+    "currency":        "MXN",
+    "failure_reason":  "...",           // payment.failed only
+    "failure_code":    "...",           // payment.failed only
+    "refunded_payment_id": "pi_...",    // payment.refunded only
+    "original_payment_id": "pi_..."     // payment.refunded only
+  }
+}
+```
+
+### Environment variables
+
+| Variable                    | Required             | Description                                                                                                                                                         |
+| --------------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `STRIPE_MX_SECRET_KEY`      | Yes                  | Stripe secret key (live or test). Injected from `dhanam-secrets`.                                                                                                   |
+| `STRIPE_MX_WEBHOOK_SECRET`  | Yes                  | Stripe webhook signing secret. Injected from `dhanam-secrets`.                                                                                                      |
+| `STRIPE_MX_PUBLISHABLE_KEY` | Yes (client)         | For frontend Elements / Checkout.                                                                                                                                   |
+| `FEATURE_STRIPE_MXN_LIVE`   | No (default `false`) | When `false`, livemode Stripe events are rejected 200-ACK with a warning log. Test-mode events always flow. Flip to `true` only after a staging smoke on live keys. |
+| `PRODUCT_WEBHOOK_URLS`      | Yes for relay        | CSV: `karafiel:https://api.karafiel.mx/api/v1/webhooks/dhanam,tezca:...`. Re-used from `notifyProductWebhooks`.                                                     |
+| `DHANAM_WEBHOOK_SECRET`     | Yes for relay        | HMAC-SHA256 signing secret. Same value as Karafiel's `DHANAM_BILLING_WEBHOOK_SECRET`.                                                                               |
+
+### Operator runbook
+
+1. Confirm Mexico is enabled on the existing Stripe account at
+   `innovacionesmadfam@madfam.io` and SPEI is available as a payment
+   method (Dashboard → Payments → Payment methods).
+2. Set `STRIPE_MX_SECRET_KEY` (test first), `STRIPE_MX_WEBHOOK_SECRET`, and
+   `STRIPE_MX_PUBLISHABLE_KEY` in `dhanam-secrets` (K8s Secret).
+3. In the Stripe Dashboard, register the webhook endpoint at
+   `https://api.dhan.am/v1/billing/webhooks/stripe` subscribed to
+   `payment_intent.succeeded`, `payment_intent.payment_failed`, and
+   `charge.refunded`. Copy the signing secret into
+   `STRIPE_MX_WEBHOOK_SECRET`.
+4. Set `FEATURE_STRIPE_MXN_LIVE=true` in the prod ConfigMap only after
+   the test-key end-to-end flow has been validated (Stripe test SPEI →
+   Dhanam webhook → Karafiel CFDI emitted).
+5. RFC 0003 Gotcha #1: first MXN 10K of live receipts settle T+3 via
+   Citibanamex → BBVA. Plan working capital accordingly.
+
+See `apps/api/src/modules/billing/services/stripe-mx-spei-relay.service.ts`
+for the transform implementation and
+`apps/api/src/modules/billing/__tests__/stripe-mx-spei-relay.service.spec.ts`
+for the 22-test suite covering signature, transforms, idempotency,
+currency guard, and feature-flag gate.
+
 ## Known Local Dev Issues
 
 - **Janua SDK**: Using `@janua/react-sdk@0.1.4`. PKCE exports and `useMFA`/`MFAChallenge` are now available. Auth state fix: `signIn()` parses JWT for immediate user state instead of blocking on `getCurrentUser()`. SSR safety: components loaded via `next/dynamic` + `JanuaErrorBoundary`; `SSRSafeJanuaProvider` in `providers.tsx` handles the dynamic import.

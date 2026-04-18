@@ -49,6 +49,7 @@ import { PriceResolverService } from './services/price-resolver.service';
 import { PricingEngineService } from './services/pricing-engine.service';
 import { ProductCatalogService } from './services/product-catalog.service';
 import { RevenueMetricsService } from './services/revenue-metrics.service';
+import { StripeMxSpeiRelayService } from './services/stripe-mx-spei-relay.service';
 import { StripeMxService } from './services/stripe-mx.service';
 // Extracted sub-services (usage, lifecycle, webhooks)
 import { SubscriptionLifecycleService } from './services/subscription-lifecycle.service';
@@ -56,6 +57,7 @@ import { TrialService } from './services/trial.service';
 import { UsageMeteringService } from './services/usage-metering.service';
 import { UsageTrackingService } from './services/usage-tracking.service';
 import { WebhookProcessorService } from './services/webhook-processor.service';
+import { StripeMxController } from './stripe-mx.controller';
 import { StripeService } from './stripe.service';
 
 @Module({
@@ -75,6 +77,7 @@ import { StripeService } from './stripe.service';
     CatalogController,
     CotizaWebhookController,
     MadfamEventsController,
+    StripeMxController,
   ],
   providers: [
     // Core billing services
@@ -108,6 +111,7 @@ import { StripeService } from './stripe.service';
     // Hybrid Router (Stripe MX + Paddle)
     PaymentRouterService,
     StripeMxService,
+    StripeMxSpeiRelayService,
     PaddleService,
 
     // Federation (PhyneCRM)
@@ -131,6 +135,7 @@ import { StripeService } from './stripe.service';
     TrialService,
     PaymentRouterService,
     StripeMxService,
+    StripeMxSpeiRelayService,
     PaddleService,
     CustomerFederationService,
     UsageMeteringService,
