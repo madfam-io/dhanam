@@ -87,6 +87,8 @@ import type Stripe from 'stripe';
 import { AuditService } from '../../../core/audit/audit.service';
 import { PrismaService } from '../../../core/prisma/prisma.service';
 
+import { PhyneCrmEngagementNotifierService } from './phynecrm-engagement-notifier.service';
+
 /** Outbound Dhanam envelope for payment.* events. */
 export interface DhanamPaymentEnvelope {
   type: 'payment.succeeded' | 'payment.failed' | 'payment.refunded';
@@ -103,7 +105,59 @@ export interface DhanamPaymentEnvelope {
     failure_code?: string;
     refunded_payment_id?: string;
     original_payment_id?: string;
+    /**
+     * Optional passthrough metadata from the Stripe PI. Callers upstream
+     * (e.g. Cotiza's DhanamMilestoneService) stamp these onto the
+     * PaymentIntent so downstream consumers can correlate back without
+     * reaching into Stripe. Present when the payment is tied to a
+     * cross-ecosystem flow; absent for standalone Dhanam subs.
+     */
+    ecosystem?: {
+      engagement_id?: string;
+      cotiza_quote_id?: string;
+      cotiza_quote_item_id?: string;
+      milestone_id?: string;
+      order_id?: string;
+      source?: 'cotiza' | 'routecraft' | string;
+    };
   };
+}
+
+/**
+ * Pull cross-ecosystem correlation keys out of Stripe metadata.
+ *
+ * Upstream producers (Cotiza's DhanamMilestoneService, RouteCraft's
+ * checkout) stamp these onto the PaymentIntent so Dhanam consumers can
+ * correlate back without a separate lookup. Present only when the
+ * payment originated from a cross-ecosystem flow; returns `null` for a
+ * standalone Dhanam subscription payment so the envelope stays lean.
+ *
+ * Keys recognized (all optional, all string):
+ *   engagement_id             PhyneCRM engagement aggregate ID
+ *   cotiza_quote_id           Cotiza quote ID (the parent quote)
+ *   cotiza_quote_item_id      Cotiza quote-item ID (for per-milestone charges)
+ *   milestone_id              The milestone inside services-mode details
+ *   order_id                  Cotiza order ID (post-payment bundle)
+ *   source                    Free-form tag — 'cotiza' | 'routecraft' | …
+ */
+export function extractEcosystemMetadata(
+  metadata: Stripe.Metadata | null | undefined
+): NonNullable<DhanamPaymentEnvelope['data']['ecosystem']> | null {
+  if (!metadata) return null;
+  const keys = [
+    'engagement_id',
+    'cotiza_quote_id',
+    'cotiza_quote_item_id',
+    'milestone_id',
+    'order_id',
+    'source',
+  ] as const;
+  const picked: Record<string, string> = {};
+  for (const k of keys) {
+    const v = metadata[k];
+    if (typeof v === 'string' && v.length > 0) picked[k] = v;
+  }
+  return Object.keys(picked).length > 0 ? picked : null;
 }
 
 /** Stripe event types this relay recognizes. */
@@ -127,7 +181,8 @@ export class StripeMxSpeiRelayService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly config: ConfigService,
-    private readonly audit: AuditService
+    private readonly audit: AuditService,
+    private readonly phynecrmNotifier: PhyneCrmEngagementNotifierService
   ) {}
 
   /**
@@ -246,6 +301,9 @@ export class StripeMxSpeiRelayService {
       },
     };
 
+    const ecosystem = extractEcosystemMetadata(pi.metadata);
+    if (ecosystem) base.data.ecosystem = ecosystem;
+
     if (type === 'payment.failed' && pi.last_payment_error) {
       base.data.failure_reason = pi.last_payment_error.message || '';
       base.data.failure_code = pi.last_payment_error.code || '';
@@ -277,7 +335,7 @@ export class StripeMxSpeiRelayService {
     const latestRefund = charge.refunds?.data?.[0];
     const amountMinor = latestRefund?.amount ?? charge.amount_refunded ?? 0;
 
-    return {
+    const envelope: DhanamPaymentEnvelope = {
       type: 'payment.refunded',
       id: randomUUID(),
       timestamp: new Date().toISOString(),
@@ -296,6 +354,11 @@ export class StripeMxSpeiRelayService {
         original_payment_id: paymentIntentId,
       },
     };
+
+    const ecosystem = extractEcosystemMetadata(charge.metadata);
+    if (ecosystem) envelope.data.ecosystem = ecosystem;
+
+    return envelope;
   }
 
   private isMxnCurrency(currency: string | null | undefined, id: string): boolean {
@@ -452,6 +515,12 @@ export class StripeMxSpeiRelayService {
    * retry ladder to re-deliver to us if we returned non-200.
    */
   private async dispatch(envelope: DhanamPaymentEnvelope): Promise<void> {
+    // Fire the PhyneCRM engagement event first (fire-and-forget). It's
+    // schema-incompatible with the `PRODUCT_WEBHOOK_URLS` canonical
+    // envelope so we can't add PhyneCRM as another target in that list
+    // — it has its own transformer + endpoint.
+    void this.phynecrmNotifier.notify(envelope);
+
     const targets = this.listRelayTargets();
     if (targets.length === 0) {
       this.logger.log(`No PRODUCT_WEBHOOK_URLS configured; envelope ${envelope.id} persisted only`);
