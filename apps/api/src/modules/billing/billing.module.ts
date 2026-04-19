@@ -50,6 +50,7 @@ import { PriceResolverService } from './services/price-resolver.service';
 import { PricingEngineService } from './services/pricing-engine.service';
 import { ProductCatalogService } from './services/product-catalog.service';
 import { RevenueMetricsService } from './services/revenue-metrics.service';
+import { PhyneCrmEngagementNotifierService } from './services/phynecrm-engagement-notifier.service';
 import { StripeMxSpeiRelayService } from './services/stripe-mx-spei-relay.service';
 import { StripeMxService } from './services/stripe-mx.service';
 // Extracted sub-services (usage, lifecycle, webhooks)
@@ -120,6 +121,7 @@ import { UsageAlertsService } from './services/usage-alerts.service';
     PaymentRouterService,
     StripeMxService,
     StripeMxSpeiRelayService,
+    PhyneCrmEngagementNotifierService,
     PaddleService,
 
     // Federation (PhyneCRM)

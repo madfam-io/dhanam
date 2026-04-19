@@ -4,6 +4,7 @@ import type Stripe from 'stripe';
 
 import { AuditService } from '../../../core/audit/audit.service';
 import { PrismaService } from '../../../core/prisma/prisma.service';
+import { PhyneCrmEngagementNotifierService } from '../services/phynecrm-engagement-notifier.service';
 import { StripeMxSpeiRelayService } from '../services/stripe-mx-spei-relay.service';
 
 // ─── helpers ────────────────────────────────────────────────────────────
@@ -123,6 +124,12 @@ describe('StripeMxSpeiRelayService', () => {
         { provide: PrismaService, useValue: prisma },
         { provide: ConfigService, useValue: config },
         { provide: AuditService, useValue: audit },
+        {
+          // Notifier is fire-and-forget; stub it to a no-op so the
+          // relay tests stay focused on dispatch/envelope concerns.
+          provide: PhyneCrmEngagementNotifierService,
+          useValue: { notify: jest.fn().mockResolvedValue(undefined) },
+        },
       ],
     }).compile();
 
