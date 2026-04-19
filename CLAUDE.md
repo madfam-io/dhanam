@@ -480,6 +480,40 @@ for the transform implementation and
 for the 22-test suite covering signature, transforms, idempotency,
 currency guard, and feature-flag gate.
 
+### PhyneCRM engagement event relay (T1.3)
+
+When a Stripe MX envelope carries ecosystem correlation keys (set by
+Cotiza's `DhanamMilestoneService` when a services-mode quote with
+billableType=MILESTONE transitions to ORDERED — see the `extractEcosystemMetadata()` helper in `stripe-mx-spei-relay.service.ts`),
+`PhyneCrmEngagementNotifierService` fires an outbound
+`dhanam:payment.succeeded` (or `failed` / `refunded`) event to PhyneCRM's
+unified engagement-events webhook so the client portal timeline updates
+live. Sits alongside the Karafiel CFDI notifier and the product-webhook
+relay as a peer on the Stripe MX → ecosystem fan-out.
+
+**Contract:**
+
+| Property     | Value                                                                                                                  |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------- |
+| Target       | `POST <PHYNECRM_API_URL>/api/v1/engagements/events`                                                                    |
+| Auth         | HMAC-SHA256 body signature in `x-webhook-signature` header (secret `PHYNE_ENGAGEMENT_EVENTS_SECRET`)                   |
+| Trigger      | Only fires when `envelope.data.ecosystem.engagement_id` is present (standalone Dhanam subs are silent)                 |
+| Idempotency  | PhyneCRM side dedups on `dedup_key = dhanam:<type>:<payment_id>`                                                       |
+| Failure mode | Fire-and-forget — errors logged, never thrown; Stripe retry ladder still re-delivers to Dhanam if the envelope matters |
+
+**Keys mapped into `payload.metadata`** (match PhyneCRM's receiver + Cotiza's producer contract exactly — snake_case throughout):
+`payment_id`, `subscription_id`, `amount`, `amount_minor`, `currency`, `customer_id`, `failure_reason`, `failure_code`, `refunded_payment_id`, `original_payment_id`, `cotiza_quote_id`, `cotiza_quote_item_id`, `milestone_id`, `order_id`, `source_product`.
+
+**Env vars:**
+
+| Variable                         | Required             | Description                                                                                                                                                                     |
+| -------------------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `PHYNECRM_API_URL`               | Yes for relay        | Base URL; trailing slashes stripped. E.g. `https://phyne-crm.madfam.io`                                                                                                         |
+| `PHYNE_ENGAGEMENT_EVENTS_SECRET` | Yes for relay        | Shared secret — same value as PhyneCRM's `PHYNE_ENGAGEMENT_EVENTS_SECRET` and Cotiza's `PHYNECRM_ENGAGEMENT_SECRET` (all three names refer to the same ecosystem-wide HMAC key) |
+| `PHYNECRM_WEBHOOK_TIMEOUT`       | No (default 10000ms) | `fetch` timeout for the notify call                                                                                                                                             |
+
+Files: `apps/api/src/modules/billing/services/phynecrm-engagement-notifier.service.ts` + `apps/api/src/modules/billing/__tests__/phynecrm-engagement-notifier.service.spec.ts` (13 tests covering skip-paths, HMAC, dedup_key stability, success/failed/refunded translation, non-throwing error handling, trailing-slash URL hygiene + `extractEcosystemMetadata` empty-string skip).
+
 ## Preview Environments (P1.7 — Enclii ephemeral per-PR envs)
 
 Dhanam is the first participating service for Enclii's preview-environment
@@ -487,11 +521,11 @@ feature (see
 [internal-devops/roadmaps/2026-04-enclii-remediation-plan.md](https://github.com/madfam-org/internal-devops/blob/main/roadmaps/2026-04-enclii-remediation-plan.md)
 P1.7). Every non-fork PR to `main` auto-spawns a per-PR environment:
 
-| Surface | URL |
-|---------|-----|
-| API | `https://pr-<N>.api.preview.dhan.am` |
-| Web | `https://pr-<N>.web.preview.dhan.am` |
-| Admin | `https://pr-<N>.admin.preview.dhan.am` |
+| Surface | URL                                    |
+| ------- | -------------------------------------- |
+| API     | `https://pr-<N>.api.preview.dhan.am`   |
+| Web     | `https://pr-<N>.web.preview.dhan.am`   |
+| Admin   | `https://pr-<N>.admin.preview.dhan.am` |
 
 ### How it works
 
@@ -535,23 +569,23 @@ P1.7). Every non-fork PR to `main` auto-spawns a per-PR environment:
 
 ### Files
 
-| Purpose | Location |
-|---------|----------|
-| Overlay | `infra/k8s/overlays/preview/kustomization.yaml` |
-| API env patch | `infra/k8s/overlays/preview/env-patch-api.yaml` |
-| Web env patch | `infra/k8s/overlays/preview/env-patch-web.yaml` |
-| Admin env patch | `infra/k8s/overlays/preview/env-patch-admin.yaml` |
-| Secrets retarget | `infra/k8s/overlays/preview/secrets-patch.yaml` |
-| HPA disable | `infra/k8s/overlays/preview/hpa-disable-patch.yaml` |
-| Resource quota | `infra/k8s/overlays/preview/quota.yaml` |
-| Secrets template | `infra/k8s/overlays/preview/secrets-template.yaml` |
-| CI workflow | `.github/workflows/preview-deploy.yml` |
-| Smoke script | `scripts/preview-smoke.sh <pr-number>` |
+| Purpose          | Location                                            |
+| ---------------- | --------------------------------------------------- |
+| Overlay          | `infra/k8s/overlays/preview/kustomization.yaml`     |
+| API env patch    | `infra/k8s/overlays/preview/env-patch-api.yaml`     |
+| Web env patch    | `infra/k8s/overlays/preview/env-patch-web.yaml`     |
+| Admin env patch  | `infra/k8s/overlays/preview/env-patch-admin.yaml`   |
+| Secrets retarget | `infra/k8s/overlays/preview/secrets-patch.yaml`     |
+| HPA disable      | `infra/k8s/overlays/preview/hpa-disable-patch.yaml` |
+| Resource quota   | `infra/k8s/overlays/preview/quota.yaml`             |
+| Secrets template | `infra/k8s/overlays/preview/secrets-template.yaml`  |
+| CI workflow      | `.github/workflows/preview-deploy.yml`              |
+| Smoke script     | `scripts/preview-smoke.sh <pr-number>`              |
 
 ### Troubleshooting
 
 - **Preview not appearing after PR open**: check the `Preview Deploy
-  (per-PR)` workflow run. If skipped, look for the `fork` /
+(per-PR)` workflow run. If skipped, look for the `fork` /
   `no-preview-label` reason in the guard step.
 - **Build succeeds but pod CrashLoop**: missing
   `dhanam-secrets-preview` in the namespace. Operator must apply
@@ -560,7 +594,7 @@ P1.7). Every non-fork PR to `main` auto-spawns a per-PR environment:
   ArgoCD (`argocd app get dhanam-pr-<PR>`) and namespace events.
 - **Stale preview after merge**: reap runs within 14 days. For
   immediate cleanup, `kubectl delete application dhanam-pr-<PR> -n
-  argocd` and the finalizer takes care of the namespace.
+argocd` and the finalizer takes care of the namespace.
 
 ## Known Local Dev Issues
 
