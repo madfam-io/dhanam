@@ -88,7 +88,11 @@ jobs:
           cache: pnpm
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        # --ignore-scripts so workspace postinstall hooks (e.g. apps/api's
+        # Prisma config loader that needs DATABASE_URL) don't block SDK
+        # publishing. The published packages (billing-sdk, shared, esg,
+        # simulations) have no lifecycle scripts of their own.
+        run: pnpm install --frozen-lockfile --ignore-scripts
 
       - name: Authenticate to npm.madfam.io
         run: |
