@@ -88,11 +88,13 @@ jobs:
           cache: pnpm
 
       - name: Install dependencies
-        # --ignore-scripts so workspace postinstall hooks (e.g. apps/api's
-        # Prisma config loader that needs DATABASE_URL) don't block SDK
-        # publishing. The published packages (billing-sdk, shared, esg,
-        # simulations) have no lifecycle scripts of their own.
-        run: pnpm install --frozen-lockfile --ignore-scripts
+        # Filter to just the package being published (+ its workspace deps).
+        # Avoids two problems:
+        #   1. apps/api postinstall needs DATABASE_URL (not available here)
+        #   2. apps/mobile lockfile drift blocks the entire workspace
+        # Also --ignore-scripts for belt-and-braces. The publishable packages
+        # (billing-sdk, shared, esg, simulations) have no lifecycle scripts.
+        run: pnpm install --frozen-lockfile --ignore-scripts --filter '${{ needs.resolve.outputs.package_name }}...'
 
       - name: Authenticate to npm.madfam.io
         run: |
@@ -100,8 +102,8 @@ jobs:
         env:
           NPM_MADFAM_TOKEN: ${{ secrets.NPM_MADFAM_TOKEN }}
 
-      - name: Build all packages
-        run: pnpm build:packages
+      - name: Build target package (and its workspace deps)
+        run: pnpm --filter '${{ needs.resolve.outputs.package_name }}...' build
 
       - name: Typecheck target package
         run: pnpm --filter '${{ needs.resolve.outputs.package_name }}' typecheck
