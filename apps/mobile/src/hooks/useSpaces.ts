@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 
-import { useAuth } from './useAuth';
-
 import { apiClient } from '@/services/api';
+
+import { useAuth } from './useAuth';
 
 export interface Space {
   id: string;
