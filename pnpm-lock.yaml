@@ -116,8 +116,8 @@ importers:
         specifier: ^3.2.0
         version: 3.6.0
       lucide-react:
-        specifier: ^0.563.0
-        version: 0.563.0(react@18.3.1)
+        specifier: ^1.8.0
+        version: 1.8.0(react@18.3.1)
       next:
         specifier: 15.5.11
         version: 15.5.11(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(@playwright/test@1.59.1)(babel-plugin-react-compiler@1.0.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -713,8 +713,8 @@ importers:
         specifier: ^12.37.0
         version: 12.38.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       lucide-react:
-        specifier: ^0.563.0
-        version: 0.563.0(react@18.3.1)
+        specifier: ^1.8.0
+        version: 1.8.0(react@18.3.1)
       next:
         specifier: 15.5.11
         version: 15.5.11(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(@playwright/test@1.59.1)(babel-plugin-react-compiler@1.0.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -1021,8 +1021,8 @@ importers:
         specifier: ^2.1.1
         version: 2.1.1
       lucide-react:
-        specifier: ^0.563.0
-        version: 0.563.0(react@18.3.1)
+        specifier: ^1.8.0
+        version: 1.8.0(react@18.3.1)
       tailwind-merge:
         specifier: ^3.4.0
         version: 3.5.0
@@ -8940,8 +8940,8 @@ packages:
     peerDependencies:
       react: 18.3.1
 
-  lucide-react@0.563.0:
-    resolution: {integrity: sha512-8dXPB2GI4dI8jV4MgUDGBeLdGk8ekfqVZ0BdLcrRzocGgG75ltNEmWS+gE7uokKF/0oSUuczNDT+g9hFJ23FkA==}
+  lucide-react@1.8.0:
+    resolution: {integrity: sha512-WuvlsjngSk7TnTBJ1hsCy3ql9V9VOdcPkd3PKcSmM34vJD8KG6molxz7m7zbYFgICwsanQWmJ13JlYs4Zp7Arw==}
     peerDependencies:
       react: 18.3.1
 
@@ -22012,7 +22012,7 @@ snapshots:
     dependencies:
       react: 18.3.1
 
-  lucide-react@0.563.0(react@18.3.1):
+  lucide-react@1.8.0(react@18.3.1):
     dependencies:
       react: 18.3.1
 
