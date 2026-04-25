@@ -16,6 +16,15 @@ export default [
 
   {
     files: ['**/*.ts'],
+    // tsconfig.json excludes test files (`**/*spec.ts`, `test/`); without
+    // this ignore list the typed-project parser errors out on test files.
+    ignores: [
+      '**/*.spec.ts',
+      '**/__tests__/**/*.ts',
+      '**/test/**/*.ts',
+      'prisma/**/*.ts',
+      'scripts/**/*.ts',
+    ],
     languageOptions: {
       parserOptions: {
         tsconfigRootDir: __dirname,
