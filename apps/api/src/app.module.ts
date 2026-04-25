@@ -13,6 +13,7 @@ import { CategoriesModule } from '@modules/categories/categories.module';
 import { DocumentsModule } from '@modules/documents/documents.module';
 import { EmailModule } from '@modules/email/email.module';
 import { EstatePlanningModule } from '@modules/estate-planning/estate-planning.module';
+import { FxModule } from '@modules/fx/fx.module';
 import { FxRatesModule } from '@modules/fx-rates/fx-rates.module';
 import { GamingModule } from '@modules/gaming/gaming.module';
 import { GoalsModule } from '@modules/goals/goals.module';
@@ -63,6 +64,7 @@ import { validationSchema } from './config/validation';
     AnalyticsModule,
     JobsModule,
     ProvidersModule,
+    FxModule,
     FxRatesModule,
     OnboardingModule,
     PreferencesModule,
