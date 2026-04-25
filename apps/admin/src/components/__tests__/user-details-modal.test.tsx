@@ -1,47 +1,52 @@
-import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
+import React from 'react';
 
-jest.mock('@dhanam/ui', () =>
-  new Proxy(
-    {},
-    {
-      get: (_, prop) => {
-        if (prop === '__esModule') return true;
-        const tag = String(prop).toLowerCase();
-        if (tag === 'dialog') {
-          return ({ children, ...props }: any) => (
-            <div data-testid={tag} {...props}>
+jest.mock(
+  '@dhanam/ui',
+  () =>
+    new Proxy(
+      {},
+      {
+        get: (_, prop) => {
+          if (prop === '__esModule') return true;
+          const tag = String(prop).toLowerCase();
+          if (tag === 'dialog') {
+            return ({ children, ...props }: any) => (
+              <div data-testid={tag} {...props}>
+                {children}
+              </div>
+            );
+          }
+          if (tag === 'separator') {
+            return (props: any) => <hr data-testid={tag} {...props} />;
+          }
+          return ({ children, className, ...props }: any) => (
+            <div data-testid={tag} className={className} {...props}>
               {children}
             </div>
           );
-        }
-        if (tag === 'separator') {
-          return (props: any) => <hr data-testid={tag} {...props} />;
-        }
-        return ({ children, className, ...props }: any) => (
-          <div data-testid={tag} className={className} {...props}>
-            {children}
-          </div>
-        );
-      },
-    }
-  )
+        },
+      }
+    )
 );
 
-jest.mock('lucide-react', () =>
-  new Proxy(
-    {},
-    {
-      get: (_, prop) => {
-        if (prop === '__esModule') return true;
-        return (props: any) => <span data-testid={`icon-${String(prop)}`} {...props} />;
-      },
-    }
-  )
+jest.mock(
+  'lucide-react',
+  () =>
+    new Proxy(
+      {},
+      {
+        get: (_, prop) => {
+          if (prop === '__esModule') return true;
+          return (props: any) => <span data-testid={`icon-${String(prop)}`} {...props} />;
+        },
+      }
+    )
 );
+
+import type { UserDetails } from '@/lib/api/admin';
 
 import { UserDetailsModal } from '../user-details-modal';
-import type { UserDetails } from '@/lib/api/admin';
 
 const mockUser: UserDetails = {
   id: 'user-1',

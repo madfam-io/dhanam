@@ -1,11 +1,10 @@
 'use client';
 
-import { useState } from 'react';
-import { Card } from '@dhanam/ui';
-import { Input } from '@dhanam/ui';
-import { Button } from '@dhanam/ui';
-import { adminApi } from '@/lib/api/admin';
+import { Card, Input, Button } from '@dhanam/ui';
 import { Download, Trash2, Clock } from 'lucide-react';
+import { useState } from 'react';
+
+import { adminApi } from '@/lib/api/admin';
 
 export function ComplianceActions() {
   const [userId, setUserId] = useState('');
@@ -124,9 +123,7 @@ export function ComplianceActions() {
       </Card>
 
       <Card className="p-6">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-          Data Retention
-        </h3>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Data Retention</h3>
         <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
           Execute data retention policies to clean up expired data according to configured rules.
         </p>
