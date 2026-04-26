@@ -8,6 +8,8 @@
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 
+import { JwtAuthGuard } from '../../../core/auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../../core/auth/guards/roles.guard';
 import { DlqController } from '../dlq.controller';
 import { WebhookDlqService } from '../services/webhook-dlq.service';
 
@@ -28,7 +30,15 @@ describe('DlqController', () => {
           },
         },
       ],
-    }).compile();
+    })
+      // Auth guards are exercised by their own dedicated specs
+      // (roles.guard.spec, jwt-auth-guard.spec); here we override
+      // them so the unit tests focus on controller→service wiring.
+      .overrideGuard(JwtAuthGuard)
+      .useValue({ canActivate: () => true })
+      .overrideGuard(RolesGuard)
+      .useValue({ canActivate: () => true })
+      .compile();
 
     controller = module.get(DlqController);
     dlq = module.get(WebhookDlqService) as jest.Mocked<WebhookDlqService>;
