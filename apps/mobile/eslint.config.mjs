@@ -6,6 +6,7 @@ import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import reactNative from '@dhanam/config/eslint/react-native';
+import globals from 'globals';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -42,6 +43,19 @@ export default [
       'react-hooks/exhaustive-deps': 'warn',
 
       'import/no-unresolved': ['error', { ignore: ['^@dhanam/', '^@/'] }],
+    },
+  },
+
+  // Jest globals for test files (describe, it, expect, beforeEach, etc.)
+  // Scoped to test files only so production code keeps strict no-undef checks.
+  {
+    files: [
+      '**/__tests__/**/*.{ts,tsx}',
+      '**/*.test.{ts,tsx}',
+      'test/**/*.{ts,tsx}',
+    ],
+    languageOptions: {
+      globals: { ...globals.jest },
     },
   },
 
