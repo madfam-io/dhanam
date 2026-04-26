@@ -40,6 +40,7 @@ import { JanuaBillingService } from './janua-billing.service';
 import { OverageInvoicingJob } from './jobs/overage-invoicing.job';
 import { ReconciliationJob } from './jobs/reconciliation.job';
 import { SubscriptionLifecycleJob } from './jobs/subscription-lifecycle.job';
+import { SyntheticRevenueProbeJob } from './jobs/synthetic-revenue-probe.job';
 import { MadfamEventsController } from './madfam-events.controller';
 // Federation (PhyneCRM integration)
 import { CancellationService } from './services/cancellation.service';
@@ -55,6 +56,7 @@ import { RevenueMetricsService } from './services/revenue-metrics.service';
 import { PhyneCrmEngagementNotifierService } from './services/phynecrm-engagement-notifier.service';
 import { StripeMxSpeiRelayService } from './services/stripe-mx-spei-relay.service';
 import { StripeMxService } from './services/stripe-mx.service';
+import { SyntheticRevenueProbeService } from './services/synthetic-revenue-probe.service';
 // Extracted sub-services (usage, lifecycle, webhooks)
 import { SubscriptionLifecycleService } from './services/subscription-lifecycle.service';
 import { TrialService } from './services/trial.service';
@@ -120,6 +122,12 @@ import { UsageAlertsService } from './services/usage-alerts.service';
     SubscriptionLifecycleJob,
     ReconciliationJob,
     OverageInvoicingJob,
+
+    // Synthetic revenue probe — production-only smoke test for the
+    // Stripe → Dhanam → consumer fan-out path. See
+    // services/synthetic-revenue-probe.service.ts for design rationale.
+    SyntheticRevenueProbeService,
+    SyntheticRevenueProbeJob,
 
     // Hybrid Router (Stripe MX + Paddle + Conekta direct)
     PaymentRouterService,
