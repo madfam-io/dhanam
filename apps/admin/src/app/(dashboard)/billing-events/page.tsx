@@ -20,7 +20,7 @@ export default function BillingEventsPage() {
       const response = await adminApi.getBillingEvents(page, 20);
       setEvents(response.data);
       setTotalPages(response.totalPages);
-    } catch (err) {
+    } catch (_err) {
       setError('Failed to load billing events. Please try again.');
     } finally {
       setLoading(false);
