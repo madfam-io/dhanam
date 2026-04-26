@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState, Component, type ReactNode } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
 import { JanuaProvider, SignIn } from '@janua/react-sdk';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useState, Component, type ReactNode } from 'react';
+
 import { useAdminAuth } from '@/lib/hooks/use-admin-auth';
 
 const januaConfig = {

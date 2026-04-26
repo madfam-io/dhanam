@@ -1,7 +1,7 @@
 'use client';
 
-import { Card } from '@dhanam/ui';
-import { Badge } from '@dhanam/ui';
+import { Card, Badge } from '@dhanam/ui';
+
 import type { ProviderHealth } from '@/lib/api/admin';
 
 interface ProviderStatusTableProps {
@@ -38,10 +38,7 @@ export function ProviderStatusTable({ providers }: ProviderStatusTableProps) {
           <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
             {providers.length === 0 ? (
               <tr>
-                <td
-                  colSpan={4}
-                  className="px-6 py-12 text-center text-gray-500 dark:text-gray-400"
-                >
+                <td colSpan={4} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
                   No provider data available
                 </td>
               </tr>

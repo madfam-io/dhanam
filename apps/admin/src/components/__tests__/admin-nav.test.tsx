@@ -1,6 +1,6 @@
-import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { usePathname } from 'next/navigation';
+import React from 'react';
 
 jest.mock(
   'lucide-react',

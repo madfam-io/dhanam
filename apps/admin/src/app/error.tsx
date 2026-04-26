@@ -61,6 +61,10 @@ export default function Error({
           >
             Try again
           </button>
+          {/* Intentional <a> in an error boundary — bypasses a possibly-broken
+              router context to force a fresh navigation. Next.js docs recommend
+              this pattern for top-level error pages. */}
+          {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
           <a
             href="/"
             style={{

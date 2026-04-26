@@ -1,9 +1,9 @@
 'use client';
 
-import { Card } from '@dhanam/ui';
-import { Badge } from '@dhanam/ui';
-import type { DeploymentStatus as DeploymentStatusType } from '@/lib/api/admin';
+import { Card, Badge } from '@dhanam/ui';
 import { Server, GitBranch, Clock, Cpu } from 'lucide-react';
+
+import type { DeploymentStatus as DeploymentStatusType } from '@/lib/api/admin';
 
 interface DeploymentStatusProps {
   status: DeploymentStatusType;
@@ -44,10 +44,7 @@ export function DeploymentStatusCard({ status }: DeploymentStatusProps) {
     <Card className="p-6">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Deployment</h3>
-        <Badge
-          className={envColors[status.environment] || envColors.development}
-          variant="outline"
-        >
+        <Badge className={envColors[status.environment] || envColors.development} variant="outline">
           {status.environment}
         </Badge>
       </div>

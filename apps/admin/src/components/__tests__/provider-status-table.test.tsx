@@ -1,36 +1,41 @@
-import React from 'react';
 import { render, screen } from '@testing-library/react';
+import React from 'react';
 
-jest.mock('@dhanam/ui', () =>
-  new Proxy(
-    {},
-    {
-      get: (_, prop) => {
-        if (prop === '__esModule') return true;
-        return ({ children, ...props }: any) => (
-          <div data-testid={String(prop).toLowerCase()} {...props}>
-            {children}
-          </div>
-        );
-      },
-    },
-  ),
+jest.mock(
+  '@dhanam/ui',
+  () =>
+    new Proxy(
+      {},
+      {
+        get: (_, prop) => {
+          if (prop === '__esModule') return true;
+          return ({ children, ...props }: any) => (
+            <div data-testid={String(prop).toLowerCase()} {...props}>
+              {children}
+            </div>
+          );
+        },
+      }
+    )
 );
 
-jest.mock('lucide-react', () =>
-  new Proxy(
-    {},
-    {
-      get: (_, prop) => {
-        if (prop === '__esModule') return true;
-        return (props: any) => <span data-testid={`icon-${String(prop)}`} {...props} />;
-      },
-    },
-  ),
+jest.mock(
+  'lucide-react',
+  () =>
+    new Proxy(
+      {},
+      {
+        get: (_, prop) => {
+          if (prop === '__esModule') return true;
+          return (props: any) => <span data-testid={`icon-${String(prop)}`} {...props} />;
+        },
+      }
+    )
 );
+
+import type { ProviderHealth } from '@/lib/api/admin';
 
 import { ProviderStatusTable } from '../provider-status-table';
-import type { ProviderHealth } from '@/lib/api/admin';
 
 const providers: ProviderHealth[] = [
   { name: 'belvo', status: 'healthy', accountCount: 42, lastSyncAt: '2026-03-14T08:00:00Z' },

@@ -1,10 +1,11 @@
 'use client';
 
 import { useEffect } from 'react';
-import { AdminNav } from '@/components/admin-nav';
+
 import { AdminHeader } from '@/components/admin-header';
-import { useAdminAuth } from '@/lib/hooks/use-admin-auth';
+import { AdminNav } from '@/components/admin-nav';
 import { AdminProvider } from '@/contexts/AdminContext';
+import { useAdminAuth } from '@/lib/hooks/use-admin-auth';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, isAuthenticated, isAdmin, _hasHydrated } = useAdminAuth();
