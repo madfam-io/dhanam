@@ -1,36 +1,41 @@
-import React from 'react';
 import { render, screen } from '@testing-library/react';
+import React from 'react';
 
-jest.mock('@dhanam/ui', () =>
-  new Proxy(
-    {},
-    {
-      get: (_, prop) => {
-        if (prop === '__esModule') return true;
-        return ({ children, ...props }: any) => (
-          <div data-testid={String(prop).toLowerCase()} {...props}>
-            {children}
-          </div>
-        );
-      },
-    },
-  ),
+jest.mock(
+  '@dhanam/ui',
+  () =>
+    new Proxy(
+      {},
+      {
+        get: (_, prop) => {
+          if (prop === '__esModule') return true;
+          return ({ children, ...props }: any) => (
+            <div data-testid={String(prop).toLowerCase()} {...props}>
+              {children}
+            </div>
+          );
+        },
+      }
+    )
 );
 
-jest.mock('lucide-react', () =>
-  new Proxy(
-    {},
-    {
-      get: (_, prop) => {
-        if (prop === '__esModule') return true;
-        return (props: any) => <span data-testid={`icon-${String(prop)}`} {...props} />;
-      },
-    },
-  ),
+jest.mock(
+  'lucide-react',
+  () =>
+    new Proxy(
+      {},
+      {
+        get: (_, prop) => {
+          if (prop === '__esModule') return true;
+          return (props: any) => <span data-testid={`icon-${String(prop)}`} {...props} />;
+        },
+      }
+    )
 );
+
+import type { DeploymentStatus } from '@/lib/api/admin';
 
 import { DeploymentStatusCard } from '../deployment-status';
-import type { DeploymentStatus } from '@/lib/api/admin';
 
 const status: DeploymentStatus = {
   version: '2.4.1',

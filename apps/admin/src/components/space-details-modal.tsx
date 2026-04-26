@@ -1,11 +1,9 @@
 'use client';
 
-import { Dialog } from '@dhanam/ui';
-import { Badge } from '@dhanam/ui';
-import { Card } from '@dhanam/ui';
-import { Separator } from '@dhanam/ui';
-import type { SpaceInfo } from '@/lib/api/admin';
+import { Dialog, Badge, Card, Separator } from '@dhanam/ui';
 import { Building2, Users, CreditCard, Receipt } from 'lucide-react';
+
+import type { SpaceInfo } from '@/lib/api/admin';
 
 interface SpaceDetailsModalProps {
   space: SpaceInfo;
@@ -51,7 +49,9 @@ export function SpaceDetailsModal({ space, onClose }: SpaceDetailsModalProps) {
                   <Building2 className="h-8 w-8 text-gray-500 dark:text-gray-400" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white">{space.name}</h3>
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                    {space.name}
+                  </h3>
                   <div className="flex items-center space-x-2 mt-2">
                     <Badge variant={space.type === 'personal' ? 'default' : 'secondary'}>
                       {space.type}
