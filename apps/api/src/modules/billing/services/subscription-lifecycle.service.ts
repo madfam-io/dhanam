@@ -1,6 +1,6 @@
 import * as crypto from 'crypto';
 
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, Optional } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 import { AuditService } from '../../../core/audit/audit.service';
@@ -8,6 +8,8 @@ import { PrismaService } from '../../../core/prisma/prisma.service';
 import { PostHogService } from '../../analytics/posthog.service';
 import { BillingProvider, JanuaBillingService } from '../janua-billing.service';
 import { StripeService } from '../stripe.service';
+
+import { WebhookDlqService } from './webhook-dlq.service';
 
 /**
  * Options for premium upgrade.
@@ -60,7 +62,11 @@ export class SubscriptionLifecycleService {
     private januaBilling: JanuaBillingService,
     private audit: AuditService,
     private config: ConfigService,
-    private posthog: PostHogService
+    private posthog: PostHogService,
+    // Optional so existing call sites that build this service manually
+    // (older specs) don't have to construct a DLQ stub. When absent,
+    // the legacy "log + forget" failure path is preserved.
+    @Optional() private dlq?: WebhookDlqService
   ) {}
 
   // ─── Upgrade flows ───────────────────────────────────────────────────
@@ -589,7 +595,7 @@ export class SubscriptionLifecycleService {
     const targetUrl = urlMap[product];
     if (!targetUrl) return;
 
-    const payload = JSON.stringify({
+    const envelope = {
       type: eventType,
       id: crypto.randomUUID(),
       data: {
@@ -600,9 +606,14 @@ export class SubscriptionLifecycleService {
         status: eventType.includes('.') ? eventType.split('.')[1] : 'created',
       },
       timestamp: new Date().toISOString(),
-    });
+    };
+    const payload = JSON.stringify(envelope);
 
     const signature = crypto.createHmac('sha256', secret).update(payload).digest('hex');
+
+    let statusCode: number | undefined;
+    let errorMessage: string | undefined;
+    let ok = false;
 
     try {
       const response = await fetch(targetUrl, {
@@ -614,13 +625,48 @@ export class SubscriptionLifecycleService {
         body: payload,
       });
 
-      if (!response.ok) {
+      statusCode = response.status;
+      ok = response.ok;
+      if (!ok) {
+        try {
+          errorMessage = `consumer responded ${response.status}: ${(
+            await response.text()
+          ).slice(0, 500)}`;
+        } catch {
+          errorMessage = `consumer responded ${response.status}`;
+        }
         this.logger.warn(`Product webhook to ${product} failed: ${response.status}`);
       } else {
         this.logger.log(`Product webhook dispatched to ${product} for ${eventType}`);
       }
     } catch (error) {
+      errorMessage = `network/timeout: ${error.message}`;
       this.logger.error(`Product webhook dispatch to ${product} failed: ${error.message}`);
+    }
+
+    // Persist non-2xx / network errors to the DLQ so the auto-retry job
+    // (and the admin manual-replay endpoint) can re-deliver later.
+    // Best-effort — a DLQ insert failure cannot break the original
+    // billing flow; the consumer remains the source of idempotency.
+    if (!ok && this.dlq) {
+      try {
+        await this.dlq.recordFailure({
+          eventId: envelope.id,
+          consumer: product,
+          consumerUrl: targetUrl,
+          eventType,
+          payload: envelope,
+          signatureHeader: signature,
+          statusCode,
+          errorMessage: errorMessage ?? 'unknown',
+        });
+      } catch (dlqErr) {
+        this.logger.error(
+          `Failed to persist DLQ row for ${product} subscription event ${eventType}: ${
+            (dlqErr as Error).message
+          }`
+        );
+      }
     }
   }
 }
