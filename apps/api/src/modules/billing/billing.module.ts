@@ -25,6 +25,7 @@ import { EmailModule } from '../email/email.module';
 import { BillingController } from './billing.controller';
 import { BillingService } from './billing.service';
 import { CatalogController } from './catalog.controller';
+import { ConektaController } from './conekta.controller';
 import { CotizaWebhookController } from './cotiza-webhook.controller';
 import { CreditBillingController } from './credit-billing.controller';
 import { CustomerFederationController } from './customer-federation.controller';
@@ -42,6 +43,7 @@ import { SubscriptionLifecycleJob } from './jobs/subscription-lifecycle.job';
 import { MadfamEventsController } from './madfam-events.controller';
 // Federation (PhyneCRM integration)
 import { CancellationService } from './services/cancellation.service';
+import { ConektaService } from './services/conekta.service';
 import { CustomerFederationService } from './services/customer-federation.service';
 // Hybrid Router Services (Stripe MX + Paddle)
 import { PaddleService } from './services/paddle.service';
@@ -78,10 +80,12 @@ import { UsageAlertsService } from './services/usage-alerts.service';
   ],
   controllers: [
     BillingController,
+    ConektaController,
     CreditBillingController,
     CustomerFederationController,
     CatalogController,
-    CotizaWebhookController,    MadfamEventsController,
+    CotizaWebhookController,
+    MadfamEventsController,
     StripeMxController,
     UsageAlertsController,
   ],
@@ -117,12 +121,15 @@ import { UsageAlertsService } from './services/usage-alerts.service';
     ReconciliationJob,
     OverageInvoicingJob,
 
-    // Hybrid Router (Stripe MX + Paddle)
+    // Hybrid Router (Stripe MX + Paddle + Conekta direct)
     PaymentRouterService,
     StripeMxService,
     StripeMxSpeiRelayService,
     PhyneCrmEngagementNotifierService,
     PaddleService,
+    // Conekta direct gateway (Wave A — alongside Stripe MX, distinct from
+    // Janua-routed Conekta path in JanuaBillingService)
+    ConektaService,
 
     // Federation (PhyneCRM)
     CustomerFederationService,
@@ -147,6 +154,7 @@ import { UsageAlertsService } from './services/usage-alerts.service';
     StripeMxService,
     StripeMxSpeiRelayService,
     PaddleService,
+    ConektaService,
     CustomerFederationService,
     UsageMeteringService,
     UsageTrackingService,
