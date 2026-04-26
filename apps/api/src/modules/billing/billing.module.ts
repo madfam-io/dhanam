@@ -19,6 +19,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 
 import { AuditModule } from '../../core/audit/audit.module';
+import { MonitoringModule } from '../../core/monitoring/monitoring.module';
 import { PrismaModule } from '../../core/prisma/prisma.module';
 import { EmailModule } from '../email/email.module';
 
@@ -40,6 +41,7 @@ import { JanuaBillingService } from './janua-billing.service';
 import { OverageInvoicingJob } from './jobs/overage-invoicing.job';
 import { ReconciliationJob } from './jobs/reconciliation.job';
 import { SubscriptionLifecycleJob } from './jobs/subscription-lifecycle.job';
+import { SyntheticRevenueProbeJob } from './jobs/synthetic-revenue-probe.job';
 import { MadfamEventsController } from './madfam-events.controller';
 // Federation (PhyneCRM integration)
 import { CancellationService } from './services/cancellation.service';
@@ -55,6 +57,7 @@ import { RevenueMetricsService } from './services/revenue-metrics.service';
 import { PhyneCrmEngagementNotifierService } from './services/phynecrm-engagement-notifier.service';
 import { StripeMxSpeiRelayService } from './services/stripe-mx-spei-relay.service';
 import { StripeMxService } from './services/stripe-mx.service';
+import { SyntheticRevenueProbeService } from './services/synthetic-revenue-probe.service';
 // Extracted sub-services (usage, lifecycle, webhooks)
 import { SubscriptionLifecycleService } from './services/subscription-lifecycle.service';
 import { TrialService } from './services/trial.service';
@@ -73,6 +76,9 @@ import { UsageAlertsService } from './services/usage-alerts.service';
     PrismaModule,
     AuditModule,
     EmailModule,
+    // MonitoringModule provides the 'SentryService' string token used
+    // by WebhookDlqService for per-failure structured Sentry events.
+    MonitoringModule,
     HttpModule.register({
       timeout: 30000,
       maxRedirects: 5,
@@ -85,6 +91,7 @@ import { UsageAlertsService } from './services/usage-alerts.service';
     CustomerFederationController,
     CatalogController,
     CotizaWebhookController,
+    DlqController,
     MadfamEventsController,
     StripeMxController,
     UsageAlertsController,
@@ -120,6 +127,19 @@ import { UsageAlertsService } from './services/usage-alerts.service';
     SubscriptionLifecycleJob,
     ReconciliationJob,
     OverageInvoicingJob,
+
+    // Synthetic revenue probe — production-only smoke test for the
+    // Stripe → Dhanam → consumer fan-out path. See
+    // services/synthetic-revenue-probe.service.ts for design rationale.
+    SyntheticRevenueProbeService,
+    SyntheticRevenueProbeJob,
+
+    // Webhook DLQ + auto-retry (Karafiel/Tezca CFDI safety net).
+    // Captures failed downstream deliveries from the Stripe MX SPEI
+    // relay + the subscription product-webhook fan-out, with both
+    // an auto-retry cron job and an admin manual-replay endpoint.
+    WebhookDlqService,
+    WebhookDlqRetryJob,
 
     // Hybrid Router (Stripe MX + Paddle + Conekta direct)
     PaymentRouterService,
@@ -159,6 +179,7 @@ import { UsageAlertsService } from './services/usage-alerts.service';
     UsageMeteringService,
     UsageTrackingService,
     SubscriptionLifecycleService,
+    WebhookDlqService,
     WebhookProcessorService,
     SubscriptionGuard,
     UsageLimitGuard,

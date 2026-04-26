@@ -88,6 +88,7 @@ import { AuditService } from '../../../core/audit/audit.service';
 import { PrismaService } from '../../../core/prisma/prisma.service';
 
 import { PhyneCrmEngagementNotifierService } from './phynecrm-engagement-notifier.service';
+import { WebhookDlqService } from './webhook-dlq.service';
 
 /** Outbound Dhanam envelope for payment.* events. */
 export interface DhanamPaymentEnvelope {
@@ -182,7 +183,8 @@ export class StripeMxSpeiRelayService {
     private readonly prisma: PrismaService,
     private readonly config: ConfigService,
     private readonly audit: AuditService,
-    private readonly phynecrmNotifier: PhyneCrmEngagementNotifierService
+    private readonly phynecrmNotifier: PhyneCrmEngagementNotifierService,
+    private readonly dlq: WebhookDlqService
   ) {}
 
   /**
@@ -540,6 +542,11 @@ export class StripeMxSpeiRelayService {
 
     await Promise.all(
       targets.map(async ({ product, url }) => {
+        let statusCode: number | undefined;
+        let errorMessage: string | undefined;
+        let ok = false;
+        let responseBodySnippet = '';
+
         try {
           const res = await fetch(url, {
             method: 'POST',
@@ -551,7 +558,15 @@ export class StripeMxSpeiRelayService {
             },
             body,
           });
-          if (!res.ok) {
+          statusCode = res.status;
+          ok = res.ok;
+          if (!ok) {
+            try {
+              responseBodySnippet = (await res.text()).slice(0, 500);
+            } catch {
+              responseBodySnippet = '';
+            }
+            errorMessage = `consumer responded ${res.status}: ${responseBodySnippet}`;
             this.logger.warn(
               `Relay to ${product} (${url}) returned ${res.status} for envelope ${envelope.id}`
             );
@@ -559,7 +574,32 @@ export class StripeMxSpeiRelayService {
             this.logger.log(`Relayed ${envelope.type} (${envelope.id}) → ${product}`);
           }
         } catch (err) {
+          errorMessage = `network/timeout: ${(err as Error).message}`;
           this.logger.error(`Relay to ${product} (${url}) failed: ${(err as Error).message}`);
+        }
+
+        if (!ok) {
+          // Persist to the DLQ so the auto-retry job (and the manual
+          // replay endpoint) can deliver later. Best-effort: a DLQ
+          // insertion failure must not amplify into a Stripe retry.
+          try {
+            await this.dlq.recordFailure({
+              eventId: envelope.id,
+              consumer: product,
+              consumerUrl: url,
+              eventType: envelope.type,
+              payload: envelope,
+              signatureHeader: signature,
+              statusCode,
+              errorMessage: errorMessage ?? 'unknown',
+            });
+          } catch (dlqErr) {
+            this.logger.error(
+              `Failed to persist DLQ row for ${product} envelope ${envelope.id}: ${
+                (dlqErr as Error).message
+              }`
+            );
+          }
         }
       })
     );
