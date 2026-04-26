@@ -6,6 +6,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ---
 
+## Pricing & PMF Anchoring
+
+- **Pricing source-of-truth**: `internal-devops/decisions/2026-04-25-tulana-ecosystem-pricing.md`. Dhanam Consumer tiers (Tulana v0.1 recommended, MXN/mo): Free $0 / Copilot Pro 199 / Family Plus 499 / Teams (B2B) 1,499. Plus Dhanam B2B Platform Billing tiers: Starter $0+3.5% / Scale 499+2.5% / Enterprise 2,999+1.5%. Confidence: low — needs validation with real users.
+- **Note**: Dhanam IS the billing platform for the MADFAM ecosystem — it consumes PMF data from Tulana but its own pricing is anchored by Tulana too (no self-anchoring).
+- **PMF measurement**: per RFC 0013, NPS + Sean Ellis + retention via `@madfam/pmf-widget` → Tulana `/v1/pmf/*` endpoints. Composite PMF Score informs price moves + sunset decisions.
+
+---
+
 ## ⚠️ CRITICAL: MADFAM Ecosystem Dependencies
 
 **READ THIS FIRST before any auth, deployment, or infrastructure work.**
