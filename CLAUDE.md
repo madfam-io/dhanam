@@ -522,6 +522,65 @@ relay as a peer on the Stripe MX → ecosystem fan-out.
 
 Files: `apps/api/src/modules/billing/services/phynecrm-engagement-notifier.service.ts` + `apps/api/src/modules/billing/__tests__/phynecrm-engagement-notifier.service.spec.ts` (13 tests covering skip-paths, HMAC, dedup_key stability, success/failed/refunded translation, non-throwing error handling, trailing-slash URL hygiene + `extractEcosystemMetadata` empty-string skip).
 
+## Conekta direct gateway (Wave A pre-flight)
+
+Direct Conekta REST API integration for the LATAM card + SPEI charge path,
+sitting alongside Stripe MX. Distinct from the Janua-routed Conekta path
+(`JanuaBillingService`) — that proxy handles unified subscription lifecycle;
+this service is the raw charge endpoint used by the ecosystem invoice flow
+(Cotiza → Dhanam invoices) where Janua-mediated subscription semantics
+don't apply.
+
+### Scope
+
+- `POST /v1/billing/webhooks/conekta` — Conekta-facing webhook URL.
+  Signature-verified via `CONEKTA_WEBHOOK_SIGNING_KEY` (HMAC-SHA256 over
+  raw body). Accepts both `digest: sha256=<hex>` (preferred, modern) and
+  `conekta-signature: t=<ts>,v1=<hex>` (legacy) header forms. Invalid
+  signatures return 400 (matching the Stripe MX / Janua / Paddle
+  receivers' convention — not 401, intentionally; see controller header
+  comment for rationale). Handler crashes return 200 ACK to avoid
+  amplifying Conekta retries.
+- `ConektaService.createCharge(...)` — creates a Conekta order with one
+  line item and one charge. Supports `card` (token from Conekta.js),
+  `spei` (returns CLABE + reference), and `oxxo_cash` (returns barcode).
+  Idempotency forwarded via `metadata.idempotency_key` →
+  `Idempotency-Key` header.
+- `ConektaService.handleWebhookEvent(...)` — classifies `charge.paid`,
+  `charge.declined`, `charge.refunded`, `order.expired`. Unknown event
+  types are logged + ack'd, never throw.
+
+### Environment variables
+
+| Variable                      | Required               | Description                                                                                                                                                                                 |
+| ----------------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `CONEKTA_PRIVATE_KEY`         | Yes                    | HTTP Basic auth username (password is empty). Test or live. Operator rotates via Wave A runbook. Without this, `ConektaService.isConfigured()` returns false and the webhook receiver 400s. |
+| `CONEKTA_PUBLIC_KEY`          | Yes (client)           | For client-side tokenization via Conekta.js.                                                                                                                                                |
+| `CONEKTA_WEBHOOK_SIGNING_KEY` | Yes for inbound events | HMAC-SHA256 secret for webhook signature verification. Operator copies from Conekta dashboard webhook config.                                                                               |
+| `CONEKTA_API_VERSION`         | No (default `2.1.0`)   | Sent in `Accept: application/vnd.conekta-v<version>+json`.                                                                                                                                  |
+
+### Operator runbook
+
+See `internal-devops/runbooks/2026-04-25-wave-a-stripe-conekta-provisioning.md`
+for the full key rotation + dashboard-registration steps. Summary:
+
+1. Provision a Conekta account at `https://panel.conekta.com` for
+   MADFAM (LATAM Mexican entity).
+2. Copy private/public keys → `dhanam-secrets` K8s Secret as
+   `CONEKTA_PRIVATE_KEY`, `CONEKTA_PUBLIC_KEY`.
+3. In the Conekta dashboard, register the webhook endpoint
+   `https://api.dhan.am/v1/billing/webhooks/conekta` subscribed to
+   `charge.paid`, `charge.declined`, `charge.refunded`, `order.expired`.
+   Copy the webhook signing key → `CONEKTA_WEBHOOK_SIGNING_KEY`.
+4. Test with Conekta's sandbox before flipping to live keys.
+
+### Files
+
+- `apps/api/src/modules/billing/services/conekta.service.ts` — service
+- `apps/api/src/modules/billing/conekta.controller.ts` — webhook receiver
+- `apps/api/src/modules/billing/__tests__/conekta.service.spec.ts` — unit tests
+- `apps/api/src/modules/billing/__tests__/conekta.controller.spec.ts` — controller tests
+
 ## Preview Environments (P1.7 — Enclii ephemeral per-PR envs)
 
 Dhanam is the first participating service for Enclii's preview-environment
