@@ -1,4 +1,5 @@
 import { PrismaService } from '@core/prisma/prisma.service';
+import { Prisma } from '@db';
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Cron } from '@nestjs/schedule';
@@ -14,7 +15,7 @@ export class ReconciliationJob {
     private config: ConfigService
   ) {
     this.stripe = new Stripe(this.config.get('STRIPE_SECRET_KEY') ?? '', {
-      apiVersion: '2024-12-18.acacia',
+      apiVersion: '2026-02-25.clover',
     });
   }
 
@@ -93,7 +94,11 @@ export class ReconciliationJob {
         amount: 0,
         currency: 'USD',
         status: 'flagged',
-        metadata: details,
+        // `details` is shaped as Record<string, unknown>; Prisma's Json column
+        // accepts InputJsonValue (a recursively-typed JSON shape). The runtime
+        // value IS valid JSON, but TS can't prove it from the unknown value
+        // type — cast at the boundary.
+        metadata: details as Prisma.InputJsonValue,
       },
     });
   }

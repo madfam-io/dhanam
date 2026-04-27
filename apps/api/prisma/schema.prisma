@@ -81,6 +81,7 @@ enum BillingEventType {
   refund_issued
   cancel_intent_created
   save_offer_accepted
+  reconciliation_mismatch
 }
 
 enum BillingStatus {
@@ -89,6 +90,7 @@ enum BillingStatus {
   failed
   refunded
   paused
+  flagged
 }
 
 enum CancellationReason {
