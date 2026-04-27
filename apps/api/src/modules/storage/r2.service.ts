@@ -5,10 +5,32 @@ import {
   DeleteObjectCommand,
   HeadObjectCommand,
 } from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { getSignedUrl as _getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { v4 as uuidv4 } from 'uuid';
+
+/**
+ * AWS SDK v3 versions ship `S3Client` (from `@aws-sdk/client-s3`) and the
+ * generic `Client<...>` shape that `getSignedUrl` declares as its first arg
+ * in `@aws-sdk/s3-request-presigner`. They're structurally identical at
+ * runtime but TypeScript treats them as separate nominal types because the
+ * presigner's `ServiceInputTypes` is a Service-specific union that doesn't
+ * narrow against the concrete S3 client.
+ *
+ * `_getSignedUrl as Function` discards the over-specific declared signature.
+ * The wrapper exposes the runtime contract: `(client, command, options) =>
+ * Promise<string>`, which is what every call site actually relies on.
+ */
+const getSignedUrl: (
+  client: unknown,
+  command: unknown,
+  options?: { expiresIn?: number },
+) => Promise<string> = _getSignedUrl as unknown as (
+  client: unknown,
+  command: unknown,
+  options?: { expiresIn?: number },
+) => Promise<string>;
 
 export interface UploadedDocument {
   key: string;
