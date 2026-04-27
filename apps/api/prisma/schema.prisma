@@ -1177,6 +1177,61 @@ model BillingEvent {
   @@map("billing_events")
 }
 
+/// Dead-letter queue for outbound product-webhook fan-out (Karafiel,
+/// Tezca, etc.). When a downstream consumer is restarting / 5xxs / times
+/// out, the failed delivery lands here so an auto-retry job (and an
+/// admin manual-replay endpoint) can re-deliver it without operator
+/// help. See `apps/api/src/modules/billing/services/webhook-dlq.service.ts`.
+model WebhookDeliveryFailure {
+  id               String    @id @default(uuid())
+  /// The Dhanam-side correlation id for the original event (envelope
+  /// `id` from `StripeMxSpeiRelayService` payment.* envelopes, or the
+  /// crypto.randomUUID() emitted by `notifyProductWebhooks`). Indexed
+  /// so the admin UI can pivot a customer's CFDI ticket against
+  /// failed deliveries quickly.
+  eventId          String    @map("event_id")
+  /// Logical consumer name (the key from PRODUCT_WEBHOOK_URLS, e.g.
+  /// `karafiel`, `tezca`). Used for per-consumer failure-rate dashboards.
+  consumer         String
+  /// The full URL we POSTed to. Stored verbatim so a consumer URL
+  /// rotation is easy to detect from the DLQ alone.
+  consumerUrl      String    @map("consumer_url")
+  /// Optional event type for human-readable filtering in the admin
+  /// UI (e.g. `payment.succeeded`, `subscription.cancelled`). Nullable
+  /// because legacy callers may not have it.
+  eventType        String?   @map("event_type")
+  /// The exact JSON body that was POSTed. Replayed verbatim on retry
+  /// so the HMAC signature stays valid and the consumer's idempotency
+  /// key is preserved.
+  payload          Json
+  /// The HMAC-SHA256 signature value that was sent with the original
+  /// delivery. Replayed verbatim — we never re-sign on retry, because
+  /// re-signing would defeat the consumer's "have I seen this body
+  /// before" dedup.
+  signatureHeader  String    @map("signature_header")
+  attemptCount     Int       @default(1) @map("attempt_count")
+  lastAttemptAt    DateTime  @default(now()) @map("last_attempt_at")
+  lastStatusCode   Int?      @map("last_status_code")
+  lastErrorMessage String?   @map("last_error_message")
+  /// Wall-clock at which the auto-retry job should next attempt this
+  /// delivery. NULL = stop auto-retrying (max attempts exhausted —
+  /// operator must intervene). Auto-retry job uses the partial index
+  /// `webhook_delivery_failures_due_for_retry_idx` to find rows where
+  /// `next_retry_at <= now()` AND `resolved_at IS NULL`.
+  nextRetryAt      DateTime? @map("next_retry_at")
+  /// Set when a retry succeeds OR when an operator manually marks the
+  /// row resolved (out-of-band remediation). Once non-null the row is
+  /// invisible to the auto-retry job.
+  resolvedAt       DateTime? @map("resolved_at")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  @@index([eventId])
+  @@index([consumer])
+  @@index([resolvedAt, createdAt(sort: Desc)])
+  @@map("webhook_delivery_failures")
+}
+
 model UsageMetric {
   id         String          @id @default(uuid())
   userId     String          @map("user_id")
@@ -2345,4 +2400,81 @@ model UsageAlertIngest {
   @@index([projectId, createdAt(sort: Desc)])
   @@index([notifiedAt])
   @@map("usage_alert_ingests")
+}
+
+// ────────────────────────────────────────────────
+// RFC 0011 — FX as a platform service (Phase 1)
+// ────────────────────────────────────────────────
+//
+// Three additive tables. The legacy `exchange_rates` table is preserved for
+// the in-process `fx-rates` module (analytics), and is decommissioned as part
+// of the forgesight migration (RFC 0011 §"Implementation plan", Week 8).
+//
+// `fx_rate_observations` — every rate the platform service has ever *seen*
+// from any provider. Source-of-truth for type=spot history and for fallback
+// "last_known_good" lookups. Rate is stored as Decimal(18, 8) for precision
+// across crypto-grade quotes (future v2 scope) without a migration.
+//
+// `fx_rate_publications` — official daily rate per (pair, effective_date).
+// Today populated only for type=dof (Banxico SF60653); the unique constraint
+// enforces "one canonical rate per audited day" so SAT auditors can't be
+// confused by retroactive provider updates.
+//
+// `fx_rate_overrides` — operator-issued overrides (incident response).
+// Every override row is an append-only audit record. `revokedAt` makes
+// retraction non-destructive; `expiresAt` auto-disables stale overrides.
+
+model FxRateObservation {
+  id           String   @id @default(uuid())
+  fromCurrency String   @map("from_currency") // ISO 4217 (3-letter, uppercase)
+  toCurrency   String   @map("to_currency")
+  rateType     String   @map("rate_type") // 'spot' | 'dof' | 'settled'
+  rate         Decimal  @db.Decimal(18, 8)
+  source       String   // 'openexchangerates' | 'exchangerate_host' | 'banxico_sie' | ...
+  providerId   String?  @map("provider_id") // upstream stable id, e.g. 'oer:2026-04-25T18:14:00Z'
+  paymentId    String?  @map("payment_id") // populated only for rateType='settled'
+  observedAt   DateTime @map("observed_at")
+  effectiveAt  DateTime @map("effective_at")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@index([fromCurrency, toCurrency, rateType, effectiveAt(sort: Desc)])
+  @@index([fromCurrency, toCurrency, rateType, observedAt(sort: Desc)])
+  @@index([paymentId])
+  @@map("fx_rate_observations")
+}
+
+model FxRatePublication {
+  id            String   @id @default(uuid())
+  fromCurrency  String   @map("from_currency")
+  toCurrency    String   @map("to_currency")
+  effectiveDate DateTime @map("effective_date") @db.Date
+  rate          Decimal  @db.Decimal(18, 8)
+  source        String   // typically 'banxico_sie'
+  providerId    String?  @map("provider_id")
+  publishedAt   DateTime @map("published_at")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@unique([fromCurrency, toCurrency, effectiveDate], name: "fromCurrency_toCurrency_effectiveDate")
+  @@index([fromCurrency, toCurrency, effectiveDate(sort: Desc)])
+  @@map("fx_rate_publications")
+}
+
+model FxRateOverride {
+  id           String    @id @default(uuid())
+  fromCurrency String    @map("from_currency")
+  toCurrency   String    @map("to_currency")
+  rateType     String    @map("rate_type")
+  rate         Decimal   @db.Decimal(18, 8)
+  rationale    String    // RFC 0011 §"Override governance" — required runbook entry
+  issuedBy     String    @map("issued_by") // Janua sub claim of the operator
+  approvedBy   String?   @map("approved_by") // ASK_DUAL second-approver Janua sub claim
+  expiresAt    DateTime? @map("expires_at")
+  revokedAt    DateTime? @map("revoked_at")
+  revokedBy    String?   @map("revoked_by")
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  @@index([fromCurrency, toCurrency, rateType, expiresAt])
+  @@index([revokedAt])
+  @@map("fx_rate_overrides")
 }

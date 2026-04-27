@@ -8,6 +8,7 @@ import { PreferencesProvider } from '~/contexts/PreferencesContext';
 import PostHogProvider from '~/providers/PostHogProvider';
 import { useState, useEffect, useCallback, useRef, type ComponentType } from 'react';
 import { CookieConsentBanner } from '~/components/cookie-consent-banner';
+import { PmfWidgetMount } from '~/components/pmf/PmfWidgetMount';
 
 /**
  * SSR-safe wrapper: @janua/react-sdk accesses browser APIs at module level,
@@ -268,6 +269,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
               <AuthProvider>
                 {/* eslint-disable-next-line @typescript-eslint/no-explicit-any -- Reason: React 19 type incompatibility with PreferencesProvider children prop */}
                 <PreferencesProvider>{children as any}</PreferencesProvider>
+                <PmfWidgetMount />
               </AuthProvider>
             </SSRSafeJanuaProvider>
             <CookieConsentBanner />

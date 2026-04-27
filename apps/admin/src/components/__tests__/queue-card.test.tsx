@@ -1,40 +1,44 @@
-import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import React from 'react';
 
-jest.mock('@dhanam/ui', () =>
-  new Proxy(
-    {},
-    {
-      get: (_, prop) => {
-        if (prop === '__esModule') return true;
-        const tag = String(prop).toLowerCase();
-        if (tag === 'button') {
-          return ({ children, disabled, onClick, ...props }: any) => (
-            <button data-testid={tag} disabled={disabled} onClick={onClick} {...props}>
+jest.mock(
+  '@dhanam/ui',
+  () =>
+    new Proxy(
+      {},
+      {
+        get: (_, prop) => {
+          if (prop === '__esModule') return true;
+          const tag = String(prop).toLowerCase();
+          if (tag === 'button') {
+            return ({ children, disabled, onClick, ...props }: any) => (
+              <button data-testid={tag} disabled={disabled} onClick={onClick} {...props}>
+                {children}
+              </button>
+            );
+          }
+          return ({ children, className, ...props }: any) => (
+            <div data-testid={tag} className={className} {...props}>
               {children}
-            </button>
+            </div>
           );
-        }
-        return ({ children, className, ...props }: any) => (
-          <div data-testid={tag} className={className} {...props}>
-            {children}
-          </div>
-        );
-      },
-    }
-  )
+        },
+      }
+    )
 );
 
-jest.mock('lucide-react', () =>
-  new Proxy(
-    {},
-    {
-      get: (_, prop) => {
-        if (prop === '__esModule') return true;
-        return (props: any) => <span data-testid={`icon-${String(prop)}`} {...props} />;
-      },
-    }
-  )
+jest.mock(
+  'lucide-react',
+  () =>
+    new Proxy(
+      {},
+      {
+        get: (_, prop) => {
+          if (prop === '__esModule') return true;
+          return (props: any) => <span data-testid={`icon-${String(prop)}`} {...props} />;
+        },
+      }
+    )
 );
 
 jest.mock('@/lib/api/admin', () => ({
@@ -44,9 +48,10 @@ jest.mock('@/lib/api/admin', () => ({
   },
 }));
 
-import { QueueCard } from '../queue-card';
 import type { QueueInfo } from '@/lib/api/admin';
 import { adminApi } from '@/lib/api/admin';
+
+import { QueueCard } from '../queue-card';
 
 const activeQueue: QueueInfo = {
   name: 'transaction-sync',

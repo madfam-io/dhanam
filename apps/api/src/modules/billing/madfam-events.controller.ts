@@ -295,19 +295,35 @@ export class MadfamEventsController {
    * null if no mapping exists — the receiver treats that as "accept but
    * don't persist" so first-touch ecosystem events don't fail loudly.
    *
-   * Today the mapping is best-effort: we look for a user whose primary
-   * Space id equals the ecosystem `organization_id`. When the tighter
-   * org-linkage story lands this function is the one place to update.
+   * The mapping resolves via the UserSpace join table: a Space's owner
+   * is the user with role='owner'. Falls back to admin if no owner is
+   * present (defensive — every Space should have exactly one owner per
+   * the schema invariant, but we want a deterministic resolution if a
+   * Space ends up ownerless during migration windows).
+   *
+   * History: this function previously selected Space.ownerId, which
+   * doesn't exist in the schema. The try/catch swallowed the runtime
+   * Prisma error, silently routing every real ecosystem event to
+   * status='accepted_unlinked'. Surfaced 2026-04-26 by the synthetic
+   * revenue probe (PR #355).
    */
   private async resolveUserForOrganization(organizationId: string): Promise<string | null> {
     if (!organizationId) return null;
     try {
-      // Primary path — organization_id is a Dhanam Space id.
-      const space = await this.prisma.space.findUnique({
-        where: { id: organizationId },
-        select: { ownerId: true },
+      // organization_id is a Dhanam Space id. Resolve via the
+      // UserSpace join table — preferring owner, falling back to admin.
+      const ownerLink = await this.prisma.userSpace.findFirst({
+        where: { spaceId: organizationId, role: 'owner' },
+        select: { userId: true },
       });
-      if (space?.ownerId) return space.ownerId;
+      if (ownerLink?.userId) return ownerLink.userId;
+
+      const adminLink = await this.prisma.userSpace.findFirst({
+        where: { spaceId: organizationId, role: 'admin' },
+        select: { userId: true },
+        orderBy: { createdAt: 'asc' },
+      });
+      if (adminLink?.userId) return adminLink.userId;
     } catch {
       // fall through
     }

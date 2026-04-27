@@ -1,8 +1,9 @@
 'use client';
 
 import { Button } from '@dhanam/ui';
-import { useAdminAuth } from '@/lib/hooks/use-admin-auth';
 import { Shield, LogOut, Home } from 'lucide-react';
+
+import { useAdminAuth } from '@/lib/hooks/use-admin-auth';
 
 export function AdminHeader() {
   const { user, logout } = useAdminAuth();

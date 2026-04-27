@@ -6,6 +6,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ---
 
+## Pricing & PMF Anchoring
+
+- **Pricing source-of-truth**: `internal-devops/decisions/2026-04-25-tulana-ecosystem-pricing.md`. Dhanam Consumer tiers (Tulana v0.1 recommended, MXN/mo): Free $0 / Copilot Pro 199 / Family Plus 499 / Teams (B2B) 1,499. Plus Dhanam B2B Platform Billing tiers: Starter $0+3.5% / Scale 499+2.5% / Enterprise 2,999+1.5%. Confidence: low — needs validation with real users.
+- **Note**: Dhanam IS the billing platform for the MADFAM ecosystem — it consumes PMF data from Tulana but its own pricing is anchored by Tulana too (no self-anchoring).
+- **PMF measurement**: per RFC 0013, NPS + Sean Ellis + retention via `@madfam/pmf-widget` → Tulana `/v1/pmf/*` endpoints. Composite PMF Score informs price moves + sunset decisions.
+  - **Integration status (2026-04-26):** Wired into `apps/web` via `src/components/pmf/PmfWidgetMount.tsx`, mounted in `src/lib/providers.tsx` inside the `AuthProvider` tree (renders nowhere visible until activated). Identity comes from the existing `useAuth()` Zustand store (Janua-synced via `JanuaAuthSync`). Gates: feature flag `NEXT_PUBLIC_PMF_WIDGET_ENABLED` (default `false`) + `useAuth().isAuthenticated` + path-prefix exclusion (`/login`, `/auth`, `/onboarding`, `/billing/checkout`, `/billing/success`) plus exact-match `/`. `productSlug=dhanam`, `apiUrl=$NEXT_PUBLIC_TULANA_API_URL` (default `https://api.tulana.madfam.io`), triggers: NPS afterSession=5 / dismissCooldown=30d, Sean Ellis afterSession=3 / dismissCooldown=45d, smile after 1 `transaction_categorized` action (the dhanam core value moment per ml/categorization correction loop). Activation is operator-gated: requires (1) `NPM_MADFAM_TOKEN` rotation so `@madfam/pmf-widget@^0.1.0` can publish + install, (2) deletion of `apps/web/src/types/madfam-pmf-widget.d.ts` once the published `.d.ts` ships, (3) flipping `NEXT_PUBLIC_PMF_WIDGET_ENABLED=true` in the deployed env. The dynamic import is fail-closed — a missing module never breaks the page.
+- **Monetization architecture (full ecosystem)**: `internal-devops/ecosystem/monetization-architecture-2026-04-26.md`. Canonical end-to-end reference for money flows, fan-out signing, CFDI pipeline, PMF gating, and operator-only blockers. Dhanam is the singular Stripe-key holder per the operator's 2026-04-25 directive.
+
+---
+
 ## ⚠️ CRITICAL: MADFAM Ecosystem Dependencies
 
 **READ THIS FIRST before any auth, deployment, or infrastructure work.**
@@ -513,6 +523,65 @@ relay as a peer on the Stripe MX → ecosystem fan-out.
 | `PHYNECRM_WEBHOOK_TIMEOUT`       | No (default 10000ms) | `fetch` timeout for the notify call                                                                                                                                             |
 
 Files: `apps/api/src/modules/billing/services/phynecrm-engagement-notifier.service.ts` + `apps/api/src/modules/billing/__tests__/phynecrm-engagement-notifier.service.spec.ts` (13 tests covering skip-paths, HMAC, dedup_key stability, success/failed/refunded translation, non-throwing error handling, trailing-slash URL hygiene + `extractEcosystemMetadata` empty-string skip).
+
+## Conekta direct gateway (Wave A pre-flight)
+
+Direct Conekta REST API integration for the LATAM card + SPEI charge path,
+sitting alongside Stripe MX. Distinct from the Janua-routed Conekta path
+(`JanuaBillingService`) — that proxy handles unified subscription lifecycle;
+this service is the raw charge endpoint used by the ecosystem invoice flow
+(Cotiza → Dhanam invoices) where Janua-mediated subscription semantics
+don't apply.
+
+### Scope
+
+- `POST /v1/billing/webhooks/conekta` — Conekta-facing webhook URL.
+  Signature-verified via `CONEKTA_WEBHOOK_SIGNING_KEY` (HMAC-SHA256 over
+  raw body). Accepts both `digest: sha256=<hex>` (preferred, modern) and
+  `conekta-signature: t=<ts>,v1=<hex>` (legacy) header forms. Invalid
+  signatures return 400 (matching the Stripe MX / Janua / Paddle
+  receivers' convention — not 401, intentionally; see controller header
+  comment for rationale). Handler crashes return 200 ACK to avoid
+  amplifying Conekta retries.
+- `ConektaService.createCharge(...)` — creates a Conekta order with one
+  line item and one charge. Supports `card` (token from Conekta.js),
+  `spei` (returns CLABE + reference), and `oxxo_cash` (returns barcode).
+  Idempotency forwarded via `metadata.idempotency_key` →
+  `Idempotency-Key` header.
+- `ConektaService.handleWebhookEvent(...)` — classifies `charge.paid`,
+  `charge.declined`, `charge.refunded`, `order.expired`. Unknown event
+  types are logged + ack'd, never throw.
+
+### Environment variables
+
+| Variable                      | Required               | Description                                                                                                                                                                                 |
+| ----------------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `CONEKTA_PRIVATE_KEY`         | Yes                    | HTTP Basic auth username (password is empty). Test or live. Operator rotates via Wave A runbook. Without this, `ConektaService.isConfigured()` returns false and the webhook receiver 400s. |
+| `CONEKTA_PUBLIC_KEY`          | Yes (client)           | For client-side tokenization via Conekta.js.                                                                                                                                                |
+| `CONEKTA_WEBHOOK_SIGNING_KEY` | Yes for inbound events | HMAC-SHA256 secret for webhook signature verification. Operator copies from Conekta dashboard webhook config.                                                                               |
+| `CONEKTA_API_VERSION`         | No (default `2.1.0`)   | Sent in `Accept: application/vnd.conekta-v<version>+json`.                                                                                                                                  |
+
+### Operator runbook
+
+See `internal-devops/runbooks/2026-04-25-wave-a-stripe-conekta-provisioning.md`
+for the full key rotation + dashboard-registration steps. Summary:
+
+1. Provision a Conekta account at `https://panel.conekta.com` for
+   MADFAM (LATAM Mexican entity).
+2. Copy private/public keys → `dhanam-secrets` K8s Secret as
+   `CONEKTA_PRIVATE_KEY`, `CONEKTA_PUBLIC_KEY`.
+3. In the Conekta dashboard, register the webhook endpoint
+   `https://api.dhan.am/v1/billing/webhooks/conekta` subscribed to
+   `charge.paid`, `charge.declined`, `charge.refunded`, `order.expired`.
+   Copy the webhook signing key → `CONEKTA_WEBHOOK_SIGNING_KEY`.
+4. Test with Conekta's sandbox before flipping to live keys.
+
+### Files
+
+- `apps/api/src/modules/billing/services/conekta.service.ts` — service
+- `apps/api/src/modules/billing/conekta.controller.ts` — webhook receiver
+- `apps/api/src/modules/billing/__tests__/conekta.service.spec.ts` — unit tests
+- `apps/api/src/modules/billing/__tests__/conekta.controller.spec.ts` — controller tests
 
 ## Preview Environments (P1.7 — Enclii ephemeral per-PR envs)
 

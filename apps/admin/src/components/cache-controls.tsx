@@ -1,11 +1,10 @@
 'use client';
 
-import { useState } from 'react';
-import { Card } from '@dhanam/ui';
-import { Input } from '@dhanam/ui';
-import { Button } from '@dhanam/ui';
-import { adminApi } from '@/lib/api/admin';
+import { Card, Input, Button } from '@dhanam/ui';
 import { Trash2 } from 'lucide-react';
+import { useState } from 'react';
+
+import { adminApi } from '@/lib/api/admin';
 
 export function CacheControls() {
   const [pattern, setPattern] = useState('');
@@ -52,7 +51,11 @@ export function CacheControls() {
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPattern(e.target.value)}
           className="flex-1"
         />
-        <Button type="submit" disabled={loading || !pattern.trim()} className="flex items-center space-x-2">
+        <Button
+          type="submit"
+          disabled={loading || !pattern.trim()}
+          className="flex items-center space-x-2"
+        >
           <Trash2 className="h-4 w-4" />
           <span>{loading ? 'Flushing...' : 'Flush'}</span>
         </Button>

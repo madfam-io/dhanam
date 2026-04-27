@@ -19,15 +19,18 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 
 import { AuditModule } from '../../core/audit/audit.module';
+import { MonitoringModule } from '../../core/monitoring/monitoring.module';
 import { PrismaModule } from '../../core/prisma/prisma.module';
 import { EmailModule } from '../email/email.module';
 
 import { BillingController } from './billing.controller';
 import { BillingService } from './billing.service';
 import { CatalogController } from './catalog.controller';
+import { ConektaController } from './conekta.controller';
 import { CotizaWebhookController } from './cotiza-webhook.controller';
 import { CreditBillingController } from './credit-billing.controller';
 import { CustomerFederationController } from './customer-federation.controller';
+import { DlqController } from './dlq.controller';
 import { FeatureGateGuard } from './guards/feature-gate.guard';
 import { FederationAuthGuard } from './guards/federation-auth.guard';
 import { ProviderConnectionGuard } from './guards/provider-connection.guard';
@@ -39,9 +42,12 @@ import { JanuaBillingService } from './janua-billing.service';
 import { OverageInvoicingJob } from './jobs/overage-invoicing.job';
 import { ReconciliationJob } from './jobs/reconciliation.job';
 import { SubscriptionLifecycleJob } from './jobs/subscription-lifecycle.job';
+import { SyntheticRevenueProbeJob } from './jobs/synthetic-revenue-probe.job';
+import { WebhookDlqRetryJob } from './jobs/webhook-dlq-retry.job';
 import { MadfamEventsController } from './madfam-events.controller';
 // Federation (PhyneCRM integration)
 import { CancellationService } from './services/cancellation.service';
+import { ConektaService } from './services/conekta.service';
 import { CustomerFederationService } from './services/customer-federation.service';
 // Hybrid Router Services (Stripe MX + Paddle)
 import { PaddleService } from './services/paddle.service';
@@ -53,6 +59,8 @@ import { RevenueMetricsService } from './services/revenue-metrics.service';
 import { PhyneCrmEngagementNotifierService } from './services/phynecrm-engagement-notifier.service';
 import { StripeMxSpeiRelayService } from './services/stripe-mx-spei-relay.service';
 import { StripeMxService } from './services/stripe-mx.service';
+import { SyntheticRevenueProbeService } from './services/synthetic-revenue-probe.service';
+import { WebhookDlqService } from './services/webhook-dlq.service';
 // Extracted sub-services (usage, lifecycle, webhooks)
 import { SubscriptionLifecycleService } from './services/subscription-lifecycle.service';
 import { TrialService } from './services/trial.service';
@@ -71,6 +79,9 @@ import { UsageAlertsService } from './services/usage-alerts.service';
     PrismaModule,
     AuditModule,
     EmailModule,
+    // MonitoringModule provides the 'SentryService' string token used
+    // by WebhookDlqService for per-failure structured Sentry events.
+    MonitoringModule,
     HttpModule.register({
       timeout: 30000,
       maxRedirects: 5,
@@ -78,10 +89,13 @@ import { UsageAlertsService } from './services/usage-alerts.service';
   ],
   controllers: [
     BillingController,
+    ConektaController,
     CreditBillingController,
     CustomerFederationController,
     CatalogController,
-    CotizaWebhookController,    MadfamEventsController,
+    CotizaWebhookController,
+    DlqController,
+    MadfamEventsController,
     StripeMxController,
     UsageAlertsController,
   ],
@@ -117,12 +131,28 @@ import { UsageAlertsService } from './services/usage-alerts.service';
     ReconciliationJob,
     OverageInvoicingJob,
 
-    // Hybrid Router (Stripe MX + Paddle)
+    // Synthetic revenue probe — production-only smoke test for the
+    // Stripe → Dhanam → consumer fan-out path. See
+    // services/synthetic-revenue-probe.service.ts for design rationale.
+    SyntheticRevenueProbeService,
+    SyntheticRevenueProbeJob,
+
+    // Webhook DLQ + auto-retry (Karafiel/Tezca CFDI safety net).
+    // Captures failed downstream deliveries from the Stripe MX SPEI
+    // relay + the subscription product-webhook fan-out, with both
+    // an auto-retry cron job and an admin manual-replay endpoint.
+    WebhookDlqService,
+    WebhookDlqRetryJob,
+
+    // Hybrid Router (Stripe MX + Paddle + Conekta direct)
     PaymentRouterService,
     StripeMxService,
     StripeMxSpeiRelayService,
     PhyneCrmEngagementNotifierService,
     PaddleService,
+    // Conekta direct gateway (Wave A — alongside Stripe MX, distinct from
+    // Janua-routed Conekta path in JanuaBillingService)
+    ConektaService,
 
     // Federation (PhyneCRM)
     CustomerFederationService,
@@ -147,10 +177,12 @@ import { UsageAlertsService } from './services/usage-alerts.service';
     StripeMxService,
     StripeMxSpeiRelayService,
     PaddleService,
+    ConektaService,
     CustomerFederationService,
     UsageMeteringService,
     UsageTrackingService,
     SubscriptionLifecycleService,
+    WebhookDlqService,
     WebhookProcessorService,
     SubscriptionGuard,
     UsageLimitGuard,

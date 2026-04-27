@@ -114,14 +114,14 @@ describe('LoginForm', () => {
     expect(toggleButton).toHaveAttribute('aria-label', 'Show password');
   });
 
-  it.skip('should show validation errors for empty fields on submit', async () => {
-    // Import fireEvent locally to avoid conflict if not imported at top
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { fireEvent } = require('@testing-library/react');
+  // AUDIT-2026-04-23 T5 resolved: un-skipped, swapped to userEvent.click
+  // which goes through jsdom's synthetic event path (fireEvent.click
+  // did not propagate through react-hook-form's async resolver here).
+  it('should show validation errors for empty fields on submit [AUDIT-T5]', async () => {
+    const user = userEvent.setup();
     render(<LoginForm onSubmit={mockOnSubmit} />);
 
-    // Use fireEvent.click instead of user.click to avoid jsdom/react interaction bug
-    fireEvent.click(screen.getByRole('button', { name: 'Sign in' }));
+    await user.click(screen.getByRole('button', { name: 'Sign in' }));
 
     await waitFor(() => {
       expect(screen.getByText('Invalid email address')).toBeInTheDocument();

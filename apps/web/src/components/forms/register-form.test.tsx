@@ -121,9 +121,9 @@ describe('RegisterForm', () => {
     expect(eyeIcons).toHaveLength(2);
 
     // Both toggle buttons should have "Show password" aria-label initially
-    const toggleButtons = screen.getAllByRole('button').filter((btn) =>
-      btn.getAttribute('aria-label')?.includes('password')
-    );
+    const toggleButtons = screen
+      .getAllByRole('button')
+      .filter((btn) => btn.getAttribute('aria-label')?.includes('password'));
     expect(toggleButtons).toHaveLength(2);
     toggleButtons.forEach((btn) => {
       expect(btn).toHaveAttribute('aria-label', 'Show password');
@@ -155,7 +155,11 @@ describe('RegisterForm', () => {
     expect(toggleAgain).toHaveAttribute('aria-label', 'Show password');
   });
 
-  it.skip('should show validation errors for empty fields on submit', async () => {
+  // AUDIT-2026-04-23 / finding T5: registration form validation skipped.
+  // 4 tests below (empty fields, invalid email, weak password, missing uppercase) cover
+  // user-facing error messaging on the signup form. Un-skip after fixing jsdom/react interaction.
+  // See /Users/aldoruizluna/labspace/claudedocs/ECOSYSTEM_AUDIT_2026-04-23.md
+  it('should show validation errors for empty fields on submit [AUDIT-T5]', async () => {
     const user = userEvent.setup();
     render(<RegisterForm onSubmit={mockOnSubmit} />);
 
@@ -169,7 +173,7 @@ describe('RegisterForm', () => {
     expect(mockOnSubmit).not.toHaveBeenCalled();
   });
 
-  it.skip('should show validation error for invalid email', async () => {
+  it('should show validation error for invalid email [AUDIT-T5]', async () => {
     const user = userEvent.setup();
     render(<RegisterForm onSubmit={mockOnSubmit} />);
 
@@ -184,7 +188,7 @@ describe('RegisterForm', () => {
     });
   });
 
-  it.skip('should show validation error for weak password', async () => {
+  it('should show validation error for weak password [AUDIT-T5]', async () => {
     const user = userEvent.setup();
     render(<RegisterForm onSubmit={mockOnSubmit} />);
 
@@ -198,7 +202,7 @@ describe('RegisterForm', () => {
     });
   });
 
-  it.skip('should show error when password missing uppercase letter', async () => {
+  it('should show error when password missing uppercase letter [AUDIT-T5]', async () => {
     const user = userEvent.setup();
     render(<RegisterForm onSubmit={mockOnSubmit} />);
 
