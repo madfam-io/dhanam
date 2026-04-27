@@ -243,13 +243,16 @@ export class BillingController {
       promoEndsAt: string | null;
     };
 
+    // JWT round-trip serializes Dates as ISO strings; coerce back before
+    // passing to TrialService methods which expect `Date | null`.
+    const toDate = (s: string | null): Date | null => (s ? new Date(s) : null);
     const isInTrial = this.trialService.isInTrial({
       trialTier: user.trialTier,
-      trialEndsAt: user.trialEndsAt,
+      trialEndsAt: toDate(user.trialEndsAt),
     });
     const isInPromo = this.trialService.isInPromo({
-      promoStartedAt: user.promoStartedAt,
-      promoEndsAt: user.promoEndsAt,
+      promoStartedAt: toDate(user.promoStartedAt),
+      promoEndsAt: toDate(user.promoEndsAt),
     });
 
     return {
