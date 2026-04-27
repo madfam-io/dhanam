@@ -38,7 +38,7 @@
     "expo-crypto": "~13.0.2",
     "expo-device": "~8.0.10",
     "expo-font": "~55.0.6",
-    "expo-linear-gradient": "^15.0.7",
+    "expo-linear-gradient": "^55.0.13",
     "expo-linking": "~8.0.9",
     "expo-local-authentication": "~55.0.8",
     "expo-notifications": "~0.32.13",
