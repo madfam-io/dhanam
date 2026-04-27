@@ -90,7 +90,7 @@ export class CircuitBreakerService {
       consecutiveFailures: number;
     } | null;
     try {
-      health = await this.prisma.providerHealthStatus.findUnique({
+      const record = await this.prisma.providerHealthStatus.findUnique({
         where: {
           provider_region: {
             provider,
@@ -98,6 +98,22 @@ export class CircuitBreakerService {
           },
         },
       });
+
+      // The Prisma `ProviderHealthStatus` model does not yet carry a
+      // `consecutiveFailures` column (see schema.prisma — adding it requires
+      // a coordinated migration). Default to 0 at read time so the rest of
+      // the breaker logic stays type-safe without changing runtime behaviour.
+      health = record
+        ? {
+            circuitBreakerOpen: record.circuitBreakerOpen,
+            updatedAt: record.updatedAt,
+            errorRate:
+              typeof record.errorRate === 'number' ? record.errorRate : Number(record.errorRate),
+            avgResponseTimeMs: record.avgResponseTimeMs,
+            consecutiveFailures:
+              (record as { consecutiveFailures?: number }).consecutiveFailures ?? 0,
+          }
+        : null;
 
       // Sync to memory cache
       if (health) {

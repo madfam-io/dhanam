@@ -371,10 +371,23 @@ export class DripCampaignTask {
       day14_last_chance: `Hola ${user.name || ''},\n\nEste es un recordatorio amistoso de que tu cuenta sigue disponible. Despues de 30 dias, tus datos seran eliminados de acuerdo con nuestra politica de privacidad.\n\nSi cambias de opinion, reactivar es facil.`,
     };
 
+    // EmailOptions no longer accepts a free-form `text` field; route through
+    // the closest existing reengagement template and pass the prior body as
+    // context so operators can later wire it into the .hbs template.
+    // Behaviour change: previously `text` was silently dropped by the email
+    // pipeline (which renders only the .hbs template `html`), so this fix
+    // is type-only — the prior body was never being delivered.
     await this.emailService.sendEmail({
       to: user.email,
       subject: subjects[step] || 'Hola de nuevo',
-      text: bodies[step] || '',
+      template: 'drip-reengagement-day-14',
+      context: {
+        name: user.name || '',
+        daysInactive: daysSinceCancel,
+        body: bodies[step] || '',
+        step,
+      },
+      priority: 'low',
     });
 
     // Record the drip event

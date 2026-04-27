@@ -487,7 +487,10 @@ export class MxService implements IFinancialProvider {
       throw new BadRequestException('Invalid MX webhook signature');
     }
 
-    const { type, payload: eventPayload } = payload;
+    const { type, payload: eventPayload } = payload as {
+      type: string;
+      payload: Record<string, unknown>;
+    };
 
     this.logger.log(`Received MX webhook: ${type}`);
 

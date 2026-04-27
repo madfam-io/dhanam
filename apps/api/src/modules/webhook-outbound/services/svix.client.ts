@@ -31,7 +31,7 @@ import { ConfigService } from '@nestjs/config';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type SvixSDK = any;
 
-import { InfrastructureException } from '../../../core/exceptions/domain-exceptions';
+import { ErrorCode, InfrastructureException } from '../../../core/exceptions/domain-exceptions';
 
 export interface SvixEndpointCreateInput {
   url: string;
@@ -58,7 +58,7 @@ export class SvixClient {
 
     if (!this.enabled) {
       this.logger.warn(
-        'Svix not configured (SVIX_AUTH_TOKEN / SVIX_API_URL missing) — outbound webhooks disabled',
+        'Svix not configured (SVIX_AUTH_TOKEN / SVIX_API_URL missing) — outbound webhooks disabled'
       );
       return;
     }
@@ -73,7 +73,8 @@ export class SvixClient {
     } catch (err) {
       this.logger.error(`Failed to load svix package: ${(err as Error).message}`);
       throw new InfrastructureException(
-        'Svix package not installed. Run `pnpm add -F @dhanam/api svix`.',
+        ErrorCode.CONFIGURATION_ERROR,
+        'Svix package not installed. Run `pnpm add -F @dhanam/api svix`.'
       );
     }
   }
@@ -85,7 +86,8 @@ export class SvixClient {
   private ensureEnabled(): SvixSDK {
     if (!this.isEnabled()) {
       throw new InfrastructureException(
-        'Outbound webhooks are disabled: configure SVIX_API_URL + SVIX_AUTH_TOKEN.',
+        ErrorCode.CONFIGURATION_ERROR,
+        'Outbound webhooks are disabled: configure SVIX_API_URL + SVIX_AUTH_TOKEN.'
       );
     }
     return this.svix!;
@@ -100,7 +102,7 @@ export class SvixClient {
     try {
       await svix.application.create(
         { name: name ?? consumerAppId, uid: consumerAppId },
-        { idempotencyKey: `app-${consumerAppId}` },
+        { idempotencyKey: `app-${consumerAppId}` }
       );
     } catch (err) {
       // Svix returns 409 if already exists. Either way, post-condition
@@ -114,7 +116,7 @@ export class SvixClient {
 
   async createEndpoint(
     consumerAppId: string,
-    input: SvixEndpointCreateInput,
+    input: SvixEndpointCreateInput
   ): Promise<{ id: string; secret: string }> {
     const svix = this.ensureEnabled();
     await this.ensureApplication(consumerAppId);
@@ -134,7 +136,7 @@ export class SvixClient {
 
   async rotateEndpointSecret(
     consumerAppId: string,
-    svixEndpointId: string,
+    svixEndpointId: string
   ): Promise<{ secret: string }> {
     const svix = this.ensureEnabled();
     await svix.endpoint.rotateSecret(consumerAppId, svixEndpointId, {});
@@ -144,7 +146,7 @@ export class SvixClient {
 
   async sendMessage(
     consumerAppId: string,
-    input: SvixMessageCreateInput,
+    input: SvixMessageCreateInput
   ): Promise<{ svixMessageId: string }> {
     const svix = this.ensureEnabled();
     await this.ensureApplication(consumerAppId);
@@ -155,7 +157,7 @@ export class SvixClient {
         payload: input.payload,
         eventId: input.eventId,
       },
-      { idempotencyKey: input.eventId },
+      { idempotencyKey: input.eventId }
     );
     return { svixMessageId: msg.id! };
   }
@@ -163,7 +165,7 @@ export class SvixClient {
   async replayFailedMessages(
     consumerAppId: string,
     svixEndpointId: string,
-    sinceSeconds: number,
+    sinceSeconds: number
   ): Promise<void> {
     const svix = this.ensureEnabled();
     const since = new Date(Date.now() - sinceSeconds * 1000);

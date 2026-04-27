@@ -29,7 +29,7 @@ export interface StripeMxCheckoutParams {
   successUrl: string;
   cancelUrl: string;
   metadata?: Record<string, string>;
-  paymentMethods?: ('card' | 'oxxo' | 'customer_balance' | 'spei_transfer')[];
+  paymentMethods?: ('card' | 'oxxo' | 'customer_balance')[];
 }
 
 export interface StripeMxCustomerParams {
@@ -107,13 +107,10 @@ export class StripeMxService {
 
     this.logger.log('Creating Stripe MX checkout session');
 
-    // Default payment methods for Mexico
-    const paymentMethods = params.paymentMethods || [
-      'card',
-      'oxxo',
-      'customer_balance',
-      'spei_transfer',
-    ];
+    // Default payment methods for Mexico.
+    // Note: SPEI is surfaced as `customer_balance` by modern Stripe SDK
+    // (the `spei_transfer` literal was removed from PaymentMethodType).
+    const paymentMethods = params.paymentMethods || ['card', 'oxxo', 'customer_balance'];
 
     const sessionParams: Stripe.Checkout.SessionCreateParams = {
       mode: 'subscription',
@@ -163,7 +160,7 @@ export class StripeMxService {
     customerEmail: string;
     description: string;
     metadata?: Record<string, string>;
-    paymentMethod?: 'card' | 'oxxo' | 'customer_balance' | 'spei_transfer';
+    paymentMethod?: 'card' | 'oxxo' | 'customer_balance';
   }): Promise<Stripe.PaymentIntent> {
     if (!this.stripe) {
       throw InfrastructureException.configurationError('STRIPE_MX_SECRET_KEY');
