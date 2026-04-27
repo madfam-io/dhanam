@@ -18,6 +18,45 @@ import {
 } from './provider.interface';
 
 /**
+ * Union of every operation's params shape. Each call site already passes the
+ * correct concrete type, but the orchestrator's generic `operation` switch
+ * needs a permissive supertype that exposes the cross-cutting routing fields
+ * (userId, spaceId, institutionId, accountId) to the orchestrator's logging
+ * + ML-selection paths without losing strict checking on the per-operation
+ * cast that happens inside the switch.
+ */
+type ProviderOperationParams =
+  | CreateLinkParams
+  | ExchangeTokenParams
+  | GetAccountsParams
+  | SyncTransactionsParams;
+
+/**
+ * Routing fields read by the orchestrator across all operations. All optional
+ * because not every operation supplies every field (e.g. exchangeToken doesn't
+ * carry an accountId; getAccounts doesn't carry an institutionId). Computed
+ * defensively from the params at the top of executeWithFailover.
+ */
+interface OrchestratorRoutingFields {
+  userId?: string;
+  spaceId?: string;
+  institutionId?: string;
+  accountId?: string;
+}
+
+function pickRoutingFields(params: ProviderOperationParams): OrchestratorRoutingFields {
+  const p = params as Partial<
+    CreateLinkParams & ExchangeTokenParams & GetAccountsParams & SyncTransactionsParams
+  >;
+  return {
+    userId: p.userId,
+    spaceId: p.spaceId,
+    institutionId: p.institutionId,
+    accountId: p.accountId,
+  };
+}
+
+/**
  * Provider Orchestrator Service
  *
  * Coordinates multiple financial data providers (Plaid, Belvo, MX, Finicity, Bitso)
@@ -183,19 +222,20 @@ export class ProviderOrchestratorService {
    */
   async executeWithFailover<T>(
     operation: 'createLink' | 'exchangeToken' | 'getAccounts' | 'syncTransactions',
-    params: Record<string, unknown>,
+    params: ProviderOperationParams,
     preferredProvider?: Provider,
     region: string = 'US'
   ): Promise<ProviderAttemptResult<T>> {
     const startTime = Date.now();
+    const routing = pickRoutingFields(params);
 
     // Use ML to select optimal provider if no preference specified
-    if (!preferredProvider && params.institutionId) {
+    if (!preferredProvider && routing.institutionId) {
       try {
         preferredProvider = await this.providerSelection.selectOptimalProvider(
-          params.institutionId,
+          routing.institutionId,
           region,
-          params.userId
+          routing.userId
         );
         this.logger.log(`ML selected optimal provider: ${preferredProvider}`);
       } catch (error) {
@@ -268,10 +308,10 @@ export class ProviderOrchestratorService {
 
         // Log connection attempt
         await this.logConnectionAttempt({
-          spaceId: params.spaceId,
-          accountId: params.accountId,
+          spaceId: routing.spaceId,
+          accountId: routing.accountId,
           provider,
-          institutionId: params.institutionId,
+          institutionId: routing.institutionId,
           attemptType: operation,
           status: 'success',
           responseTimeMs,
@@ -281,13 +321,13 @@ export class ProviderOrchestratorService {
         this.logger.log(`✅ ${operation} succeeded with ${provider} in ${responseTimeMs}ms`);
 
         // Emit real-time events to the connected user (SSE)
-        if (params.userId) {
-          this.emitRealtimeEvents(operation, params.userId, provider, params.accountId);
+        if (routing.userId) {
+          this.emitRealtimeEvents(operation, routing.userId, provider, routing.accountId);
         }
 
         return {
           success: true,
-          data: result,
+          data: result as T,
           provider,
           responseTimeMs: Date.now() - startTime,
           failoverUsed: i > 0,
@@ -307,10 +347,10 @@ export class ProviderOrchestratorService {
 
         // Log failed attempt
         await this.logConnectionAttempt({
-          spaceId: params.spaceId,
-          accountId: params.accountId,
+          spaceId: routing.spaceId,
+          accountId: routing.accountId,
           provider,
-          institutionId: params.institutionId,
+          institutionId: routing.institutionId,
           attemptType: operation,
           status: 'failure',
           errorCode: lastError.code,
