@@ -374,8 +374,11 @@ async function main(): Promise<void> {
   console.log('='.repeat(64));
   console.log('');
   console.log('# === Stripe Configuration (Test Mode) ===');
+  // Don't echo the operator's Stripe secret key back into stdout / CI logs;
+  // it's already in their environment. The webhook secret is only available
+  // at creation time and can't be retrieved later, so we still print it.
   console.log(`STRIPE_MX_PUBLISHABLE_KEY=${process.env.STRIPE_MX_PUBLISHABLE_KEY || '<get-from-stripe-dashboard>'}`);
-  console.log(`STRIPE_MX_SECRET_KEY=${STRIPE_SECRET_KEY}`);
+  console.log(`STRIPE_MX_SECRET_KEY=<set-from-your-STRIPE_MX_SECRET_KEY-env>`);
   console.log(`STRIPE_MX_WEBHOOK_SECRET=${webhookSecret}`);
   console.log(`STRIPE_ESSENTIALS_PRICE_ID=${essentials.price.id}`);
   console.log(`STRIPE_PREMIUM_PRICE_ID=${pro.price.id}       # This is Pro (historical naming)`);

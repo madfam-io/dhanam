@@ -81,7 +81,9 @@ export class BillingController {
     // New ecosystem services add their custom domain here without code changes.
     const envHosts = (process.env.CHECKOUT_ALLOWED_HOSTS || '').split(',').filter(Boolean);
     for (const h of envHosts) {
-      const escaped = h.replace(/\./g, '\\.');
+      // Escape ALL regex metacharacters (not just '.') so a misconfigured env
+      // value can't smuggle alternation or character classes into the matcher.
+      const escaped = h.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       allowedHosts.push(new RegExp(`(^|\\.)${escaped}$`));
     }
 

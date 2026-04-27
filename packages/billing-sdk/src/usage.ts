@@ -2,6 +2,7 @@ import * as crypto from 'crypto';
 
 import { DhanamApiError, DhanamAuthError } from './errors';
 import type { CreditBalance, CreditUsageResult, UsageBreakdown } from './types';
+import { stripTrailingSlashes } from './url';
 
 /**
  * Configuration for the usage reporting client.
@@ -60,7 +61,7 @@ export class DhanamUsageClient {
   private readonly _fetch: typeof globalThis.fetch;
 
   constructor(config: UsageClientConfig) {
-    this.baseUrl = config.baseUrl.replace(/\/+$/, '');
+    this.baseUrl = stripTrailingSlashes(config.baseUrl);
     this.signingSecret = config.signingSecret;
     this.tokenOrFn = config.token;
     this._fetch = config.fetch ?? globalThis.fetch;

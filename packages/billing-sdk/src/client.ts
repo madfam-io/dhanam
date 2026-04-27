@@ -1,4 +1,5 @@
 import { DhanamApiError, DhanamAuthError } from './errors';
+import { stripTrailingSlashes } from './url';
 import type {
   BillingHistory,
   CatalogCreditCost,
@@ -34,9 +35,7 @@ export class DhanamClient {
   private readonly _fetch: typeof globalThis.fetch;
 
   constructor(config: DhanamClientConfig) {
-    // Strip trailing slashes
-    const url = config.baseUrl.replace(/\/+$/, '');
-    this.baseUrl = url;
+    this.baseUrl = stripTrailingSlashes(config.baseUrl);
     this.tokenOrFn = config.token;
     this._fetch = config.fetch ?? globalThis.fetch;
   }
