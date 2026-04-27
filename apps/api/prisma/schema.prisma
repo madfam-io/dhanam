@@ -1126,6 +1126,57 @@ model WebhookEvent {
   @@map("webhook_events")
 }
 
+/// Outbound webhook subscription — registered by a consumer app
+/// (forj, karafiel, tezca, ...) to receive Dhanam ecosystem events.
+/// Backed by Svix; `svixEndpointId` is the upstream Svix entity that
+/// owns retry + signing. We persist a local row for audit/replay and
+/// to manage the lifecycle (rotate secret, deactivate, replay-failed).
+/// See `apps/api/src/modules/webhook-outbound/`.
+model WebhookEndpoint {
+  id               String    @id @default(cuid())
+  consumerAppId    String    @map("consumer_app_id")
+  url              String
+  svixEndpointId   String?   @unique @map("svix_endpoint_id")
+  subscribedEvents String[]  @map("subscribed_events")
+  description      String?
+  active           Boolean   @default(true)
+  metadata         Json?
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+  disabledAt       DateTime? @map("disabled_at")
+
+  deliveries WebhookDelivery[]
+
+  @@index([consumerAppId])
+  @@index([active])
+  @@map("webhook_endpoints")
+}
+
+/// Local audit row for each outbound webhook delivery attempt. Svix
+/// is the source of truth for retry semantics; this table exists so
+/// admin tooling can correlate a Dhanam event id to a Svix message id
+/// without round-tripping the Svix API.
+model WebhookDelivery {
+  id                String    @id @default(cuid())
+  webhookEndpointId String    @map("webhook_endpoint_id")
+  eventType         String    @map("event_type")
+  eventId           String    @map("event_id")
+  svixMessageId     String?   @map("svix_message_id")
+  payload           Json
+  lastStatus        Int?      @map("last_status")
+  attempts          Int       @default(0)
+  deliveredAt       DateTime? @map("delivered_at")
+  lastAttemptAt     DateTime? @map("last_attempt_at")
+  createdAt         DateTime  @default(now()) @map("created_at")
+
+  endpoint WebhookEndpoint @relation(fields: [webhookEndpointId], references: [id], onDelete: Cascade)
+
+  @@index([webhookEndpointId])
+  @@index([eventId])
+  @@index([deliveredAt])
+  @@map("webhook_deliveries")
+}
+
 model ErrorLog {
   id        String   @id @default(uuid())
   timestamp DateTime @default(now())
@@ -2379,22 +2430,22 @@ model AmbassadorProfile {
 // exactly-once notification delivery despite at-least-once transport.
 
 model UsageAlertIngest {
-  id                String    @id @default(uuid())
-  waybillAlertId    String    @map("waybill_alert_id")
-  projectId         String    @map("project_id") // Enclii project UUID (opaque here)
-  budgetId          String    @map("budget_id")
-  period            String // "monthly" | "weekly" | "quarterly"
-  periodStart       DateTime  @map("period_start")
-  periodEnd         DateTime  @map("period_end")
-  thresholdCrossed  Int       @map("threshold_crossed") // 50, 80, 100, etc.
-  actualCents       BigInt    @map("actual_cents") // BigInt future-proofs against enterprise-scale spend
-  budgetCents       BigInt    @map("budget_cents")
-  currency          String    @default("USD")
-  serviceBreakdown  Json?     @map("service_breakdown")
-  notifiedAt        DateTime? @map("notified_at")
-  seenCount         Int       @default(1) @map("seen_count")
-  lastSeenAt        DateTime  @default(now()) @map("last_seen_at")
-  createdAt         DateTime  @default(now()) @map("created_at")
+  id               String    @id @default(uuid())
+  waybillAlertId   String    @map("waybill_alert_id")
+  projectId        String    @map("project_id") // Enclii project UUID (opaque here)
+  budgetId         String    @map("budget_id")
+  period           String // "monthly" | "weekly" | "quarterly"
+  periodStart      DateTime  @map("period_start")
+  periodEnd        DateTime  @map("period_end")
+  thresholdCrossed Int       @map("threshold_crossed") // 50, 80, 100, etc.
+  actualCents      BigInt    @map("actual_cents") // BigInt future-proofs against enterprise-scale spend
+  budgetCents      BigInt    @map("budget_cents")
+  currency         String    @default("USD")
+  serviceBreakdown Json?     @map("service_breakdown")
+  notifiedAt       DateTime? @map("notified_at")
+  seenCount        Int       @default(1) @map("seen_count")
+  lastSeenAt       DateTime  @default(now()) @map("last_seen_at")
+  createdAt        DateTime  @default(now()) @map("created_at")
 
   @@unique([projectId, periodStart, thresholdCrossed], name: "projectId_periodStart_thresholdCrossed")
   @@index([projectId, createdAt(sort: Desc)])
@@ -2430,7 +2481,7 @@ model FxRateObservation {
   toCurrency   String   @map("to_currency")
   rateType     String   @map("rate_type") // 'spot' | 'dof' | 'settled'
   rate         Decimal  @db.Decimal(18, 8)
-  source       String   // 'openexchangerates' | 'exchangerate_host' | 'banxico_sie' | ...
+  source       String // 'openexchangerates' | 'exchangerate_host' | 'banxico_sie' | ...
   providerId   String?  @map("provider_id") // upstream stable id, e.g. 'oer:2026-04-25T18:14:00Z'
   paymentId    String?  @map("payment_id") // populated only for rateType='settled'
   observedAt   DateTime @map("observed_at")
@@ -2449,7 +2500,7 @@ model FxRatePublication {
   toCurrency    String   @map("to_currency")
   effectiveDate DateTime @map("effective_date") @db.Date
   rate          Decimal  @db.Decimal(18, 8)
-  source        String   // typically 'banxico_sie'
+  source        String // typically 'banxico_sie'
   providerId    String?  @map("provider_id")
   publishedAt   DateTime @map("published_at")
   createdAt     DateTime @default(now()) @map("created_at")
@@ -2466,7 +2517,7 @@ model FxRateOverride {
   toCurrency   String    @map("to_currency")
   rateType     String    @map("rate_type")
   rate         Decimal   @db.Decimal(18, 8)
-  rationale    String    // RFC 0011 §"Override governance" — required runbook entry
+  rationale    String // RFC 0011 §"Override governance" — required runbook entry
   issuedBy     String    @map("issued_by") // Janua sub claim of the operator
   approvedBy   String?   @map("approved_by") // ASK_DUAL second-approver Janua sub claim
   expiresAt    DateTime? @map("expires_at")
