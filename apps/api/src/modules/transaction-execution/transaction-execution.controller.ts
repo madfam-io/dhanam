@@ -22,6 +22,16 @@ import { KycVerifiedGuard } from '../kyc/guards/kyc-verified.guard';
 import { CreateOrderDto, VerifyOrderDto, UpdateOrderDto, OrderFilterDto } from './dto';
 import { TransactionExecutionService } from './transaction-execution.service';
 
+/**
+ * HTTP `User-Agent` headers can legally be a list (multiple values), but our
+ * audit log fields expect a single string. Take the first if it's an array,
+ * preserve undefined for absence. Mirrors the pattern in BillingController +
+ * KycController.
+ */
+function firstHeader(value: string | string[] | undefined): string | undefined {
+  return Array.isArray(value) ? value[0] : value;
+}
+
 @Controller('spaces/:spaceId/orders')
 @UseGuards(JwtAuthGuard, SubscriptionGuard, KycVerifiedGuard)
 @RequiresPremium()
@@ -44,7 +54,7 @@ export class TransactionExecutionController {
       req.user.id,
       dto,
       req.ip,
-      req.headers['user-agent']
+      firstHeader(req.headers['user-agent'])
     );
   }
 
@@ -87,7 +97,7 @@ export class TransactionExecutionController {
       req.user.id,
       dto,
       req.ip,
-      req.headers['user-agent']
+      firstHeader(req.headers['user-agent'])
     );
   }
 
@@ -108,7 +118,7 @@ export class TransactionExecutionController {
       req.user.id,
       dto,
       req.ip,
-      req.headers['user-agent']
+      firstHeader(req.headers['user-agent'])
     );
   }
 
@@ -127,7 +137,7 @@ export class TransactionExecutionController {
       id,
       req.user.id,
       req.ip,
-      req.headers['user-agent']
+      firstHeader(req.headers['user-agent'])
     );
   }
 
@@ -145,7 +155,7 @@ export class TransactionExecutionController {
       id,
       req.user.id,
       req.ip,
-      req.headers['user-agent']
+      firstHeader(req.headers['user-agent'])
     );
   }
 }
