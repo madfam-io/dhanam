@@ -6,6 +6,8 @@ import {
   PrismaClientInitializationError,
   PrismaClientUnknownRequestError,
 } from '@db';
+
+import { isPrismaKnownRequestError } from './prisma-error.guard';
 import {
   ArgumentsHost,
   Catch,
@@ -123,7 +125,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     }
 
     // Add Prisma-specific context
-    if (exception instanceof PrismaClientKnownRequestError) {
+    if (isPrismaKnownRequestError(exception)) {
       this.sentryService.setContext('prisma', {
         code: exception.code,
         meta: exception.meta,
