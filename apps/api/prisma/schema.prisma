@@ -370,6 +370,7 @@ model User {
   cancellationIntents   CancellationIntent[]
   identityVerifications IdentityVerification[]
   ambassadorProfile     AmbassadorProfile?
+  merchantAccounts      MerchantAccount[]
 
   @@index([onboardingCompleted, createdAt(sort: Desc)])
   @@index([lastLoginAt(sort: Desc)])
@@ -1175,6 +1176,129 @@ model WebhookDelivery {
   @@index([eventId])
   @@index([deliveredAt])
   @@map("webhook_deliveries")
+}
+
+/// Connect/Marketplace primitive — a Stripe (or future processor) connected
+/// account that Dhanam manages on behalf of a user. Backed by the migration
+/// `20260424000000_add_marketplace_and_webhook_schema`.
+/// See `apps/api/src/modules/marketplace/` and `docs/rfcs/connect-marketplace.md`.
+model MerchantAccount {
+  id                String    @id @default(cuid())
+  userId            String    @map("user_id")
+  processorId       String    @map("processor_id")
+  externalAccountId String    @map("external_account_id")
+  country           String
+  defaultCurrency   Currency  @map("default_currency")
+  chargesEnabled    Boolean   @default(false) @map("charges_enabled")
+  payoutsEnabled    Boolean   @default(false) @map("payouts_enabled")
+  detailsSubmitted  Boolean   @default(false) @map("details_submitted")
+  requirements      Json?
+  businessType      String?   @map("business_type")
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @map("created_at")
+  onboardedAt       DateTime? @map("onboarded_at")
+  disabledAt        DateTime? @map("disabled_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transfers       Transfer[]
+  payouts         Payout[]
+  disputes        Dispute[]
+  applicationFees ApplicationFee[]
+
+  @@unique([processorId, externalAccountId])
+  @@index([userId])
+  @@map("merchant_accounts")
+}
+
+/// Stripe Connect transfer record. Persisted on outbound transfer creation
+/// and updated via `transfer.created` / `transfer.reversed` webhooks.
+model Transfer {
+  id                 String    @id @default(cuid())
+  merchantAccountId  String    @map("merchant_account_id")
+  externalTransferId String    @unique @map("external_transfer_id")
+  sourceChargeId     String?   @map("source_charge_id")
+  amount             Decimal   @db.Decimal(12, 2)
+  currency           Currency
+  status             String
+  failureCode        String?   @map("failure_code")
+  metadata           Json?
+  createdAt          DateTime  @default(now()) @map("created_at")
+  reversedAt         DateTime? @map("reversed_at")
+
+  merchant MerchantAccount @relation(fields: [merchantAccountId], references: [id], onDelete: Cascade)
+
+  @@index([merchantAccountId])
+  @@index([sourceChargeId])
+  @@map("transfers")
+}
+
+/// Stripe Connect payout record. Persisted on outbound payout creation
+/// and updated via `payout.paid` / `payout.failed` webhooks.
+model Payout {
+  id                String    @id @default(cuid())
+  merchantAccountId String    @map("merchant_account_id")
+  externalPayoutId  String    @unique @map("external_payout_id")
+  amount            Decimal   @db.Decimal(12, 2)
+  currency          Currency
+  status            String
+  method            String?
+  arrivalDate       DateTime? @map("arrival_date")
+  failureCode       String?   @map("failure_code")
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @map("created_at")
+  paidAt            DateTime? @map("paid_at")
+  failedAt          DateTime? @map("failed_at")
+
+  merchant MerchantAccount @relation(fields: [merchantAccountId], references: [id], onDelete: Cascade)
+
+  @@index([merchantAccountId])
+  @@index([status])
+  @@map("payouts")
+}
+
+/// Stripe Connect dispute record. Persisted on `charge.dispute.created`
+/// and updated via `charge.dispute.updated` / `charge.dispute.closed`.
+model Dispute {
+  id                String    @id @default(cuid())
+  merchantAccountId String    @map("merchant_account_id")
+  externalDisputeId String    @unique @map("external_dispute_id")
+  externalChargeId  String    @map("external_charge_id")
+  amount            Decimal   @db.Decimal(12, 2)
+  currency          Currency
+  reason            String
+  status            String
+  evidenceDueBy     DateTime? @map("evidence_due_by")
+  evidence          Json?
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @map("created_at")
+  resolvedAt        DateTime? @map("resolved_at")
+
+  merchant MerchantAccount @relation(fields: [merchantAccountId], references: [id], onDelete: Cascade)
+
+  @@index([merchantAccountId])
+  @@index([status])
+  @@map("disputes")
+}
+
+/// Stripe Connect application fee record. Persisted via the
+/// `application_fee.created` webhook for marketplace revenue tracking.
+model ApplicationFee {
+  id                String   @id @default(cuid())
+  merchantAccountId String   @map("merchant_account_id")
+  externalFeeId     String   @unique @map("external_fee_id")
+  externalChargeId  String   @map("external_charge_id")
+  amount            Decimal  @db.Decimal(12, 2)
+  currency          Currency
+  refunded          Boolean  @default(false)
+  refundedAmount    Decimal? @map("refunded_amount") @db.Decimal(12, 2)
+  metadata          Json?
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  merchant MerchantAccount @relation(fields: [merchantAccountId], references: [id], onDelete: Cascade)
+
+  @@index([merchantAccountId])
+  @@map("application_fees")
 }
 
 model ErrorLog {
