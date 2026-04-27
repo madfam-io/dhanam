@@ -1,5 +1,6 @@
 import { DhanamApiError, DhanamAuthError } from './errors';
 import type { AmbassadorProfile, ReferralReward } from './types';
+import { stripTrailingSlashes } from './url';
 
 /**
  * Configuration for the referral client.
@@ -44,7 +45,7 @@ export class DhanamReferralClient {
   private readonly _fetch: typeof globalThis.fetch;
 
   constructor(config: ReferralClientConfig) {
-    this.baseUrl = config.baseUrl.replace(/\/+$/, '');
+    this.baseUrl = stripTrailingSlashes(config.baseUrl);
     this.getAccessToken = config.getAccessToken;
     this._fetch = config.fetch ?? globalThis.fetch;
   }

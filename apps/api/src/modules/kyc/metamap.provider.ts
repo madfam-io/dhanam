@@ -145,9 +145,16 @@ export class MetaMapProvider {
    * @returns       Parsed verification result with PEP, sanctions, CURP, and INE flags
    */
   async getVerificationResult(flowId: string): Promise<MetaMapVerificationResult> {
+    // MetaMap flow IDs are MongoDB ObjectIds (24 hex chars). Reject anything
+    // else so a poisoned flowId can't pivot the request to a different host
+    // or path (request-forgery).
+    if (!/^[a-zA-Z0-9_-]{1,64}$/.test(flowId)) {
+      throw new Error('Invalid MetaMap flow ID');
+    }
+
     const token = await this.getAccessToken();
 
-    const response = await fetch(`${this.apiUrl}/v2/verifications/${flowId}`, {
+    const response = await fetch(`${this.apiUrl}/v2/verifications/${encodeURIComponent(flowId)}`, {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${token}`,

@@ -5,15 +5,21 @@ import { LMAsset, LMPlaidAccount, LMCrypto, LMRecurringItem } from './lunchmoney
 
 const logger = new Logger('LunchMoneyMapper');
 
-/** Decode common HTML entities returned by the LunchMoney API */
+const HTML_ENTITY_MAP: Record<string, string> = {
+  '&amp;': '&',
+  '&#x27;': "'",
+  '&#39;': "'",
+  '&lt;': '<',
+  '&gt;': '>',
+  '&quot;': '"',
+};
+
+/** Decode common HTML entities returned by the LunchMoney API. */
 export function decodeHtmlEntities(str: string): string {
-  return str
-    .replace(/&amp;/g, '&')
-    .replace(/&#x27;/g, "'")
-    .replace(/&#39;/g, "'")
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"');
+  // Single-pass replacement so an already-decoded `&` (from `&amp;`) cannot
+  // be re-scanned as the start of another entity. Chained `.replace` calls
+  // double-unescape `&amp;lt;` (literal `&lt;`) into `<`.
+  return str.replace(/&(?:amp|lt|gt|quot|#x27|#39);/g, (match) => HTML_ENTITY_MAP[match] ?? match);
 }
 
 export function mapCurrency(lmCurrency: string): Currency {

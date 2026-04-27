@@ -3,6 +3,19 @@
 import { useEffect } from 'react';
 import { useAuth } from '~/lib/hooks/use-auth';
 
+/**
+ * Accepts only same-origin relative paths beginning with a single '/' and
+ * not '//' (protocol-relative). Rejects absolute URLs, `javascript:` URIs,
+ * and anything URL-encoded that would parse to an external origin.
+ */
+function isSafeRedirectPath(value: string | null | undefined): value is string {
+  if (!value || typeof value !== 'string') return false;
+  if (!value.startsWith('/')) return false;
+  if (value.startsWith('//')) return false;
+  if (value.startsWith('/\\')) return false;
+  return true;
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { tokens, isAuthenticated, setAuth, refreshTokens, clearAuth } = useAuth();
 
@@ -67,7 +80,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const path = window.location.pathname;
           if (path === '/login' || path === '/register') {
             const from = new URLSearchParams(window.location.search).get('from');
-            window.location.href = from || '/dashboard';
+            // Only allow same-origin relative paths. Rejects `javascript:`,
+            // `//evil.com`, `https://evil.com`, and protocol-relative URLs
+            // that would otherwise be honored as open-redirect / XSS sinks.
+            window.location.href = isSafeRedirectPath(from) ? from : '/dashboard';
           }
         }
       }
