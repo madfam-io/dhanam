@@ -17,7 +17,7 @@
  * =============================================================================
  */
 
-import { Currency } from '@prisma/client';
+import { Currency } from '@db';
 
 export type ProcessorId = 'stripe' | 'stripe_mx' | 'paddle' | 'conekta' | 'polar';
 

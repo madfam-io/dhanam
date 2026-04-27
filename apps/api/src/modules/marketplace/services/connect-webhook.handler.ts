@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Currency, Prisma } from '@prisma/client';
+import { Currency, Prisma } from '@db';
 import type Stripe from 'stripe';
 
 import { PrismaService } from '../../../core/prisma/prisma.service';

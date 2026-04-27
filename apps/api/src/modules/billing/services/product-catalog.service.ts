@@ -1,3 +1,4 @@
+import { Prisma } from '@db';
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 
 import { PrismaService } from '../../../core/prisma/prisma.service';
@@ -157,7 +158,7 @@ export class ProductCatalogService {
         iconUrl: data.iconUrl,
         websiteUrl: data.websiteUrl,
         stripeProductId: data.stripeProductId,
-        metadata: data.metadata,
+        metadata: data.metadata as Prisma.InputJsonValue,
         sortOrder: data.sortOrder ?? 0,
       },
       update: {
@@ -167,7 +168,7 @@ export class ProductCatalogService {
         ...(data.iconUrl !== undefined && { iconUrl: data.iconUrl }),
         ...(data.websiteUrl !== undefined && { websiteUrl: data.websiteUrl }),
         ...(data.stripeProductId && { stripeProductId: data.stripeProductId }),
-        ...(data.metadata && { metadata: data.metadata }),
+        ...(data.metadata && { metadata: data.metadata as Prisma.InputJsonValue }),
         ...(data.sortOrder !== undefined && { sortOrder: data.sortOrder }),
       },
     });
@@ -212,14 +213,14 @@ export class ProductCatalogService {
         stripePriceId: data.stripePriceId,
         displayName: data.displayName,
         description: data.description,
-        metadata: data.metadata,
+        metadata: data.metadata as Prisma.InputJsonValue,
       },
       update: {
         amountCents: data.amountCents,
         ...(data.stripePriceId && { stripePriceId: data.stripePriceId }),
         ...(data.displayName !== undefined && { displayName: data.displayName }),
         ...(data.description !== undefined && { description: data.description }),
-        ...(data.metadata && { metadata: data.metadata }),
+        ...(data.metadata && { metadata: data.metadata as Prisma.InputJsonValue }),
       },
     });
 

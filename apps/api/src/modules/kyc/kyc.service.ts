@@ -1,4 +1,4 @@
-import { KycStatus } from '@db';
+import { KycStatus, Prisma } from '@db';
 import {
   BadRequestException,
   ConflictException,
@@ -153,7 +153,7 @@ export class KycService {
             sanctionsMatch: result.sanctionsMatch,
             curpValidated: result.curpValidated,
             ineValidated: result.ineValidated,
-            verificationData: result.details,
+            verificationData: result.details as Prisma.InputJsonValue,
             completedAt: new Date(),
           },
         });
@@ -197,7 +197,7 @@ export class KycService {
             sanctionsMatch: updatedResult.sanctionsMatch,
             curpValidated: updatedResult.curpValidated,
             ineValidated: updatedResult.ineValidated,
-            verificationData: updatedResult.details,
+            verificationData: updatedResult.details as Prisma.InputJsonValue,
             completedAt: new Date(),
           },
         });

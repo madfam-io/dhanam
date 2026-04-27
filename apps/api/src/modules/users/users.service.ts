@@ -27,15 +27,16 @@ export class UsersService {
    */
   private handlePrismaError(error: unknown, operation: string): never {
     if (error instanceof PrismaClientKnownRequestError) {
-      switch (error.code) {
+      const prismaErr = error as InstanceType<typeof PrismaClientKnownRequestError>;
+      switch (prismaErr.code) {
         case 'P2025':
           throw BusinessRuleException.resourceNotFound('User', operation);
         case 'P2002':
           throw ValidationException.duplicateEntry(
-            (error.meta?.target as string[])?.join(', ') || 'field'
+            (prismaErr.meta?.target as string[])?.join(', ') || 'field'
           );
         default:
-          throw InfrastructureException.databaseError(operation, error);
+          throw InfrastructureException.databaseError(operation, prismaErr);
       }
     }
 
