@@ -31,6 +31,7 @@ jobs:
 
       - name: Install pnpm
         uses: pnpm/action-setup@v6
+        with:
           run_install: false
 
       - name: Configure npm registry
@@ -67,6 +68,7 @@ jobs:
 
       - name: Install pnpm
         uses: pnpm/action-setup@v6
+        with:
           run_install: false
 
       - name: Get pnpm store directory
@@ -114,6 +116,7 @@ jobs:
 
       - name: Install pnpm
         uses: pnpm/action-setup@v6
+        with:
           run_install: false
 
       - name: Get pnpm store directory
@@ -194,6 +197,7 @@ jobs:
 
       - name: Install pnpm
         uses: pnpm/action-setup@v6
+        with:
           run_install: false
 
       - name: Get pnpm store directory
@@ -286,6 +290,7 @@ jobs:
 
       - name: Install pnpm
         uses: pnpm/action-setup@v6
+        with:
           run_install: false
 
       - name: Get pnpm store directory
@@ -342,6 +347,7 @@ jobs:
 
       - name: Install pnpm
         uses: pnpm/action-setup@v6
+        with:
           run_install: false
 
       - name: Get pnpm store directory
@@ -393,6 +399,7 @@ jobs:
 
       - name: Install pnpm
         uses: pnpm/action-setup@v6
+        with:
           run_install: false
 
       - name: Get pnpm store directory
@@ -449,6 +456,7 @@ jobs:
 
       - name: Install pnpm
         uses: pnpm/action-setup@v6
+        with:
           run_install: false
 
       - name: Get pnpm store directory
@@ -533,6 +541,7 @@ jobs:
 
       - name: Install pnpm
         uses: pnpm/action-setup@v6
+        with:
           run_install: false
 
       - name: Get pnpm store directory
@@ -619,6 +628,7 @@ jobs:
 
       - name: Install pnpm
         uses: pnpm/action-setup@v6
+        with:
           run_install: false
 
       - name: Get pnpm store directory
@@ -698,6 +708,7 @@ jobs:
 
       - name: Install pnpm
         uses: pnpm/action-setup@v6
+        with:
           run_install: false
 
       - name: Get pnpm store directory
@@ -819,6 +830,7 @@ jobs:
 
       - name: Install pnpm
         uses: pnpm/action-setup@v6
+        with:
           run_install: false
 
       - name: Get pnpm store directory
