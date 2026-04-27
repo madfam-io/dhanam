@@ -21,6 +21,8 @@ import {
 } from '@nestjs/swagger';
 import type { Request } from 'express';
 
+import { Prisma } from '@db';
+
 import { AuditService } from '../../core/audit/audit.service';
 import { PrismaService } from '../../core/prisma/prisma.service';
 import { PostHogService } from '../analytics/posthog.service';
@@ -174,7 +176,7 @@ export class MadfamEventsController {
           occurred_at: payload.occurred_at,
           attribution: payload.attribution ?? null,
           source_metadata: payload.metadata ?? null,
-        },
+        } as unknown as Prisma.InputJsonValue,
       },
     });
 

@@ -1,5 +1,5 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Prisma } from '@db';
 
 import { PrismaService } from '../../../core/prisma/prisma.service';
 import { StripeConnectService } from '../../billing/services/stripe-connect.service';

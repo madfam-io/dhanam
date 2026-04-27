@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Currency } from '@prisma/client';
+import { Currency } from '@db';
 import { IsEnum, IsInt, IsOptional, IsString, IsUrl, Min } from 'class-validator';
 
 export class CreateMerchantDto {
