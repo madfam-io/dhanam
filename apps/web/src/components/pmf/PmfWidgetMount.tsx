@@ -7,15 +7,17 @@
  *
  * `@madfam/pmf-widget@0.1.0` is built but NOT YET PUBLISHED to the
  * MADFAM npm registry. Publish is blocked on `NPM_MADFAM_TOKEN`
- * rotation (operator-only). The package is declared in
- * apps/web/package.json so lockfile resolution lands the moment the
- * publish unblocks, but `pnpm install` in CI today resolves it as a
- * missing optional-ish dep.
+ * rotation (operator-only). The dep is **intentionally not declared**
+ * in apps/web/package.json: while the prior arrangement let pnpm
+ * resolve the lockfile entry from cache, fresh CI runs (and any
+ * `pnpm install` after a lockfile cache miss) hit
+ * `ERR_PNPM_FETCH_401` from npm.madfam.io because the tarball isn't
+ * actually published, which blocked every dhanam CI workflow.
  *
- * To keep CI green BEFORE the publish:
- *   1. The import is dynamic (runtime), not static — webpack/turbopack
- *      do not resolve it at build time, so a missing module does not
- *      fail the build.
+ * Why this is safe today:
+ *   1. The import is dynamic (runtime, with `webpackIgnore` /
+ *      `@vite-ignore`), not static — bundlers do not resolve it at
+ *      build time, so a missing module does not fail the build.
  *   2. The component is gated on `NEXT_PUBLIC_PMF_WIDGET_ENABLED`. Until
  *      an operator flips the flag, the dynamic import never fires and
  *      no runtime resolution is attempted.
@@ -25,7 +27,10 @@
  *      so the published types take over.
  *
  * Activation checklist (post-publish):
- *   - Operator runs `pnpm install @madfam/pmf-widget@^0.1.0` in apps/web
+ *   - Rotate NPM_MADFAM_TOKEN (operator) and publish
+ *     `@madfam/pmf-widget@^0.1.0` to npm.madfam.io
+ *   - `pnpm add @madfam/pmf-widget@^0.1.0 -F @dhanam/web` to re-add it
+ *     to dependencies + lockfile
  *   - Set `NEXT_PUBLIC_PMF_WIDGET_ENABLED=true` in the deployed env
  *   - Set `NEXT_PUBLIC_TULANA_API_URL` if not the default
  *   - Delete `apps/web/src/types/madfam-pmf-widget.d.ts`
