@@ -83,7 +83,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // Only allow same-origin relative paths. Rejects `javascript:`,
             // `//evil.com`, `https://evil.com`, and protocol-relative URLs
             // that would otherwise be honored as open-redirect / XSS sinks.
-            window.location.href = isSafeRedirectPath(from) ? from! : '/dashboard';
+            window.location.href = isSafeRedirectPath(from) ? from : '/dashboard';
           }
         }
       }
