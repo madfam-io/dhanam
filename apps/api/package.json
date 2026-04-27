@@ -99,7 +99,7 @@
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "passport-local": "^1.0.0",
-    "path-to-regexp": "8.3.0",
+    "path-to-regexp": "8.4.2",
     "pdfkit": "^0.17.2",
     "pg": "^8.18.0",
     "plaid": "^41.1.0",
