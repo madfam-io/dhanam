@@ -10,6 +10,7 @@ import {
 import { LoggerService } from '@core/logger/logger.service';
 import { PrismaService } from '@core/prisma/prisma.service';
 import { PrismaClientKnownRequestError } from '@db';
+import { isPrismaKnownRequestError } from '@core/filters/prisma-error.guard';
 import { Injectable } from '@nestjs/common';
 import * as qrcode from 'qrcode';
 import * as speakeasy from 'speakeasy';
@@ -42,11 +43,11 @@ export class TotpService {
     }
 
     // Handle Prisma errors
-    if (error instanceof PrismaClientKnownRequestError) {
+    if (isPrismaKnownRequestError(error)) {
       if (error.code === 'P2025') {
         throw BusinessRuleException.resourceNotFound('User', operation);
       }
-      throw InfrastructureException.databaseError(operation, error);
+      throw InfrastructureException.databaseError(operation, new Error(error.message));
     }
 
     // Log and wrap unknown errors
