@@ -193,8 +193,10 @@ export class StripeService {
     subscriptionId: string,
     couponId: string
   ): Promise<Stripe.Subscription> {
+    // Modern Stripe SDK removed the `coupon` shortcut on SubscriptionUpdateParams.
+    // Use the `discounts` array instead (single coupon mirrors prior behaviour).
     return this.stripe.subscriptions.update(subscriptionId, {
-      coupon: couponId,
+      discounts: [{ coupon: couponId }],
     });
   }
 

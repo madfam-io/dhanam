@@ -29,7 +29,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Stripe from 'stripe';
 
-import { InfrastructureException } from '../../../core/exceptions/domain-exceptions';
+import { ErrorCode, InfrastructureException } from '../../../core/exceptions/domain-exceptions';
 import {
   ChargeHandle,
   CreateDestinationChargeInput,
@@ -79,7 +79,8 @@ export class StripeConnectService {
   private requireStripe(): Stripe {
     if (!this.stripe) {
       throw new InfrastructureException(
-        'Stripe Connect is not configured. Set STRIPE_SECRET_KEY.',
+        ErrorCode.CONFIGURATION_ERROR,
+        'Stripe Connect is not configured. Set STRIPE_SECRET_KEY.'
       );
     }
     return this.stripe;
@@ -89,12 +90,10 @@ export class StripeConnectService {
   // Merchant accounts
   // ---------------------------------------------------------------------------
 
-  async createMerchantAccount(
-    input: CreateMerchantInput,
-  ): Promise<MerchantAccountHandle> {
+  async createMerchantAccount(input: CreateMerchantInput): Promise<MerchantAccountHandle> {
     const stripe = this.requireStripe();
     this.logger.log(
-      `Creating Express Connect account for user=${input.userId} country=${input.country}`,
+      `Creating Express Connect account for user=${input.userId} country=${input.country}`
     );
 
     const account = await stripe.accounts.create({
@@ -119,7 +118,7 @@ export class StripeConnectService {
   async createMerchantOnboardingLink(
     externalId: string,
     returnUrl: string,
-    refreshUrl: string,
+    refreshUrl: string
   ): Promise<OnboardingLink> {
     const stripe = this.requireStripe();
     const link = await stripe.accountLinks.create({
@@ -144,9 +143,7 @@ export class StripeConnectService {
   // Destination charges (platform collects, settles to merchant, keeps fee)
   // ---------------------------------------------------------------------------
 
-  async createDestinationCharge(
-    input: CreateDestinationChargeInput,
-  ): Promise<ChargeHandle> {
+  async createDestinationCharge(input: CreateDestinationChargeInput): Promise<ChargeHandle> {
     const stripe = this.requireStripe();
 
     const pi = await stripe.paymentIntents.create({
@@ -168,7 +165,7 @@ export class StripeConnectService {
     return {
       externalId: pi.id,
       amount: pi.amount,
-      currency: (pi.currency.toUpperCase() as ChargeHandle['currency']),
+      currency: pi.currency.toUpperCase() as ChargeHandle['currency'],
       status: pi.status as ChargeHandle['status'],
       clientSecret: pi.client_secret ?? undefined,
       // application_fee + transfer land asynchronously; persist the IDs via webhook.
@@ -211,16 +208,14 @@ export class StripeConnectService {
         description: input.description,
         metadata: input.metadata ?? {},
       },
-      { stripeAccount: input.merchantExternalId },
+      { stripeAccount: input.merchantExternalId }
     );
     return {
       externalId: payout.id,
       amount: payout.amount,
       currency: payout.currency.toUpperCase() as PayoutHandle['currency'],
       status: payout.status as PayoutHandle['status'],
-      arrivalDate: payout.arrival_date
-        ? new Date(payout.arrival_date * 1000)
-        : undefined,
+      arrivalDate: payout.arrival_date ? new Date(payout.arrival_date * 1000) : undefined,
     };
   }
 
@@ -249,7 +244,7 @@ export class StripeConnectService {
 
   async submitDisputeEvidence(
     externalId: string,
-    evidence: DisputeEvidence,
+    evidence: DisputeEvidence
   ): Promise<DisputeHandle> {
     const stripe = this.requireStripe();
     const updated = await stripe.disputes.update(externalId, {

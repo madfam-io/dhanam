@@ -183,7 +183,7 @@ describe('StripeMxService', () => {
 
       expect(createSpy).toHaveBeenCalledWith(
         expect.objectContaining({
-          payment_method_types: ['card', 'oxxo', 'customer_balance', 'spei_transfer'],
+          payment_method_types: ['card', 'oxxo', 'customer_balance'],
         })
       );
     });

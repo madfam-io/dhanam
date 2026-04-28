@@ -493,7 +493,11 @@ export class FinicityService implements IFinancialProvider {
       throw new BadRequestException('Invalid Finicity webhook signature');
     }
 
-    const { eventType, customerId, accountId } = payload;
+    const { eventType, customerId, accountId } = payload as {
+      eventType: string;
+      customerId: string;
+      accountId: string;
+    };
 
     this.logger.log(`Received Finicity webhook: ${eventType}`);
 

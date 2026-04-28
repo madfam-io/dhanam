@@ -155,4 +155,9 @@ export class SubmitDisputeEvidenceDto {
   @IsOptional()
   @IsString()
   uncategorizedText?: string;
+
+  // Index signature mirrors `DisputeEvidence` in
+  // billing/services/payment-processor.interface.ts so the DTO stays
+  // structurally assignable without losing the documented fields above.
+  [key: string]: string | undefined;
 }

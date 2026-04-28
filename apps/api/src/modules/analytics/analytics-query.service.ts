@@ -381,8 +381,8 @@ export class AnalyticsQueryService {
             _avg: { amount: { toNumber: () => number } | null };
           }
         ) => ({
-          group: catMap.get(r.categoryId) || 'Uncategorized',
-          groupId: r.categoryId,
+          group: catMap.get(r.categoryId as string) || 'Uncategorized',
+          groupId: r.categoryId as string | null,
           sum: Math.abs(r._sum.amount?.toNumber() || 0),
           count: r._count.id,
           average: Math.abs(r._avg.amount?.toNumber() || 0),
@@ -413,8 +413,8 @@ export class AnalyticsQueryService {
             _avg: { amount: { toNumber: () => number } | null };
           }
         ) => ({
-          group: acctMap.get(r.accountId) || 'Unknown',
-          groupId: r.accountId,
+          group: acctMap.get(r.accountId as string) || 'Unknown',
+          groupId: r.accountId as string | null,
           sum: Math.abs(r._sum.amount?.toNumber() || 0),
           count: r._count.id,
           average: Math.abs(r._avg.amount?.toNumber() || 0),
