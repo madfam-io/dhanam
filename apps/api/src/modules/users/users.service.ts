@@ -3,9 +3,9 @@ import {
   InfrastructureException,
   ValidationException,
 } from '@core/exceptions/domain-exceptions';
+import { isPrismaKnownRequestError } from '@core/filters/prisma-error.guard';
 import { LoggerService } from '@core/logger/logger.service';
 import { PrismaService } from '@core/prisma/prisma.service';
-import { PrismaClientKnownRequestError } from '@db';
 import { User, UserProfile } from '@dhanam/shared';
 import { Injectable } from '@nestjs/common';
 
@@ -26,17 +26,19 @@ export class UsersService {
    * Handle Prisma errors and map to domain exceptions
    */
   private handlePrismaError(error: unknown, operation: string): never {
-    if (error instanceof PrismaClientKnownRequestError) {
-      const prismaErr = error as InstanceType<typeof PrismaClientKnownRequestError>;
-      switch (prismaErr.code) {
+    if (isPrismaKnownRequestError(error)) {
+      switch (error.code) {
         case 'P2025':
           throw BusinessRuleException.resourceNotFound('User', operation);
         case 'P2002':
           throw ValidationException.duplicateEntry(
-            (prismaErr.meta?.target as string[])?.join(', ') || 'field'
+            (error.meta?.target as string[])?.join(', ') || 'field'
           );
         default:
-          throw InfrastructureException.databaseError(operation, prismaErr);
+          throw InfrastructureException.databaseError(
+            operation,
+            error instanceof Error ? error : new Error(String(error))
+          );
       }
     }
 
