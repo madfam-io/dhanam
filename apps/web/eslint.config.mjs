@@ -19,7 +19,7 @@ export default [
     languageOptions: {
       parserOptions: {
         tsconfigRootDir: __dirname,
-        project: './tsconfig.json',
+        projectService: true,
       },
     },
   },
