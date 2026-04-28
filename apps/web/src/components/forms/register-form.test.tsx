@@ -218,7 +218,7 @@ describe('RegisterForm', () => {
     });
   });
 
-  it.skip('should show error when password missing number', async () => {
+  it('should show error when password missing number', async () => {
     const user = userEvent.setup();
     render(<RegisterForm onSubmit={mockOnSubmit} />);
 
@@ -264,9 +264,7 @@ describe('RegisterForm', () => {
     expect(submittedData).not.toHaveProperty('confirmPassword');
   });
 
-  // Skipped: ZodError from z.literal(true) propagates through jsdom event system
-  // in @hookform/resolvers@3.10.0, same root cause as other skipped validation tests
-  it.skip('should not submit without accepting terms', async () => {
+  it('should not submit without accepting terms', async () => {
     const user = userEvent.setup();
     render(<RegisterForm onSubmit={mockOnSubmit} />);
 

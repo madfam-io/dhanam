@@ -48,18 +48,22 @@ export function RegisterForm({ onSubmit, isLoading }: RegisterFormProps) {
     [tv]
   );
 
+  type RegisterFormValues = z.infer<typeof registerSchema>;
+
   const {
     register,
     handleSubmit,
     setValue,
     watch,
     formState: { errors },
-  } = useForm<RegisterDto & { acceptTerms: boolean; confirmPassword: string }>({
+  } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
       locale: geo.locale,
       timezone: geo.timezone,
-      acceptTerms: false,
+      // Cast required: schema demands `true` literal but checkbox starts unchecked.
+      // Validation enforces `true` on submit; TS just needs assignability for default.
+      acceptTerms: false as unknown as true,
     },
   });
 
@@ -160,7 +164,7 @@ export function RegisterForm({ onSubmit, isLoading }: RegisterFormProps) {
             id="acceptTerms"
             checked={acceptTerms}
             onCheckedChange={(checked) =>
-              setValue('acceptTerms', checked === true, { shouldValidate: true })
+              setValue('acceptTerms', (checked === true) as true, { shouldValidate: true })
             }
             disabled={isLoading}
             className="mt-0.5"
