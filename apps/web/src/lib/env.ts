@@ -35,7 +35,7 @@ const envSchemaBase = z.object({
 });
 
 const envSchema = envSchemaBase.superRefine((data, ctx) => {
-  // In janua auth mode, OIDC vars are required
+  // In janua auth mode, OIDC vars are required (auth literally won't work without them)
   if (data.NEXT_PUBLIC_AUTH_MODE === 'janua') {
     if (!data.NEXT_PUBLIC_OIDC_ISSUER) {
       ctx.addIssue({
@@ -60,16 +60,12 @@ const envSchema = envSchemaBase.superRefine((data, ctx) => {
     }
   }
 
-  // Production guards
-  if (data.NODE_ENV === 'production') {
-    if (!data.NEXT_PUBLIC_POSTHOG_KEY) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'NEXT_PUBLIC_POSTHOG_KEY should be set in production for observability',
-        path: ['NEXT_PUBLIC_POSTHOG_KEY'],
-      });
-    }
-  }
+  // Note: PostHog absence used to be a fatal error in production — that was
+  // wrong. Observability is non-essential for the app to serve users; treating
+  // it as load-blocking caused 5+ days of CrashLoopBackOff (660 restarts on
+  // dhanam-web-85f66c94fb) when the env var was simply forgotten in the K8s
+  // Secret rollout. The check was downgraded to a non-blocking warn at module
+  // load (see getEnv() below) so prod can boot even when PostHog is unset.
 });
 
 export type Env = z.infer<typeof envSchema>;
@@ -87,6 +83,16 @@ export function getEnv(): Env {
     throw new Error(`[dhanam-web] Invalid environment variables:\n${message}`);
   }
   cachedEnv = parsed.data;
+
+  // Warn (but don't fail) on missing observability — see superRefine note above.
+  if (cachedEnv.NODE_ENV === 'production' && !cachedEnv.NEXT_PUBLIC_POSTHOG_KEY) {
+    // eslint-disable-next-line no-console
+    console.warn(
+      '[dhanam-web] NEXT_PUBLIC_POSTHOG_KEY not set in production — observability disabled. ' +
+        'Set it in dhanam-secrets to re-enable PostHog tracking.',
+    );
+  }
+
   return cachedEnv;
 }
 
