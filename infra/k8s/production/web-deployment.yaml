@@ -107,7 +107,7 @@ spec:
                   name: dhanam-billing-secrets
                   key: PADDLE_CLIENT_TOKEN
             - name: NEXT_PUBLIC_PADDLE_ENVIRONMENT
-              value: "live"
+              value: "production"
 
           resources:
             requests:
