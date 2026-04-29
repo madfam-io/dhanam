@@ -1,6 +1,6 @@
+import { Space } from '@dhanam/shared';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { Space } from '@dhanam/shared';
 
 interface SpaceStore {
   currentSpace: Space | null;

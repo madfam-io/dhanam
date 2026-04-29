@@ -1,6 +1,6 @@
+import { User } from '@dhanam/shared';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { User } from '@dhanam/shared';
 
 interface AuthState {
   user: User | null;
