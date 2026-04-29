@@ -73,6 +73,18 @@ const envSchema = envSchemaBase.superRefine((data, ctx) => {
   // image was simply stale. This block is a load-bearing reminder: if a
   // future PR ever wants to promote PostHog (or any observability var) back
   // to required, the answer is no. Add it here as a soft warn instead.
+  //
+  // Repeat incident #3 (2026-04-28, evening): same stale-image symptom
+  // resurfaced — pods crashlooping with the old "should be set in production
+  // for observability" message that no longer exists in source. Self-hosted
+  // PostHog has been REMOVED from the platform (see enclii CLAUDE.md: S106
+  // removed, S110 cleaned). The Cloudflare Worker proxy at
+  // analytics.madfam.io still exists for PostHog Cloud, but that path is
+  // entirely opt-in via the env var being set — its absence is now the
+  // expected steady state, not a misconfiguration. If you find yourself
+  // here writing a `required()` call, stop: every call site
+  // (posthog.ts, useAnalytics.ts, PostHogProvider.tsx) already guards on
+  // truthiness and no-ops cleanly when the key is unset.
 });
 
 export type Env = z.infer<typeof envSchema>;
