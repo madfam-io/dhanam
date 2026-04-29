@@ -66,6 +66,13 @@ const envSchema = envSchemaBase.superRefine((data, ctx) => {
   // dhanam-web-85f66c94fb) when the env var was simply forgotten in the K8s
   // Secret rollout. The check was downgraded to a non-blocking warn at module
   // load (see getEnv() below) so prod can boot even when PostHog is unset.
+  //
+  // Repeat incident 2026-04-28: a 20h crashloop hit again when prod kept
+  // running an image built before the original fix shipped (PR #399, commit
+  // ba6cac1). The validator code was already correct on main; the deployed
+  // image was simply stale. This block is a load-bearing reminder: if a
+  // future PR ever wants to promote PostHog (or any observability var) back
+  // to required, the answer is no. Add it here as a soft warn instead.
 });
 
 export type Env = z.infer<typeof envSchema>;
@@ -74,6 +81,22 @@ let cachedEnv: Env | null = null;
 
 export function getEnv(): Env {
   if (cachedEnv) return cachedEnv;
+
+  // Ops escape hatch: if a future validator regression ever blocks pod boot,
+  // operators can flip SKIP_ENV_VALIDATION=1 in the ConfigMap to bypass Zod
+  // entirely and recover the web tier in seconds. The schema is still parsed
+  // partially via getEnvUnsafe() at use sites, so type narrowing still works.
+  // Use only as a break-glass — log loudly so it's visible in incident review.
+  if (process.env.SKIP_ENV_VALIDATION === '1') {
+    // eslint-disable-next-line no-console
+    console.warn(
+      '[dhanam-web] SKIP_ENV_VALIDATION=1 — Zod env schema bypassed. ' +
+        'This is a break-glass for prod incidents only; remove it once recovered.'
+    );
+    cachedEnv = envSchemaBase.partial().parse(process.env) as Env;
+    return cachedEnv;
+  }
+
   const parsed = envSchema.safeParse(process.env);
   if (!parsed.success) {
     const formatted = parsed.error.flatten().fieldErrors;
@@ -89,7 +112,7 @@ export function getEnv(): Env {
     // eslint-disable-next-line no-console
     console.warn(
       '[dhanam-web] NEXT_PUBLIC_POSTHOG_KEY not set in production — observability disabled. ' +
-        'Set it in dhanam-secrets to re-enable PostHog tracking.',
+        'Set it in dhanam-secrets to re-enable PostHog tracking.'
     );
   }
 
