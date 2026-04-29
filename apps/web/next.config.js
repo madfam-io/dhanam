@@ -4,6 +4,11 @@ const { withSentryConfig } = require('@sentry/nextjs');
 const nextConfig = {
   output: 'standalone',
   reactStrictMode: true,
+  eslint: {
+    // ESLint runs in CI/lint workflow; skipping here keeps Docker build green
+    // when project-service mode trips on test files outside the prod tsconfig.
+    ignoreDuringBuilds: true,
+  },
   transpilePackages: [
     '@dhanam/shared',
     '@dhanam/ui',
